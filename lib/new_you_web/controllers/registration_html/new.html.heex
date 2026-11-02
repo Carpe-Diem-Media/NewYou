@@ -1,0 +1,75 @@
+<main lang={@locale} class="mx-auto max-w-2xl px-6 py-12">
+  <nav aria-label={copy("shared.language.change", @locale)} class="mb-8 flex gap-4">
+    <a href="/register?locale=af">{copy("shared.language.afrikaans", @locale)}</a>
+    <a href="/register?locale=en">{copy("shared.language.english", @locale)}</a>
+  </nav>
+
+  <section class="space-y-4">
+    <h1 class="text-3xl font-semibold">{copy("public.entry.launch.title", @locale)}</h1>
+    <p>{copy("public.entry.launch.body", @locale)}</p>
+    <p>{copy("public.entry.safety.body", @locale)}</p>
+  </section>
+
+  <section class="mt-10 space-y-6">
+    <header class="space-y-2">
+      <h2 class="text-2xl font-semibold">{copy("identity.registration.title", @locale)}</h2>
+      <p>{copy("identity.registration.intro", @locale)}</p>
+    </header>
+
+    <form action="/register" method="post" class="space-y-5">
+      <input type="hidden" name="_csrf_token" value={get_csrf_token()} />
+      <input type="hidden" name="registration[operation_id]" value={@operation_id} />
+      <input type="hidden" name="registration[preferred_language]" value={@locale} />
+
+      <label class="block">
+        <span>{copy("identity.registration.first_name.label", @locale)}</span>
+        <input type="text" name="registration[first_name]" required />
+      </label>
+
+      <label class="block">
+        <span>{copy("identity.registration.surname.label", @locale)}</span>
+        <input type="text" name="registration[surname]" required />
+      </label>
+
+      <label class="block">
+        <span>{copy("identity.registration.email.label", @locale)}</span>
+        <input type="email" name="registration[email]" required />
+      </label>
+
+      <label class="block">
+        <span>{copy("identity.registration.password.label", @locale)}</span>
+        <input type="password" name="registration[password]" required />
+      </label>
+
+      <div class="space-y-1">
+        <p>{copy("identity.registration.preferred_language.label", @locale)}</p>
+        <p>{copy("identity.registration.preferred_language.help", @locale)}</p>
+      </div>
+
+      <label class="flex gap-2">
+        <input type="checkbox" name="registration[confirmed_age_18]" value="true" required />
+        <span>{copy("identity.registration.age_confirmation", @locale)}</span>
+      </label>
+
+      <div class="space-y-3">
+        <p>{copy("legal.shared.document_language_disclosure", @locale)}</p>
+
+        <label class="flex gap-2">
+          <input type="checkbox" name="registration[terms_accepted]" value="true" required />
+          <span>{copy("identity.registration.terms_acceptance", @locale)}</span>
+        </label>
+        <a href="/legal/terms">{copy("identity.registration.terms_link", @locale)}</a>
+
+        <p>{copy("identity.registration.privacy_presentation", @locale)}</p>
+        <a href="/legal/privacy">{copy("identity.registration.privacy_link", @locale)}</a>
+
+        <label class="flex gap-2">
+          <input type="checkbox" name="registration[privacy_accepted]" value="true" required />
+          <span>{copy("identity.registration.privacy_acceptance", @locale)}</span>
+        </label>
+      </div>
+
+      <button type="submit">{copy("identity.registration.submit", @locale)}</button>
+    </form>
+  </section>
+</main>

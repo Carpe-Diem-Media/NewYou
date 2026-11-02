@@ -23,6 +23,7 @@ defmodule NewYouWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/register", RegistrationController, :new
   end
 
   # Other scopes may use custom stacks.
