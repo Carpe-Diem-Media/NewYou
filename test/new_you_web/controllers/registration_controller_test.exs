@@ -30,7 +30,7 @@ defmodule NewYouWeb.RegistrationControllerTest do
       assert html =~ "Lees die Bepalings en Voorwaardes (Engels)"
 
       assert html =~
-               "Ek aanvaar die Test Platform-privaatheidsbeleid vir registrasie. Dit is nie toestemming vir elke verwerkingsdoel nie."
+               "Ek aanvaar Test Platform se Privaatheidsbeleid vir registrasie. Dit is nie toestemming vir elke verwerkingsdoel nie."
 
       assert html =~ ~s(name="registration[operation_id]")
       refute html =~ "Health and lifestyle support built around real life"
