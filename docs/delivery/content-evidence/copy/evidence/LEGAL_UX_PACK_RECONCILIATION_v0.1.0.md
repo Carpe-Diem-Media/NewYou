@@ -17,23 +17,23 @@ The repository-local Terms and Privacy source files matched these recorded hashe
 
 | Source item | Disposition | Workspace destination |
 |---|---|---|
-| LUX-DIS-001 | integrated, adapted to `{{platform_name}}` | `legal/disclaimers/GENERAL_WELLNESS_DISCLAIMER_WORKING_v0.1.0.md` |
-| LUX-DIS-002 | integrated | `legal/disclaimers/TEMPERAMENT_DISCLAIMER_WORKING_v0.1.0.md` |
-| LUX-DIS-003 | integrated, dynamic platform name | `legal/disclaimers/FAITH_PROFESSIONAL_CARE_BOUNDARY_WORKING_v0.1.0.md` |
-| LUX-DIS-004 | integrated, dynamic platform name | `legal/disclaimers/NO_GUARANTEED_OUTCOME_WORKING_v0.1.0.md` |
-| LUX-REG-001 | retained; matches current age confirmation | `journeys/registration/P8_05_REGISTRATION_COPY.md` |
-| LUX-REG-002 | v0.3.0 copy candidate replaces the v0.2 combined-control layout; this is a UX choice, not a Product Law control-count rule | registration journey + `legal/consent/REGISTRATION_LEGAL_INTERACTIONS_WORKING_v0.1.0.md` |
-| LUX-REG-003 | presentation/disclosure wording adapted; current Product Law also requires the distinct Privacy acceptance fact; AF terminology uses `Privaatheidsbeleid` | registration journey + `legal/privacy/REGISTRATION_PRIVACY_PRESENTATION_WORKING_v0.1.0.md` |
-| LUX-MKT-001 | integrated as JIT candidate | `legal/consent/MARKETING_PERMISSION_WORKING_v0.1.0.md` |
-| LUX-MKT-002 | integrated as JIT candidate | `communications/marketing/MARKETING_CHANNEL_PREFERENCES_WORKING_v0.1.0.md` |
-| LUX-CK-001 | integrated; inventory-gated | `legal/cookies/COOKIE_BANNER_WORKING_v0.1.0.md` |
-| LUX-CK-002 | integrated; AF `toegangsreëls` terminology | `legal/cookies/COOKIE_PREFERENCE_CENTRE_WORKING_v0.1.0.md` |
-| LUX-CK-003 | integrated as **structure-only / hard blocked** | `legal/cookies/COOKIE_NOTICE_SHELL_WORKING_v0.1.0.md` |
-| LUX-HLT-001 | integrated as JIT template; AF uses `Privaatheidsbeleid` | `legal/privacy/HEALTH_DATA_JIT_DISCLOSURE_TEMPLATE_WORKING_v0.1.0.md` |
-| LUX-HLT-002 | integrated as **hard-blocked review shell** | `legal/consent/HEALTH_SPECIAL_PI_CONSENT_SHELL_BLOCKED_v0.1.0.md` |
-| LUX-PRAC-001 | integrated as future/blocked shell | `legal/consent/PRACTITIONER_SHARING_PERMISSION_FUTURE_v0.1.0.md` |
-| LUX-ECTA-001 | integrated as SKU/counsel-gated shell | `commerce/checkout/EARLY_PERFORMANCE_INSTRUCTION_SHELL_BLOCKED_v0.1.0.md` |
-| LUX-VER-001 | evaluated; **not used to regress current reviewed copy** | existing `journeys/verification/P8_05_VERIFICATION_PENDING_COPY.md` retained |
+| LUX-DIS-001 | integrated, adapted to `{{platform_name}}` | `docs/delivery/content-evidence/copy/legal/disclaimers/GENERAL_WELLNESS_DISCLAIMER_WORKING_v0.1.0.md` |
+| LUX-DIS-002 | integrated | `docs/delivery/content-evidence/copy/legal/disclaimers/TEMPERAMENT_DISCLAIMER_WORKING_v0.1.0.md` |
+| LUX-DIS-003 | integrated, dynamic platform name | `docs/delivery/content-evidence/copy/legal/disclaimers/FAITH_PROFESSIONAL_CARE_BOUNDARY_WORKING_v0.1.0.md` |
+| LUX-DIS-004 | integrated, dynamic platform name | `docs/delivery/content-evidence/copy/legal/disclaimers/NO_GUARANTEED_OUTCOME_WORKING_v0.1.0.md` |
+| LUX-REG-001 | retained; matches current age confirmation | `docs/delivery/content-evidence/copy/journeys/registration/P8_05_REGISTRATION_COPY.md` |
+| LUX-REG-002 | v0.3.0 copy candidate replaces the v0.2 combined-control layout; this is a UX choice, not a Product Law control-count rule | `docs/delivery/content-evidence/copy/journeys/registration/P8_05_REGISTRATION_COPY.md` + `docs/delivery/content-evidence/copy/legal/consent/REGISTRATION_LEGAL_INTERACTIONS_WORKING_v0.1.0.md` |
+| LUX-REG-003 | presentation/disclosure wording adapted; current Product Law also requires the distinct Privacy acceptance fact; AF terminology uses `Privaatheidsbeleid` | `docs/delivery/content-evidence/copy/journeys/registration/P8_05_REGISTRATION_COPY.md` + `docs/delivery/content-evidence/copy/legal/privacy/REGISTRATION_PRIVACY_PRESENTATION_WORKING_v0.1.0.md` |
+| LUX-MKT-001 | integrated as JIT candidate | `docs/delivery/content-evidence/copy/legal/consent/MARKETING_PERMISSION_WORKING_v0.1.0.md` |
+| LUX-MKT-002 | integrated as JIT candidate | `docs/delivery/content-evidence/copy/communications/marketing/MARKETING_CHANNEL_PREFERENCES_WORKING_v0.1.0.md` |
+| LUX-CK-001 | integrated; inventory-gated | `docs/delivery/content-evidence/copy/legal/cookies/COOKIE_BANNER_WORKING_v0.1.0.md` |
+| LUX-CK-002 | integrated; AF `toegangsreëls` terminology | `docs/delivery/content-evidence/copy/legal/cookies/COOKIE_PREFERENCE_CENTRE_WORKING_v0.1.0.md` |
+| LUX-CK-003 | integrated as **structure-only / hard blocked** | `docs/delivery/content-evidence/copy/legal/cookies/COOKIE_NOTICE_SHELL_WORKING_v0.1.0.md` |
+| LUX-HLT-001 | integrated as JIT template; AF uses `Privaatheidsbeleid` | `docs/delivery/content-evidence/copy/legal/privacy/HEALTH_DATA_JIT_DISCLOSURE_TEMPLATE_WORKING_v0.1.0.md` |
+| LUX-HLT-002 | integrated as **hard-blocked review shell** | `docs/delivery/content-evidence/copy/legal/consent/HEALTH_SPECIAL_PI_CONSENT_SHELL_BLOCKED_v0.1.0.md` |
+| LUX-PRAC-001 | integrated as future/blocked shell | `docs/delivery/content-evidence/copy/legal/consent/PRACTITIONER_SHARING_PERMISSION_FUTURE_v0.1.0.md` |
+| LUX-ECTA-001 | integrated as SKU/counsel-gated shell | `docs/delivery/content-evidence/copy/commerce/checkout/EARLY_PERFORMANCE_INSTRUCTION_SHELL_BLOCKED_v0.1.0.md` |
+| LUX-VER-001 | evaluated; **not used to regress current reviewed copy** | existing `docs/delivery/content-evidence/copy/journeys/verification/P8_05_VERIFICATION_PENDING_COPY.md` retained |
 | LUX-VER-002 | resend action already matches; supporting text not substituted | existing verification journey retained |
 
 ## Material correction to workspace v0.2.0
