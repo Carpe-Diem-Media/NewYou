@@ -8,7 +8,10 @@ defmodule NewYouWeb.CopyRegistry do
   """
 
   @approved_workspace_version "0.3.0"
-  @registry_path Path.expand("../../docs/delivery/content-evidence/copy/COPY_REGISTRY.json", __DIR__)
+  @registry_path Path.expand(
+                   "../../docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+                   __DIR__
+                 )
   @external_resource @registry_path
   @registry @registry_path |> File.read!() |> Jason.decode!()
 
