@@ -47,7 +47,10 @@ defmodule NewYou.Identity.RegistrationOperation do
       touches_resources [
         NewYou.Identity.Account,
         NewYou.Identity.Token,
-        NewYou.Audit.EvidenceObligation
+        NewYou.Audit.EvidenceObligation,
+        NewYou.Communications.MessageIntent,
+        NewYou.Communications.ProtectedEnvelope,
+        NewYou.Communications.EnvelopeNonce
       ]
 
       run NewYou.Identity.Actions.AcceptRegistration

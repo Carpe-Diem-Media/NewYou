@@ -22,7 +22,9 @@ defmodule NewYou.Identity.Actions.AcceptRegistration do
     committed_at = NewYou.Identity.registration_now()
 
     with {:ok, account} <- create_account(registration, admission.pmr, committed_at),
-         {:ok, verification_proof} <- issue_verification_proof(account),
+         {:ok, verification_proof, claims} <- issue_verification_proof(account),
+         {:ok, _intent} <-
+           establish_verification_intent(registration, committed_at, claims, verification_proof),
          {:ok, _obligation} <-
            NewYou.Audit.establish_registration_obligation(
              %{
@@ -92,10 +94,24 @@ defmodule NewYou.Identity.Actions.AcceptRegistration do
            domain: NewYou.Identity,
            authorize?: false
          ) do
-      {:ok, token, _claims} -> {:ok, token}
+      {:ok, token, claims} -> {:ok, token, claims}
       _ -> {:error, :token_creation_failed}
     end
   rescue
     _ -> {:error, :token_creation_failed}
+  end
+
+  defp establish_verification_intent(registration, committed_at, claims, verification_proof) do
+    NewYou.Communications.establish_verification(
+      %{
+        source_operation_id: registration.operation_id,
+        source_reference: claims["jti"],
+        destination: registration.email,
+        destination_provenance: "identity_challenge_issuance",
+        destination_authorized_at: committed_at,
+        locale: Atom.to_string(registration.preferred_language)
+      },
+      verification_proof
+    )
   end
 end

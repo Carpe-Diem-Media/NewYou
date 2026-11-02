@@ -7,6 +7,7 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
   setup do
     previous_keys = Application.get_env(:new_you, :identity_registration_binding_keys)
     previous_token_signing_secret = Application.get_env(:new_you, :identity_token_signing_secret)
+    previous_communications_keyring = Application.get_env(:new_you, :communications_keyring)
     previous_clock = Application.get_env(:new_you, :identity_clock)
     previous_pmr_generator = Application.get_env(:new_you, :identity_pmr_generator)
 
@@ -17,11 +18,17 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
 
     Application.put_env(:new_you, :identity_token_signing_secret, :crypto.strong_rand_bytes(32))
 
+    Application.put_env(:new_you, :communications_keyring, %{
+      active: "test-v1",
+      keys: %{"test-v1" => :crypto.strong_rand_bytes(32)}
+    })
+
     Application.put_env(:new_you, :identity_clock, fn -> DateTime.utc_now() end)
 
     on_exit(fn ->
       restore_app_env(:identity_registration_binding_keys, previous_keys)
       restore_app_env(:identity_token_signing_secret, previous_token_signing_secret)
+      restore_app_env(:communications_keyring, previous_communications_keyring)
       restore_app_env(:identity_clock, previous_clock)
       restore_app_env(:identity_pmr_generator, previous_pmr_generator)
     end)
@@ -669,7 +676,8 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
              Enum.sort([
                NewYou.Identity.Account,
                NewYou.Identity.Token,
-               NewYou.Identity.RegistrationOperation
+               NewYou.Identity.RegistrationOperation,
+               NewYou.Identity.ResendOperation
              ])
 
     assert {:ok, %Postgrex.Result{rows: [["pmr"]], num_rows: 1}} =
