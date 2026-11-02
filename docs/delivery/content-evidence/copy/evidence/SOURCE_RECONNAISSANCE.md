@@ -49,8 +49,8 @@
 
 - Legal UX pack Markdown SHA-256: `3db06cc3a9faa23f90cf8439afba6afcaaf5c75c65bb0590f96cd4d85d755dfb`.
 - Legal UX manifest SHA-256: `5bb3115c40793ab756dd28e10993eae539759afc3d3799479c28815aea56422a`.
-- Source Terms candidate: `NEWYOU_PLATFORM_DIGITAL_PRODUCTS_SUBSCRIPTION_TERMS_COUNSEL_REVIEW_CANDIDATE_v0.3.3.md` / `826546419cd055bcd4710bb9f4ebd5d738d89a50874bdcc013759335d69180f6`.
-- Source Privacy candidate: `NEWYOU_PRIVACY_NOTICE_COUNSEL_REVIEW_CANDIDATE_v0.3.2.md` / `29e834dcbd3b2208902698ab842e965c595e3e6063e26526d845d0af8d493baa`.
+- Source-pack Terms candidate (body excluded from this workspace): `NEWYOU_PLATFORM_DIGITAL_PRODUCTS_SUBSCRIPTION_TERMS_COUNSEL_REVIEW_CANDIDATE_v0.3.3.md` / `826546419cd055bcd4710bb9f4ebd5d738d89a50874bdcc013759335d69180f6`.
+- Source-pack Privacy candidate (body excluded from this workspace): `NEWYOU_PRIVACY_NOTICE_COUNSEL_REVIEW_CANDIDATE_v0.3.2.md` / `29e834dcbd3b2208902698ab842e965c595e3e6063e26526d845d0af8d493baa`.
 - Both are unchanged pre-counsel inputs with stale Product v1.9.0 language assumptions. Current Product v1.13.0 and DEC-316 override the bilingual governing-document claims and require English-only governing Terms and Privacy bodies.
 - Live `main` rechecked at `ec9deb9bc3f5e78b5041213c32698b226c6a6ceb`.
 - Plane WELL-45 rechecked in `Planning`; its bounded-development browser-copy evidence and release-only approvals remain separate.

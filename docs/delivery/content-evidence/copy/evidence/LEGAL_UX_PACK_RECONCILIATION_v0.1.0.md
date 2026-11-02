@@ -11,7 +11,7 @@
 - Terms source SHA-256: `826546419cd055bcd4710bb9f4ebd5d738d89a50874bdcc013759335d69180f6` (`NEWYOU_PLATFORM_DIGITAL_PRODUCTS_SUBSCRIPTION_TERMS_COUNSEL_REVIEW_CANDIDATE_v0.3.3.md`)
 - Privacy source SHA-256: `29e834dcbd3b2208902698ab842e965c595e3e6063e26526d845d0af8d493baa` (`NEWYOU_PRIVACY_NOTICE_COUNSEL_REVIEW_CANDIDATE_v0.3.2.md`)
 
-The repository-local Terms and Privacy source files match these recorded hashes and remain unchanged. The source pack and its manifest are not present in this repository, so their recorded input hashes are retained as provenance without a local re-hash. These source candidates are pre-counsel inputs, not current authority.
+The repository-local Terms and Privacy source files matched these recorded hashes before they were excluded from this workspace. Their exact pre-counsel bytes are not rewritten or included in the current tree. The source pack and manifest are not present in this repository, so the recorded hashes remain provenance without a local re-hash. These source candidates are pre-counsel inputs, not current authority.
 
 ## Disposition of all source copy items
 
@@ -44,7 +44,7 @@ Terms v0.3.3 and Privacy v0.3.2 are pre-counsel source inputs that preserve stal
 
 ## Deliberate non-replacements
 
-- The user-staged Terms v0.3.3 and Privacy v0.3.2 counsel-review documents remain separate and are not edited.
+- The Terms v0.3.3 and Privacy v0.3.2 source bodies are omitted from this workspace. Their names and recorded hashes remain as provenance; their source bytes are not edited.
 - The exact English-only development baseline legal artifacts remain separately referenced.
 - Existing owner-reviewed P8-05 verification copy remains the current candidate because it is clearer while retaining the mandatory anti-enumeration boundary.
 - The existing P8-05 launch safety candidate is not replaced by the generic LUX-DIS-001 disclaimer; they have different purposes and placement.

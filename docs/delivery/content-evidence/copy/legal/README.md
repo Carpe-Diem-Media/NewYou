@@ -11,7 +11,7 @@ This split workspace derives from `NEWYOU_LEGAL_UX_COPY_PACK_WORKING_v0.1.0.md` 
 - Terms: `NEWYOU_PLATFORM_DIGITAL_PRODUCTS_SUBSCRIPTION_TERMS_COUNSEL_REVIEW_CANDIDATE_v0.3.3.md` — SHA-256 `826546419cd055bcd4710bb9f4ebd5d738d89a50874bdcc013759335d69180f6` — **PRE-COUNSEL / NOT FOR PUBLICATION**.
 - Privacy: `NEWYOU_PRIVACY_NOTICE_COUNSEL_REVIEW_CANDIDATE_v0.3.2.md` — SHA-256 `29e834dcbd3b2208902698ab842e965c595e3e6063e26526d845d0af8d493baa` — **PRE-COUNSEL / NOT FOR PUBLICATION**.
 
-Those two pre-counsel documents are intentionally **not copied, rewritten or superseded by this integration**. They remain separate source artifacts in `copy/legal/terms/` and `copy/legal/privacy/`. They contain stale assumptions from Product v1.9.0, including that governing Terms and Privacy documents must be bilingual. Current Product v1.13.0 and DEC-316 require English-only governing documents and override those conflicting assumptions. Reconcile the candidates against current authority before using them in any legal or counsel successor.
+Those two pre-counsel source bodies are intentionally excluded from this workspace. Their names and hashes preserve provenance to the source pack; they do not mean the bodies are present here. The candidates contain stale assumptions from Product v1.9.0, including that governing Terms and Privacy documents must be bilingual. Current Product v1.13.0 and DEC-316 require English-only governing documents and override those conflicting assumptions. Reconcile the source inputs against current authority before using them in any legal or counsel successor.
 
 ## Authority boundary
 

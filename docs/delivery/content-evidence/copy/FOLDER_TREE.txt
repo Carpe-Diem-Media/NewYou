@@ -1,0 +1,188 @@
+copy/
+├── archive/
+│   ├── COPY_REGISTRY_v0.2.0.json
+│   └── README.md
+├── commerce/
+│   ├── checkout/
+│   │   ├── EARLY_PERFORMANCE_INSTRUCTION_SHELL_BLOCKED_v0.1.0.md
+│   │   └── README.md
+│   ├── entitlement/
+│   │   └── README.md
+│   ├── payment/
+│   │   └── README.md
+│   ├── products/
+│   │   └── README.md
+│   ├── refunds/
+│   │   └── README.md
+│   └── subscription/
+│       └── README.md
+├── communications/
+│   ├── email/
+│   │   └── VERIFICATION_EMAIL_EXISTING_EVIDENCE.md
+│   ├── in-app/
+│   │   └── README.md
+│   ├── marketing/
+│   │   ├── MARKETING_CHANNEL_PREFERENCES_WORKING_v0.1.0.md
+│   │   └── README.md
+│   ├── push/
+│   │   └── README.md
+│   └── sms/
+│       └── README.md
+├── content/
+│   ├── content-library/
+│   │   └── README.md
+│   ├── editorial/
+│   │   └── README.md
+│   ├── nutrition/
+│   │   └── README.md
+│   ├── recipes/
+│   │   └── README.md
+│   ├── recommendations/
+│   │   └── README.md
+│   └── taxonomy/
+│       └── README.md
+├── evidence/
+│   ├── LEGAL_UX_PACK_RECONCILIATION_v0.1.0.md
+│   ├── LEGAL_UX_SOURCE_HASHES_v0.1.0.md
+│   └── SOURCE_RECONNAISSANCE.md
+├── journeys/
+│   ├── assessments/
+│   │   └── README.md
+│   ├── commerce/
+│   │   └── README.md
+│   ├── habits/
+│   │   └── README.md
+│   ├── health-intake/
+│   │   └── README.md
+│   ├── journal/
+│   │   └── README.md
+│   ├── login/
+│   │   └── README.md
+│   ├── onboarding/
+│   │   └── README.md
+│   ├── participant-home/
+│   │   └── README.md
+│   ├── plans/
+│   │   └── README.md
+│   ├── profile/
+│   │   └── README.md
+│   ├── programmes/
+│   │   └── README.md
+│   ├── progress/
+│   │   └── README.md
+│   ├── public/
+│   │   └── README.md
+│   ├── recovery/
+│   │   └── README.md
+│   ├── registration/
+│   │   └── P8_05_REGISTRATION_COPY.md
+│   ├── settings/
+│   │   └── README.md
+│   ├── support/
+│   │   └── README.md
+│   └── verification/
+│       └── P8_05_VERIFICATION_PENDING_COPY.md
+├── legal/
+│   ├── consent/
+│   │   ├── HEALTH_SPECIAL_PI_CONSENT_SHELL_BLOCKED_v0.1.0.md
+│   │   ├── MARKETING_PERMISSION_WORKING_v0.1.0.md
+│   │   ├── PRACTITIONER_SHARING_PERMISSION_FUTURE_v0.1.0.md
+│   │   ├── README.md
+│   │   └── REGISTRATION_LEGAL_INTERACTIONS_WORKING_v0.1.0.md
+│   ├── cookies/
+│   │   ├── COOKIE_BANNER_WORKING_v0.1.0.md
+│   │   ├── COOKIE_NOTICE_SHELL_WORKING_v0.1.0.md
+│   │   ├── COOKIE_PREFERENCE_CENTRE_WORKING_v0.1.0.md
+│   │   └── README.md
+│   ├── disclaimers/
+│   │   ├── FAITH_PROFESSIONAL_CARE_BOUNDARY_WORKING_v0.1.0.md
+│   │   ├── GENERAL_WELLNESS_DISCLAIMER_WORKING_v0.1.0.md
+│   │   ├── NO_GUARANTEED_OUTCOME_WORKING_v0.1.0.md
+│   │   ├── README.md
+│   │   └── TEMPERAMENT_DISCLAIMER_WORKING_v0.1.0.md
+│   ├── privacy/
+│   │   ├── HEALTH_DATA_JIT_DISCLOSURE_TEMPLATE_WORKING_v0.1.0.md
+│   │   ├── README.md
+│   │   └── REGISTRATION_PRIVACY_PRESENTATION_WORKING_v0.1.0.md
+│   ├── terms/
+│   │   └── README.md
+│   ├── LEGAL_UX_COPY_INDEX_WORKING_v0.1.0.md
+│   ├── LEGAL_UX_LIFECYCLE_CONTRACTS_WORKING_v0.1.0.md
+│   ├── LEGAL_UX_RELEASE_GATES_WORKING_v0.1.0.md
+│   └── README.md
+├── operator/
+│   ├── administration/
+│   │   └── README.md
+│   ├── approvals/
+│   │   └── README.md
+│   ├── audit/
+│   │   └── README.md
+│   ├── command-centre/
+│   │   └── README.md
+│   ├── content/
+│   │   └── README.md
+│   ├── support/
+│   │   └── README.md
+│   └── work/
+│       └── README.md
+├── pages/
+│   ├── operator/
+│   │   └── README.md
+│   ├── participant/
+│   │   └── README.md
+│   └── public/
+│       ├── login.yaml
+│       ├── public-shell.yaml
+│       ├── registration.yaml
+│       └── verification-pending.yaml
+├── safety/
+│   ├── eligibility/
+│   │   └── README.md
+│   ├── general/
+│   │   └── P8_05_LAUNCH_SAFETY_CANDIDATE.md
+│   ├── health/
+│   │   └── README.md
+│   ├── urgent-support/
+│   │   └── README.md
+│   └── warnings/
+│       └── README.md
+├── seo/
+│   ├── metadata/
+│   │   └── README.md
+│   ├── social/
+│   │   └── README.md
+│   └── structured-data/
+│       └── README.md
+├── shared-ui/
+│   ├── accessibility/
+│   │   └── COPY.md
+│   ├── actions/
+│   │   └── COPY.md
+│   ├── confirmations/
+│   │   └── COPY.md
+│   ├── empty-states/
+│   │   └── COPY.md
+│   ├── errors/
+│   │   └── COPY.md
+│   ├── forms/
+│   │   └── COPY.md
+│   ├── language/
+│   │   └── COPY.md
+│   ├── navigation/
+│   │   └── COPY.md
+│   ├── states/
+│   │   └── COPY.md
+│   ├── validation/
+│   │   └── COPY.md
+│   └── SHARED_UI_BASELINE.md
+├── templates/
+│   └── COPY_ITEM_TEMPLATE.md
+├── COPY_INVENTORY.md
+├── COPY_REGISTRY.json
+├── FOLDER_TREE.txt
+├── GLOSSARY.md
+├── GOVERNANCE.md
+├── README.md
+├── REVIEW_REPORT.md
+├── STATUS.md
+└── STYLE_GUIDE.md
