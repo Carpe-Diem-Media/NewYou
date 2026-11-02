@@ -109,6 +109,17 @@ Before "/grilling", "to-spec", "to-tickets" or material implementation, inspect 
 4. live Plane work, blockers, dependencies and acceptance criteria;
 5. actual code, tests, migrations and dependency versions.
 
+Participant-facing copy and localisation
+
+When a task creates, changes or renders participant-visible copy, inspect `docs/delivery/content-evidence/copy/` during reconnaissance, including `COPY_REGISTRY.json` and the relevant journey/page/glossary/style files.
+
+- Reuse existing semantic copy keys where the meaning is the same; do not create independent duplicate strings.
+- `candidate` copy is not approved copy. If acceptance criteria require exact approved content, use only the eligible approved version or treat its absence as an execution blocker.
+- Do not invent or casually rewrite Class A governed copy. Preserve exact approved bytes where required.
+- Respect EN/AF requirements and any governed no-fallback rule.
+- Ordinary low-risk copy remains a JIT implementation choice where authority does not require exact approved wording.
+- The copy workspace defines semantic content identity; it does not by itself mandate a CMS, database Resource, translation mechanism or other runtime architecture.
+
 Follow evidence only as far as the task requires. Do not load the entire historical archive by default.
 
 Do not re-grill, re-spec or re-ticket settled decisions without new evidence, changed scope or a proven contradiction.
