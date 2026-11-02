@@ -226,6 +226,31 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert length(Repo.all(from job in Oban.Job)) == 1
   end
 
+  test "resend by canonical email stays inside Identity and returns the neutral outcome" do
+    registration = valid_request()
+    assert {:ok, %{account_id: account_id}} = Identity.register(registration)
+
+    resend = %{operation_id: Ecto.UUID.generate(), email: registration.email}
+    send_resend = &Identity.resend_verification_by_email/1
+
+    assert {:ok, :verification_pending} = send_resend.(resend)
+    assert {:ok, :verification_pending} = send_resend.(resend)
+    assert resource_count(Identity.ResendOperation, Identity) == 1
+    assert resource_count(MessageIntent, Communications) == 2
+
+    [resend_operation] = records(Identity.ResendOperation, Identity)
+    assert resend_operation.account_id == account_id
+
+    missing = %{
+      operation_id: Ecto.UUID.generate(),
+      email: "missing-#{System.unique_integer([:positive])}@example.test"
+    }
+
+    assert {:ok, :verification_pending} = send_resend.(missing)
+    assert resource_count(Identity.ResendOperation, Identity) == 1
+    assert resource_count(MessageIntent, Communications) == 2
+  end
+
   test "replaying resend A after resend B leaves B as the current challenge" do
     assert {:ok, %{account_id: account_id}} = Identity.register(valid_request())
     resend_a = %{operation_id: Ecto.UUID.generate(), account_id: account_id}

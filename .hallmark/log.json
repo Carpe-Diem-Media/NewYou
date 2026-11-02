@@ -1,0 +1,51 @@
+[
+  {
+    "shape": "app screen",
+    "theme": "custom",
+    "axes": "light/roman-serif/chromatic-green",
+    "hero": "approved launch and safety copy precedes registration",
+    "nav": "language switch",
+    "footer": "none",
+    "imagery": "none",
+    "photos": [],
+    "entry": "/register",
+    "fingerprint": "Left-margin|Asymmetric spans|Hairline|Solid|None|None",
+    "sections": [
+      "launch",
+      "safety",
+      "registration",
+      "verification pending",
+      "resend"
+    ],
+    "signature": "the exact safety boundary comes before the account action",
+    "waived": [],
+    "prompt": "Warm, grounded, calm, editorial and practical bilingual registration and verification pending for adult women in South Africa.",
+    "date": "2026-11-02",
+    "mode": "build",
+    "verification": {
+      "date": "2026-11-02",
+      "sloplint": "clean: 0 FAIL, 0 REFLEX, 0 WARN across 1 NewYou token stylesheet and 5 rendered URLs",
+      "rendered": [
+        "/register?locale=en",
+        "/register?locale=af",
+        "/register language chooser",
+        "sanitized EN pending/resend snapshot",
+        "sanitized AF pending/resend snapshot"
+      ],
+      "hallmark_capture_viewports": [
+        "375px full page",
+        "1280x800",
+        "1440x900",
+        "1440px full page",
+        "1920x1080"
+      ],
+      "manual_review_viewports": [
+        "320px",
+        "414px",
+        "768px",
+        "1024px"
+      ],
+      "notes": "Pending snapshots used reserved example.test data and omitted CSRF, email, and operation ID fields. No screenshots or snapshots are committed."
+    }
+  }
+]

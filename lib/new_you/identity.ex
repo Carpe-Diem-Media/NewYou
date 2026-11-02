@@ -99,6 +99,33 @@ defmodule NewYou.Identity do
 
   def resend_verification(_), do: {:error, :resend_unavailable}
 
+  @doc """
+  Accepts a resend request addressed by canonical email without exposing an Account ID
+  to the browser. An unknown or ineligible address receives the same neutral pending
+  outcome. Accepted requests use the same Identity-owned operation binding as
+  `resend_verification/1`.
+  """
+  @spec resend_verification_by_email(map()) ::
+          {:ok, :verification_pending} | {:error, :resend_unavailable}
+  def resend_verification_by_email(request) when is_map(request) do
+    with {:ok, operation_id} <- resend_operation_id(Map.get(request, :operation_id)),
+         {:ok, email} <- Email.canonicalize(Map.get(request, :email)),
+         {:ok, account_id} <- account_id_for_email(email) do
+      case account_id do
+        nil -> {:ok, :verification_pending}
+        account_id -> resend_verification(%{operation_id: operation_id, account_id: account_id})
+      end
+    else
+      _ -> {:error, :resend_unavailable}
+    end
+  rescue
+    _ -> {:error, :resend_unavailable}
+  catch
+    _, _ -> {:error, :resend_unavailable}
+  end
+
+  def resend_verification_by_email(_), do: {:error, :resend_unavailable}
+
   def registration_now, do: now()
 
   @doc false
@@ -371,6 +398,16 @@ defmodule NewYou.Identity do
 
     case Ash.read(query, domain: __MODULE__, authorize?: false) do
       {:ok, [operation]} -> {:ok, operation}
+      {:ok, []} -> {:ok, nil}
+      _ -> {:error, :resend_unavailable}
+    end
+  end
+
+  defp account_id_for_email(email) do
+    query = Ash.Query.filter(Account, email == ^email)
+
+    case Ash.read(query, domain: __MODULE__, authorize?: false) do
+      {:ok, [%Account{id: account_id}]} -> {:ok, account_id}
       {:ok, []} -> {:ok, nil}
       _ -> {:error, :resend_unavailable}
     end

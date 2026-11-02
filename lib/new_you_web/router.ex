@@ -24,6 +24,10 @@ defmodule NewYouWeb.Router do
 
     get "/", PageController, :home
     get "/register", RegistrationController, :new
+    post "/register", RegistrationController, :create, log: false
+    post "/verification/resend", RegistrationController, :resend, log: false
+    get "/legal/terms", RegistrationController, :terms
+    get "/legal/privacy", RegistrationController, :privacy
   end
 
   # Other scopes may use custom stacks.
