@@ -23,6 +23,6 @@ Review shell only if authorised privacy/legal counsel determines consent is the 
 ## Guards
 
 - DO NOT USE until counsel approves the applicable special-PI authorisation.
-- Terms acceptance, Privacy acknowledgement and Account creation are not this consent.
+- Terms acceptance, Privacy acceptance and Account creation are not this consent.
 - Do not infer religious/philosophical consent from Christian-content use.
 - Exact purpose and wording/version must be preserved if consent is selected.

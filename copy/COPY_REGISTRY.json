@@ -5,7 +5,7 @@
   "status": "REVIEW_WORKSPACE_NON_AUTHORITATIVE",
   "canonical_repo": "https://github.com/JCSchoeman96/NewYou",
   "verified_main_sha": "ec9deb9bc3f5e78b5041213c32698b226c6a6ceb",
-  "authority_note": "GitHub durable authority and Plane live execution state remain canonical. This workspace is review material. Legal UX working candidates are derived from the uploaded v0.1.0 legal UX pack and the user-staged Terms v0.3.3 / Privacy v0.3.2 counsel-review candidates; none is production legal approval.",
+  "authority_note": "GitHub durable authority and Plane live execution state remain canonical. This workspace is review material. Current Product v1.13.0 and DEC-316 require English-only governing Terms and Privacy documents, linked by both Afrikaans and English experiences. Pre-counsel Terms v0.3.3 and Privacy v0.3.2 inputs remain unchanged but contain stale assumptions and do not override current Product Law. No workspace item is production legal approval.",
   "key_convention": {
     "pattern": "<area>.<journey_or_surface>.<concept>[.<variant>]",
     "rules": [
@@ -5655,28 +5655,74 @@
       "class": "A",
       "readiness": "NOW",
       "owner": "content_media",
-      "purpose": "Withdrawn separate Privacy checkbox candidate.",
+      "purpose": "Required separate affirmative Privacy acceptance control for P8-05 registration; not purpose-specific consent.",
       "content_risk": "legal_or_consent",
-      "version": "1",
-      "status": "superseded",
+      "version": "2",
+      "status": "candidate",
       "development_eligible": false,
       "production_eligible": false,
-      "owner_review_required": false,
+      "owner_review_required": true,
       "no_silent_fallback": true,
-      "approval_needs": [],
-      "notes": "SUPERSEDED by LUX-REG-003 treatment. Privacy Notice presentation/acknowledgement is not blanket consent and is distinct from Terms acceptance.",
+      "approval_needs": [
+        "legal_or_privacy_approver",
+        "content_approver",
+        "afrikaans_language_reviewer",
+        "english_language_reviewer"
+      ],
+      "notes": "v2 candidate restores the Privacy acceptance required by DEC-027 and P8-05. The participant accepts the exact applicable English Privacy version for registration. This is not consent to every processing purpose and is not production legal approval.",
       "source": null,
-      "page_refs": [],
+      "page_refs": [
+        "registration"
+      ],
       "do_not_edit_here": false,
       "en": {
-        "text": "I have read and accept the Privacy Notice.",
-        "status": "superseded",
-        "sha256": "ebad87383956260c32572de340a0d527463e5a6bb46b16697000e60b0c1b8558"
+        "text": "I accept the {{platform_name}} Privacy Notice for registration. This is not consent to every processing purpose.",
+        "status": "candidate",
+        "sha256": "e951895cc44e88776b293afb16a53b66527d59c6ed9c7d44d81f3914cd00a199"
       },
       "af": {
-        "text": "Ek het die Privaatheidsbeleid gelees en aanvaar dit.",
-        "status": "superseded",
-        "sha256": "e545ad79c70cbf05262e6c0c5bf0bee6ae81a1c7e3b1cc221e657b497b57d8e0"
+        "text": "Ek aanvaar {{platform_name}} se Privaatheidsbeleid vir registrasie. Dit is nie toestemming vir elke verwerkingsdoel nie.",
+        "status": "candidate",
+        "sha256": "252f3689046bd897970a8d86cd38d41358fe66bef923531efce85687817631a5"
+      }
+    },
+    {
+      "key": "identity.registration.privacy_acceptance.required",
+      "kind": "copy_item",
+      "area": "identity",
+      "surface": "registration",
+      "class": "A",
+      "readiness": "NOW",
+      "owner": "content_media",
+      "purpose": "Validation for missing required Privacy acceptance during P8-05 registration.",
+      "content_risk": "legal_or_consent",
+      "version": "1",
+      "status": "candidate",
+      "development_eligible": false,
+      "production_eligible": false,
+      "owner_review_required": true,
+      "no_silent_fallback": true,
+      "approval_needs": [
+        "legal_or_privacy_approver",
+        "content_approver",
+        "afrikaans_language_reviewer",
+        "english_language_reviewer"
+      ],
+      "notes": "Required Privacy acceptance validation. The presentation/disclosure key does not satisfy this gate. This acceptance is not consent to every processing purpose.",
+      "source": null,
+      "page_refs": [
+        "registration"
+      ],
+      "do_not_edit_here": false,
+      "en": {
+        "text": "Accept the Privacy Notice for registration to continue. This is not consent to every processing purpose.",
+        "status": "candidate",
+        "sha256": "51c1ee3d902521945435de02d0d76f32b1e514360478e5e62b5883215b36918d"
+      },
+      "af": {
+        "text": "Aanvaar die Privaatheidsbeleid vir registrasie om voort te gaan. Dit is nie toestemming vir elke verwerkingsdoel nie.",
+        "status": "candidate",
+        "sha256": "ee33350172543e89c3398600f95cbeb394d1e1c6b17a993d0f529d68ec5fd0fd"
       }
     },
     {
@@ -6081,7 +6127,7 @@
         "afrikaans_language_reviewer",
         "english_language_reviewer"
       ],
-      "notes": "SUPERSEDED 2026-11-02 by legal UX pack LUX-REG-002/LUX-REG-003. Terms acceptance and Privacy Notice presentation/acknowledgement are distinct legal interactions; do not bundle them into one checkbox.",
+      "notes": "SUPERSEDED historical v0.2.0 combined Terms + Privacy control. Current Product Law still requires separate acceptance of both exact document versions.",
       "source": null,
       "page_refs": [],
       "do_not_edit_here": false,
@@ -6577,7 +6623,7 @@
         "afrikaans_language_reviewer",
         "english_language_reviewer"
       ],
-      "notes": "SUPERSEDED with the combined legal checkbox. Separate Terms and Privacy acknowledgement validation now compose the registration page.",
+      "notes": "SUPERSEDED historical combined validation. The current registration page uses separate Terms and Privacy acceptance validations.",
       "source": null,
       "page_refs": [],
       "do_not_edit_here": false,
@@ -6614,7 +6660,7 @@
         "afrikaans_language_reviewer",
         "english_language_reviewer"
       ],
-      "notes": "v2 candidate. Separate from Privacy presentation/acknowledgement.",
+      "notes": "v2 candidate. Separate from the required Privacy acceptance control.",
       "source": null,
       "page_refs": [
         "registration"
@@ -6648,7 +6694,7 @@
       "owner_review_required": false,
       "no_silent_fallback": true,
       "approval_needs": [],
-      "notes": "SUPERSEDED by identity.registration.privacy_acknowledgement.required. Do not describe Privacy Notice presentation as blanket consent.",
+      "notes": "SUPERSEDED. The active required Privacy acceptance validation is identity.registration.privacy_acceptance.required.",
       "source": null,
       "page_refs": [],
       "do_not_edit_here": false,
@@ -10006,7 +10052,7 @@
       "class": "A",
       "readiness": "NOW",
       "owner": "content_media",
-      "purpose": "Bilingual registration Privacy Notice presentation text, distinct from consent.",
+      "purpose": "Bilingual Privacy Notice presentation/disclosure text, separate from the required Privacy acceptance control.",
       "content_risk": "legal_or_consent",
       "version": "1",
       "status": "candidate",
@@ -10020,7 +10066,7 @@
         "afrikaans_language_reviewer",
         "english_language_reviewer"
       ],
-      "notes": "Adapted from LUX-REG-003. English legal artifact remains titled Privacy Notice; Afrikaans participant-facing terminology uses Privaatheidsbeleid per owner decision. Privacy presentation is not blanket consent.",
+      "notes": "Current Product Law requires a separate affirmative Privacy acceptance event. This key is disclosure copy only and does not satisfy that requirement. The governing English legal artifact remains titled Privacy Notice; Afrikaans UI uses Privaatheidsbeleid. The disclosure does not grant blanket or purpose-specific consent.",
       "source": "NEWYOU_LEGAL_UX_COPY_PACK_WORKING_v0.1.0:LUX-REG-003",
       "page_refs": [
         "registration"
@@ -10045,34 +10091,27 @@
       "class": "A",
       "readiness": "NOW",
       "owner": "content_media",
-      "purpose": "Separate affirmative acknowledgement of Privacy Notice availability for the bounded registration candidate.",
+      "purpose": "Superseded historical Privacy Notice availability acknowledgement; not the required Privacy acceptance event.",
       "content_risk": "legal_or_consent",
       "version": "1",
-      "status": "candidate",
+      "status": "superseded",
       "development_eligible": false,
       "production_eligible": false,
-      "owner_review_required": true,
+      "owner_review_required": false,
       "no_silent_fallback": true,
-      "approval_needs": [
-        "legal_or_privacy_approver",
-        "content_approver",
-        "afrikaans_language_reviewer",
-        "english_language_reviewer"
-      ],
-      "notes": "Adapted from LUX-REG-003. Acknowledgement is evidence of presentation/transparency, not blanket consent. Production treatment remains counsel/privacy gated.",
+      "approval_needs": [],
+      "notes": "SUPERSEDED as a current registration interaction. DEC-027 and P8-05 require Privacy acceptance; presentation acknowledgement alone does not satisfy that requirement. This historical wording is not used by the registration manifest.",
       "source": "NEWYOU_LEGAL_UX_COPY_PACK_WORKING_v0.1.0:LUX-REG-003",
-      "page_refs": [
-        "registration"
-      ],
+      "page_refs": [],
       "do_not_edit_here": false,
       "en": {
         "text": "I acknowledge that the {{platform_name}} Privacy Notice has been made available to me.",
-        "status": "candidate",
+        "status": "superseded",
         "sha256": "9e13498719c0ec6f48dd580e3e0f6abefe8a315c8fb7e9f128d3786be1c62dbe"
       },
       "af": {
         "text": "Ek erken dat {{platform_name}} se Privaatheidsbeleid aan my beskikbaar gestel is.",
-        "status": "candidate",
+        "status": "superseded",
         "sha256": "b8b87b01931f3cb319145e34b42b4f2c66e62ca9e343c3a3b9c66ee64e58a74c"
       }
     },
@@ -10084,34 +10123,27 @@
       "class": "A",
       "readiness": "NOW",
       "owner": "content_media",
-      "purpose": "Validation for the separate Privacy Notice acknowledgement gate.",
+      "purpose": "Superseded historical validation for Privacy Notice availability acknowledgement; not the current registration gate.",
       "content_risk": "legal_or_consent",
       "version": "1",
-      "status": "candidate",
+      "status": "superseded",
       "development_eligible": false,
       "production_eligible": false,
-      "owner_review_required": true,
+      "owner_review_required": false,
       "no_silent_fallback": true,
-      "approval_needs": [
-        "legal_or_privacy_approver",
-        "content_approver",
-        "afrikaans_language_reviewer",
-        "english_language_reviewer"
-      ],
-      "notes": "Candidate validation. This does not convert the Privacy Notice into purpose-specific consent.",
+      "approval_needs": [],
+      "notes": "SUPERSEDED as a current registration interaction. DEC-027 and P8-05 require Privacy acceptance; presentation acknowledgement alone does not satisfy that requirement. This historical wording is not used by the registration manifest.",
       "source": "NEWYOU_LEGAL_UX_COPY_PACK_WORKING_v0.1.0:LUX-REG-003",
-      "page_refs": [
-        "registration"
-      ],
+      "page_refs": [],
       "do_not_edit_here": false,
       "en": {
         "text": "Acknowledge the Privacy Notice to continue.",
-        "status": "candidate",
+        "status": "superseded",
         "sha256": "0f0c074751b7756a77c767892c72d76ab9be7558dc4d59fab3a6462e78be54a8"
       },
       "af": {
         "text": "Bevestig dat die Privaatheidsbeleid aan jou beskikbaar gestel is om voort te gaan.",
-        "status": "candidate",
+        "status": "superseded",
         "sha256": "b2b8cd921de400663370a87d7d0f815e4494381c0e17e6c2f09009edc3099660"
       }
     },
@@ -11162,6 +11194,9 @@
       "status": "PRE_COUNSEL_NOT_FOR_PUBLICATION"
     },
     "disposition": "INTEGRATED_AS_WORKING_CANDIDATES_NOT_PRODUCTION_APPROVAL",
-    "combined_registration_legal_checkbox": "SUPERSEDED_BY_SEPARATE_TERMS_AND_PRIVACY_INTERACTIONS"
+    "combined_registration_legal_checkbox": "SUPERSEDED_BY_SEPARATE_TERMS_ACCEPTANCE_AND_PRIVACY_ACCEPTANCE",
+    "source_candidates_authority": "PRE_COUNSEL_INPUTS_WITH_STALE_PRODUCT_V1_9_0_ASSUMPTIONS; CURRENT_PRODUCT_V1_13_0_AND_DEC_316_OVERRIDE_CONFLICTS; RECONCILE_BEFORE_ANY_LEGAL_OR_COUNSEL_SUCCESSOR",
+    "governing_document_language": "ENGLISH_ONLY; BOTH_AFRIKAANS_AND_ENGLISH_EXPERIENCES_LINK_TO_THE_SAME_ENGLISH_DOCUMENTS",
+    "registration_privacy_semantics": "SEPARATE_PRIVACY_ACCEPTANCE_REQUIRED; PRESENTATION_DOES_NOT_REPLACE_ACCEPTANCE; PURPOSE_SPECIFIC_CONSENT_REMAINS_SEPARATE"
   }
 }

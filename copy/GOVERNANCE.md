@@ -125,6 +125,8 @@ Implementation agents may choose normal Class C/JIT wording only within the curr
 
 ## Legal UX event separation
 
-The split legal UX candidates add no new Product/Domain authority. They enforce a copy-governance rule for composition: distinct legal events remain distinct. Page manifests must not collapse Terms acceptance, Privacy presentation/acknowledgement, age, marketing permission, cookie choices, special-PI consent, practitioner sharing or early-performance instructions into a generic `accepted_legal` interaction.
+The split legal UX candidates add no Product or Domain authority. Current Product Law requires separate Terms acceptance and Privacy acceptance at registration. A Privacy Notice presentation is a separate disclosure and does not replace Privacy acceptance. Page manifests must keep these events separate from age confirmation, purpose-specific consent, marketing permission, cookie choices, special-PI authorisation, practitioner sharing and early-performance instructions. Do not combine them into a generic `accepted_legal` interaction. Privacy acceptance is not consent to every processing purpose.
+
+The governing Terms and Privacy bodies are English-only under current Product Law. Afrikaans and English product experiences link to the same English documents, while participant-facing UI remains bilingual. The pre-counsel source candidates are historical inputs; current Product Law overrides their conflicting assumptions.
 
 Lifecycle semantics for these working candidates are documented in `legal/LEGAL_UX_LIFECYCLE_CONTRACTS_WORKING_v0.1.0.md`; production/release gates are in `legal/LEGAL_UX_RELEASE_GATES_WORKING_v0.1.0.md`.

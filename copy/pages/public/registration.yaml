@@ -23,7 +23,7 @@ copy:
   - identity.registration.terms_link
   - identity.registration.privacy_presentation
   - identity.registration.privacy_link
-  - identity.registration.privacy_acknowledgement
+  - identity.registration.privacy_acceptance
   - identity.registration.submit
   - identity.registration.processing
   - identity.registration.first_name.required
@@ -33,11 +33,11 @@ copy:
   - identity.registration.language.required
   - identity.registration.age.required
   - identity.registration.terms.required
-  - identity.registration.privacy_acknowledgement.required
+  - identity.registration.privacy_acceptance.required
   - identity.registration.failure
   - identity.registration.accepted_neutral
   - legal.terms.development_baseline
   - legal.privacy.development_baseline
 notes: |
   P8-05 composition. Phone/city/preferred-name are intentionally absent. Governing legal document bodies are external English-only artifacts.
-  Terms acceptance and Privacy Notice presentation/acknowledgement are separate participant interactions. Privacy acknowledgement is not blanket consent.
+  Age confirmation, Terms acceptance, Privacy Notice presentation and Privacy acceptance are separate registration interactions. Privacy acceptance is required by current Product Law and is not consent to every processing purpose. Purpose-specific consent remains separate.

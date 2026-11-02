@@ -18,7 +18,7 @@
 - Registration heading accepted; brand token is dynamic.
 - Registration introduction expanded to explain free registration may unlock additional/personalised experiences without promising a specific future feature.
 - Age confirmation and age validation accepted; no Afrikaans comma is required in `Bevestig dat jy 18 jaar of ouer is om ’n rekening te skep.`
-- Terms and Privacy use **one participant-facing checkbox**, while implementation must still record exact Terms and exact Privacy version acceptance independently.
+- The v0.2.0 owner decision used one participant-facing checkbox for Terms and Privacy. That historical decision is superseded and is not current guidance.
 - Afrikaans UI term is `Privaatheidsbeleid`. The governing English artifact remains the English `Privacy Notice`; the UI choice does not rename that legal artifact.
 
 ### Identity/security wording
@@ -91,11 +91,14 @@ These do not justify pretending the current candidate browser strings are approv
 
 The current blocker is narrower: exact immutable EN/AF browser-copy evidence for the P8-05 journey plus the required scoped content/language approvals. This workspace supplies reviewable candidate wording and stable identities; **it does not close WELL-45**.
 
-## v0.3.0 — Legal UX pack reconciliation
+## v0.3.0 legal UX candidate
 
-- **SUPERSEDED:** the v0.2.0 decision to use one combined participant-facing Terms + Privacy checkbox. The uploaded legal UX pack, derived from the current Terms v0.3.3 and Privacy v0.3.2 counsel-review candidates, requires distinct legal events.
-- **CURRENT CANDIDATE:** separate Terms acceptance plus Privacy Notice presentation/acknowledgement. The latter is not blanket consent.
+- The v0.2.0 combined participant-facing Terms + Privacy checkbox is superseded.
+- The current candidate uses age confirmation, separate Terms acceptance, Privacy Notice presentation, then separate affirmative Privacy acceptance for registration. Presentation alone does not satisfy the governed Privacy acceptance requirement.
+- Privacy acceptance records acceptance of the applicable exact Privacy version for registration. It is not blanket consent to every processing purpose. Purpose-specific consent remains separate and appears only where applicable.
+- Product v1.13.0, DEC-027 and DEC-316 govern. Governing Terms and Privacy documents are English-only; Afrikaans and English product experiences link to the same English documents, while participant interaction/preferred locale is recorded separately.
+- Terms v0.3.3 and Privacy v0.3.2 are unchanged pre-counsel source inputs. Their older Product v1.9.0 language assumptions, including a requirement for bilingual governing legal documents, are stale and subordinate to current Product Law. Reconcile them against current authority before any later legal or counsel successor can become production authority. The source pack does not amend Product semantics.
 - **RETAINED:** existing owner-reviewed verification-pending/resend copy; LUX-VER-001/002 did not replace it because the existing copy is clearer while remaining anti-enumeration safe.
 - **RETAINED:** existing P8-05 launch/safety wording; generic legal disclaimer candidates are contextual future/JIT copy, not replacements for the P8-05 launch safety candidate.
 - **ADDED:** split working legal UX candidates/templates for disclaimers, marketing, cookies, health JIT disclosure, special-PI review shell, practitioner sharing and early-performance instruction.
-- **UNCHANGED:** `NEWYOU_PLATFORM_DIGITAL_PRODUCTS_SUBSCRIPTION_TERMS_COUNSEL_REVIEW_CANDIDATE_v0.3.3.md` and `NEWYOU_PRIVACY_NOTICE_COUNSEL_REVIEW_CANDIDATE_v0.3.2.md` remain separate pre-counsel legal source documents; this workspace references but does not edit them.
+- **UNCHANGED:** `NEWYOU_PLATFORM_DIGITAL_PRODUCTS_SUBSCRIPTION_TERMS_COUNSEL_REVIEW_CANDIDATE_v0.3.3.md` and `NEWYOU_PRIVACY_NOTICE_COUNSEL_REVIEW_CANDIDATE_v0.3.2.md` retain their exact pre-counsel source bytes; this workspace references but does not edit them.

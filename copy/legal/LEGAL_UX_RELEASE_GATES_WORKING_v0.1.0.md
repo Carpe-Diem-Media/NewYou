@@ -13,14 +13,14 @@
 
 1. Final contracting supplier / Responsible Party / legal contact details.
 2. Exact approved Terms and Privacy versions plus legal/privacy approval evidence.
-3. Counsel/privacy decision per surface: Privacy Notice presentation alone versus affirmative acknowledgement.
+3. Legal/privacy review of the scoped Privacy acceptance wording and evidence. Current Product Law requires Privacy acceptance for registration; this is not purpose-specific consent.
 4. Verified production cookie/technology inventory: names, providers, purposes, recipients, lifetimes, international processing and category/choice treatment.
 5. Approved lawful basis and any required special-personal-information authorisation for each health/religious/professional-care processing purpose.
 6. Direct-marketing permission/customer-exception/channel model and current National Opt-Out Registry/consumer-law operations before marketing launch.
 7. Practitioner-sharing wording and professional-record/Responsible Party boundaries if practitioner functionality activates.
 8. SKU-by-SKU CPA/ECTA cooling-off and early-performance treatment.
 9. CPA section 49 prominence/assent treatment where applicable.
-10. Final bilingual language approval for every participant-facing legal/consent copy version.
+10. Final bilingual language approval for participant-facing legal/consent UI. Governing Terms and Privacy bodies remain English-only under current Product Law.
 
 ## Implementation boundary
 

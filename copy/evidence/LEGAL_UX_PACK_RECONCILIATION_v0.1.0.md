@@ -8,10 +8,10 @@
 
 - Source Markdown SHA-256: `3db06cc3a9faa23f90cf8439afba6afcaaf5c75c65bb0590f96cd4d85d755dfb`
 - Source manifest SHA-256: `5bb3115c40793ab756dd28e10993eae539759afc3d3799479c28815aea56422a`
-- Terms source expected SHA-256: `826546419cd055bcd4710bb9f4ebd5d738d89a50874bdcc013759335d69180f6` (`NEWYOU_PLATFORM_DIGITAL_PRODUCTS_SUBSCRIPTION_TERMS_COUNSEL_REVIEW_CANDIDATE_v0.3.3.md`)
-- Privacy source expected SHA-256: `29e834dcbd3b2208902698ab842e965c595e3e6063e26526d845d0af8d493baa` (`NEWYOU_PRIVACY_NOTICE_COUNSEL_REVIEW_CANDIDATE_v0.3.2.md`)
+- Terms source SHA-256: `826546419cd055bcd4710bb9f4ebd5d738d89a50874bdcc013759335d69180f6` (`NEWYOU_PLATFORM_DIGITAL_PRODUCTS_SUBSCRIPTION_TERMS_COUNSEL_REVIEW_CANDIDATE_v0.3.3.md`)
+- Privacy source SHA-256: `29e834dcbd3b2208902698ab842e965c595e3e6063e26526d845d0af8d493baa` (`NEWYOU_PRIVACY_NOTICE_COUNSEL_REVIEW_CANDIDATE_v0.3.2.md`)
 
-The two counsel-review source documents are intentionally left untouched in the user's repository. This integration does not claim to have re-hashed their local staged bytes; it preserves the source-pack hashes for the user to verify locally.
+The repository-local Terms and Privacy source files match these recorded hashes and remain unchanged. The source pack and its manifest are not present in this repository, so their recorded input hashes are retained as provenance without a local re-hash. These source candidates are pre-counsel inputs, not current authority.
 
 ## Disposition of all source copy items
 
@@ -23,7 +23,7 @@ The two counsel-review source documents are intentionally left untouched in the 
 | LUX-DIS-004 | integrated, dynamic platform name | `legal/disclaimers/NO_GUARANTEED_OUTCOME_WORKING_v0.1.0.md` |
 | LUX-REG-001 | retained; matches current age confirmation | `journeys/registration/P8_05_REGISTRATION_COPY.md` |
 | LUX-REG-002 | **supersedes combined legal checkbox design** | registration journey + `legal/consent/REGISTRATION_LEGAL_INTERACTIONS_WORKING_v0.1.0.md` |
-| LUX-REG-003 | integrated; AF terminology adjusted to `Privaatheidsbeleid` | registration journey + `legal/privacy/REGISTRATION_PRIVACY_PRESENTATION_WORKING_v0.1.0.md` |
+| LUX-REG-003 | presentation/disclosure wording adapted; current Product Law separately requires affirmative Privacy acceptance; AF terminology uses `Privaatheidsbeleid` | registration journey + `legal/privacy/REGISTRATION_PRIVACY_PRESENTATION_WORKING_v0.1.0.md` |
 | LUX-MKT-001 | integrated as JIT candidate | `legal/consent/MARKETING_PERMISSION_WORKING_v0.1.0.md` |
 | LUX-MKT-002 | integrated as JIT candidate | `communications/marketing/MARKETING_CHANNEL_PREFERENCES_WORKING_v0.1.0.md` |
 | LUX-CK-001 | integrated; inventory-gated | `legal/cookies/COOKIE_BANNER_WORKING_v0.1.0.md` |
@@ -38,7 +38,9 @@ The two counsel-review source documents are intentionally left untouched in the 
 
 ## Material correction to workspace v0.2.0
 
-The v0.2.0 combined Terms + Privacy checkbox is superseded. The legal UX pack—derived from the current counsel-review candidates—requires separate legal interactions and explicitly states that Privacy Notice presentation/acknowledgement is not blanket consent. The v0.3.0 registry/page composition therefore uses separate Terms acceptance and Privacy presentation/acknowledgement keys.
+The v0.2.0 combined Terms + Privacy checkbox is superseded. Current Product v1.13.0, DEC-027 and P8-05 require separate Terms acceptance and Privacy acceptance before Account creation. The page also presents the Privacy Notice and its disclosure separately; presentation alone does not satisfy acceptance. Privacy acceptance is not consent to every processing purpose. The v0.3.0 registry/page composition therefore uses separate Terms acceptance, Privacy presentation and Privacy acceptance keys.
+
+Terms v0.3.3 and Privacy v0.3.2 are pre-counsel source inputs that preserve stale Product v1.9.0 assumptions, including a bilingual governing-document requirement. Product v1.13.0 and DEC-316 instead require English-only governing Terms and Privacy bodies, with both Afrikaans and English experiences linking to the same English documents. Current Product Law overrides the stale source statements. Reconcile the source candidates against current authority before any later legal or counsel successor becomes production authority. The copy workspace does not amend or supersede Product semantics.
 
 ## Deliberate non-replacements
 

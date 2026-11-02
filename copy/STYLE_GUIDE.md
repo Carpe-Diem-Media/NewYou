@@ -84,6 +84,6 @@ Use placeholders only where they demonstrate format or reduce uncertainty. Do no
 
 ## Legal-interaction wording rule
 
-Do not combine distinct legal events merely to make a form shorter. Terms acceptance, Privacy Notice presentation/acknowledgement, age confirmation, purpose-specific consent, marketing permission, cookie choices, practitioner sharing and SKU-specific early-performance instructions stay semantically distinct. A Privacy Notice explains processing; an acknowledgement that it was made available is not blanket consent.
+Do not combine distinct legal events to shorten a form. Registration requires separate Terms acceptance and Privacy acceptance. Present the Privacy Notice separately, and do not treat presentation alone as acceptance. Privacy acceptance is not consent to every processing purpose. Age confirmation, purpose-specific consent, marketing permission, cookie choices, practitioner sharing and SKU-specific early-performance instructions remain separate events.
 
 The English governing artifact may be titled **Privacy Notice** while Afrikaans participant-facing UI uses the owner-selected term **Privaatheidsbeleid**.

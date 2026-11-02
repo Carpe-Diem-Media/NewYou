@@ -20,14 +20,15 @@ These are semantic lifecycle requirements, not Ash Resource/table/schema prescri
 - **Concurrency/idempotency:** replay of the same registration must not create contradictory duplicate acceptance; changed version/input requires a new valid action.
 - **Recovery:** a later Terms version never rewrites prior acceptance evidence.
 
-## 2. Privacy Notice presentation / acknowledgement
+## 2. Privacy Notice presentation and acceptance
 
-**States:** `not_presented → presented → acknowledged` where acknowledgement is selected. A later Notice version creates separate presentation evidence.
+**States:** `not_presented → presented → accepted → historical_superseded` for one exact Privacy version. A later Notice version creates separate acceptance evidence.
 
-- **Guard:** acknowledgement is not purpose-specific consent.
-- **Side effects/evidence:** retain exact Notice version and applicable presentation/acknowledgement evidence.
-- **Terminal:** historical evidence for the exact version; a new Notice does not rewrite it.
-- **Recovery:** missing evidence is not reconstructed by assuming the participant must have seen a later/current Notice.
+- **Transitions:** present the applicable English Privacy Notice and bilingual disclosure copy; accept that exact version for registration.
+- **Guard:** presentation alone does not satisfy the required Privacy acceptance event. Acceptance is not consent to every processing purpose.
+- **Side effects/evidence:** retain the exact Privacy version, acceptance timestamp, Account/registration association and participant interaction/preferred locale. The governing document locale is `en`.
+- **Terminal:** historical evidence for the exact accepted version; a new Notice does not rewrite it.
+- **Recovery:** missing acceptance evidence is not reconstructed by assuming the participant saw or accepted a later/current Notice.
 
 ## 3. Purpose-specific consent
 
@@ -69,6 +70,6 @@ Purpose-level marketing permission and channel/category preferences are separate
 
 **States:** `not_given → given → historical` for the exact order/SKU/instruction version.
 
-- Cannot be inferred from Terms acceptance, Privacy acknowledgement, payment, Account creation or opening content.
+- Cannot be inferred from Terms acceptance, Privacy acceptance, payment, Account creation or opening content.
 - Immutable once relied upon for that order/SKU.
 - Legal/commercial authority determines cancellation consequences; the UX record alone does not.
