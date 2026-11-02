@@ -57,6 +57,7 @@ defmodule NewYou.Identity.Token do
       argument :jti, :string, allow_nil?: false, sensitive?: true
       public? false
       change AshAuthentication.TokenResource.RevokeJtiChange
+      change NewYou.Identity.Changes.SetTokenAccount
     end
 
     create :store_token do

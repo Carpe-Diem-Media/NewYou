@@ -1,6 +1,16 @@
 defmodule NewYou.Identity do
   use Ash.Domain, otp_app: :new_you
 
+  @moduledoc """
+  Identity owns Accounts, credentials, PMR assignment, verification Tokens, and
+  registration and resend operation bindings.
+
+  Registration coordinates with Audit and Communications through their owner
+  interfaces. Communications owns MessageIntents and protected envelopes; Audit owns
+  the initial registration evidence obligation and durable schedule. Identity does
+  not own delivery execution or Audit materialisation.
+  """
+
   require Ash.Query
 
   alias NewYou.Identity.{
@@ -9,6 +19,7 @@ defmodule NewYou.Identity do
     PMR,
     RegistrationBinding,
     RegistrationOperation,
+    ResendOperation,
     RegistrationResult,
     Token
   }
@@ -17,6 +28,7 @@ defmodule NewYou.Identity do
   @registration_operation_expiry_batch_size 100
   @verifier_provider "AshAuthentication.Argon2Provider"
   @verifier_version "argon2_elixir-4.1.3"
+  @verification_token_lifetime {24, :hours}
   @development_terms_id "NEWYOU-TERMS-EN-DEV-2026-10-27-001"
   @development_privacy_id "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
 
@@ -27,9 +39,21 @@ defmodule NewYou.Identity do
     resource RegistrationOperation do
       define :accept_new_registration, action: :accept_registration
     end
+
+    resource NewYou.Identity.ResendOperation
   end
 
-  @doc "Accept a valid registration into Identity and return a neutral pending result."
+  @doc """
+  Accepts a registration bound to its opaque operation ID.
+
+  A new Account commits with its credential, PMR, verification Token, Communications
+  MessageIntent and protected envelope, and the initial Audit obligation and schedule
+  in one source transaction. Replaying the same immutable request returns its prior
+  result without repeating those effects. A distinct operation for an existing
+  canonical email returns the neutral pending result without creating another Account
+  or its consequences. A first accepted result contains the transient verification
+  proof used to establish the protected envelope; replays do not return that proof.
+  """
   @spec register(map()) :: {:ok, RegistrationResult.t()} | {:error, atom()}
   def register(request) when is_map(request) do
     with {:ok, operation_id} <- operation_id(request),
@@ -44,6 +68,36 @@ defmodule NewYou.Identity do
   end
 
   def register(_), do: {:error, :invalid_registration}
+
+  @doc """
+  Accepts a verification resend for an active, unverified Account.
+
+  The operation ID binds to the Account ID. An accepted replay for that pair returns
+  the same neutral result without replacing the current challenge again. Reusing the
+  ID for another Account returns `:resend_unavailable`. Acceptance supersedes active
+  verification Tokens and commits one replacement Token, Communications
+  MessageIntent and protected envelope with the Identity resend record. The operation
+  does not create an Audit obligation or Communications job.
+  """
+  @spec resend_verification(map()) :: {:ok, :verification_pending} | {:error, :resend_unavailable}
+  def resend_verification(request) when is_map(request) do
+    with {:ok, operation_id} <- resend_operation_id(Map.get(request, :operation_id)),
+         {:ok, account_id} <- account_id(Map.get(request, :account_id)) do
+      case read_resend_operation(operation_id) do
+        {:ok, nil} -> accept_resend(operation_id, account_id)
+        {:ok, operation} -> replay_resend_operation(operation, account_id)
+        _ -> {:error, :resend_unavailable}
+      end
+    else
+      _ -> {:error, :resend_unavailable}
+    end
+  rescue
+    _ -> {:error, :resend_unavailable}
+  catch
+    _, _ -> {:error, :resend_unavailable}
+  end
+
+  def resend_verification(_), do: {:error, :resend_unavailable}
 
   def registration_now, do: now()
 
@@ -145,6 +199,221 @@ defmodule NewYou.Identity do
     else
       _ -> {:error, :invalid_registration}
     end
+  end
+
+  defp accept_resend(operation_id, account_id) do
+    transaction = resend_transaction(operation_id, account_id)
+
+    case transaction do
+      {:ok, {:ok, :verification_pending}} ->
+        {:ok, :verification_pending}
+
+      {:error, error} ->
+        resend_transaction_error(operation_id, account_id, error)
+
+      _ ->
+        {:error, :resend_unavailable}
+    end
+  end
+
+  defp resend_transaction(operation_id, account_id) do
+    Ash.transact(
+      [
+        Account,
+        Token,
+        ResendOperation,
+        NewYou.Communications.MessageIntent,
+        NewYou.Communications.ProtectedEnvelope,
+        NewYou.Communications.EnvelopeNonce
+      ],
+      fn -> accept_resend_locked(operation_id, account_id) end
+    )
+  end
+
+  defp accept_resend_locked(operation_id, account_id) do
+    with {:ok, account} <- lock_resend_account(account_id),
+         {:ok, operation} <- read_resend_operation(operation_id) do
+      accept_resend_state(operation, account, operation_id, account_id)
+    else
+      _ -> {:error, :resend_unavailable}
+    end
+  end
+
+  defp accept_resend_state(nil, nil, _operation_id, _account_id),
+    do: {:ok, :verification_pending}
+
+  defp accept_resend_state(nil, account, operation_id, _account_id),
+    do: establish_resend(account, operation_id)
+
+  defp accept_resend_state(operation, _account, _operation_id, account_id),
+    do: replay_resend_operation(operation, account_id)
+
+  defp resend_transaction_error(operation_id, account_id, error) do
+    if resend_operation_id_collision?(error) do
+      replay_resend_after_race(operation_id, account_id)
+    else
+      {:error, :resend_unavailable}
+    end
+  end
+
+  defp lock_resend_account(account_id) do
+    query =
+      Account
+      |> Ash.Query.filter(id == ^account_id)
+      |> Ash.Query.lock(:for_update)
+
+    case Ash.read(query, domain: __MODULE__, authorize?: false) do
+      {:ok, [account]} -> {:ok, account}
+      {:ok, []} -> {:ok, nil}
+      _ -> {:error, :resend_unavailable}
+    end
+  end
+
+  defp establish_resend(
+         %Account{credential_status: :active, email_verified?: false} = account,
+         operation_id
+       ) do
+    accepted_at = registration_now()
+
+    with :ok <- supersede_active_challenges(account),
+         {:ok, bearer, claims} <- issue_resend_proof(account),
+         {:ok, _intent} <-
+           establish_resend_intent(account, operation_id, accepted_at, claims, bearer),
+         {:ok, _operation} <-
+           Ash.create(
+             ResendOperation,
+             %{operation_id: operation_id, account_id: account.id, accepted_at: accepted_at},
+             action: :accept,
+             domain: __MODULE__,
+             authorize?: false
+           ) do
+      {:ok, :verification_pending}
+    else
+      error -> error
+    end
+  end
+
+  defp establish_resend(%Account{}, _operation_id), do: {:ok, :verification_pending}
+
+  defp supersede_active_challenges(account) do
+    now = registration_now()
+
+    query =
+      Ash.Query.filter(
+        Token,
+        account_id == ^account.id and purpose == "email_verification" and expires_at > ^now
+      )
+
+    case Ash.read(query, domain: __MODULE__, authorize?: false) do
+      {:ok, tokens} -> revoke_active_challenges(tokens, account)
+      _ -> {:error, :resend_unavailable}
+    end
+  end
+
+  defp revoke_active_challenges(tokens, account) do
+    Enum.reduce_while(tokens, :ok, fn token, :ok ->
+      case AshAuthentication.TokenResource.Actions.revoke_jti(
+             Token,
+             token.jti,
+             token.subject,
+             domain: __MODULE__,
+             authorize?: false,
+             context: %{ash_authentication: %{user: account}}
+           ) do
+        :ok -> {:cont, :ok}
+        _ -> {:halt, {:error, :resend_unavailable}}
+      end
+    end)
+  end
+
+  defp issue_resend_proof(account) do
+    case AshAuthentication.Jwt.token_for_user(
+           account,
+           %{"purpose" => "email_verification"},
+           purpose: :email_verification,
+           token_lifetime: @verification_token_lifetime,
+           domain: __MODULE__,
+           authorize?: false
+         ) do
+      {:ok, bearer, claims} when is_binary(bearer) and is_map(claims) ->
+        {:ok, bearer, claims}
+
+      _ ->
+        {:error, :token_creation_failed}
+    end
+  rescue
+    _ -> {:error, :token_creation_failed}
+  end
+
+  defp establish_resend_intent(account, operation_id, accepted_at, claims, bearer) do
+    NewYou.Communications.establish_verification(
+      %{
+        source_operation_id: operation_id,
+        source_reference: claims["jti"],
+        destination: account.email,
+        destination_provenance: "identity_challenge_issuance",
+        destination_authorized_at: accepted_at,
+        locale: Atom.to_string(account.preferred_language)
+      },
+      bearer
+    )
+  end
+
+  defp replay_resend_after_race(operation_id, account_id) do
+    case read_resend_operation(operation_id) do
+      {:ok, %ResendOperation{} = operation} -> replay_resend_operation(operation, account_id)
+      _ -> {:error, :resend_unavailable}
+    end
+  end
+
+  defp read_resend_operation(operation_id) do
+    query = Ash.Query.filter(ResendOperation, operation_id == ^operation_id)
+
+    case Ash.read(query, domain: __MODULE__, authorize?: false) do
+      {:ok, [operation]} -> {:ok, operation}
+      {:ok, []} -> {:ok, nil}
+      _ -> {:error, :resend_unavailable}
+    end
+  end
+
+  defp replay_resend_operation(%ResendOperation{account_id: account_id}, account_id),
+    do: {:ok, :verification_pending}
+
+  defp replay_resend_operation(%ResendOperation{}, _account_id),
+    do: {:error, :resend_unavailable}
+
+  defp resend_operation_id(value) do
+    with {:ok, operation_id} when is_binary(operation_id) <- Ecto.UUID.cast(value),
+         {:ok, <<_timestamp::48, 4::4, _random_a::12, 2::2, _random_b::62>>} <-
+           Ecto.UUID.dump(operation_id) do
+      {:ok, operation_id}
+    else
+      _ -> {:error, :invalid_operation_id}
+    end
+  end
+
+  defp account_id(value) do
+    case Ecto.UUID.cast(value) do
+      {:ok, account_id} -> {:ok, account_id}
+      _ -> {:error, :invalid_account_id}
+    end
+  end
+
+  defp resend_operation_id_collision?(error) do
+    error_has_unique_field?(error, :operation_id) or
+      case error do
+        %Ecto.ConstraintError{
+          type: :unique,
+          constraint: "resend_operations_opaque_operation_id_index"
+        } ->
+          true
+
+        %{errors: errors} when is_list(errors) ->
+          Enum.any?(errors, &resend_operation_id_collision?/1)
+
+        _ ->
+          false
+      end
   end
 
   defp replay_or_reject(operation, request) do

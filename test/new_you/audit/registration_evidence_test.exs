@@ -7,6 +7,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
   setup do
     previous_keys = Application.get_env(:new_you, :identity_registration_binding_keys)
     previous_token_secret = Application.get_env(:new_you, :identity_token_signing_secret)
+    previous_communications_keyring = Application.get_env(:new_you, :communications_keyring)
 
     Application.put_env(:new_you, :identity_registration_binding_keys, %{
       active_version: "test-v1",
@@ -15,12 +16,20 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
 
     Application.put_env(:new_you, :identity_token_signing_secret, :crypto.strong_rand_bytes(32))
 
+    Application.put_env(:new_you, :communications_keyring, %{
+      active: "test-v1",
+      keys: %{"test-v1" => :crypto.strong_rand_bytes(32)}
+    })
+
     on_exit(fn ->
       restore_app_env(:identity_registration_binding_keys, previous_keys)
       restore_app_env(:identity_token_signing_secret, previous_token_secret)
+      restore_app_env(:communications_keyring, previous_communications_keyring)
     end)
 
-    :ok
+    {:ok,
+     nonce_count: row_count("communications_envelope_nonces"),
+     pmr_reservation_count: row_count("identity_pmr_reservations")}
   end
 
   test "successful registration creates one open E2 obligation and its Audit job" do
@@ -125,7 +134,10 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     assert length(scheduled_audit_jobs()) == 1
   end
 
-  test "a failed Audit schedule rolls back all registration acceptance writes" do
+  test "a failed Audit schedule rolls back all registration acceptance writes", %{
+    nonce_count: nonce_count,
+    pmr_reservation_count: pmr_reservation_count
+  } do
     reject_inserts("oban_jobs", "audit_schedule_failure")
 
     assert {:error, :registration_unavailable} = NewYou.Identity.register(valid_request())
@@ -137,10 +149,17 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
 
     assert audit_records("EvidenceObligation") == []
     assert row_count("tokens") == 0
+    assert row_count("message_intents") == 0
+    assert row_count("communications_protected_envelopes") == 0
+    assert row_count("communications_envelope_nonces") == nonce_count
+    assert row_count("identity_pmr_reservations") == pmr_reservation_count
     assert scheduled_audit_jobs() == []
   end
 
-  test "a failed obligation creation rolls back all registration acceptance writes" do
+  test "a failed obligation creation rolls back all registration acceptance writes", %{
+    nonce_count: nonce_count,
+    pmr_reservation_count: pmr_reservation_count
+  } do
     reject_inserts("evidence_obligations", "evidence_obligation_failure")
 
     assert {:error, :registration_unavailable} = NewYou.Identity.register(valid_request())
@@ -152,10 +171,17 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
 
     assert audit_records("EvidenceObligation") == []
     assert row_count("tokens") == 0
+    assert row_count("message_intents") == 0
+    assert row_count("communications_protected_envelopes") == 0
+    assert row_count("communications_envelope_nonces") == nonce_count
+    assert row_count("identity_pmr_reservations") == pmr_reservation_count
     assert scheduled_audit_jobs() == []
   end
 
-  test "a later Identity write failure rolls back the inserted Audit job" do
+  test "a later Identity write failure rolls back the inserted Audit job", %{
+    nonce_count: nonce_count,
+    pmr_reservation_count: pmr_reservation_count
+  } do
     reject_inserts("registration_operations", "late_identity_acceptance_failure")
 
     assert {:error, :registration_unavailable} = NewYou.Identity.register(valid_request())
@@ -167,6 +193,10 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
 
     assert audit_records("EvidenceObligation") == []
     assert row_count("tokens") == 0
+    assert row_count("message_intents") == 0
+    assert row_count("communications_protected_envelopes") == 0
+    assert row_count("communications_envelope_nonces") == nonce_count
+    assert row_count("identity_pmr_reservations") == pmr_reservation_count
     assert scheduled_audit_jobs() == []
   end
 
