@@ -5616,7 +5616,7 @@
       "class": "A",
       "readiness": "NOW",
       "owner": "content_media",
-      "purpose": "Required separate affirmative Terms acceptance control for P8-05 registration.",
+      "purpose": "Required Terms acceptance fact for P8-05 registration. The v0.3.0 copy candidate presents it with a separate affirmative control; Product Law does not prescribe control count.",
       "content_risk": "legal_or_consent",
       "version": "2",
       "status": "candidate",
@@ -5630,7 +5630,7 @@
         "afrikaans_language_reviewer",
         "english_language_reviewer"
       ],
-      "notes": "v2 candidate derived from LUX-REG-002. v1 was withdrawn in workspace v0.2.0 and remains preserved in archive/COPY_REGISTRY_v0.2.0.json. Must bind the exact context-eligible English Terms version.",
+      "notes": "v2 copy candidate derived from LUX-REG-002. The exact Terms acceptance fact and evidence are required. The separate control is a v0.3.0 UX candidate, not a Product Law control-count rule. Must bind the exact context-eligible English Terms version.",
       "source": null,
       "page_refs": [
         "registration"
@@ -5655,7 +5655,7 @@
       "class": "A",
       "readiness": "NOW",
       "owner": "content_media",
-      "purpose": "Required separate affirmative Privacy acceptance control for P8-05 registration; not purpose-specific consent.",
+      "purpose": "Required Privacy acceptance fact for P8-05 registration; not purpose-specific consent. The v0.3.0 copy candidate presents it with a separate affirmative control, but Product Law does not prescribe control count.",
       "content_risk": "legal_or_consent",
       "version": "2",
       "status": "candidate",
@@ -5669,7 +5669,7 @@
         "afrikaans_language_reviewer",
         "english_language_reviewer"
       ],
-      "notes": "v2 candidate restores the Privacy acceptance required by DEC-027 and P8-05. The participant accepts the exact applicable English Privacy version for registration. This is not consent to every processing purpose and is not production legal approval.",
+      "notes": "v2 copy candidate restores the Privacy acceptance fact required by DEC-027 and P8-05. The participant accepts the exact applicable English Privacy version for registration. The separate control is a v0.3.0 UX candidate, not a Product Law control-count rule. This is not consent to every processing purpose and is not production legal approval.",
       "source": null,
       "page_refs": [
         "registration"
@@ -6113,7 +6113,7 @@
       "class": "A",
       "readiness": "NOW",
       "owner": "content_media",
-      "purpose": "Single participant-facing checkbox. Implementation must still record the exact accepted Terms version and exact accepted Privacy version independently.",
+      "purpose": "SUPERSEDED historical v0.2.0 layout: one participant-facing checkbox represented acceptance of both exact Terms and Privacy versions.",
       "content_risk": "legal_or_consent",
       "version": "1",
       "status": "superseded",
@@ -6127,7 +6127,7 @@
         "afrikaans_language_reviewer",
         "english_language_reviewer"
       ],
-      "notes": "SUPERSEDED historical v0.2.0 combined Terms + Privacy control. Current Product Law still requires separate acceptance of both exact document versions.",
+      "notes": "SUPERSEDED as the current v0.3.0 copy-workspace layout. Product Law requires acceptance of both exact document versions with distinct evidence, but does not prescribe control count. The current candidate uses separate controls.",
       "source": null,
       "page_refs": [],
       "do_not_edit_here": false,
@@ -6623,7 +6623,7 @@
         "afrikaans_language_reviewer",
         "english_language_reviewer"
       ],
-      "notes": "SUPERSEDED historical combined validation. The current registration page uses separate Terms and Privacy acceptance validations.",
+      "notes": "SUPERSEDED historical combined validation. The v0.3.0 copy manifest uses distinct Terms and Privacy acceptance validation keys; this candidate structure does not prescribe a participant-facing control count.",
       "source": null,
       "page_refs": [],
       "do_not_edit_here": false,
@@ -6660,7 +6660,7 @@
         "afrikaans_language_reviewer",
         "english_language_reviewer"
       ],
-      "notes": "v2 candidate. Separate from the required Privacy acceptance control.",
+      "notes": "v2 candidate for its own Terms validation. The required Terms acceptance fact and Privacy acceptance fact remain distinct; the v0.3.0 control layout is a UX choice.",
       "source": null,
       "page_refs": [
         "registration"
@@ -10052,7 +10052,7 @@
       "class": "A",
       "readiness": "NOW",
       "owner": "content_media",
-      "purpose": "Bilingual Privacy Notice presentation/disclosure text, separate from the required Privacy acceptance control.",
+      "purpose": "Bilingual Privacy Notice presentation/disclosure text. It is distinct from the required Privacy acceptance fact.",
       "content_risk": "legal_or_consent",
       "version": "1",
       "status": "candidate",
@@ -10066,7 +10066,7 @@
         "afrikaans_language_reviewer",
         "english_language_reviewer"
       ],
-      "notes": "Current Product Law requires a separate affirmative Privacy acceptance event. This key is disclosure copy only and does not satisfy that requirement. The governing English legal artifact remains titled Privacy Notice; Afrikaans UI uses Privaatheidsbeleid. The disclosure does not grant blanket or purpose-specific consent.",
+      "notes": "Current Product Law requires the affirmative Privacy acceptance fact. This key is disclosure copy only and does not satisfy that requirement. The governing English legal artifact remains titled Privacy Notice; Afrikaans UI uses Privaatheidsbeleid. The disclosure does not grant blanket or purpose-specific consent.",
       "source": "NEWYOU_LEGAL_UX_COPY_PACK_WORKING_v0.1.0:LUX-REG-003",
       "page_refs": [
         "registration"
@@ -11194,7 +11194,7 @@
       "status": "PRE_COUNSEL_NOT_FOR_PUBLICATION"
     },
     "disposition": "INTEGRATED_AS_WORKING_CANDIDATES_NOT_PRODUCTION_APPROVAL",
-    "combined_registration_legal_checkbox": "SUPERSEDED_BY_SEPARATE_TERMS_ACCEPTANCE_AND_PRIVACY_ACCEPTANCE",
+    "combined_registration_legal_checkbox": "V0_2_LAYOUT_SUPERSEDED_AS_CURRENT_COPY_CANDIDATE; V0_3_SEPARATE_CONTROLS_ARE_A_UX_CHOICE; PRODUCT_REQUIRES_BOTH_DISTINCT_ACCEPTANCE_FACTS_NOT_A_CONTROL_COUNT",
     "source_candidates_authority": "PRE_COUNSEL_INPUTS_WITH_STALE_PRODUCT_V1_9_0_ASSUMPTIONS; CURRENT_PRODUCT_V1_13_0_AND_DEC_316_OVERRIDE_CONFLICTS; RECONCILE_BEFORE_ANY_LEGAL_OR_COUNSEL_SUCCESSOR",
     "governing_document_language": "ENGLISH_ONLY; BOTH_AFRIKAANS_AND_ENGLISH_EXPERIENCES_LINK_TO_THE_SAME_ENGLISH_DOCUMENTS",
     "registration_privacy_semantics": "SEPARATE_PRIVACY_ACCEPTANCE_REQUIRED; PRESENTATION_DOES_NOT_REPLACE_ACCEPTANCE; PURPOSE_SPECIFIC_CONSENT_REMAINS_SEPARATE"

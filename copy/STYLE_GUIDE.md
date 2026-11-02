@@ -47,7 +47,7 @@ The book foundation adds a useful principle: **help the woman work wisely with w
 
 - Governing Terms and Privacy bodies are English-only under current authority. Afrikaans UI uses `Privaatheidsbeleid` as the participant-facing descriptor for the English Privacy Notice; this must not be mistaken for an official translated governing legal body.
 - Keep purpose-specific permissions separate. Marketing preference is not health-data consent; notification preference is not legal consent.
-- A single participant-facing Terms + Privacy checkbox is permitted by the current owner decision only if the implementation still records the exact accepted Terms version and exact accepted Privacy version independently. Do not collapse the underlying evidence into one undifferentiated legal fact.
+- The v0.2 owner decision selected one participant-facing Terms + Privacy checkbox. The v0.3 copy candidate replaces that layout with separate controls, but neither choice is prescribed by Product Law. Registration must preserve acceptance of both exact versions as distinct durable facts and evidence, regardless of the control layout.
 
 ## 7. Errors and ambiguity
 
@@ -84,6 +84,6 @@ Use placeholders only where they demonstrate format or reduce uncertainty. Do no
 
 ## Legal-interaction wording rule
 
-Do not combine distinct legal events to shorten a form. Registration requires separate Terms acceptance and Privacy acceptance. Present the Privacy Notice separately, and do not treat presentation alone as acceptance. Privacy acceptance is not consent to every processing purpose. Age confirmation, purpose-specific consent, marketing permission, cookie choices, practitioner sharing and SKU-specific early-performance instructions remain separate events.
+Keep the required Terms and Privacy acceptance facts distinct in evidence. The current v0.3 copy candidate presents them with separate controls; Product Law does not prescribe that layout. Present the Privacy Notice separately, and do not treat presentation alone as acceptance. Privacy acceptance is not consent to every processing purpose. Age confirmation, purpose-specific consent, marketing permission, cookie choices, practitioner sharing and SKU-specific early-performance instructions remain separate facts where applicable.
 
 The English governing artifact may be titled **Privacy Notice** while Afrikaans participant-facing UI uses the owner-selected term **Privaatheidsbeleid**.

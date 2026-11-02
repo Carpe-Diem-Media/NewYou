@@ -25,7 +25,7 @@ Once the exact NOW browser items receive the required scoped development approva
 - language/header account access;
 - pre-registration launch/safety framing;
 - required DEC-027 registration fields and gates;
-- separate Terms acceptance, Privacy Notice presentation and Privacy acceptance, exact versioned legal evidence, links and legal-language disclosure;
+- acceptance of both exact Terms and Privacy versions, represented by separate controls in the current UX candidate, plus Privacy Notice presentation, exact versioned evidence, links and legal-language disclosure;
 - neutral accepted/failure responses;
 - localized verification-pending and explicit resend states;
 - public-safe next actions.
@@ -54,6 +54,6 @@ Edit candidate wording in the registry/source review files, then create a new im
 
 The uploaded `NEWYOU_LEGAL_UX_COPY_PACK_WORKING_v0.1.0` has been reconciled into scoped Markdown files. Its Terms v0.3.3 and Privacy v0.3.2 files remain unchanged pre-counsel source inputs. They contain stale governance assumptions from Product v1.9.0, including a bilingual governing-document requirement. Current Product v1.13.0 and DEC-316 require English-only governing Terms and Privacy documents, and override conflicting source assumptions. Any later legal or counsel successor must be reconciled against current authority before it can be treated as current.
 
-The v0.2.0 combined Terms + Privacy checkbox is superseded. The current P8-05 candidate uses separate Terms acceptance, Privacy Notice presentation and affirmative Privacy acceptance. Privacy acceptance records the governed registration event; it does not grant consent to every processing purpose. Purpose-specific consent remains separate. Both Afrikaans and English experiences link to the same English governing documents. This workspace is non-authoritative and does not claim legal, privacy or production approval.
+The v0.2.0 combined-control layout is superseded as the current copy-workspace candidate. Product Law and P8-05 require acceptance of both exact Terms and Privacy versions, with distinct evidence, but do not prescribe the number of participant-facing controls. The v0.3.0 candidate uses separate Terms and Privacy controls, with Privacy Notice presentation represented separately. Privacy acceptance does not grant consent to every processing purpose. Purpose-specific consent remains separate. Both Afrikaans and English experiences link to the same English governing documents. This workspace is non-authoritative and does not claim legal, privacy or production approval.
 
 See `legal/LEGAL_UX_COPY_INDEX_WORKING_v0.1.0.md` and `evidence/LEGAL_UX_PACK_RECONCILIATION_v0.1.0.md`.

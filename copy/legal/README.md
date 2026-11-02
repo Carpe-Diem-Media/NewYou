@@ -19,7 +19,7 @@ GitHub Product/Decision/Architecture/Domain/Roadmap/supporting authority remains
 
 ## Core interaction rule
 
-Do **not** bundle legal events. Registration uses separate Terms acceptance and Privacy acceptance, with Privacy Notice presentation as a separate disclosure. Privacy acceptance is not consent to every processing purpose. Age confirmation, purpose-specific consent, marketing permission, cookie choices, special-personal-information authorisation, practitioner sharing and early-performance instructions remain separate interactions where applicable.
+Keep the required Terms and Privacy acceptance facts and evidence distinct. Product Law and P8-05 do not prescribe the number of participant-facing controls; the v0.3.0 copy candidate uses separate controls. Privacy Notice presentation is a separate disclosure and does not establish acceptance. Privacy acceptance is not consent to every processing purpose. Age confirmation, purpose-specific consent, marketing permission, cookie choices, special-personal-information authorisation, practitioner sharing and early-performance instructions remain separate facts where applicable.
 
 ## Split files
 

@@ -94,7 +94,7 @@ The current blocker is narrower: exact immutable EN/AF browser-copy evidence for
 ## v0.3.0 legal UX candidate
 
 - The v0.2.0 combined participant-facing Terms + Privacy checkbox is superseded.
-- The current candidate uses age confirmation, separate Terms acceptance, Privacy Notice presentation, then separate affirmative Privacy acceptance for registration. Presentation alone does not satisfy the governed Privacy acceptance requirement.
+- The current candidate uses age confirmation, separate Terms and Privacy acceptance controls, with Privacy Notice presentation before acceptance. Presentation alone does not satisfy the governed Privacy acceptance requirement. Product Law requires both exact acceptance facts and their evidence, but does not prescribe two controls; this layout is a candidate UX/legal-review choice.
 - Privacy acceptance records acceptance of the applicable exact Privacy version for registration. It is not blanket consent to every processing purpose. Purpose-specific consent remains separate and appears only where applicable.
 - Product v1.13.0, DEC-027 and DEC-316 govern. Governing Terms and Privacy documents are English-only; Afrikaans and English product experiences link to the same English documents, while participant interaction/preferred locale is recorded separately.
 - Terms v0.3.3 and Privacy v0.3.2 are unchanged pre-counsel source inputs. Their older Product v1.9.0 language assumptions, including a requirement for bilingual governing legal documents, are stale and subordinate to current Product Law. Reconcile them against current authority before any later legal or counsel successor can become production authority. The source pack does not amend Product semantics.

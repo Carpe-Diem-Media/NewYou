@@ -3,7 +3,7 @@
 **Status:** WORKING CANDIDATE / NOT DEVELOPMENT-APPROVED BY THIS FILE / NOT PRODUCTION-APPROVED<br>
 **Legal UX reconciliation:** 2026-11-02, informed by the uploaded `NEWYOU_LEGAL_UX_COPY_PACK_WORKING_v0.1.0` and pre-counsel Terms v0.3.3 / Privacy v0.3.2 source inputs. Current Product Law overrides their conflicting assumptions.
 
-The combined Terms + Privacy checkbox from workspace v0.2.0 is **superseded**. The current candidate uses these separate registration interactions:
+The v0.2.0 combined-control layout is **superseded as the current copy-workspace candidate**. Product Law and P8-05 require acceptance of both exact legal versions and distinct evidence for each, but do not prescribe the number of participant-facing controls. The v0.3.0 UX candidate uses separate acceptance controls and presents the Privacy Notice separately:
 
 1. age confirmation;
 2. Terms acceptance;
@@ -13,7 +13,7 @@ The combined Terms + Privacy checkbox from workspace v0.2.0 is **superseded**. T
 
 The governing Terms and Privacy document bodies remain exact English-only artifacts. Afrikaans and English UI both link to the same selected English versions. The English legal artifact is titled **Privacy Notice**; participant-facing Afrikaans terminology uses **Privaatheidsbeleid** by owner decision.
 
-P8-05 evidence must preserve the exact accepted Terms version, exact accepted Privacy version, acceptance timestamp and participant interaction/preferred locale. The governing documents have locale `en`; the participant interaction/preferred locale remains `af` or `en`. This copy pack does not settle legal sufficiency or production treatment.
+P8-05 evidence must preserve the exact accepted Terms version, exact accepted Privacy version, acceptance timestamp and participant interaction/preferred locale. The governing documents have locale `en`; the participant interaction/preferred locale remains `af` or `en`. This copy pack does not settle legal sufficiency, control composition or production treatment.
 
 | Key | Class | English | Afrikaans | Status | Review flag |
 | --- | --- | --- | --- | --- | --- |

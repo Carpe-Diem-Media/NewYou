@@ -125,7 +125,9 @@ Implementation agents may choose normal Class C/JIT wording only within the curr
 
 ## Legal UX event separation
 
-The split legal UX candidates add no Product or Domain authority. Current Product Law requires separate Terms acceptance and Privacy acceptance at registration. A Privacy Notice presentation is a separate disclosure and does not replace Privacy acceptance. Page manifests must keep these events separate from age confirmation, purpose-specific consent, marketing permission, cookie choices, special-PI authorisation, practitioner sharing and early-performance instructions. Do not combine them into a generic `accepted_legal` interaction. Privacy acceptance is not consent to every processing purpose.
+The split legal UX candidates add no Product or Domain authority. Current Product Law requires acceptance of both the exact applicable Terms version and the exact applicable Privacy version before registration, with the required acceptance evidence. These are distinct durable acceptance facts. Product Law and P8-05 do not prescribe the number or visual arrangement of participant-facing controls. The v0.3.0 copy candidate represents the facts with separate Terms and Privacy controls, as a UX/legal-review choice.
+
+Page manifests preserve distinct Terms and Privacy acceptance keys and must not collapse their evidence into a generic `accepted_legal` fact. A Privacy Notice presentation is a separate disclosure and does not replace Privacy acceptance. Keep both acceptance facts distinct from age confirmation, purpose-specific consent, marketing permission, cookie choices, special-PI authorisation, practitioner sharing and early-performance instructions. Privacy acceptance is not consent to every processing purpose.
 
 The governing Terms and Privacy bodies are English-only under current Product Law. Afrikaans and English product experiences link to the same English documents, while participant-facing UI remains bilingual. The pre-counsel source candidates are historical inputs; current Product Law overrides their conflicting assumptions.
 

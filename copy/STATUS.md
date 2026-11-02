@@ -35,9 +35,9 @@ Final production legal/privacy approvals for the governing Terms/Privacy bodies 
 ## v0.3.0 legal UX integration status
 
 - Source legal UX pack: reconciled and split into scoped Markdown files.
-- Terms + Privacy combined checkbox: **SUPERSEDED**.
-- Separate Terms acceptance: **CANDIDATE / OWNER + LEGAL/PRIVACY + LANGUAGE REVIEW REQUIRED**.
-- Privacy Notice presentation and separate Privacy acceptance: **CANDIDATE / OWNER + LEGAL/PRIVACY + LANGUAGE REVIEW REQUIRED**. Privacy acceptance remains required by current Product Law and is not consent to every processing purpose.
+- v0.2 combined-control layout: **SUPERSEDED AS THE CURRENT COPY-WORKSPACE CANDIDATE**. Product Law requires both exact acceptance facts but does not prescribe control count.
+- Terms acceptance copy: **CANDIDATE / OWNER + LEGAL/PRIVACY + LANGUAGE REVIEW REQUIRED**.
+- Privacy Notice presentation and Privacy acceptance copy: **CANDIDATE / OWNER + LEGAL/PRIVACY + LANGUAGE REVIEW REQUIRED**. Privacy acceptance remains required by current Product Law and is not consent to every processing purpose. The v0.3 candidate uses a separate control as a UX choice.
 - Cookie Notice shell, special-PI consent shell and early-performance instruction: **HARD BLOCKED / REVIEW SHELLS ONLY**.
 - Terms v0.3.3 / Privacy v0.3.2: **PRE-COUNSEL SOURCE INPUTS / UNCHANGED / NOT CURRENT AUTHORITY**. Their stale bilingual-document assumptions are overridden by Product v1.13.0 and DEC-316; governing Terms and Privacy bodies are English-only.
 - WELL-45: remains open Planning; this workspace does not record the approvals needed to close the bounded-development browser-copy evidence gate.

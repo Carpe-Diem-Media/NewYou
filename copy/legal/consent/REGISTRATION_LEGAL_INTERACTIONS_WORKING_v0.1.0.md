@@ -12,7 +12,9 @@ These are unchanged pre-counsel source inputs, not current authority. They conta
 
 ## Required separation
 
-The current P8-05 candidate composes these distinct registration interactions in order:
+Product Law and P8-05 require acceptance of both exact Terms and Privacy versions, with distinct evidence for each. They do not prescribe the number or visual arrangement of participant-facing controls. The v0.3.0 copy candidate uses separate Terms and Privacy acceptance controls as a UX/legal-review choice. Another composition would still need to preserve both acceptance facts and their exact evidence.
+
+The current candidate presents these registration items in order:
 
 1. **Age confirmation** — separate affirmative control.
 2. **Terms acceptance** — separate affirmative control linked to the exact selected English Terms version.
@@ -47,4 +49,4 @@ See `../privacy/REGISTRATION_PRIVACY_PRESENTATION_WORKING_v0.1.0.md`.
 
 ## Superseded v0.2.0 design
 
-The single combined Terms + Privacy checkbox is superseded. Do not compose `identity.registration.legal_acceptance` or `identity.registration.legal.required` into new registration pages. Use the separate Terms and Privacy acceptance controls; a Privacy Notice presentation key is disclosure copy only.
+The v0.2 combined-control layout is superseded as the current copy-workspace candidate. Do not compose `identity.registration.legal_acceptance` or `identity.registration.legal.required` into the v0.3 candidate page. The current candidate uses separate acceptance controls, while Product Law leaves control count open. A Privacy Notice presentation key is disclosure copy only and does not establish either acceptance fact.

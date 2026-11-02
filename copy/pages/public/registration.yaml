@@ -40,4 +40,4 @@ copy:
   - legal.privacy.development_baseline
 notes: |
   P8-05 composition. Phone/city/preferred-name are intentionally absent. Governing legal document bodies are external English-only artifacts.
-  Age confirmation, Terms acceptance, Privacy Notice presentation and Privacy acceptance are separate registration interactions. Privacy acceptance is required by current Product Law and is not consent to every processing purpose. Purpose-specific consent remains separate.
+  Registration requires acceptance of both exact Terms and Privacy versions as distinct evidenced facts. This v0.3.0 copy candidate presents those facts with separate controls, but Product Law and P8-05 do not prescribe control count. Privacy Notice presentation does not replace acceptance. Privacy acceptance is not consent to every processing purpose; purpose-specific consent remains separate.
