@@ -1,0 +1,18 @@
+page: verification-pending
+source_of_text: COPY_REGISTRY.json
+copy:
+  - identity.verification.pending.title
+  - identity.verification.pending.explanation
+  - identity.verification.pending.check_inbox
+  - identity.verification.pending.address_label
+  - identity.verification.pending.not_arrived.title
+  - identity.verification.pending.not_arrived.body
+  - identity.verification.resend.action
+  - identity.verification.resend.processing
+  - identity.verification.resend.accepted_neutral
+  - identity.verification.resend.failure
+  - identity.verification.pending.access_limitation
+  - identity.verification.pending.browse_public
+  - identity.verification.pending.home
+notes: |
+  P8-05 composition. No change-email key, no expiry wording, and no emergency/urgent-support copy in the current slice.

@@ -1,0 +1,20 @@
+page: public-shell
+source_of_text: COPY_REGISTRY.json
+copy:
+  - shared.language.afrikaans
+  - shared.language.english
+  - shared.language.change
+  - shared.navigation.home
+  - shared.navigation.content
+  - shared.navigation.programmes
+  - shared.navigation.products
+  - shared.navigation.about
+  - shared.navigation.help
+  - shared.navigation.contact
+  - shared.navigation.search
+  - shared.navigation.create_account
+  - shared.navigation.login
+  - public.entry.launch.title
+  - public.entry.launch.body
+notes: |
+  Composition only. Homepage-specific marketing copy remains JIT and must not be duplicated here.

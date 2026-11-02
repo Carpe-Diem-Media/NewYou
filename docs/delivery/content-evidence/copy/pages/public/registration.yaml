@@ -1,0 +1,43 @@
+page: registration
+source_of_text: COPY_REGISTRY.json
+copy:
+  - public.entry.launch.title
+  - public.entry.launch.body
+  - public.entry.safety.body
+  - shared.language.afrikaans
+  - shared.language.english
+  - shared.language.change
+  - shared.navigation.login
+  - identity.registration.title
+  - identity.registration.intro
+  - identity.registration.existing_account_prompt
+  - identity.registration.first_name.label
+  - identity.registration.surname.label
+  - identity.registration.email.label
+  - identity.registration.password.label
+  - identity.registration.preferred_language.label
+  - identity.registration.preferred_language.help
+  - identity.registration.age_confirmation
+  - legal.shared.document_language_disclosure
+  - identity.registration.terms_acceptance
+  - identity.registration.terms_link
+  - identity.registration.privacy_presentation
+  - identity.registration.privacy_link
+  - identity.registration.privacy_acceptance
+  - identity.registration.submit
+  - identity.registration.processing
+  - identity.registration.first_name.required
+  - identity.registration.surname.required
+  - identity.registration.email.required
+  - identity.registration.password.required
+  - identity.registration.language.required
+  - identity.registration.age.required
+  - identity.registration.terms.required
+  - identity.registration.privacy_acceptance.required
+  - identity.registration.failure
+  - identity.registration.accepted_neutral
+  - legal.terms.development_baseline
+  - legal.privacy.development_baseline
+notes: |
+  P8-05 composition. Phone/city/preferred-name are intentionally absent. Governing legal document bodies are external English-only artifacts.
+  Registration requires acceptance of both exact Terms and Privacy versions as distinct evidenced facts. This v0.3.0 copy candidate presents those facts with separate controls, but Product Law and P8-05 do not prescribe control count. Privacy Notice presentation does not replace acceptance. Privacy acceptance is not consent to every processing purpose; purpose-specific consent remains separate.
