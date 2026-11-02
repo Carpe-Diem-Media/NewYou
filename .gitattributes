@@ -1,3 +1,7 @@
 # Generated UsageRules reference copies of upstream documentation: keep byte-identical
 # to generator output, so exempt them from whitespace checks.
 .agents/skills/*/references/** -whitespace
+
+# Immutable counsel-review legal candidates: preserve exact source bytes.
+copy/legal/privacy/NEWYOU_PRIVACY_NOTICE_COUNSEL_REVIEW_CANDIDATE_v0.3.2.md -whitespace
+copy/legal/terms/NEWYOU_PLATFORM_DIGITAL_PRODUCTS_SUBSCRIPTION_TERMS_COUNSEL_REVIEW_CANDIDATE_v0.3.3.md -whitespace

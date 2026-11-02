@@ -1,0 +1,19 @@
+page: login
+source_of_text: COPY_REGISTRY.json
+copy:
+  - shared.language.change
+  - shared.navigation.create_account
+  - identity.login.title
+  - identity.login.email.label
+  - identity.login.password.label
+  - shared.form.show_password
+  - shared.form.hide_password
+  - identity.login.submit
+  - identity.login.processing
+  - identity.login.credential_failure
+  - identity.login.unverified
+  - identity.login.forgot_password
+  - identity.login.create_account
+  - identity.login.session_expired
+notes: |
+  JIT manifest: keys exist, but detailed login copy is intentionally not frozen yet.
