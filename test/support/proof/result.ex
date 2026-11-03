@@ -699,22 +699,13 @@ defmodule NewYou.Proof.Result do
   end
 
   defp validate_compiled_business_manifest(entry, manifest, digest, required_ids, status, verdict) do
-    partial? = Map.get(manifest, :scope) == :partial
     expected_ids = Enum.map(manifest.cases, & &1.case_id)
     cases = value(entry, "cases") || []
     case_ids = Enum.map(cases, &value(&1, "case_id"))
 
     errors =
       []
-      |> maybe_error(
-        Map.get(manifest, :scope) not in [:partial, :complete],
-        :invalid_manifest_scope
-      )
-      |> maybe_error(partial? and verdict == "PASS", :partial_manifest_pass)
-      |> maybe_error(
-        partial? and "manifest.partial" not in (value(entry, "reason_codes") || []),
-        :missing_partial_manifest_reason
-      )
+      |> add_errors(validate_manifest_scope(entry, manifest, verdict))
       |> maybe_error(digest != manifest.digest, :invalid_business_manifest_digest)
       |> maybe_error(required_ids != expected_ids, :invalid_business_required_cases)
       |> maybe_error(case_ids != expected_ids, :incomplete_business_cases)
@@ -732,6 +723,21 @@ defmodule NewYou.Proof.Result do
     |> maybe_error(
       verdict == "FAIL" and not valid_reasons?(value(entry, "reason_codes")),
       :missing_failure_reason
+    )
+  end
+
+  defp validate_manifest_scope(entry, manifest, verdict) do
+    partial? = Map.get(manifest, :scope) == :partial
+
+    []
+    |> maybe_error(
+      Map.get(manifest, :scope) not in [:partial, :complete],
+      :invalid_manifest_scope
+    )
+    |> maybe_error(partial? and verdict == "PASS", :partial_manifest_pass)
+    |> maybe_error(
+      partial? and "manifest.partial" not in (value(entry, "reason_codes") || []),
+      :missing_partial_manifest_reason
     )
   end
 
