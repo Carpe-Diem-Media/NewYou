@@ -1,0 +1,52 @@
+[
+  {
+    "shape": "app screen",
+    "theme": "custom",
+    "axes": "light/roman-serif/chromatic-green",
+    "hero": "approved launch and safety copy precedes registration",
+    "nav": "language switch",
+    "footer": "none",
+    "imagery": "none",
+    "photos": [],
+    "entry": "/register",
+    "fingerprint": "Left-margin|Asymmetric spans|Hairline|Solid|None|None",
+    "sections": [
+      "launch",
+      "safety",
+      "registration",
+      "verification pending",
+      "resend"
+    ],
+    "signature": "the exact safety boundary comes before the account action",
+    "waived": [],
+    "prompt": "Warm, grounded, calm, editorial and practical bilingual registration and verification pending for adult women in South Africa.",
+    "date": "2026-11-02",
+    "mode": "build",
+    "verification": {
+      "date": "2026-11-03",
+      "sloplint": "clean: 0 FAIL, 0 REFLEX, 0 WARN across the NewYou token stylesheet and 3 rendered registration URLs",
+      "rendered": [
+        "/register (default English entry)",
+        "/register?locale=en",
+        "/register?locale=af",
+        "sanitized EN pending/resend snapshot (prior capture; templates unchanged)",
+        "sanitized AF pending/resend snapshot (prior capture; templates unchanged)"
+      ],
+      "hallmark_capture_viewports": [
+        "sloplint widths: 320, 375, 414, 768, 1024, 1280, 1920",
+        "fold screenshots: 1280x800, 1440x900, 1920x1080",
+        "full-page screenshots: 375 and 1440",
+        "capture.mjs: phone 390x844, tablet 834x1112, laptop 1280x800, desktop 1440x900"
+      ],
+      "manual_review_viewports": [
+        "375px full page",
+        "390x844 phone",
+        "834x1112 tablet",
+        "1280x800 laptop",
+        "1440x900 desktop",
+        "1920x1080 wide desktop"
+      ],
+      "notes": "The default route renders the registered English launch and safety content and keeps the Afrikaans/English switcher visible. The pending/resend templates did not change in this correction; their exact EN/AF copy remains covered by controller tests."
+    }
+  }
+]

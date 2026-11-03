@@ -1,0 +1,22 @@
+{
+  "scanned": "2026-11-02",
+  "findings": {
+    "framework": "Phoenix 1.8.16 controllers and HEEx; Ash 3.37.2 owns Identity state",
+    "fonts": "No custom font assets or project font tokens; Tailwind system sans is the current default",
+    "palette": "DaisyUI light/dark palettes in assets/css/app.css, not suitable as the P8-05 page palette",
+    "motion": "No motion library; app.js includes an existing theme bootstrap",
+    "spacing": "Tailwind v4 utility spacing; no separate NewYou semantic design token file",
+    "existing_surface": "GET /register is a scratch controller/HEEx page; the browser form and legal routes are incomplete"
+  },
+  "preserve": [
+    "Existing Phoenix route and semantic field names",
+    "Exact registered P8-05 copy and configured platform name",
+    "Identity ownership and existing operation-binding behavior",
+    "The existing root layout, global app assets, and accessible server-rendered baseline"
+  ],
+  "introduce": [
+    "A scoped NewYou participant-page token layer and responsive registration composition",
+    "Server-rendered registration, pending, resend, and gated development legal routes",
+    "Hallmark states, responsive review, and final rendered sloplint evidence"
+  ]
+}

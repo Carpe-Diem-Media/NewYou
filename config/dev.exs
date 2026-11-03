@@ -1,6 +1,7 @@
 import Config
 
 config :new_you, :verification_development_fixtures, true
+config :new_you, :p8_05_browser_development_fixtures, true
 
 config :new_you, :platform_name, "Development Platform"
 

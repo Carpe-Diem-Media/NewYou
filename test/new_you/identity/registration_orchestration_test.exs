@@ -226,6 +226,139 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert length(Repo.all(from job in Oban.Job)) == 1
   end
 
+  test "resend by canonical email stays inside Identity and returns the neutral outcome" do
+    registration = valid_request()
+    assert {:ok, %{account_id: account_id}} = Identity.register(registration)
+
+    resend = %{operation_id: Ecto.UUID.generate(), email: registration.email}
+    send_resend = &Identity.resend_verification_by_email/1
+
+    assert {:ok, :verification_pending} = send_resend.(resend)
+    assert {:ok, :verification_pending} = send_resend.(resend)
+    assert resource_count(Identity.ResendOperation, Identity) == 1
+    assert resource_count(MessageIntent, Communications) == 2
+
+    [resend_operation] = records(Identity.ResendOperation, Identity)
+    assert resend_operation.account_id == account_id
+
+    missing = %{
+      operation_id: Ecto.UUID.generate(),
+      email: "missing-#{System.unique_integer([:positive])}@example.test"
+    }
+
+    assert {:ok, :verification_pending} = send_resend.(missing)
+    assert resource_count(Identity.ResendOperation, Identity) == 2
+    assert resource_count(MessageIntent, Communications) == 2
+  end
+
+  test "a resend operation ID cannot switch from an unknown email to a known Account" do
+    registration = %{
+      valid_request()
+      | email: "known-#{System.unique_integer([:positive])}@example.test"
+    }
+
+    assert {:ok, %{account_id: account_id}} = Identity.register(registration)
+    [original_challenge] = current_challenges()
+    operation_id = Ecto.UUID.generate()
+    unknown_email = "unknown-#{System.unique_integer([:positive])}@example.test"
+
+    assert {:ok, :verification_pending} =
+             Identity.resend_verification_by_email(%{
+               operation_id: operation_id,
+               email: unknown_email
+             })
+
+    assert {:error, :resend_unavailable} =
+             Identity.resend_verification_by_email(%{
+               operation_id: operation_id,
+               email: registration.email
+             })
+
+    assert [current_challenge] = current_challenges()
+    assert current_challenge.jti == original_challenge.jti
+    assert resource_count(Identity.ResendOperation, Identity) == 1
+    assert resource_count(MessageIntent, Communications) == 1
+    assert resource_count(Identity.Account, Identity) == 1
+    assert is_binary(account_id)
+  end
+
+  test "an unknown email replay stays terminal after that address becomes eligible" do
+    email = "later-eligible-#{System.unique_integer([:positive])}@example.test"
+    operation_id = Ecto.UUID.generate()
+    resend = %{operation_id: operation_id, email: email}
+
+    assert {:ok, :verification_pending} = Identity.resend_verification_by_email(resend)
+    assert resource_count(Identity.ResendOperation, Identity) == 1
+
+    assert {:ok, %{account_id: account_id}} = Identity.register(%{valid_request() | email: email})
+    [original_challenge] = current_challenges()
+
+    assert {:ok, :verification_pending} = Identity.resend_verification_by_email(resend)
+
+    assert [current_challenge] = current_challenges()
+    assert current_challenge.jti == original_challenge.jti
+    assert resource_count(Identity.ResendOperation, Identity) == 1
+    assert resource_count(MessageIntent, Communications) == 1
+    assert resource_count(Identity.Account, Identity) == 1
+    assert is_binary(account_id)
+  end
+
+  test "concurrent different email requests cannot share one resend operation ID" do
+    registration = %{
+      valid_request()
+      | email: "eligible-#{System.unique_integer([:positive])}@example.test"
+    }
+
+    {:ok, account_id, eligible_email} =
+      Sandbox.unboxed_run(Repo, fn ->
+        {:ok, %{account_id: account_id}} = Identity.register(registration)
+        account = Ash.get!(Identity.Account, account_id, domain: Identity, authorize?: false)
+        {:ok, account_id, account.email}
+      end)
+
+    operation_id = Ecto.UUID.generate()
+    unknown_email = "concurrent-unknown-#{System.unique_integer([:positive])}@example.test"
+    operation_ids = [operation_id]
+    on_exit(fn -> cleanup_unboxed_registration(account_id, operation_ids) end)
+
+    requests = [
+      %{operation_id: operation_id, email: unknown_email},
+      %{operation_id: operation_id, email: eligible_email}
+    ]
+
+    results = assert_concurrent_email_resends(requests)
+
+    assert Enum.count(results, &(&1 == {:ok, :verification_pending})) == 1
+    assert Enum.count(results, &(&1 == {:error, :resend_unavailable})) == 1
+
+    summary =
+      Sandbox.unboxed_run(Repo, fn ->
+        [operation] = records(Identity.ResendOperation, Identity)
+        resend_intents = intent_count(operation_id)
+
+        replay_results =
+          Enum.map(requests, &Identity.resend_verification_by_email/1)
+
+        %{
+          operation: operation,
+          resend_intents: resend_intents,
+          resend_envelopes:
+            count_for_query!(
+              "SELECT count(*) FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = $1",
+              [Ecto.UUID.dump!(operation_id)]
+            ),
+          replay_results: replay_results
+        }
+      end)
+
+    assert summary.resend_intents in [0, 1]
+    assert summary.resend_envelopes == summary.resend_intents
+    assert Enum.count(summary.replay_results, &(&1 == {:ok, :verification_pending})) == 1
+    assert Enum.count(summary.replay_results, &(&1 == {:error, :resend_unavailable})) == 1
+    assert summary.operation.outcome in [:accepted, :neutral]
+    assert summary.resend_intents == if(summary.operation.outcome == :accepted, do: 1, else: 0)
+  end
+
   test "replaying resend A after resend B leaves B as the current challenge" do
     assert {:ok, %{account_id: account_id}} = Identity.register(valid_request())
     resend_a = %{operation_id: Ecto.UUID.generate(), account_id: account_id}
@@ -266,20 +399,25 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
   test "a revoked Account receives a neutral resend response without new state" do
     assert {:ok, %{account_id: account_id}} = Identity.register(valid_request())
     [original] = current_challenges()
+    request = %{operation_id: Ecto.UUID.generate(), account_id: account_id}
 
     Repo.query!("UPDATE accounts SET credential_status = 'revoked' WHERE id = $1", [
       Ecto.UUID.dump!(account_id)
     ])
 
-    assert {:ok, :verification_pending} =
-             Identity.resend_verification(%{
-               operation_id: Ecto.UUID.generate(),
-               account_id: account_id
-             })
+    assert {:ok, :verification_pending} = Identity.resend_verification(request)
+
+    Repo.query!("UPDATE accounts SET credential_status = 'active' WHERE id = $1", [
+      Ecto.UUID.dump!(account_id)
+    ])
+
+    assert {:ok, :verification_pending} = Identity.resend_verification(request)
 
     assert [challenge] = current_challenges()
     assert challenge.jti == original.jti
-    assert resource_count(Identity.ResendOperation, Identity) == 0
+    assert resource_count(Identity.ResendOperation, Identity) == 1
+    [operation] = records(Identity.ResendOperation, Identity)
+    assert operation.outcome == :neutral
     assert resource_count(MessageIntent, Communications) == 1
     assert row_count("communications_protected_envelopes") == 1
     assert length(Repo.all(from job in Oban.Job)) == 1
@@ -418,6 +556,33 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert Enum.all?(results, &(&1 == {:ok, :verification_pending}))
   end
 
+  defp assert_concurrent_email_resends(requests) do
+    parent = self()
+
+    tasks =
+      Enum.map(requests, fn request ->
+        Task.async(fn ->
+          send(parent, {:email_resend_ready, self()})
+
+          receive do
+            :start ->
+              Sandbox.unboxed_run(Repo, fn ->
+                Identity.resend_verification_by_email(request)
+              end)
+          after
+            15_000 -> {:error, :resend_barrier_timeout}
+          end
+        end)
+      end)
+
+    for _ <- requests do
+      assert_receive {:email_resend_ready, _pid}, 5_000
+    end
+
+    Enum.each(tasks, &send(&1.pid, :start))
+    Enum.map(tasks, &Task.await(&1, 60_000))
+  end
+
   defp intent_count(operation_id) do
     count_for_query!(
       "SELECT count(*) FROM message_intents WHERE source_operation_id = $1",
@@ -449,14 +614,17 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     """)
   end
 
-  defp cleanup_unboxed_registration(account_id) do
+  defp cleanup_unboxed_registration(account_id, resend_operation_ids \\ []) do
     Sandbox.unboxed_run(Repo, fn ->
-      Repo.transaction(fn -> cleanup_unboxed_registration_rows(account_id) end)
+      Repo.transaction(fn ->
+        cleanup_unboxed_registration_rows(account_id, resend_operation_ids)
+      end)
     end)
   end
 
-  defp cleanup_unboxed_registration_rows(account_id) do
+  defp cleanup_unboxed_registration_rows(account_id, resend_operation_ids) do
     account_binary = Ecto.UUID.dump!(account_id)
+    resend_operation_binaries = Enum.map(resend_operation_ids, &Ecto.UUID.dump!/1)
 
     %{rows: registration_rows} =
       Repo.query!(
@@ -467,9 +635,10 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
       )
 
     %{rows: resend_rows} =
-      Repo.query!("SELECT operation_id FROM resend_operations WHERE account_id = $1", [
-        account_binary
-      ])
+      Repo.query!(
+        "SELECT operation_id FROM resend_operations WHERE account_id = $1 OR operation_id = ANY($2::uuid[])",
+        [account_binary, resend_operation_binaries]
+      )
 
     registration_operation_ids = Enum.map(registration_rows, fn [id] -> id end)
     operation_ids = registration_operation_ids ++ Enum.map(resend_rows, fn [id] -> id end)
@@ -506,7 +675,11 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     ])
 
     Repo.query!("DELETE FROM tokens WHERE account_id = $1", [account_binary])
-    Repo.query!("DELETE FROM resend_operations WHERE account_id = $1", [account_binary])
+
+    Repo.query!(
+      "DELETE FROM resend_operations WHERE account_id = $1 OR operation_id = ANY($2::uuid[])",
+      [account_binary, resend_operation_binaries]
+    )
 
     Repo.query!("DELETE FROM registration_operations WHERE created_account_id = $1", [
       account_binary

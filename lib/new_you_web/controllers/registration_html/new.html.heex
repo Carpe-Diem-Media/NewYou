@@ -1,0 +1,362 @@
+<main id="main" class="registration-page min-h-svh bg-ny-paper text-ny-copy">
+  <header class="mx-auto flex w-full max-w-7xl flex-col gap-5 border-b border-ny-rule px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
+    <p class="font-ny-display text-lg font-semibold tracking-tight text-ny-ink">
+      {NewYou.platform_name()}
+    </p>
+
+    <nav
+      aria-label={copy("shared.language.change", @locale)}
+      class="flex flex-wrap gap-x-5 gap-y-2"
+    >
+      <a
+        lang="af"
+        href="/register?locale=af"
+        aria-current={if @locale == "af", do: "page"}
+        class={[
+          "min-h-11 content-center text-sm underline decoration-ny-rule underline-offset-4 hover:text-ny-accent active:text-ny-accent",
+          @locale == "af" && "font-semibold text-ny-ink decoration-ny-accent"
+        ]}
+      >
+        {copy("shared.language.afrikaans", @locale)}
+      </a>
+      <a
+        lang="en"
+        href="/register?locale=en"
+        aria-current={if @locale == "en", do: "page"}
+        class={[
+          "min-h-11 content-center text-sm underline decoration-ny-rule underline-offset-4 hover:text-ny-accent active:text-ny-accent",
+          @locale == "en" && "font-semibold text-ny-ink decoration-ny-accent"
+        ]}
+      >
+        {copy("shared.language.english", @locale)}
+      </a>
+    </nav>
+  </header>
+
+  <div class="mx-auto grid w-full max-w-7xl grid-cols-1 gap-y-12 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-8 lg:px-10 lg:py-12">
+    <section class="grid content-start gap-6 min-w-0 lg:col-span-5">
+      <h1
+        id="launch-heading"
+        class="max-w-3xl min-w-0 break-words font-ny-display text-4xl font-semibold leading-tight tracking-tight text-ny-ink sm:text-5xl lg:text-ny-display"
+      >
+        {copy("public.entry.launch.title", @locale)}
+      </h1>
+    </section>
+
+    <section class="grid content-end gap-6 min-w-0 lg:col-span-7 lg:col-start-6">
+      <p class="max-w-prose text-lg leading-relaxed text-ny-copy">
+        {copy("public.entry.launch.body", @locale)}
+      </p>
+    </section>
+
+    <section class="grid content-start gap-5 border-t-2 border-ny-rule-strong pt-6 lg:col-span-10">
+      <p class="max-w-prose text-base leading-relaxed text-ny-copy">
+        {copy("public.entry.safety.body", @locale)}
+      </p>
+    </section>
+
+    <section
+      id="registration"
+      aria-labelledby="registration-heading"
+      class="grid content-start gap-8 min-w-0 border-t border-ny-rule pt-10 sm:pt-12 lg:col-span-12 lg:mt-2 lg:pt-10"
+    >
+      <div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
+        <header class="grid content-start gap-4 lg:col-span-4">
+          <h2
+            id="registration-heading"
+            class="font-ny-display text-3xl font-semibold leading-tight tracking-tight text-ny-ink sm:text-ny-section"
+          >
+            {copy("identity.registration.title", @locale)}
+          </h2>
+          <p class="max-w-prose text-base leading-relaxed text-ny-copy">
+            {copy("identity.registration.intro", @locale)}
+          </p>
+        </header>
+
+        <.form
+          for={@form}
+          action={~p"/register"}
+          method="post"
+          id="registration-form"
+          class="grid grid-cols-1 gap-x-6 gap-y-6 lg:col-span-8 lg:grid-cols-2"
+        >
+          <input type="hidden" name="registration[operation_id]" value={@operation_id} />
+
+          <%= if @global_error do %>
+            <p
+              role="alert"
+              class="border-l-2 border-ny-error px-4 py-2 text-sm leading-relaxed text-ny-ink lg:col-span-2"
+            >
+              {copy(@global_error, @locale)}
+            </p>
+          <% end %>
+
+          <div class="grid content-start gap-2">
+            <label for="registration-first-name" class="text-sm font-semibold text-ny-ink">
+              {copy("identity.registration.first_name.label", @locale)}
+            </label>
+            <input
+              id="registration-first-name"
+              type="text"
+              name="registration[first_name]"
+              value={Map.get(@values, "first_name", "")}
+              autocomplete="given-name"
+              required
+              aria-required="true"
+              aria-invalid={if @errors["first_name"], do: "true"}
+              aria-describedby={if @errors["first_name"], do: "registration-first-name-error"}
+              autofocus={not is_nil(@errors["first_name"]) or not is_nil(@global_error)}
+              class={[
+                "min-h-12 w-full border border-ny-field-edge bg-ny-sheet px-4 py-3 text-base text-ny-ink outline-2 outline-transparent outline-offset-[-3px] focus-visible:outline-ny-focus",
+                @errors["first_name"] && "border-ny-error"
+              ]}
+            />
+            <%= if @errors["first_name"] do %>
+              <p
+                id="registration-first-name-error"
+                role="alert"
+                class="text-sm leading-relaxed text-ny-error"
+              >
+                {copy(@errors["first_name"], @locale)}
+              </p>
+            <% end %>
+          </div>
+
+          <div class="grid content-start gap-2">
+            <label for="registration-surname" class="text-sm font-semibold text-ny-ink">
+              {copy("identity.registration.surname.label", @locale)}
+            </label>
+            <input
+              id="registration-surname"
+              type="text"
+              name="registration[surname]"
+              value={Map.get(@values, "surname", "")}
+              autocomplete="family-name"
+              required
+              aria-required="true"
+              aria-invalid={if @errors["surname"], do: "true"}
+              aria-describedby={if @errors["surname"], do: "registration-surname-error"}
+              class={[
+                "min-h-12 w-full border border-ny-field-edge bg-ny-sheet px-4 py-3 text-base text-ny-ink outline-2 outline-transparent outline-offset-[-3px] focus-visible:outline-ny-focus",
+                @errors["surname"] && "border-ny-error"
+              ]}
+            />
+            <%= if @errors["surname"] do %>
+              <p
+                id="registration-surname-error"
+                role="alert"
+                class="text-sm leading-relaxed text-ny-error"
+              >
+                {copy(@errors["surname"], @locale)}
+              </p>
+            <% end %>
+          </div>
+
+          <div class="grid content-start gap-2">
+            <label for="registration-email" class="text-sm font-semibold text-ny-ink">
+              {copy("identity.registration.email.label", @locale)}
+            </label>
+            <input
+              id="registration-email"
+              type="email"
+              name="registration[email]"
+              value={Map.get(@values, "email", "")}
+              autocomplete="email"
+              required
+              aria-required="true"
+              aria-invalid={if @errors["email"], do: "true"}
+              aria-describedby={if @errors["email"], do: "registration-email-error"}
+              class={[
+                "min-h-12 w-full border border-ny-field-edge bg-ny-sheet px-4 py-3 text-base text-ny-ink outline-2 outline-transparent outline-offset-[-3px] focus-visible:outline-ny-focus",
+                @errors["email"] && "border-ny-error"
+              ]}
+            />
+            <%= if @errors["email"] do %>
+              <p
+                id="registration-email-error"
+                role="alert"
+                class="text-sm leading-relaxed text-ny-error"
+              >
+                {copy(@errors["email"], @locale)}
+              </p>
+            <% end %>
+          </div>
+
+          <div class="grid content-start gap-2">
+            <label for="registration-password" class="text-sm font-semibold text-ny-ink">
+              {copy("identity.registration.password.label", @locale)}
+            </label>
+            <input
+              id="registration-password"
+              type="password"
+              name="registration[password]"
+              autocomplete="new-password"
+              required
+              aria-required="true"
+              aria-invalid={if @errors["password"], do: "true"}
+              aria-describedby={if @errors["password"], do: "registration-password-error"}
+              class={[
+                "min-h-12 w-full border border-ny-field-edge bg-ny-sheet px-4 py-3 text-base text-ny-ink outline-2 outline-transparent outline-offset-[-3px] focus-visible:outline-ny-focus",
+                @errors["password"] && "border-ny-error"
+              ]}
+            />
+            <%= if @errors["password"] do %>
+              <p
+                id="registration-password-error"
+                role="alert"
+                class="text-sm leading-relaxed text-ny-error"
+              >
+                {copy(@errors["password"], @locale)}
+              </p>
+            <% end %>
+          </div>
+
+          <fieldset class="grid content-start gap-2 lg:col-span-2">
+            <legend class="text-sm font-semibold text-ny-ink">
+              {copy("identity.registration.preferred_language.label", @locale)}
+            </legend>
+            <p class="text-base text-ny-ink">
+              {if @locale == "af",
+                do: copy("shared.language.afrikaans", @locale),
+                else: copy("shared.language.english", @locale)}
+            </p>
+            <input
+              type="hidden"
+              name="registration[preferred_language]"
+              value={@locale}
+              aria-describedby="preferred-language-help"
+            />
+            <p id="preferred-language-help" class="text-sm leading-relaxed text-ny-muted">
+              {copy("identity.registration.preferred_language.help", @locale)}
+            </p>
+          </fieldset>
+
+          <div class="grid gap-2 lg:col-span-2">
+            <label
+              for="registration-age"
+              class="flex min-h-11 items-start gap-3 py-2 text-base leading-relaxed text-ny-ink"
+            >
+              <input
+                id="registration-age"
+                type="checkbox"
+                name="registration[confirmed_age_18]"
+                value="true"
+                checked={Map.get(@values, "confirmed_age_18") == "true"}
+                required
+                aria-required="true"
+                aria-invalid={if @errors["confirmed_age_18"], do: "true"}
+                aria-describedby={if @errors["confirmed_age_18"], do: "registration-age-error"}
+                class="mt-1 size-5 shrink-0 accent-ny-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ny-focus"
+              />
+              <span>{copy("identity.registration.age_confirmation", @locale)}</span>
+            </label>
+            <%= if @errors["confirmed_age_18"] do %>
+              <p
+                id="registration-age-error"
+                role="alert"
+                class="text-sm leading-relaxed text-ny-error"
+              >
+                {copy(@errors["confirmed_age_18"], @locale)}
+              </p>
+            <% end %>
+          </div>
+
+          <div class="grid gap-6 border-y border-ny-rule py-6 lg:col-span-2">
+            <p class="max-w-prose text-sm leading-relaxed text-ny-copy">
+              {copy("legal.shared.document_language_disclosure", @locale)}
+            </p>
+
+            <div class="grid gap-2">
+              <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                <label
+                  for="registration-terms"
+                  class="flex min-h-11 items-start gap-3 py-2 text-base leading-relaxed text-ny-ink"
+                >
+                  <input
+                    id="registration-terms"
+                    type="checkbox"
+                    name="registration[terms_accepted]"
+                    value="true"
+                    checked={Map.get(@values, "terms_accepted") == "true"}
+                    required
+                    aria-required="true"
+                    aria-invalid={if @errors["terms_accepted"], do: "true"}
+                    aria-describedby={
+                      if @errors["terms_accepted"], do: "registration-terms-error"
+                    }
+                    class="mt-1 size-5 shrink-0 accent-ny-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ny-focus"
+                  />
+                  <span>{copy("identity.registration.terms_acceptance", @locale)}</span>
+                </label>
+                <a
+                  href="/legal/terms"
+                  class="min-h-11 content-center text-sm leading-relaxed text-ny-ink underline decoration-ny-accent underline-offset-4 hover:text-ny-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ny-focus"
+                >
+                  {copy("identity.registration.terms_link", @locale)}
+                </a>
+              </div>
+              <%= if @errors["terms_accepted"] do %>
+                <p
+                  id="registration-terms-error"
+                  role="alert"
+                  class="text-sm leading-relaxed text-ny-error"
+                >
+                  {copy(@errors["terms_accepted"], @locale)}
+                </p>
+              <% end %>
+            </div>
+
+            <div class="grid gap-3 border-t border-ny-rule pt-6">
+              <p class="max-w-prose text-sm leading-relaxed text-ny-copy">
+                {copy("identity.registration.privacy_presentation", @locale)}
+              </p>
+              <a
+                href="/legal/privacy"
+                class="min-h-11 content-center text-sm leading-relaxed text-ny-ink underline decoration-ny-accent underline-offset-4 hover:text-ny-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ny-focus"
+              >
+                {copy("identity.registration.privacy_link", @locale)}
+              </a>
+              <label
+                for="registration-privacy"
+                class="flex min-h-11 items-start gap-3 py-2 text-base leading-relaxed text-ny-ink"
+              >
+                <input
+                  id="registration-privacy"
+                  type="checkbox"
+                  name="registration[privacy_accepted]"
+                  value="true"
+                  checked={Map.get(@values, "privacy_accepted") == "true"}
+                  required
+                  aria-required="true"
+                  aria-invalid={if @errors["privacy_accepted"], do: "true"}
+                  aria-describedby={
+                    if @errors["privacy_accepted"], do: "registration-privacy-error"
+                  }
+                  class="mt-1 size-5 shrink-0 accent-ny-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ny-focus"
+                />
+                <span>{copy("identity.registration.privacy_acceptance", @locale)}</span>
+              </label>
+              <%= if @errors["privacy_accepted"] do %>
+                <p
+                  id="registration-privacy-error"
+                  role="alert"
+                  class="text-sm leading-relaxed text-ny-error"
+                >
+                  {copy(@errors["privacy_accepted"], @locale)}
+                </p>
+              <% end %>
+            </div>
+          </div>
+
+          <button
+            id="registration-submit"
+            type="submit"
+            class="min-h-12 w-full justify-self-start bg-ny-accent px-6 py-3 text-base font-semibold text-ny-accent-ink underline-offset-4 hover:bg-ny-accent-strong active:bg-ny-accent-strong disabled:bg-ny-muted disabled:text-ny-paper disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ny-focus sm:w-auto"
+          >
+            {copy("identity.registration.submit", @locale)}
+          </button>
+        </.form>
+      </div>
+    </section>
+  </div>
+</main>

@@ -1,0 +1,24 @@
+<main class="registration-page min-h-svh bg-ny-paper text-ny-copy">
+  <div class="mx-auto grid min-h-svh w-full max-w-7xl content-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-12 lg:gap-12 lg:px-10">
+    <h1 class="col-span-full font-ny-display text-4xl leading-tight text-ny-ink sm:text-5xl">
+      {NewYou.platform_name()}
+    </h1>
+
+    <div class="col-span-full grid gap-4 sm:grid-cols-2 lg:col-span-8">
+      <a
+        lang="af"
+        href="/register?locale=af"
+        class="inline-flex min-h-14 items-center justify-between border-y border-ny-rule px-4 py-3 font-ny-display text-xl text-ny-ink underline decoration-ny-accent underline-offset-4 hover:bg-ny-paper-soft active:bg-ny-paper-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ny-focus"
+      >
+        {copy("shared.language.afrikaans", "af")}
+      </a>
+      <a
+        lang="en"
+        href="/register?locale=en"
+        class="inline-flex min-h-14 items-center justify-between border-y border-ny-rule px-4 py-3 font-ny-display text-xl text-ny-ink underline decoration-ny-accent underline-offset-4 hover:bg-ny-paper-soft active:bg-ny-paper-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ny-focus"
+      >
+        {copy("shared.language.english", "en")}
+      </a>
+    </div>
+  </div>
+</main>

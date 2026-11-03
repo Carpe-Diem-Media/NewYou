@@ -1,0 +1,111 @@
+/* Hallmark · shape: app screen · genre: editorial · theme: custom · idea: exact launch and safety copy leads into the real registration form · vibe: warm grounded calm editorial practical · redesign: full · nav: language switch · signature: safety before registration · states: initial, validation, pending, resend result · ground: warm paper · ink: forest-black · accent: forest · faces: Georgia / system sans · posture: restrained · axes: light/roman-serif/chromatic-green · contrast: pass · copy: governed P8-05 verbatim · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V3 · weakest: V, a registration form must stay familiar; made the launch and safety content lead before the action */
+/* Hallmark · hero-review: fix · 4 findings · 2 resolved (responsive composition, custom direction); 2 governed (exact title, safety before registration) */
+/* Hallmark · finish-review: fix · routed Browse public content to the locale-specific approved launch/safety screen and Back to home to language choice; regression tested */
+/* Hallmark · answered F26 · keep the approved P8-05 launch title and long safety copy byte-exact; the form follows them in reading order */
+/* Hallmark · answered F1 · keep the approved English pending question punctuation byte-exact */
+/* Hallmark · dropped _csrf_token, registration[operation_id] · their fields stay wired; both values must be fresh for each response */
+@theme inline {
+  --color-ny-paper: var(--ny-paper);
+  --color-ny-paper-soft: var(--ny-paper-soft);
+  --color-ny-sheet: var(--ny-sheet);
+  --color-ny-ink: var(--ny-ink);
+  --color-ny-copy: var(--ny-copy);
+  --color-ny-muted: var(--ny-muted);
+  --color-ny-rule: var(--ny-rule);
+  --color-ny-rule-strong: var(--ny-rule-strong);
+  --color-ny-field-edge: var(--ny-field-edge);
+  --color-ny-accent: var(--ny-accent);
+  --color-ny-accent-strong: var(--ny-accent-strong);
+  --color-ny-accent-ink: var(--ny-accent-ink);
+  --color-ny-focus: var(--ny-focus);
+  --color-ny-error: var(--ny-error);
+  --font-ny-display: var(--ny-font-display);
+  --text-ny-display: var(--ny-text-display);
+  --text-ny-section: var(--ny-text-section);
+}
+
+:root {
+  --ny-paper: oklch(98% 0.012 83);
+  --ny-paper-soft: oklch(95% 0.018 83);
+  --ny-sheet: oklch(99.5% 0.006 83);
+  --ny-ink: oklch(22% 0.025 164);
+  --ny-copy: oklch(27% 0.022 164);
+  --ny-muted: oklch(42% 0.022 164);
+  --ny-rule: oklch(82% 0.022 83);
+  --ny-rule-strong: oklch(56% 0.03 164);
+  --ny-field-edge: oklch(47% 0.028 164);
+  --ny-accent: oklch(39% 0.085 160);
+  --ny-accent-strong: oklch(32% 0.075 160);
+  --ny-accent-ink: oklch(98% 0.01 83);
+  --ny-focus: oklch(40% 0.11 160);
+  --ny-error: oklch(46% 0.14 27);
+  --ny-font-display: Georgia, "Times New Roman", serif;
+  --ny-font-body: ui-sans-serif, system-ui, sans-serif;
+  --ny-text-display: clamp(2.5rem, 5vw, 4.5rem);
+  --ny-text-section: clamp(2rem, 3vw, 3rem);
+}
+
+:root[data-theme="dark"] {
+  --ny-paper: oklch(19% 0.018 164);
+  --ny-paper-soft: oklch(24% 0.022 164);
+  --ny-sheet: oklch(22% 0.02 164);
+  --ny-ink: oklch(94% 0.012 83);
+  --ny-copy: oklch(87% 0.018 83);
+  --ny-muted: oklch(75% 0.018 83);
+  --ny-rule: oklch(34% 0.024 164);
+  --ny-rule-strong: oklch(63% 0.022 83);
+  --ny-field-edge: oklch(68% 0.024 83);
+  --ny-accent: oklch(76% 0.09 154);
+  --ny-accent-strong: oklch(83% 0.085 154);
+  --ny-accent-ink: oklch(20% 0.025 164);
+  --ny-focus: oklch(80% 0.09 154);
+  --ny-error: oklch(76% 0.13 27);
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+.registration-page {
+  color-scheme: light;
+  color: var(--ny-copy);
+  font-family: var(--ny-font-body);
+}
+
+:root[data-theme="dark"] .registration-page {
+  color-scheme: dark;
+}
+
+.registration-page :focus-visible {
+  outline: 2px solid var(--ny-focus);
+  outline-offset: 2px;
+}
+
+.registration-page a:active {
+  color: var(--ny-accent-strong);
+}
+
+.registration-page button:active {
+  background-color: var(--ny-accent-strong);
+}
+
+.registration-page :is(h1, h2) {
+  text-wrap: balance;
+}
+
+.registration-page ::selection {
+  color: var(--ny-accent-ink);
+  background-color: var(--ny-accent);
+}
+
+.registration-page :where(input:not([type="checkbox"]), textarea) {
+  caret-color: var(--ny-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .registration-page {
+    scroll-behavior: auto;
+  }
+}
