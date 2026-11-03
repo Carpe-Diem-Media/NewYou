@@ -1,9 +1,9 @@
 defmodule NewYou.Proof.Catalog do
   @moduledoc """
-  Fixed P8-04 coverage inventory and compiled infrastructure self-test manifests.
+  Fixed P8-04 coverage inventory, infrastructure self-tests and bounded P8-05 mappings.
 
   Registrations supply callbacks only. They cannot add required coverage or turn
-  the unavailable TB-001 business manifests into approved manifests.
+  unavailable future TB-001 business manifests into approved manifests.
   """
 
   @coverage_inventory [
@@ -67,8 +67,6 @@ defmodule NewYou.Proof.Catalog do
     "privacy.redaction"
   ]
 
-  @business_manifests %{}
-
   @type business_manifest :: %{
           required(:version) => String.t(),
           required(:digest) => String.t(),
@@ -84,7 +82,7 @@ defmodule NewYou.Proof.Catalog do
           self_test: %{version: String.t(), digest: String.t(), cases: [map()]}
         }
   @spec compiled_business_registrations() :: [registration()]
-  def compiled_business_registrations, do: []
+  def compiled_business_registrations, do: NewYou.Proof.P805Catalog.registrations()
 
   @spec validate_compiled_registrations(map(), [registration()]) :: :ok | {:error, [atom()]}
   def validate_compiled_registrations(manifests, registrations)
@@ -337,7 +335,7 @@ defmodule NewYou.Proof.Catalog do
     end
   end
 
-  defp business_manifests, do: Map.new(@business_manifests)
+  defp business_manifests, do: NewYou.Proof.P805Catalog.manifests()
 
   defp digest(term) do
     :crypto.hash(:sha256, :erlang.term_to_binary(term, [:deterministic]))

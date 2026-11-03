@@ -24,7 +24,7 @@ devcore-project run test -- mise exec -- mix run test/proof/run.exs --mode tb001
 
 Dependency provenance derives `runtime_required` from the TEST Mix dependency graph before it checks loaded application versions. Mix documents the dependency `:runtime` option in its [v1.20.4 dependency task reference](https://mix.hexdocs.pm/1.20.4/Mix.Tasks.Deps.html). The runner reads the resolved graph through `Mix.Dep.cached/0`, which is an internal API in the [v1.20.4 Mix.Dep source](https://github.com/elixir-lang/elixir/blob/v1.20.4/lib/mix/lib/mix/dep.ex). Recheck this derivation when upgrading Mix.
 
-At WELL-5 completion, `tb001` is expected to exit `1` because later business-family manifests and cases, including `browser_spine`, are unavailable. The result must identify those missing obligations. That expected failure is acceptance evidence, not Phase-8 architectural PASS. Once later slices supply complete reviewed manifests and cases, this mode can pass only when every required family, case, assertion, provenance check, and cleanup condition passes.
+At WELL-5 completion, `tb001` was expected to exit `1` because later business-family manifests and cases, including `browser_spine`, are unavailable. The result must identify those missing obligations. That expected failure is acceptance evidence, not Phase-8 architectural PASS. Once later slices supply complete reviewed manifests and cases, this mode can pass only when every required family, case, assertion, provenance check, and cleanup condition passes.
 
 `diagnostic` runs selected infrastructure cases for investigation. It cannot qualify as full proof.
 
@@ -41,6 +41,8 @@ Review the artifact’s exact Git SHA, source cleanliness, dependency identity, 
 Proof controls and probes live under `test/` and are excluded from production builds. They do not provide a runtime switch, business authority, provider transport, production write path, or durable recovery mechanism. PostgreSQL advisory locks exist only in infrastructure fixtures that demonstrate actual contention; later business races must execute through their owning Ash interfaces without harness-supplied transactions or locks.
 
 The runner and scenario controller remain outside the worker being terminated. Worker replacement can demonstrate consumed instructions stay consumed, uncommitted database work is dropped, locks are released, and replacement work owns a fresh connection. It does not prove business durable-recovery semantics. Later slices must reconstruct business truth through fresh owning interfaces from PostgreSQL or durable executor state. A whole runner or BEAM crash invalidates the run; never resume an old PASS.
+
+WELL-53 adds the bounded P8-05 mappings described in [P8-05 production-path proof](p8-05-proof.md). Their success still does not certify the later families or full TB-001.
 
 ## Result schema checks
 

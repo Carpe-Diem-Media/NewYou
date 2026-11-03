@@ -1,6 +1,8 @@
 defmodule NewYou.Identity.Actions.AcceptRegistration do
   use Ash.Resource.Actions.Implementation
 
+  @test_build Mix.env() == :test
+
   @operation_lifetime_seconds 24 * 60 * 60
   @verifier_provider "AshAuthentication.Argon2Provider"
   @verifier_version "argon2_elixir-4.1.3"
@@ -46,6 +48,12 @@ defmodule NewYou.Identity.Actions.AcceptRegistration do
              expires_at: DateTime.add(committed_at, @operation_lifetime_seconds, :second),
              created_account_id: account.id
            }) do
+      # The checkpoint is compiled out of non-TEST builds. It runs after all
+      # owner writes, still inside the existing Ash acceptance transaction.
+      if @test_build do
+        NewYou.Proof.RegistrationSeam.checkpoint()
+      end
+
       {:ok,
        %{
          status: :verification_pending,

@@ -312,8 +312,16 @@ defmodule NewYou.Proof.RunnerTest do
     assert result["exit_code"] == 2
     assert "runner.unsupported_option" in result["reason_codes"]
     assert length(result["results"]) == length(Catalog.coverage_inventory())
-    assert Enum.all?(result["results"], &(&1["status"] == "missing"))
-    assert Enum.all?(result["results"], &("missing.manifest" in &1["reason_codes"]))
+    assert_unexecuted_business_inventory(result["results"])
+
+    assert Enum.all?(
+             Enum.reject(
+               result["results"],
+               &Map.has_key?(Catalog.required().business_manifests, &1["coverage_id"])
+             ),
+             &("missing.manifest" in &1["reason_codes"])
+           )
+
     assert :ok = Result.validate(result, mode: :tb001)
   end
 
@@ -322,7 +330,7 @@ defmodule NewYou.Proof.RunnerTest do
 
     assert result["exit_code"] == 2
     assert "runner.unsupported_option" in result["reason_codes"]
-    assert Enum.all?(result["results"], &(&1["status"] == "missing"))
+    assert_unexecuted_business_inventory(result["results"])
   end
 
   test "canonical TB-001 rejects business registrations by themselves" do
@@ -333,7 +341,7 @@ defmodule NewYou.Proof.RunnerTest do
 
     assert result["exit_code"] == 2
     assert "runner.unsupported_option" in result["reason_codes"]
-    assert Enum.all?(result["results"], &(&1["status"] == "missing"))
+    assert_unexecuted_business_inventory(result["results"])
   end
 
   test "canonical TB-001 rejects diagnostic-only and unknown runtime options" do
@@ -397,26 +405,34 @@ defmodule NewYou.Proof.RunnerTest do
     end
   end
 
-  test "full mode exposes every missing business family and browser spine" do
-    result = Runner.run(:tb001)
+  test "full evaluator exposes every unavailable family alongside owned P8-05 cases" do
+    {results, cleanup} = Runner.execute_full_catalog(Catalog.required().business_manifests, [])
+    result = Runner.evaluate_full(Catalog.required().business_manifests, [], true, cleanup)
+    assert Enum.map(results, & &1["coverage_id"]) == Catalog.coverage_inventory()
+    assert Enum.all?(results, &(&1["verdict"] == "FAIL"))
 
-    assert result["coverage_inventory"] == Catalog.coverage_inventory()
-    assert Enum.map(result["results"], & &1["coverage_id"]) == Catalog.coverage_inventory()
-    assert result["git"]["head_before"] == current_project_sha()
-    assert Enum.all?(result["results"], &(&1["status"] == "missing"))
-    assert Enum.all?(result["results"], &(&1["verdict"] == "FAIL"))
-    assert Enum.all?(result["results"], &("missing.manifest" in &1["reason_codes"]))
-    assert result["overall_verdict"] == "FAIL"
-    assert result["exit_code"] in [1, 2]
-    assert "browser_spine" == List.last(Enum.map(result["results"], & &1["coverage_id"]))
+    unavailable =
+      Enum.reject(
+        results,
+        &Map.has_key?(Catalog.required().business_manifests, &1["coverage_id"])
+      )
+
+    assert length(unavailable) == 7
+
+    assert Enum.all?(
+             unavailable,
+             &(&1["status"] == "missing" and "missing.manifest" in &1["reason_codes"])
+           )
+
+    registration = Enum.find(results, &(&1["coverage_id"] == "registration_pmr_reconciliation"))
+    assert hd(registration["cases"])["reason_codes"] == ["missing.case"]
+    assert result.verdict == "FAIL"
+    assert result.exit_code == 1
   end
 
   test "synthetic full-catalog executor can pass a complete registered fixture" do
     manifests = executable_fixture_manifests()
     registrations = executable_fixture_registrations(manifests)
-
-    assert Catalog.required().business_manifests == %{}
-    assert Catalog.compiled_business_registrations() == []
 
     {results, cleanup} = Runner.execute_full_catalog(manifests, registrations)
 
@@ -596,8 +612,6 @@ defmodule NewYou.Proof.RunnerTest do
   test "test-only full evaluator accepts a complete fixture without catalog business manifests" do
     manifests = full_fixture_manifests()
     cases = full_fixture_cases(manifests)
-
-    assert Catalog.required().business_manifests == %{}
 
     result = evaluate_full_fixture(manifests, cases)
 
@@ -918,6 +932,30 @@ defmodule NewYou.Proof.RunnerTest do
     end)
   end
 
+  defp assert_unexecuted_business_inventory(results) do
+    assert Enum.map(results, & &1["coverage_id"]) == Catalog.coverage_inventory()
+
+    for entry <- results do
+      case Map.fetch(Catalog.required().business_manifests, entry["coverage_id"]) do
+        {:ok, manifest} ->
+          assert entry["status"] == "not_run"
+          assert entry["manifest_sha256"] == manifest.digest
+          assert entry["required_case_ids"] == Enum.map(manifest.cases, & &1.case_id)
+
+          assert Enum.all?(
+                   entry["cases"],
+                   &(&1["status"] == "not_run" and &1["verdict"] == "FAIL")
+                 )
+
+        :error ->
+          assert entry["status"] == "missing"
+          assert entry["manifest_sha256"] == nil
+          assert entry["cases"] == []
+          assert entry["reason_codes"] == ["missing.manifest"]
+      end
+    end
+  end
+
   defp executable_fixture_manifests, do: full_fixture_manifests()
 
   defp executable_fixture_registrations(manifests) do
@@ -1072,11 +1110,5 @@ defmodule NewYou.Proof.RunnerTest do
       )
 
     root
-  end
-
-  defp current_project_sha do
-    root = Path.dirname(Mix.Project.project_file())
-    {sha, 0} = System.cmd("git", ["-C", root, "rev-parse", "HEAD"])
-    String.trim(sha)
   end
 end

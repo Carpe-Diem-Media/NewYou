@@ -43,6 +43,17 @@ defmodule NewYou.Proof.SelfTest do
     end
   end
 
+  @doc false
+  def observe_manifest!(code, value)
+      when is_binary(code) and (is_boolean(value) or is_integer(value)) do
+    observations = Process.get(@observations_context_key, [])
+    Process.put(@observations_context_key, observations ++ [%{"code" => code, "value" => value}])
+    :ok
+  end
+
+  @doc false
+  def cleanup_manifest!(updates), do: record_cleanup(updates)
+
   @spec run([String.t()], keyword()) :: {[map()], map()}
   def run(case_ids, opts \\ []) do
     manifests = Map.new(Catalog.required().self_test.cases, &{&1.case_id, &1})
@@ -1360,7 +1371,7 @@ defmodule NewYou.Proof.SelfTest do
 
         :missing_family ->
           length(Catalog.validate_registrations([], :tb001).missing_families) ==
-            length(Catalog.coverage_inventory())
+            length(Catalog.coverage_inventory()) - map_size(Catalog.required().business_manifests)
 
         :missing_case ->
           incomplete = List.delete_at(registrations, length(registrations) - 1)
@@ -1596,6 +1607,8 @@ defmodule NewYou.Proof.SelfTest do
               Path.join([build_path, "lib", "new_you", "ebin", "Elixir.NewYou.Proof.*.beam"])
             ) == []
 
+        hook_absent? = production_owner_hook_absent?(build_path)
+
         expression =
           "Application.put_env(:new_you, :proof, %{enabled: true}); if Application.get_env(:new_you, :proof) != %{enabled: true} or Code.ensure_loaded?(NewYou.Proof.Runner), do: System.halt(1)"
 
@@ -1608,7 +1621,7 @@ defmodule NewYou.Proof.SelfTest do
             stderr_to_stdout: true
           )
 
-        {compile_status == 0, modules_absent?, runtime_status == 0}
+        {compile_status == 0, modules_absent? and hook_absent?, runtime_status == 0}
       rescue
         _ -> {false, false, false}
       after
@@ -1616,6 +1629,28 @@ defmodule NewYou.Proof.SelfTest do
       end
     else
       {false, false, false}
+    end
+  end
+
+  defp production_owner_hook_absent?(build_path) do
+    owner_beam =
+      Path.join([
+        build_path,
+        "lib",
+        "new_you",
+        "ebin",
+        "Elixir.NewYou.Identity.Actions.AcceptRegistration.beam"
+      ])
+
+    case :beam_lib.chunks(String.to_charlist(owner_beam), [:imports]) do
+      {:ok, {_module, [imports: imports]}} ->
+        Enum.all?(imports, fn {module, _function, _arity} ->
+          not String.starts_with?(Atom.to_string(module), "Elixir.NewYou.Proof.") and
+            module != Mix
+        end)
+
+      _ ->
+        false
     end
   end
 
@@ -1869,6 +1904,9 @@ defmodule NewYou.Proof.SelfTest do
 
   defp clean_cleanup,
     do: %{workers_stopped: true, connections_released: true, locks_released: true}
+
+  defp initial_case_cleanup("p805." <> _),
+    do: %{workers_stopped: true, connections_released: false, locks_released: false}
 
   defp initial_case_cleanup(_case_id), do: clean_cleanup()
 

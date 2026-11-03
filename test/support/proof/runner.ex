@@ -5,7 +5,7 @@ defmodule NewYou.Proof.Runner do
 
   @moduledoc """
   Deterministic P8-04 proof runner. Coverage completeness comes from compiled
-  manifests; the current catalog contains no business manifests.
+  manifests, including the bounded P8-05 cases.
   """
 
   alias NewYou.Proof.{Catalog, CutPoints, FullCatalog, Result, SelfTest}
@@ -311,7 +311,7 @@ defmodule NewYou.Proof.Runner do
       assertions_executed: length(assertion_ids),
       duration_ms: non_negative_integer(observation_value(observation, "duration_ms"), 0),
       timeout_ms: positive_integer(Map.get(manifest_case, :timeout_ms), 10_000),
-      timeout_override_reason: nil,
+      timeout_override_reason: Map.get(manifest_case, :timeout_override_reason),
       reason_codes: if(passed?, do: [], else: Enum.uniq(reasons))
     }
   end
@@ -412,7 +412,7 @@ defmodule NewYou.Proof.Runner do
       assertions_executed: length(assertion_ids),
       duration_ms: 0,
       timeout_ms: positive_integer(Map.get(manifest_case, :timeout_ms), 10_000),
-      timeout_override_reason: nil,
+      timeout_override_reason: Map.get(manifest_case, :timeout_override_reason),
       reason_codes: reasons
     }
   end
@@ -980,16 +980,13 @@ defmodule NewYou.Proof.Runner do
   end
 
   defp missing_business_results do
+    manifests = Catalog.required().business_manifests
+
     Enum.map(Catalog.coverage_inventory(), fn coverage_id ->
-      %{
-        "coverage_id" => coverage_id,
-        "manifest_sha256" => nil,
-        "required_case_ids" => [],
-        "status" => "missing",
-        "verdict" => "FAIL",
-        "reason_codes" => ["missing.manifest"],
-        "cases" => []
-      }
+      case Map.fetch(manifests, coverage_id) do
+        {:ok, manifest} -> full_entry_document(not_run_entry(coverage_id, manifest))
+        :error -> full_entry_document(missing_manifest_entry(coverage_id))
+      end
     end)
   end
 
