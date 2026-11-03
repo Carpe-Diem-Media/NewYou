@@ -49,8 +49,78 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
         ~s|<div class="bg-design-primary bg-design-primary-deep"></div>|
       )
 
-    assert Enum.any?(primary_fills, &String.contains?(&1, "primary fill is reserved"))
+    assert Enum.any?(
+             primary_fills,
+             &String.contains?(&1, "primary fill is reserved for authorized semantic components")
+           )
+
     assert Enum.any?(primary_fills, &String.contains?(&1, "primary-deep fill is limited"))
+  end
+
+  test "the enforcement check scans forbidden classes in multiline HEEx" do
+    source = """
+    <div
+      class={[
+        "bg-red-500",
+        "rounded-[13px]"
+      ]}
+    />
+    """
+
+    violations = Check.violations("lib/new_you_web/pages/new_page.html.heex", source)
+
+    assert Enum.any?(violations, &String.contains?(&1, "default Tailwind palette"))
+    assert Enum.any?(violations, &String.contains?(&1, "arbitrary visual utility"))
+    assert Enum.any?(violations, &String.contains?(&1, ":3: default Tailwind palette"))
+  end
+
+  test "the enforcement check accepts compliant multiline HEEx" do
+    source = """
+    <div
+      class={[
+        "flex",
+        "items-center",
+        "design-tablet:grid"
+      ]}
+    />
+    """
+
+    assert [] = Check.violations("lib/new_you_web/pages/new_page.html.heex", source)
+  end
+
+  test "the enforcement check preserves dynamic class rejection across lines" do
+    source = """
+    <div
+      class={[
+        "flex",
+        @active && "bg-red-500"
+      ]}
+    />
+    """
+
+    violations = Check.violations("lib/new_you_web/pages/new_page.html.heex", source)
+
+    assert Enum.any?(
+             violations,
+             &String.contains?(&1, "dynamic classes need a static semantic variant")
+           )
+
+    assert Enum.any?(violations, &String.contains?(&1, "default Tailwind palette"))
+  end
+
+  test "the class-expression scanner ignores braces inside quoted strings" do
+    source = """
+    <div
+      class={[
+        "flex }",
+        "rounded-[13px]"
+      ]}
+    />
+    """
+
+    violations = Check.violations("lib/new_you_web/pages/new_page.html.heex", source)
+
+    assert Enum.any?(violations, &String.contains?(&1, "arbitrary visual utility"))
   end
 
   test "the enforcement check ignores nonvisual data attributes" do
@@ -74,6 +144,13 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
                "lib/new_you_web/pages/legacy_page.html.heex",
                source,
                source <> "\n<div class=\"bg-red-500\"></div>"
+             )
+
+    assert [] =
+             Check.new_violations(
+               "lib/new_you_web/pages/legacy_page.html.heex",
+               source,
+               "<section>\n<div class=\"bg-red-500 rounded-lg\"></div>\n<div class=\"flex items-center\"></div>"
              )
   end
 
@@ -124,6 +201,94 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
       )
 
     assert approved_breakpoint == []
+  end
+
+  test "the enforcement check finds a raw CSS value split across lines" do
+    css = """
+    .example {
+      color:
+        #abc123;
+    }
+    """
+
+    violations = Check.violations("assets/css/new-feature.css", css)
+
+    assert Enum.any?(violations, &String.contains?(&1, "raw visual CSS value"))
+    assert Enum.any?(violations, &String.contains?(&1, "#abc123"))
+    assert Enum.any?(violations, &String.contains?(&1, "assets/css/new-feature.css:3:"))
+  end
+
+  test "changing a grandfathered CSS variable value is a new design violation" do
+    baseline = ".legacy { --new-color: #111111; }"
+    current = ".legacy { --new-color: #222222; }"
+
+    violations =
+      Check.new_violations("assets/css/legacy.css", baseline, current)
+
+    assert Enum.any?(
+             violations,
+             &String.contains?(&1, "new CSS variables require an approved token")
+           )
+  end
+
+  test "changing a grandfathered inline style value is a new design violation" do
+    baseline = ~s|<div style="color: #111111"></div>|
+    current = ~s|<div style="color: #222222"></div>|
+
+    violations = Check.new_violations("lib/new_you_web/pages/legacy.heex", baseline, current)
+
+    assert Enum.any?(
+             violations,
+             &String.contains?(&1, "inline visual styles bypass project tokens")
+           )
+  end
+
+  test "the enforcement check scans multiline JavaScript class and style assignments" do
+    js = """
+    element.classList.add(
+      "bg-red-500"
+    )
+    element.style.color =
+      "#abc123";
+    """
+
+    violations = Check.violations("assets/js/new-feature.js", js)
+
+    assert Enum.any?(violations, &String.contains?(&1, "default Tailwind palette"))
+
+    assert Enum.any?(
+             violations,
+             &String.contains?(&1, "inline visual styles bypass project tokens")
+           )
+  end
+
+  test "primary surface fill is limited to authorized semantic component paths" do
+    feature =
+      Check.violations(
+        "lib/new_you_web/pages/new_page.html.heex",
+        ~s|<section class="bg-design-primary"></section>|
+      )
+
+    assert Enum.any?(
+             feature,
+             &String.contains?(&1, "primary fill is reserved for authorized semantic components")
+           )
+
+    cta =
+      Check.violations(
+        "lib/new_you_web/components/design/button.ex",
+        ~s|<button class="bg-design-primary"></button>|
+      )
+
+    assert cta == []
+
+    enterprise_band =
+      Check.violations(
+        "lib/new_you_web/components/design/enterprise_band.ex",
+        ~s|<section class="bg-design-primary"></section>|
+      )
+
+    assert enterprise_band == []
   end
 
   test "the token contract rejects values that diverge from DESIGN.md" do

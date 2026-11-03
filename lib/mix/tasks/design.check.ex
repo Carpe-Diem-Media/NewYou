@@ -3,11 +3,12 @@ defmodule Mix.Tasks.Design.Check do
   use Mix.Task
 
   @shortdoc "Checks changed frontend code against DESIGN.md"
-  @double_class ~r/(?<![\w:-])class\s*=\s*"([^"]*)"/
-  @single_class ~r/(?<![\w:-])class\s*=\s*'([^']*)'/
-  @class_expr ~r/(?<![\w:-])class\s*=\s*\{([^}]*)\}/
-  @quoted ~r/"([^"]*)"|'([^']*)'/
-  @apply ~r/@apply\s+([^;{}]+);?/
+  @double_class ~r/(?<![\w:-])class\s*=\s*"((?:\\.|[^"\\])*)"/s
+  @single_class ~r/(?<![\w:-])class\s*=\s*'((?:\\.|[^'\\])*)'/s
+  @class_expr_start ~r/(?<![\w:-])class\s*=\s*\{/
+  @double_quoted ~r/"((?:\\.|[^"\\])*)"/s
+  @single_quoted ~r/'((?:\\.|[^'\\])*)'/s
+  @apply ~r/@apply\s+([^;{}]+);?/s
   @js_class ~r/(?:classList\.(?:add|remove|toggle)|className\s*=|setAttribute\(\s*["']class["']\s*,)\s*\(?\s*["']([^"']*)["']/
 
   @class_rules [
@@ -30,13 +31,18 @@ defmodule Mix.Tasks.Design.Check do
 
   @default_breakpoint ~r/^(?:sm|md|lg|xl|2xl|min-\[[^\]]+\]|max-\[[^\]]+\])$/
   @css_property ~r/(?:^|[;{])\s*(background(?:-color)?|color|border(?:-(?:top|right|bottom|left|inline|block))?(?:-(?:color|width|radius))?|outline(?:-(?:color|width))?|box-shadow|font-(?:family|size|weight|style)|line-height|letter-spacing|text-transform|padding(?:-(?:top|right|bottom|left|inline|block))?|margin(?:-(?:top|right|bottom|left|inline|block))?|(?:row-|column-)?gap|height|min-height)\s*:\s*([^;}]+)/i
-  @css_variable ~r/--[\w-]+\s*:\s*([^;]+);/
+  @css_variable ~r/(--[\w-]+)\s*:\s*([^;]+);/s
   @raw_value ~r/(?:#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla|oklch|oklab)\s*\(|\b(?:black|white|red|green|blue|orange|purple)\b|(?:^|\s)-?\d+(?:\.\d+)?(?:px|rem|em|vw|vh|%)\b|^\d+(?:\.\d+)?$)/i
-  @media_width ~r/@(?:media|container)\b[^{}]*\b(?:min-width|max-width)\s*:|@(?:media|container)\b[^{}]*\bwidth\s*(?:>=|<=|>|<)/i
-  @style_attribute ~r/(?<![\w:-])style\s*=\s*(?:["']|\{)/i
+  @media_width ~r/(@(?:media|container)\b[^{}]*\b(?:min-width|max-width)\s*:[^{}]*|@(?:media|container)\b[^{}]*\bwidth\s*(?:>=|<=|>|<)[^{}]*)/is
+  @style_attribute ~r/(?<![\w:-])style\s*=\s*(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\{)/is
   @raw_color_attribute ~r/(?<![\w:-])(?:fill|stroke|color|bgcolor|background)\s*=\s*["']\s*#[0-9a-fA-F]{3,8}\b/i
   @daisyui_selector ~r/\.(?:btn|card|badge|alert|input|select|textarea|toggle|checkbox|radio|modal|navbar|menu|tabs?|drawer|dropdown|tooltip|toast|join|avatar|form-control|collapse)(?:-|[,:.\s{])/i
-  @js_style ~r/\.style\.(?:color|backgroundColor|borderColor|borderRadius|boxShadow|fontSize|fontFamily|fontWeight|letterSpacing|padding|margin)\s*=\s*["']/
+  @js_style ~r/\.style\.(color|backgroundColor|borderColor|borderRadius|boxShadow|fontSize|fontFamily|fontWeight|letterSpacing|padding|margin)\s*=\s*["']([^"']*)["']/
+  @frozen_token ~r/^[ \t]*(--ny-[\w-]+)\s*:\s*([^\n;]+)/m
+  @primary_fill_paths [
+    "lib/new_you_web/components/design/button.ex",
+    "lib/new_you_web/components/design/enterprise_band.ex"
+  ]
 
   @doc false
   def run(_args) do
@@ -107,32 +113,47 @@ defmodule Mix.Tasks.Design.Check do
   end
 
   defp scan(path, source) do
-    source
-    |> String.split("\n")
-    |> Enum.with_index(1)
-    |> Enum.flat_map(fn {line, number} ->
-      classes(path, line, number) ++ styles(path, line, number)
-    end)
+    classes(path, source) ++ styles(path, source)
   end
 
-  defp classes(path, line, number) do
-    static = captured(@double_class, line) ++ captured(@single_class, line)
-    expressions = captured(@class_expr, line)
+  defp classes(path, source) do
+    expressions = class_expressions(source)
 
-    dynamic =
-      Enum.flat_map(expressions, fn expression ->
-        strings = quoted_strings(expression)
-        rest = Regex.replace(@quoted, expression, "") |> String.replace(~r/[\s\[\],]/, "")
+    static =
+      (capture_matches(@double_class, source) ++ capture_matches(@single_class, source))
+      |> Enum.reject(fn [{_value, offset}] -> inside_class_expression?(offset, expressions) end)
 
-        if strings == [] or rest != "",
-          do: issue(:dynamic_class, :dynamic_class, path, number),
-          else: []
+    static_findings =
+      Enum.flat_map(static, fn [{value, offset}] ->
+        check_classes(path, value, line_number(source, offset))
       end)
 
-    Enum.flat_map(
-      static ++ Enum.flat_map(expressions, &quoted_strings/1),
-      &check_classes(path, &1, number)
-    ) ++ dynamic
+    expression_findings =
+      Enum.flat_map(expressions, fn expression ->
+        strings = quoted_strings(expression.source)
+
+        class_findings =
+          Enum.flat_map(strings, fn {value, offset} ->
+            check_classes(path, value, line_number(source, expression.content_offset + offset))
+          end)
+
+        rest = strip_quoted_strings(expression.source) |> String.replace(~r/[\s\[\],]/, "")
+
+        dynamic_findings =
+          if strings == [] or rest != "" or not expression.closed?,
+            do:
+              issue(
+                :dynamic_class,
+                :dynamic_class,
+                path,
+                line_number(source, expression.attribute_offset)
+              ),
+            else: []
+
+        class_findings ++ dynamic_findings
+      end)
+
+    static_findings ++ expression_findings
   end
 
   defp check_classes(path, value, number) do
@@ -170,7 +191,7 @@ defmodule Mix.Tasks.Design.Check do
   end
 
   defp primary_fill?(path, utility),
-    do: utility == "bg-design-primary" and path != "lib/new_you_web/components/design/button.ex"
+    do: utility == "bg-design-primary" and path not in @primary_fill_paths
 
   defp primary_deep?(path, utility, variants),
     do: utility == "bg-design-primary-deep" and not primary_interaction?(path, variants)
@@ -203,82 +224,118 @@ defmodule Mix.Tasks.Design.Check do
     end
   end
 
-  defp styles(path, line, number) do
+  defp styles(path, source) do
     classes =
       if Path.extname(path) == ".css",
-        do: captured(@apply, line),
-        else: if(Path.extname(path) == ".js", do: captured(@js_class, line), else: [])
+        do: capture_matches(@apply, source),
+        else: if(Path.extname(path) == ".js", do: capture_matches(@js_class, source), else: [])
 
-    class_findings = Enum.flat_map(classes, &check_classes(path, &1, number))
-    class_findings ++ css_findings(path, line, number)
+    class_findings =
+      Enum.flat_map(classes, fn [{value, offset}] ->
+        check_classes(path, value, line_number(source, offset))
+      end)
+
+    class_findings ++ css_findings(path, source)
   end
 
-  defp css_findings(path, line, number) do
-    raw_css_findings(path, line, number) ++
-      custom_variable_findings(path, line, number) ++
-      inline_style_findings(path, line, number) ++
-      raw_color_attribute_findings(path, line, number) ++
-      daisyui_selector_findings(path, line, number) ++
-      js_style_findings(path, line, number) ++
-      breakpoint_findings(path, line, number) ++
-      frozen_token_findings(path, line, number)
+  defp css_findings(path, source) do
+    raw_css_findings(path, source) ++
+      custom_variable_findings(path, source) ++
+      inline_style_findings(path, source) ++
+      raw_color_attribute_findings(path, source) ++
+      daisyui_selector_findings(path, source) ++
+      js_style_findings(path, source) ++
+      breakpoint_findings(path, source) ++
+      frozen_token_findings(path, source)
   end
 
-  defp raw_css_findings(path, line, number) do
-    Regex.scan(@css_property, line, capture: :all_but_first)
-    |> Enum.flat_map(fn [property, value] ->
+  defp raw_css_findings(path, source) do
+    capture_matches(@css_property, source)
+    |> Enum.flat_map(fn [{property, _property_offset}, {value, value_offset}] ->
       value = String.trim(value)
 
       if path == "assets/css/design-tokens.css" or approved_css?(value),
         do: [],
-        else: issue(:raw_css, {property, value}, path, number)
+        else: issue(:raw_css, {property, value}, path, line_number(source, value_offset))
     end)
   end
 
-  defp custom_variable_findings(path, line, number) do
-    if path != "assets/css/design-tokens.css" and
-         Regex.match?(@css_variable, line),
-       do: issue(:raw_css_variable, line, path, number),
-       else: []
+  defp custom_variable_findings(path, source) do
+    if path == "assets/css/design-tokens.css" do
+      []
+    else
+      capture_matches(@css_variable, source)
+      |> Enum.flat_map(fn [{name, offset}, {value, _value_offset}] ->
+        issue(:raw_css_variable, {name, String.trim(value)}, path, line_number(source, offset))
+      end)
+    end
   end
 
-  defp inline_style_findings(path, line, number),
-    do:
-      if(Regex.match?(@style_attribute, line),
-        do: issue(:inline_style, line, path, number),
-        else: []
-      )
-
-  defp raw_color_attribute_findings(path, line, number) do
-    if Path.extname(path) in [".ex", ".heex"] and Regex.match?(@raw_color_attribute, line),
-      do: issue(:raw_css, line, path, number),
-      else: []
+  defp inline_style_findings(path, source) do
+    full_matches(@style_attribute, source)
+    |> Enum.flat_map(fn {match, offset} ->
+      value = style_attribute_value(source, match, offset)
+      issue(:inline_style, value, path, line_number(source, offset))
+    end)
   end
 
-  defp daisyui_selector_findings(path, line, number) do
-    if Path.extname(path) == ".css" and Regex.match?(@daisyui_selector, line),
-      do: issue(:daisyui, line, path, number),
-      else: []
+  defp raw_color_attribute_findings(path, source) do
+    if Path.extname(path) in [".ex", ".heex"] do
+      full_matches(@raw_color_attribute, source)
+      |> Enum.flat_map(fn {match, offset} ->
+        issue(:raw_css, match, path, line_number(source, offset))
+      end)
+    else
+      []
+    end
   end
 
-  defp js_style_findings(path, line, number) do
-    if Path.extname(path) == ".js" and Regex.match?(@js_style, line),
-      do: issue(:inline_style, line, path, number),
-      else: []
+  defp daisyui_selector_findings(path, source) do
+    if Path.extname(path) == ".css" do
+      full_matches(@daisyui_selector, source)
+      |> Enum.flat_map(fn {match, offset} ->
+        issue(:daisyui, match, path, line_number(source, offset))
+      end)
+    else
+      []
+    end
   end
 
-  defp breakpoint_findings(path, line, number) do
-    invalid =
-      Path.extname(path) == ".css" and Regex.match?(@media_width, line) and
-        not Regex.match?(~r/--breakpoint-design-(?:tablet|desktop|wide)/, line)
-
-    if invalid, do: issue(:css_breakpoint, line, path, number), else: []
+  defp js_style_findings(path, source) do
+    if Path.extname(path) == ".js" do
+      capture_matches(@js_style, source)
+      |> Enum.flat_map(fn [{property, offset}, {value, _value_offset}] ->
+        issue(:inline_style, {property, value}, path, line_number(source, offset))
+      end)
+    else
+      []
+    end
   end
 
-  defp frozen_token_findings(path, line, number) do
-    if path == "assets/css/tokens.css" and Regex.match?(~r/^\s*--ny-[\w-]+:/, line),
-      do: issue(:legacy_definition, line, path, number),
-      else: []
+  defp breakpoint_findings(path, source) do
+    if Path.extname(path) == ".css" do
+      capture_matches(@media_width, source)
+      |> Enum.flat_map(&breakpoint_issue(path, source, &1))
+    else
+      []
+    end
+  end
+
+  defp breakpoint_issue(path, source, [{query, offset}]) do
+    if Regex.match?(~r/--breakpoint-design-(?:tablet|desktop|wide)/, query),
+      do: [],
+      else: issue(:css_breakpoint, query, path, line_number(source, offset))
+  end
+
+  defp frozen_token_findings(path, source) do
+    if path == "assets/css/tokens.css" do
+      capture_matches(@frozen_token, source)
+      |> Enum.flat_map(fn [{name, offset}, {value, _value_offset}] ->
+        issue(:legacy_definition, {name, String.trim(value)}, path, line_number(source, offset))
+      end)
+    else
+      []
+    end
   end
 
   defp approved_css?(value),
@@ -286,10 +343,124 @@ defmodule Mix.Tasks.Design.Check do
       value in ["0", "none", "transparent", "currentColor", "inherit"] or
         (String.contains?(value, "var(--design-") and not Regex.match?(@raw_value, value))
 
-  defp captured(pattern, line),
-    do: Regex.scan(pattern, line, capture: :all_but_first) |> List.flatten()
+  defp capture_matches(pattern, source) do
+    Regex.scan(pattern, source, capture: :all_but_first, return: :index)
+    |> Enum.map(fn captures ->
+      Enum.map(captures, fn {offset, length} ->
+        {binary_part(source, offset, length), offset}
+      end)
+    end)
+  end
 
-  defp quoted_strings(expression), do: captured(@quoted, expression)
+  defp full_matches(pattern, source) do
+    Regex.scan(pattern, source, return: :index)
+    |> Enum.map(fn [{offset, length} | _] -> {binary_part(source, offset, length), offset} end)
+  end
+
+  defp class_expressions(source) do
+    full_matches(@class_expr_start, source)
+    |> Enum.reduce({[], 0}, fn {match, attribute_offset}, {expressions, consumed_to} ->
+      if attribute_offset < consumed_to do
+        {expressions, consumed_to}
+      else
+        open_brace_offset = attribute_offset + byte_size(match) - 1
+        content_offset = open_brace_offset + 1
+        {expression, end_offset, closed?} = class_expression(source, content_offset)
+
+        entry = %{
+          attribute_offset: attribute_offset,
+          content_offset: content_offset,
+          end_offset: end_offset,
+          source: expression,
+          closed?: closed?
+        }
+
+        {[entry | expressions], end_offset}
+      end
+    end)
+    |> elem(0)
+    |> Enum.reverse()
+  end
+
+  defp class_expression(source, content_offset) do
+    read_class_expression(source, content_offset, content_offset, 1, nil, false)
+  end
+
+  defp style_attribute_value(source, match, offset) do
+    if String.ends_with?(match, "{") do
+      {_expression, end_offset, _closed?} = class_expression(source, offset + byte_size(match))
+      binary_part(source, offset, end_offset - offset)
+    else
+      match
+    end
+  end
+
+  defp read_class_expression(source, content_offset, position, _depth, _quote, _escaped)
+       when position >= byte_size(source) do
+    {binary_part(source, content_offset, position - content_offset), position, false}
+  end
+
+  defp read_class_expression(source, content_offset, position, depth, quote, escaped) do
+    character = :binary.at(source, position)
+
+    case class_expression_step(character, depth, quote, escaped) do
+      :close ->
+        {binary_part(source, content_offset, position - content_offset), position + 1, true}
+
+      {next_depth, next_quote, next_escaped} ->
+        read_class_expression(
+          source,
+          content_offset,
+          position + 1,
+          next_depth,
+          next_quote,
+          next_escaped
+        )
+    end
+  end
+
+  defp class_expression_step(character, depth, quote, escaped) do
+    if is_nil(quote),
+      do: unquoted_expression_step(character, depth),
+      else: quoted_expression_step(character, depth, quote, escaped)
+  end
+
+  defp quoted_expression_step(_character, depth, quote, true), do: {depth, quote, false}
+  defp quoted_expression_step(92, depth, quote, false), do: {depth, quote, true}
+
+  defp quoted_expression_step(character, depth, quote, false) when character == quote,
+    do: {depth, nil, false}
+
+  defp quoted_expression_step(_character, depth, quote, false), do: {depth, quote, false}
+
+  defp unquoted_expression_step(34, depth), do: {depth, 34, false}
+  defp unquoted_expression_step(39, depth), do: {depth, 39, false}
+  defp unquoted_expression_step(123, depth), do: {depth + 1, nil, false}
+  defp unquoted_expression_step(125, 1), do: :close
+  defp unquoted_expression_step(125, depth), do: {depth - 1, nil, false}
+  defp unquoted_expression_step(_character, depth), do: {depth, nil, false}
+
+  defp inside_class_expression?(offset, expressions) do
+    Enum.any?(expressions, fn expression ->
+      offset >= expression.attribute_offset and offset < expression.end_offset
+    end)
+  end
+
+  defp quoted_strings(source) do
+    (capture_matches(@double_quoted, source) ++ capture_matches(@single_quoted, source))
+    |> Enum.map(fn [{value, offset}] -> {value, offset} end)
+    |> Enum.sort_by(&elem(&1, 1))
+  end
+
+  defp strip_quoted_strings(source) do
+    source
+    |> then(&Regex.replace(@double_quoted, &1, ""))
+    |> then(&Regex.replace(@single_quoted, &1, ""))
+  end
+
+  defp line_number(source, offset) do
+    1 + (:binary.matches(binary_part(source, 0, offset), "\n") |> length())
+  end
 
   defp issue(kind, value, path, number),
     do: [%{key: {kind, value}, message: "#{path}:#{number}: #{reason(kind)}: #{inspect(value)}"}]
@@ -304,7 +475,7 @@ defmodule Mix.Tasks.Design.Check do
           %{
             breakpoint: "use a breakpoint defined by DESIGN.md",
             focus: "preserve visible focus",
-            primary_fill: "primary fill is reserved for the primary CTA",
+            primary_fill: "primary fill is reserved for authorized semantic components",
             primary_deep: "primary-deep fill is limited to the primary CTA hover/pressed state",
             dark_token: "dark mode must use existing compatibility tokens",
             legacy_token: "legacy tokens are limited to existing dark/error compatibility states",
