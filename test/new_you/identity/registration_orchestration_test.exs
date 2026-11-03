@@ -170,7 +170,8 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     active_challenges = Enum.filter(tokens, &(&1.purpose == "email_verification"))
     [replacement] = active_challenges
     intents = records(MessageIntent, Communications)
-    [registration_intent, resend_intent] = intents
+    [resend_intent] = Enum.filter(intents, &(&1.source_operation_id == operation_id))
+    [registration_intent] = Enum.reject(intents, &(&1.source_operation_id == operation_id))
 
     assert length(tokens) == 2
     [revocation] = Enum.filter(tokens, &(&1.purpose == "revocation"))
