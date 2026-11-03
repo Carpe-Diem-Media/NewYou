@@ -41,7 +41,7 @@ defmodule NewYou.Proof.P805Race do
       P805.check(
         id,
         "independent_transactions",
-        is_binary(transaction_b) and transaction_a != transaction_b
+        transaction_a != transaction_b
       )
 
       P805.check(id, "contention", is_binary(transaction_b))
