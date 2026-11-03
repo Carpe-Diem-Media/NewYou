@@ -6,6 +6,14 @@ defmodule NewYou.Identity.Actions.AcceptRegistration do
   @verifier_version "argon2_elixir-4.1.3"
   @verification_token_lifetime {24, :hours}
 
+  defmacrop proof_checkpoint do
+    if Mix.env() == :test do
+      quote do: NewYou.Proof.RegistrationSeam.checkpoint()
+    else
+      quote do: :ok
+    end
+  end
+
   @impl true
   def run(input, _opts, _context) do
     with {:ok, admission} <-
@@ -46,6 +54,10 @@ defmodule NewYou.Identity.Actions.AcceptRegistration do
              expires_at: DateTime.add(committed_at, @operation_lifetime_seconds, :second),
              created_account_id: account.id
            }) do
+      # The checkpoint is compiled out of non-TEST builds. It runs after all
+      # owner writes, still inside the existing Ash acceptance transaction.
+      proof_checkpoint()
+
       {:ok,
        %{
          status: :verification_pending,

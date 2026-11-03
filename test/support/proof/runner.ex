@@ -5,7 +5,7 @@ defmodule NewYou.Proof.Runner do
 
   @moduledoc """
   Deterministic P8-04 proof runner. Coverage completeness comes from compiled
-  manifests; the current catalog contains no business manifests.
+  manifests, including the bounded P8-05 cases.
   """
 
   alias NewYou.Proof.{Catalog, CutPoints, FullCatalog, Result, SelfTest}
@@ -243,7 +243,9 @@ defmodule NewYou.Proof.Runner do
         evaluate_full_case(coverage_id, manifest_case, observations, case_stopped?)
       end)
 
-    passed? = cases != [] and Enum.all?(cases, &(&1.verdict == "PASS"))
+    passed? =
+      manifest.scope == :complete and cases != [] and Enum.all?(cases, &(&1.verdict == "PASS"))
+
     executed? = Enum.any?(cases, &(&1.status == "completed"))
     all_not_run? = cases != [] and Enum.all?(cases, &(&1.status == "not_run"))
     status = family_status(all_not_run?, executed?)
@@ -251,6 +253,7 @@ defmodule NewYou.Proof.Runner do
     reasons =
       cases
       |> Enum.flat_map(& &1.reason_codes)
+      |> Kernel.++(manifest_reasons(manifest))
       |> Enum.uniq()
 
     entry = %{
@@ -311,7 +314,7 @@ defmodule NewYou.Proof.Runner do
       assertions_executed: length(assertion_ids),
       duration_ms: non_negative_integer(observation_value(observation, "duration_ms"), 0),
       timeout_ms: positive_integer(Map.get(manifest_case, :timeout_ms), 10_000),
-      timeout_override_reason: nil,
+      timeout_override_reason: Map.get(manifest_case, :timeout_override_reason),
       reason_codes: if(passed?, do: [], else: Enum.uniq(reasons))
     }
   end
@@ -380,10 +383,14 @@ defmodule NewYou.Proof.Runner do
       required_case_ids: Enum.map(Map.get(manifest, :cases), &Map.get(&1, :case_id)),
       status: "not_run",
       verdict: "FAIL",
-      reason_codes: ["coverage.not_run"],
+      reason_codes: ["coverage.not_run" | manifest_reasons(manifest)],
       cases: cases
     }
   end
+
+  # Executability and full-family completeness are separate reviewed facts.
+  defp manifest_reasons(%{scope: :partial}), do: ["manifest.partial"]
+  defp manifest_reasons(_manifest), do: []
 
   defp not_run_case(manifest_case) do
     case_from_manifest(manifest_case, "not_run", "FAIL", ["coverage.not_run"], [])
@@ -412,7 +419,7 @@ defmodule NewYou.Proof.Runner do
       assertions_executed: length(assertion_ids),
       duration_ms: 0,
       timeout_ms: positive_integer(Map.get(manifest_case, :timeout_ms), 10_000),
-      timeout_override_reason: nil,
+      timeout_override_reason: Map.get(manifest_case, :timeout_override_reason),
       reason_codes: reasons
     }
   end
@@ -420,7 +427,8 @@ defmodule NewYou.Proof.Runner do
   defp valid_full_manifest?(coverage_id, manifest) when is_map(manifest) do
     case_ids = Enum.map(Map.get(manifest, :cases, []), &Map.get(&1, :case_id))
 
-    Map.get(manifest, :coverage_id, coverage_id) == coverage_id and
+    Map.get(manifest, :scope) in [:partial, :complete] and
+      Map.get(manifest, :coverage_id, coverage_id) == coverage_id and
       is_binary(Map.get(manifest, :version)) and Map.get(manifest, :version) != "" and
       valid_sha256?(Map.get(manifest, :digest)) and is_list(Map.get(manifest, :cases)) and
       case_ids != [] and length(case_ids) == length(Enum.uniq(case_ids)) and
@@ -952,7 +960,7 @@ defmodule NewYou.Proof.Runner do
       "schema_version" => "1.0.0",
       "run_id" => run_id(),
       "mode" => Atom.to_string(mode),
-      "contract" => "TB-001/v0.1.2",
+      "contract" => "TB-001/v0.1.3",
       "metadata_complete" => metadata.complete,
       "git" => %{
         "head_before" => metadata.source_before.head,
@@ -980,16 +988,13 @@ defmodule NewYou.Proof.Runner do
   end
 
   defp missing_business_results do
+    manifests = Catalog.required().business_manifests
+
     Enum.map(Catalog.coverage_inventory(), fn coverage_id ->
-      %{
-        "coverage_id" => coverage_id,
-        "manifest_sha256" => nil,
-        "required_case_ids" => [],
-        "status" => "missing",
-        "verdict" => "FAIL",
-        "reason_codes" => ["missing.manifest"],
-        "cases" => []
-      }
+      case Map.fetch(manifests, coverage_id) do
+        {:ok, manifest} -> full_entry_document(not_run_entry(coverage_id, manifest))
+        :error -> full_entry_document(missing_manifest_entry(coverage_id))
+      end
     end)
   end
 

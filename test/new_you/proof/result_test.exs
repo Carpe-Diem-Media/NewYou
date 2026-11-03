@@ -3,6 +3,70 @@ defmodule NewYou.Proof.ResultTest do
 
   alias NewYou.Proof.{Catalog, Result, Scenario}
 
+  test "evidence is bound to the current routed TB-001 authority and rejects its predecessor" do
+    router = File.read!("docs/delivery/CURRENT_DELIVERY_ROUTER.json") |> Jason.decode!()
+
+    authority =
+      Enum.find(router["delivery_contracts"], &(&1["document_id"] == "FP001_TRACER_BULLET"))
+
+    assert authority["canonical_filename"] == "FP-001_TRACER_BULLET_CONTRACT_WORKING_v0.1.3.md"
+
+    assert Base.encode16(:crypto.hash(:sha256, File.read!(authority["repository_path"])),
+             case: :lower
+           ) == authority["sha256"]
+
+    result = self_test_result(Catalog.required().self_test.digest)
+    assert result["contract"] == "TB-001/v0.1.3"
+    assert :ok = Result.validate(result, mode: :harness_self_test)
+
+    assert {:error, errors} =
+             Result.validate(Map.put(result, "contract", "TB-001/v0.1.2"),
+               mode: :harness_self_test
+             )
+
+    assert :invalid_constant in errors
+  end
+
+  test "semantic validation independently rejects partial-family PASS and missing scope reason" do
+    manifest = Catalog.required().business_manifests["browser_spine"]
+
+    entry = %{
+      "coverage_id" => "browser_spine",
+      "manifest_sha256" => manifest.digest,
+      "required_case_ids" => Enum.map(manifest.cases, & &1.case_id),
+      "status" => "completed",
+      "verdict" => "PASS",
+      "reason_codes" => [],
+      "cases" =>
+        Enum.map(manifest.cases, fn case_data ->
+          case_data
+          |> Map.drop([:coverage_id, :digest])
+          |> Map.merge(%{
+            status: "completed",
+            verdict: "PASS",
+            observations: [],
+            assertions_executed: length(case_data.assertion_ids),
+            duration_ms: 0,
+            timeout_override_reason: Map.get(case_data, :timeout_override_reason),
+            reason_codes: []
+          })
+          |> Jason.encode!()
+          |> Jason.decode!()
+        end)
+    }
+
+    result = unavailable_full_result()
+
+    results =
+      Enum.map(result["results"], fn current ->
+        if current["coverage_id"] == "browser_spine", do: entry, else: current
+      end)
+
+    assert {:error, errors} = Result.validate(Map.put(result, "results", results), mode: :tb001)
+    assert :partial_manifest_pass in errors
+    assert :missing_partial_manifest_reason in errors
+  end
+
   test "expect records the actual assertion and returns the observation" do
     scenario = Scenario.start()
     :ok = Scenario.require_assertions(scenario, "case.one", ["case.one.verified"])
@@ -163,6 +227,8 @@ defmodule NewYou.Proof.ResultTest do
     schema =
       File.read!("docs/superpowers/specs/p8-04-proof-result-v1.schema.json")
       |> Jason.decode!()
+
+    assert schema["properties"]["contract"]["const"] == "TB-001/v0.1.3"
 
     assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert schema["$id"] == "urn:new-you:p8-04:proof-result:1.0.0"
@@ -516,7 +582,7 @@ defmodule NewYou.Proof.ResultTest do
       "schema_version" => "1.0.0",
       "run_id" => "run-test",
       "mode" => "tb001",
-      "contract" => "TB-001/v0.1.2",
+      "contract" => "TB-001/v0.1.3",
       "metadata_complete" => false,
       "git" => %{
         "head_before" => nil,
@@ -577,7 +643,7 @@ defmodule NewYou.Proof.ResultTest do
       "schema_version" => "1.0.0",
       "run_id" => "run-test",
       "mode" => "harness_self_test",
-      "contract" => "TB-001/v0.1.2",
+      "contract" => "TB-001/v0.1.3",
       "metadata_complete" => false,
       "git" => %{
         "head_before" => nil,

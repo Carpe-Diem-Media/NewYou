@@ -1,0 +1,135 @@
+// Dependency-free Chromium DevTools driver for the runner-owned P8-05 cases.
+// No screenshots, traces, page bodies, credentials or browser diagnostics leave
+// this process. Only fixed boolean facts and opaque operation IDs are returned.
+import { createHash } from 'node:crypto';
+import { spawn } from 'node:child_process';
+import { existsSync, readFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir, homedir } from 'node:os';
+import { join } from 'node:path';
+import { createInterface } from 'node:readline';
+
+const input = await new Promise(resolve => createInterface({ input: process.stdin }).once('line', line => resolve(JSON.parse(line))));
+const candidates = ['/usr/bin/google-chrome', '/opt/google/chrome/chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser', join(homedir(), '.cache/ms-playwright/chromium-1234/chrome-linux64/chrome')];
+const executable = candidates.find(existsSync);
+const profile = mkdtempSync(join(tmpdir(), 'p805-browser-'));
+let browser;
+let browserStopped;
+let closeBrowser;
+let cleanup = false;
+// A closed runner pipe or cancellation also terminates the browser child.
+const cancel = () => { browser?.kill('SIGTERM'); try { rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); } catch {} process.exit(2); };
+process.stdin.on('end', cancel);
+process.on('SIGTERM', cancel);
+process.on('SIGHUP', cancel);
+const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+const operations = [];
+const checks = {};
+try {
+  if (!executable) throw new Error('browser.unavailable');
+  browser = spawn(executable, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-background-networking', '--disable-component-update', '--no-first-run', '--remote-debugging-pipe', `--user-data-dir=${profile}`, 'about:blank'], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
+  browserStopped = new Promise(resolve => browser.once('exit', resolve));
+  let sequence = 0;
+  let buffer = '';
+  const pending = new Map();
+  const events = new Map();
+  browser.stdio[4].on('data', chunk => {
+    buffer += chunk.toString();
+    let end;
+    while ((end = buffer.indexOf('\0')) >= 0) {
+      const message = JSON.parse(buffer.slice(0, end));
+      buffer = buffer.slice(end + 1);
+      if (message.id) {
+        const waiter = pending.get(message.id);
+        if (waiter) {
+          clearTimeout(waiter.timer);
+          pending.delete(message.id);
+          if (message.error) waiter.reject(new Error('browser.protocol'));
+          else waiter.resolve(message.result);
+        }
+      } else if (message.method) {
+        const key = `${message.sessionId}:${message.method}`;
+        const waiter = events.get(key);
+        if (waiter) { clearTimeout(waiter.timer); events.delete(key); waiter.resolve(message.params); }
+      }
+    }
+  });
+  function call(method, params = {}, sessionId) {
+    return new Promise((resolve, reject) => {
+      const id = ++sequence;
+      const timer = setTimeout(() => { pending.delete(id); reject(new Error('browser.protocol_timeout')); }, 20000);
+      pending.set(id, { resolve, reject, timer });
+      browser.stdio[3].write(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }) + '\0');
+    });
+  }
+  closeBrowser = () => call('Browser.close');
+  const context = await call('Target.createBrowserContext');
+  const { targetId } = await call('Target.createTarget', { url: 'about:blank', browserContextId: context.browserContextId });
+  const { sessionId } = await call('Target.attachToTarget', { targetId, flatten: true });
+  const cdp = (method, params) => call(method, params, sessionId);
+  await cdp('Page.enable');
+  const evaluate = async expression => {
+    const value = await cdp('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+    if (value.exceptionDetails) throw new Error('browser.evaluation');
+    return value.result.value;
+  };
+  const navigation = async action => {
+    const loaded = new Promise((resolve, reject) => {
+      const key = `${sessionId}:Page.loadEventFired`;
+      const timer = setTimeout(() => { events.delete(key); reject(new Error('browser.navigation_timeout')); }, 20000);
+      events.set(key, { resolve, timer });
+    });
+    await action();
+    await loaded;
+  };
+  const base = `http://127.0.0.1:${input.port}`;
+  await navigation(() => cdp('Page.navigate', { url: `${base}/register?locale=${input.locale}` }));
+  const registry = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/COPY_REGISTRY.json', 'utf8'));
+  const text = (key, locale) => registry.entries.find(entry => entry.key === key)[locale].text.replaceAll('{{platform_name}}', input.platform_name);
+  const registrationKeys = ['public.entry.launch.title', 'public.entry.launch.body', 'public.entry.safety.body', 'identity.registration.title', 'identity.registration.intro', 'identity.registration.first_name.label', 'identity.registration.surname.label', 'identity.registration.email.label', 'identity.registration.password.label', 'identity.registration.preferred_language.label', 'identity.registration.preferred_language.help', 'identity.registration.age_confirmation', 'legal.shared.document_language_disclosure', 'identity.registration.terms_acceptance', 'identity.registration.terms_link', 'identity.registration.privacy_presentation', 'identity.registration.privacy_link', 'identity.registration.privacy_acceptance', 'identity.registration.submit'];
+  const pendingKeys = ['identity.verification.pending.title', 'identity.verification.pending.explanation', 'identity.verification.pending.check_inbox', 'identity.verification.pending.address_label', 'identity.verification.pending.not_arrived.title', 'identity.verification.pending.not_arrived.body', 'identity.verification.resend.action', 'identity.verification.pending.access_limitation', 'identity.verification.pending.browse_public', 'identity.verification.pending.home'];
+  const hasCopy = async (keys, locale) => evaluate(`(${JSON.stringify(keys.map(key => text(key, locale)))}).every(text => document.body.innerText.includes(text))`);
+  const noFallback = async keys => {
+    const other = input.locale === 'af' ? 'en' : 'af';
+    const alternatives = keys.filter(key => text(key, other) !== text(key, input.locale)).map(key => text(key, other));
+    return evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && (${JSON.stringify(alternatives)}).every(text => !document.body.textContent.includes(text))`);
+  };
+  checks.approved_copy = sha256(readFileSync('docs/delivery/content-evidence/copy/COPY_REGISTRY.json')) === '744f1a34ad80c0158c86395f3f66227622714969526f5e9d69ee62314fd48635' && await hasCopy(registrationKeys, input.locale);
+  checks.approved_copy &&= await evaluate(`document.body.innerText.indexOf(${JSON.stringify(text('public.entry.safety.body', input.locale))}) < document.body.innerText.indexOf(${JSON.stringify(text('identity.registration.title', input.locale))})`);
+  const registrationLocale = await noFallback(registrationKeys);
+  const form = await evaluate(`(() => { const form = document.querySelector('form[action="/register"]'); return { action: form?.getAttribute('action'), fields: [...form.elements].filter(el => el.name).map(el => ({ name: el.name, type: el.type, required: el.required, value: el.type === 'hidden' ? el.value : null })) }; })()`);
+  const fieldNames = ['first_name', 'surname', 'email', 'password', 'confirmed_age_18', 'terms_accepted', 'privacy_accepted'];
+  checks.required_form = fieldNames.every(name => form.fields.some(field => field.name === `registration[${name}]` && field.required));
+  operations.push(form.fields.find(field => field.name === 'registration[operation_id]').value);
+  checks.legal_artifacts = await evaluate(`Promise.all(['/legal/terms', '/legal/privacy'].map(async path => { const link = document.querySelector('a[href=\"'+path+'\"]'); if (!link) return {status: 0, body: ''}; const response = await fetch(link.href); return {status: response.status, body: await response.text()}; }))`)
+    .then(pages => pages.every((page, index) => page.status === 200 && sha256(page.body) === ['6feb2d016f30e889c08995990a863429db0034af49fc6b6bd3467b90cda03937', 'ac603377eaafce20bf5e425f64cfc97fbc855b20bd66deca481401f0f6efd43e'][index] && page.body === readFileSync(`docs/delivery/content-evidence/content_media/legal_baselines/NEWYOU-${index === 0 ? 'TERMS' : 'PRIVACY'}-EN-DEV-BASELINE-2026-10-27-001.html`, 'utf8')));
+  await evaluate(`(() => { const values = ${JSON.stringify({first_name: input.input.first_name, surname: input.input.surname, email: input.input.email, password: input.input.password, preferred_language: input.locale})}; for (const [name,value] of Object.entries(values)) document.querySelector('[name="registration['+name+']"]').value=value; for (const name of ['confirmed_age_18','terms_accepted','privacy_accepted']) document.querySelector('[name="registration['+name+']"]').checked=true; })()`);
+  checks.submitted_acceptances = await evaluate(`(() => { const form = document.querySelector('form[action="/register"]'); const data = new FormData(form); return form.checkValidity() && ['confirmed_age_18','terms_accepted','privacy_accepted'].every(name => data.get('registration['+name+']') === 'true') && data.get('registration[preferred_language]') === ${JSON.stringify(input.locale)}; })()`);
+  await navigation(() => evaluate(`document.querySelector('form[action="/register"]').requestSubmit()`));
+  checks.pending_copy = await hasCopy([...pendingKeys, 'identity.registration.accepted_neutral'], input.locale);
+  const pendingLocale = await noFallback(pendingKeys);
+  const resendOperation = await evaluate(`document.querySelector('[name="resend[operation_id]"]')?.value`);
+  if (resendOperation) operations.push(resendOperation);
+  await navigation(() => evaluate(`document.querySelector('form[action="/verification/resend"]').requestSubmit()`));
+  const nextOperation = await evaluate(`document.querySelector('[name="resend[operation_id]"]')?.value`);
+  checks.explicit_resend = operations[0] !== resendOperation && nextOperation !== resendOperation && await hasCopy([...pendingKeys, 'identity.verification.resend.accepted_neutral'], input.locale);
+  checks.locale_no_fallback = registrationLocale && pendingLocale && await noFallback(pendingKeys);
+  checks.no_session = await evaluate(`!document.body.textContent.includes(${JSON.stringify(input.input.password)}) && !document.querySelector('a[href*="consume"]')`);
+  await call('Target.disposeBrowserContext', { browserContextId: context.browserContextId });
+} catch {
+  checks.browser_completed = false;
+} finally {
+  try {
+    if (browser && browser.exitCode === null) {
+      // Browser.close completes the normal Chromium shutdown path before the
+      // profile is removed. Abrupt parent termination races child profile writes.
+      try { await closeBrowser(); } catch { browser.kill('SIGTERM'); }
+      await browserStopped;
+    }
+    rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    cleanup = !existsSync(profile) && (!browser || browser.exitCode !== null);
+  } catch {
+    cleanup = false;
+  }
+}
+process.stdout.write(JSON.stringify({checks, operations, cleanup}));
+process.exit(0);
