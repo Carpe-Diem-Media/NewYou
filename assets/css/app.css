@@ -2,6 +2,7 @@
    https://tailwindcss.com/docs/configuration */
 
 @import "tailwindcss" source(none);
+@import "./design-tokens.css";
 @import "./tokens.css";
 @import "phoenix-colocated/new_you/colocated.css";
 @source "../css";
