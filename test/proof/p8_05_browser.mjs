@@ -13,8 +13,11 @@ const candidates = ['/usr/bin/google-chrome', '/opt/google/chrome/chrome', '/usr
 const executable = candidates.find(existsSync);
 const profile = mkdtempSync(join(tmpdir(), 'p805-browser-'));
 let browser;
+let browserStopped;
+let closeBrowser;
+let cleanup = false;
 // A closed runner pipe or cancellation also terminates the browser child.
-const cancel = () => { browser?.kill('SIGKILL'); rmSync(profile, { recursive: true, force: true }); process.exit(2); };
+const cancel = () => { browser?.kill('SIGTERM'); try { rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); } catch {} process.exit(2); };
 process.stdin.on('end', cancel);
 process.on('SIGTERM', cancel);
 process.on('SIGHUP', cancel);
@@ -24,6 +27,7 @@ const checks = {};
 try {
   if (!executable) throw new Error('browser.unavailable');
   browser = spawn(executable, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-background-networking', '--disable-component-update', '--no-first-run', '--remote-debugging-pipe', `--user-data-dir=${profile}`, 'about:blank'], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
+  browserStopped = new Promise(resolve => browser.once('exit', resolve));
   let sequence = 0;
   let buffer = '';
   const pending = new Map();
@@ -57,6 +61,7 @@ try {
       browser.stdio[3].write(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }) + '\0');
     });
   }
+  closeBrowser = () => call('Browser.close');
   const context = await call('Target.createBrowserContext');
   const { targetId } = await call('Target.createTarget', { url: 'about:blank', browserContextId: context.browserContextId });
   const { sessionId } = await call('Target.attachToTarget', { targetId, flatten: true });
@@ -113,12 +118,18 @@ try {
 } catch {
   checks.browser_completed = false;
 } finally {
-  if (browser) {
-    const stopped = new Promise(resolve => browser.once('exit', resolve));
-    browser.kill('SIGKILL');
-    await stopped;
+  try {
+    if (browser && browser.exitCode === null) {
+      // Browser.close completes the normal Chromium shutdown path before the
+      // profile is removed. Abrupt parent termination races child profile writes.
+      try { await closeBrowser(); } catch { browser.kill('SIGTERM'); }
+      await browserStopped;
+    }
+    rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    cleanup = !existsSync(profile) && (!browser || browser.exitCode !== null);
+  } catch {
+    cleanup = false;
   }
-  rmSync(profile, { recursive: true, force: true });
 }
-process.stdout.write(JSON.stringify({checks, operations}));
+process.stdout.write(JSON.stringify({checks, operations, cleanup}));
 process.exit(0);

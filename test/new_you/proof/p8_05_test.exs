@@ -26,8 +26,10 @@ defmodule NewYou.Proof.P805Test do
     assert {:ok, observations, cleanup} =
              FullCatalog.execute(manifests, Catalog.compiled_business_registrations())
 
+    assert Enum.all?(observations, &(&1["verdict"] == "PASS")),
+           "bounded proof observations: #{inspect(observations)}"
+
     assert length(observations) == length(@case_ids)
-    assert Enum.all?(observations, &(&1["verdict"] == "PASS"))
     assert cleanup["verdict"] == "PASS"
 
     for observation <- observations do

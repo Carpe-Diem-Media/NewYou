@@ -4,7 +4,7 @@ WELL-53 adds twelve P8-05 cases to the existing P8-04 runner. The approved entry
 
 The browser cases require Node.js and a local Chromium installation. The dependency-free CDP driver checks the standard Google Chrome and Chromium executable paths. It starts an isolated headless browser against the actual Phoenix endpoint on a loopback-only ephemeral TEST port. It submits the rendered forms with their CSRF tokens and operation IDs from the rendered forms. It checks the exact registry-backed EN and AF copy, pinned English legal artifacts, accepted registration, localized pending content and explicit resend. The TEST HTTP wrapper observes the actual Phoenix session keys before responses leave the endpoint. It creates no substitute registration endpoint or business write API.
 
-No frontend source, participant copy, dependency, migration or business lifecycle is changed. Chromium stderr, screenshots, traces, page bodies and protected inputs are not saved. Synthetic credentials travel to the browser only on stdin. Returned browser evidence contains fixed boolean facts and opaque operation IDs. Runner assertions, rather than a browser-supplied PASS, decide each case verdict.
+No frontend source, participant copy, dependency, migration or business lifecycle is changed. Chromium stderr, screenshots, traces, page bodies and protected inputs are not saved. Synthetic credentials travel to the browser only on stdin. Returned browser evidence contains fixed boolean facts and opaque operation IDs. The driver closes Chromium through CDP, waits for its exit and confirms removal of its temporary profile before reporting worker cleanup. Runner assertions, rather than a browser-supplied PASS, decide each case verdict.
 
 ## Mappings and interpretation
 

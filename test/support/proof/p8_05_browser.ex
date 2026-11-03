@@ -1,10 +1,11 @@
 defmodule NewYou.Proof.P805Browser do
   @moduledoc false
-  alias NewYou.Proof.P805
+  alias NewYou.Proof.{P805, SelfTest}
   alias NewYou.Identity
   require Ash.Query
 
   def run(id, locale) do
+    SelfTest.cleanup_manifest!(workers_stopped: false)
     input = P805.request(%{preferred_language: String.to_existing_atom(locale)})
 
     reference = make_ref()
@@ -31,6 +32,8 @@ defmodule NewYou.Proof.P805Browser do
       executable = System.find_executable("node") || raise "proof browser requires Node"
       script = Path.expand("../../proof/p8_05_browser.mjs", __DIR__)
       result = run_port(executable, script, payload)
+      true = result["cleanup"]
+      Process.put({__MODULE__, :browser_stopped}, true)
       Enum.each(result["operations"] || [], fn operation -> P805.track_operation(operation) end)
 
       result = bind_durable_result(result, input)
@@ -45,6 +48,10 @@ defmodule NewYou.Proof.P805Browser do
       end
     after
       Supervisor.stop(server)
+
+      SelfTest.cleanup_manifest!(
+        workers_stopped: Process.delete({__MODULE__, :browser_stopped}) == true
+      )
     end
   end
 
