@@ -3,6 +3,22 @@ defmodule NewYou.Proof.RunnerTest do
 
   alias NewYou.Proof.{Catalog, Result, Runner, Scenario, SelfTest}
 
+  test "proof support scripts are not rediscovered as ExUnit test files" do
+    config = Mix.Project.config()
+    [load_test?] = Keyword.fetch!(config, :test_load_filters)
+    [ignore_support] = Keyword.fetch!(config, :test_ignore_filters)
+
+    for path <- Path.wildcard("test/proof/**/*.exs") do
+      refute load_test?.(path), path
+      assert Regex.match?(ignore_support, path), path
+    end
+
+    for path <- Path.wildcard("test/**/*_test.exs") -- ["test/proof/self_test.exs"] do
+      assert load_test?.(path), path
+      refute Regex.match?(ignore_support, path), path
+    end
+  end
+
   test "partial mappings cannot certify a family even when every case and other family passes" do
     for family <- Map.keys(Catalog.required().business_manifests) do
       manifests = full_fixture_manifests()

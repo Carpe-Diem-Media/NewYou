@@ -7,6 +7,15 @@ defmodule NewYou.MixProject do
       version: "0.1.0",
       elixir: "~> 1.20.4",
       elixirc_paths: elixirc_paths(Mix.env()),
+      # This proof helper is compiled through test/support, not an ExUnit test.
+      test_load_filters: [
+        fn path ->
+          String.ends_with?(path, "_test.exs") and path != "test/proof/self_test.exs"
+        end
+      ],
+      test_ignore_filters: [
+        ~r"^test/proof/(self_test|run|postgresql_probe|fixtures/provider_fixtures)\.exs$"
+      ],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -139,7 +148,7 @@ defmodule NewYou.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "ecto.migrate", "assets.setup", "assets.build"],
-      test: ["ecto.migrate --quiet", "test"],
+      test: ["ecto.migrate --quiet", "test --warnings-as-errors"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["compile", "tailwind new_you", "esbuild new_you"],
       "assets.deploy": [
@@ -156,7 +165,7 @@ defmodule NewYou.MixProject do
         "check.architecture",
         "usage_rules.sync --check",
         "credo --strict",
-        "sobelow --exit --skip --private --router lib/new_you_web/router.ex",
+        "sobelow --exit --skip --private --strict --router lib/new_you_web/router.ex",
         "test"
       ],
       # Slower engineering gate. Dialyzer owns its PLT build and caching.
