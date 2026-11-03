@@ -58,8 +58,10 @@ jobs:
             deps
             _build
           key: app-ci-${{ runner.os }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
-      - name: Fetch dependencies
-        run: mix deps.get
+      - name: Reject unused dependency locks
+        run: mix deps.unlock --check-unused
+      - name: Fetch locked dependencies
+        run: mix deps.get --check-locked
       - name: Provision isolated TEST role and database
         shell: bash
         run: |
@@ -119,8 +121,10 @@ jobs:
         with:
           path: _build/plts
           key: dialyzer-plt-${{ runner.os }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
-      - name: Fetch dependencies
-        run: mix deps.get
+      - name: Reject unused dependency locks
+        run: mix deps.unlock --check-unused
+      - name: Fetch locked dependencies
+        run: mix deps.get --check-locked
       - name: Provision isolated TEST role and database
         shell: bash
         run: |

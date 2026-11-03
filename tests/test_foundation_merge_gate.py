@@ -17,6 +17,41 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
             workflow,
         )
 
+    def test_each_application_job_checks_dependencies_before_database_and_gates(self):
+        workflow = (WORKFLOWS / "application-ci.yml").read_text(encoding="utf-8")
+        for job in ("mix-check", "mix-check-deep"):
+            with self.subTest(job=job):
+                block = workflow.split(f"  {job}:\n", 1)[1].split("\n  mix-check-deep:", 1)[0]
+                header = block.split("    steps:", 1)[0]
+                if job == "mix-check":
+                    self.assertNotIn("    if:", header)
+                else:
+                    self.assertIn("    if: inputs.deep_application_changes\n", header)
+                commands = [
+                    "uses: actions/checkout@v7",
+                    "uses: erlef/setup-beam@v1",
+                    "run: mix deps.unlock --check-unused",
+                    "run: mix deps.get --check-locked",
+                    "      - name: Provision isolated TEST role and database",
+                    f"run: mix {'check' if job == 'mix-check' else 'check.deep'}",
+                ]
+                for command in commands:
+                    self.assertIn(command + "\n", block)
+                positions = [block.index(command) for command in commands]
+                self.assertEqual(sorted(positions), positions)
+                self.assertNotIn("continue-on-error", block)
+                self.assertNotIn("run: mix deps.get\n", block)
+                self.assertNotIn("if:", block.split("    steps:", 1)[1])
+
+    def test_mix_aliases_enforce_warnings_and_strict_security_parsing(self):
+        mix = (ROOT / "mix.exs").read_text(encoding="utf-8")
+        self.assertIn('test: ["ecto.migrate --quiet", "test --warnings-as-errors"]', mix)
+        self.assertIn('"compile --warnings-as-errors"', mix)
+        self.assertIn(
+            '"sobelow --exit --skip --private --strict --router lib/new_you_web/router.ex"',
+            mix,
+        )
+
     def test_required_gate_does_not_wait_for_foundation_full(self):
         workflow = (WORKFLOWS / "foundation-integrity.yml").read_text(encoding="utf-8")
 
