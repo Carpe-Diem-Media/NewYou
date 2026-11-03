@@ -1,0 +1,86 @@
+/* Executable token layer mapped from the root DESIGN.md. */
+@theme static {
+  --color-design-primary: #0061ef;
+  --color-design-primary-deep: #0000ee;
+  --color-design-ink: #2d2c2b;
+  --color-design-ink-strong: #141313;
+  --color-design-ink-soft: #44423f;
+  --color-design-ink-muted: #4b4c4d;
+  --color-design-ink-meta: #63605d;
+  --color-design-canvas: #f9f4f2;
+  --color-design-surface: #ffffff;
+  --color-design-hairline: #e2ded9;
+  --color-design-hairline-cool: #d2d5de;
+  --color-design-on-primary: #ffffff;
+  --color-design-on-canvas: #000000;
+  --color-design-orb-saffron: #ffce00;
+  --color-design-orb-pink: #ffa1cc;
+  --color-design-orb-aqua: #00a4ff;
+  --color-design-orb-grass: #02873e;
+  --color-design-orb-ultraviolet: #3b197f;
+
+  --font-design-sans: Inter, sans-serif;
+  --font-weight-design-regular: 400;
+  --font-weight-design-medium: 500;
+  --font-weight-design-bold: 700;
+
+  --text-design-display-xl: 64px;
+  --leading-design-display-xl: 1.05;
+  --tracking-design-display-xl: -1.92px;
+  --text-design-display-lg: 52px;
+  --leading-design-display-lg: 1.155;
+  --tracking-design-display-lg: -1.56px;
+  --text-design-display-md: 40px;
+  --leading-design-display-md: 1.2075;
+  --tracking-design-display-md: -1.2px;
+  --text-design-display-sm: 32px;
+  --leading-design-display-sm: 1.26;
+  --tracking-design-display-sm: -0.96px;
+  --text-design-heading-md: 32px;
+  --leading-design-heading-md: 1.26;
+  --tracking-design-heading-md: -0.96px;
+  --text-design-heading-sm: 24px;
+  --leading-design-heading-sm: 1.3965;
+  --tracking-design-heading-sm: -0.6px;
+  --text-design-body-lg: 24px;
+  --leading-design-body-lg: 1.26;
+  --tracking-design-body-lg: -0.72px;
+  --text-design-body-md: 20px;
+  --leading-design-body-md: 1.575;
+  --tracking-design-body-md: -0.2px;
+  --text-design-body-sm: 18px;
+  --leading-design-body-sm: 1.512;
+  --tracking-design-body-sm: -0.18px;
+  --text-design-body-xs: 16px;
+  --leading-design-body-xs: 1.575;
+  --tracking-design-body-xs: 0;
+  --text-design-button-md: 14px;
+  --leading-design-button-md: 1.155;
+  --tracking-design-button-md: 0;
+  --text-design-caption: 12px;
+  --leading-design-caption: 1.2075;
+  --tracking-design-caption: -0.12px;
+
+  --radius-design-sm: 8px;
+  --radius-design-md: 16px;
+  --radius-design-lg: 24px;
+  --radius-design-xl: 32px;
+  --radius-design-full: 800px;
+
+  --spacing-design-xxs: 4px;
+  --spacing-design-xs: 6px;
+  --spacing-design-sm: 8px;
+  --spacing-design-md: 12px;
+  --spacing-design-base: 16px;
+  --spacing-design-lg: 24px;
+  --spacing-design-xl: 32px;
+  --spacing-design-2xl: 48px;
+
+  --spacing-design-button-block: 14.3px;
+  --spacing-design-button-inline: 24px;
+  --spacing-design-button-height: 48px;
+
+  --breakpoint-design-tablet: 744px;
+  --breakpoint-design-desktop: 1128px;
+  --breakpoint-design-wide: 1441px;
+}

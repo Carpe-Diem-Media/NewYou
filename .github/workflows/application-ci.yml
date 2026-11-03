@@ -45,7 +45,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 1
+          fetch-depth: 0
       - name: Set up Erlang and Elixir from .tool-versions
         uses: erlef/setup-beam@v1
         with:
@@ -73,6 +73,7 @@ jobs:
           SQL
       - name: Run canonical fast gate
         env:
+          DESIGN_SYSTEM_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           TEST_DATABASE_HOST: "127.0.0.1"
           TEST_DATABASE_PORT: "55433"
           TEST_DATABASE_USERNAME: new_you_test

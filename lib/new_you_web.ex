@@ -81,6 +81,7 @@ defmodule NewYouWeb do
       import Phoenix.HTML
       # Core UI components
       import NewYouWeb.CoreComponents
+      import NewYouWeb.Components.Design.Button, only: [primary_button: 1]
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS

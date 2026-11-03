@@ -152,6 +152,7 @@ defmodule NewYou.MixProject do
       check: [
         "format --check-formatted",
         "compile --warnings-as-errors",
+        "design.check",
         "check.architecture",
         "usage_rules.sync --check",
         "credo --strict",
