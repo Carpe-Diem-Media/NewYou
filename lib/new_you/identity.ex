@@ -72,22 +72,20 @@ defmodule NewYou.Identity do
   @doc """
   Accepts a verification resend for an active, unverified Account.
 
-  The operation ID binds to the Account ID. An accepted replay for that pair returns
-  the same neutral result without replacing the current challenge again. Reusing the
-  ID for another Account returns `:resend_unavailable`. Acceptance supersedes active
-  verification Tokens and commits one replacement Token, Communications
-  MessageIntent and protected envelope with the Identity resend record. The operation
-  does not create an Audit obligation or Communications job.
+  Every valid request permanently binds the operation ID to a keyed fingerprint of
+  its immutable request, including neutral outcomes. An exact replay returns the
+  same neutral public result; changed input returns `:resend_unavailable`. Accepted
+  requests supersede active verification Tokens and commit one replacement Token,
+  Communications MessageIntent, protected envelope and Identity resend record in one
+  transaction. The operation does not create an Audit obligation or Communications
+  job.
   """
   @spec resend_verification(map()) :: {:ok, :verification_pending} | {:error, :resend_unavailable}
   def resend_verification(request) when is_map(request) do
     with {:ok, operation_id} <- resend_operation_id(Map.get(request, :operation_id)),
-         {:ok, account_id} <- account_id(Map.get(request, :account_id)) do
-      case read_resend_operation(operation_id) do
-        {:ok, nil} -> accept_resend(operation_id, account_id)
-        {:ok, operation} -> replay_resend_operation(operation, account_id)
-        _ -> {:error, :resend_unavailable}
-      end
+         {:ok, account_id} <- account_id(Map.get(request, :account_id)),
+         result <- accept_resend(operation_id, :account_id, account_id, {:account_id, account_id}) do
+      result
     else
       _ -> {:error, :resend_unavailable}
     end
@@ -110,11 +108,8 @@ defmodule NewYou.Identity do
   def resend_verification_by_email(request) when is_map(request) do
     with {:ok, operation_id} <- resend_operation_id(Map.get(request, :operation_id)),
          {:ok, email} <- Email.canonicalize(Map.get(request, :email)),
-         {:ok, account_id} <- account_id_for_email(email) do
-      case account_id do
-        nil -> {:ok, :verification_pending}
-        account_id -> resend_verification(%{operation_id: operation_id, account_id: account_id})
-      end
+         result <- accept_resend(operation_id, :email, email, {:email, email}) do
+      result
     else
       _ -> {:error, :resend_unavailable}
     end
@@ -228,22 +223,41 @@ defmodule NewYou.Identity do
     end
   end
 
-  defp accept_resend(operation_id, account_id) do
-    transaction = resend_transaction(operation_id, account_id)
+  defp accept_resend(operation_id, subject_type, subject_value, selector) do
+    case RegistrationBinding.resend_fingerprint(operation_id, subject_type, subject_value) do
+      {:ok, request_fingerprint, fingerprint_key_version} ->
+        input = %{
+          operation_id: operation_id,
+          subject_type: subject_type,
+          subject_value: subject_value,
+          selector: selector,
+          request_fingerprint: request_fingerprint,
+          fingerprint_key_version: fingerprint_key_version
+        }
 
-    case transaction do
-      {:ok, {:ok, :verification_pending}} ->
-        {:ok, :verification_pending}
+        case resend_transaction(input) do
+          {:ok, {:ok, :verification_pending}} ->
+            {:ok, :verification_pending}
 
-      {:error, error} ->
-        resend_transaction_error(operation_id, account_id, error)
+          {:ok, :verification_pending} ->
+            {:ok, :verification_pending}
+
+          {:ok, {:error, _reason}} ->
+            {:error, :resend_unavailable}
+
+          {:error, error} ->
+            resend_transaction_error(input, error)
+
+          _ ->
+            {:error, :resend_unavailable}
+        end
 
       _ ->
         {:error, :resend_unavailable}
     end
   end
 
-  defp resend_transaction(operation_id, account_id) do
+  defp resend_transaction(input) do
     Ash.transact(
       [
         Account,
@@ -253,42 +267,67 @@ defmodule NewYou.Identity do
         NewYou.Communications.ProtectedEnvelope,
         NewYou.Communications.EnvelopeNonce
       ],
-      fn -> accept_resend_locked(operation_id, account_id) end
+      fn -> accept_resend_locked(input) end
     )
   end
 
-  defp accept_resend_locked(operation_id, account_id) do
-    with {:ok, account} <- lock_resend_account(account_id),
-         {:ok, operation} <- read_resend_operation(operation_id) do
-      accept_resend_state(operation, account, operation_id, account_id)
+  defp accept_resend_locked(input) do
+    case read_resend_operation(input.operation_id) do
+      {:ok, %ResendOperation{} = operation} -> replay_resend_operation(operation, input)
+      {:ok, nil} -> accept_resend_after_initial_read(input)
+      _ -> {:error, :resend_unavailable}
+    end
+  end
+
+  defp accept_resend_after_initial_read(input) do
+    with {:ok, account} <- lock_resend_account(input.selector),
+         {:ok, operation} <- read_resend_operation(input.operation_id) do
+      case operation do
+        %ResendOperation{} = operation -> replay_resend_operation(operation, input)
+        nil -> accept_resend_state(account, input)
+      end
     else
       _ -> {:error, :resend_unavailable}
     end
   end
 
-  defp accept_resend_state(nil, nil, _operation_id, _account_id),
-    do: {:ok, :verification_pending}
+  defp accept_resend_state(nil, input), do: record_neutral_resend(input)
 
-  defp accept_resend_state(nil, account, operation_id, _account_id),
-    do: establish_resend(account, operation_id)
+  defp accept_resend_state(
+         %Account{credential_status: :active, email_verified?: false} = account,
+         input
+       ),
+       do: establish_resend(account, input)
 
-  defp accept_resend_state(operation, _account, _operation_id, account_id),
-    do: replay_resend_operation(operation, account_id)
+  defp accept_resend_state(%Account{}, input), do: record_neutral_resend(input)
 
-  defp resend_transaction_error(operation_id, account_id, error) do
+  defp resend_transaction_error(input, error) do
     if resend_operation_id_collision?(error) do
-      replay_resend_after_race(operation_id, account_id)
+      replay_resend_after_race(input)
     else
       {:error, :resend_unavailable}
     end
   end
 
-  defp lock_resend_account(account_id) do
+  defp lock_resend_account({:account_id, account_id}) do
     query =
       Account
       |> Ash.Query.filter(id == ^account_id)
       |> Ash.Query.lock(:for_update)
 
+    read_locked_resend_account(query)
+  end
+
+  defp lock_resend_account({:email, email}) do
+    query =
+      Account
+      |> Ash.Query.filter(email == ^email)
+      |> Ash.Query.lock(:for_update)
+
+    read_locked_resend_account(query)
+  end
+
+  defp read_locked_resend_account(query) do
     case Ash.read(query, domain: __MODULE__, authorize?: false) do
       {:ok, [account]} -> {:ok, account}
       {:ok, []} -> {:ok, nil}
@@ -296,31 +335,43 @@ defmodule NewYou.Identity do
     end
   end
 
-  defp establish_resend(
-         %Account{credential_status: :active, email_verified?: false} = account,
-         operation_id
-       ) do
+  defp establish_resend(%Account{} = account, input) do
     accepted_at = registration_now()
 
     with :ok <- supersede_active_challenges(account),
          {:ok, bearer, claims} <- issue_resend_proof(account),
          {:ok, _intent} <-
-           establish_resend_intent(account, operation_id, accepted_at, claims, bearer),
+           establish_resend_intent(account, input.operation_id, accepted_at, claims, bearer),
          {:ok, _operation} <-
-           Ash.create(
-             ResendOperation,
-             %{operation_id: operation_id, account_id: account.id, accepted_at: accepted_at},
-             action: :accept,
-             domain: __MODULE__,
-             authorize?: false
-           ) do
+           record_resend_operation(input, :accepted, account.id, accepted_at) do
       {:ok, :verification_pending}
     else
       error -> error
     end
   end
 
-  defp establish_resend(%Account{}, _operation_id), do: {:ok, :verification_pending}
+  defp record_neutral_resend(input) do
+    with {:ok, _operation} <- record_resend_operation(input, :neutral, nil, nil) do
+      {:ok, :verification_pending}
+    end
+  end
+
+  defp record_resend_operation(input, outcome, account_id, accepted_at) do
+    Ash.create(
+      ResendOperation,
+      %{
+        operation_id: input.operation_id,
+        account_id: account_id,
+        accepted_at: accepted_at,
+        request_fingerprint: input.request_fingerprint,
+        fingerprint_key_version: input.fingerprint_key_version,
+        outcome: outcome
+      },
+      action: :accept,
+      domain: __MODULE__,
+      authorize?: false
+    )
+  end
 
   defp supersede_active_challenges(account) do
     now = registration_now()
@@ -386,9 +437,9 @@ defmodule NewYou.Identity do
     )
   end
 
-  defp replay_resend_after_race(operation_id, account_id) do
-    case read_resend_operation(operation_id) do
-      {:ok, %ResendOperation{} = operation} -> replay_resend_operation(operation, account_id)
+  defp replay_resend_after_race(input) do
+    case read_resend_operation(input.operation_id) do
+      {:ok, %ResendOperation{} = operation} -> replay_resend_operation(operation, input)
       _ -> {:error, :resend_unavailable}
     end
   end
@@ -403,21 +454,59 @@ defmodule NewYou.Identity do
     end
   end
 
-  defp account_id_for_email(email) do
-    query = Ash.Query.filter(Account, email == ^email)
-
-    case Ash.read(query, domain: __MODULE__, authorize?: false) do
-      {:ok, [%Account{id: account_id}]} -> {:ok, account_id}
-      {:ok, []} -> {:ok, nil}
+  defp replay_resend_operation(
+         %ResendOperation{fingerprint_key_version: "legacy-account-id-v1"} = operation,
+         input
+       ) do
+    with {:ok, account_id} <- legacy_resend_account_id(operation, input),
+         fingerprint <-
+           RegistrationBinding.legacy_resend_fingerprint(operation.operation_id, account_id),
+         true <- RegistrationBinding.equal?(operation.request_fingerprint, fingerprint),
+         :accepted <- operation.outcome do
+      {:ok, :verification_pending}
+    else
       _ -> {:error, :resend_unavailable}
     end
   end
 
-  defp replay_resend_operation(%ResendOperation{account_id: account_id}, account_id),
-    do: {:ok, :verification_pending}
+  defp replay_resend_operation(%ResendOperation{} = operation, input) do
+    with {:ok, fingerprint} <-
+           RegistrationBinding.resend_fingerprint_for_version(
+             input.operation_id,
+             input.subject_type,
+             input.subject_value,
+             operation.fingerprint_key_version
+           ),
+         true <- RegistrationBinding.equal?(operation.request_fingerprint, fingerprint),
+         true <- operation.outcome in [:accepted, :neutral] do
+      {:ok, :verification_pending}
+    else
+      _ -> {:error, :resend_unavailable}
+    end
+  end
 
-  defp replay_resend_operation(%ResendOperation{}, _account_id),
-    do: {:error, :resend_unavailable}
+  defp legacy_resend_account_id(
+         %ResendOperation{account_id: account_id},
+         %{subject_type: :account_id, subject_value: account_id}
+       ),
+       do: {:ok, account_id}
+
+  defp legacy_resend_account_id(
+         %ResendOperation{account_id: account_id},
+         %{subject_type: :email, subject_value: email}
+       ) do
+    query =
+      Account
+      |> Ash.Query.filter(id == ^account_id and email == ^email)
+
+    case Ash.read(query, domain: __MODULE__, authorize?: false) do
+      {:ok, [%Account{}]} -> {:ok, account_id}
+      {:ok, []} -> {:error, :resend_unavailable}
+      _ -> {:error, :resend_unavailable}
+    end
+  end
+
+  defp legacy_resend_account_id(_, _), do: {:error, :resend_unavailable}
 
   defp resend_operation_id(value) do
     with {:ok, operation_id} when is_binary(operation_id) <- Ecto.UUID.cast(value),

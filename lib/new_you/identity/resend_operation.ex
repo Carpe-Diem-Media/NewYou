@@ -1,14 +1,12 @@
 defmodule NewYou.Identity.ResendOperation do
   @moduledoc """
-  Durable Identity-owned idempotency and minimum audit record for a resend.
+  Durable Identity-owned terminal binding for every valid resend request.
 
-  Lifecycle is represented by row existence: no row means the operation has not
-  been accepted; a row means it was accepted and is terminal. The row is inserted
-  in the same transaction as challenge replacement, MessageIntent and protected
-  envelope creation.
-  It has no expiry so Token cleanup cannot make an accepted operation ID reusable.
-  The Account UUID remains bound if Account or Token retention later changes. This
-  resource does not own verification-challenge or Communications state.
+  The operation ID and keyed request fingerprint are recorded for accepted and
+  neutral outcomes. Email input is never stored. Accepted rows commit with challenge
+  replacement, MessageIntent and protected envelope creation. Rows have no expiry so
+  later Account or Token changes cannot make an operation ID reusable. This resource
+  does not own verification-challenge or Communications state.
   """
 
   use Ash.Resource, otp_app: :new_you, domain: NewYou.Identity, data_layer: AshPostgres.DataLayer
@@ -16,6 +14,18 @@ defmodule NewYou.Identity.ResendOperation do
   postgres do
     table "resend_operations"
     repo NewYou.Repo
+
+    check_constraints do
+      check_constraint :request_fingerprint, "resend_operations_binding_complete",
+        check:
+          "octet_length(request_fingerprint) = 32 AND fingerprint_key_version IS NOT NULL AND fingerprint_key_version <> ''",
+        message: "must retain a valid keyed request binding"
+
+      check_constraint :outcome, "resend_operations_terminal_outcome",
+        check:
+          "(outcome = 'accepted' AND account_id IS NOT NULL AND accepted_at IS NOT NULL) OR (outcome = 'neutral' AND account_id IS NULL AND accepted_at IS NULL)",
+        message: "must retain one immutable accepted or neutral outcome"
+    end
   end
 
   actions do
@@ -25,7 +35,15 @@ defmodule NewYou.Identity.ResendOperation do
     end
 
     create :accept do
-      accept [:operation_id, :account_id, :accepted_at]
+      accept [
+        :operation_id,
+        :account_id,
+        :accepted_at,
+        :request_fingerprint,
+        :fingerprint_key_version,
+        :outcome
+      ]
+
       public? false
     end
   end
@@ -39,12 +57,30 @@ defmodule NewYou.Identity.ResendOperation do
     end
 
     attribute :account_id, :uuid do
-      allow_nil? false
+      allow_nil? true
       public? false
     end
 
     attribute :accepted_at, AshPostgres.TimestamptzUsec do
+      allow_nil? true
+      public? false
+    end
+
+    attribute :request_fingerprint, :binary do
       allow_nil? false
+      sensitive? true
+      public? false
+    end
+
+    attribute :fingerprint_key_version, :string do
+      allow_nil? false
+      sensitive? true
+      public? false
+    end
+
+    attribute :outcome, :atom do
+      allow_nil? false
+      constraints one_of: [:accepted, :neutral]
       public? false
     end
   end

@@ -4,6 +4,7 @@ defmodule NewYouWeb.RegistrationControllerTest do
 
   alias NewYou.Identity
   alias NewYouWeb.CopyRegistry
+  alias NewYouWeb.RegistrationController
 
   require Ash.Query
 
@@ -154,6 +155,18 @@ defmodule NewYouWeb.RegistrationControllerTest do
       assert html =~ ~s(value="af")
     end
 
+    test "renders useful English registration content by default with a visible language switcher",
+         %{conn: conn} do
+      html = conn |> get("/register") |> html_response(200)
+
+      assert_page_copy(html, @registration_copy_keys, "en")
+      assert html =~ ~r/<html\b[^>]*\blang="en"/
+      assert html =~ ~s(href="/register?locale=af")
+      assert html =~ ~s(href="/register?locale=en")
+      assert html =~ ~s(aria-label="#{expected_rendered_copy("shared.language.change", "en")}")
+      assert html =~ ~r/<h1\b[^>]*id="launch-heading"/
+    end
+
     test "uses NewYou tokens for responsive headings, focus, selection, and reduced motion", %{
       conn: conn
     } do
@@ -202,16 +215,7 @@ defmodule NewYouWeb.RegistrationControllerTest do
       end
     end
 
-    test "asks for a language when none is selected and rejects unsupported locales", %{
-      conn: conn
-    } do
-      html = conn |> get("/register") |> html_response(200)
-
-      refute html =~ expected_copy("public.entry.launch.title", "en")
-      refute html =~ expected_copy("public.entry.launch.title", "af")
-      assert html =~ ~s(href="/register?locale=af")
-      assert html =~ ~s(href="/register?locale=en")
-
+    test "rejects unsupported registration locales without falling back", %{conn: conn} do
       conn = get(conn, "/register?locale=mi")
       assert conn.status == 404
       assert conn.resp_body == ""
@@ -247,6 +251,25 @@ defmodule NewYouWeb.RegistrationControllerTest do
 
       assert terms == File.read!(@terms_path)
       assert privacy == File.read!(@privacy_path)
+
+      assert Base.encode16(:crypto.hash(:sha256, terms), case: :lower) ==
+               "6feb2d016f30e889c08995990a863429db0034af49fc6b6bd3467b90cda03937"
+
+      assert Base.encode16(:crypto.hash(:sha256, privacy), case: :lower) ==
+               "ac603377eaafce20bf5e425f64cfc97fbc855b20bd66deca481401f0f6efd43e"
+
+      manifest =
+        "docs/delivery/content-evidence/content_media/LEGAL_BASELINE_CONTENT_MANIFEST_v0.1.0.json"
+        |> File.read!()
+        |> Jason.decode!()
+
+      terms_entry = Enum.find(manifest["versions"], &(&1["document_type"] == "terms"))
+      privacy_entry = Enum.find(manifest["versions"], &(&1["document_type"] == "privacy"))
+
+      assert RegistrationController.legal_baseline_valid?(:terms, terms_entry, terms)
+      assert RegistrationController.legal_baseline_valid?(:privacy, privacy_entry, privacy)
+      refute RegistrationController.legal_baseline_valid?(:terms, terms_entry, terms <> " ")
+      refute RegistrationController.legal_baseline_valid?(:privacy, privacy_entry, privacy <> " ")
       assert get_resp_header(terms_conn, "cache-control") == ["no-store"]
       assert get_resp_header(terms_conn, "content-type") |> List.first() =~ "text/html"
     end
