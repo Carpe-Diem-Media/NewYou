@@ -80,7 +80,7 @@ defmodule NewYou.Proof.CatalogTest do
     assert result.missing_families ==
              Enum.reject(
                Catalog.coverage_inventory(),
-               &Map.has_key?(Catalog.required().business_manifests, &1)
+               &(get_in(Catalog.required().business_manifests, [&1, :scope]) == :complete)
              )
 
     assert :missing_manifest in result.errors

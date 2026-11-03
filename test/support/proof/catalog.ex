@@ -68,6 +68,7 @@ defmodule NewYou.Proof.Catalog do
   ]
 
   @type business_manifest :: %{
+          required(:scope) => :partial | :complete,
           required(:version) => String.t(),
           required(:digest) => String.t(),
           required(:cases) => [map()]
@@ -214,7 +215,11 @@ defmodule NewYou.Proof.Catalog do
 
     missing_families =
       if mode == :tb001,
-        do: Enum.reject(@coverage_inventory, &Map.has_key?(required().business_manifests, &1)),
+        do:
+          Enum.reject(
+            @coverage_inventory,
+            &(get_in(required().business_manifests, [&1, :scope]) == :complete)
+          ),
         else: []
 
     business_manifests = required().business_manifests

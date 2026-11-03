@@ -56,7 +56,7 @@ defmodule NewYou.Proof.P805Catalog do
     end)
     |> Enum.group_by(& &1.coverage_id)
     |> Map.new(fn {family, cases} ->
-      manifest = %{coverage_id: family, version: "p8-05.1", cases: cases}
+      manifest = %{coverage_id: family, version: "p8-05.2", scope: :partial, cases: cases}
       {family, Map.put(manifest, :digest, digest(manifest))}
     end)
   end

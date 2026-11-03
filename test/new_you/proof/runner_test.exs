@@ -3,6 +3,28 @@ defmodule NewYou.Proof.RunnerTest do
 
   alias NewYou.Proof.{Catalog, Result, Runner, Scenario, SelfTest}
 
+  test "partial mappings cannot certify a family even when every case and other family passes" do
+    for family <- Map.keys(Catalog.required().business_manifests) do
+      manifests = full_fixture_manifests()
+      manifests = put_in(manifests[family][:scope], :partial)
+      result = evaluate_full_fixture(manifests, full_fixture_cases(manifests))
+      entry = Enum.find(result.entries, &(&1.coverage_id == family))
+      assert Enum.all?(entry.cases, &(&1.verdict == "PASS"))
+      assert entry.verdict == "FAIL"
+      assert "manifest.partial" in entry.reason_codes
+      assert result.verdict == "FAIL"
+      assert result.exit_code == 1
+    end
+  end
+
+  test "a mapping without explicit completeness scope fails closed" do
+    manifests = full_fixture_manifests()
+    family = hd(Catalog.coverage_inventory())
+    manifests = Map.update!(manifests, family, &Map.delete(&1, :scope))
+    result = evaluate_full_fixture(manifests, full_fixture_cases(manifests))
+    assert result.verdict == "FAIL"
+  end
+
   test "CLI parsing accepts the approved modes and requires an output path" do
     for {mode, expected} <- [
           {"harness_self_test", :harness_self_test},
@@ -1017,6 +1039,7 @@ defmodule NewYou.Proof.RunnerTest do
     %{
       coverage_id: coverage_id,
       version: "1.0.0",
+      scope: :complete,
       digest: Base.encode16(digest, case: :lower),
       cases: cases
     }

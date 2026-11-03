@@ -10,7 +10,7 @@
     "schema_version": {"const": "1.0.0"},
     "run_id": {"$ref": "#/$defs/label"},
     "mode": {"enum": ["harness_self_test", "tb001", "diagnostic"]},
-    "contract": {"const": "TB-001/v0.1.2"},
+    "contract": {"const": "TB-001/v0.1.3"},
     "metadata_complete": {"type": "boolean"},
     "git": {
       "type": "object",

@@ -1371,7 +1371,9 @@ defmodule NewYou.Proof.SelfTest do
 
         :missing_family ->
           length(Catalog.validate_registrations([], :tb001).missing_families) ==
-            length(Catalog.coverage_inventory()) - map_size(Catalog.required().business_manifests)
+            Enum.count(Catalog.coverage_inventory(), fn family ->
+              get_in(Catalog.required().business_manifests, [family, :scope]) != :complete
+            end)
 
         :missing_case ->
           incomplete = List.delete_at(registrations, length(registrations) - 1)
@@ -1682,7 +1684,7 @@ defmodule NewYou.Proof.SelfTest do
       "schema_version" => "1.0.0",
       "run_id" => "self-test-fixture",
       "mode" => "harness_self_test",
-      "contract" => "TB-001/v0.1.2",
+      "contract" => "TB-001/v0.1.3",
       "metadata_complete" => false,
       "git" => %{
         "head_before" => nil,
@@ -1748,7 +1750,7 @@ defmodule NewYou.Proof.SelfTest do
       "schema_version" => "1.0.0",
       "run_id" => "full-fixture",
       "mode" => "tb001",
-      "contract" => "TB-001/v0.1.2",
+      "contract" => "TB-001/v0.1.3",
       "metadata_complete" => true,
       "git" => %{
         "head_before" => source.head,

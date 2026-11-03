@@ -7,12 +7,14 @@ defmodule NewYou.Proof.P805Test do
 
   test "P8-05 reviewed cases are compiled without manufacturing future coverage" do
     manifests = Catalog.required().business_manifests
+    assert Enum.all?(Map.values(manifests), &(&1.scope == :partial))
     registrations = Catalog.compiled_business_registrations()
     cases = Enum.flat_map(Map.values(manifests), & &1.cases)
     assert Enum.sort(Enum.map(cases, & &1.case_id)) == Enum.sort(@case_ids)
     assert Enum.sort(Enum.map(registrations, & &1.case_id)) == Enum.sort(@case_ids)
     assert :ok = Catalog.validate_compiled_registrations(manifests, registrations)
     missing = Catalog.validate_registrations(registrations, :tb001).missing_families
+    assert missing == Catalog.coverage_inventory()
     assert "session_login_revocation_restart" in missing
     assert "audit_e1" in missing
     assert "recovery_primary_email_change" in missing
@@ -43,6 +45,13 @@ defmodule NewYou.Proof.P805Test do
     end
 
     result = NewYou.Proof.Runner.evaluate_full(manifests, observations, true, cleanup)
+
+    for entry <- result.entries, Map.has_key?(manifests, entry.coverage_id) do
+      assert Enum.all?(entry.cases, &(&1.verdict == "PASS"))
+      assert entry.verdict == "FAIL"
+      assert "manifest.partial" in entry.reason_codes
+    end
+
     assert result.exit_code == 1
     assert result.verdict == "FAIL"
     assert "coverage.incomplete" in result.reason_codes
