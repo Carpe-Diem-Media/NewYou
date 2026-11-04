@@ -43,4 +43,4 @@ jobs:
         if: contains(github.event.head_commit.message, '[well93-drill]')
         run: sleep 120
 
-# Controlled trial: controller termination while executing.
+# Controlled trial: lost registration response.
