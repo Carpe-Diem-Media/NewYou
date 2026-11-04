@@ -55,7 +55,8 @@ not select Full by themselves. Git rename detection is disabled for path
 classification, so both source and destination are considered.
 
 Foundation Smoke runs on each PR. The required **Foundation Integrity** aggregate
-waits for Smoke and routed Application CI, but not for Full.
+waits for Smoke, routed Application CI and the routed Hex security audit,
+but not for Full.
 
 Routed application and engineering changes run the canonical `mix check` gate.
 The slower `mix check.deep` lane runs when application source, migrations or

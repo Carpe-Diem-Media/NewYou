@@ -26,8 +26,9 @@ Solo-maintainer repos still benefit: mistakes, compromised tooling, and process 
 - **Required status check context:** **`Foundation Integrity`** — set explicitly via `jobs.foundation-integrity.name` in the workflow.
 
 The `Foundation Integrity` job aggregates always-on **Foundation Smoke** with
-routed **Application CI** when required. Foundation Full provides separate, non-blocking evidence for applicable governance changes. Application-only paths may skip Full, but they cannot skip Smoke or the aggregation check. Keep this exact aggregation context required in the branch
-ruleset.
+routed **Application CI** and the Hex security audit when required. Foundation
+Full provides separate, non-blocking evidence for applicable governance
+changes. Keep this exact aggregation context required in the branch ruleset.
 
 Do **not** require `foundation-integrity` (job id) unless the Check Runs API on the PR head proves that is the published context. After workflow changes, verify:
 

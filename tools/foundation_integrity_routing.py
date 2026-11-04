@@ -17,8 +17,8 @@ classifier does not need a special "status-only" GitHub lane.
 
 Pull requests are routed from their exact diff. The classifier also supports
 push ranges for callers that explicitly use them; Foundation Integrity does
-not run on main pushes. Governance and unknown paths remain fail-closed. Governance-sensitive changes
-start the cold Full lane as non-blocking historical/provenance evidence; the
+not run on main pushes. Governance and unknown paths remain fail-closed.
+Governance-sensitive changes start the cold Full lane as non-blocking historical/provenance evidence; the
 required Foundation Integrity merge gate does not wait for it. Ordinary
 application changes run Application CI and Foundation Smoke without Full.
 Superseded PR workflow runs are cancelled by the workflow concurrency policy.

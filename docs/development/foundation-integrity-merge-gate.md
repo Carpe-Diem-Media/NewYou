@@ -95,9 +95,10 @@ run Foundation Smoke and the applicable `mix check` and `mix check.deep` gates
 with DevCore, and record their output. Run Foundation Full by exact-SHA dispatch
 when the routed governance evidence requires it. Resolve provenance or review
 failures separately; passing fresh tests cannot repair an unreviewed merge.
-The saved evidence is not itself a signature or a review approval; the independent reviewer must preserve and
-check its provenance. Reusing PR CI does not create a check run on main.
+The saved evidence is not itself a signature or a review approval; the
+independent reviewer must preserve and check its provenance. Reusing PR CI does not create a check run on main.
 Nightly hardening and manual Foundation Full certification remain separate.
+
 ## Hex security audit
 
 WELL-83 adds an independent blocking Hex lane to the same required Foundation
