@@ -28,3 +28,11 @@ class ApplicationPolicyTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'unapproved_proving_run'):
                 runner.execute({'phase': 'isolated', 'profile': 'application'}, 1, 'a' * 40)
             ssh.assert_not_called()
+
+    def test_application_rejects_another_branch_even_with_the_right_workflow(self):
+        from unittest.mock import patch
+        run = dict(head_sha='a' * 40, event='push', head_branch='well-93-unapproved', path='.github/workflows/disposable-runner-application.yml', status='queued')
+        with patch.object(runner, 'github', side_effect=[run, AssertionError('must reject before provider setup')]), patch.object(runner, 'save'), patch.object(runner, 'ssh') as ssh:
+            with self.assertRaisesRegex(RuntimeError, 'unapproved_proving_run'):
+                runner.execute({'phase': 'isolated', 'profile': 'application'}, 1, 'a' * 40)
+            ssh.assert_not_called()
