@@ -84,7 +84,7 @@ class GitHubCollectionTest(unittest.TestCase):
         self.run = {"id": 100, "path": ".github/workflows/foundation-integrity.yml", "status": "completed",
                     "event": "pull_request", "head_sha": self.e["head"], "run_attempt": 1,
                     "check_suite_id": 77, "pull_requests": [{"number": 42}]}
-        self.pr = {"merged": False, "head": {"sha": self.e["head"]},
+        self.pr = {"merged": False, "state": "open", "head": {"sha": self.e["head"]},
                    "base": {"sha": self.e["base"], "ref": "main"},
                    "merge_commit_sha": self.e["candidate"]}
         self.jobs = [{"id": 1, "name": "Route CI lanes", "status": "completed", "conclusion": "success"},
@@ -159,6 +159,7 @@ class GitHubCollectionTest(unittest.TestCase):
 
     def test_collector_rejects_wrong_source_and_missing_or_failed_jobs(self):
         mutations = [
+            lambda: self.pr.update(state="closed"),
             lambda: self.run.update(head_sha="e" * 40),
             lambda: self.check.update(app={"slug": "other"}),
             lambda: self.check.update(check_suite={"id": 99}),
@@ -178,7 +179,7 @@ class ResultCollectionTest(GitHubCollectionTest):
         from tools.ci_attestation import collect
         old_api = self.api
         merge_sha = "f" * 40
-        self.pr.update(merged=True, merge_commit_sha=merge_sha)
+        self.pr.update(merged=True, state="closed", merge_commit_sha=merge_sha)
         self.run["pull_requests"] = []
         def api(path):
             if path.endswith("commits/main"):

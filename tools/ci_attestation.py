@@ -107,7 +107,9 @@ def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: s
     repo = "JCSchoeman96/NewYou"
     pr = _api(f"repos/{repo}/pulls/{pr_number}")
     require(pr.get("base", {}).get("ref") == "main", "PR does not target main")
-    require(pr.get("merged") is after_merge, "PR merge state is unexpected")
+    require(pr.get("merged") is after_merge
+            and pr.get("state") == ("closed" if after_merge else "open"),
+            "PR merge state is unexpected")
     head = pr["head"]["sha"]
     base = pr["base"]["sha"]
     candidate = candidate_sha if after_merge else pr.get("merge_commit_sha")
@@ -175,6 +177,7 @@ def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: s
     fresh_pr = _api(f"repos/{repo}/pulls/{pr_number}")
     require(fresh_pr["head"]["sha"] == head and fresh_pr["base"]["sha"] == base
             and fresh_pr.get("merged") is after_merge
+            and fresh_pr.get("state") == ("closed" if after_merge else "open")
             and fresh_pr.get("merge_commit_sha") == pr.get("merge_commit_sha"),
             "PR changed while collecting evidence")
     fresh_run = _api(f"repos/{repo}/actions/runs/{run_id}")
