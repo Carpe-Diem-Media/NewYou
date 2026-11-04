@@ -227,3 +227,35 @@ journal and a guest for an independently started recovery command. It requires
 a bounded systemd user unit. Run recovery immediately, repeat it, and inspect all
 owned resources. This tests process restart reconciliation, not workstation reboot.
 Neither drill is an ordinary CI action or an application interface.
+
+
+## Opt-in application trial
+
+The `application` profile accepts only the separate disposable application
+workflow and registers the distinct `newyou-well93-application` label. It requires
+a 4096 MiB guest and the unchanged host reserves, a 24 GiB disposable disk,
+a 60-minute runner deadline and an independent 80-minute supervisor deadline.
+It never changes the required hosted workflows. Start only one reviewed owner
+push on `well-93-application-run`, then invoke the trusted controller:
+
+```bash
+python3 tools/disposable_runner.py supervise --profile application --run-id RUN_ID --sha EXACT_SOURCE_SHA
+```
+
+Before registration, trusted guest bootstrap installs signed Ubuntu packages and
+Docker's signed stable Ubuntu repository packages. A package service policy
+prevents rootful Docker/containerd startup; those system services are masked.
+Only the runner user's rootless Docker service is enabled, with a socket beneath
+`/run/user/UID/`. The runner receives neither sudo nor docker-group membership.
+There is no host socket, shared filesystem, host cache or DevCore environment.
+See Docker's [rootless installation](https://docs.docker.com/engine/security/rootless/)
+and [Ubuntu package instructions](https://docs.docker.com/engine/install/ubuntu/).
+
+The one-job workflow pulls PostgreSQL 18 into that guest-local daemon and binds
+its TEST port to guest loopback only. It creates a fresh restricted TEST role,
+masks the generated password and uses the existing application TEST variables.
+It verifies the pinned Elixir/OTP runtime, fetches locked dependencies without
+shared caches, and runs fast and deep checks. `ImageOS: ubuntu24` selects the
+matching prebuilt runtime on the custom runner. Diagnostic projections remain
+bounded across the longer deadline. Live outcomes and performance belong in
+Plane; adding this route does not certify its execution or authorize cutover.

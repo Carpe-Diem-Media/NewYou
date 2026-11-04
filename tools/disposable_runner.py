@@ -51,6 +51,16 @@ def can_transition(before, after):
     return after in TRANSITIONS.get(before, set())
 
 
+def execution_policy(profile):
+    if profile == 'proof':
+        return {'workflow': '.github/workflows/disposable-runner-proof.yml',
+                'label': LABEL, 'job_seconds': 600, 'memory': 2048}
+    if profile == 'application':
+        return {'workflow': '.github/workflows/disposable-runner-application.yml',
+                'label': 'newyou-well93-application', 'job_seconds': 3600, 'memory': 4096}
+    raise RuntimeError('unknown_execution_profile')
+
+
 def capacity_error(available_mb, swap_free_mb, guest_mb, disk_free_mb, full_pressure=0.0):
     if guest_mb < 2048 or guest_mb > 4096:
         return 'guest_memory_out_of_bounds'
@@ -296,7 +306,7 @@ def provision(state, memory):
              str(directory / 'seed.iso'), str(directory / 'user-data'), str(directory / 'meta-data')])
     # Upload a private standalone copy. Never reuse the unproven existing base.
     command(['cp', '--reflink=auto', str(IMAGE), str(directory / 'disk.qcow2')])
-    command(['qemu-img', 'resize', str(directory / 'disk.qcow2'), '12G'])
+    command(['qemu-img', 'resize', str(directory / 'disk.qcow2'), '24G' if state.get('profile') == 'application' else '12G'])
     for suffix, filename, fmt in [('disk.qcow2', 'disk.qcow2', 'qcow2'), ('seed.iso', 'seed.iso', 'raw')]:
         vol = state['name'] + '-' + suffix
         virsh('vol-create-as', POOL, vol, str((directory / filename).stat().st_size), '--format', fmt)
@@ -409,7 +419,7 @@ class DiagnosticStream:
         self.thread = threading.Thread(target=self.run, daemon=True)
 
     def run(self):
-        for _ in range(120):
+        for _ in range(execution_policy(self.state.get('profile', 'proof'))['job_seconds'] // 5 + 1):
             try:
                 export_diagnostics(self.state)
             except Exception:
@@ -546,15 +556,21 @@ def cleanup(state):
 def execute(state, run_id, expected_sha):
     if state.get('phase') != 'isolated':
         raise RuntimeError('isolation_not_proven')
+    policy = execution_policy(state.get('profile', 'proof'))
     run = github('actions/runs/' + str(run_id))
     if (run['head_sha'] != expected_sha or run['event'] != 'push'
             or not run['head_branch'].startswith('well-93-')
-            or run['path'] != '.github/workflows/disposable-runner-proof.yml'
+            or run['path'] != policy['workflow']
             or run['status'] != 'queued'):
         raise RuntimeError('unapproved_proving_run')
     state['run_id'] = run_id
     state['sha'] = expected_sha
     save(state)
+    if state.get('profile') == 'application':
+        bootstrap = Path(__file__).with_name('runner_guest_application.sh').read_text()
+        ssh(state, bootstrap, timeout=600)
+        state['rootless_docker_verified'] = True
+        save(state)
     applications = github('actions/runners/downloads')
     app = next(a for a in applications if a['os'] == 'linux' and a['architecture'] == 'x64')
     if not re.fullmatch(r'[a-f0-9]{64}', app.get('sha256_checksum', '')):
@@ -580,7 +596,7 @@ rm /tmp/runner.tar.gz
     save(state)
     jit = github('actions/runners/generate-jitconfig', 'POST', {
         'name': state['name'], 'runner_group_id': 1,
-        'labels': [LABEL], 'work_folder': '_work'})
+        'labels': [policy['label']], 'work_folder': '_work'})
     state['runner_id'] = jit['runner']['id']
     state['registration_outcome'] = 'acknowledged'
     transition(state, 'registered')
@@ -590,6 +606,11 @@ rm /tmp/runner.tar.gz
     script = '''set -eu
 IFS= read -r jit
 cd /opt/actions-runner
+if [ -S "/run/user/$(id -u runner)/docker.sock" ]; then
+    export XDG_RUNTIME_DIR="/run/user/$(id -u runner)"
+    export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/docker.sock"
+    exec runuser -u runner -- env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" DOCKER_HOST="$DOCKER_HOST" ./run.sh --jitconfig "$jit"
+fi
 exec runuser -u runner -- ./run.sh --jitconfig "$jit"
 '''
     # ssh executes a constant command, payload goes only through stdin.
@@ -602,7 +623,7 @@ exec runuser -u runner -- ./run.sh --jitconfig "$jit"
             '-o', f'UserKnownHostsFile={directory / "known_hosts"}',
             f'root@{GUEST_IP}', '/root/launch-runner']
     with DiagnosticStream(state):
-        command(args, data=jit['encoded_jit_config'] + '\n', timeout=600, discard_output=True)
+        command(args, data=jit['encoded_jit_config'] + '\n', timeout=policy['job_seconds'], discard_output=True)
     deadline = time.monotonic() + 45
     while time.monotonic() < deadline:
         run = github('actions/runs/' + str(run_id))
@@ -631,8 +652,9 @@ def record_job_result(state, run, jobs):
 
 def supervisor_command(arguments):
     script = str(Path(__file__).resolve())
+    deadline = 4800 if '--profile' in arguments and arguments[arguments.index('--profile') + 1] == 'application' else 1200
     return ['systemd-run', '--user', '--unit=newyou-w93-controller', '--collect', '--wait',
-            '--property=RuntimeMaxSec=1200', '--property=TimeoutStopSec=60',
+            f'--property=RuntimeMaxSec={deadline}', '--property=TimeoutStopSec=60',
             '--property=KillMode=mixed',
             '--property=ExecStopPost=/usr/bin/python3 ' + script + ' recover',
             '/usr/bin/python3', script, *arguments]
@@ -643,13 +665,18 @@ def main():
     parser.add_argument('action', choices=['supervise', 'probe', 'prove', 'recover'])
     parser.add_argument('--run-id', type=int)
     parser.add_argument('--sha')
-    parser.add_argument('--memory', type=int, default=2048)
+    parser.add_argument('--memory', type=int)
+    parser.add_argument('--profile', choices=['proof', 'application'], default='proof')
     args = parser.parse_args()
+    policy = execution_policy(args.profile)
+    args.memory = args.memory or policy['memory']
+    if args.profile == 'application' and (not args.run_id or args.memory != 4096):
+        parser.error('application trials require --run-id and 4096 MiB')
     if args.action == 'supervise':
         forwarded = ['prove', '--run-id', str(args.run_id), '--sha', args.sha] if args.run_id else ['probe']
         if args.run_id and not args.sha:
             parser.error('--run-id requires --sha')
-        forwarded += ['--memory', str(args.memory)]
+        forwarded += ['--memory', str(args.memory), '--profile', args.profile]
         result = subprocess.run(supervisor_command(forwarded))
         sys.exit(result.returncode)
     if args.action in ['probe', 'prove'] and not os.environ.get('INVOCATION_ID'):
@@ -674,7 +701,7 @@ def main():
         identity = uuid.uuid4()
         state = {'name': 'newyou-w93-' + identity.hex[:12], 'uuid': str(identity),
                  'mac': '52:54:00:' + ':'.join(f'{n:02x}' for n in identity.bytes[:3]),
-                 'phase': 'provisioning', 'created_at': int(time.time()), 'capacity': capacity}
+                 'phase': 'provisioning', 'created_at': int(time.time()), 'capacity': capacity, 'profile': args.profile}
         save(state)
         def interrupted(signum, frame):
             raise KeyboardInterrupt()
