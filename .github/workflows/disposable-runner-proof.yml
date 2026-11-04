@@ -1,6 +1,7 @@
 name: Disposable runner proof
 
 # Separate, bounded proving route. Existing required and scheduled jobs stay hosted.
+# The trusted host controller owns VM teardown after this single job.
 on:
   push:
     branches: [well-93-proving-run]
