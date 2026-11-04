@@ -85,6 +85,16 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
         self.assertIn("group: foundation-integrity-${{ github.event.pull_request.number || github.ref }}", workflow)
         self.assertIn("cancel-in-progress: true", workflow)
 
+    def test_pr_gate_has_no_post_merge_push_trigger(self):
+        integrity = (WORKFLOWS / "foundation-integrity.yml").read_text(encoding="utf-8")
+        triggers = integrity.split("\non:\n", 1)[1].split("\nconcurrency:", 1)[0]
+        self.assertIn("  pull_request:", triggers)
+        self.assertNotIn("  push:", triggers)
+
+    def test_attestation_regressions_run_in_smoke(self):
+        integrity = (WORKFLOWS / "foundation-integrity.yml").read_text(encoding="utf-8")
+        self.assertIn("python -m unittest discover -s tests -p 'test_ci_attestation.py' -v", integrity)
+
     def test_exact_sha_dispatch_is_owned_by_foundation_full(self):
         integrity = (WORKFLOWS / "foundation-integrity.yml").read_text(encoding="utf-8")
         full = (WORKFLOWS / "foundation-full.yml").read_text(encoding="utf-8")
