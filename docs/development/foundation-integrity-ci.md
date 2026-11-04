@@ -35,20 +35,18 @@ overlays `docs/history/` evidence so later provenance changes remain visible.
 Temporary links are removed when the suite exits; the repository and both
 current routers use only the semantic roots.
 
-For an exact commit on GitHub Actions, run **Foundation Integrity** with the
+For historical certification of an exact commit on GitHub Actions, run **Foundation Full** with the
 `workflow_dispatch` input `sha` set to the full 40-character commit SHA and use
-the workflow ref whose tip is that same SHA. Both Smoke and Full verify the
-workflow ref SHA and checked-out `HEAD` against the input. Dispatch always
-selects Foundation Full.
+a workflow ref where Foundation Full is available. The workflow verifies that
+checked-out `HEAD` equals the input SHA.
 
 ## CI routing
 
-Every pull request and every push to `main` runs Foundation Smoke. The workflow
+Every pull request runs Foundation Smoke; ordinary pushes to `main` do not. The workflow
 does not use path filters, so the required status check cannot disappear when
 files change.
 
-The route job compares the pull request base to its head, or the push's `before`
-to its head. `docs/governance/**`, `docs/history/**` and explicit Foundation
+The route job compares the pull request base to its head. `docs/governance/**`, `docs/history/**` and explicit Foundation
 Full/provenance machinery select Full. `docs/delivery/**`,
 `docs/development/**`, `.agents/**`, application source and tests select
 Application CI as appropriate. Unknown paths and unresolvable pull-request
@@ -56,8 +54,9 @@ diffs fail closed to Full. Python language and the generic `tests/**` root do
 not select Full by themselves. Git rename detection is disabled for path
 classification, so both source and destination are considered.
 
-Foundation Smoke always runs. The required **Foundation Integrity** aggregate
-waits for Smoke and routed Application CI, but not for Full.
+Foundation Smoke runs on each PR. The required **Foundation Integrity** aggregate
+waits for Smoke, routed Application CI and the routed Hex security audit,
+but not for Full.
 
 Routed application and engineering changes run the canonical `mix check` gate.
 The slower `mix check.deep` lane runs when application source, migrations or

@@ -20,17 +20,15 @@ Solo-maintainer repos still benefit: mistakes, compromised tooling, and process 
 ## Foundation Integrity workflow and check name
 
 - Workflow: `.github/workflows/foundation-integrity.yml`
-- Triggers: **every** `pull_request`, **every** push to `main`, and manual `workflow_dispatch` (no `paths:` filters). Required checks must not be skippable by path filtering.
-- **Merge-preview vs exact-head:** `pull_request` runs validate GitHub’s PR merge preview (integration evidence). Pre-merge **exact-head** certification requires a `workflow_dispatch` run with **Use workflow from** set to the candidate branch whose tip is the certified head, and `sha` set to that same **40-character SHA**; the workflow fails closed if `GITHUB_SHA`, checkout (`git rev-parse HEAD`), or `sha` disagree. Bind attestation `pre_merge_ci.head_sha` to the Actions run only when the run `event` is `workflow_dispatch` and `head_sha` equals that same certified SHA.
-- **Dispatch bootstrap:** `workflow_dispatch` is only available after the workflow file exists on the default branch. A PR that introduces dispatch cannot use dispatch for its own pre-merge evidence until it merges; narrow toolchain corrections may rely on `pull_request` merge-preview CI for merge gating while dossier/feature certification uses dispatch only after the mechanism is on `main`.
+- Trigger: every `pull_request`, without path filters. Ordinary pushes to `main` do not run this workflow. Nightly hardening and manual Foundation Full remain separate.
+- Pull-request CI tests GitHub's merge candidate. Independent review binds the reviewed head and exact candidate to the required check and verifies the resulting main tree using the procedure in [Foundation Integrity merge gate](foundation-integrity-merge-gate.md).
 - Aggregation job id: `foundation-integrity`
 - **Required status check context:** **`Foundation Integrity`** — set explicitly via `jobs.foundation-integrity.name` in the workflow.
 
 The `Foundation Integrity` job aggregates always-on **Foundation Smoke** with
-**Foundation Full** when changed paths require governance certification.
-Application-only paths may skip Full, but they cannot skip Smoke or the
-aggregation check. Keep this exact aggregation context required in the branch
-ruleset.
+routed **Application CI** and the Hex security audit when required. Foundation
+Full provides separate, non-blocking evidence for applicable governance
+changes. Keep this exact aggregation context required in the branch ruleset.
 
 Do **not** require `foundation-integrity` (job id) unless the Check Runs API on the PR head proves that is the published context. After workflow changes, verify:
 
@@ -57,4 +55,4 @@ A protected `main` should not return HTTP 404 for branch protection or should sh
 
 1. PR head passes **Foundation Integrity** with the verified check context name.
 2. Activate ruleset / branch protection on `main` **before** merging the Pass 1 closure PR.
-3. Merge through the protection; confirm post-merge **Foundation Integrity** on resulting `main` SHA.
+3. Merge through the protection; confirm post-merge **Foundation Integrity** on resulting `main` SHA (the Pass 1 procedure).

@@ -387,7 +387,7 @@ A reviewer claiming an upstream governance contradiction must satisfy the same t
 
 Any reviewed-head change invalidates prior certification.
 
-Merge alone does not complete delivery. Verify resulting-main SHA/tree, candidate integration/no drift and required resulting-main CI/proof before moving Plane to "Done" or opening dependent work.
+Merge alone does not complete delivery. Independently verify resulting-main SHA/tree, candidate integration/no drift and required resulting-main CI/proof before moving Plane to "Done" or opening dependent work. The PR-tested merge tree may supply that proof only when the pre-merge run, reviewed head, base, candidate, required checks and resulting merge commit are independently bound as described in "docs/development/foundation-integrity-merge-gate.md". Any missing or mismatched evidence requires explicit fresh exact-SHA verification; never describe reused PR evidence as a main-SHA check run.
 
 Local DevCore credentials
 

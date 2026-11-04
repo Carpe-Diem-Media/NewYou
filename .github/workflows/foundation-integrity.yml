@@ -18,9 +18,6 @@ name: Foundation Integrity
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
 
 concurrency:
   group: foundation-integrity-${{ github.event.pull_request.number || github.ref }}
@@ -72,6 +69,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_hex_security_audit.py' -v
       - name: Run Foundation Smoke tests
         run: python -m unittest discover -s tests -p 'test_foundation_smoke.py' -v
+      - name: Run CI attestation regression tests
+        run: python -m unittest discover -s tests -p 'test_ci_attestation.py' -v
       - name: Verify merge-gate topology
         run: python -m unittest discover -s tests -p 'test_foundation_merge_gate.py' -v
       - name: Run current authority smoke audit

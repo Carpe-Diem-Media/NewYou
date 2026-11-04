@@ -252,9 +252,8 @@ class EventRoutingTests(unittest.TestCase):
     def test_unknown_push_range_fails_closed_for_all_selected_lanes(self):
         self.assertTrue(classify_deep_event("push", "", "", str(ROOT)))
 
-    def test_post_merge_push_of_reviewed_application_tree_does_not_rerun_full(self):
-        """Scenario F: the merged application tree was verified on its PR head; main must not
-        re-run cold Full for it, while application verification still runs on the push."""
+    def test_explicit_push_range_classification_remains_available(self):
+        """Explicit push ranges remain classifiable, independent of workflow triggers."""
         with tempfile.TemporaryDirectory() as directory:
             root, git = self._repo(directory)
             git("checkout", "--quiet", "-b", "feature")
@@ -273,7 +272,7 @@ class EventRoutingTests(unittest.TestCase):
             self.assertFalse(post_merge["foundation_full"])
             self.assertTrue(post_merge["application_changes"])
 
-    def test_main_push_with_governance_change_runs_full(self):
+    def test_governance_push_range_classifies_as_full(self):
         with tempfile.TemporaryDirectory() as directory:
             root, git = self._repo(directory)
             base = git("rev-parse", "HEAD")
@@ -286,7 +285,7 @@ class EventRoutingTests(unittest.TestCase):
                 classify_event("push", base, head, str(root)),
             )
 
-    def test_main_push_with_unknown_path_fails_closed_to_full(self):
+    def test_unknown_push_range_fails_closed_to_full(self):
         with tempfile.TemporaryDirectory() as directory:
             root, git = self._repo(directory)
             base = git("rev-parse", "HEAD")
