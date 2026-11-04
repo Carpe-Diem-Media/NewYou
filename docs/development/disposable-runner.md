@@ -20,11 +20,11 @@ The guest has two accounts. Root handles trusted preparation over host-initiated
 SSH with a fresh pinned host key. `runner` executes the workflow without sudo,
 Docker membership or host credentials. SSH agent and port forwarding are disabled.
 The initial harmless job has no checkout, actions, repository secrets, service
-containers or token permissions. Guest-local Docker and PostgreSQL are subsequent
-proof work, not provided by this initial controller.
+containers or token permissions. The separate opt-in application profile adds
+guest-local rootless Docker and PostgreSQL TEST for application proof.
 
 `gh` obtains controller credentials on the host. The repository JIT API creates
-one-job configuration with only the proving label. Only that short-lived payload
+one-job configuration with only the selected profile label. Only that short-lived payload
 passes through SSH stdin. No controller credential enters the guest, shell argv,
 state, logs, Plane or GitHub. A lost registration response leaves a durable unresolved request. One empty
 lookup never discharges it. Recovery must observe and delete the late runner by

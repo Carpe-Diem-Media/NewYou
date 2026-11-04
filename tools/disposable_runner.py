@@ -54,10 +54,10 @@ def can_transition(before, after):
 def execution_policy(profile):
     if profile == 'proof':
         return {'workflow': '.github/workflows/disposable-runner-proof.yml',
-                'label': LABEL, 'job_seconds': 600, 'memory': 2048}
+                'branch': 'well-93-proving-run', 'label': LABEL, 'job_seconds': 600, 'memory': 2048}
     if profile == 'application':
         return {'workflow': '.github/workflows/disposable-runner-application.yml',
-                'label': 'newyou-well93-application', 'job_seconds': 3600, 'memory': 4096}
+                'branch': 'well-93-application-run', 'label': 'newyou-well93-application', 'job_seconds': 3600, 'memory': 4096}
     raise RuntimeError('unknown_execution_profile')
 
 
@@ -559,7 +559,7 @@ def execute(state, run_id, expected_sha):
     policy = execution_policy(state.get('profile', 'proof'))
     run = github('actions/runs/' + str(run_id))
     if (run['head_sha'] != expected_sha or run['event'] != 'push'
-            or not run['head_branch'].startswith('well-93-')
+            or run['head_branch'] != policy['branch']
             or run['path'] != policy['workflow']
             or run['status'] != 'queued'):
         raise RuntimeError('unapproved_proving_run')
@@ -669,7 +669,7 @@ def main():
     parser.add_argument('--profile', choices=['proof', 'application'], default='proof')
     args = parser.parse_args()
     policy = execution_policy(args.profile)
-    args.memory = args.memory or policy['memory']
+    args.memory = policy['memory'] if args.memory is None else args.memory
     if args.profile == 'application' and (not args.run_id or args.memory != 4096):
         parser.error('application trials require --run-id and 4096 MiB')
     if args.action == 'supervise':
