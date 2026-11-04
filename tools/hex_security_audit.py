@@ -43,7 +43,7 @@ def input_digest(root: Path) -> str:
     return digest.hexdigest()
 
 
-def disposition(evidence: dict, status: int, exception: dict, today: dt.date, root: Path) -> str:
+def disposition(evidence: dict, status: int, exception: dict, root: Path) -> str:
     """Validate pinned Hex evidence, then apply an exact, bounded disposition."""
     try:
         if evidence['version'] != '2.1.0' or len(evidence['runs']) != 1:
@@ -63,8 +63,6 @@ def disposition(evidence: dict, status: int, exception: dict, today: dt.date, ro
                         'input_digest': APPROVED_INPUT_DIGEST}
             if any(exception.get(k) != v for k, v in expected.items()):
                 raise AuditError('Unauthorised or inactive exception metadata')
-            if today < dt.date(2026, 11, 4) or today >= dt.date.fromisoformat(exception['expires_on']):
-                raise AuditError('Exception expired or not yet valid')
             if input_digest(root) != APPROVED_INPUT_DIGEST:
                 raise AuditError('Exception invalidated by changed dependency/source/config inputs')
         if not results:
@@ -96,6 +94,13 @@ def disposition(evidence: dict, status: int, exception: dict, today: dt.date, ro
                 or rule['helpUri'] != APPROVED_URL
                 or rule['properties'] != {'tags': ['security'], 'security-severity': '9.5'}):
             raise AuditError('Advisory evidence changed; independent revalidation required')
+        # Read UTC only after all evidence and input checks, immediately before
+        # granting the disposition. A run may cross expiry while Hex is running.
+        now = dt.datetime.now(dt.timezone.utc)
+        approved_at = dt.datetime(2026, 11, 4, tzinfo=dt.timezone.utc)
+        expires_at = dt.datetime.fromisoformat(exception['expires_on']).replace(tzinfo=dt.timezone.utc)
+        if now < approved_at or now >= expires_at:
+            raise AuditError('Exception expired or not yet valid')
         return ('CONTROLLED DISPOSITION: unsuppressed Hex audit FAILED for assent 0.2.13; '
                 f'{rule_id}; JC; WELL-91; approval {APPROVAL}; expires at 2026-11-18T00:00:00Z. '
                 'Dependency remains vulnerable. This is not a clean audit.')
@@ -153,7 +158,7 @@ def latest_supported_assent_release() -> str:
     return '.'.join(map(str, max(versions)))
 
 
-def execute(root: Path, today: dt.date) -> str:
+def execute(root: Path) -> str:
     """Install pinned Hex, resolve the unchanged lock and run the real CLI once."""
     lock = (root / 'mix.lock').read_text()
     deps = locked_dependencies(lock)
@@ -185,12 +190,12 @@ def execute(root: Path, today: dt.date) -> str:
             raise AuditError(f'Fresh Hex audit failed to produce evidence, status {result.returncode}')
         evidence = json.loads(report.read_text())
         print(report.read_text(), flush=True)
-        return disposition(evidence, result.returncode, exception, today, root)
+        return disposition(evidence, result.returncode, exception, root)
 
 
 def main() -> int:
     try:
-        print(execute(Path(__file__).resolve().parents[1], dt.datetime.now(dt.timezone.utc).date()))
+        print(execute(Path(__file__).resolve().parents[1]))
         return 0
     except (AuditError, OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
         print(f'HEX SECURITY AUDIT FAILURE: {error}', file=sys.stderr)

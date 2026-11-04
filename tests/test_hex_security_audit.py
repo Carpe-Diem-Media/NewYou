@@ -10,6 +10,7 @@ from unittest.mock import patch
 from tools import hex_security_audit as audit
 
 ROOT = Path(__file__).resolve().parents[1]
+DATETIME = dt.datetime
 
 
 def report(package='assent', version='0.2.13', advisory='EEF-CVE-2026-117656'):
@@ -24,10 +25,15 @@ class AuditEvidenceTests(unittest.TestCase):
     def setUp(self):
         self.exception = json.loads((ROOT / 'tools/hex_audit/assent_exception.json').read_text())
         self.today = dt.date(2026, 11, 4)
+        clock_patch = patch.object(audit.dt, 'datetime', wraps=DATETIME)
+        self.clock = clock_patch.start()
+        self.addCleanup(clock_patch.stop)
+        self.clock.now.return_value = DATETIME(2026, 11, 4, tzinfo=dt.timezone.utc)
 
     def decide(self, evidence=None, status=1, exception=None, today=None):
-        return audit.disposition(report() if evidence is None else evidence, status, self.exception if exception is None else exception,
-                                 today or self.today, ROOT)
+        self.clock.now.return_value = DATETIME.combine(today or self.today, dt.time(), dt.timezone.utc)
+        return audit.disposition(report() if evidence is None else evidence, status,
+                                 self.exception if exception is None else exception, ROOT)
 
     def test_exact_approved_finding_is_controlled_not_clean(self):
         self.assertIn('CONTROLLED DISPOSITION', self.decide())
@@ -105,7 +111,7 @@ class AuditEvidenceTests(unittest.TestCase):
     def test_supported_assent_backport_requires_revalidation(self):
         with patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), patch.object(audit, 'latest_supported_assent_release', return_value='0.2.14'):
             with self.assertRaisesRegex(audit.AuditError, 'revalidation'):
-                audit.execute(ROOT, self.today)
+                audit.execute(ROOT)
 
     def test_retirement_cannot_use_advisory_exception(self):
         evidence = report(advisory='HEX0003')
@@ -116,7 +122,7 @@ class AuditEvidenceTests(unittest.TestCase):
     def test_new_stable_auth_release_requires_revalidation(self):
         with patch.object(audit, 'latest_authentication_release', return_value='4.15.2'):
             with self.assertRaisesRegex(audit.AuditError, 'revalidation'):
-                audit.execute(ROOT, self.today)
+                audit.execute(ROOT)
 
     def test_real_new_production_file_changes_digest(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -145,7 +151,7 @@ class AuditEvidenceTests(unittest.TestCase):
                 return type('Result', (), {'returncode': 1})()
             return type('Result', (), {'returncode': 0})()
         with patch.object(audit, 'latest_supported_assent_release', return_value='0.2.13'), patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), patch.object(audit.subprocess, 'run', side_effect=run):
-            self.assertIn('CONTROLLED', audit.execute(ROOT, self.today))
+            self.assertIn('CONTROLLED', audit.execute(ROOT))
         self.assertEqual([c[0][1] for c in calls], ['local.hex', 'deps.get', 'hex.audit'])
         self.assertIn('--check-locked', calls[1][0])
         self.assertTrue(all(c[1]['cwd'] != ROOT for c in calls))
@@ -155,7 +161,7 @@ class AuditEvidenceTests(unittest.TestCase):
     def test_missing_report_cannot_be_fabricated_clean(self):
         with patch.object(audit, 'latest_supported_assent_release', return_value='0.2.13'), patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), patch.object(audit.subprocess, 'run', return_value=type('Result', (), {'returncode': 0})()):
             with self.assertRaises(audit.AuditError):
-                audit.execute(ROOT, self.today)
+                audit.execute(ROOT)
 
     def test_advisory_service_failure_or_malformed_report_fails(self):
         for payload in [None, 'not JSON']:
@@ -165,12 +171,36 @@ class AuditEvidenceTests(unittest.TestCase):
                 return type('Result', (), {'returncode': 1 if 'hex.audit' in command else 0})()
             with patch.object(audit, 'latest_supported_assent_release', return_value='0.2.13'), patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), patch.object(audit.subprocess, 'run', side_effect=run):
                 with self.subTest(payload=payload), self.assertRaises((audit.AuditError, ValueError)):
-                    audit.execute(ROOT, self.today)
+                    audit.execute(ROOT)
+
+    def test_run_crossing_expiry_fails_at_final_decision(self):
+        started = dt.datetime(2026, 11, 17, 23, 59, 58, tzinfo=dt.timezone.utc)
+        for finished in [dt.datetime(2026, 11, 18, tzinfo=dt.timezone.utc),
+                         dt.datetime(2026, 11, 18, 0, 0, 10, tzinfo=dt.timezone.utc)]:
+            clock = [started]
+            class Clock(DATETIME):
+                @classmethod
+                def now(cls, tz=None):
+                    self.assertEqual(tz, dt.timezone.utc)
+                    return clock[0]
+            def run(command, **kwargs):
+                if 'hex.audit' in command:
+                    (Path(kwargs['cwd']) / 'audit.sarif').write_text(json.dumps(report()))
+                    clock[0] = finished
+                return type('Result', (), {'returncode': 1 if 'hex.audit' in command else 0})()
+            with self.subTest(finished=finished), patch.object(audit.dt, 'datetime', Clock), \
+                    patch.object(audit, 'latest_supported_assent_release', return_value='0.2.13'), \
+                    patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), \
+                    patch.object(audit.subprocess, 'run', side_effect=run), \
+                    patch('builtins.print') as output:
+                self.assertEqual(audit.main(), 1)
+                self.assertTrue(any('expired' in str(call) for call in output.call_args_list))
+                self.assertFalse(any('CONTROLLED DISPOSITION' in str(call) for call in output.call_args_list))
 
     def test_network_failure_is_visible(self):
         with patch.object(audit, 'latest_supported_assent_release', return_value='0.2.13'), patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), patch.object(audit.subprocess, 'run', return_value=type('Result', (), {'returncode': 1})()):
             with self.assertRaisesRegex(audit.AuditError, 'failed'):
-                audit.execute(ROOT, self.today)
+                audit.execute(ROOT)
 
 class AuditRoutingTests(unittest.TestCase):
     def test_sensitive_inputs_and_bypass_attempts_select_audit(self):
