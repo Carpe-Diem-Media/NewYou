@@ -42,3 +42,5 @@ jobs:
       - name: Controlled failure-drill window
         if: contains(github.event.head_commit.message, '[well93-drill]')
         run: sleep 120
+
+# Controlled trial: cancellation while executing.
