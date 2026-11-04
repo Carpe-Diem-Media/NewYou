@@ -4,10 +4,10 @@ WELL-93 adds a proving-only controller. Required Foundation Integrity,
 Application CI, Hex security audit and nightly jobs continue on GitHub-hosted
 runners. This is not a CI cutover or release certification.
 
-The first live guest booted, but isolation proving did not complete. Registration
-has never been attempted. The next guest was refused because workstation swap
-headroom fell below the resource guard. This change remains a draft until a
-real GitHub job, successful isolation probes and cleanup/failure drills pass.
+Run-specific results, resource measurements and blockers belong in Plane WELL-93
+and the implementation PR. A successful harmless job proves only that bounded
+execution and cleanup path. Application checks, failure recovery and CI cutover
+need their own evidence and independent review.
 
 ## Trust boundary
 
@@ -165,11 +165,11 @@ If capacity fails, cancel that queued proving run. Do not route normal PR work
 onto this label. The separate controller-tests workflow runs on GitHub-hosted
 Linux and has no provisioning credentials.
 
-## Proof still required
+## Proof required before cutover
 
-Complete the corrected live DNS/HTTPS and host/LAN/DevCore deny probes, patched
-boot, actual one-job registration, GitHub runner/result binding and guest-file
-absence. Exercise cancellation during a job, controller SIGKILL, guest crash,
+Verify live DNS/HTTPS and host/LAN/DevCore deny probes, patched boot, actual
+one-job registration, GitHub runner/result binding and guest-file absence for
+the reviewed controller and image. Exercise cancellation during a job, controller SIGKILL, guest crash,
 lost provider response, teardown failure and host restart reconciliation. Repeat
 recovery and verify no owned domain, filter, volume or registration remains.
 
