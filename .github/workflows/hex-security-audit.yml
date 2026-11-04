@@ -1,0 +1,29 @@
+name: Hex security audit
+
+on:
+  workflow_call:
+  schedule:
+    - cron: '43 2 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Fresh Hex advisory and retirement audit
+    if: github.event_name != 'schedule' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out current main for nightly or exact caller revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'main' || github.sha }}
+          persist-credentials: false
+      - name: Set up supported toolchain
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - name: Audit committed lock with isolated pinned Hex
+        run: python3 tools/hex_security_audit.py

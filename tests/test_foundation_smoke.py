@@ -24,6 +24,7 @@ class FoundationSmokeTests(unittest.TestCase):
         (root / "docs").mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / "docs/README.md", root / "docs/README.md")
         shutil.copytree(ROOT / "docs/development", root / "docs/development")
+        shutil.copytree(ROOT / "tools/hex_audit", root / "tools/hex_audit")
         shutil.copytree(ROOT / ".agents/skills", root / ".agents/skills")
         (root / ".github/workflows").mkdir(parents=True, exist_ok=True)
         shutil.copy2(

@@ -599,8 +599,10 @@ def run_smoke_audit(
         and "if:" not in smoke_match.group(1)
         and "foundation-full:" in workflow
         and "if: needs.route.outputs.foundation_full == 'true'" in workflow
+        and "hex-security-audit:" in workflow
+        and "AUDIT_RESULT: ${{ needs.hex-security-audit.result }}" in workflow
         and "application-ci:" in workflow
-        and aggregate_needs == {"route", "foundation-smoke", "application-ci"}
+        and aggregate_needs == {"route", "foundation-smoke", "application-ci", "hex-security-audit"}
     )
     _record(
         report,
