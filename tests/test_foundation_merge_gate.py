@@ -55,7 +55,7 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
     def test_required_gate_does_not_wait_for_foundation_full(self):
         workflow = (WORKFLOWS / "foundation-integrity.yml").read_text(encoding="utf-8")
 
-        self.assertIn("needs: [route, foundation-smoke, application-ci]", workflow)
+        self.assertIn("needs: [route, foundation-smoke, application-ci, hex-security-audit]", workflow)
         self.assertNotIn("needs: [route, foundation-smoke, application-ci, foundation-full]", workflow)
         self.assertNotIn("FULL_REQUIRED:", workflow)
         self.assertNotIn("FULL_RESULT:", workflow)

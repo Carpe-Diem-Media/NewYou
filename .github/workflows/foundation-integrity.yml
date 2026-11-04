@@ -34,6 +34,7 @@ jobs:
     name: Route CI lanes
     runs-on: ubuntu-latest
     outputs:
+      hex_audit_changes: ${{ steps.classify.outputs.hex_audit_changes }}
       foundation_full: ${{ steps.classify.outputs.foundation_full }}
       application_changes: ${{ steps.classify.outputs.application_changes }}
       deep_application_changes: ${{ steps.classify.outputs.deep_application_changes }}
@@ -67,6 +68,8 @@ jobs:
           python-version: "3.12"
       - name: Run Foundation path-routing regression tests
         run: python -m unittest discover -s tests -p 'test_foundation_lane_routing.py' -v
+      - name: Run Hex security audit regression tests
+        run: python -m unittest discover -s tests -p 'test_hex_security_audit.py' -v
       - name: Run Foundation Smoke tests
         run: python -m unittest discover -s tests -p 'test_foundation_smoke.py' -v
       - name: Verify merge-gate topology
@@ -82,6 +85,12 @@ jobs:
     with:
       deep_application_changes: ${{ needs.route.outputs.deep_application_changes == 'true' }}
 
+  hex-security-audit:
+    name: Hex security audit
+    needs: route
+    if: needs.route.outputs.hex_audit_changes == 'true'
+    uses: ./.github/workflows/hex-security-audit.yml
+
   foundation-full:
     name: Foundation Full
     needs: route
@@ -90,7 +99,7 @@ jobs:
 
   foundation-integrity:
     name: Foundation Integrity
-    needs: [route, foundation-smoke, application-ci]
+    needs: [route, foundation-smoke, application-ci, hex-security-audit]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -99,6 +108,8 @@ jobs:
           ROUTE_RESULT: ${{ needs.route.result }}
           SMOKE_RESULT: ${{ needs.foundation-smoke.result }}
           APP_REQUIRED: ${{ needs.route.outputs.application_changes }}
+          AUDIT_REQUIRED: ${{ needs.route.outputs.hex_audit_changes }}
+          AUDIT_RESULT: ${{ needs.hex-security-audit.result }}
           APP_RESULT: ${{ needs.application-ci.result }}
         run: |
           set -euo pipefail
@@ -126,6 +137,24 @@ jobs:
               ;;
             *)
               echo "Invalid/missing Application CI routing decision: $APP_REQUIRED"
+              exit 1
+              ;;
+          esac
+          case "$AUDIT_REQUIRED" in
+            true)
+              if [[ "$AUDIT_RESULT" != "success" ]]; then
+                echo "Hex security audit was required but did not pass: $AUDIT_RESULT"
+                exit 1
+              fi
+              ;;
+            false)
+              if [[ "$AUDIT_RESULT" != "skipped" ]]; then
+                echo "Hex security audit was not required but did not skip: $AUDIT_RESULT"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "Invalid/missing Hex security audit routing decision: $AUDIT_REQUIRED"
               exit 1
               ;;
           esac

@@ -6,7 +6,7 @@ This is the current operational CI contract. The workflows define executable beh
 
 The repository ruleset requires the **Foundation Integrity** status context. Every pull request and push to `main` runs Foundation Smoke. Application CI runs when the change contains application or engineering paths. Foundation Full is separate, non-blocking evidence and is not part of the required aggregate.
 
-The aggregate requires successful routing and Smoke, plus successful Application CI when selected. It does not wait for Foundation Full.
+The aggregate requires successful routing and Smoke, plus successful Application CI and Hex security audit when selected. It does not wait for Foundation Full.
 
 ## Semantic path ownership
 
@@ -49,3 +49,109 @@ Application CI runs the canonical `mix check` gate for routed application and en
 The historical pre-migration suite and audit use temporary compatibility views inside Foundation Full. They rebuild pinned baseline files at frozen paths, then overlay `docs/history/` evidence so provenance mutations remain visible. The temporary views do not add a legacy documentation root to the repository or either current router. Foundation Smoke validates current governance and delivery routing directly.
 
 See [Foundation Integrity CI](foundation-integrity-ci.md) for certification history and command details.
+
+## Hex security audit
+
+WELL-83 adds an independent blocking Hex lane to the same required Foundation
+Integrity aggregate. Existing Application CI and Foundation Full selection remains
+unchanged. The audit selects dependency/toolchain inputs, production source and
+configuration, all workflows and tools, Python regression tests, and the compiled
+authentication reachability guard. Unknown or unreadable event ranges select the
+audit. These extra source/config inputs detect changes to exception reachability.
+The aggregate rejects a missing routing decision and any required audit result
+other than success. Smoke runs the audit boundary regression tests on every PR.
+
+The separate `hex-security-audit.yml` schedule checks out current `main` at run
+time, only on the main ref. It does not depend on a PR diff or Foundation Full.
+A failing nightly job is a maintainer obligation to triage in Plane, not permission
+to suppress findings. No external scanner or policy service is introduced.
+
+Hex 2.6.0 was verified on 2026-11-04 against its official installation manifest,
+tagged task/SARIF source and the actual CLI on Elixir 1.20.5 / OTP 29.1.2.
+References: [audit task](https://hex.hexdocs.pm/Mix.Tasks.Hex.Audit.html),
+[tagged implementation](https://github.com/hexpm/hex/blob/v2.6.0/lib/mix/tasks/hex.audit.ex),
+[installation manifest](https://builds.hex.pm/installs/hex-1.x.csv).
+The task emits SARIF 2.1.0 and exits 1 for findings. Suppressed findings disappear
+from SARIF, so the runner does not evaluate the application project or inherit
+Hex ignores. It generates a minimal project with every locked Hex package as an
+exact root, copies the committed lock, uses fresh temporary Hex/Mix homes, installs
+exact Hex 2.6.0, and runs `deps.get --check-locked` followed by `hex.audit`.
+No compilation, application loading/startup or project aliases run. The lock must
+remain byte-identical. Git asset dependencies remain in the lock but are outside
+Hex package-registry coverage and are not fetched. Unsupported lock shapes fail.
+No registry, dependency or advisory caches are restored. CLI output and SARIF stay
+in job logs. Missing reports, malformed evidence, network failures and unexpected
+exit codes fail visibly. The audit is absent from ordinary `mix check`.
+
+### Retained Assent disposition lifecycle
+
+The active record is `tools/hex_audit/assent_exception.json`. Independent approval
+is WELL-91 comment `b8ac8764-c2c8-4dd9-b13e-802039e34790`, for PR #190 candidate
+`4bec2a65aefbe2c6359c3857a4a53f20a8cf997c`. The candidate's lock, source and config
+match WELL-83 base `c4da7161814a32ca9545a01e61ecbe450ac27a74`. JC remains accountable.
+WELL-91 remains open for remediation/revalidation. This implementation grants no
+new exception and no extension.
+
+- Proposed records cannot disposition a failure. Activation requires independent
+  review of the exact dependency graph, authentication strategies/routes/callers,
+  advisory evidence, owner, follow-up and deadline through a reviewed PR.
+- Active records pass only for the sole unsuppressed finding, package `assent`,
+  version `0.2.13`, the exact EEF/CVE/GHSA alias set, reviewed summary, URL and
+  critical severity. The result says `CONTROLLED DISPOSITION`, never clean.
+- A changed lock, toolchain, `mix.exs`, any production source/config or the auth
+  guard invalidates the input digest. This deliberately includes newly added
+  files and unrelated production changes rather than risk missing a new caller.
+  Updating a hash does not grant approval. A new stable AshAuthentication release
+  also fails pending review, even if its Assent constraint has not changed.
+  A new stable Assent 0.2 backport also fails pending revalidation.
+  The release checks use the official Hex API, fail on unavailable/malformed
+  evidence and does not install a release. Changed advisory details or aliases,
+  new findings, retirement, wrong package/version and unmatched records fail.
+- Expiry is exclusive at `2026-11-18T00:00:00Z`, a conservative interpretation of
+  the latest authorised deadline. Dates before approval also fail. An expired or
+  invalidated record cannot return to active without a new independent decision.
+- Resolved or superseded records are terminal and cannot disposition findings.
+  A reviewed remediation removes the active record by replacing it with `{}`.
+  Only a fresh successful audit with zero findings then reports clean. A successor
+  needs its own independent approval and future tracked obligation. This ticket
+  does not authorise one.
+
+Each run reconstructs the decision from committed evidence and current UTC time.
+Retries start with a fresh home and registry fetch. No mutable lifecycle database,
+process state, automatic renewal, environment escape hatch or broad ignore exists.
+Audit script/workflow changes select the gate and require full-diff review. As with
+other repository CI, an author able to rewrite the scanner or tests cannot be
+restrained by those same files alone. Independent Master Gate review remains the
+approval boundary.
+
+### HIGH / privileged_security proof matrix
+
+- Positive/negative and invariant proof applies. Tests cover exact disposition,
+  a second vulnerability, retirement/unrecognised rules, wrong package/version,
+  known and unknown aliases, changed severity/details, stale entries, expiry,
+  inactive/unauthorised metadata, malformed/missing reports and conflicting exits.
+- Lifecycle and authorization proof applies. Fixed approval/owner/deadline checks,
+  production-input binding, stable-release invalidation and exclusive expiry
+  reject unreviewed transitions. No application capability is granted.
+- Routing/bypass proof applies. Tests cover dependency/source/config/tool/workflow
+  changes and execute the aggregate shell against success, failure, cancellation,
+  skipped and missing decisions. Smoke checks the aggregate dependency topology.
+- Failure/retry/recovery proof applies. Installation/resolution failures stop the
+  run, missing evidence cannot become a fabricated clean result, subprocesses and
+  metadata requests have timeouts, and retries reconstruct from fresh state.
+- Provider evidence applies to Hex only. The real fresh-home CLI run reports
+  Assent with exit 1; the wrapper makes its distinct controlled decision. The
+  stable parent release probe fails closed and never upgrades dependencies.
+- Leakage review applies. Jobs have `contents: read` only, no application/database
+  secrets, no persisted checkout credentials and no upload write permission.
+  Package metadata and committed public lock evidence appear in diagnostics.
+- Concurrency, duplicate/reorder and idempotent business writes are N/A. The audit
+  has no business mutations or shared mutable exception state. Concurrent jobs
+  use isolated temporary homes and independently compute the same decision.
+- Migration/rollback, financial calculations, participant copy and privacy deletion
+  are N/A. This change alters CI evidence only, with no schema, application
+  behaviour, participant data or financial calculation changes.
+- Independent security review applies. A read-only reviewer checked the audit,
+  routing and exception boundary and identified the negative-rule-index parser
+  case, now rejected with permanent regression coverage. Final exact-head
+  approval remains with ChatGPT Master Gate.

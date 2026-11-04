@@ -42,6 +42,8 @@ from pathlib import PurePosixPath
 
 APPLICATION_FILES = frozenset(
     {
+        "tools/hex_security_audit.py",
+        ".github/workflows/hex-security-audit.yml",
         "mix.exs",
         "mix.lock",
         ".formatter.exs",
@@ -69,6 +71,7 @@ APPLICATION_PREFIXES = (
     "test/",
     "tests/",
     "tools/architecture/",
+    "tools/hex_audit/",
 )
 
 # The fast Application CI lane runs for every classified engineering change.
@@ -217,6 +220,26 @@ def classify_deep_event(event_name: str, base_sha: str, head_sha: str, cwd: str 
     return classify_deep_application_changes(paths)
 
 
+def classify_hex_audit_changes(paths: list[str]) -> bool:
+    """Select security evidence for dependencies, reachability and gate machinery."""
+    return not paths or any(
+        path in {"mix.exs", "mix.lock", ".tool-versions"}
+        or path.startswith(("lib/", "config/", "tools/", ".github/workflows/", "tests/"))
+        or path == "test/new_you_web/security/authentication_reachability_test.exs"
+        for path in paths
+    )
+
+
+def classify_hex_audit_event(event: str, base: str, head: str, root: str = ".") -> bool:
+    """Unknown ranges fail closed. Nightly execution does not use PR routing."""
+    if event not in {"pull_request", "push"} or not base or not head:
+        return True
+    try:
+        return classify_hex_audit_changes(_changed_paths(event, base, head, root))
+    except (OSError, subprocess.CalledProcessError):
+        return True
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--event", default=os.environ.get("GITHUB_EVENT_NAME", ""))
@@ -232,6 +255,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"foundation_full={str(decision['foundation_full']).lower()}")
     print(f"application_changes={str(decision['application_changes']).lower()}")
     print(f"deep_application_changes={str(deep_application_changes).lower()}")
+    print(f"hex_audit_changes={str(classify_hex_audit_event(args.event, args.base_sha, args.head_sha, args.root)).lower()}")
     if decision["foundation_full"]:
         print("Foundation Full selected as non-blocking historical/provenance evidence.", file=sys.stderr)
     return 0
