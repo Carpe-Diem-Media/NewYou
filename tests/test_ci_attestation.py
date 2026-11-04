@@ -22,12 +22,26 @@ def evidence():
         "run_pr": 42,
         "required_check": {"id": 12, "name": "Foundation Integrity", "status": "completed", "conclusion": "success"},
         "checkout_shas": ["c" * 40, "c" * 40],
-        "strict_ruleset": True,
+        "trust_mode": "private-procedural",
+        "repository": {"full_name": "JCSchoeman96/NewYou", "private": True,
+                       "visibility": "private", "default_branch": "main"},
+        "branch": {"name": "main", "protected": False},
         "reviewed_head": "a" * 40,
     }
 
 
 class CandidateAttestationTest(unittest.TestCase):
+    def test_review_record_requires_independent_review_reference_and_exact_head(self):
+        from tools.ci_attestation import validate_review_record
+        record = {"reviewed_head": "a" * 40, "reviewer": "reviewer",
+                  "review_reference": "https://example.test/review/42",
+                  "diff_sha256": "b" * 64}
+        validate_review_record(record, "a" * 40)
+        for change in ({"reviewed_head": "e" * 40}, {"reviewer": ""},
+                       {"review_reference": ""}, {"diff_sha256": "bad"}):
+            with self.subTest(change=change), self.assertRaises(AttestationError):
+                validate_review_record(dict(record, **change), "a" * 40)
+
     def test_current_candidate_passes(self):
         verify_candidate(evidence())
 
@@ -38,7 +52,7 @@ class CandidateAttestationTest(unittest.TestCase):
             ("run_pr", 41), ("reviewed_head", "e" * 40),
             ("candidate_parents", ["b" * 40, "e" * 40]),
             ("checkout_shas", ["c" * 40, "e" * 40]), ("checkout_shas", []),
-            ("strict_ruleset", False), ("required_check", None),
+            ("trust_mode", None), ("repository", {}), ("branch", {}), ("required_check", None),
         ]:
             with self.subTest(key=key, value=value):
                 data = evidence()
@@ -94,13 +108,14 @@ class GitHubCollectionTest(unittest.TestCase):
                           check_suite={"id": 77}, head_sha=self.e["head"])
         self.commit = {"tree": {"sha": self.e["tree"]},
                        "parents": [{"sha": x} for x in self.e["candidate_parents"]]}
-        self.ruleset = {"name": "Protect main", "enforcement": "active", "bypass_actors": [],
-                        "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
-                        "rules": [{"type": "pull_request"}, {"type": "required_status_checks", "parameters": {
-                            "strict_required_status_checks_policy": True,
-                            "required_status_checks": [{"context": "Foundation Integrity"}]}}]}
+        self.repository = self.e["repository"].copy()
+        self.branch = self.e["branch"].copy()
 
     def api(self, path):
+        if path == "repos/JCSchoeman96/NewYou":
+            return self.repository
+        if path.endswith("branches/main"):
+            return self.branch
         if path.endswith("pulls/42"):
             return self.pr
         if path.endswith("commits/main"):
@@ -113,8 +128,6 @@ class GitHubCollectionTest(unittest.TestCase):
             return {"total_count": len(self.jobs), "jobs": self.jobs}
         if path.endswith("check-runs/12"):
             return self.check
-        if path.endswith("rulesets/24191860"):
-            return self.ruleset
         if "/git/commits/" in path:
             return self.commit
         raise AssertionError(path)
@@ -122,16 +135,45 @@ class GitHubCollectionTest(unittest.TestCase):
     def log(self, *args):
         return f"job\tstep\ttime [command]/usr/bin/git log -1 --format=%H\njob\tstep\ttime {self.e['candidate']}\n"
 
+    def test_private_procedural_mode_requires_explicit_verified_identity(self):
+        from tools.ci_attestation import verify_trust_mode
+        repo = {"full_name": "JCSchoeman96/NewYou", "private": True,
+                "visibility": "private", "default_branch": "main"}
+        branch = {"name": "main", "protected": False}
+        verify_trust_mode("private-procedural", repo, branch)
+        for mode, repository, current_branch in [
+            (None, repo, branch), ("unknown", repo, branch),
+            ("private-procedural", {}, branch),
+            ("private-procedural", dict(repo, full_name="other/repo"), branch),
+            ("private-procedural", dict(repo, private=False), branch),
+            ("private-procedural", dict(repo, visibility="public"), branch),
+            ("private-procedural", repo, {}),
+            ("private-procedural", None, branch),
+            ("private-procedural", repo, None),
+            ("private-procedural", repo, dict(branch, protected=True)),
+        ]:
+            with self.subTest(mode=mode, repo=repository, branch=current_branch):
+                with self.assertRaises(AttestationError):
+                    verify_trust_mode(mode, repository, current_branch)
+
     def collect(self):
         from tools.ci_attestation import collect
         with self.patch("tools.ci_attestation._api", side_effect=self.api), self.patch("tools.ci_attestation._command", side_effect=self.log):
-            return collect(42, self.e["head"], 100)
+            return collect(42, self.e["head"], 100, trust_mode="private-procedural")
 
     def test_collector_binds_live_run_checks_and_checkout(self):
         result = self.collect()
         self.assertEqual(result["candidate"], self.e["candidate"])
         self.assertEqual(result["job_ids"], [1, 2])
         self.assertEqual(result["check_suite_id"], 77)
+
+    def test_collector_requires_opt_in_and_rejects_api_failure(self):
+        from tools.ci_attestation import collect
+        with self.assertRaises(AttestationError):
+            collect(42, self.e["head"], 100)
+        with self.patch("tools.ci_attestation._api", side_effect=AttestationError("API failure")):
+            with self.assertRaises(AttestationError):
+                collect(42, self.e["head"], 100, trust_mode="private-procedural")
 
     def test_superseded_run_cannot_be_reused(self):
         old_api = self.api
@@ -143,7 +185,7 @@ class GitHubCollectionTest(unittest.TestCase):
         with self.patch("tools.ci_attestation._api", side_effect=api), self.patch("tools.ci_attestation._command", side_effect=self.log):
             from tools.ci_attestation import collect
             with self.assertRaises(AttestationError):
-                collect(42, self.e["head"], 100)
+                collect(42, self.e["head"], 100, trust_mode="private-procedural")
 
     def test_nonblocking_full_does_not_delay_required_proof(self):
         self.run["status"] = "in_progress"
@@ -164,8 +206,8 @@ class GitHubCollectionTest(unittest.TestCase):
             lambda: self.check.update(app={"slug": "other"}),
             lambda: self.check.update(check_suite={"id": 99}),
             lambda: self.jobs[1].update(conclusion="skipped"),
-            lambda: self.ruleset.update(bypass_actors=[{}]),
-            lambda: self.ruleset["conditions"]["ref_name"].update(exclude=["refs/heads/main"]),
+            lambda: self.repository.update(visibility="public"),
+            lambda: self.branch.update(protected=True),
         ]
         for mutate in mutations:
             with self.subTest(mutation=mutate):
@@ -188,6 +230,7 @@ class ResultCollectionTest(GitHubCollectionTest):
                 return self.commit
             return old_api(path)
         with self.patch("tools.ci_attestation._api", side_effect=api), self.patch("tools.ci_attestation._command", side_effect=self.log):
-            result = collect(42, self.e["head"], 100, candidate_sha=self.e["candidate"], after_merge=True)
+            result = collect(42, self.e["head"], 100, candidate_sha=self.e["candidate"], after_merge=True,
+                             trust_mode="private-procedural")
         self.assertEqual(result["result"]["main"], merge_sha)
         self.assertEqual(result["result"]["tree"], self.e["tree"])

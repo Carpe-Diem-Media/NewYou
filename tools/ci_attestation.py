@@ -17,6 +17,27 @@ def require(condition: object, message: str) -> None:
         raise AttestationError(message)
 
 
+def verify_trust_mode(mode: str, repo: dict, branch: dict) -> None:
+    require(mode == "private-procedural", "explicit private-procedural mode is required")
+    require(isinstance(repo, dict) and isinstance(branch, dict), "repository or branch evidence is missing")
+    require(repo.get("full_name") == "JCSchoeman96/NewYou"
+            and repo.get("private") is True and repo.get("visibility") == "private"
+            and repo.get("default_branch") == "main", "repository identity or visibility is inconsistent")
+    require(branch.get("name") == "main" and branch.get("protected") is False,
+            "main protection state is inconsistent")
+
+
+def validate_review_record(record: dict, head: str) -> None:
+    require(isinstance(record, dict) and record.get("reviewed_head") == head,
+            "independent review record does not bind the reviewed head")
+    for field in ("reviewer", "review_reference"):
+        require(isinstance(record.get(field), str) and bool(record[field].strip()),
+                f"missing {field}")
+    digest = record.get("diff_sha256")
+    require(isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest),
+            "missing or invalid reviewed diff digest")
+
+
 def verify_candidate(e: dict) -> None:
     for name in ("head", "base", "candidate", "tree"):
         require(isinstance(e.get(name), str) and re.fullmatch(r"[0-9a-f]{40}", e[name]),
@@ -36,7 +57,7 @@ def verify_candidate(e: dict) -> None:
     require(isinstance(checkouts, list) and len(checkouts) >= 2
             and all(sha == e["candidate"] for sha in checkouts),
             "missing or inconsistent job checkouts")
-    require(e.get("strict_ruleset") is True, "strict required ruleset not established")
+    verify_trust_mode(e.get("trust_mode"), e.get("repository", {}), e.get("branch", {}))
 
 
 def verify_result(candidate: dict, result: dict) -> None:
@@ -80,31 +101,16 @@ def _api(path: str) -> dict:
     return value
 
 
-def _ruleset_ok(repo: str) -> bool:
-    ruleset = _api(f"repos/{repo}/rulesets/24191860")
-    if ruleset.get("name") != "Protect main" or ruleset.get("enforcement") != "active":
-        return False
-    if ruleset.get("bypass_actors") != []:
-        return False
-    refs = ruleset.get("conditions", {}).get("ref_name", {})
-    if "~DEFAULT_BRANCH" not in refs.get("include", []) or refs.get("exclude") != []:
-        return False
-    rules = ruleset.get("rules", [])
-    if not any(rule.get("type") == "pull_request" for rule in rules):
-        return False
-    for rule in rules:
-        if rule.get("type") == "required_status_checks":
-            params = rule.get("parameters", {})
-            return (params.get("strict_required_status_checks_policy") is True
-                    and any(item.get("context") == "Foundation Integrity"
-                            for item in params.get("required_status_checks", [])))
-    return False
-
-
 def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: str | None = None,
-            after_merge: bool = False) -> dict:
-    """Collect run, checkout, PR, Git and ruleset evidence directly from GitHub."""
+            after_merge: bool = False, trust_mode: str | None = None) -> dict:
+    """Collect run, checkout, PR, Git and repository evidence directly from GitHub."""
     repo = "JCSchoeman96/NewYou"
+    require(trust_mode == "private-procedural", "explicit private-procedural mode is required")
+    repository_response = _api(f"repos/{repo}")
+    branch_response = _api(f"repos/{repo}/branches/main")
+    repository = {k: repository_response.get(k) for k in ("full_name", "private", "visibility", "default_branch")}
+    branch = {k: branch_response.get(k) for k in ("name", "protected")}
+    verify_trust_mode(trust_mode, repository, branch)
     pr = _api(f"repos/{repo}/pulls/{pr_number}")
     require(pr.get("base", {}).get("ref") == "main", "PR does not target main")
     require(pr.get("merged") is after_merge
@@ -170,7 +176,7 @@ def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: s
          "current_head": head, "current_base": base, "premerge_main": base if after_merge else main,
          "run_head": run["head_sha"], "run_event": run["event"], "run_pr": pr_number,
          "required_check": {k: check.get(k) for k in ("id", "name", "status", "conclusion")},
-         "checkout_shas": checkouts, "strict_ruleset": _ruleset_ok(repo),
+         "checkout_shas": checkouts, "trust_mode": trust_mode, "repository": repository, "branch": branch,
          "reviewed_head": reviewed_head, "run_id": run_id, "run_attempt": attempt,
          "check_suite_id": run["check_suite_id"], "job_ids": job_ids, "jobs": job_evidence}
     verify_candidate(e)
@@ -188,6 +194,7 @@ def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: s
                       or any(p.get("number") == pr_number for p in item.get("pull_requests", []))]
     require(fresh_relevant and fresh_relevant[0].get("id") == run_id, "run was superseded while collecting evidence")
     require(_api(f"repos/{repo}/commits/main")["sha"] == main, "main changed while collecting evidence")
+    verify_trust_mode(trust_mode, _api(f"repos/{repo}"), _api(f"repos/{repo}/branches/main"))
     if after_merge:
         merge_sha = pr.get("merge_commit_sha")
         require(isinstance(merge_sha, str) and re.fullmatch(r"[0-9a-f]{40}", merge_sha), "missing PR merge SHA")
@@ -210,19 +217,26 @@ def main() -> int:
     parser.add_argument("--pr", type=int, required=True)
     parser.add_argument("--reviewed-head", required=True, help="exact head independently reviewed by Master Gate")
     parser.add_argument("--run", type=int, required=True)
+    parser.add_argument("--trust-mode", required=True, choices=("private-procedural",))
+    parser.add_argument("--review-record", required=True, help="independent review record JSON")
     parser.add_argument("--before", help="saved pre-merge evidence, required after merge")
     args = parser.parse_args()
     try:
+        with open(args.review_record, encoding="utf-8") as file:
+            review = json.load(file)
+        validate_review_record(review, args.reviewed_head)
         if args.phase == "before":
             require(args.before is None, "--before is only valid after merge")
-            proof = collect(args.pr, args.reviewed_head, args.run)
+            proof = collect(args.pr, args.reviewed_head, args.run, trust_mode=args.trust_mode)
+            proof["review_record"] = review
         else:
             require(args.before is not None, "--before is required after merge")
             with open(args.before, encoding="utf-8") as file:
                 before = json.load(file)
             verify_candidate(before)
             proof = collect(args.pr, args.reviewed_head, args.run,
-                            candidate_sha=before["candidate"], after_merge=True)
+                            candidate_sha=before["candidate"], after_merge=True, trust_mode=args.trust_mode)
+            proof["candidate"]["review_record"] = review
             require(proof["candidate"] == before, "pre-merge evidence differs from live GitHub evidence")
         print(json.dumps(proof, indent=2, sort_keys=True))
         return 0
