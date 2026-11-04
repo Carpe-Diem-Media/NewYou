@@ -4,7 +4,7 @@ This is the current operational CI contract. The workflows define executable beh
 
 ## Required gate
 
-The repository ruleset requires the **Foundation Integrity** status context. Every pull request runs Foundation Smoke. Ordinary pushes to `main` do not start this workflow. Application CI runs when the change contains application or engineering paths. Foundation Full is separate, non-blocking evidence and is not part of the required aggregate.
+The procedural Master Gate requires a successful **Foundation Integrity** check. GitHub Free does not enforce that requirement or protect `main` in this private repository. A writer can bypass the procedure, an owner-accepted risk described in [GitHub branch governance](github-branch-governance.md). Every pull request runs Foundation Smoke. Ordinary pushes to `main` do not start this workflow. Application CI runs when the change contains application or engineering paths. Foundation Full is separate, non-blocking evidence and is not part of the required aggregate.
 
 The aggregate requires successful routing and Smoke, plus successful Application CI and Hex security audit when selected. It does not wait for Foundation Full.
 
@@ -53,25 +53,36 @@ See [Foundation Integrity CI](foundation-integrity-ci.md) for certification hist
 ## Independent resulting-main attestation
 
 The independent Master Gate reviews the exact PR head and diff, confirms all
-review and security conditions, and verifies the current strict `Protect main`
-ruleset before merging. Capture evidence while the PR is open, after the
-required gate succeeds. The collector reads GitHub's PR, ruleset, run,
+review and security conditions, and verifies the private repository and
+unprotected branch state before merging. Capture evidence while the PR is open, after the
+required gate succeeds. The collector reads GitHub's PR, repository, branch, run,
 check-run, job, checkout-log and Git commit APIs. The reviewer supplies the
 head they independently reviewed; this command does not perform the review.
 Use a trusted checkout containing the reviewed attestation tool and a `gh`
 session authorised to read the repository and Actions logs.
 
 ```bash
-python3 -m tools.ci_attestation before --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID > before.json
+python3 -m tools.ci_attestation before --trust-mode private-procedural --review-record review.json --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID > before.json
 ```
 
-Record the command output and its digest with the independent review evidence.
+The independent reviewer records `reviewed_head`, `reviewer`, `review_reference`
+and the SHA-256 `diff_sha256` of the reviewed full diff in `review.json`:
+
+```json
+{"reviewed_head":"<40-character head SHA>","reviewer":"<independent reviewer>","review_reference":"<durable review reference>","diff_sha256":"<64-character SHA-256>"}
+```
+
+Independently verify the review
+reference, reviewer, full diff and digest, and retain the record in trusted
+custody. The collector validates their presence and binding, but does not verify
+the review itself or calculate the diff digest. Record the command output and its digest with the independent review evidence.
 Do not use a file produced by an untrusted PR checkout. The PR Actions API's
 `head_sha` identifies the PR head, not the merge candidate. The collector
 requires the exact candidate from checkout logs for each executed required
 job, and verifies its parents and tree. It also requires the successful
-`Foundation Integrity` check identity from the latest run and the active
-strict ruleset. Full is non-blocking; investigate a relevant Full failure.
+`Foundation Integrity` check identity from the latest run, the explicit
+private procedural mode and reported branch state. Full is non-blocking;
+investigate a relevant Full failure.
 Any changed head, base, candidate, run attempt, checkout, or review invalidates
 the evidence. Recapture and re-review as appropriate. Immediately before an
 authorised merge, recheck the PR and current main; use a merge commit with
@@ -81,7 +92,7 @@ use auto-merge or a bypass. This command requires separate merge authorisation.
 After an authorised merge, immediately run from the trusted checkout:
 
 ```bash
-python3 -m tools.ci_attestation after --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID --before before.json > after.json
+python3 -m tools.ci_attestation after --trust-mode private-procedural --review-record review.json --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID --before before.json > after.json
 ```
 
 The collector re-reads GitHub evidence and requires the resulting main to be
