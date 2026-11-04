@@ -30,8 +30,8 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
                 commands = [
                     "uses: actions/checkout@v7",
                     "uses: erlef/setup-beam@v1",
-                    "run: mix deps.unlock --check-unused",
                     "run: mix deps.get --check-locked",
+                    "run: mix deps.unlock --check-unused",
                     "      - name: Provision isolated TEST role and database",
                     f"run: mix {'check' if job == 'mix-check' else 'check.deep'}",
                 ]
