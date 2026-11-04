@@ -15,7 +15,38 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
 
     refute password.sign_in_enabled?
     refute password.registration_enabled?
+    refute password.sign_in_tokens_enabled?
+    assert password.resettable == nil
+    assert AshAuthentication.Info.authentication_add_ons(NewYou.Identity.Account) == []
+
+    assert Enum.sort(
+             Enum.map(Ash.Resource.Info.actions(NewYou.Identity.Account), &{&1.type, &1.name})
+           ) ==
+             [{:create, :register}, {:read, :get_by_subject}, {:read, :read}]
+
     assert AshAuthentication.Strategy.routes(password) == []
+  end
+
+  test "SQL resources have no context-tenant prefix path" do
+    for domain <- Ash.Info.domains(:new_you),
+        resource <- Ash.Domain.Info.resources(domain),
+        Ash.Resource.Info.data_layer(resource) == AshPostgres.DataLayer do
+      assert Ash.Resource.Info.multitenancy_strategy(resource) == nil
+      assert AshPostgres.DataLayer.Info.repo(resource, :read) == NewYou.Repo
+    end
+  end
+
+  test "browser pipeline has no authenticated-session loader" do
+    plugs = NewYouWeb.Router.__info__(:functions)
+    assert {:browser, 2} in plugs
+
+    conn =
+      Plug.Test.conn(:get, "/")
+      |> Plug.Test.init_test_session(%{})
+      |> NewYouWeb.Router.call(NewYouWeb.Router.init([]))
+
+    refute Map.has_key?(conn.assigns, :current_user)
+    refute Map.has_key?(conn.assigns, :current_account)
   end
 
   test "router exposes only the reviewed public and bounded registration endpoints" do
