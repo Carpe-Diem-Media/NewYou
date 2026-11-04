@@ -14,11 +14,18 @@ from pathlib import Path
 import re
 import shutil
 import signal
+import selectors
+import threading
 import subprocess
 import sys
 import time
 import uuid
 import xml.etree.ElementTree as ET
+
+try:
+    from tools import runner_diagnostics as diagnostics
+except ModuleNotFoundError:
+    import runner_diagnostics as diagnostics
 
 REPO = 'JCSchoeman96/NewYou'
 URI = 'qemu:///system'
@@ -125,9 +132,11 @@ def cleanup_steps(remove):
     return errors
 
 
-def command(args, *, data=None, timeout=120, check=True, discard_output=False):
+def command(args, *, data=None, timeout=120, check=True, discard_output=False, max_output=None):
     # Never interpolate guest output or credentials into host commands. Do not
     # include subprocess output in errors: gh/ssh failures may contain secrets.
+    if max_output is not None:
+        return bounded_command(args, data=data, timeout=timeout, max_output=max_output)
     output = subprocess.DEVNULL if discard_output else subprocess.PIPE
     proc = subprocess.run(args, input=data, stdout=output, stderr=output, text=True, timeout=timeout)
     if check and proc.returncode:
@@ -135,15 +144,61 @@ def command(args, *, data=None, timeout=120, check=True, discard_output=False):
     return proc
 
 
+def bounded_command(args, *, data=None, timeout=20, max_output=16384):
+    """Bound hostile guest output in memory; never write an unvalidated spool."""
+    proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    output = bytearray()
+    deadline = time.monotonic() + timeout
+    try:
+        if data:
+            proc.stdin.write(data.encode())
+        proc.stdin.close()
+        with selectors.DefaultSelector() as selector:
+            selector.register(proc.stdout, selectors.EVENT_READ)
+            while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise RuntimeError('command_timeout')
+                if not selector.select(remaining):
+                    raise RuntimeError('command_timeout')
+                chunk = os.read(proc.stdout.fileno(), 4096)
+                if not chunk:
+                    break
+                output.extend(chunk)
+                if len(output) > max_output:
+                    raise RuntimeError('output_limit')
+        proc.wait(timeout=max(.1, deadline - time.monotonic()))
+        if proc.returncode:
+            raise RuntimeError('bounded_command_failed')
+        return subprocess.CompletedProcess(args, proc.returncode, output.decode(), '')
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+        proc.wait()
+        proc.stdout.close()
+
+
 def virsh(*args, **kw):
     return command(['virsh', '-c', URI, *args], **kw)
+
+
+class GitHubError(RuntimeError):
+    """HTTP status only. Never retain response text or request credentials."""
+    def __init__(self, status):
+        self.status = status
+        super().__init__('github_http_' + str(status))
 
 
 def github(path, method='GET', body=None):
     args = ['gh', 'api', '--method', method, f'repos/{REPO}/{path}']
     if body is not None:
         args += ['--input', '-']
-    result = command(args, data=json.dumps(body) if body else None)
+    result = command(args, data=json.dumps(body) if body else None, check=False)
+    if result.returncode:
+        match = re.search(r'HTTP (\d{3})', result.stderr)
+        if match:
+            raise GitHubError(int(match.group(1)))
+        raise RuntimeError('github_request_failed')
     return json.loads(result.stdout) if result.stdout.strip() else None
 
 
@@ -202,14 +257,14 @@ def preflight(memory):
             'disk_free_mb': free, 'guest_mb': memory, 'memory_full_avg10': float(pressure['avg10']), 'image_sha256': IMAGE_SHA}
 
 
-def ssh(state, script, timeout=120):
+def ssh(state, script, timeout=120, max_output=None):
     directory = ROOT / state['name']
     return command(['ssh', '-F', '/dev/null', '-i', str(directory / 'control'),
                     '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes',
                     '-o', 'ForwardAgent=no', '-o', 'ClearAllForwardings=yes',
                     '-o', 'StrictHostKeyChecking=yes', '-o', 'ConnectTimeout=5',
                     '-o', f'UserKnownHostsFile={directory / "known_hosts"}',
-                    f'root@{GUEST_IP}', 'bash', '-s'], data=script, timeout=timeout)
+                    f'root@{GUEST_IP}', 'bash', '-s'], data=script, timeout=timeout, max_output=max_output)
 
 
 def provision(state, memory):
@@ -326,18 +381,114 @@ curl --fail --silent --max-time 20 https://api.github.com/zen >/dev/null
     transition(state, 'isolated')
 
 
+def export_diagnostics(state):
+    directory = ROOT / 'evidence' / state['name']
+    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    try:
+        raw = ssh(state, 'python3 /root/newyou-export-diagnostics.py', timeout=12, max_output=16384).stdout
+        report = json.loads(raw)
+        diagnostics.validate_snapshot(report)
+        record = {'at': int(time.time()), 'status': 'exported', 'projection': report}
+    except Exception:
+        # Preserve earlier snapshots after a crashed guest becomes unreachable.
+        record = {'at': int(time.time()), 'status': 'unavailable', 'reason': 'guest_unreachable_or_invalid'}
+    path = directory / 'diagnostics.jsonl'
+    with path.open('a') as stream:
+        stream.write(json.dumps(record) + '\n')
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.chmod(path, 0o600)
+    return {'status': record['status'], 'path': str(path)}
+
+
+class DiagnosticStream:
+    """Bounded periodic export survives guest loss via prior host snapshots."""
+    def __init__(self, state):
+        self.state = state
+        self.stop = threading.Event()
+        self.thread = threading.Thread(target=self.run, daemon=True)
+
+    def run(self):
+        for _ in range(120):
+            try:
+                export_diagnostics(self.state)
+            except Exception:
+                break
+            if self.stop.wait(5):
+                break
+
+    def __enter__(self):
+        self.thread.start()
+        return self
+
+    def __exit__(self, *args):
+        self.stop.set()
+        self.thread.join(timeout=15)
+
+
 def cancel_owned_run(state):
     if state.get('run_id') and state.get('result') != 'success':
         path = 'actions/runs/' + str(state['run_id'])
         if github(path)['status'] != 'completed':
-            github(path + '/cancel', 'POST')
+            try:
+                github(path + '/cancel', 'POST')
+            except GitHubError as exc:
+                if exc.status != 409 or github(path)['status'] != 'completed':
+                    raise
+
+
+def reconcile_registration(state):
+    """Preserve unknown creations until a concrete registration is reclaimed.
+
+    One empty lookup cannot settle a timed-out POST. A durable unresolved journal
+    blocks the next provision; recovery must find and delete the late runner.
+    Never reissue a registration POST for the same request.
+    """
+    if not state.get('registration_attempted'):
+        return
+    ids = set(state.get('observed_runner_ids', []))
+    if state.get('runner_id') is not None:
+        ids.add(state['runner_id'])
+    page = 1
+    while True:
+        items = github(f'actions/runners?per_page=100&page={page}')['runners']
+        ids.update(item['id'] for item in items if item['name'] == state['name'])
+        if len(items) < 100:
+            break
+        page += 1
+    state['observed_runner_ids'] = sorted(ids)
+    save(state)
+    if not ids and state.get('registration_outcome') != 'removed':
+        raise RuntimeError('registration_creation_unresolved')
+    for runner_id in sorted(ids):
+        try:
+            github('actions/runners/' + str(runner_id), 'DELETE')
+        except GitHubError as exc:
+            if exc.status != 404:
+                raise
+    state['registration_outcome'] = 'removed'
+    save(state)
 
 
 def cleanup(state):
     if state['phase'] == 'cleaned':
         return
+    state.setdefault('result', 'unknown')
+    journal_failed = False
     if state['phase'] != 'teardown':
-        transition(state, 'teardown')
+        try:
+            transition(state, 'teardown')
+        except OSError:
+            journal_failed = True
+    if state.get('diagnostics_installed'):
+        try:
+            state['diagnostics'] = export_diagnostics(state)
+        except Exception:
+            state['diagnostics'] = {'status': 'unavailable', 'reason': 'host_storage_failure'}
+        try:
+            save(state)
+        except OSError:
+            journal_failed = True
     def remove(kind):
         if kind == 'domain':
             domains = virsh('list', '--all', '--name').stdout.split()
@@ -352,16 +503,7 @@ def cleanup(state):
             # Name is persisted before creating JIT configuration, so response
             # loss cannot orphan a registration whose numeric id was not saved.
             cancel_owned_run(state)
-            if state.get('registration_attempted'):
-                page = 1
-                while True:
-                    runners = github(f'actions/runners?per_page=100&page={page}')['runners']
-                    for item in runners:
-                        if item['name'] == state['name']:
-                            github('actions/runners/' + str(item['id']), 'DELETE')
-                    if len(runners) < 100:
-                        break
-                    page += 1
+            reconcile_registration(state)
         elif kind == 'volumes':
             if state['name'] in virsh('list', '--all', '--name').stdout.split():
                 raise RuntimeError('domain_still_exists')
@@ -377,8 +519,15 @@ def cleanup(state):
         elif kind == 'keys':
             shutil.rmtree(ROOT / state['name'], ignore_errors=False) if (ROOT / state['name']).exists() else None
     errors = cleanup_steps(remove)
+    if journal_failed:
+        errors.append('journal')
     state['cleanup_errors'] = errors
-    transition(state, 'cleanup_failed' if errors else 'cleaned')
+    try:
+        transition(state, 'cleanup_failed' if errors else 'cleaned')
+    except OSError:
+        if 'journal' not in errors:
+            errors.append('journal')
+        state['phase'] = 'cleanup_failed'
     if errors:
         raise RuntimeError('cleanup_incomplete:' + ','.join(errors))
 
@@ -411,13 +560,18 @@ tar -xzf /tmp/runner.tar.gz -C /opt/actions-runner
 chown -R runner:runner /opt/actions-runner
 rm /tmp/runner.tar.gz
 ''', timeout=180)
+    reducer = Path(diagnostics.__file__).read_text()
+    ssh(state, "cat > /root/newyou-export-diagnostics.py <<'NEWYOU_DIAG'\n" + reducer + '\nNEWYOU_DIAG\nchmod 700 /root/newyou-export-diagnostics.py\n')
+    state['diagnostics_installed'] = True
     state['runner_artifact'] = {'url': url, 'sha256': app['sha256_checksum']}
     state['registration_attempted'] = True
+    state['registration_outcome'] = 'unknown'
     save(state)
     jit = github('actions/runners/generate-jitconfig', 'POST', {
         'name': state['name'], 'runner_group_id': 1,
         'labels': [LABEL], 'work_folder': '_work'})
     state['runner_id'] = jit['runner']['id']
+    state['registration_outcome'] = 'acknowledged'
     transition(state, 'registered')
     transition(state, 'executing')
     # Read the one-use payload into the guest shell, then run unprivileged. Its
@@ -436,7 +590,8 @@ exec runuser -u runner -- ./run.sh --jitconfig "$jit"
             '-o', 'ClearAllForwardings=yes', '-o', 'StrictHostKeyChecking=yes',
             '-o', f'UserKnownHostsFile={directory / "known_hosts"}',
             f'root@{GUEST_IP}', '/root/launch-runner']
-    command(args, data=jit['encoded_jit_config'] + '\n', timeout=600, discard_output=True)
+    with DiagnosticStream(state):
+        command(args, data=jit['encoded_jit_config'] + '\n', timeout=600, discard_output=True)
     deadline = time.monotonic() + 45
     while time.monotonic() < deadline:
         run = github('actions/runs/' + str(run_id))
@@ -444,12 +599,21 @@ exec runuser -u runner -- ./run.sh --jitconfig "$jit"
             break
         time.sleep(3)
     jobs = github(f'actions/runs/{run_id}/jobs')['jobs']
-    if (run.get('conclusion') != 'success' or len(jobs) != 1
-            or jobs[0]['runner_id'] != state['runner_id']
-            or jobs[0]['runner_name'] != state['name']
-            or jobs[0]['conclusion'] != 'success'):
+    record_job_result(state, run, jobs)
+
+
+def record_job_result(state, run, jobs):
+    matches = (len(jobs) == 1 and jobs[0]['runner_id'] == state['runner_id']
+               and jobs[0]['runner_name'] == state['name'])
+    state['job_identity_verified'] = matches
+    if matches:
+        state['job_id'] = jobs[0]['id']
+    if run.get('conclusion') == 'cancelled':
+        state['result'] = 'cancelled'
+        transition(state, 'cancelled')
+        raise RuntimeError('proving_job_cancelled')
+    if run.get('conclusion') != 'success' or not matches or jobs[0]['conclusion'] != 'success':
         raise RuntimeError('job_result_not_bound_to_vm')
-    state['job_id'] = jobs[0]['id']
     state['result'] = 'success'
     transition(state, 'succeeded')
 
@@ -516,7 +680,7 @@ def main():
             transition(state, 'cancelled')
             raise
         except Exception:
-            if state['phase'] not in ['failed', 'cleanup_failed', 'teardown', 'cleaned']:
+            if can_transition(state['phase'], 'failed'):
                 transition(state, 'failed')
             raise
         finally:

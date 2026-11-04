@@ -17,7 +17,7 @@ jobs:
   harmless-proof:
     if: github.repository == 'JCSchoeman96/NewYou' && github.actor == 'JCSchoeman96'
     runs-on: [newyou-well93-proving]
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - name: Verify the disposable VM and unprivileged account
         shell: bash
@@ -39,3 +39,6 @@ jobs:
           print('Disposable KVM identity:', socket.gethostname())
           print('Harmless proof completed; controller must independently verify teardown.')
           PY
+      - name: Controlled failure-drill window
+        if: contains(github.event.head_commit.message, '[well93-drill]')
+        run: sleep 120

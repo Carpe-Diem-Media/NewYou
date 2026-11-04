@@ -26,8 +26,10 @@ proof work, not provided by this initial controller.
 `gh` obtains controller credentials on the host. The repository JIT API creates
 one-job configuration with only the proving label. Only that short-lived payload
 passes through SSH stdin. No controller credential enters the guest, shell argv,
-state, logs, Plane or GitHub. A failed registration response is reconciled by the
-persisted unique runner name. Do not copy a PAT into the guest or chat.
+state, logs, Plane or GitHub. A lost registration response leaves a durable unresolved request. One empty
+lookup never discharges it. Recovery must observe and delete the late runner by
+its persisted unique name or known ID before another guest can be provisioned.
+The controller never retries an uncertain registration POST. Do not copy a PAT into the guest or chat.
 
 The host account's existing GitHub credential may have broader privileges than
 runner administration. It remains outside this isolation boundary. Before any
@@ -173,10 +175,18 @@ the reviewed controller and image. Exercise cancellation during a job, controlle
 lost provider response, teardown failure and host restart reconciliation. Repeat
 recovery and verify no owned domain, filter, volume or registration remains.
 
-Preserve runner diagnostics outside the disposable guest in a restricted,
-redacted destination before sustained operation. The current controller keeps
-bounded state and GitHub's job logs; it does not yet export `_diag` files.
-Do not claim diagnostic recovery after a crash until that path has been proven.
+The controller exports a strict diagnostic projection every five seconds during
+execution and once more before teardown. It retains only counts of allow-listed
+levels, components, known exception types and lifecycle event classes. It never
+retains raw log messages, paths, filenames, environments or credential values.
+The guest reducer refuses symlinks/non-regular files and caps file count/read
+size. The host caps SSH output and validates the JSON schema independently.
+Snapshots live in the private `~/.local/state/newyou-ci/evidence/<runner-name>/`
+directory. A failed final export records an unavailable observation and preserves
+prior snapshots. A sudden crash can lose the interval after the last successful
+snapshot; this is not full raw-log recovery. Diagnostics never establish PASS.
+Inspect and retain the projection for review; remove it after review when no
+longer needed. No diagnostic upload to GitHub or third parties occurs.
 
 After the first harmless proof, verify pinned Elixir/OTP, guest-local PostgreSQL
 18 TEST isolation with NOCREATEDB, Foundation/Application checks, concurrency and
@@ -192,3 +202,22 @@ required for each implementation PR. Never merge automatically.
 Primary API references: [libvirt filters](https://libvirt.org/formatnwfilter.html),
 [GitHub repository runner APIs](https://docs.github.com/en/rest/actions/self-hosted-runners),
 and [ephemeral runner behavior](https://docs.github.com/en/actions/reference/runners/self-hosted-runners).
+
+## Failure drills
+
+The opt-in proof workflow adds a two-minute cancellation window only when the
+owner's dedicated-branch commit message contains `[well93-drill]`. Confirm the
+job is executing on the owned runner before cancellation, controller SIGKILL or
+an owned-domain power-off. Never terminate unrelated workloads or reboot the PC.
+
+`tools/disposable_runner_drills.py` provides trusted-host injection only. Its
+`lost-response` mode performs one real JIT POST, discards its reply, and makes the
+first lookup appear empty. The controller must preserve `cleanup_failed` and the
+unknown request; independent ExecStopPost recovery then sees and deletes the
+registration. This simulates response/visibility loss, not measured provider lag.
+
+The `orphan` mode exits after isolated preparation without cleanup, leaving a
+journal and a guest for an independently started recovery command. It requires
+a bounded systemd user unit. Run recovery immediately, repeat it, and inspect all
+owned resources. This tests process restart reconciliation, not workstation reboot.
+Neither drill is an ordinary CI action or an application interface.
