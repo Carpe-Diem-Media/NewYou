@@ -4,7 +4,7 @@ Risk is HIGH with the `privileged_security` consequence tag.
 
 ## Dependency and regression evidence
 
-The upstream [advisory](https://github.com/elixir-ecto/ecto/security/advisories/GHSA-cxjx-vmm2-qr8r), published November 4, 2026, identifies Ecto >= 3.4.0 and < 3.14.3 as affected by CVE-2026-118391. The [v3.14.3 changelog](https://github.com/elixir-ecto/ecto/blob/v3.14.3/CHANGELOG.md) disables caching for interpolated JSON paths, `splice/1` and `constant/1`.
+The upstream [advisory](https://github.com/elixir-ecto/ecto/security/advisories/GHSA-cxjx-vmm2-qr8r), published November 4, 2026, identifies Ecto >= 3.4.0 and < 3.14.3 as affected by CVE-2026-118391. The upstream v3.14.3 changelog disables caching for interpolated JSON paths, `splice/1` and `constant/1`.
 
 Hex published stable Ecto 3.14.3 on November 4, 2026, with no retirement. Its Elixir requirement is `~> 1.14`. NewYou uses pinned Elixir 1.20.5 and OTP 29.1.2.
 
@@ -18,15 +18,15 @@ The public router exposes home, registration, resend and legal pages. The regist
 
 AshSql 0.8.6 constructs JSON extraction fragments in `AshSql.Expr.do_get_path`, with path components and expression structure selected by the Ash expression. Its dynamic field construction and generic fragment support mean application-only text searches cannot establish universal adapter safety. No current request path into attacker-selected JSON paths or splice lengths was found. Future generic filters, dynamic query builders or JSON querying require reassessment. Remediation relies on patched Ecto, not a non-reachability exception.
 
-## Assent approval blocker
+## Assent approval binding
 
 Assent remains vulnerable at 0.2.13 through AshAuthentication 4.15.1. Account authentication is password-only with sign-in and framework registration disabled. Current routes contain no Apple/OAuth callback or identity linking, and production source/config contains no direct Assent calls. An independent read-only assessment confirmed these findings against the resulting lock graph. That technical assessment does not grant owner approval.
 
-The resulting input digest is `09dd14cb9d31fc9441767f8219224f9474e09eb6721291285d1e40dec16424a9`. It is evidence only. The committed approved digest and exception metadata remain unchanged. The existing November 18, 2026 expiry remains unchanged.
+The accountable owner accepted exact input digest `09dd14cb9d31fc9441767f8219224f9474e09eb6721291285d1e40dec16424a9` in WELL-95 comment `2804a409-64f4-4571-8df3-0da8c37da9ca`, coordinated in WELL-91 comment `1dc47a21-e216-4cca-b7e3-e43ba77a0feb`. The audit approval reference and input binding now record that decision. The November 18, 2026 expiry and all other exception conditions remain unchanged.
 
-A fresh isolated Hex 2.6.0 scan found only EEF-CVE-2026-117656 for Assent, with no Ecto advisory. The wrapper exited 1 with `Exception invalidated by changed dependency/source/config inputs`. The 24 audit regression tests likewise failed with four failures and four errors because their approved-input assumptions no longer hold. Neither result is a passing security gate.
+Before reauthorization, a fresh isolated Hex 2.6.0 scan found only EEF-CVE-2026-117656 for Assent, with no Ecto advisory. The wrapper exited 1 with `Exception invalidated by changed dependency/source/config inputs`. The 24 audit regression tests likewise failed with four failures and four errors because their approved-input assumptions no longer hold. Neither result is a passing security gate.
 
-WELL-91 owns Assent follow-up. Before accepting any replacement digest, obtain independent HIGH/privileged_security review and explicit accountable-owner security disposition for these exact inputs and unchanged exception boundaries. Keep the gate failing until then. Do not merge this change while approval or required checks remain unresolved.
+The earlier failed gate above records the pre-approval state. After owner reauthorization, all 27 audit tests pass, including rejection of the superseded approval and real changed-input invalidation tests. WELL-91 retains the Assent follow-up obligation. The vulnerability remains present. Independent exact-head Master Gate review and required CI are still mandatory before any separately authorized merge.
 
 ## Proof scope
 

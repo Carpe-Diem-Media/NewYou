@@ -2,6 +2,7 @@
 import copy
 import datetime as dt
 import json
+import shutil
 from pathlib import Path
 import tempfile
 import unittest
@@ -37,6 +38,40 @@ class AuditEvidenceTests(unittest.TestCase):
 
     def test_exact_approved_finding_is_controlled_not_clean(self):
         self.assertIn('CONTROLLED DISPOSITION', self.decide())
+
+    def test_owner_reauthorization_is_bound_to_exact_inputs(self):
+        self.assertEqual(audit.APPROVAL, '2804a409-64f4-4571-8df3-0da8c37da9ca')
+        self.assertEqual(audit.APPROVED_INPUT_DIGEST,
+                         '09dd14cb9d31fc9441767f8219224f9474e09eb6721291285d1e40dec16424a9')
+        self.assertEqual(audit.input_digest(ROOT), audit.APPROVED_INPUT_DIGEST)
+        self.assertEqual(self.exception['expires_on'], '2026-11-18')
+
+    def test_superseded_approval_and_binding_are_rejected(self):
+        for field, value in [
+                ('approval_comment', 'b8ac8764-c2c8-4dd9-b13e-802039e34790'),
+                ('input_digest', '59114f8ee39c86dc3642e992e1119e747cf85c9d4465a2ca54875d4a4253836b')]:
+            exception = dict(self.exception, **{field: value})
+            with self.subTest(field=field), self.assertRaisesRegex(audit.AuditError, 'Unauthorised'):
+                self.decide(exception=exception)
+
+    def test_real_changed_inputs_invalidate_reauthorized_disposition(self):
+        for changed in ['mix.lock', 'mix.exs', '.tool-versions', 'lib/new_callback.ex',
+                        'config/new_oauth.exs',
+                        'test/new_you_web/security/authentication_reachability_test.exs']:
+            with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                for name in ['mix.exs', 'mix.lock', '.tool-versions',
+                             'test/new_you_web/security/authentication_reachability_test.exs']:
+                    target = root / name
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(ROOT / name, target)
+                for name in ['lib', 'config']:
+                    shutil.copytree(ROOT / name, root / name)
+                self.assertEqual(audit.input_digest(root), audit.APPROVED_INPUT_DIGEST)
+                target = root / changed
+                target.write_bytes((target.read_bytes() if target.exists() else b'') + b'\n# changed\n')
+                with self.assertRaisesRegex(audit.AuditError, 'invalidated'):
+                    audit.disposition(report(), 1, self.exception, root)
 
     def test_unexpected_second_finding_fails(self):
         evidence = report()
