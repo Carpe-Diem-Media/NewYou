@@ -427,14 +427,25 @@ class DiagnosticStream:
 
 
 def cancel_owned_run(state):
-    if state.get('run_id') and state.get('result') != 'success':
-        path = 'actions/runs/' + str(state['run_id'])
-        if github(path)['status'] != 'completed':
-            try:
-                github(path + '/cancel', 'POST')
-            except GitHubError as exc:
-                if exc.status != 409 or github(path)['status'] != 'completed':
-                    raise
+    if not state.get('run_id') or state.get('result') == 'success':
+        return
+    path = 'actions/runs/' + str(state['run_id'])
+    if github(path)['status'] == 'completed':
+        return
+    for endpoint in ['/cancel', '/force-cancel']:
+        try:
+            github(path + endpoint, 'POST')
+        except GitHubError as exc:
+            if exc.status != 409:
+                raise
+        # An offline guest cannot acknowledge cancellation. GitHub documents
+        # force-cancel for runs that do not respond to ordinary cancellation.
+        # Never delete a busy registration or claim cleanup on a POST alone.
+        for _ in range(3):
+            if github(path)['status'] == 'completed':
+                return
+            time.sleep(2)
+    raise RuntimeError('run_cancellation_unresolved')
 
 
 def reconcile_registration(state):

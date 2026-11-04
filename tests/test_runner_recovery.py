@@ -99,6 +99,21 @@ class JobConclusionTest(unittest.TestCase):
             self.assertTrue(state['job_identity_verified'])
 
 class CancellationRaceTest(unittest.TestCase):
+    def test_unresponsive_cancel_escalates_then_requires_completion(self):
+        calls = []
+        def provider(path, method='GET', body=None):
+            calls.append((path, method))
+            return {'status': 'completed' if any(p.endswith('/force-cancel') for p, _ in calls) else 'in_progress'}
+        with patch.object(runner, 'github', provider), patch.object(runner.time, 'sleep'):
+            runner.cancel_owned_run({'run_id': 4, 'result': 'unknown'})
+        self.assertEqual(sum(p.endswith('/force-cancel') for p, _ in calls), 1)
+        self.assertEqual(calls[-1], ('actions/runs/4', 'GET'))
+
+    def test_still_running_after_force_cancel_keeps_cleanup_pending(self):
+        with patch.object(runner, 'github', return_value={'status': 'in_progress'}), patch.object(runner.time, 'sleep'):
+            with self.assertRaisesRegex(RuntimeError, 'run_cancellation_unresolved'):
+                runner.cancel_owned_run({'run_id': 4, 'result': 'unknown'})
+
     def test_conflict_is_only_accepted_after_completed_run_is_observed(self):
         responses = iter([{'status': 'in_progress'}, {'status': 'completed'}])
         def provider(path, method='GET', body=None):

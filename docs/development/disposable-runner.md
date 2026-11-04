@@ -122,6 +122,12 @@ owned proving run, removes its registration, deletes only its two named volumes,
 removes its filter and deletes temporary disks, seed data and SSH keys. Every
 cleanup category is attempted even if another category fails. A surviving domain
 prevents volume deletion. Recovery never declares success with unresolved errors.
+Cancellation requires observed GitHub completion. If ordinary cancellation remains
+unacknowledged after three bounded checks, recovery requests the documented
+`force-cancel` endpoint and checks completion again. An accepted request alone
+cannot release a busy registration. If GitHub still reports the run active,
+recovery retains `cleanup_failed` and blocks provisioning until reconciliation.
+See [GitHub's workflow-run API](https://docs.github.com/en/rest/actions/workflow-runs#force-cancel-a-workflow-run).
 
 After a workstation crash or reboot, run recovery before another guest. The
 controller also does this at startup. There is no always-on host-boot recovery

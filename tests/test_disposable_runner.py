@@ -107,11 +107,11 @@ class CancellationTest(unittest.TestCase):
         calls = []
         def github(path, method='GET', body=None):
             calls.append((path, method))
-            return {'status': 'in_progress'}
+            return {'status': 'completed' if len(calls) > 2 else 'in_progress'}
         from unittest.mock import patch
         with patch.object(runner, 'github', github):
             runner.cancel_owned_run({'run_id': 123, 'result': 'failed'})
-        self.assertEqual(calls, [('actions/runs/123', 'GET'), ('actions/runs/123/cancel', 'POST')])
+        self.assertEqual(calls, [('actions/runs/123', 'GET'), ('actions/runs/123/cancel', 'POST'), ('actions/runs/123', 'GET')])
         with patch.object(runner, 'github', side_effect=AssertionError('must not cancel successful run')):
             runner.cancel_owned_run({'run_id': 123, 'result': 'success'})
 
