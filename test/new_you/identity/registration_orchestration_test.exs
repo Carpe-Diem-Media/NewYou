@@ -1,6 +1,7 @@
 defmodule NewYou.Identity.RegistrationOrchestrationTest do
   use NewYou.DataCase, async: false
 
+  require Ash.Query
   import Ecto.Query
   alias Ecto.Adapters.SQL.Sandbox
 
@@ -136,6 +137,48 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert row_count("communications_envelope_nonces") == nonce_count + 1
     assert row_count("identity_pmr_reservations") == pmr_reservation_count + 1
     assert length(Repo.all(from job in Oban.Job)) == 1
+  end
+
+  test "repeated Account queries and resend revocation stay scoped to the selected Account" do
+    request_a = valid_request()
+    request_b = %{valid_request() | email: "control@example.com"}
+
+    assert {:ok, %{account_id: account_a, verification_proof: proof_a}} =
+             Identity.register(request_a)
+
+    assert {:ok, %{account_id: account_b, verification_proof: proof_b}} =
+             Identity.register(request_b)
+
+    for {email, expected} <-
+          List.duplicate([{request_a.email, account_a}, {request_b.email, account_b}], 4)
+          |> List.flatten() do
+      {:ok, canonical} = Identity.Email.canonicalize(email)
+      query = Ash.Query.filter(Identity.Account, email == ^canonical)
+      assert [%{id: ^expected}] = Ash.read!(query, domain: Identity, authorize?: false)
+    end
+
+    missing = Ash.Query.filter(Identity.Account, email == "missing@example.com")
+    assert Ash.read!(missing, domain: Identity, authorize?: false) == []
+
+    assert {:ok, :verification_pending} =
+             Identity.resend_verification(%{
+               operation_id: Ecto.UUID.generate(),
+               account_id: account_a
+             })
+
+    assert AshAuthentication.TokenResource.token_revoked?(Identity.Token, proof_a)
+    refute AshAuthentication.TokenResource.token_revoked?(Identity.Token, proof_b)
+    assert {:ok, _, _} = AshAuthentication.Jwt.verify(proof_b, Identity.Account)
+
+    for id <- [account_a, account_b, account_a, account_b] do
+      query =
+        Ash.Query.filter(Identity.Token, account_id == ^id and purpose == "email_verification")
+
+      assert [%{account_id: ^id}] = Ash.read!(query, domain: Identity, authorize?: false)
+    end
+
+    assert {:error, _} = Ash.read(Identity.Token, actor: nil)
+    assert {:error, _} = Ash.read(Identity.Account, actor: nil)
   end
 
   test "a protected-envelope failure rolls back every registration consequence", %{
