@@ -151,7 +151,7 @@ adds non-null `accounts.account_status`, default `open`, and
 `accounts.security_posture`, default `normal`. Existing rows receive those
 defaults. Constraints `accounts_account_status` and `accounts_security_posture`
 restrict values to the governed states. The matching
-[Ash snapshot](../../priv/resource_snapshots/repo/accounts/20261105172857.json)
+[Ash snapshot](https://github.com/JCSchoeman96/NewYou/blob/1cc2bdbd00e2e748d868e015e7ff742a6cc06206/priv/resource_snapshots/repo/accounts/20261105172857.json)
 records the generated schema. Down refuses to erase a non-default denial state;
 reconcile such rows through authorized owner work before rollback.
 
