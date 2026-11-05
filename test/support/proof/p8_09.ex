@@ -38,6 +38,8 @@ defmodule NewYou.Proof.P809 do
     P805.check(id, "second_boot", restart_process(credentials) == :allowed)
     {:ok, token_case} = Identity.authenticate_password(request.email, request.password)
     {:ok, hold_case} = Identity.authenticate_password(request.email, request.password)
+    {:ok, expired_case} = Identity.authenticate_password(request.email, request.password)
+    {:ok, logout_case} = Identity.authenticate_password(request.email, request.password)
 
     Repo.query!("UPDATE sessions SET state = 'revoked' WHERE id = $1", [
       Ecto.UUID.dump!(credentials.session_id)
@@ -47,6 +49,14 @@ defmodule NewYou.Proof.P809 do
     {:ok, claims} = AshAuthentication.Jwt.peek(token_case.token)
     Repo.query!("UPDATE tokens SET purpose = 'revocation' WHERE jti = $1", [claims["jti"]])
     P805.check(id, "token_revoked_after_restart", restart_process(token_case) == :denied)
+
+    Repo.query!("UPDATE sessions SET expires_at = now() - interval '1 second' WHERE id = $1", [
+      Ecto.UUID.dump!(expired_case.session_id)
+    ])
+
+    P805.check(id, "expired_after_restart", restart_process(expired_case) == :denied)
+    :ok = Identity.logout(logout_case)
+    P805.check(id, "logout_after_restart", restart_process(logout_case) == :denied)
     Repo.query!("UPDATE accounts SET security_posture = 'held' WHERE email = $1", [request.email])
     P805.check(id, "held_after_restart", restart_process(hold_case) == :denied)
   end

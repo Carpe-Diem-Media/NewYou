@@ -64,7 +64,7 @@ defmodule NewYou.Proof.P809Catalog do
         invariant_id: "p809.beam_restart",
         assertion_ids:
           Enum.map(
-            ~w(first_boot second_boot revoked_after_restart token_revoked_after_restart held_after_restart),
+            ~w(first_boot second_boot revoked_after_restart token_revoked_after_restart expired_after_restart logout_after_restart held_after_restart),
             &("p809.beam_restart." <> &1)
           ),
         expected: "Independent BEAM instances reconstruct and revalidate Session authority"
