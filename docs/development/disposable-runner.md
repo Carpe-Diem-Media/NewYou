@@ -302,3 +302,28 @@ Bounded SSH transport uses nonblocking stdin/stdout readiness under one
 monotonic deadline. A child that does not read input cannot hold the controller
 in a synchronous pipe write beyond the stage deadline. Output limits and final
 process termination/reaping remain enforced, including timeout and pipe errors.
+
+
+## Network proof correction and current execution interlock
+
+A connection refusal does not establish silent DROP enforcement. Forbidden
+probes now classify explicit outcomes: `connected`, `refused`, `timeout`,
+`route_denied`, `permission_denied`, `probe_error`. Only timeout observations
+complete the guest negative probe; every other result stops preparation.
+Socket construction/setup and unexpected exceptions are execution errors.
+
+The host independently validates a maximum of six target-class/outcome records.
+Classes are `host`, `gateway`, `lan`, `metadata`, `container`, `overlay`.
+No address, port, error text or raw command output enters that projection.
+An invalid projection fails closed. A `timeouts_only` result is an observation,
+not proof that host firewall DROP rules caused it.
+
+**Execution is currently interlocked.** Even if all guest observations and
+public HTTPS complete, `effective_firewall_proof_required` prevents transition
+to `isolated` and runner registration. There is no bypass switch. Effective
+interface-bound host rule ordering and before/after DROP counters still require
+privileged read-only inspection and a reviewed enforcement-verification path.
+The current host denies nftables, iptables and ebtables reads, including
+noninteractive sudo attempts. XML round-trip matching cannot replace that proof.
+No new VM is authorized to work around this limitation. Do not remove the
+interlock or weaken outcome classification merely to obtain a passing trial.

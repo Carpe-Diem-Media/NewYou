@@ -57,7 +57,7 @@ class PreparationTest(TestCase):
         stages = ['guest_privilege', 'guest_socket', 'guest_credentials', 'forbidden_connectivity', 'public_https']
         xml = '<domain><devices><interface><filterref filter="owned"/></interface></devices></domain>'
         for index, stage in enumerate(stages):
-            with self.subTest(stage=stage), TemporaryDirectory() as directory, patch.object(runner, 'ROOT', Path(directory)), patch.object(runner, 'virsh', return_value=subprocess.CompletedProcess([], 0, xml)), patch.object(runner, 'addresses', return_value=['192.168.123.234']), patch.object(runner, 'ssh', side_effect=[None] * (4 + index) + [runner.SSHFailure('guest_command')]):
+            with self.subTest(stage=stage), TemporaryDirectory() as directory, patch.object(runner, 'ROOT', Path(directory)), patch.object(runner, 'virsh', return_value=subprocess.CompletedProcess([], 0, xml)), patch.object(runner, 'addresses', return_value=['192.168.123.234']), patch.object(runner, 'ssh', side_effect=[subprocess.CompletedProcess([], 0, json.dumps({'status': 'timeouts_only', 'observations': [{'target_class': c, 'outcome': 'timeout'} for c in ['gateway', 'lan', 'metadata', 'overlay', 'container', 'host']]}))] * (4 + index) + [runner.SSHFailure('guest_command')]):
                 state = {'name': 'owned', 'phase': 'provisioning'}
                 with self.assertRaises(RuntimeError):
                     runner.isolate(state)
@@ -67,15 +67,18 @@ class PreparationTest(TestCase):
                 self.assertNotIn('isolation', state)
                 self.assertNotIn('192.168.123.234', json.dumps(state))
 
-    def test_all_isolation_categories_must_pass(self):
+    def test_timeout_observations_cannot_bypass_effective_firewall_proof(self):
         import subprocess
         xml = '<domain><devices><interface><filterref filter="owned"/></interface></devices></domain>'
-        with TemporaryDirectory() as directory, patch.object(runner, 'ROOT', Path(directory)), patch.object(runner, 'virsh', return_value=subprocess.CompletedProcess([], 0, xml)), patch.object(runner, 'addresses', return_value=['192.168.123.234']), patch.object(runner, 'ssh'):
+        report = {'status': 'timeouts_only', 'observations': [{'target_class': c, 'outcome': 'timeout'} for c in ['gateway', 'lan', 'metadata', 'overlay', 'container', 'host']]}
+        with TemporaryDirectory() as directory, patch.object(runner, 'ROOT', Path(directory)), patch.object(runner, 'virsh', return_value=subprocess.CompletedProcess([], 0, xml)), patch.object(runner, 'addresses', return_value=['192.168.123.234']), patch.object(runner, 'ssh', return_value=subprocess.CompletedProcess([], 0, json.dumps(report))):
             state = {'name': 'owned', 'phase': 'provisioning'}
-            runner.isolate(state)
-            self.assertEqual(state['phase'], 'isolated')
+            with self.assertRaisesRegex(RuntimeError, 'effective_firewall_proof_required'):
+                runner.isolate(state)
+            self.assertEqual(state['phase'], 'provisioning')
             self.assertEqual(len(state['preparation']), 9)
             self.assertTrue(all(x['status'] == 'passed' for x in state['preparation']))
+            self.assertEqual(state['network_proof'], 'effective_firewall_unverified')
             self.assertNotIn('192.168.123.234', json.dumps(state))
 
     def test_bounded_transport_preserves_exit_code_and_enforces_output_and_deadline(self):

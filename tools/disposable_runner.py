@@ -382,17 +382,49 @@ def provision(state, memory):
     raise RuntimeError('guest_boot_timeout')
 
 
-def prepare(state, stage, script, timeout):
+def validate_network_report(report, expected_classes=None):
+    classes = {'host', 'gateway', 'lan', 'metadata', 'container', 'overlay'}
+    outcomes = {'connected', 'refused', 'timeout', 'route_denied', 'permission_denied', 'probe_error'}
+    if not isinstance(report, dict) or set(report) != {'status', 'observations'}:
+        raise ValueError('invalid_network_projection')
+    observations = report['observations']
+    if not isinstance(report['status'], str) or report['status'] not in {'failed', 'timeouts_only'} or not isinstance(observations, list) or not 1 <= len(observations) <= 6:
+        raise ValueError('invalid_network_projection')
+    seen = set()
+    for item in observations:
+        if (not isinstance(item, dict) or set(item) != {'target_class', 'outcome'}
+                or not isinstance(item['target_class'], str) or item['target_class'] not in classes
+                or item['target_class'] in seen or not isinstance(item['outcome'], str) or item['outcome'] not in outcomes):
+            raise ValueError('invalid_network_projection')
+        seen.add(item['target_class'])
+    if report['status'] == 'timeouts_only':
+        if any(x['outcome'] != 'timeout' for x in observations) or (expected_classes is not None and seen != set(expected_classes)):
+            raise ValueError('invalid_network_projection')
+    elif observations[-1]['outcome'] == 'timeout' or any(x['outcome'] != 'timeout' for x in observations[:-1]):
+        raise ValueError('invalid_network_projection')
+    if expected_classes is not None and not seen.issubset(set(expected_classes)):
+        raise ValueError('invalid_network_projection')
+    return report
+
+
+def prepare(state, stage, script, timeout, network_classes=None):
     if stage not in {'apt_update', 'apt_upgrade', 'runner_libraries', 'reboot_guard',
                      'guest_privilege', 'guest_socket', 'guest_credentials',
                      'forbidden_connectivity', 'public_https', 'application_bootstrap'}:
         raise RuntimeError('unknown_preparation_stage')
     item = {'stage': stage, 'status': 'running', 'at': int(time.time())}
+    if network_classes is not None:
+        state.pop('network_diagnostics', None)
     # Replace earlier observations for a stage to keep this projection bounded.
     state['preparation'] = [x for x in state.get('preparation', []) if x.get('stage') != stage][-9:] + [item]
     save(state)
     try:
-        ssh(state, script, timeout=timeout, max_output=4096)
+        result = ssh(state, script, timeout=timeout, max_output=4096)
+        if network_classes is not None:
+            report = validate_network_report(json.loads(result.stdout), network_classes)
+            state['network_diagnostics'] = report
+            if report['status'] != 'timeouts_only':
+                raise SSHFailure('guest_command')
     except Exception as exc:
         item['failure'] = exc.category if isinstance(exc, SSHFailure) else 'unknown'
         item['status'] = 'failed'
@@ -420,8 +452,11 @@ def isolate(state):
     if len(xml.findall('.//interface')) != 1 or xml.find('.//filterref').get('filter') != state['name']:
         raise RuntimeError('filter_missing')
     hosts = addresses()
-    targets = sorted(set([GATEWAY, '192.168.68.1', '100.100.100.100', '169.254.169.254',
-                          '172.17.0.1', '172.18.0.1'] + [a for a in hosts if ':' not in a and a != '127.0.0.1']))
+    groups = {'gateway': [GATEWAY], 'lan': ['192.168.68.1'],
+              'metadata': ['169.254.169.254'], 'overlay': ['100.100.100.100'],
+              'container': ['172.17.0.1', '172.18.0.1'],
+              'host': sorted({a for a in hosts if ':' not in a and a not in {'127.0.0.1', GATEWAY}})}
+    groups = {key: value for key, value in groups.items() if value}
     prepare(state, 'guest_privilege', '''set -eu
 test "$(id -u runner)" -ne 0
 groups=$(id -nG runner)
@@ -432,29 +467,16 @@ POLICY
 ''', 20)
     prepare(state, 'guest_socket', 'set -eu\ntest ! -S /var/run/docker.sock\n', 20)
     prepare(state, 'guest_credentials', 'set -eu\ntest ! -e /home/runner/.config/gh\ntest ! -e /home/runner/.config/dev-core\ntest ! -e /root/.config/dev-core\n', 20)
-    probe = '''set -eu
-python3 - <<'CHECK'
-import socket
-for host in TARGETS:
-    for port in [22, 80, 443, 2375, 55432, 55433]:
-        sock = socket.socket()
-        sock.settimeout(.3)
-        try:
-            sock.connect((host, port))
-        except OSError:
-            pass
-        else:
-            raise SystemExit('isolation_failed')
-        finally:
-            sock.close()
-CHECK
-'''.replace('TARGETS', repr(targets))
-    prepare(state, 'forbidden_connectivity', probe, 90)
+    probe = ("set -eu\npython3 - <<'CHECK'\nTARGET_GROUPS = " + repr(groups) + '\n'
+             + Path(__file__).with_name('runner_guest_network.py').read_text() + '\nCHECK\n')
+    prepare(state, 'forbidden_connectivity', probe, 90, network_classes=groups)
     prepare(state, 'public_https', 'curl --fail --silent --max-time 20 https://api.github.com/zen >/dev/null', 30)
-    state['isolation'] = {stage: 'passed' for stage in [
-        'guest_privilege', 'guest_socket', 'guest_credentials',
-        'forbidden_connectivity', 'public_https']}
-    transition(state, 'isolated')
+    # Guest timeouts do not establish effective host DROP enforcement. This
+    # interlock remains until interface-bound host rule/order/counter evidence
+    # can be independently obtained and implemented. No user bypass exists.
+    state['network_proof'] = 'effective_firewall_unverified'
+    save(state)
+    raise RuntimeError('effective_firewall_proof_required')
 
 
 def export_diagnostics(state):
