@@ -505,6 +505,25 @@ defmodule NewYou.Proof.Scenario do
     end
   end
 
+  defp handle_operation({:await_owned_down, workers, timeout}, caller, state)
+       when caller == state.owner and is_list(workers) and is_integer(timeout) and
+              timeout > 0 and timeout <= @max_timeout do
+    if Enum.all?(workers, &is_pid/1) do
+      # The caller's monitors cannot acknowledge this controller's DOWN ledger.
+      # Consume our own monitor signals before confirming the selected cleanup.
+      state = await_workers(state, now_ms() + timeout, workers)
+
+      response =
+        if Enum.any?(workers, &Map.has_key?(state.workers, &1)),
+          do: {:error, :cleanup_timeout},
+          else: :ok
+
+      {state, response, false}
+    else
+      fail(state, :invalid_request, {:error, :invalid_request})
+    end
+  end
+
   defp handle_operation(:owned_processes, caller, state) when caller == state.owner do
     children = Enum.map(state.workers, fn {worker, info} -> {worker, info.guardian} end)
     {state, children, false}
@@ -1131,9 +1150,13 @@ defmodule NewYou.Proof.Scenario do
     await_workers(state, deadline)
   end
 
-  defp await_workers(state, deadline) do
-    if map_size(state.workers) == 0 or now_ms() >= deadline do
-      if map_size(state.workers) == 0,
+  defp await_workers(state, deadline), do: await_workers(state, deadline, Map.keys(state.workers))
+
+  defp await_workers(state, deadline, workers) do
+    complete? = Enum.all?(workers, &(not Map.has_key?(state.workers, &1)))
+
+    if complete? or now_ms() >= deadline do
+      if complete?,
         do: state,
         else: %{
           state
@@ -1143,7 +1166,7 @@ defmodule NewYou.Proof.Scenario do
     else
       receive do
         {:DOWN, ref, :process, pid, reason} ->
-          await_workers(worker_down(state, ref, pid, reason), deadline)
+          await_workers(worker_down(state, ref, pid, reason), deadline, workers)
       after
         max(deadline - now_ms(), 0) ->
           %{

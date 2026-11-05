@@ -102,6 +102,59 @@ defmodule NewYou.Proof.ConcurrentTest do
     assert {:error, _} = Scenario.stop(scenario)
   end
 
+  test "cleanup acknowledgement consumes controller DOWNs queued after the request" do
+    scenario = Scenario.start()
+    {worker, monitor} = Scenario.spawn(scenario, :worker, fn -> receive do: (:finish -> :ok) end)
+    [{^worker, guardian}] = Scenario.owned_processes(scenario)
+    guardian_monitor = Process.monitor(guardian)
+    request_ref = make_ref()
+
+    # Queue the acknowledgement before either DOWN in the controller mailbox,
+    # while the owner independently observes both deaths. No timing sleep.
+    :erlang.suspend_process(scenario.controller)
+
+    try do
+      send(scenario.controller, {
+        :scenario_request,
+        scenario.reference,
+        request_ref,
+        self(),
+        {:await_owned_down, [worker], 1_000}
+      })
+
+      send(worker, :finish)
+      assert_receive {:DOWN, ^monitor, :process, ^worker, :normal}
+      assert_receive {:DOWN, ^guardian_monitor, :process, ^guardian, :normal}
+    after
+      :erlang.resume_process(scenario.controller)
+    end
+
+    assert_receive {:scenario_reply, ^request_ref, :ok}, 2_000
+    assert [] = Scenario.owned_processes(scenario)
+    assert :ok = Scenario.stop(scenario)
+  end
+
+  test "cleanup acknowledgement preserves excluded workers and fails closed for live targets" do
+    scenario = Scenario.start()
+    {worker, monitor} = Scenario.spawn(scenario, :worker, fn -> receive do: (:finish -> :ok) end)
+
+    {observer, _monitor} =
+      Scenario.spawn(scenario, :observer, fn -> receive do: (:finish -> :ok) end)
+
+    send(worker, :finish)
+    assert_receive {:DOWN, ^monitor, :process, ^worker, :normal}
+
+    assert :ok = Scenario.request(scenario, {:await_owned_down, [worker], 1_000})
+    assert [{^observer, guardian}] = Scenario.owned_processes(scenario)
+    assert Process.alive?(guardian)
+
+    assert {:error, :cleanup_timeout} =
+             Scenario.request(scenario, {:await_owned_down, [observer], 10})
+
+    assert [{^observer, ^guardian}] = Scenario.owned_processes(scenario)
+    assert {:error, _} = Scenario.stop(scenario)
+  end
+
   test "run reports unconfirmed cleanup when the scenario controller is lost" do
     scenario = Scenario.start()
     parent = self()
