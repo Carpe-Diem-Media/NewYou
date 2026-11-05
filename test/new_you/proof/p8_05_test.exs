@@ -3,7 +3,44 @@ defmodule NewYou.Proof.P805Test do
 
   alias NewYou.Proof.{Catalog, FullCatalog}
 
-  @case_ids ~w(p805.accepted p805.rejected p805.envelope_rollback p805.audit_schedule_rollback p805.commit_rollback p805.replay_neutrality p805.pmr_collision p805.same_email_race p805.resend p805.resend_binding p805.browser_en p805.browser_af)
+  test "canonical-equivalent email contention is a registered proof case" do
+    registrations = Catalog.compiled_business_registrations()
+    race = Enum.find(registrations, &(&1.case_id == "p805.canonical_email_race"))
+    assert "p805.canonical_email_race.public_response" in race.assertion_ids
+  end
+
+  test "same-operation contention is a registered proof case" do
+    registrations = Catalog.compiled_business_registrations()
+    race = Enum.find(registrations, &(&1.case_id == "p805.same_operation_race"))
+    assert "p805.same_operation_race.same_account_result" in race.assertion_ids
+  end
+
+  test "post-commit process loss and recovery is a registered proof case" do
+    registrations = Catalog.compiled_business_registrations()
+    assert Enum.any?(registrations, &(&1.case_id == "p805.post_commit_recovery"))
+  end
+
+  test "concurrent PMR collision is a registered proof case" do
+    registrations = Catalog.compiled_business_registrations()
+    assert Enum.any?(registrations, &(&1.case_id == "p805.pmr_collision_race"))
+  end
+
+  test "registration write boundaries have registered rollback cases" do
+    ids = Enum.map(Catalog.compiled_business_registrations(), & &1.case_id)
+
+    assert Enum.all?(
+             ~w(account token intent nonce obligation operation),
+             &(("p805.rollback_" <> &1) in ids)
+           )
+  end
+
+  test "retired PMR non-reuse is a registered proof case" do
+    registrations = Catalog.compiled_business_registrations()
+    proof = Enum.find(registrations, &(&1.case_id == "p805.retired_pmr"))
+    assert "p805.retired_pmr.account_removed" in proof.assertion_ids
+  end
+
+  @case_ids ~w(p805.accepted p805.rejected p805.envelope_rollback p805.rollback_account p805.rollback_token p805.rollback_intent p805.rollback_nonce p805.rollback_obligation p805.rollback_operation p805.audit_schedule_rollback p805.commit_rollback p805.replay_neutrality p805.pmr_collision p805.retired_pmr p805.same_email_race p805.canonical_email_race p805.same_operation_race p805.pmr_collision_race p805.post_commit_recovery p805.resend p805.resend_binding p805.browser_en p805.browser_af)
 
   test "P8-05 reviewed cases are compiled without manufacturing future coverage" do
     manifests = Catalog.required().business_manifests
