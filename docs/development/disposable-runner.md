@@ -266,3 +266,28 @@ runner libraries, the reboot-required guard, isolation probes and application
 bootstrap. A failure reports the stage while preserving the existing teardown.
 Guest command text, package output and exception messages are not retained in
 that journal. A pending-reboot result still prevents runner registration.
+
+Isolation preparation records separate `guest_privilege`, `guest_socket`,
+`guest_credentials`, `forbidden_connectivity` and `public_https` stages. Every
+stage must pass, after host attachment/filter inspection, before `isolated`.
+The journal retains fixed stage/status values and, on failure, one of
+`ssh_transport`, `timeout`, `guest_command`, `output_limit` or `unknown`.
+A fixed remote shell wrapper normalizes guest failures, including exit 255,
+to exit 1 before OpenSSH returns. OpenSSH exit 255 or a local signal is
+classified as transport failure; normalized remote failure is `guest_command`.
+Transport failure cannot establish which network component failed. A deadline
+expiry records `timeout`; output
+beyond the fixed transport cap records `output_limit`. Neither means an
+isolation check passed. Unclassified exceptions remain `unknown`.
+
+At most ten latest preparation stages are retained, one per stage. The isolation
+summary contains only passed category values, without target addresses, ports,
+command output or exception text. Host/LAN/metadata targets still receive every
+original forbidden-port probe. No failed category permits registration. These
+diagnostics identify the failed boundary; they do not retroactively explain an
+earlier destroyed guest or establish new live isolation proof.
+
+The privilege stage rejects UID zero, privileged group membership and explicit
+sudo grants. When sudo is present, its policy must validate and its root-owned
+query must report no permission for runner. An unexpected query result fails
+the stage. No sudo policy output is retained.

@@ -146,7 +146,7 @@ def command(args, *, data=None, timeout=120, check=True, discard_output=False, m
     # Never interpolate guest output or credentials into host commands. Do not
     # include subprocess output in errors: gh/ssh failures may contain secrets.
     if max_output is not None:
-        return bounded_command(args, data=data, timeout=timeout, max_output=max_output)
+        return bounded_command(args, data=data, timeout=timeout, max_output=max_output, check=check)
     output = subprocess.DEVNULL if discard_output else subprocess.PIPE
     proc = subprocess.run(args, input=data, stdout=output, stderr=output, text=True, timeout=timeout)
     if check and proc.returncode:
@@ -154,7 +154,7 @@ def command(args, *, data=None, timeout=120, check=True, discard_output=False, m
     return proc
 
 
-def bounded_command(args, *, data=None, timeout=20, max_output=16384):
+def bounded_command(args, *, data=None, timeout=20, max_output=16384, check=True):
     """Bound hostile guest output in memory; never write an unvalidated spool."""
     proc = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     output = bytearray()
@@ -168,9 +168,9 @@ def bounded_command(args, *, data=None, timeout=20, max_output=16384):
             while True:
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
-                    raise RuntimeError('command_timeout')
+                    raise subprocess.TimeoutExpired('bounded_command', timeout)
                 if not selector.select(remaining):
-                    raise RuntimeError('command_timeout')
+                    raise subprocess.TimeoutExpired('bounded_command', timeout)
                 chunk = os.read(proc.stdout.fileno(), 4096)
                 if not chunk:
                     break
@@ -178,7 +178,7 @@ def bounded_command(args, *, data=None, timeout=20, max_output=16384):
                 if len(output) > max_output:
                     raise RuntimeError('output_limit')
         proc.wait(timeout=max(.1, deadline - time.monotonic()))
-        if proc.returncode:
+        if check and proc.returncode:
             raise RuntimeError('bounded_command_failed')
         return subprocess.CompletedProcess(args, proc.returncode, output.decode(), '')
     finally:
@@ -267,14 +267,31 @@ def preflight(memory):
             'disk_free_mb': free, 'guest_mb': memory, 'memory_full_avg10': float(pressure['avg10']), 'image_sha256': IMAGE_SHA}
 
 
+class SSHFailure(RuntimeError):
+    """Only fixed categories may cross the guest transport boundary."""
+    def __init__(self, category):
+        self.category = category if category in {'ssh_transport', 'timeout', 'guest_command', 'output_limit', 'unknown'} else 'unknown'
+        super().__init__(self.category)
+
+
 def ssh(state, script, timeout=120, max_output=None):
     directory = ROOT / state['name']
-    return command(['ssh', '-F', '/dev/null', '-i', str(directory / 'control'),
+    try:
+        result = command(['ssh', '-F', '/dev/null', '-i', str(directory / 'control'),
                     '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes',
                     '-o', 'ForwardAgent=no', '-o', 'ClearAllForwardings=yes',
                     '-o', 'StrictHostKeyChecking=yes', '-o', 'ConnectTimeout=5',
                     '-o', f'UserKnownHostsFile={directory / "known_hosts"}',
-                    f'root@{GUEST_IP}', 'bash', '-s'], data=script, timeout=timeout, max_output=max_output)
+                    f'root@{GUEST_IP}', 'bash -s; result=$?; if [ "$result" -eq 0 ]; then exit 0; else exit 1; fi'], data=script, timeout=timeout, max_output=max_output, check=False)
+    except subprocess.TimeoutExpired:
+        raise SSHFailure('timeout') from None
+    except OSError:
+        raise SSHFailure('ssh_transport') from None
+    except RuntimeError as exc:
+        raise SSHFailure('output_limit' if str(exc) == 'output_limit' else 'unknown') from None
+    if result.returncode:
+        raise SSHFailure('ssh_transport' if result.returncode == 255 or result.returncode < 0 else 'guest_command')
+    return result
 
 
 def provision(state, memory):
@@ -346,14 +363,17 @@ def provision(state, memory):
 
 def prepare(state, stage, script, timeout):
     if stage not in {'apt_update', 'apt_upgrade', 'runner_libraries', 'reboot_guard',
-                     'isolation_probe', 'application_bootstrap'}:
+                     'guest_privilege', 'guest_socket', 'guest_credentials',
+                     'forbidden_connectivity', 'public_https', 'application_bootstrap'}:
         raise RuntimeError('unknown_preparation_stage')
     item = {'stage': stage, 'status': 'running', 'at': int(time.time())}
-    state.setdefault('preparation', []).append(item)
+    # Replace earlier observations for a stage to keep this projection bounded.
+    state['preparation'] = [x for x in state.get('preparation', []) if x.get('stage') != stage][-9:] + [item]
     save(state)
     try:
         ssh(state, script, timeout=timeout, max_output=4096)
-    except Exception:
+    except Exception as exc:
+        item['failure'] = exc.category if isinstance(exc, SSHFailure) else 'unknown'
         item['status'] = 'failed'
         save(state)
         raise RuntimeError('guest_preparation_failed:' + stage) from None
@@ -381,12 +401,20 @@ def isolate(state):
     hosts = addresses()
     targets = sorted(set([GATEWAY, '192.168.68.1', '100.100.100.100', '169.254.169.254',
                           '172.17.0.1', '172.18.0.1'] + [a for a in hosts if ':' not in a and a != '127.0.0.1']))
+    prepare(state, 'guest_privilege', '''set -eu
+test "$(id -u runner)" -ne 0
+groups=$(id -nG runner)
+if printf '%s\n' "$groups" | grep -Eq '(^| )(sudo|docker|libvirt)( |$)'; then exit 1; fi
+if command -v sudo >/dev/null 2>&1; then
+    visudo -c >/dev/null 2>&1
+    result=0
+    sudo -n -l -U runner >/dev/null 2>&1 || result=$?
+    test "$result" -eq 1
+fi
+''', 20)
+    prepare(state, 'guest_socket', 'set -eu\ntest ! -S /var/run/docker.sock\n', 20)
+    prepare(state, 'guest_credentials', 'set -eu\ntest ! -e /home/runner/.config/gh\ntest ! -e /home/runner/.config/dev-core\ntest ! -e /root/.config/dev-core\n', 20)
     probe = '''set -eu
-! id -nG runner | grep -Eq 'sudo|docker|libvirt'
-test ! -S /var/run/docker.sock
-test ! -e /home/runner/.config/gh
-test ! -e /home/runner/.config/dev-core
-test ! -e /root/.config/dev-core
 python3 - <<'CHECK'
 import socket
 for host in TARGETS:
@@ -402,10 +430,12 @@ for host in TARGETS:
         finally:
             sock.close()
 CHECK
-curl --fail --silent --max-time 20 https://api.github.com/zen >/dev/null
 '''.replace('TARGETS', repr(targets))
-    prepare(state, 'isolation_probe', probe, 90)
-    state['isolation'] = {'targets': targets, 'ports': [22, 80, 443, 2375, 55432, 55433], 'public_https': True}
+    prepare(state, 'forbidden_connectivity', probe, 90)
+    prepare(state, 'public_https', 'curl --fail --silent --max-time 20 https://api.github.com/zen >/dev/null', 30)
+    state['isolation'] = {stage: 'passed' for stage in [
+        'guest_privilege', 'guest_socket', 'guest_credentials',
+        'forbidden_connectivity', 'public_https']}
     transition(state, 'isolated')
 
 
