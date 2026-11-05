@@ -68,7 +68,10 @@ Before coding, state a concise working plan containing:
 - the existing code seam;
 - material JIT decisions that must be made;
 - the test strategy, including failure/concurrency/idempotency cases where applicable;
-- the likely files/resources/migrations to touch.
+- the likely files/resources/migrations to touch;
+- documentation impact under `docs/development/implementation-handoff-standard.md`: full handoff, material update, proof section/addendum, or justified exemption.
+
+Create the required handoff or update in the same implementation PR. Record the implementation SHA, link real source symbols and tests, and distinguish observed evidence from future obligations. Material follow-up changes maintain the existing map. Apply prospectively after WELL-96 integration; do not retroactively block completed work or already-active WELL-7. These maps are descriptive, never governing or live execution authority.
 
 Do not wait for human approval of ordinary compliant implementation choices. Continue unless an unresolved choice meets the escalation threshold in `AGENTS.md`.
 
@@ -172,6 +175,7 @@ At minimum:
 - run architecture/code-generation checks when applicable;
 - run `git diff --check` or the repository equivalent;
 - inspect the complete final diff;
+- verify required handoff source links and material claims, including a cold-start walkthrough for a new substantial slice, against the exact head;
 - resolve the exact base and head SHAs;
 - verify no secrets/sensitive payloads leaked into code, logs, fixtures, jobs, or evidence.
 
@@ -187,7 +191,7 @@ When the implementation and required local verification are review-ready:
 2. confirm the PR contains only authorised ticket scope;
 3. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
 4. record material JIT choices and discovered work in Plane/PR evidence where useful;
-5. hand off for independent Master Gate review.
+5. hand off for independent Master Gate review, including the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
 
 Report:
 
