@@ -939,7 +939,7 @@ defmodule NewYou.Proof.Concurrent do
           stop_worker(pid)
         end)
 
-        await_owned_down(workers, now_ms() + @cleanup_timeout)
+        await_owned_down(scenario, workers, now_ms() + @cleanup_timeout)
 
       _ ->
         {:error, :ownership_unavailable}
@@ -957,14 +957,18 @@ defmodule NewYou.Proof.Concurrent do
     if Process.alive?(pid), do: Process.exit(pid, :kill)
   end
 
-  defp await_owned_down(processes, deadline) do
+  defp await_owned_down(scenario, processes, deadline) do
     refs =
       processes
       |> Enum.flat_map(fn {pid, guardian} -> [pid, guardian] end)
       |> Enum.uniq()
       |> Map.new(fn pid -> {Process.monitor(pid), pid} end)
 
-    await_monitors(refs, deadline)
+    with :ok <- await_monitors(refs, deadline) do
+      remaining = max(deadline - now_ms(), 1)
+      workers = Enum.map(processes, &elem(&1, 0))
+      Scenario.request(scenario, {:await_owned_down, workers, remaining}, remaining)
+    end
   end
 
   defp await_monitors(refs, _deadline) when map_size(refs) == 0, do: :ok

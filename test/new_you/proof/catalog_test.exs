@@ -10,7 +10,9 @@ defmodule NewYou.Proof.CatalogTest do
     assert required.coverage_inventory == Catalog.coverage_inventory()
 
     assert Map.keys(required.business_manifests) |> Enum.sort() ==
-             Enum.sort(~w(registration_pmr_reconciliation audit_e2 browser_spine))
+             Enum.sort(
+               ~w(registration_pmr_reconciliation audit_e2 browser_spine proof_capability_scanner_replay_supersession)
+             )
 
     assert length(required.self_test.cases) == 50
 

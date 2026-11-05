@@ -7,6 +7,7 @@ defmodule NewYouWeb.RegistrationBoundary do
   @behaviour Plug
 
   alias NewYouWeb.RegistrationController
+  alias NewYouWeb.EmailVerificationController
 
   @impl Plug
   def init(opts), do: opts
@@ -24,6 +25,14 @@ defmodule NewYouWeb.RegistrationBoundary do
     dispatch_browser_request(conn, :resend)
   end
 
+  def call(%Plug.Conn{method: "GET", request_path: "/verification/confirm"} = conn, _opts) do
+    dispatch_browser_request(conn, :show, EmailVerificationController)
+  end
+
+  def call(%Plug.Conn{method: "POST", request_path: "/verification/confirm"} = conn, _opts) do
+    dispatch_browser_request(conn, :confirm, EmailVerificationController)
+  end
+
   def call(%Plug.Conn{request_path: path} = conn, _opts) do
     if sensitive_browser_path?(path) do
       fail_closed_response(conn, 404)
@@ -32,7 +41,7 @@ defmodule NewYouWeb.RegistrationBoundary do
     end
   end
 
-  defp dispatch_browser_request(conn, action) do
+  defp dispatch_browser_request(conn, action, controller \\ RegistrationController) do
     conn
     |> Plug.Conn.fetch_query_params()
     |> Phoenix.Controller.accepts(["html"])
@@ -41,7 +50,7 @@ defmodule NewYouWeb.RegistrationBoundary do
     |> Phoenix.Controller.put_root_layout(html: {NewYouWeb.Layouts, :root})
     |> Plug.CSRFProtection.call(Plug.CSRFProtection.init([]))
     |> Phoenix.Controller.put_secure_browser_headers()
-    |> RegistrationController.call(action)
+    |> controller.call(action)
   rescue
     error ->
       log_browser_failure(error.__struct__)
@@ -68,7 +77,7 @@ defmodule NewYouWeb.RegistrationBoundary do
   end
 
   defp sensitive_browser_path?(path) do
-    Enum.any?(["/register", "/verification/resend"], fn root ->
+    Enum.any?(["/register", "/verification"], fn root ->
       path == root or String.starts_with?(path, root <> "/")
     end)
   end

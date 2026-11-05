@@ -22,7 +22,13 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
     assert Enum.sort(
              Enum.map(Ash.Resource.Info.actions(NewYou.Identity.Account), &{&1.type, &1.name})
            ) ==
-             [{:create, :register}, {:read, :get_by_subject}, {:read, :read}]
+             [
+               {:action, :confirm_email},
+               {:create, :register},
+               {:read, :get_by_subject},
+               {:read, :read},
+               {:update, :mark_email_verified}
+             ]
 
     assert AshAuthentication.Strategy.routes(password) == []
   end
@@ -49,7 +55,7 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
     refute Map.has_key?(conn.assigns, :current_account)
   end
 
-  test "router exposes only the reviewed public and bounded registration endpoints" do
+  test "router exposes only the reviewed public, registration and explicit verification endpoints" do
     routes =
       NewYouWeb.Router.__routes__()
       |> Enum.map(&{&1.verb, &1.path, &1.plug, &1.plug_opts})
@@ -61,6 +67,8 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:get, "/register", NewYouWeb.RegistrationController, :new},
                {:post, "/register", NewYouWeb.RegistrationController, :create},
                {:post, "/verification/resend", NewYouWeb.RegistrationController, :resend},
+               {:get, "/verification/confirm", NewYouWeb.EmailVerificationController, :show},
+               {:post, "/verification/confirm", NewYouWeb.EmailVerificationController, :confirm},
                {:get, "/legal/terms", NewYouWeb.RegistrationController, :terms},
                {:get, "/legal/privacy", NewYouWeb.RegistrationController, :privacy}
              ])

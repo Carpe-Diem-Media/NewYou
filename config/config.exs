@@ -76,6 +76,10 @@ config :new_you,
 # SQL query parameters can contain Identity credential verifiers.
 config :new_you, NewYou.Repo, log: false
 
+# Capability input remains transient even if a future caller enables Phoenix
+# parameter logging. Sensitive browser paths also suppress full-conn telemetry.
+config :phoenix, :filter_parameters, ["password", "proof", "token", "confirm", "secret"]
+
 # Configure the endpoint
 config :new_you, NewYouWeb.Endpoint,
   url: [host: "localhost"],

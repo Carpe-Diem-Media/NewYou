@@ -4,6 +4,39 @@ defmodule NewYou.Proof.P805Browser do
   alias NewYou.Identity
   require Ash.Query
 
+  def run_verification(registration, locale) do
+    reference = make_ref()
+
+    {:ok, server} =
+      Bandit.start_link(
+        plug: {NewYou.Proof.P805Browser.Endpoint, {self(), reference}},
+        ip: {127, 0, 0, 1},
+        port: 0
+      )
+
+    {:ok, {_address, port}} = ThousandIsland.listener_info(server)
+
+    try do
+      payload =
+        Jason.encode!(%{
+          mode: "verification",
+          port: port,
+          locale: locale,
+          proof: registration.verification_proof
+        })
+
+      executable = System.find_executable("node") || raise "proof browser requires Node"
+
+      result =
+        run_port(executable, Path.expand("../../proof/p8_05_browser.mjs", __DIR__), payload)
+
+      true = result["cleanup"]
+      Map.put(result["checks"], "no_session", collect_sessions(reference, []) == [true, true])
+    after
+      Supervisor.stop(server)
+    end
+  end
+
   def run(id, locale) do
     SelfTest.cleanup_manifest!(workers_stopped: false)
     input = P805.request(%{preferred_language: String.to_existing_atom(locale)})

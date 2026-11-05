@@ -1,0 +1,93 @@
+{
+  "version": "p8-07-temporary-v1",
+  "semantic_parent": "identity.verification.result.family",
+  "ticket": "WELL-8",
+  "status": "temporary_development_authorized",
+  "owner_authorization": "I authorize you to create temporary EN and AF text for this",
+  "authorization_provenance": "Owner reply in parent conversation, relayed to implementation agent on 2026-11-05",
+  "exact_bytes_previously_reviewed_by_owner": false,
+  "applicability": [
+    "local development",
+    "automated tests",
+    "development environments",
+    "bounded P8-07 browser proof"
+  ],
+  "production_eligible": false,
+  "runtime_role_grant": false,
+  "legal_review": false,
+  "release_authorized": false,
+  "copy_class": "A identity/security wording; scoped temporary development use only",
+  "no_silent_fallback": true,
+  "entries": {
+    "identity.verification.result.confirm.title": {
+      "en": {
+        "text": "Confirm your email",
+        "sha256": "0d1fe19967e25e33df16b6d1f4478ebe5e6aa7fd1556f0a34aaae3a5ada06a29"
+      },
+      "af": {
+        "text": "Bevestig jou e-posadres",
+        "sha256": "950bf81b6dd8799e6015acdb87a83de37c30e63d5d65721e3bb81d04eb9c1d6b"
+      }
+    },
+    "identity.verification.result.confirm.body": {
+      "en": {
+        "text": "Choose Verify email to confirm this address. Opening this page does not verify it.",
+        "sha256": "7775d1e7acb3b204204f5ecf0c505bd23f64016279e871f07b8fc2be58d589b9"
+      },
+      "af": {
+        "text": "Kies Verifieer e-posadres om hierdie adres te bevestig. As jy hierdie bladsy oopmaak, word dit nie geverifieer nie.",
+        "sha256": "d1b32dbffb3f955a342d517b4ed7bd6030b2763df1ebd8c78d01ded99e1ce47f"
+      }
+    },
+    "identity.verification.result.confirm.action": {
+      "en": {
+        "text": "Verify email",
+        "sha256": "e89a77e7fe58a6d14ffde89db2a9d370d605da0cad4b8df1fa7eec63fb2fac2b"
+      },
+      "af": {
+        "text": "Verifieer e-posadres",
+        "sha256": "4883cb339a783021a5b1b69b7f0f2eb4d12347ba535ceb4d677bd9d3ec5b06ee"
+      }
+    },
+    "identity.verification.result.verified.title": {
+      "en": {
+        "text": "Email verified",
+        "sha256": "bdfb1e4f00c73e984c7b7594afa4b22855fc7eb777c1e5ef279cb27302b10f5a"
+      },
+      "af": {
+        "text": "E-posadres geverifieer",
+        "sha256": "e775db9ef8708a77da585f4722e34257965353fb3fb42d936b9457c860d00c3f"
+      }
+    },
+    "identity.verification.result.verified.body": {
+      "en": {
+        "text": "Your email address is verified. You have not been logged in.",
+        "sha256": "e017225ca6fbd69b75129b3f57b8f6c254ba856c40845cc7c1bbd3fe72faa26c"
+      },
+      "af": {
+        "text": "Jou e-posadres is geverifieer. Jy is nie aangemeld nie.",
+        "sha256": "f458157f636d9dadef6bc0b8288c1c819ea6645cd297cc877bda07f0e28b04c1"
+      }
+    },
+    "identity.verification.result.unavailable.title": {
+      "en": {
+        "text": "Verification unavailable",
+        "sha256": "9c32bbe5689cdd9772dc278d9ec2d65eebdf0da8aee8b0d6ce1613c6e6aa7881"
+      },
+      "af": {
+        "text": "Verifikasie nie beskikbaar nie",
+        "sha256": "c65b50083fe70b9eab96a5e5847579268b20316653ae6a45dfa4433e168bda5b"
+      }
+    },
+    "identity.verification.result.unavailable.body": {
+      "en": {
+        "text": "This link cannot verify your email. Request another verification email from the registration page.",
+        "sha256": "7f13ca2eb593c1c56915f8a52427ec8a111bd616d144d4ede74f00991f40d77e"
+      },
+      "af": {
+        "text": "Hierdie skakel kan nie jou e-posadres verifieer nie. Vra nog ’n verifikasie-e-pos op die registrasiebladsy aan.",
+        "sha256": "c9e539d0d9c79485947b23e2db4c870aca5577814d62e222369fa2b95ba77973"
+      }
+    }
+  }
+}

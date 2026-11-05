@@ -83,7 +83,8 @@ defmodule NewYou.Proof.Catalog do
           self_test: %{version: String.t(), digest: String.t(), cases: [map()]}
         }
   @spec compiled_business_registrations() :: [registration()]
-  def compiled_business_registrations, do: NewYou.Proof.P805Catalog.registrations()
+  def compiled_business_registrations,
+    do: NewYou.Proof.P805Catalog.registrations() ++ NewYou.Proof.P807Catalog.registrations()
 
   @spec validate_compiled_registrations(map(), [registration()]) :: :ok | {:error, [atom()]}
   def validate_compiled_registrations(manifests, registrations)
@@ -340,7 +341,8 @@ defmodule NewYou.Proof.Catalog do
     end
   end
 
-  defp business_manifests, do: NewYou.Proof.P805Catalog.manifests()
+  defp business_manifests,
+    do: Map.merge(NewYou.Proof.P805Catalog.manifests(), NewYou.Proof.P807Catalog.manifests())
 
   defp digest(term) do
     :crypto.hash(:sha256, :erlang.term_to_binary(term, [:deterministic]))

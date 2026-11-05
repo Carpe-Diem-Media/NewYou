@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang={@locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>{copy(@result, "title", @locale)}</title>
+    <link rel="stylesheet" href={~p"/assets/css/app.css"} />
+  </head>
+  <body>
+    <main id="main" class="min-h-svh bg-design-canvas text-design-ink font-design-sans">
+      <header class="mx-auto w-full max-w-7xl border-b border-design-hairline px-design-base py-design-lg design-tablet:px-design-lg design-desktop:px-design-2xl">
+        <p class="font-design-bold text-design-body-sm">{NewYou.platform_name()}</p>
+      </header>
+      <section
+        aria-labelledby="verification-heading"
+        class="mx-auto grid w-full max-w-7xl content-start gap-design-lg px-design-base py-design-2xl design-tablet:px-design-lg design-desktop:px-design-2xl"
+      >
+        <h1
+          id="verification-heading"
+          class="max-w-3xl font-design-bold text-design-display-sm leading-design-display-sm tracking-design-display-sm design-tablet:text-design-display-md design-tablet:leading-design-display-md design-tablet:tracking-design-display-md"
+        >
+          {copy(@result, "title", @locale)}
+        </h1>
+        <p role="status" class="max-w-prose text-design-body-sm leading-design-body-sm">
+          {copy(@result, "body", @locale)}
+        </p>
+        <.form
+          :if={@result == :confirm}
+          for={%{}}
+          action="/verification/confirm"
+          method="post"
+          id="email-confirmation"
+          class="grid gap-design-base justify-items-start"
+        >
+          <input type="hidden" name="proof" value={@proof} />
+          <input type="hidden" name="locale" value={@locale} />
+          <.primary_button type="submit">
+            {copy(:confirm, "action", @locale)}
+          </.primary_button>
+        </.form>
+        <a
+          :if={@result != :confirm}
+          href={"/register?locale=#{@locale}"}
+          class="min-h-11 w-fit content-center text-design-body-xs leading-design-body-xs text-design-ink underline decoration-design-primary underline-offset-4 hover:text-design-primary active:text-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+        >
+          {NewYouWeb.CopyRegistry.text!("identity.registration.title", @locale, %{
+            "platform_name" => NewYou.platform_name()
+          })}
+        </a>
+      </section>
+    </main>
+  </body>
+</html>

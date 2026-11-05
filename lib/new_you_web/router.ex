@@ -26,6 +26,8 @@ defmodule NewYouWeb.Router do
     get "/register", RegistrationController, :new
     post "/register", RegistrationController, :create, log: false
     post "/verification/resend", RegistrationController, :resend, log: false
+    get "/verification/confirm", EmailVerificationController, :show, log: false
+    post "/verification/confirm", EmailVerificationController, :confirm, log: false
     get "/legal/terms", RegistrationController, :terms
     get "/legal/privacy", RegistrationController, :privacy
   end
