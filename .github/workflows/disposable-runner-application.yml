@@ -88,3 +88,5 @@ jobs:
           export DESIGN_SYSTEM_BASE_SHA="$(git merge-base HEAD origin/main)"
           mix check
           mix check.deep
+
+# Controlled application trial after host capacity recovery.
