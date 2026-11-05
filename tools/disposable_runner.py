@@ -344,16 +344,34 @@ def provision(state, memory):
     raise RuntimeError('guest_boot_timeout')
 
 
+def prepare(state, stage, script, timeout):
+    if stage not in {'apt_update', 'apt_upgrade', 'runner_libraries', 'reboot_guard',
+                     'isolation_probe', 'application_bootstrap'}:
+        raise RuntimeError('unknown_preparation_stage')
+    item = {'stage': stage, 'status': 'running', 'at': int(time.time())}
+    state.setdefault('preparation', []).append(item)
+    save(state)
+    try:
+        ssh(state, script, timeout=timeout, max_output=4096)
+    except Exception:
+        item['status'] = 'failed'
+        save(state)
+        raise RuntimeError('guest_preparation_failed:' + stage) from None
+    item['status'] = 'passed'
+    save(state)
+
+
 def isolate(state):
-    # Install trusted distribution updates before any workflow may run. This
-    # image is never reused, so a reboot-required update stops registration.
-    ssh(state, '''set -eu
-export DEBIAN_FRONTEND=noninteractive
-apt-get -qq -o APT::Update::Error-Mode=any -o Acquire::Retries=0 -o Acquire::http::Timeout=20 update
-apt-get -y -qq upgrade >/root/patch.log 2>&1
-apt-get -y -qq install curl ca-certificates libicu74 python3 >/root/deps.log 2>&1
-test ! -f /var/run/reboot-required
-''', timeout=600)
+    # Retain only fixed stage/status enums; package and guest output stay private
+    # inside the disposable guest and are never copied into the host journal.
+    commands = [
+        ('apt_update', 'apt-get -qq -o APT::Update::Error-Mode=any -o Acquire::Retries=0 -o Acquire::http::Timeout=20 update >/root/update.log 2>&1'),
+        ('apt_upgrade', 'apt-get -y -qq upgrade >/root/patch.log 2>&1'),
+        ('runner_libraries', 'apt-get -y -qq install curl ca-certificates libicu74 python3 >/root/deps.log 2>&1'),
+        ('reboot_guard', 'test ! -f /var/run/reboot-required'),
+    ]
+    for stage, command_text in commands:
+        prepare(state, stage, 'set -eu\nexport DEBIAN_FRONTEND=noninteractive\n' + command_text, 600)
     # Control-plane inspection is independent of guest assertions.
     xml = ET.fromstring(virsh('dumpxml', state['name']).stdout)
     if xml.findall('.//filesystem') or xml.findall('.//hostdev') or xml.findall('.//channel'):
@@ -386,7 +404,7 @@ for host in TARGETS:
 CHECK
 curl --fail --silent --max-time 20 https://api.github.com/zen >/dev/null
 '''.replace('TARGETS', repr(targets))
-    ssh(state, probe, timeout=90)
+    prepare(state, 'isolation_probe', probe, 90)
     state['isolation'] = {'targets': targets, 'ports': [22, 80, 443, 2375, 55432, 55433], 'public_https': True}
     transition(state, 'isolated')
 
@@ -568,7 +586,7 @@ def execute(state, run_id, expected_sha):
     save(state)
     if state.get('profile') == 'application':
         bootstrap = Path(__file__).with_name('runner_guest_application.sh').read_text()
-        ssh(state, bootstrap, timeout=600)
+        prepare(state, 'application_bootstrap', bootstrap, 600)
         state['rootless_docker_verified'] = True
         save(state)
     applications = github('actions/runners/downloads')

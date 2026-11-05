@@ -259,3 +259,10 @@ shared caches, and runs fast and deep checks. `ImageOS: ubuntu24` selects the
 matching prebuilt runtime on the custom runner. Diagnostic projections remain
 bounded across the longer deadline. Live outcomes and performance belong in
 Plane; adding this route does not certify its execution or authorize cutover.
+
+
+Preparation records fixed stage/status values before and after package updates,
+runner libraries, the reboot-required guard, isolation probes and application
+bootstrap. A failure reports the stage while preserving the existing teardown.
+Guest command text, package output and exception messages are not retained in
+that journal. A pending-reboot result still prevents runner registration.

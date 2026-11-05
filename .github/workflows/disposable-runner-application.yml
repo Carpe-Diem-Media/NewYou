@@ -80,11 +80,11 @@ jobs:
           SQL
       - name: Run canonical fast and deep gates
         env:
-          DESIGN_SYSTEM_BASE_SHA: ${{ github.event.before }}
           TEST_DATABASE_HOST: '127.0.0.1'
           TEST_DATABASE_PORT: '55433'
           TEST_DATABASE_USERNAME: new_you_test
           TEST_DATABASE_NAME: new_you_test
         run: |
+          export DESIGN_SYSTEM_BASE_SHA="$(git merge-base HEAD origin/main)"
           mix check
           mix check.deep

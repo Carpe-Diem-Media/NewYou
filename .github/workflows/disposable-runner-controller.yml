@@ -25,4 +25,4 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - run: python -m unittest tests.test_disposable_runner tests.test_runner_recovery tests.test_runner_diagnostics tests.test_runner_application -v
+      - run: python -m unittest tests.test_disposable_runner tests.test_runner_recovery tests.test_runner_diagnostics tests.test_runner_application tests.test_runner_preparation -v
