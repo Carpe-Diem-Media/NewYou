@@ -76,6 +76,7 @@ jobs:
           set -euo pipefail
           result_path="${RUNNER_TEMP}/phase8-proof-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.json"
           echo "PROOF_RESULT_PATH=${result_path}" >> "$GITHUB_ENV"
+          mix ecto.migrate --quiet
           mix run test/proof/run.exs --mode "$PROOF_MODE" --output "$result_path"
       - name: Upload proof result
         if: always()

@@ -162,11 +162,31 @@ defmodule NewYou.Proof.P805 do
     check(id, "no_partial_consequences", counts(), before)
   end
 
-  defp execute(id) when id in ["p805.envelope_rollback", "p805.audit_schedule_rollback"] do
+  defp execute(id)
+       when id in [
+              "p805.envelope_rollback",
+              "p805.audit_schedule_rollback",
+              "p805.rollback_account",
+              "p805.rollback_token",
+              "p805.rollback_intent",
+              "p805.rollback_nonce",
+              "p805.rollback_obligation",
+              "p805.rollback_operation"
+            ] do
     table =
-      if id == "p805.envelope_rollback",
-        do: "communications_protected_envelopes",
-        else: "oban_jobs"
+      Map.fetch!(
+        %{
+          "p805.envelope_rollback" => "communications_protected_envelopes",
+          "p805.audit_schedule_rollback" => "oban_jobs",
+          "p805.rollback_account" => "accounts",
+          "p805.rollback_token" => "tokens",
+          "p805.rollback_intent" => "message_intents",
+          "p805.rollback_nonce" => "communications_envelope_nonces",
+          "p805.rollback_obligation" => "evidence_obligations",
+          "p805.rollback_operation" => "registration_operations"
+        },
+        id
+      )
 
     before = counts()
     input = request()
@@ -313,7 +333,145 @@ defmodule NewYou.Proof.P805 do
     check(id, "no_partial_consequences", counts(), before)
   end
 
+  defp execute("p805.retired_pmr" = id) do
+    input = request()
+    {:ok, accepted} = Identity.register(input)
+    retired = account!(accepted.account_id).pmr
+    cleanup()
+
+    check(
+      id,
+      "account_removed",
+      scalar("SELECT count(*) FROM accounts WHERE pmr = $1", [retired]),
+      0
+    )
+
+    check(
+      id,
+      "reservation_survives",
+      scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [retired]),
+      1
+    )
+
+    before = counts()
+    Process.put({__MODULE__, :retired_pmr_calls}, 0)
+
+    Application.put_env(:new_you, :identity_pmr_generator, fn ->
+      calls = Process.get({__MODULE__, :retired_pmr_calls})
+      Process.put({__MODULE__, :retired_pmr_calls}, calls + 1)
+      {:ok, retired}
+    end)
+
+    result = Identity.register(request())
+
+    check(
+      id,
+      "exhaustion",
+      result == {:error, :registration_unavailable} and
+        Process.get({__MODULE__, :retired_pmr_calls}) == 5
+    )
+
+    check(id, "no_reassignment", counts(), before)
+  end
+
   defp execute("p805.same_email_race" = id), do: NewYou.Proof.P805Race.run(id)
+  defp execute("p805.canonical_email_race" = id), do: NewYou.Proof.P805Race.run(id)
+  defp execute("p805.same_operation_race" = id), do: NewYou.Proof.P805Race.run(id)
+  defp execute("p805.pmr_collision_race" = id), do: NewYou.Proof.P805Race.run(id)
+
+  defp execute("p805.post_commit_recovery" = id) do
+    input = request()
+    before = counts()
+    parent = self()
+    ref = make_ref()
+    scenario = Scenario.start()
+
+    try do
+      :ok = CutPoints.arm(scenario, "transaction.after_commit", :registration, :terminate)
+
+      {worker, worker_monitor} =
+        Scenario.spawn(scenario, :registration, fn ->
+          :ok = Sandbox.checkout(Repo, sandbox: false)
+
+          try do
+            backend = scalar("SELECT pg_backend_pid()")
+            {:ok, _result} = Identity.register(input)
+            send(parent, {ref, :committed, backend})
+            CutPoints.hit(scenario, "transaction.after_commit", :registration)
+            send(parent, {ref, :acknowledged})
+          after
+            Sandbox.checkin(Repo)
+          end
+        end)
+
+      registration_backend =
+        receive do
+          {^ref, :committed, backend} -> backend
+        after
+          20_000 -> raise "post-commit deadline"
+        end
+
+      receive do
+        {:DOWN, ^worker_monitor, :process, ^worker, :proof_terminated} -> :ok
+      after
+        10_000 -> raise "post-commit termination deadline"
+      end
+
+      consumed = CutPoints.verify_consumed(scenario)
+
+      {reader, reader_monitor} =
+        Scenario.spawn(scenario, :recovery, fn ->
+          :ok = Sandbox.checkout(Repo, sandbox: false)
+
+          try do
+            backend = scalar("SELECT pg_backend_pid()")
+            snapshot = accepted_snapshot(input)
+            before_replay = counts()
+            {:ok, replay} = Identity.register(input)
+
+            send(
+              parent,
+              {ref, :recovered, backend, snapshot.complete and snapshot.credential,
+               replay.status == :verification_pending and is_binary(replay.account_id) and
+                 is_nil(replay.verification_proof), counts() == before_replay}
+            )
+          after
+            :ok = Sandbox.checkin(Repo)
+          end
+        end)
+
+      {reader_backend, complete, replayed, unchanged} =
+        receive do
+          {^ref, :recovered, backend, complete, replayed, unchanged} ->
+            {backend, complete, replayed, unchanged}
+        after
+          20_000 -> raise "recovery result deadline"
+        end
+
+      receive do
+        {:DOWN, ^reader_monitor, :process, ^reader, :normal} -> :ok
+      after
+        10_000 -> raise "recovery reader cleanup deadline"
+      end
+
+      acknowledged =
+        receive do
+          {^ref, :acknowledged} -> true
+        after
+          0 -> false
+        end
+
+      check(id, "cut_consumed", consumed, :ok)
+      check(id, "acknowledgement_lost", not acknowledged)
+      check(id, "fresh_connection", registration_backend != reader_backend)
+      check(id, "complete_recovery", complete)
+      check(id, "replay_converges", replayed and unchanged)
+      check(id, "committed_once", delta(before, counts()), [1, 1, 1, 0, 1, 1, 1, 1, 1, 1])
+    after
+      :ok = Scenario.stop(scenario)
+    end
+  end
+
   defp execute("p805.browser_en" = id), do: NewYou.Proof.P805Browser.run(id, "en")
   defp execute("p805.browser_af" = id), do: NewYou.Proof.P805Browser.run(id, "af")
 
