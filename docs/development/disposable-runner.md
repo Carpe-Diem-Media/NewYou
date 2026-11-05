@@ -366,3 +366,33 @@ iptables and ebtables pointing to xtables-nft-multi. The version-matched libvirt
 uses ebtables/iptables. This identifies the expected compatibility stack, not
 actual active per-VM enforcement. The virtual-network backend setting and
 nwfilter driver must not be conflated. Root inspection remains pending.
+
+### Offline firewall-verifier primitives
+
+`tools/runner_firewall_proof.py` is an offline evaluator, not an installed
+privileged collector or registration authority. It binds an exact journal UUID,
+name and MAC to the sole expected network/filter attachment, traces a supported
+explicit rule graph in order, and compares bounded counter observations with
+unchanged binding, graph, probe and rule identities. Counter resets, stale
+observations, unrelated chains, earlier accepts, opaque expressions on the traversed path and
+unsupported predicates fail closed. Counters must follow predicates. Ownership
+uses the full family/table/chain identity.
+
+The narrow native-save adapter keeps physical bridge-port predicates separate
+from logical interface predicates and preserves goto semantics;
+it is not yet a complete adapter for libvirt's generated rules. In particular,
+conntrack, UDP ports, bridge protocol/spoofing predicates, effective hook coverage and
+native-save/kernel correspondence, including independently observed physical
+bridge-port facts, still need implementation and regression
+proof. Synthetic fixtures are not host attestations. Exact counter deltas remain
+correlation and cannot establish controlled-probe exclusivity. Every comparison
+still reports `enforcement: unverified`. Nothing invokes this module from
+`isolate()` or removes the existing registration interlock.
+
+The discovery source candidate now explicitly reads ebtables `nat` with counters
+and recognizes persistent I/O and temporary J/P interface roots, plus the IP
+roots. Libvirt's pinned driver uses bridge `nat`, not bridge `filter`, for this
+path. The candidate adds `bridge_nat_table` to its bounded metadata. These source
+changes do not replace any installed helper. Replacing installed bytes requires
+fresh security review and separate owner approval. No tests invoke the installed
+helper, inspect the host firewall, install privileges or provision a guest.

@@ -77,3 +77,15 @@ class FirewallInspectorTest(TestCase):
         with patch.object(Path, 'lstat', lstat), patch.object(inspector.os, 'readlink', readlink), patch.object(Path, 'resolve', return_value=Path('/usr/sbin/xtables-nft-multi')):
             with self.assertRaises(ValueError):
                 inspector.trusted_executable('/usr/sbin/iptables-save')
+
+    def test_libvirt_bridge_nat_roots_are_discovered_without_certification(self):
+        self.assertEqual(inspector.COMMANDS['ebtables'],
+                         ('/usr/sbin/ebtables-save', '-c', '-t', 'nat'))
+        for name in ['I-vnet7', 'O-vnet7', 'J-vnet7', 'P-vnet7',
+                     'FI-vnet7', 'FO-vnet7', 'HI-vnet7', 'FJ-vnet7', 'FP-vnet7', 'HJ-vnet7']:
+            report = inspector.project_nft({'nftables': [
+                {'table': {'family': 'bridge', 'name': 'nat'}},
+                {'chain': {'family': 'bridge', 'table': 'nat', 'name': name}}
+            ]})
+            self.assertEqual(report['bridge_nat_table'], 'present')
+            self.assertEqual(report['nwfilter_chain_candidates'], 'present')

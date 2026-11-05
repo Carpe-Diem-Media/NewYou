@@ -13,7 +13,7 @@ import time
 COMMANDS = {
     'nft': ('/usr/sbin/nft', '-j', 'list', 'ruleset'),
     'iptables': ('/usr/sbin/iptables-save', '-c', '-t', 'filter'),
-    'ebtables': ('/usr/sbin/ebtables-save',),
+    'ebtables': ('/usr/sbin/ebtables-save', '-c', '-t', 'nat'),
 }
 LIMIT = 8 * 1024 * 1024
 DEADLINE = 8
@@ -97,7 +97,7 @@ def read_backend(backend):
 def project_nft(data):
     if not isinstance(data, dict) or not isinstance(data.get('nftables'), list):
         raise ValueError('unsupported_ruleset')
-    report = dict.fromkeys(['ip_filter_table', 'bridge_filter_table',
+    report = dict.fromkeys(['ip_filter_table', 'bridge_filter_table', 'bridge_nat_table',
                            'nwfilter_chain_candidates', 'counter_statements'], 'absent')
     for item in data['nftables']:
         if not isinstance(item, dict):
@@ -107,9 +107,11 @@ def project_nft(data):
             report['ip_filter_table'] = 'present'
         if table.get('name') == 'filter' and table.get('family') == 'bridge':
             report['bridge_filter_table'] = 'present'
+        if table.get('name') == 'nat' and table.get('family') == 'bridge':
+            report['bridge_nat_table'] = 'present'
         chain = item.get('chain', {})
         name = chain.get('name', '')
-        if isinstance(name, str) and re.fullmatch(r'(?:FI|FO|HI)-vnet[0-9]+|libvirt-[IO]-vnet[0-9]+', name):
+        if isinstance(name, str) and re.fullmatch(r'(?:FI|FO|HI|FJ|FP|HJ|I|O|J|P)-vnet[0-9]+|libvirt-[IO]-vnet[0-9]+', name):
             report['nwfilter_chain_candidates'] = 'present'
         for expression in item.get('rule', {}).get('expr', []):
             if isinstance(expression, dict) and 'counter' in expression:
