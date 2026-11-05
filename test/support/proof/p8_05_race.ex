@@ -1,7 +1,7 @@
 defmodule NewYou.Proof.P805Race do
   @moduledoc false
   alias NewYou.{Identity, Repo}
-  alias NewYou.Proof.{Concurrent, P805, RegistrationSeam, Scenario}
+  alias NewYou.Proof.{Concurrent, P805, P805PublicResponse, RegistrationSeam, Scenario}
 
   def run(id) do
     {input, duplicate} = setup_inputs(id)
@@ -168,11 +168,16 @@ defmodule NewYou.Proof.P805Race do
     end
 
     if id == "p805.canonical_email_race" do
-      P805.check(
-        id,
-        "public_response",
-        Enum.all?(Map.values(outcomes.outcomes), &(List.last(&1.outcome) == true))
-      )
+      projections =
+        for _ <- 1..2 do
+          receive do
+            {^reference, :public_response, projection} -> projection
+          after
+            5_000 -> raise "public response deadline"
+          end
+        end
+
+      P805.check(id, "public_response", match?([{:ok, first}, {:ok, first}], projections))
     end
 
     if same_operation do
@@ -217,7 +222,7 @@ defmodule NewYou.Proof.P805Race do
     end
 
     if id == "p805.canonical_email_race" do
-      browser_registration(input)
+      browser_registration(input, parent, reference)
     else
       register(input, parent, reference, id)
     end
@@ -244,7 +249,7 @@ defmodule NewYou.Proof.P805Race do
     end
   end
 
-  defp browser_registration(input) do
+  defp browser_registration(input, parent, reference) do
     params = %{
       "registration" => %{
         "operation_id" => input.operation_id,
@@ -272,17 +277,23 @@ defmodule NewYou.Proof.P805Race do
       P805.read(Identity.RegistrationOperation, Identity)
       |> Enum.find(&(&1.operation_id == input.operation_id))
 
-    copy =
-      NewYouWeb.RegistrationHTML.copy(
-        "identity.registration.accepted_neutral",
+    projection =
+      P805PublicResponse.project(
+        response.status,
+        response.resp_body,
+        input.email,
         Atom.to_string(input.preferred_language)
       )
-      |> Phoenix.HTML.html_escape()
-      |> Phoenix.HTML.safe_to_string()
 
-    {:verification_pending,
-     if(is_binary(operation.created_account_id), do: :created, else: :neutral),
-     response.status == 200 and String.contains?(response.resp_body, copy)}
+    send(parent, {reference, :public_response, projection})
+
+    category =
+      case projection do
+        {:ok, %{category: category}} -> category
+        _ -> :unexpected
+      end
+
+    {category, if(is_binary(operation.created_account_id), do: :created, else: :neutral)}
   end
 
   defp await_first(reference) do
