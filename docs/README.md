@@ -17,5 +17,6 @@ Implementation maps and their review requirements live in development documentat
 
 - [Vertical-slice handoff standard and reusable template](development/implementation-handoff-standard.md)
 - [P8-05 registration implementation handoff](development/p8-05-registration-handoff.md)
+- [P8-07 explicit email verification implementation handoff](development/p8-07-verification-handoff.md)
 
 These maps describe source at a recorded revision. Verify current code before reuse; they are not semantic authority routes or live status ledgers.
