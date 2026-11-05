@@ -113,7 +113,7 @@ class PreparationTest(TestCase):
                 runner.ssh({'name': 'owned'}, 'exit 255')
             self.assertEqual(caught.exception.category, 'guest_command')
 
-    def test_explicit_sudo_grant_fails_privilege_probe(self):
+    def test_privilege_stage_runs_policy_proof_instead_of_ambiguous_sudo_query(self):
         import subprocess
         scripts = {}
         def capture(state, stage, script, timeout):
@@ -124,17 +124,26 @@ class PreparationTest(TestCase):
         with patch.object(runner, 'prepare', side_effect=capture), patch.object(runner, 'addresses', return_value=[]), patch.object(runner, 'virsh', return_value=subprocess.CompletedProcess([], 0, xml)):
             with self.assertRaises(RuntimeError):
                 runner.isolate({'name': 'owned'})
-        with TemporaryDirectory() as directory:
-            root = Path(directory)
-            for name, script in {'id': 'if [ "$1" = -u ]; then echo 1000; else echo runner; fi', 'sudo': 'exit 0', 'visudo': 'exit 0'}.items():
-                path = root / name
-                path.write_text('#!/bin/sh\n' + script + '\n')
-                path.chmod(0o700)
-            result = subprocess.run(['bash', '-c', scripts['guest_privilege']], env={'PATH': directory + ':/usr/bin:/bin'}, capture_output=True)
-            self.assertNotEqual(result.returncode, 0)
-            (root / 'sudo').write_text('#!/bin/sh\nexit 1\n')
-            result = subprocess.run(['bash', '-c', scripts['guest_privilege']], env={'PATH': directory + ':/usr/bin:/bin'}, capture_output=True)
-            self.assertEqual(result.returncode, 0)
-            (root / 'visudo').write_text('#!/bin/sh\nexit 1\n')
-            result = subprocess.run(['bash', '-c', scripts['guest_privilege']], env={'PATH': directory + ':/usr/bin:/bin'}, capture_output=True)
-            self.assertNotEqual(result.returncode, 0)
+        script = scripts['guest_privilege']
+        self.assertNotIn('sudo -n', script)
+        self.assertIn('verify_policy(Path', script)
+        subprocess.run(['bash', '-n'], input=script, text=True, check=True)
+
+    def test_nonreading_child_cannot_block_stdin_past_deadline(self):
+        import subprocess
+        import sys
+        import time
+        started = time.monotonic()
+        with self.assertRaises(subprocess.TimeoutExpired):
+            runner.bounded_command([sys.executable, '-c', 'import time; time.sleep(.5)'], data='x' * 1048576, timeout=.05)
+        self.assertLess(time.monotonic() - started, .4)
+
+    def test_stdin_and_stdout_make_progress_under_one_deadline(self):
+        import sys
+        result = runner.bounded_command([sys.executable, '-c', 'import sys; sys.stdout.write("x" * 100000); sys.stdout.flush(); data=sys.stdin.read(); print(len(data))'], data='y' * 100000, max_output=110000, timeout=5)
+        self.assertTrue(result.stdout.endswith('100000\n'))
+
+    def test_incomplete_stdin_is_never_success_even_if_child_exits_zero(self):
+        import sys
+        with self.assertRaisesRegex(RuntimeError, 'input_delivery_failed'):
+            runner.bounded_command([sys.executable, '-c', 'import os; os.close(0)'], data='x' * 1048576, timeout=2)

@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - tools/disposable_runner.py
+      - tools/runner_guest_privilege.py
       - tools/runner_diagnostics.py
       - tools/disposable_runner_drills.py
       - tools/runner_guest_application.sh
@@ -25,4 +26,4 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - run: python -m unittest tests.test_disposable_runner tests.test_runner_recovery tests.test_runner_diagnostics tests.test_runner_application tests.test_runner_preparation -v
+      - run: python -m unittest tests.test_disposable_runner tests.test_runner_recovery tests.test_runner_diagnostics tests.test_runner_application tests.test_runner_preparation tests.test_runner_privilege -v

@@ -287,7 +287,18 @@ original forbidden-port probe. No failed category permits registration. These
 diagnostics identify the failed boundary; they do not retroactively explain an
 earlier destroyed guest or establish new live isolation proof.
 
-The privilege stage rejects UID zero, privileged group membership and explicit
-sudo grants. When sudo is present, its policy must validate and its root-owned
-query must report no permission for runner. An unexpected query result fails
-the stage. No sudo policy output is retained.
+The privilege stage rejects UID zero and privileged group membership. Its
+root-owned Python proof inspects a deliberately narrow local sudo policy subset,
+without interpreting sudo query exit status. Only enumerated stock Defaults,
+root-only rules, non-member sudo/admin group rules, and one fixed includedir are
+supported. Numeric UID rules, aliases, other user grants, custom plugins,
+remote/duplicate policy sources, unknown syntax, symlinks, non-regular or writable
+files, missing files and inspection failures stop registration. This may reject
+otherwise valid unfamiliar policy; it never edits policy to obtain a pass.
+Policy files are bounded to 64 KiB and the included directory to 32 entries.
+Raw policy and inspection errors stay in the guest and are never exported.
+
+Bounded SSH transport uses nonblocking stdin/stdout readiness under one
+monotonic deadline. A child that does not read input cannot hold the controller
+in a synchronous pipe write beyond the stage deadline. Output limits and final
+process termination/reaping remain enforced, including timeout and pipe errors.

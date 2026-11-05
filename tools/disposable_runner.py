@@ -160,24 +160,44 @@ def bounded_command(args, *, data=None, timeout=20, max_output=16384, check=True
     output = bytearray()
     deadline = time.monotonic() + timeout
     try:
-        if data:
-            proc.stdin.write(data.encode())
-        proc.stdin.close()
+        pending = memoryview((data or '').encode())
+        os.set_blocking(proc.stdin.fileno(), False)
+        os.set_blocking(proc.stdout.fileno(), False)
         with selectors.DefaultSelector() as selector:
             selector.register(proc.stdout, selectors.EVENT_READ)
-            while True:
+            if pending:
+                selector.register(proc.stdin, selectors.EVENT_WRITE)
+            else:
+                proc.stdin.close()
+            while selector.get_map():
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     raise subprocess.TimeoutExpired('bounded_command', timeout)
-                if not selector.select(remaining):
+                events = selector.select(remaining)
+                if not events:
                     raise subprocess.TimeoutExpired('bounded_command', timeout)
-                chunk = os.read(proc.stdout.fileno(), 4096)
-                if not chunk:
-                    break
-                output.extend(chunk)
-                if len(output) > max_output:
-                    raise RuntimeError('output_limit')
-        proc.wait(timeout=max(.1, deadline - time.monotonic()))
+                for key, _ in events:
+                    if key.fileobj is proc.stdin:
+                        try:
+                            sent = os.write(proc.stdin.fileno(), pending[:4096])
+                            pending = pending[sent:]
+                        except BrokenPipeError:
+                            raise RuntimeError('input_delivery_failed') from None
+                        if not pending:
+                            selector.unregister(proc.stdin)
+                            proc.stdin.close()
+                    else:
+                        chunk = os.read(proc.stdout.fileno(), 4096)
+                        if not chunk:
+                            selector.unregister(proc.stdout)
+                        else:
+                            output.extend(chunk)
+                            if len(output) > max_output:
+                                raise RuntimeError('output_limit')
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise subprocess.TimeoutExpired('bounded_command', timeout)
+        proc.wait(timeout=remaining)
         if check and proc.returncode:
             raise RuntimeError('bounded_command_failed')
         return subprocess.CompletedProcess(args, proc.returncode, output.decode(), '')
@@ -186,6 +206,7 @@ def bounded_command(args, *, data=None, timeout=20, max_output=16384, check=True
             proc.kill()
         proc.wait()
         proc.stdout.close()
+        proc.stdin.close()
 
 
 def virsh(*args, **kw):
@@ -405,12 +426,9 @@ def isolate(state):
 test "$(id -u runner)" -ne 0
 groups=$(id -nG runner)
 if printf '%s\n' "$groups" | grep -Eq '(^| )(sudo|docker|libvirt)( |$)'; then exit 1; fi
-if command -v sudo >/dev/null 2>&1; then
-    visudo -c >/dev/null 2>&1
-    result=0
-    sudo -n -l -U runner >/dev/null 2>&1 || result=$?
-    test "$result" -eq 1
-fi
+python3 - <<'POLICY'
+''' + Path(__file__).with_name('runner_guest_privilege.py').read_text() + '''
+POLICY
 ''', 20)
     prepare(state, 'guest_socket', 'set -eu\ntest ! -S /var/run/docker.sock\n', 20)
     prepare(state, 'guest_credentials', 'set -eu\ntest ! -e /home/runner/.config/gh\ntest ! -e /home/runner/.config/dev-core\ntest ! -e /root/.config/dev-core\n', 20)
