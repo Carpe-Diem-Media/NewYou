@@ -121,6 +121,113 @@ class CancellationTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'libvirt_filter_changed_rules'):
             runner.verify_filter(expected, altered)
 
+class FilterStructureTest(unittest.TestCase):
+    """Full filter identity/includes must survive libvirt's XML round trip."""
+    def setUp(self):
+        import xml.etree.ElementTree as ET
+        self.ET = ET
+        self.expected = runner.network_filter('newyou-w93-test', [])
+
+    def reject(self, mutate):
+        root = self.ET.fromstring(self.expected)
+        mutate(root)
+        with self.assertRaisesRegex(RuntimeError, '^libvirt_filter_changed_rules$'):
+            runner.verify_filter(self.expected, self.ET.tostring(root, encoding='unicode'))
+
+    def test_each_spoofing_reference_is_required_exactly_once_and_unchanged(self):
+        for index in range(3):
+            for mutation in ('missing', 'duplicate', 'name', 'attribute', 'parameter'):
+                with self.subTest(index=index, mutation=mutation):
+                    def mutate(root):
+                        reference = root.findall('filterref')[index]
+                        if mutation == 'missing':
+                            root.remove(reference)
+                        elif mutation == 'duplicate':
+                            import copy
+                            root.insert(index, copy.deepcopy(reference))
+                        elif mutation == 'name':
+                            reference.set('filter', 'unexpected-filter')
+                        elif mutation == 'attribute':
+                            reference.set('unexpected', 'value')
+                        else:
+                            self.ET.SubElement(reference, 'parameter', name='IP', value='unexpected')
+                    self.reject(mutate)
+
+    def test_root_identity_attributes_and_all_child_order_are_checked(self):
+        for field in ('name', 'chain', 'priority'):
+            with self.subTest(field=field):
+                self.reject(lambda root: root.set(field, 'unexpected'))
+        self.reject(lambda root: setattr(root, 'tag', 'unexpected'))
+        self.reject(lambda root: root.set('unexpected', 'value'))
+        self.reject(self.swap_references)
+        def move_reference(root):
+            reference = root[0]
+            root.remove(reference)
+            root.append(reference)
+        self.reject(move_reference)
+        def swap_rules(root):
+            index = list(root).index(root.find('rule'))
+            left, right = root[index], root[index + 1]
+            root[index], root[index + 1] = right, left
+        self.reject(swap_rules)
+
+    @staticmethod
+    def swap_references(root):
+        root[0], root[1] = root[1], root[0]
+
+    def test_unexpected_semantic_elements_text_and_nested_attributes_are_rejected(self):
+        self.reject(lambda root: self.ET.SubElement(root, 'filterref', filter='unexpected'))
+        self.reject(lambda root: self.ET.SubElement(root, 'unexpected'))
+        self.reject(lambda root: self.ET.SubElement(root.find('rule')[0], 'unexpected', value='secret'))
+        self.reject(lambda root: setattr(root.find('filterref'), 'text', 'unexpected'))
+        self.reject(lambda root: setattr(root.find('filterref'), 'tail', 'unexpected'))
+        # Even equal outer parameter tags must not conceal changed descendants.
+        expected = self.ET.fromstring(self.expected)
+        parameter = self.ET.SubElement(expected[0], 'parameter', name='IP', value='fixed')
+        self.ET.SubElement(parameter, 'nested', value='original')
+        actual = self.ET.fromstring(self.ET.tostring(expected))
+        actual[0][0][0].set('value', 'changed')
+        with self.assertRaisesRegex(RuntimeError, 'libvirt_filter_changed_rules'):
+            runner.verify_filter(self.ET.tostring(expected), self.ET.tostring(actual))
+
+    def test_generated_uuid_and_xml_formatting_are_the_only_ignored_differences(self):
+        # libvirt v12 virNWFilterDefParseXML generates absent UUIDs, and
+        # virNWFilterDefFormat emits one first, before ordered filter entries.
+        root = self.ET.fromstring(self.expected)
+        identity = self.ET.Element('uuid')
+        identity.text = '12345678-1234-4234-8234-123456789abc'
+        root.insert(0, identity)
+        for element in root.iter():
+            element.attrib = dict(reversed(list(element.attrib.items())))
+        self.ET.indent(root)
+        runner.verify_filter(self.expected, self.ET.tostring(root, encoding='unicode'))
+        runner.verify_filter(self.expected, self.expected)
+
+    def test_uuid_exception_rejects_malformed_duplicate_nested_or_misplaced_metadata(self):
+        for xml in ('<uuid>invalid</uuid>', '<uuid/>',
+                    '<uuid extra="value">12345678-1234-4234-8234-123456789abc</uuid>',
+                    '<uuid><nested/></uuid>',
+                    '<uuid>12345678-1234-4234-8234-123456789abc</uuid>unexpected'):
+            with self.subTest(xml=xml):
+                # Parse a wrapper to preserve unexpected tail text.
+                self.reject(lambda root: root.insert(0, self.ET.fromstring('<wrapper>' + xml + '</wrapper>')[0]))
+        identity = '<uuid>12345678-1234-4234-8234-123456789abc</uuid>'
+        self.reject(lambda root: (root.insert(0, self.ET.fromstring(identity)), root.insert(0, self.ET.fromstring(identity))))
+        self.reject(lambda root: root.append(self.ET.fromstring(identity)))
+        self.reject(lambda root: root[0].append(self.ET.fromstring(identity)))
+
+    def test_explicit_expected_uuid_is_not_ignored_and_parse_errors_are_sanitized(self):
+        expected = self.expected.replace('><filterref', '><uuid>12345678-1234-4234-8234-123456789abc</uuid><filterref', 1)
+        runner.verify_filter(expected, expected)
+        with self.assertRaisesRegex(RuntimeError, '^libvirt_filter_changed_rules$'):
+            runner.verify_filter(expected, expected.replace('<uuid>', '<uuid> '))
+        actual = expected.replace('12345678-1234-4234-8234-123456789abc', 'aaaaaaaa-1234-4234-8234-123456789abc')
+        with self.assertRaisesRegex(RuntimeError, '^libvirt_filter_changed_rules$'):
+            runner.verify_filter(expected, actual)
+        with self.assertRaisesRegex(RuntimeError, '^libvirt_filter_changed_rules$'):
+            runner.verify_filter(self.expected, '<filter SECRET')
+
+
 class RegistrationGuardTest(unittest.TestCase):
     def test_no_provider_call_before_isolation(self):
         from unittest.mock import patch

@@ -121,14 +121,39 @@ def network_filter(name, host_addresses, host_routes=()):
 
 
 def verify_filter(expected, actual):
-    # Libvirt can silently discard unknown attributes or replace out-of-range
-    # priorities. Compare its stored rules before attaching any guest.
-    def rules(xml):
-        root = ET.fromstring(xml)
-        return [(dict(rule.attrib), [(item.tag, dict(item.attrib)) for item in rule])
-                for rule in root.findall('rule')]
-    if rules(expected) != rules(actual):
-        raise RuntimeError('libvirt_filter_changed_rules')
+    """Require the full stored filter, including ordered spoofing includes.
+
+    Libvirt 12 generates an absent UUID and emits it as the first child. Only
+    that metadata addition is ignored; explicit UUIDs and all semantic elements
+    remain bound. XML indentation and attribute serialization order are inert.
+    This compares definitions, not effective referenced-filter/kernel behavior.
+    """
+    try:
+        wanted, stored = ET.fromstring(expected), ET.fromstring(actual)
+        if wanted.tag != 'filter' or stored.tag != 'filter':
+            raise ValueError()
+        if not wanted.findall('uuid') and stored.findall('uuid'):
+            identities = stored.findall('uuid')
+            identity = identities[0]
+            text = identity.text or ''
+            if (len(identities) != 1 or stored[0] is not identity
+                    or identity.attrib or len(identity) or (identity.tail or '').strip()
+                    or str(uuid.UUID(text)) != text):
+                raise ValueError()
+            stored.remove(identity)
+
+        def content(value):
+            return value if value and value.strip() else ''
+
+        def structure(element):
+            return (element.tag, dict(element.attrib),
+                    content(element.text), content(element.tail),
+                    tuple(structure(child) for child in element))
+
+        if structure(wanted) != structure(stored):
+            raise ValueError()
+    except (ET.ParseError, ValueError, TypeError, AttributeError):
+        raise RuntimeError('libvirt_filter_changed_rules') from None
 
 
 def cleanup_steps(remove):
