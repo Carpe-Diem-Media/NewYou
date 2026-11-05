@@ -82,7 +82,14 @@ try {
     await loaded;
   };
   const base = `http://127.0.0.1:${input.port}`;
-  if (input.mode === 'verification') {
+  if (input.mode === 'login') {
+    await navigation(() => cdp('Page.navigate', {url: `${base}/login?locale=${input.locale}`}));
+    checks.login_form = await evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && !!document.querySelector('form[action="/login"] [name="_csrf_token"]')`);
+    await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.email)}; document.querySelector('[name="password"]').value=${JSON.stringify(input.password)};`);
+    await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
+    checks.protected_access = await evaluate(`location.pathname === '/session/protected'`);
+    checks.reloaded_access = await evaluate(`fetch('/session/protected').then(r => r.status === 200)`);
+  } else if (input.mode === 'verification') {
     const file = 'docs/development/fixtures/p8-07-copy-v1.json';
     const fixture = JSON.parse(readFileSync(file, 'utf8'));
     const text = (state, part) => fixture.entries[`identity.verification.result.${state}.${part}`][input.locale].text;

@@ -41,7 +41,36 @@ defmodule NewYou.Identity do
     end
 
     resource NewYou.Identity.ResendOperation
+    resource NewYou.Identity.Session
   end
+
+  @doc """
+  Authenticate a password and atomically issue an Identity-owned Session and token.
+
+  The returned token is a transient bearer. Callers must protect it and must not
+  store it in the Session or logs. All unavailable outcomes share one error.
+  """
+  @spec authenticate_password(term(), term()) ::
+          {:ok, map()} | {:error, :authentication_unavailable}
+  def authenticate_password(email, password),
+    do: NewYou.Identity.PasswordSession.authenticate(email, password)
+
+  @doc "Revalidate current Session, token and Account authority and return only the Account ID."
+  @spec authorize_session(term()) ::
+          {:ok, %{account_id: String.t()}} | {:error, :authentication_unavailable}
+  def authorize_session(credentials), do: NewYou.Identity.PasswordSession.authorize(credentials)
+
+  @doc "Log out the identified Session."
+  @spec logout(term()) :: :ok | {:error, :authentication_unavailable}
+  def logout(credentials), do: NewYou.Identity.PasswordSession.logout(credentials)
+
+  @doc "Revoke the identified Session."
+  @spec revoke_session(term()) :: :ok | {:error, :authentication_unavailable}
+  def revoke_session(credentials), do: NewYou.Identity.PasswordSession.revoke(credentials)
+
+  @doc "Reconcile a bounded batch of Sessions whose expiry deadlines have passed."
+  @spec expire_due_sessions() :: {:ok, non_neg_integer()} | {:error, :authentication_unavailable}
+  def expire_due_sessions, do: NewYou.Identity.PasswordSession.expire_due()
 
   @doc """
   Consumes an email-verification capability and verifies its Account atomically.

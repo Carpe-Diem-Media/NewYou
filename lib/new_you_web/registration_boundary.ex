@@ -8,6 +8,7 @@ defmodule NewYouWeb.RegistrationBoundary do
 
   alias NewYouWeb.RegistrationController
   alias NewYouWeb.EmailVerificationController
+  alias NewYouWeb.PasswordSessionController
 
   @impl Plug
   def init(opts), do: opts
@@ -32,6 +33,18 @@ defmodule NewYouWeb.RegistrationBoundary do
   def call(%Plug.Conn{method: "POST", request_path: "/verification/confirm"} = conn, _opts) do
     dispatch_browser_request(conn, :confirm, EmailVerificationController)
   end
+
+  def call(%Plug.Conn{method: "GET", request_path: "/login"} = conn, _opts),
+    do: dispatch_browser_request(conn, :new, PasswordSessionController)
+
+  def call(%Plug.Conn{method: "POST", request_path: "/login"} = conn, _opts),
+    do: dispatch_browser_request(conn, :create, PasswordSessionController)
+
+  def call(%Plug.Conn{method: "GET", request_path: "/session/protected"} = conn, _opts),
+    do: dispatch_browser_request(conn, :protected, PasswordSessionController)
+
+  def call(%Plug.Conn{method: "POST", request_path: "/session/logout"} = conn, _opts),
+    do: dispatch_browser_request(conn, :logout, PasswordSessionController)
 
   def call(%Plug.Conn{request_path: path} = conn, _opts) do
     if sensitive_browser_path?(path) do
@@ -77,7 +90,7 @@ defmodule NewYouWeb.RegistrationBoundary do
   end
 
   defp sensitive_browser_path?(path) do
-    Enum.any?(["/register", "/verification"], fn root ->
+    Enum.any?(["/register", "/verification", "/login", "/session"], fn root ->
       path == root or String.starts_with?(path, root <> "/")
     end)
   end

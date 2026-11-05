@@ -1,14 +1,15 @@
 defmodule NewYouWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :new_you
 
-  # The session will be stored in the cookie and signed,
-  # this means its contents can be read but not tampered with.
-  # Set :encryption_salt if you would also like to encrypt it.
+  # The browser carries the Identity token in an encrypted, authenticated cookie.
   @session_options [
     store: :cookie,
     key: "_new_you_key",
     signing_salt: "4mVDyeX6",
-    same_site: "Lax"
+    encryption_salt: "identity-session-v1",
+    same_site: "Lax",
+    http_only: true,
+    secure: true
   ]
 
   socket "/live", Phoenix.LiveView.Socket,

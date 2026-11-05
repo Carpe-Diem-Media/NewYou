@@ -4,6 +4,42 @@ defmodule NewYou.Proof.P805Browser do
   alias NewYou.Identity
   require Ash.Query
 
+  def run_login(request, locale) do
+    reference = make_ref()
+
+    {:ok, server} =
+      Bandit.start_link(
+        plug: {NewYou.Proof.P805Browser.Endpoint, {self(), reference}},
+        ip: {127, 0, 0, 1},
+        port: 0
+      )
+
+    {:ok, {_address, port}} = ThousandIsland.listener_info(server)
+
+    try do
+      payload =
+        Jason.encode!(%{
+          mode: "login",
+          port: port,
+          locale: locale,
+          email: request.email,
+          password: request.password
+        })
+
+      result =
+        run_port(
+          System.find_executable("node"),
+          Path.expand("../../proof/p8_05_browser.mjs", __DIR__),
+          payload
+        )
+
+      true = result["cleanup"]
+      result["checks"]
+    after
+      Supervisor.stop(server)
+    end
+  end
+
   def run_verification(registration, locale) do
     reference = make_ref()
 

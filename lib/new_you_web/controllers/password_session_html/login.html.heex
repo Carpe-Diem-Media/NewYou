@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang={@locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{NewYouWeb.CopyRegistry.text!("shared.navigation.login", @locale)}</title>
+    <link rel="stylesheet" href={~p"/assets/css/app.css"} />
+    <link rel="stylesheet" href={~p"/identity-login.css"} />
+  </head>
+  <body>
+    <main class="min-h-svh bg-design-canvas text-design-ink font-design-sans">
+      <section class="mx-auto grid w-full max-w-7xl content-start gap-design-lg px-design-base py-design-2xl">
+        <h1 class="font-design-bold text-design-display-sm">
+          {NewYouWeb.CopyRegistry.text!("shared.navigation.login", @locale)}
+        </h1>
+        <p :if={@failed?} role="alert">
+          {if @locale == "af", do: "Aanmelding is nie beskikbaar nie.", else: "Unable to log in."}
+        </p>
+        <.form
+          for={%{}}
+          action="/login"
+          method="post"
+          class="grid w-full max-w-prose gap-design-base justify-items-start"
+        >
+          <input type="hidden" name="locale" value={@locale} />
+          <label class="text-design-body-sm font-design-bold text-design-ink" for="email">{NewYouWeb.CopyRegistry.text!(
+            "identity.registration.email.label",
+            @locale
+          )}</label>
+          <input
+            class="min-h-12 w-full border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+            id="email"
+            name="email"
+            type="email"
+            required
+            autocomplete="username"
+          />
+          <label class="text-design-body-sm font-design-bold text-design-ink" for="password">{NewYouWeb.CopyRegistry.text!(
+            "identity.registration.password.label",
+            @locale
+          )}</label>
+          <input
+            class="min-h-12 w-full border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+            id="password"
+            name="password"
+            type="password"
+            required
+            autocomplete="current-password"
+          />
+          <.primary_button type="submit">{NewYouWeb.CopyRegistry.text!(
+            "shared.navigation.login",
+            @locale
+          )}</.primary_button>
+        </.form>
+      </section>
+    </main>
+  </body>
+</html>

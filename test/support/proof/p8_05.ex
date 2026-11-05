@@ -785,6 +785,11 @@ defmodule NewYou.Proof.P805 do
     ])
 
     Repo.query!(
+      "DELETE FROM sessions WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+      [emails]
+    )
+
+    Repo.query!(
       "DELETE FROM tokens WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
       [emails]
     )

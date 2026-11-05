@@ -1,0 +1,6 @@
+/* Hallmark · shape: app screen · job: authenticate · preserve NewYou design system */
+/* Critique: a short authentication form prioritizes the task and avoids unrelated content. */
+/* Hallmark · waive 79 · bounded identity proof form · Empty space keeps the existing task-focused form free of unrelated content. */
+/* Hallmark · waive 85 · email input is a credential · The form authenticates an existing account and is not an email subscription. */
+html, body { overflow-x: clip; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
