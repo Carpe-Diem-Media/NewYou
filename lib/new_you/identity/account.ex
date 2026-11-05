@@ -38,6 +38,14 @@ defmodule NewYou.Identity.Account do
     ]
 
     check_constraints do
+      check_constraint :account_status, "accounts_account_status",
+        check: "account_status IN ('open', 'closed_recoverable', 'closed_terminal')",
+        message: "must be a supported Account lifecycle state"
+
+      check_constraint :security_posture, "accounts_security_posture",
+        check: "security_posture IN ('normal', 'held')",
+        message: "must be a supported security posture"
+
       check_constraint :email, "accounts_email_length",
         check: "octet_length(email) <= 254",
         message: "must be a canonical mailbox address"
@@ -65,6 +73,20 @@ defmodule NewYou.Identity.Account do
   end
 
   actions do
+    action :confirm_email, :atom do
+      description "Explicit purpose-bound email verification; no Session issuance"
+      public? false
+      argument :proof, :string, allow_nil?: false, sensitive?: true
+      run NewYou.Identity.Actions.ConfirmEmail
+    end
+
+    update :mark_email_verified do
+      description "Private write inside the locked Identity confirmation transaction"
+      public? false
+      accept []
+      change set_attribute(:email_verified?, true)
+    end
+
     read :read do
       primary? true
       public? false
@@ -109,6 +131,22 @@ defmodule NewYou.Identity.Account do
 
   attributes do
     uuid_v7_primary_key :id
+
+    attribute :account_status, :atom do
+      description "Current closure eligibility; verification cannot reopen an Account"
+      allow_nil? false
+      public? false
+      default :open
+      constraints one_of: [:open, :closed_recoverable, :closed_terminal]
+    end
+
+    attribute :security_posture, :atom do
+      description "Current containment eligibility; verification cannot release a hold"
+      allow_nil? false
+      public? false
+      default :normal
+      constraints one_of: [:normal, :held]
+    end
 
     attribute :first_name, :string do
       allow_nil? false

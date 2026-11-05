@@ -82,6 +82,21 @@ try {
     await loaded;
   };
   const base = `http://127.0.0.1:${input.port}`;
+  if (input.mode === 'verification') {
+    const file = 'docs/development/fixtures/p8-07-copy-v1.json';
+    const fixture = JSON.parse(readFileSync(file, 'utf8'));
+    const text = (state, part) => fixture.entries[`identity.verification.result.${state}.${part}`][input.locale].text;
+    const hasState = state => evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && document.querySelector('h1').textContent.trim() === ${JSON.stringify(text(state, 'title'))} && document.body.textContent.includes(${JSON.stringify(text(state, 'body'))})`);
+    const url = `${base}/verification/confirm?${new URLSearchParams({proof: input.proof, locale: input.locale})}`;
+    await navigation(() => cdp('Page.navigate', {url}));
+    checks.temporary_copy = sha256(readFileSync(file)) === '146eeb3399c96fd0bc995fc905161a4a70f90bbf21fa77f395b2e427e840b1fa' && await hasState('confirm');
+    checks.explicit_form = await evaluate(`(() => { const form = document.querySelector('#email-confirmation'); return form?.method === 'post' && !!form.querySelector('[name="_csrf_token"]').value && form.querySelector('button').textContent.trim() === ${JSON.stringify(text('confirm', 'action'))}; })()`);
+    await navigation(() => evaluate(`document.querySelector('#email-confirmation button').click()`));
+    checks.verified_result = await hasState('verified') && await evaluate(`!document.querySelector('[name="proof"]') && !document.body.textContent.includes(${JSON.stringify(input.proof)})`);
+    await navigation(() => cdp('Page.navigate', {url}));
+    await navigation(() => evaluate(`document.querySelector('#email-confirmation button').click()`));
+    checks.safe_replay = await hasState('unavailable') && await evaluate(`!document.querySelector('[name="proof"]') && !document.body.textContent.includes(${JSON.stringify(input.proof)})`);
+  } else {
   await navigation(() => cdp('Page.navigate', { url: `${base}/register?locale=${input.locale}` }));
   const registry = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/COPY_REGISTRY.json', 'utf8'));
   const text = (key, locale) => registry.entries.find(entry => entry.key === key)[locale].text.replaceAll('{{platform_name}}', input.platform_name);
@@ -114,6 +129,7 @@ try {
   checks.explicit_resend = operations[0] !== resendOperation && nextOperation !== resendOperation && await hasCopy([...pendingKeys, 'identity.verification.resend.accepted_neutral'], input.locale);
   checks.locale_no_fallback = registrationLocale && pendingLocale && await noFallback(pendingKeys);
   checks.no_session = await evaluate(`!document.body.textContent.includes(${JSON.stringify(input.input.password)}) && !document.querySelector('a[href*="consume"]')`);
+  }
   await call('Target.disposeBrowserContext', { browserContextId: context.browserContextId });
 } catch {
   checks.browser_completed = false;

@@ -49,6 +49,7 @@ defmodule NewYou.Identity.Token do
       argument :token, :string, allow_nil?: false, sensitive?: true
       public? false
       change AshAuthentication.TokenResource.RevokeTokenChange
+      change NewYou.Identity.Changes.SetTokenAccount
     end
 
     create :revoke_jti do

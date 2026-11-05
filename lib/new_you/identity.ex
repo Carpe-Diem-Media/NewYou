@@ -44,6 +44,31 @@ defmodule NewYou.Identity do
   end
 
   @doc """
+  Consumes an email-verification capability and verifies its Account atomically.
+
+  Call only for explicit participant confirmation. The bearer is transient. The
+  action rechecks signed claims, stored proof and current Account under database
+  locks. Replays and every unavailable outcome share one public error. This never
+  authenticates the participant or issues a Session.
+  """
+  @spec verify_email(term()) :: {:ok, :verified} | {:error, :verification_unavailable}
+  def verify_email(proof) when is_binary(proof) and byte_size(proof) in 1..8192 do
+    Account
+    |> Ash.ActionInput.for_action(:confirm_email, %{proof: proof}, authorize?: false)
+    |> Ash.run_action()
+    |> case do
+      {:ok, :verified} -> {:ok, :verified}
+      _ -> {:error, :verification_unavailable}
+    end
+  rescue
+    _ -> {:error, :verification_unavailable}
+  catch
+    _, _ -> {:error, :verification_unavailable}
+  end
+
+  def verify_email(_), do: {:error, :verification_unavailable}
+
+  @doc """
   Accepts a registration bound to its opaque operation ID.
 
   A new Account commits with its credential, PMR, verification Token, Communications
