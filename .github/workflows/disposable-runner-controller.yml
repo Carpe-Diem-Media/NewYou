@@ -3,6 +3,8 @@ name: Disposable runner controller tests
 on:
   pull_request:
     paths:
+      - tools/runner_firewall_inspector.py
+      - tools/runner_firewall_inspector.sudoers
       - tools/disposable_runner.py
       - tools/runner_guest_network.py
       - tools/runner_guest_privilege.py
@@ -27,4 +29,5 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - run: python -m unittest tests.test_disposable_runner tests.test_runner_recovery tests.test_runner_diagnostics tests.test_runner_application tests.test_runner_preparation tests.test_runner_privilege tests.test_runner_network -v
+      - run: python -m unittest tests.test_disposable_runner tests.test_runner_recovery tests.test_runner_diagnostics tests.test_runner_application tests.test_runner_preparation tests.test_runner_privilege tests.test_runner_network tests.test_runner_firewall_inspector -v
+      - run: /usr/sbin/visudo -c -f tools/runner_firewall_inspector.sudoers

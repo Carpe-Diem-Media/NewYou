@@ -327,3 +327,42 @@ The current host denies nftables, iptables and ebtables reads, including
 noninteractive sudo attempts. XML round-trip matching cannot replace that proof.
 No new VM is authorized to work around this limitation. Do not remove the
 interlock or weaken outcome classification merely to obtain a passing trial.
+
+
+## Proposed read-only host inspector, not installed
+
+`tools/runner_firewall_inspector.py` is a standalone root-installable discovery
+helper. Its isolated Python shebang prevents caller Python environment/import
+injection. It accepts no arguments or stdin configuration. It invokes only
+fixed nft/iptables-save/ebtables-save read commands, with a clean environment,
+8-second per-command deadlines and 8 MiB transient output caps. It rejects
+non-root/writable executables and parents. Raw rules are never printed or stored.
+
+Only fixed frontend/readability/table/chain-candidate/counter-presence metadata
+is exported. Generic counter presence is not an owned-VM counter delta. Candidate
+chain presence is not ownership or rule-order verification. The report always
+states `enforcement: unverified`; it cannot discharge the controller interlock.
+This first capability step does not implement interface-bound runtime proof.
+
+`tools/runner_firewall_inspector.sudoers` is a candidate single-command rule for
+this workstation account. The empty argument specification denies arguments.
+It grants neither a shell nor direct firewall commands. Do not install either
+file until independent exact-head review and explicit owner approval. No helper,
+sudo rule or host privilege is installed by repository tests or CI.
+
+After that approval, installation must copy the reviewed helper into the fixed
+`/usr/local/libexec/newyou-ci-firewall-inspect` path, owned root:root mode0755,
+under a root-owned directory that is not writable by the invoking user. Validate
+the candidate with `visudo -c -f` before installing the root:root mode0440 rule
+at `/etc/sudoers.d/newyou-ci-firewall-inspect`. Stop if either destination already
+exists unexpectedly; do not overwrite unrelated configuration. No daemon restart
+or firewall mutation is required. Invoke only the installed helper through
+`sudo -n /usr/local/libexec/newyou-ci-firewall-inspect`, never the user-writable
+repository copy as root. Retain only its bounded JSON metadata.
+
+Host inspection found libvirt12.0.0, iptables1.8.11 and nftables1.1.6, with both
+iptables and ebtables pointing to xtables-nft-multi. The version-matched libvirt
+[nwfilter driver source](https://github.com/libvirt/libvirt/blob/v12.0.0/src/nwfilter/nwfilter_ebiptables_driver.c)
+uses ebtables/iptables. This identifies the expected compatibility stack, not
+actual active per-VM enforcement. The virtual-network backend setting and
+nwfilter driver must not be conflated. Root inspection remains pending.
