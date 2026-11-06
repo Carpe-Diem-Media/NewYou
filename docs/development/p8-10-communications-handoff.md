@@ -1,0 +1,107 @@
+# P8-10 Communications implementation handoff
+
+## 1. Purpose, scope and version
+
+WELL-10 completes the bounded Communications delivery path after the [P8-05 registration handoff](p8-05-registration-handoff.md). This revision describes implementation commit `7f466d4d5fd3404eefea9a8ca04112660e5991fc`, based on `main@0f42ff54b325b455b38171dd00269baf7fcc914f`. The documentation commit may be newer. Resolve current source, dependency versions, [routing](../README.md) and [live WELL-10](https://app.plane.so/symphony-development/browse/WELL-10) before reuse.
+
+The [Communications dossier](../delivery/jit/communications/FP-001_COMMUNICATIONS_JIT_DOMAIN_DOSSIER_WORKING_v0.1.0.md), [TB-001](../delivery/feature-contracts/fp-001/FP-001_TRACER_BULLET_CONTRACT_WORKING_v0.1.3.md), current Product/Architecture/Domain law and live acceptance criteria govern this implementation. Historical phase/status prose in those contracts does not supersede the current routers or Plane.
+
+This is development/proof execution. [DeliveryProvider](../../lib/new_you/communications/delivery_provider.ex) hardwires a disabled provider outside TEST. It exposes no vendor configuration or network sender. The generated proof link uses the reserved `proof.invalid` host and the actual `/verification/confirm` route shape. No production vendor, real-participant send, production content approval, Phase-8 certification or Phase-9 authorization follows from these tests. OQ-036 remains release-only. Future magic-link, reset, recovery and email-change tickets must add their own source-purpose guards and governed content; they cannot treat the current verification-only implementation as authorization for those flows.
+
+Documentation impact is a full handoff for a new end-to-end Communications capability. The [P8-05 map](p8-05-registration-handoff.md) links here; its atomic source acceptance and zero-Communications-job boundary remain intact.
+
+## 2. Architecture, sequence and ownership
+
+The real execution sequence is:
+
+1. Identity's existing registration/resend boundary calls [Communications.establish_verification/2](../../lib/new_you/communications.ex). Source acceptance commits MessageIntent and its encrypted ProtectedEnvelope. P8-05 does not insert a delivery job.
+2. [MessageIntent's `delivery` AshOban trigger](../../lib/new_you/communications/message_intent.ex) scans every non-closed intent each minute using keyset pagination. Open, held and reconciliation-required intents remain discoverable. It recreates executor work after missing/deleted/discarded jobs without inferring business success from job state.
+3. The generated `Workers.Delivery` invokes the private `execute_delivery` Ash action with `primary_key.id`. [ExecuteDelivery.run/3](../../lib/new_you/communications/actions/execute_delivery.ex) calls the Communications owner interface. The generic action has `transaction? false`, and the trigger has `lock_for_update? false`.
+4. [Executor.prepare/1](../../lib/new_you/communications/executor.ex) opens a short Ash transaction and locks the MessageIntent. [Identity.DeliveryEligibility.verification/2](../../lib/new_you/identity/delivery_eligibility.ex) checks current Account and Token authority under Account/Token locks. [Content.VerificationMessage.eligible/1](../../lib/new_you/content/verification_message.ex) validates the exact development-eligible content/locale bytes. The executor validates frozen render provenance and purpose-bound envelope access, creates DeliveryAttempt and commits.
+5. A second short transaction fences invocation. It rechecks current source, content, capability and equality with the attempt's immutable binding, then commits `invocation_started_at`. A stale executor cannot reuse a closed admission.
+6. Provider I/O occurs after both transactions. A trusted synchronous result or authenticated reconciliation updates the original attempt through another intent-locked transaction. Provider evidence never calls an Identity mutation.
+
+MessageIntent owns the logical obligation and dispatch disposition. DeliveryAttempt owns one admitted operation and its evidence. ProtectedEnvelope and EnvelopeNonce remain technical encryption machinery. Identity owns proof validity and Account truth. Content & Media owns eligibility and immutable locale bytes. Oban owns executor records only. The [schema](../../lib/new_you/communications/delivery_attempt.ex) introduces no provider, reconciliation or queue Resource.
+
+## 3. Ash map and framework selection
+
+[NewYou.Communications](../../lib/new_you/communications.ex) registers the two business Resources and the two existing technical stores. Its supported source interface is `establish_verification/2`. `execute/1` is a trusted internal executor interface, not an HTTP or operator capability. `reconcile/4` authenticates evidence and offers no human bypass.
+
+[MessageIntent](../../lib/new_you/communications/message_intent.ex) retains causal identity and immutable source/destination/content/render fields. Its private `disposition` action accepts only disposition/reason. Reads and `execute_delivery` require `AshObanInteraction` under normal authorization; ordinary users cannot invoke the action. Source establishment and lifecycle writes use the owning trusted interface with explicit `authorize?: false`. No public route exposes these internal functions.
+
+[DeliveryAttempt](../../lib/new_you/communications/delivery_attempt.ex) has private `admit`, `read` and `record` actions. Ordinary authorized callers are denied. `admit` accepts only the parent ID and frozen content/render provenance. `record` cannot alter those fields. The executor serializes these internal mutations through the parent row lock. There is no ordinary delete action. [ProtectedEnvelope](../../lib/new_you/communications/protected_envelope.ex) adds private denied-by-default read/clear actions for the restricted executor; nonce reservations remain after clearing.
+
+Framework decisions at this baseline:
+
+- USE the pinned Ash actions, `Ash.transact`, AshPostgres row locks/checks/partial unique index and existing AshOban trigger machinery. No new dependency is required. Igniter's `ash.gen.resource ... --extend postgres` created the initial Resource and Domain registration; hand edits express the ticket-specific lifecycle, and `ash.codegen` generated its migration/snapshot.
+- NOT APPLICABLE for a new Ash Signals reaction. The existing source handoff already invokes Communications atomically; executor reads use the owning Identity interface. No event bus or new cross-Domain write is introduced.
+- NOT APPLICABLE for Temporal Resources. Historical facts are immutable attempt provenance and separate observation/reconciliation fields, with no effective-period/as-of query requirement.
+- DEFER installing AshStateMachine. It is absent from the lock. The current guarded actions and PostgreSQL arbitration enforce separate dimensions without a new package. An extension alone would not replace the cross-resource admission/concurrency controls.
+
+Official API checks on 2026-11-06 covered pinned [Ash 3.37.2](https://hexdocs.pm/ash/3.37.2/Ash.html), current [Ash 3.37.3](https://hexdocs.pm/ash/3.37.3/Ash.html), pinned/current [AshPostgres 2.15.2](https://hexdocs.pm/ash_postgres/2.15.2/dsl-ashpostgres-datalayer.html), pinned [AshOban 0.10.2](https://hexdocs.pm/ash_oban/0.10.2/dsl-ashoban.html), current [AshOban 0.10.3](https://hexdocs.pm/ash_oban/0.10.3/dsl-ashoban.html) and current stable [AshStateMachine 0.3.0](https://hexdocs.pm/ash_state_machine/0.3.0/getting-started-with-ash-state-machine.html). Installed source confirmed generic-action transaction handling, nested Ash transaction results, scheduler keyset reads, generated id-only worker arguments and explicit worker transaction/lock settings. Package versions remain unchanged in this PR.
+
+## 4. Important interface contracts
+
+[Communications.execute/1](../../lib/new_you/communications.ex) accepts one UUID MessageIntent ID and returns `{:ok, status}` or bounded `{:error, :delivery_unavailable}`. Status distinguishes processed, waiting, held, closed and source_invalid. It refuses an existing caller transaction, including an AshOban/manual caller that would turn its commit into a savepoint. It never returns a bearer, body or destination. A provider exception becomes unknown rather than retryable failure.
+
+[Communications.reconcile/4](../../lib/new_you/communications/executor.ex) accepts attempt ID, one normalized outcome, a bounded evidence reference and signature. It returns `{:ok, :recorded}`, `{:error, :unauthenticated}` or a bounded delivery error. TEST authentication signs the exact attempt/outcome/reference with HMAC-SHA256 and constant-time comparison. The [test adapter](../../test/support/proof/delivery_adapter.ex) alone reads the synthetic proof key. Production authentication is disabled. A production provider needs separately authorized authenticated evidence semantics; supplying a runtime key cannot enable it.
+
+[Identity.DeliveryEligibility.verification/2](../../lib/new_you/identity/delivery_eligibility.ex) returns only `:ok` or `{:error, :source_invalid}` for the exact source reference/destination. It requires an open transaction, locks the Account before rereading/locking Token, and checks current purpose, subject, expiry, destination, verification, credential, Account and security state. It does not return Account data or proof material and never changes Identity truth.
+
+[Content.VerificationMessage.eligible/1](../../lib/new_you/content/verification_message.ex) returns exact immutable bytes only for the pinned development-approved locale binding. It checks item/version/translation IDs, locale, exact SHA-256, approval and withdrawal facts. Unknown/changed bindings fail closed. Production builds deny eligibility. No `latest` lookup, silent language fallback, content publication or automatic successor rebinding exists.
+
+The [transient DeliveryPayload](../../lib/new_you/communications/delivery_payload.ex) redacts its destination/body on inspection. Plaintext exists only between restricted envelope recovery and the provider boundary. It is absent from Resource attributes, jobs and normal evidence. [EnvelopeCrypto](../../lib/new_you/communications/envelope_crypto.ex) authenticates intent/source/purpose as associated data. A missing key, wrong purpose or missing envelope holds work before submission.
+
+## 5. Lifecycle, failure and recovery
+
+[Executor](../../lib/new_you/communications/executor.ex) enforces the following independent dimensions:
+
+- MessageIntent disposition remains open, held, reconciliation_required or closed, with a distinct terminal reason. Queue state never becomes a fifth business disposition. Held work is scanned again, so a transient prerequisite can recover.
+- Admission is admitted or closed_before_invocation. A committed admission has no implied provider result. Recovery can close an admission with no invocation marker while holding its parent lock. The original executor must acquire that same lock and reread the admission before writing its marker, so it cannot later invoke a closed attempt. A later call gets a new attempt ID.
+- Provider observation is pending, rejected_before_submission, accepted, delivered, bounced_or_failed or unknown. An executor lost after its marker is conservatively unknown. Accepted remains accepted while unresolved and blocks another call. Neither a timeout nor job exhaustion proves no-operation.
+- Reconciliation is none or confirmed_no_operation. It does not overwrite provider observation or admission. Only authenticated evidence can resolve an unknown operation. A safe conclusion, rejection or conclusive non-delivery releases the current active admission; a new admission still repeats current source/content/capability guards.
+
+A delivered observation closes dispatch and clears the envelope. Source expiry, revocation, supersession, consumption, closure or security ineligibility ends send authority and clears the envelope, including when conflicting evidence exists. Later reconciliation retains historical provider evidence without reopening a source-invalid intent. Identity source invalidation and invocation admission serialize under the source locks. The final marker transaction is the last local send-authorization cut; a source change after that committed cut cannot recall an external operation. No source/provider atomic transaction is claimed. Any later Identity use still revalidates and consumes through Identity.
+
+[Evidence tests](../../test/new_you/communications/delivery_evidence_test.exs) cover duplicates with identical and different event references, accepted/delivered/unknown reordering, terminal contradictions and late older-attempt evidence. Stronger known facts do not regress by arrival order. Contradiction sets `conflict?` on the original attempt and preserves reconciliation-required disposition even if a newer operation later reports delivery. Further sends stop; no automatic conflict-clearing/operator override is implemented. Evidence reference fingerprints are bounded to 64 per attempt; overflow freezes work for attention rather than discarding uncertainty.
+
+[Recovery tests](../../test/new_you/communications/delivery_recovery_test.exs) reuse P8-04 Scenario, CutPoints and Provider. They kill real workers after admission, before provider invocation and after provider return before persistence. Marker-before-call death is intentionally uncertain. The scheduler can reschedule every non-closed intent after missing, deleted or exhausted jobs. Five Oban job attempts are executor policy for this bounded path, not five authorized business sends. Job uniqueness never grants another admission.
+
+## 6. Persistence and consistency
+
+The generated [migration](../../priv/repo/migrations/20261106091916_well10_delivery.exs) and [Ash snapshot](../../priv/resource_snapshots/repo/delivery_attempts/20261106091917.json) add only `delivery_attempts`. Existing source/intent/envelope acceptance tables remain intact. There is no backfill or new source acceptance schedule.
+
+`delivery_attempts_message_intent_id_fkey` binds each attempt to one intent. `delivery_attempts_one_active` is a partial unique index on MessageIntent ID where active. Checks constrain admission, provider observation and reconciliation, require a closed-before-invocation admission to have no invocation marker/provider outcome, and require active to match the unresolved dimensions. Resource action acceptance preserves content/locale/render provenance. Each new attempt uses its own UUID as safe operation identity.
+
+The parent intent lock serializes preparation, invocation fencing and evidence. Account/Token locks serialize current source checks with Identity mutations. All application writes use Ash; Repo use in application code is limited to the `in_transaction?` guard. No raw SQL, Ecto.Multi, process-local lock, extra Repo, Redis or extra service owns business state.
+
+Provider calls occur after commit. If result persistence fails, the marker and active admission remain discoverable and block resubmission. If admission fails, the transaction rolls back. The migration's down path drops attempt history; rollback after meaningful delivery evidence requires an explicit data-preservation decision. It is not a routine recovery mechanism.
+
+## 7. Tests, proof and evidence
+
+The focused [delivery tests](../../test/new_you/communications/delivery_test.exs), [evidence tests](../../test/new_you/communications/delivery_evidence_test.exs) and [recovery tests](../../test/new_you/communications/delivery_recovery_test.exs) exercise real PostgreSQL through owning business interfaces. Coverage includes admission commit/no open transaction at I/O; source consumption between admission and invocation; expiry/revocation/supersession; purpose/content/render negatives; immutable retry provenance; authenticated/unauthenticated evidence; duplicate/reordered/contradictory observations; ordinary authorization negatives; payload/log/telemetry/persistence privacy; direct database rejection of a second active attempt; real PostgreSQL lock contention with distinct transaction/backend IDs; and eight competing executors.
+
+The [fresh-BEAM script](../../test/proof/p8_10_restart.exs) starts the actual application on a separate BEAM twice. It reconstructs jobs and accepted ambiguity from PostgreSQL. Synthetic encryption configuration travels over the anonymous process pipe, never through CLI/job arguments. There is no persisted test bearer or DevCore secret copy. [P8-05 fixture cleanup](../../test/support/proof/p8_05.ex) removes only the synthetic Communications jobs tied to its tracked operation IDs. [ScopeTest](../../test/new_you/communications/scope_test.exs) now checks the two business Resources plus existing technical stores and the nontransactional worker action, replacing P8-05's obsolete no-executor assertion.
+
+Reproduce with the declared mise toolchain and DevCore TEST profile:
+
+```sh
+mise exec -- devcore-project run test -- mix test test/new_you/communications
+mise exec -- devcore-project run test -- mix check
+mise exec -- devcore-project run test -- mix check.deep
+mise exec -- devcore-project run test -- mix ash.codegen --check
+mise exec -- devcore-project run test -- mix check.architecture
+mise exec -- python3 tools/hex_security_audit.py
+```
+
+Observed implementation runs include 40 passing Communications tests, a 404-test fast gate before the last focused privacy/source guard additions, successful deep analysis and codegen/architecture checks. Final exact-head runs and CI belong in the PR/Plane evidence. Do not reinterpret these local observations as exact-head CI or full TB-001 certification. Expected fault-probe disconnects and CSRF-negative logs occur in the wider suite.
+
+The fresh isolated Hex 2.6.0 audit reported the retained Assent 0.2.13 advisory and failed because changed production inputs invalidate its approval. This is an unresolved security authorization gate under [WELL-91](https://app.plane.so/symphony-development/browse/WELL-91), not a clean audit. Approval constants, exception metadata, audit regressions and the exclusive `2026-11-18T00:00:00Z` expiry remain unchanged. Any new binding requires independent security disposition and explicit owner authorization.
+
+## 8. Future-agent extension guide and cold-start walkthrough
+
+Start with the current routers and live ticket, then [Communications](../../lib/new_you/communications.ex), [MessageIntent](../../lib/new_you/communications/message_intent.ex), [Executor](../../lib/new_you/communications/executor.ex), [DeliveryAttempt](../../lib/new_you/communications/delivery_attempt.ex), the [Identity source guard](../../lib/new_you/identity/delivery_eligibility.ex), the [Content read contract](../../lib/new_you/content/verification_message.ex), migration and tests above. Trace `delivery` to `execute_delivery`, admission, invocation fencing and observation. Check the partial index, marker checks and deny-by-default policies against source before changing any path.
+
+The cold-start walkthrough followed those links at the implementation SHA, checked actual action arguments and generated worker transaction behavior, compared Resource DSL to generated migration/snapshot, and traced one accepted, one pre-invocation death and one unknown/no-operation retry through their tests. It found no missing source path. Final independent review must repeat the walkthrough against the PR head, including later corrections.
+
+Extend by adding a purpose-specific owner guard and exact eligible content for the next separately authorized source lifecycle. Preserve immutable attempt binding and the id-only business job reference. Do not reuse this verification envelope for another purpose, add a third Communications business Resource, use provider acceptance as Identity proof, clear ambiguity through a timeout/operator flag, add real egress through runtime configuration, or place bearer/body/destination in jobs or ordinary evidence. A production provider and any content publication remain separately gated. The [P8-05 handoff](p8-05-registration-handoff.md) remains the source-acceptance map; the [P8-11 addendum](p8-11-audit-recovery-addendum.md) remains the Audit recovery map.
