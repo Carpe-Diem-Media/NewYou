@@ -328,21 +328,21 @@ defmodule NewYou.Communications.Executor do
          do: {:ok, :recorded}
   end
 
+  defp apply_disposition(%{dispatch_disposition: :closed}, outcome)
+       when outcome in @safe or outcome == :confirmed_no_operation,
+       do: {:ok, :recorded}
+
   defp apply_disposition(intent, outcome)
        when outcome in @safe or outcome == :confirmed_no_operation do
-    if intent.dispatch_disposition == :closed do
-      {:ok, :recorded}
-    else
-      case delivery_payload(intent) do
-        {:ok, _payload} ->
-          with {:ok, _} <- disposition(intent, :open), do: {:ok, :recorded}
+    case delivery_payload(intent) do
+      {:ok, _payload} ->
+        with {:ok, _} <- disposition(intent, :open), do: {:ok, :recorded}
 
-        {:error, :source_invalid} ->
-          with {:ok, :source_invalid} <- close_source(intent), do: {:ok, :recorded}
+      {:error, :source_invalid} ->
+        with {:ok, :source_invalid} <- close_source(intent), do: {:ok, :recorded}
 
-        _ ->
-          with {:ok, _} <- disposition(intent, :held), do: {:ok, :recorded}
-      end
+      _ ->
+        with {:ok, _} <- disposition(intent, :held), do: {:ok, :recorded}
     end
   end
 
@@ -356,9 +356,14 @@ defmodule NewYou.Communications.Executor do
     end
   end
 
-  defp flag_current_conflict(%{dispatch_disposition: :closed, terminal_reason: reason}, _attempt)
-       when reason != "delivery_observed",
-       do: {:ok, :recorded}
+  defp flag_current_conflict(
+         %{dispatch_disposition: :closed, terminal_reason: "delivery_observed"} = intent,
+         attempt
+       ),
+       do: flag_conflict(intent, attempt)
+
+  defp flag_current_conflict(%{dispatch_disposition: :closed}, _attempt),
+    do: {:ok, :recorded}
 
   defp flag_current_conflict(intent, attempt) do
     case NewYou.Identity.DeliveryEligibility.verification(
@@ -366,16 +371,20 @@ defmodule NewYou.Communications.Executor do
            intent.destination
          ) do
       :ok ->
-        with {:ok, _} <-
-               Ash.update(intent, %{attempt_id: attempt.id},
-                 action: :flag_evidence_conflict,
-                 authorize?: false
-               ),
-             do: {:ok, :recorded}
+        flag_conflict(intent, attempt)
 
       {:error, :source_invalid} ->
         with {:ok, :source_invalid} <- close_source(intent), do: {:ok, :recorded}
     end
+  end
+
+  defp flag_conflict(intent, attempt) do
+    with {:ok, _} <-
+           Ash.update(intent, %{attempt_id: attempt.id},
+             action: :flag_evidence_conflict,
+             authorize?: false
+           ),
+         do: {:ok, :recorded}
   end
 
   defp close_source(intent) do

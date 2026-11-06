@@ -287,6 +287,29 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
     Process.delete(:p810_provider)
   end
 
+  test "delivery-observed closure retains legitimate conflict handling after proof consumption" do
+    P805.with_fixture(fn ->
+      {:ok, registration} = Identity.register(P805.request())
+      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      Process.put(:p810_provider, fn _, _ -> :delivered end)
+      assert {:ok, :processed} = Communications.execute(intent.id)
+      [attempt] = attempts()
+
+      assert Ash.get!(Communications.MessageIntent, intent.id, authorize?: false).terminal_reason ==
+               "delivery_observed"
+
+      assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+      evidence(attempt, :bounced_or_failed, "delivery-contradiction-after-consumption")
+      assert disposition(intent) == :reconciliation_required
+      assert Ash.get!(Communications.DeliveryAttempt, attempt.id, authorize?: false).conflict?
+      assert envelope(intent) == nil
+      assert {:ok, :source_invalid} = Communications.execute(intent.id)
+      assert length(attempts()) == 1
+    end)
+  after
+    Process.delete(:p810_provider)
+  end
+
   test "safe provider rejections and failures allow guarded new identities with immutable provenance" do
     P805.with_fixture(fn ->
       {:ok, _} = Identity.register(P805.request())
