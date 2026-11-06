@@ -8,7 +8,7 @@ defmodule NewYou.Communications.MessageIntent do
     domain: NewYou.Communications,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshOban]
+    extensions: [AshStateMachine, AshOban]
 
   postgres do
     table "message_intents"
@@ -30,6 +30,28 @@ defmodule NewYou.Communications.MessageIntent do
       check_constraint :source_reference, "message_intents_source_reference",
         check: "source_reference ~ '^[0-9a-v]{24}$'",
         message: "is invalid"
+    end
+  end
+
+  state_machine do
+    initial_states [:open]
+    default_initial_state :open
+    state_attribute :dispatch_disposition
+
+    transitions do
+      transition :hold, from: [:open, :held, :reconciliation_required], to: :held
+      transition :resume, from: [:open, :held, :reconciliation_required], to: :open
+
+      transition :require_reconciliation,
+        from: [:open, :held, :reconciliation_required],
+        to: :reconciliation_required
+
+      transition :close, from: [:open, :held, :reconciliation_required, :closed], to: :closed
+      # A recorded contradictory attempt is the sole exceptional exit from
+      # closure. It freezes delivery and never restores source send authority.
+      transition :flag_evidence_conflict,
+        from: [:open, :held, :reconciliation_required, :closed],
+        to: :reconciliation_required
     end
   end
 
@@ -69,9 +91,38 @@ defmodule NewYou.Communications.MessageIntent do
       run NewYou.Communications.Actions.ExecuteDelivery
     end
 
-    update :disposition do
-      accept [:dispatch_disposition, :terminal_reason]
+    update :hold do
+      accept [:terminal_reason]
       public? false
+      change transition_state(:held)
+    end
+
+    update :resume do
+      accept [:terminal_reason]
+      public? false
+      change transition_state(:open)
+    end
+
+    update :require_reconciliation do
+      accept [:terminal_reason]
+      public? false
+      change transition_state(:reconciliation_required)
+    end
+
+    update :close do
+      accept [:terminal_reason]
+      public? false
+      change transition_state(:closed)
+    end
+
+    update :flag_evidence_conflict do
+      description "Freeze dispatch only for a conflicting attempt belonging to this intent."
+      accept []
+      argument :attempt_id, :uuid, allow_nil?: false
+      public? false
+      change filter(expr(exists(delivery_attempts, id == ^arg(:attempt_id) and conflict?)))
+      change set_attribute(:terminal_reason, "conflicting_provider_evidence")
+      change transition_state(:reconciliation_required)
     end
 
     create :establish do
@@ -100,7 +151,14 @@ defmodule NewYou.Communications.MessageIntent do
       authorize_if AshOban.Checks.AshObanInteraction
     end
 
-    policy action([:establish, :disposition]) do
+    policy action([
+             :establish,
+             :hold,
+             :resume,
+             :require_reconciliation,
+             :close,
+             :flag_evidence_conflict
+           ]) do
       forbid_if always()
     end
   end
@@ -166,6 +224,13 @@ defmodule NewYou.Communications.MessageIntent do
     attribute :terminal_reason, :string, public?: false
     create_timestamp :created_at
     update_timestamp :updated_at
+  end
+
+  relationships do
+    has_many :delivery_attempts, NewYou.Communications.DeliveryAttempt do
+      public? false
+      destination_attribute :message_intent_id
+    end
   end
 
   identities do

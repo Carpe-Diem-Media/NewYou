@@ -92,6 +92,7 @@ defmodule NewYou.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:ash_state_machine, "== 0.3.0"},
       {:oban, "== 2.24.2"},
       {:ash_oban, "== 0.10.2"},
       {:argon2_elixir, "== 4.1.3"},

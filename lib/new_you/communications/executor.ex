@@ -310,7 +310,10 @@ defmodule NewYou.Communications.Executor do
       })
 
     with {:ok, _} <- record(attempt, attrs) do
-      apply_disposition(intent, outcome)
+      # The parent lock and partial unique index identify this sole active
+      # admission. Historical repeats retain evidence without changing the
+      # disposition of a newer operation or a held/closed obligation.
+      if attempt.active, do: apply_disposition(intent, outcome), else: {:ok, :recorded}
     end
   end
 
@@ -341,7 +344,10 @@ defmodule NewYou.Communications.Executor do
   defp conflict(intent, attempt) do
     with {:ok, _} <- record(attempt, %{conflict?: true}),
          {:ok, _} <-
-           disposition(intent, :reconciliation_required, "conflicting_provider_evidence"),
+           Ash.update(intent, %{attempt_id: attempt.id},
+             action: :flag_evidence_conflict,
+             authorize?: false
+           ),
          do: {:ok, :recorded}
   end
 
@@ -361,8 +367,17 @@ defmodule NewYou.Communications.Executor do
 
   defp disposition(intent, state, reason \\ nil),
     do:
-      Ash.update(intent, %{dispatch_disposition: state, terminal_reason: reason},
-        action: :disposition,
+      Ash.update(intent, %{terminal_reason: reason},
+        action:
+          Map.fetch!(
+            %{
+              open: :resume,
+              held: :hold,
+              reconciliation_required: :require_reconciliation,
+              closed: :close
+            },
+            state
+          ),
         authorize?: false
       )
 

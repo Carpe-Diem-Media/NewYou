@@ -52,6 +52,52 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
     Process.delete(:p810_provider)
   end
 
+  for terminal <- [:bounced_or_failed, :rejected_before_submission, :confirmed_no_operation] do
+    test "repeated older #{terminal} evidence preserves newer accepted ambiguity" do
+      P805.with_fixture(fn ->
+        {:ok, _} = Identity.register(P805.request())
+        [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+
+        initial =
+          if unquote(terminal) == :confirmed_no_operation, do: :unknown, else: unquote(terminal)
+
+        Process.put(:p810_provider, fn _, _ -> initial end)
+        assert {:ok, :processed} = Communications.execute(intent.id)
+        [older] = attempts()
+
+        if unquote(terminal) == :confirmed_no_operation,
+          do: evidence(older, unquote(terminal), "absence-first")
+
+        assert disposition(intent) == :open
+
+        Process.put(:p810_provider, fn _, _ -> :accepted end)
+        assert {:ok, :processed} = Communications.execute(intent.id)
+        newer = Enum.find(attempts(), &(&1.id != older.id))
+        assert newer.active and newer.provider_observation == :accepted
+        assert disposition(intent) == :reconciliation_required
+
+        evidence(older, unquote(terminal), "older-new-reference")
+        assert disposition(intent) == :reconciliation_required
+        evidence(older, unquote(terminal), "older-new-reference")
+        assert disposition(intent) == :reconciliation_required
+
+        if unquote(terminal) == :bounced_or_failed,
+          do: evidence(older, :unknown, "older-reordered-timeout")
+
+        assert disposition(intent) == :reconciliation_required
+        unchanged = Ash.get!(Communications.DeliveryAttempt, newer.id, authorize?: false)
+        assert unchanged == newer
+        historical = Ash.get!(Communications.DeliveryAttempt, older.id, authorize?: false)
+        assert length(historical.evidence_refs) > length(older.evidence_refs)
+        refute historical.active
+        assert {:ok, :waiting} = Communications.execute(intent.id)
+        assert length(attempts()) == 2
+      end)
+    after
+      Process.delete(:p810_provider)
+    end
+  end
+
   test "late contradictory old-attempt evidence stops newer work and remains visible" do
     P805.with_fixture(fn ->
       {:ok, _} = Identity.register(P805.request())
@@ -81,6 +127,39 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
                authorize?: false,
                not_found_error?: false
              ) == nil
+    end)
+  after
+    Process.delete(:p810_provider)
+  end
+
+  test "late contradictory evidence can freeze closed dispatch only for its owning intent" do
+    P805.with_fixture(fn ->
+      first_request = P805.request()
+      second_request = P805.request()
+      {:ok, _} = Identity.register(first_request)
+      {:ok, _} = Identity.register(second_request)
+      intents = Ash.read!(Communications.MessageIntent, authorize?: false)
+      first = Enum.find(intents, &(&1.source_operation_id == first_request.operation_id))
+      second = Enum.find(intents, &(&1.source_operation_id == second_request.operation_id))
+      Process.put(:p810_provider, fn _, _ -> :delivered end)
+      assert {:ok, :processed} = Communications.execute(first.id)
+      [attempt] = attempts()
+      assert disposition(first) == :closed
+      evidence(attempt, :bounced_or_failed, "contradictory-after-closure")
+      assert disposition(first) == :reconciliation_required
+      assert Ash.get!(Communications.DeliveryAttempt, attempt.id, authorize?: false).conflict?
+
+      closed = Ash.update!(second, %{}, action: :close, authorize?: false)
+
+      assert {:error, _} =
+               Ash.update(closed, %{attempt_id: attempt.id},
+                 action: :flag_evidence_conflict,
+                 authorize?: false
+               )
+
+      assert disposition(second) == :closed
+      assert {:ok, :waiting} = Communications.execute(first.id)
+      assert length(attempts()) == 1
     end)
   after
     Process.delete(:p810_provider)
