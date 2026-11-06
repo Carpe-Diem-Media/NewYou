@@ -767,9 +767,34 @@ defmodule NewYou.Proof.P805 do
       [operations]
     )
 
-    Repo.query!("DELETE FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[])", [
-      operations
-    ])
+    # Transactional DDL takes table locks. Only these synthetic fixture rows
+    # are removed, and guards are restored before the transaction commits.
+    {:ok, :ok} =
+      Repo.transaction(fn ->
+        Repo.query!("ALTER TABLE evidence_records DISABLE TRIGGER evidence_records_immutable")
+
+        Repo.query!(
+          "ALTER TABLE evidence_obligations DISABLE TRIGGER evidence_obligations_no_delete"
+        )
+
+        Repo.query!(
+          "DELETE FROM evidence_records WHERE obligation_id IN (SELECT id FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]))",
+          [operations]
+        )
+
+        Repo.query!(
+          "DELETE FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[])",
+          [operations]
+        )
+
+        Repo.query!("ALTER TABLE evidence_records ENABLE TRIGGER evidence_records_immutable")
+
+        Repo.query!(
+          "ALTER TABLE evidence_obligations ENABLE TRIGGER evidence_obligations_no_delete"
+        )
+
+        :ok
+      end)
 
     Repo.query!(
       "DELETE FROM communications_protected_envelopes e USING message_intents i WHERE e.message_intent_id = i.id AND i.source_operation_id = ANY($1::uuid[])",

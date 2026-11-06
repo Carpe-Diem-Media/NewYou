@@ -261,7 +261,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     assert audit_records("EvidenceRecord") == []
   end
 
-  test "an open obligation cannot be stranded by standalone record creation" do
+  test "standalone record creation is not exposed through a Domain interface" do
     assert {:ok, _} = NewYou.Identity.register(valid_request())
     [obligation] = audit_records("EvidenceObligation")
 
@@ -331,6 +331,183 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     assert audit_records("EvidenceRecord") == []
     assert length(scheduled_audit_jobs()) == 1
     assert is_binary(obligation.id)
+  end
+
+  test "an open obligation with a committed record recovers the same assertion" do
+    assert {:ok, _} = NewYou.Identity.register(valid_request())
+    [obligation] = audit_records("EvidenceObligation")
+
+    record =
+      Ash.create!(NewYou.Audit.EvidenceRecord, %{obligation_id: obligation.id},
+        action: :materialize,
+        domain: NewYou.Audit,
+        authorize?: false
+      )
+
+    assert {:ok, %{evidence_record_id: record_id}} =
+             NewYou.Audit.materialize_registration_evidence(%{primary_key: %{id: obligation.id}},
+               authorize?: false
+             )
+
+    assert record_id == record.id
+    assert [%{id: ^record_id}] = audit_records("EvidenceRecord")
+
+    assert %{state: :fulfilled} =
+             NewYou.Audit.get_evidence_obligation!(obligation.id, authorize?: false)
+  end
+
+  test "the durable scheduler recreates missing execution from open obligations" do
+    assert {:ok, _} = NewYou.Identity.register(valid_request())
+    [obligation] = audit_records("EvidenceObligation")
+    Repo.query!("DELETE FROM oban_jobs WHERE queue = 'audit'")
+    trigger = AshOban.Info.oban_trigger(NewYou.Audit.EvidenceObligation, :registration_evidence)
+
+    configured =
+      AshOban.config(
+        Application.fetch_env!(:new_you, :ash_domains),
+        Application.fetch_env!(:new_you, Oban)
+      )
+
+    assert {"* * * * *", trigger.scheduler, []} in configured[:cron][:crontab]
+    assert is_atom(trigger.scheduler) and not is_nil(trigger.scheduler)
+    assert :ok = trigger.scheduler.perform(%Oban.Job{args: %{}})
+    assert [%{args: %{"primary_key" => %{"id" => id}}}] = scheduled_audit_jobs()
+    assert id == obligation.id
+  end
+
+  test "PostgreSQL refuses fulfilled obligations without evidence" do
+    assert {:ok, _} = NewYou.Identity.register(valid_request())
+    [obligation] = audit_records("EvidenceObligation")
+
+    assert_raise Postgrex.Error, fn ->
+      Repo.query!(
+        "UPDATE evidence_obligations SET state = 'fulfilled', fulfilled_at = now() WHERE id = $1",
+        [Ecto.UUID.dump!(obligation.id)]
+      )
+    end
+  end
+
+  test "PostgreSQL preserves pending provenance and refuses terminal insertion" do
+    assert {:ok, _} = NewYou.Identity.register(valid_request())
+
+    for assignment <- [
+          "source_operation_id = gen_random_uuid()",
+          "source_occurred_at = now()",
+          "evidence_type = 'other'",
+          "id = gen_random_uuid()",
+          "created_at = now()"
+        ] do
+      assert_raise Postgrex.Error, fn ->
+        Repo.query!("UPDATE evidence_obligations SET " <> assignment)
+      end
+    end
+
+    assert_raise Postgrex.Error, fn ->
+      Repo.query!("""
+      INSERT INTO evidence_obligations (source_operation_id, source_occurred_at, evidence_type, state, fulfilled_at)
+      VALUES (gen_random_uuid(), now(), 'account_registration_pmr_assignment', 'fulfilled', now())
+      """)
+    end
+  end
+
+  test "PostgreSQL preserves evidence and its terminal immutable provenance" do
+    assert {:ok, _} = NewYou.Identity.register(valid_request())
+    [obligation] = audit_records("EvidenceObligation")
+
+    assert {:ok, _} =
+             NewYou.Audit.materialize_registration_evidence(%{primary_key: %{id: obligation.id}},
+               authorize?: false
+             )
+
+    for statement <- [
+          "UPDATE evidence_records SET created_at = now()",
+          "DELETE FROM evidence_records",
+          "TRUNCATE evidence_records",
+          "UPDATE evidence_obligations SET source_occurred_at = now()",
+          "UPDATE evidence_obligations SET state = 'open', fulfilled_at = NULL",
+          "DELETE FROM evidence_obligations",
+          "TRUNCATE evidence_obligations CASCADE"
+        ] do
+      assert_raise Postgrex.Error, fn -> Repo.query!(statement) end
+    end
+  end
+
+  test "PostgreSQL rejects a second assertion even through a direct insert" do
+    assert {:ok, _} = NewYou.Identity.register(valid_request())
+    [obligation] = audit_records("EvidenceObligation")
+
+    assert {:ok, _} =
+             NewYou.Audit.materialize_registration_evidence(
+               %{primary_key: %{id: obligation.id}},
+               authorize?: false
+             )
+
+    assert_raise Postgrex.Error, fn ->
+      Repo.query!(
+        "INSERT INTO evidence_records (obligation_id) VALUES ($1)",
+        [Ecto.UUID.dump!(obligation.id)]
+      )
+    end
+
+    assert length(audit_records("EvidenceRecord")) == 1
+  end
+
+  test "corrupt fulfilled evidence fails safely without rebuilding source truth" do
+    assert {:ok, %{account_id: account_id}} = NewYou.Identity.register(valid_request())
+    [obligation] = audit_records("EvidenceObligation")
+
+    assert {:ok, _} =
+             NewYou.Audit.materialize_registration_evidence(
+               %{primary_key: %{id: obligation.id}},
+               authorize?: false
+             )
+
+    before = identity_truth(account_id)
+
+    # Synthetic corruption is possible only after deliberately disabling a DB
+    # guard. The sandbox rolls back this fixture and its transactional DDL.
+    Repo.query!("ALTER TABLE evidence_records DISABLE TRIGGER evidence_records_immutable")
+    Repo.query!("DELETE FROM evidence_records")
+    Repo.query!("ALTER TABLE evidence_records ENABLE TRIGGER evidence_records_immutable")
+
+    assert {:error, error} =
+             NewYou.Audit.materialize_registration_evidence(
+               %{primary_key: %{id: obligation.id}},
+               authorize?: false
+             )
+
+    assert Exception.message(error) =~ "evidence_obligation_integrity_mismatch"
+    assert identity_truth(account_id) == before
+    assert audit_records("EvidenceRecord") == []
+
+    assert %{state: :fulfilled} =
+             NewYou.Audit.get_evidence_obligation!(obligation.id, authorize?: false)
+  end
+
+  test "untrusted materialisation selectors and excess evidence payload fail closed" do
+    assert {:ok, %{account_id: account_id}} = NewYou.Identity.register(valid_request())
+    [obligation] = audit_records("EvidenceObligation")
+    before = identity_truth(account_id)
+
+    for key <- [%{}, %{id: "invalid"}, %{id: Ecto.UUID.generate()}] do
+      assert {:error, _} =
+               NewYou.Audit.materialize_registration_evidence(
+                 %{primary_key: key},
+                 authorize?: false
+               )
+    end
+
+    assert {:error, _} =
+             Ash.create(
+               NewYou.Audit.EvidenceRecord,
+               %{obligation_id: obligation.id, source_payload: "forbidden", bearer: "forbidden"},
+               action: :materialize,
+               domain: NewYou.Audit,
+               authorize?: false
+             )
+
+    assert identity_truth(account_id) == before
+    assert audit_records("EvidenceRecord") == []
   end
 
   defp valid_request do
