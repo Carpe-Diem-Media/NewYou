@@ -333,7 +333,16 @@ defmodule NewYou.Communications.Executor do
     if intent.dispatch_disposition == :closed do
       {:ok, :recorded}
     else
-      with {:ok, _} <- disposition(intent, :open), do: {:ok, :recorded}
+      case delivery_payload(intent) do
+        {:ok, _payload} ->
+          with {:ok, _} <- disposition(intent, :open), do: {:ok, :recorded}
+
+        {:error, :source_invalid} ->
+          with {:ok, :source_invalid} <- close_source(intent), do: {:ok, :recorded}
+
+        _ ->
+          with {:ok, _} <- disposition(intent, :held), do: {:ok, :recorded}
+      end
     end
   end
 
@@ -342,13 +351,31 @@ defmodule NewYou.Communications.Executor do
   end
 
   defp conflict(intent, attempt) do
-    with {:ok, _} <- record(attempt, %{conflict?: true}),
-         {:ok, _} <-
-           Ash.update(intent, %{attempt_id: attempt.id},
-             action: :flag_evidence_conflict,
-             authorize?: false
-           ),
-         do: {:ok, :recorded}
+    with {:ok, _} <- record(attempt, %{conflict?: true}) do
+      flag_current_conflict(intent, attempt)
+    end
+  end
+
+  defp flag_current_conflict(%{dispatch_disposition: :closed, terminal_reason: reason}, _attempt)
+       when reason != "delivery_observed",
+       do: {:ok, :recorded}
+
+  defp flag_current_conflict(intent, attempt) do
+    case NewYou.Identity.DeliveryEligibility.verification(
+           intent.source_reference,
+           intent.destination
+         ) do
+      :ok ->
+        with {:ok, _} <-
+               Ash.update(intent, %{attempt_id: attempt.id},
+                 action: :flag_evidence_conflict,
+                 authorize?: false
+               ),
+             do: {:ok, :recorded}
+
+      {:error, :source_invalid} ->
+        with {:ok, :source_invalid} <- close_source(intent), do: {:ok, :recorded}
+    end
   end
 
   defp close_source(intent) do

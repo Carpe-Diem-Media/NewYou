@@ -13,6 +13,128 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
     on_exit(fn -> Application.delete_env(:new_you, :communications_proof_evidence_key) end)
   end
 
+  for mode <- [:consumed, :revoked, :superseded, :expired],
+      outcome <- [:bounced_or_failed, :rejected_before_submission, :confirmed_no_operation] do
+    test "#{mode} source cannot reopen after #{outcome} evidence" do
+      P805.with_fixture(fn ->
+        {:ok, registration} = Identity.register(P805.request())
+        [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+        initial = if unquote(outcome) == :bounced_or_failed, do: :accepted, else: :unknown
+        Process.put(:p810_provider, fn _, _ -> initial end)
+        assert {:ok, :processed} = Communications.execute(intent.id)
+        [attempt] = attempts()
+        invalidate_source(unquote(mode), intent, registration)
+        evidence(attempt, unquote(outcome), "source-ended")
+        current = Ash.get!(Communications.MessageIntent, intent.id, authorize?: false)
+        assert current.dispatch_disposition == :closed
+        assert current.terminal_reason == "source_invalid"
+        assert envelope(intent) == nil
+        saved = Ash.get!(Communications.DeliveryAttempt, attempt.id, authorize?: false)
+        refute saved.active
+        assert length(saved.evidence_refs) == 2
+
+        if unquote(outcome) == :confirmed_no_operation do
+          assert saved.provider_observation == :unknown
+          assert saved.reconciliation == :confirmed_no_operation
+        else
+          assert saved.provider_observation == unquote(outcome)
+        end
+
+        assert {:ok, :closed} = Communications.execute(intent.id)
+        assert length(attempts()) == 1
+      end)
+    after
+      Process.delete(:p810_provider)
+    end
+  end
+
+  for mode <- [:content, :capability, :provider_policy],
+      outcome <- [:bounced_or_failed, :rejected_before_submission, :confirmed_no_operation] do
+    test "#{mode} ineligibility holds dispatch after #{outcome} evidence" do
+      P805.with_fixture(fn ->
+        {:ok, _} = Identity.register(P805.request())
+        [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+        initial = if unquote(outcome) == :bounced_or_failed, do: :accepted, else: :unknown
+        Process.put(:p810_provider, fn _, _ -> initial end)
+        assert {:ok, :processed} = Communications.execute(intent.id)
+        [attempt] = attempts()
+
+        case unquote(mode) do
+          :content ->
+            Repo.query!(
+              "UPDATE message_intents SET content_sha256 = $1 WHERE id = $2",
+              [String.duplicate("0", 64), Ecto.UUID.dump!(intent.id)]
+            )
+
+          :capability ->
+            Ash.destroy!(envelope(intent), action: :clear, authorize?: false)
+
+          :provider_policy ->
+            Process.delete(:p810_provider)
+        end
+
+        evidence(attempt, unquote(outcome), "prerequisite-ended")
+        assert disposition(intent) == :held
+        refute Ash.get!(Communications.DeliveryAttempt, attempt.id, authorize?: false).active
+        assert {:ok, :held} = Communications.execute(intent.id)
+        assert length(attempts()) == 1
+      end)
+    after
+      Process.delete(:p810_provider)
+    end
+  end
+
+  test "contradiction preserves source-invalid closure and cannot affect another intent" do
+    P805.with_fixture(fn ->
+      {:ok, registration} = Identity.register(P805.request())
+      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      Process.put(:p810_provider, fn _, _ -> :accepted end)
+      assert {:ok, :processed} = Communications.execute(intent.id)
+      [attempt] = attempts()
+      assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+      assert {:ok, :source_invalid} = Communications.execute(intent.id)
+      closed = Ash.get!(Communications.MessageIntent, intent.id, authorize?: false)
+      assert closed.terminal_reason == "source_invalid"
+      assert envelope(intent) == nil
+      {:ok, _} = Identity.register(P805.request())
+
+      other =
+        Enum.find(
+          Ash.read!(Communications.MessageIntent, authorize?: false),
+          &(&1.id != intent.id)
+        )
+
+      evidence(attempt, :rejected_before_submission, "late-contradiction")
+      evidence(attempt, :rejected_before_submission, "late-contradiction")
+      assert Ash.get!(Communications.DeliveryAttempt, attempt.id, authorize?: false).conflict?
+      assert Ash.get!(Communications.MessageIntent, intent.id, authorize?: false) == closed
+      assert Ash.get!(Communications.MessageIntent, other.id, authorize?: false) == other
+      assert envelope(intent) == nil
+      assert {:ok, :closed} = Communications.execute(intent.id)
+      assert length(attempts()) == 1
+
+      assert {:error, _} =
+               Ash.update(closed, %{attempt_id: attempt.id},
+                 action: :flag_evidence_conflict,
+                 authorize?: false
+               )
+
+      assert {:error, _} =
+               Ash.update(intent, %{attempt_id: attempt.id},
+                 action: :flag_evidence_conflict,
+                 authorize?: false
+               )
+
+      assert {:error, _} =
+               Ash.update(other, %{attempt_id: attempt.id},
+                 action: :flag_evidence_conflict,
+                 authorize?: false
+               )
+    end)
+  after
+    Process.delete(:p810_provider)
+  end
+
   test "accepted stays pending; duplicate and reordered observations never regress delivery" do
     P805.with_fixture(fn ->
       {:ok, registration} = Identity.register(P805.request())
@@ -417,6 +539,48 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
       0 -> acc
     end
   end
+
+  defp invalidate_source(:consumed, _intent, registration) do
+    assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+  end
+
+  defp invalidate_source(:expired, intent, _registration) do
+    Repo.query!(
+      "UPDATE tokens SET expires_at = now() - interval '1 second' WHERE jti = $1",
+      [intent.source_reference]
+    )
+  end
+
+  defp invalidate_source(:revoked, intent, registration) do
+    account = Ash.get!(Identity.Account, registration.account_id, authorize?: false)
+
+    :ok =
+      AshAuthentication.TokenResource.Actions.revoke_jti(
+        Identity.Token,
+        intent.source_reference,
+        AshAuthentication.user_to_subject(account),
+        authorize?: false,
+        context: %{ash_authentication: %{user: account}}
+      )
+  end
+
+  defp invalidate_source(:superseded, _intent, registration) do
+    operation = Ash.UUID.generate()
+    P805.track_operation(operation)
+
+    assert {:ok, _} =
+             Identity.resend_verification(%{
+               operation_id: operation,
+               account_id: registration.account_id
+             })
+  end
+
+  defp envelope(intent),
+    do:
+      Ash.get!(Communications.ProtectedEnvelope, intent.id,
+        authorize?: false,
+        not_found_error?: false
+      )
 
   defp evidence(attempt, outcome, reference) do
     key = Application.fetch_env!(:new_you, :communications_proof_evidence_key)

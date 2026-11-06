@@ -47,8 +47,8 @@ defmodule NewYou.Communications.MessageIntent do
         to: :reconciliation_required
 
       transition :close, from: [:open, :held, :reconciliation_required, :closed], to: :closed
-      # A recorded contradictory attempt is the sole exceptional exit from
-      # closure. It freezes delivery and never restores source send authority.
+      # Only a delivery-observed closure may freeze for contradictory evidence.
+      # Source-invalid and other terminal closures cannot regain dispatch.
       transition :flag_evidence_conflict,
         from: [:open, :held, :reconciliation_required, :closed],
         to: :reconciliation_required
@@ -116,11 +116,18 @@ defmodule NewYou.Communications.MessageIntent do
     end
 
     update :flag_evidence_conflict do
-      description "Freeze dispatch only for a conflicting attempt belonging to this intent."
+      description "Freeze live or delivery-observed dispatch for this intent's conflicting attempt."
       accept []
       argument :attempt_id, :uuid, allow_nil?: false
       public? false
-      change filter(expr(exists(delivery_attempts, id == ^arg(:attempt_id) and conflict?)))
+
+      change filter(
+               expr(
+                 (dispatch_disposition != :closed or terminal_reason == "delivery_observed") and
+                   exists(delivery_attempts, id == ^arg(:attempt_id) and conflict?)
+               )
+             )
+
       change set_attribute(:terminal_reason, "conflicting_provider_evidence")
       change transition_state(:reconciliation_required)
     end

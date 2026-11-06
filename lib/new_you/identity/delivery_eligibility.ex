@@ -1,7 +1,7 @@
 defmodule NewYou.Identity.DeliveryEligibility do
   @moduledoc """
-  Identity's current, read-only source guard for Communications admission.
-  Called inside the admission transaction. Account and Token locks serialize
+  Identity's current, read-only source guard for Communications admission and
+  evidence disposition. Called inside the owning Communications transaction. Account and Token locks serialize
   admission with consumption, revocation and supersession. No provider evidence
   enters this interface and no Identity state changes here.
   """
