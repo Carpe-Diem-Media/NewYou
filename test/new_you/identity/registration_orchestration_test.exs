@@ -699,9 +699,19 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
         [registration_operation_ids]
       )
 
+      # Test teardown only. The enclosing transaction holds the table lock
+      # until this guard is restored and the tracked fixture deletion commits.
+      Repo.query!(
+        "ALTER TABLE evidence_obligations DISABLE TRIGGER evidence_obligations_no_delete"
+      )
+
       Repo.query!(
         "DELETE FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[])",
         [registration_operation_ids]
+      )
+
+      Repo.query!(
+        "ALTER TABLE evidence_obligations ENABLE TRIGGER evidence_obligations_no_delete"
       )
     end
 
