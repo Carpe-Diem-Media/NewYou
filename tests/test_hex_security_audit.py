@@ -40,14 +40,14 @@ class AuditEvidenceTests(unittest.TestCase):
         self.assertIn('CONTROLLED DISPOSITION', self.decide())
 
     def test_owner_reauthorization_is_bound_to_exact_inputs(self):
-        self.assertEqual(audit.APPROVAL, 'f1705f90-2e2f-48e5-8df0-e3e1e4b2321f')
+        self.assertEqual(audit.APPROVAL, '6153e770-7a49-49ad-87da-1513b07e15d1')
         self.assertEqual(audit.APPROVED_INPUT_DIGEST,
-                         'b080e9cfcfa6c73e7d8cfd54ede395c13447fca45a904d0bd575661a245d1718')
+                         '9dba69b70b03f3c541a956fc0dd45a802678d0b72bcc3850a9058e4940134a55')
         self.assertEqual(audit.input_digest(ROOT), audit.APPROVED_INPUT_DIGEST)
         self.assertEqual(self.exception['approval_comment'],
-                         'f1705f90-2e2f-48e5-8df0-e3e1e4b2321f')
+                         '6153e770-7a49-49ad-87da-1513b07e15d1')
         self.assertEqual(self.exception['input_digest'],
-                         'b080e9cfcfa6c73e7d8cfd54ede395c13447fca45a904d0bd575661a245d1718')
+                         '9dba69b70b03f3c541a956fc0dd45a802678d0b72bcc3850a9058e4940134a55')
         self.assertEqual(self.exception['owner'], 'JC')
         self.assertEqual(self.exception['package'], 'assent')
         self.assertEqual(self.exception['version'], '0.2.13')
@@ -55,6 +55,8 @@ class AuditEvidenceTests(unittest.TestCase):
 
     def test_superseded_approval_and_binding_are_rejected(self):
         for field, value in [
+                ('approval_comment', 'f1705f90-2e2f-48e5-8df0-e3e1e4b2321f'),
+                ('input_digest', 'b080e9cfcfa6c73e7d8cfd54ede395c13447fca45a904d0bd575661a245d1718'),
                 ('approval_comment', '2804a409-64f4-4571-8df3-0da8c37da9ca'),
                 ('input_digest', '09dd14cb9d31fc9441767f8219224f9474e09eb6721291285d1e40dec16424a9'),
                 ('approval_comment', 'b8ac8764-c2c8-4dd9-b13e-802039e34790'),
@@ -64,10 +66,12 @@ class AuditEvidenceTests(unittest.TestCase):
                 self.decide(exception=exception)
 
     def test_old_baseline_inputs_cannot_use_new_approval(self):
-        with patch.object(audit, 'input_digest', return_value=
-                          '09dd14cb9d31fc9441767f8219224f9474e09eb6721291285d1e40dec16424a9'):
-            with self.assertRaisesRegex(audit.AuditError, 'invalidated'):
-                self.decide()
+        for digest in [
+                'b080e9cfcfa6c73e7d8cfd54ede395c13447fca45a904d0bd575661a245d1718',
+                '09dd14cb9d31fc9441767f8219224f9474e09eb6721291285d1e40dec16424a9']:
+            with self.subTest(digest=digest), patch.object(audit, 'input_digest', return_value=digest):
+                with self.assertRaisesRegex(audit.AuditError, 'invalidated'):
+                    self.decide()
 
     def test_real_changed_inputs_invalidate_reauthorized_disposition(self):
         for changed in ['mix.lock', 'mix.exs', '.tool-versions', 'lib/new_callback.ex',
