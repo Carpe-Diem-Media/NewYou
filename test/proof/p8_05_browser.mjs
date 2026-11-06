@@ -1,6 +1,7 @@
 // Dependency-free Chromium DevTools driver for the runner-owned P8-05 cases.
 // No screenshots, traces, page bodies, credentials or browser diagnostics leave
 // this process. Only fixed boolean facts and opaque operation IDs are returned.
+import { completeNavigation, settleBrowserExit, protocolError, boundedFailureCode } from './browser_protocol.mjs';
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync, mkdtempSync, rmSync } from 'node:fs';
@@ -16,6 +17,7 @@ let browser;
 let browserStopped;
 let closeBrowser;
 let cleanup = false;
+let failure;
 // A closed runner pipe or cancellation also terminates the browser child.
 const cancel = () => { browser?.kill('SIGTERM'); try { rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); } catch {} process.exit(2); };
 process.stdin.on('end', cancel);
@@ -27,11 +29,11 @@ const checks = {};
 try {
   if (!executable) throw new Error('browser.unavailable');
   browser = spawn(executable, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-background-networking', '--disable-component-update', '--no-first-run', '--remote-debugging-pipe', `--user-data-dir=${profile}`, 'about:blank'], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
-  browserStopped = new Promise(resolve => browser.once('exit', resolve));
   let sequence = 0;
   let buffer = '';
   const pending = new Map();
   const events = new Map();
+  browserStopped = new Promise(resolve => browser.once('exit', () => { settleBrowserExit(pending); resolve(); }));
   browser.stdio[4].on('data', chunk => {
     buffer += chunk.toString();
     let end;
@@ -43,7 +45,7 @@ try {
         if (waiter) {
           clearTimeout(waiter.timer);
           pending.delete(message.id);
-          if (message.error) waiter.reject(new Error('browser.protocol'));
+          if (message.error) waiter.reject(protocolError(message.error));
           else waiter.resolve(message.result);
         }
       } else if (message.method) {
@@ -73,13 +75,14 @@ try {
     return value.result.value;
   };
   const navigation = async action => {
+    const key = `${sessionId}:Page.loadEventFired`;
+    let timer;
     const loaded = new Promise((resolve, reject) => {
-      const key = `${sessionId}:Page.loadEventFired`;
-      const timer = setTimeout(() => { events.delete(key); reject(new Error('browser.navigation_timeout')); }, 20000);
+      timer = setTimeout(() => { events.delete(key); reject(new Error('browser.navigation_timeout')); }, 20000);
       events.set(key, { resolve, timer });
     });
-    await action();
-    await loaded;
+    try { await completeNavigation(action, loaded); }
+    finally { clearTimeout(timer); events.delete(key); }
   };
   const base = `http://127.0.0.1:${input.port}`;
   if (input.mode === 'login') {
@@ -138,7 +141,8 @@ try {
   checks.no_session = await evaluate(`!document.body.textContent.includes(${JSON.stringify(input.input.password)}) && !document.querySelector('a[href*="consume"]')`);
   }
   await call('Target.disposeBrowserContext', { browserContextId: context.browserContextId });
-} catch {
+} catch (error) {
+  failure = boundedFailureCode(error);
   checks.browser_completed = false;
 } finally {
   try {
@@ -154,5 +158,5 @@ try {
     cleanup = false;
   }
 }
-process.stdout.write(JSON.stringify({checks, operations, cleanup}));
+process.stdout.write(JSON.stringify({checks, operations, cleanup, failure}));
 process.exit(0);

@@ -174,7 +174,22 @@ defmodule NewYou.Proof.P805Browser do
       ])
 
     Port.command(port, payload <> "\n")
-    collect(port, "")
+    result = collect(port, "")
+
+    case result["failure"] do
+      nil ->
+        :ok
+
+      code
+      when code in ~w(browser.unavailable browser.protocol browser.protocol_timeout browser.context_lost browser.evaluation browser.navigation_timeout browser.stopped browser.unclassified) ->
+        SelfTest.observe_manifest!(code, false)
+        raise "proof browser failed with bounded diagnostic"
+
+      _ ->
+        raise "proof browser returned an unrecognized diagnostic"
+    end
+
+    result
   end
 
   defp collect_sessions(reference, sessions) do

@@ -73,7 +73,16 @@ defmodule NewYou.Proof.P805Test do
     failures =
       observations
       |> Enum.reject(&(&1["verdict"] == "PASS"))
-      |> Enum.map(&Map.take(&1, ["case_id", "verdict", "status", "reason_codes", "duration_ms"]))
+      |> Enum.map(fn observation ->
+        failed_codes =
+          observation["observations"]
+          |> Enum.filter(&(&1["value"] == false))
+          |> Enum.map(& &1["code"])
+
+        observation
+        |> Map.take(["case_id", "verdict", "status", "reason_codes", "duration_ms"])
+        |> Map.put("failed_observations", failed_codes)
+      end)
 
     assert failures == [], "bounded proof failures: #{inspect(failures, limit: :infinity)}"
 
