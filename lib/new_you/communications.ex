@@ -1,10 +1,10 @@
 defmodule NewYou.Communications do
   @moduledoc """
-  Communications-owned creation of verification obligations.
-
-  Identity must call this interface inside its source acceptance transaction. It does
-  not authenticate the challenge, admit a delivery, or invoke a provider. The
-  development content bindings are disabled in production builds.
+  Communications owns the durable message obligation, attempt admissions and
+  delivery evidence. Identity establishes the intent and encrypted capability
+  inside its source transaction. The id-only executor rechecks current owners,
+  commits admission, then invokes its provider outside authoritative transactions.
+  Provider evidence never changes Identity truth. Production egress is disabled.
   """
   use Ash.Domain, otp_app: :new_you
 
@@ -14,7 +14,17 @@ defmodule NewYou.Communications do
     resource MessageIntent
     resource ProtectedEnvelope
     resource EnvelopeNonce
+    resource NewYou.Communications.DeliveryAttempt
   end
+
+  @doc "Execute a trusted id-only delivery job. Public HTTP callers must not expose this internal boundary."
+  @spec execute(String.t()) :: {:ok, atom()} | {:error, atom()}
+  def execute(id), do: NewYou.Communications.Executor.execute(id)
+
+  @doc "Accept only authenticated bounded provider evidence for an existing attempt. No operator bypass is provided."
+  @spec reconcile(String.t(), atom(), String.t(), binary()) :: {:ok, :recorded} | {:error, atom()}
+  def reconcile(id, outcome, reference, signature),
+    do: NewYou.Communications.Executor.reconcile(id, outcome, reference, signature)
 
   @development_fixtures Application.compile_env(
                           :new_you,
@@ -33,7 +43,7 @@ defmodule NewYou.Communications do
   write rolls back the new intent. The bearer is never returned or stored in the intent.
 
   This is an owner seam for a trusted source operation, not evidence of current
-  send authority. The future executor must establish that separately.
+  send authority. The executor establishes that separately before admission.
   """
   @spec establish_verification(map(), binary()) :: {:ok, MessageIntent.t()} | {:error, atom()}
   if @development_fixtures do

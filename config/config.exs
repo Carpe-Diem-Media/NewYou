@@ -12,7 +12,7 @@ config :ash_oban, pro?: false
 config :new_you, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
-  queues: [default: 10, audit: 10],
+  queues: [default: 10, audit: 10, communications: 10],
   lifeline: [rescue_after: {2, :hours}],
   pruner: [max_age: {1, :day}],
   repo: NewYou.Repo,

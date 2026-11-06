@@ -1,21 +1,26 @@
 defmodule NewYou.Communications.ScopeTest do
   use ExUnit.Case, async: true
 
-  test "the slice has no delivery executor or third business resource" do
-    assert Enum.sort(Path.wildcard("lib/new_you/communications/**/*.ex")) == [
-             "lib/new_you/communications/envelope_crypto.ex",
-             "lib/new_you/communications/envelope_nonce.ex",
-             "lib/new_you/communications/keyring.ex",
-             "lib/new_you/communications/message_intent.ex",
-             "lib/new_you/communications/protected_envelope.ex"
-           ]
+  test "Communications keeps exactly two business Resources and its existing technical stores" do
+    assert Enum.sort(Ash.Domain.Info.resources(NewYou.Communications)) ==
+             Enum.sort([
+               NewYou.Communications.MessageIntent,
+               NewYou.Communications.DeliveryAttempt,
+               NewYou.Communications.ProtectedEnvelope,
+               NewYou.Communications.EnvelopeNonce
+             ])
 
-    refute AshOban in Spark.extensions(NewYou.Communications.MessageIntent)
-    refute AshOban in Spark.extensions(NewYou.Communications.ProtectedEnvelope)
-    refute AshOban in Spark.extensions(NewYou.Communications.EnvelopeNonce)
+    assert AshOban in Spark.extensions(NewYou.Communications.MessageIntent)
 
-    assert Enum.sort(
-             Enum.map(Ash.Resource.Info.actions(NewYou.Communications.MessageIntent), & &1.name)
-           ) == [:establish, :read]
+    for resource <- [
+          NewYou.Communications.ProtectedEnvelope,
+          NewYou.Communications.EnvelopeNonce,
+          NewYou.Communications.DeliveryAttempt
+        ] do
+      refute AshOban in Spark.extensions(resource)
+    end
+
+    action = Ash.Resource.Info.action(NewYou.Communications.MessageIntent, :execute_delivery)
+    refute action.transaction?
   end
 end

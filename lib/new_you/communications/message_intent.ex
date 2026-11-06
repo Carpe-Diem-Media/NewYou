@@ -7,7 +7,8 @@ defmodule NewYou.Communications.MessageIntent do
     otp_app: :new_you,
     domain: NewYou.Communications,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    extensions: [AshOban]
 
   postgres do
     table "message_intents"
@@ -32,9 +33,44 @@ defmodule NewYou.Communications.MessageIntent do
     end
   end
 
+  oban do
+    triggers do
+      trigger :delivery do
+        action :execute_delivery
+        where expr(dispatch_disposition != :closed)
+        scheduler_cron "* * * * *"
+        queue :communications
+        lock_for_update? false
+        log_errors? false
+        log_final_error? false
+        max_attempts 5
+        worker_module_name NewYou.Communications.Workers.Delivery
+        scheduler_module_name NewYou.Communications.Schedulers.Delivery
+      end
+    end
+  end
+
   actions do
     read :read do
       primary? true
+      public? false
+
+      pagination do
+        keyset? true
+        required? false
+      end
+    end
+
+    action :execute_delivery, :atom do
+      description "Revalidate, durably admit and execute outside any provider-spanning transaction."
+      argument :primary_key, :map, allow_nil?: false
+      public? false
+      transaction? false
+      run NewYou.Communications.Actions.ExecuteDelivery
+    end
+
+    update :disposition do
+      accept [:dispatch_disposition, :terminal_reason]
       public? false
     end
 
@@ -60,7 +96,11 @@ defmodule NewYou.Communications.MessageIntent do
   end
 
   policies do
-    policy always() do
+    policy action([:read, :execute_delivery]) do
+      authorize_if AshOban.Checks.AshObanInteraction
+    end
+
+    policy action([:establish, :disposition]) do
       forbid_if always()
     end
   end
