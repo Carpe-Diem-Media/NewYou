@@ -1,6 +1,7 @@
 // Dependency-free Chromium DevTools driver for the runner-owned P8-05 cases.
-// No screenshots, traces, page bodies, credentials or browser diagnostics leave
-// this process. Only fixed boolean facts and opaque operation IDs are returned.
+// No screenshots, traces, page bodies, credentials or raw browser diagnostics
+// leave this process. Only fixed facts, allow-listed error codes and opaque
+// operation IDs are returned.
 import { completeNavigation, settleBrowserExit, protocolError, boundedFailureCode } from './browser_protocol.mjs';
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
