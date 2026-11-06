@@ -87,9 +87,8 @@ defmodule NewYou.Communications.Executor do
   end
 
   defp recover(intent, %{invocation_started_at: nil} = attempt) do
-    with {:ok, _} <- record(attempt, %{admission: :closed_before_invocation, active: false}),
-         {:ok, _} <- disposition(intent, :open) do
-      {:ok, :waiting}
+    with {:ok, _} <- record(attempt, %{admission: :closed_before_invocation, active: false}) do
+      reopen_guarded(intent)
     end
   end
 
@@ -334,20 +333,26 @@ defmodule NewYou.Communications.Executor do
 
   defp apply_disposition(intent, outcome)
        when outcome in @safe or outcome == :confirmed_no_operation do
-    case delivery_payload(intent) do
-      {:ok, _payload} ->
-        with {:ok, _} <- disposition(intent, :open), do: {:ok, :recorded}
-
-      {:error, :source_invalid} ->
-        with {:ok, :source_invalid} <- close_source(intent), do: {:ok, :recorded}
-
-      _ ->
-        with {:ok, _} <- disposition(intent, :held), do: {:ok, :recorded}
-    end
+    with {:ok, _status} <- reopen_guarded(intent), do: {:ok, :recorded}
   end
 
   defp apply_disposition(intent, _) do
     with {:ok, _} <- disposition(intent, :reconciliation_required), do: {:ok, :recorded}
+  end
+
+  # A terminal admission or safe provider outcome never grants current send
+  # eligibility. Both paths re-read the same owner guards under the intent lock.
+  defp reopen_guarded(intent) do
+    case delivery_payload(intent) do
+      {:ok, _payload} ->
+        with {:ok, _} <- disposition(intent, :open), do: {:ok, :waiting}
+
+      {:error, :source_invalid} ->
+        close_source(intent)
+
+      _ ->
+        with {:ok, _} <- disposition(intent, :held), do: {:ok, :held}
+    end
   end
 
   defp conflict(intent, attempt) do

@@ -37,6 +37,10 @@ defmodule NewYou.Communications.DeliveryRecoveryTest do
         assert :ok = CutPoints.verify_consumed(scenario)
         [admitted] = Ash.read!(Communications.DeliveryAttempt, authorize?: false)
         assert admitted.admission == :admitted
+
+        if unquote(point) == :after_admission,
+          do: Process.put(:p810_provider, fn _, _ -> :delivered end)
+
         assert {:ok, :waiting} = Communications.execute(intent.id)
         recovered = Ash.get!(Communications.DeliveryAttempt, admitted.id, authorize?: false)
 
@@ -55,6 +59,110 @@ defmodule NewYou.Communications.DeliveryRecoveryTest do
         end
 
         assert :ok = Scenario.stop(scenario)
+      end)
+    after
+      Process.delete(:p810_provider)
+    end
+  end
+
+  for prerequisite <- [
+        :eligible,
+        :content_ineligible,
+        :capability_unavailable,
+        :provider_unavailable
+      ] do
+    test "pre-invocation crash recovery rechecks #{prerequisite}" do
+      P805.with_fixture(fn ->
+        {:ok, _} = Identity.register(P805.request())
+        [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+        scenario = Scenario.start()
+        parent = self()
+        reference = make_ref()
+
+        try do
+          :ok = Provider.configure(scenario, %{"recovery-operation" => [{:submit, :accepted}]})
+          :ok = CutPoints.arm(scenario, :"transaction.after_commit", :executor, :terminate)
+
+          {pid, monitor} =
+            Scenario.spawn(scenario, :executor, fn ->
+              Sandbox.unboxed_run(Repo, fn ->
+                Process.put(:p810_provider, fn attempt, _ ->
+                  send(parent, {reference, :submitted, attempt.id})
+                  {:ok, event} = Provider.next(scenario, "recovery-operation", :submit)
+                  event.outcome
+                end)
+
+                Process.put(DeliverySeam, fn point ->
+                  if point == :after_admission,
+                    do: CutPoints.hit(scenario, :"transaction.after_commit", :executor)
+                end)
+
+                Communications.execute(intent.id)
+              end)
+            end)
+
+          assert_receive {:DOWN, ^monitor, :process, ^pid, :proof_terminated}, 10_000
+          assert :ok = CutPoints.verify_consumed(scenario)
+          [admitted] = Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+          assert admitted.active and admitted.invocation_started_at == nil
+
+          Process.put(:p810_provider, fn attempt, _ ->
+            send(parent, {reference, :submitted, attempt.id})
+            :accepted
+          end)
+
+          case unquote(prerequisite) do
+            :content_ineligible ->
+              Repo.query!(
+                "UPDATE message_intents SET translation_version_id = $1 WHERE id = $2",
+                ["withdrawn-or-unknown", Ecto.UUID.dump!(intent.id)]
+              )
+
+            :capability_unavailable ->
+              envelope = Ash.get!(Communications.ProtectedEnvelope, intent.id, authorize?: false)
+              Ash.destroy!(envelope, action: :clear, authorize?: false)
+
+            :provider_unavailable ->
+              Process.delete(:p810_provider)
+
+            :eligible ->
+              :ok
+          end
+
+          expected = if unquote(prerequisite) == :eligible, do: :waiting, else: :held
+          result = Communications.execute(intent.id)
+          recovered = Ash.get!(Communications.DeliveryAttempt, admitted.id, authorize?: false)
+          assert recovered.admission == :closed_before_invocation
+          refute recovered.active
+          assert recovered.invocation_started_at == nil
+          assert recovered.provider_observation == :pending
+          assert recovered.reconciliation == :none
+          assert recovered.locale == admitted.locale
+          assert recovered.render_digest == admitted.render_digest
+          refute_receive {^reference, :submitted, _}
+          assert [recovered] == Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+          current = Ash.get!(Communications.MessageIntent, intent.id, authorize?: false)
+          expected_disposition = if unquote(prerequisite) == :eligible, do: :open, else: :held
+          assert current.dispatch_disposition == expected_disposition
+          assert {:ok, ^expected} = result
+
+          if unquote(prerequisite) == :eligible do
+            assert current.dispatch_disposition == :open
+            assert {:ok, :processed} = Communications.execute(intent.id)
+            assert_receive {^reference, :submitted, new_id}
+            refute new_id == admitted.id
+
+            assert recovered ==
+                     Ash.get!(Communications.DeliveryAttempt, admitted.id, authorize?: false)
+          else
+            assert current.dispatch_disposition == :held
+            assert {:ok, :held} = Communications.execute(intent.id)
+            refute_receive {^reference, :submitted, _}
+            assert [recovered] == Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+          end
+        after
+          assert :ok = Scenario.stop(scenario)
+        end
       end)
     after
       Process.delete(:p810_provider)
