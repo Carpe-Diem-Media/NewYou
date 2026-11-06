@@ -36,5 +36,21 @@ export function boundedFailureCode(error) {
     'browser.context_lost', 'browser.evaluation', 'browser.navigation_timeout',
     'browser.stopped'
   ]);
+  const methods = [
+    'Target.createBrowserContext', 'Target.createTarget', 'Target.attachToTarget',
+    'Page.enable', 'Runtime.enable', 'Runtime.evaluate', 'Page.navigate',
+    'Target.disposeBrowserContext', 'Browser.close'
+  ];
+  for (const method of methods) codes.add(`browser.protocol_timeout.${method}`);
   return codes.has(error?.message) ? error.message : 'browser.unclassified';
+}
+
+export function settleContextLoss(pending, sessionId) {
+  for (const [id, waiter] of pending) {
+    if (waiter.method === 'Runtime.evaluate' && waiter.sessionId === sessionId) {
+      clearTimeout(waiter.timer);
+      pending.delete(id);
+      waiter.reject(new Error('browser.context_lost'));
+    }
+  }
 }

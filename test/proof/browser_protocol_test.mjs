@@ -72,3 +72,24 @@ test('failure diagnostics expose only fixed codes', async () => {
   assert.equal(boundedFailureCode(new Error('browser.protocol_timeout')), 'browser.protocol_timeout');
   assert.equal(boundedFailureCode(new Error('synthetic-secret-canary')), 'browser.unclassified');
 });
+
+test('cleared execution contexts settle only evaluations in the affected session', async () => {
+  const { settleContextLoss } = await import('./browser_protocol.mjs');
+  const rejected = [];
+  const pending = new Map([
+    [1, {method: 'Runtime.evaluate', sessionId: 'page-a', reject: error => rejected.push(error.message)}],
+    [2, {method: 'Page.navigate', sessionId: 'page-a', reject: () => assert.fail('navigation rejected')}],
+    [3, {method: 'Runtime.evaluate', sessionId: 'page-b', reject: () => assert.fail('other page rejected')}]
+  ]);
+  settleContextLoss(pending, 'page-a');
+  assert.deepEqual(rejected, ['browser.context_lost']);
+  assert.deepEqual([...pending.keys()], [2, 3]);
+});
+
+test('method-level timeout diagnostics remain bounded', async () => {
+  const { boundedFailureCode } = await import('./browser_protocol.mjs');
+  assert.equal(boundedFailureCode(new Error('browser.protocol_timeout.Runtime.evaluate')),
+    'browser.protocol_timeout.Runtime.evaluate');
+  assert.equal(boundedFailureCode(new Error('browser.protocol_timeout.synthetic-secret-canary')),
+    'browser.unclassified');
+});

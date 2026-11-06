@@ -2,7 +2,7 @@
 // No screenshots, traces, page bodies, credentials or raw browser diagnostics
 // leave this process. Only fixed facts, allow-listed error codes and opaque
 // operation IDs are returned.
-import { completeNavigation, settleBrowserExit, protocolError, boundedFailureCode } from './browser_protocol.mjs';
+import { completeNavigation, settleBrowserExit, settleContextLoss, protocolError, boundedFailureCode } from './browser_protocol.mjs';
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync, mkdtempSync, rmSync } from 'node:fs';
@@ -50,6 +50,9 @@ try {
           else waiter.resolve(message.result);
         }
       } else if (message.method) {
+        if (message.method === 'Runtime.executionContextsCleared') {
+          settleContextLoss(pending, message.sessionId);
+        }
         const key = `${message.sessionId}:${message.method}`;
         const waiter = events.get(key);
         if (waiter) { clearTimeout(waiter.timer); events.delete(key); waiter.resolve(message.params); }
@@ -59,8 +62,8 @@ try {
   function call(method, params = {}, sessionId) {
     return new Promise((resolve, reject) => {
       const id = ++sequence;
-      const timer = setTimeout(() => { pending.delete(id); reject(new Error('browser.protocol_timeout')); }, 20000);
-      pending.set(id, { resolve, reject, timer });
+      const timer = setTimeout(() => { pending.delete(id); reject(new Error(`browser.protocol_timeout.${method}`)); }, 20000);
+      pending.set(id, { resolve, reject, timer, method, sessionId });
       browser.stdio[3].write(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }) + '\0');
     });
   }
@@ -70,6 +73,7 @@ try {
   const { sessionId } = await call('Target.attachToTarget', { targetId, flatten: true });
   const cdp = (method, params) => call(method, params, sessionId);
   await cdp('Page.enable');
+  await cdp('Runtime.enable');
   const evaluate = async expression => {
     const value = await cdp('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
     if (value.exceptionDetails) throw new Error('browser.evaluation');
