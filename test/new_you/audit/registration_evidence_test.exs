@@ -261,7 +261,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     assert audit_records("EvidenceRecord") == []
   end
 
-  test "an open obligation cannot be stranded by standalone record creation" do
+  test "standalone record creation is not exposed through a Domain interface" do
     assert {:ok, _} = NewYou.Identity.register(valid_request())
     [obligation] = audit_records("EvidenceObligation")
 
