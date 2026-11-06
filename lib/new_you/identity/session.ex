@@ -11,6 +11,11 @@ defmodule NewYou.Identity.Session do
     table "sessions"
     repo NewYou.Repo
 
+    references do
+      # Token cleanup must retain Session history and its original identifier.
+      reference :token, ignore?: true
+    end
+
     check_constraints do
       check_constraint :state, "sessions_state",
         check: "state IN ('active', 'expired', 'revoked', 'logged_out')"

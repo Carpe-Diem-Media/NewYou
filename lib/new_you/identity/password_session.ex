@@ -10,7 +10,7 @@ defmodule NewYou.Identity.PasswordSession do
     with {:ok, email} <- Email.canonicalize(email),
          {:ok, account} <- find_account(email),
          true <- Argon2Provider.valid?(password, account.hashed_password) do
-      issue(account)
+      issue(account, email)
     else
       _ -> {:error, :authentication_unavailable}
     end
@@ -31,20 +31,21 @@ defmodule NewYou.Identity.PasswordSession do
     end
   end
 
-  defp issue(account) do
-    case Ash.transact([Account, Token, Session], fn -> issue_locked(account) end) do
+  defp issue(account, email) do
+    case Ash.transact([Account, Token, Session], fn -> issue_locked(account, email) end) do
       {:ok, {:ok, credentials}} -> {:ok, credentials}
       {:ok, credentials} when is_map(credentials) -> {:ok, credentials}
       _ -> {:error, :authentication_unavailable}
     end
   end
 
-  defp issue_locked(account) do
+  defp issue_locked(account, email) do
     with {:ok, [current]} <-
            Account
            |> Ash.Query.filter(id == ^account.id)
            |> Ash.Query.lock(:for_update)
            |> Ash.read(authorize?: false),
+         true <- current.email == email,
          true <- eligible?(current),
          true <- current.hashed_password == account.hashed_password,
          {:ok, bearer, claims} <-

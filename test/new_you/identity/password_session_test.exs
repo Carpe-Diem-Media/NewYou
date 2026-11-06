@@ -104,6 +104,133 @@ defmodule NewYou.Identity.PasswordSessionTest do
     end)
   end
 
+  test "expired-token cleanup retains linked Session history and denies old credentials" do
+    P805.with_fixture(fn ->
+      request = P805.request()
+      {:ok, registration} = Identity.register(request)
+      {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+
+      credentials =
+        for state <- [:active, :expired, :revoked, :logged_out] do
+          {:ok, credentials} = Identity.authenticate_password(request.email, request.password)
+          session_id = Ecto.UUID.dump!(credentials.session_id)
+
+          NewYou.Repo.query!(
+            "UPDATE sessions SET state = $2 WHERE id = $1",
+            [session_id, Atom.to_string(state)]
+          )
+
+          session = Ash.get!(Identity.Session, credentials.session_id, authorize?: false)
+
+          NewYou.Repo.query!(
+            "UPDATE tokens SET expires_at = now() - interval '1 hour' WHERE jti = $1",
+            [session.token_jti]
+          )
+
+          {credentials, session}
+        end
+
+      assert :ok = AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
+      assert :ok = AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
+
+      for {credentials, original} <- credentials do
+        retained = Ash.get!(Identity.Session, credentials.session_id, authorize?: false)
+        assert retained.state == original.state
+        assert retained.token_jti == original.token_jti
+        assert retained.created_at == original.created_at
+
+        assert is_nil(
+                 Ash.get!(Identity.Token, original.token_jti,
+                   authorize?: false,
+                   not_found_error?: false
+                 )
+               )
+
+        assert {:error, :authentication_unavailable} = Identity.authorize_session(credentials)
+      end
+
+      assert {:ok, fresh} = Identity.authenticate_password(request.email, request.password)
+      assert {:ok, %{account_id: id}} = Identity.authorize_session(fresh)
+      assert id == registration.account_id
+    end)
+  end
+
+  test "password login rejects an email changed while waiting for the Account lock" do
+    P805.with_fixture(fn ->
+      request = P805.request()
+      changed_email = P805.request().email
+      {:ok, registration} = Identity.register(request)
+      {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+      account_id = Ecto.UUID.dump!(registration.account_id)
+      parent = self()
+      reference = make_ref()
+      scenario = NewYou.Proof.Scenario.start()
+      before_tokens = P805.scalar("SELECT count(*) FROM tokens")
+      before_sessions = P805.scalar("SELECT count(*) FROM sessions")
+
+      try do
+        {:ok, monitor} =
+          NewYou.Repo.transaction(fn ->
+            NewYou.Repo.query!("SELECT id FROM accounts WHERE id = $1 FOR UPDATE", [account_id])
+            holder_backend = P805.scalar("SELECT pg_backend_pid()")
+
+            {_worker, monitor} =
+              NewYou.Proof.Scenario.spawn(scenario, :stale_email_login, fn ->
+                :ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo, sandbox: false)
+
+                try do
+                  send(parent, {reference, :backend, P805.scalar("SELECT pg_backend_pid()")})
+
+                  # Send only the decision, never a bearer, back to the test process.
+                  result = Identity.authenticate_password(request.email, request.password)
+
+                  send(
+                    parent,
+                    {reference, :denied, result == {:error, :authentication_unavailable}}
+                  )
+                after
+                  Ecto.Adapters.SQL.Sandbox.checkin(NewYou.Repo)
+                end
+              end)
+
+            assert_receive {^reference, :backend, login_backend}, 5_000
+
+            assert await_account_lock(
+                     holder_backend,
+                     login_backend,
+                     System.monotonic_time(:millisecond) + 10_000
+                   )
+
+            NewYou.Repo.query!("UPDATE accounts SET email = $2 WHERE id = $1", [
+              account_id,
+              changed_email
+            ])
+
+            monitor
+          end)
+
+        assert_receive {^reference, :denied, true}, 5_000
+        assert_receive {:DOWN, ^monitor, :process, _, :normal}, 5_000
+        assert P805.scalar("SELECT count(*) FROM tokens") == before_tokens
+        assert P805.scalar("SELECT count(*) FROM sessions") == before_sessions
+
+        assert {:error, :authentication_unavailable} =
+                 Identity.authenticate_password(request.email, request.password)
+
+        assert {:ok, fresh} =
+                 Identity.authenticate_password(
+                   String.replace(changed_email, "@example.test", "@EXAMPLE.TEST"),
+                   request.password
+                 )
+
+        assert {:ok, %{account_id: id}} = Identity.authorize_session(fresh)
+        assert id == registration.account_id
+      after
+        assert :ok = NewYou.Proof.Scenario.stop(scenario)
+      end
+    end)
+  end
+
   test "session and token revocation independently deny protected access" do
     P805.with_fixture(fn ->
       request = P805.request()
@@ -300,5 +427,16 @@ defmodule NewYou.Identity.PasswordSessionTest do
       assert Ash.get!(Identity.Session, credentials.session_id, authorize?: false).state ==
                :expired
     end)
+  end
+
+  defp await_account_lock(holder, login, deadline) do
+    case NewYou.Repo.query!("SELECT $1 = ANY(pg_blocking_pids($2))", [holder, login]).rows do
+      [[true]] ->
+        true
+
+      _ ->
+        System.monotonic_time(:millisecond) < deadline and
+          await_account_lock(holder, login, deadline)
+    end
   end
 end
