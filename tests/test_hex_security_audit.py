@@ -40,14 +40,14 @@ class AuditEvidenceTests(unittest.TestCase):
         self.assertIn('CONTROLLED DISPOSITION', self.decide())
 
     def test_owner_reauthorization_is_bound_to_exact_inputs(self):
-        self.assertEqual(audit.APPROVAL, '41bbcf5f-6473-4065-a531-4a5fa7bdf834')
+        self.assertEqual(audit.APPROVAL, '41c24934-21d0-4b29-a86f-56532b27e5c9')
         self.assertEqual(audit.APPROVED_INPUT_DIGEST,
-                         'bd4ddce56947edb853449b26793a974266e48e5762cf77d19dd1f2c24cba0d4d')
+                         '2c82e2c7608eaef0f4a6204041377b7a2300a23434eda8445307477bd147e9a0')
         self.assertEqual(audit.input_digest(ROOT), audit.APPROVED_INPUT_DIGEST)
         self.assertEqual(self.exception['approval_comment'],
-                         '41bbcf5f-6473-4065-a531-4a5fa7bdf834')
+                         '41c24934-21d0-4b29-a86f-56532b27e5c9')
         self.assertEqual(self.exception['input_digest'],
-                         'bd4ddce56947edb853449b26793a974266e48e5762cf77d19dd1f2c24cba0d4d')
+                         '2c82e2c7608eaef0f4a6204041377b7a2300a23434eda8445307477bd147e9a0')
         self.assertEqual(self.exception['owner'], 'JC')
         self.assertEqual(self.exception['package'], 'assent')
         self.assertEqual(self.exception['version'], '0.2.13')
@@ -68,7 +68,9 @@ class AuditEvidenceTests(unittest.TestCase):
                 ('approval_comment', 'd9d80575-34d9-41cb-9879-5823873cb68a'),
                 ('input_digest', '2c4e97e5ca481ed7f436a87d770f56b64162e82722bcffe990f355e023ec21c1'),
                 ('approval_comment', 'e51fa0fa-431b-4e33-8b5a-863b9c1d4fbd'),
-                ('input_digest', '532a998b33c90ea736a045701624655b8313ec7239b81116fbfb06d6310c6699')]:
+                ('input_digest', '532a998b33c90ea736a045701624655b8313ec7239b81116fbfb06d6310c6699'),
+                ('approval_comment', '41bbcf5f-6473-4065-a531-4a5fa7bdf834'),
+                ('input_digest', 'bd4ddce56947edb853449b26793a974266e48e5762cf77d19dd1f2c24cba0d4d')]:
             exception = dict(self.exception, **{field: value})
             with self.subTest(field=field), self.assertRaisesRegex(audit.AuditError, 'Unauthorised'):
                 self.decide(exception=exception)
@@ -80,7 +82,8 @@ class AuditEvidenceTests(unittest.TestCase):
                 '9dba69b70b03f3c541a956fc0dd45a802678d0b72bcc3850a9058e4940134a55',
                 '9054cd23327eb3ac64f5cbaf1c7672c33e1497cb09d4214c63cbd2e87ad54545',
                 '2c4e97e5ca481ed7f436a87d770f56b64162e82722bcffe990f355e023ec21c1',
-                '532a998b33c90ea736a045701624655b8313ec7239b81116fbfb06d6310c6699']:
+                '532a998b33c90ea736a045701624655b8313ec7239b81116fbfb06d6310c6699',
+                'bd4ddce56947edb853449b26793a974266e48e5762cf77d19dd1f2c24cba0d4d']:
             with self.subTest(digest=digest), patch.object(audit, 'input_digest', return_value=digest):
                 with self.assertRaisesRegex(audit.AuditError, 'invalidated'):
                     self.decide()
