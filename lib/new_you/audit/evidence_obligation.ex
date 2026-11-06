@@ -1,4 +1,9 @@
 defmodule NewYou.Audit.EvidenceObligation do
+  @moduledoc """
+  Durable Audit E2 work, independent of executor jobs. PostgreSQL preserves the
+  source provenance and terminal fulfilment. The AshOban scheduler rediscovers
+  open obligations every minute, including those with missing or exhausted jobs.
+  """
   use Ash.Resource,
     otp_app: :new_you,
     domain: NewYou.Audit,
@@ -30,7 +35,7 @@ defmodule NewYou.Audit.EvidenceObligation do
       trigger :registration_evidence do
         action :materialize_registration_evidence
         where expr(state == :open)
-        scheduler_cron false
+        scheduler_cron "* * * * *"
         queue :audit
         max_attempts 10
         worker_module_name NewYou.Audit.Workers.RegistrationEvidence
