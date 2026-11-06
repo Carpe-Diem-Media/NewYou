@@ -234,7 +234,12 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
     assert operation.password_verifier == account.hashed_password
     refute Map.has_key?(Map.from_struct(operation), :password)
     assert :binary.match(:erlang.term_to_binary(operation), request.password) == :nomatch
-    refute Code.ensure_loaded?(Module.concat(NewYou.Identity, "Session"))
+
+    assert %{rows: [[0]]} =
+             NewYou.Repo.query!("SELECT count(*) FROM sessions WHERE account_id = $1", [
+               Ecto.UUID.dump!(account.id)
+             ])
+
     refute Enum.any?(Ash.Resource.Info.actions(NewYou.Identity.Account), &(&1.type == :destroy))
   end
 
@@ -676,6 +681,7 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
              Enum.sort([
                NewYou.Identity.Account,
                NewYou.Identity.Token,
+               NewYou.Identity.Session,
                NewYou.Identity.RegistrationOperation,
                NewYou.Identity.ResendOperation
              ])

@@ -2,7 +2,7 @@ defmodule NewYouWeb.PrivacyTelemetry do
   @moduledoc false
 
   @behaviour Plug
-  @sensitive_browser_paths ["/register", "/verification"]
+  @sensitive_browser_paths ["/register", "/verification", "/login", "/session"]
 
   @impl Plug
   def init(opts) do
