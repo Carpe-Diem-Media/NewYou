@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -93,6 +94,17 @@ class VerificationMessageAuthorityTests(unittest.TestCase):
         self.assertIn("verification-message proof contract", self.spec)
         self.assertIn("development_approved", section)
         self.assertIn("runtime_release_eligibility", section)
+
+    def test_live_p805_product_references_match_current_governance_routes(self) -> None:
+        expected = {
+            row["repository_path"] for row in ROUTER["governing_documents"]
+            if row["document_id"] in {"PLATFORM_PRODUCT_LAW", "PRODUCT_DECISIONS"}
+        }
+        for heading in ("## Purpose and current boundary", "## Source references"):
+            with self.subTest(section=heading):
+                section = self.spec.split(heading, 1)[1].split("\n## ", 1)[0]
+                references = set(re.findall(r"docs/governance/product/(?:00_PLATFORM|01_DECISIONS)_v\d+\.\d+\.\d+\.md", section))
+                self.assertEqual(expected, references)
 
     def test_locale_version_is_delivery_authority_not_mutable_authoring_template(self) -> None:
         definition = self.product.split("## 21E.19 Verification message content classification", 1)[1].split("## 21E.20", 1)[0]
