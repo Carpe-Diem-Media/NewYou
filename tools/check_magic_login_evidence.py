@@ -167,6 +167,14 @@ def validate_development(root: Path, packet: dict) -> list[str]:
         eligibility = copy.deepcopy(candidate["eligibility"])
         eligibility["development"] = True
         check(packet["eligibility"] == eligibility, "development cannot authorise runtime or release")
+        delivery = json.loads((root / "docs/delivery/CURRENT_DELIVERY_ROUTER.json").read_text())
+        active = [x for x in delivery["delivery_contracts"] if x["document_id"] == "MAGIC_LOGIN_MESSAGE_DEVELOPMENT_EVIDENCE"]
+        check(len(active) == 1, "missing or ambiguous current development evidence")
+        if len(active) == 1:
+            route = active[0]
+            expected_path = str(PACKET_PATH).replace("v0.1.0", "v0.2.0")
+            check(route["repository_path"] == expected_path and route.get("status") == "DEVELOPMENT_ONLY_APPROVED; RUNTIME_RELEASE_PROHIBITED", "development evidence withdrawn, superseded or unsupported")
+            load_artifact({"path": route["repository_path"], "sha256": route["sha256"]})
         expected_events = {}
         for index, owner in enumerate(("Product", "Content & Media")):
             decision = source["decisions"][index]
@@ -205,7 +213,11 @@ def validate_development(root: Path, packet: dict) -> list[str]:
 if __name__ == "__main__":
     try:
         findings = validate(ROOT, json.loads((ROOT / PACKET_PATH).read_text()))
-        development = ROOT / str(PACKET_PATH).replace("v0.1.0", "v0.2.0")
+        delivery = json.loads((ROOT / "docs/delivery/CURRENT_DELIVERY_ROUTER.json").read_text())
+        routes = [x for x in delivery["delivery_contracts"] if x["document_id"] == "MAGIC_LOGIN_MESSAGE_DEVELOPMENT_EVIDENCE"]
+        if len(routes) != 1:
+            raise ValueError("missing or ambiguous current development evidence")
+        development = ROOT / routes[0]["repository_path"]
         findings.extend(validate_development(ROOT, json.loads(development.read_text())))
     except (OSError, ValueError) as error:
         findings = [str(error)]

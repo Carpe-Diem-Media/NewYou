@@ -3,6 +3,8 @@
 import copy
 import json
 import unittest
+import shutil
+import tempfile
 from pathlib import Path
 
 from tools.check_magic_login_evidence import validate_development
@@ -47,6 +49,24 @@ class MagicLoginDevelopmentApprovalTests(unittest.TestCase):
         self.assertEqual([], validate_development(ROOT, repeated))
         repeated["approval_events"][-1]["binding"]["format_id"] = "changed"
         self.assertTrue(validate_development(ROOT, repeated))
+
+    def test_old_approved_file_cannot_override_current_withdrawal_or_missing_route(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copytree(ROOT / "docs/governance", root / "docs/governance")
+            relative = PACKET.parent.relative_to(ROOT)
+            shutil.copytree(PACKET.parent, root / relative)
+            route_path = root / "docs/delivery/CURRENT_DELIVERY_ROUTER.json"
+            route_path.write_bytes((ROOT / "docs/delivery/CURRENT_DELIVERY_ROUTER.json").read_bytes())
+            original = json.loads(route_path.read_text())
+            for status in ("WITHDRAWN", "SUPERSEDED"):
+                router = copy.deepcopy(original)
+                next(x for x in router["delivery_contracts"] if x["document_id"] == "MAGIC_LOGIN_MESSAGE_DEVELOPMENT_EVIDENCE")["status"] = status
+                route_path.write_text(json.dumps(router))
+                self.assertTrue(validate_development(root, self.packet))
+            original["delivery_contracts"] = [x for x in original["delivery_contracts"] if x["document_id"] != "MAGIC_LOGIN_MESSAGE_DEVELOPMENT_EVIDENCE"]
+            route_path.write_text(json.dumps(original))
+            self.assertTrue(validate_development(root, self.packet))
 
     def test_successor_changes_only_approved_semantics(self):
         for document in self.packet["promoted_authority"]:
