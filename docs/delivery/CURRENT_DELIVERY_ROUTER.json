@@ -164,6 +164,14 @@
       "repository_path": "docs/delivery/content-evidence/content_media/verification_messages/VERIFICATION_MESSAGE_EVIDENCE_PACKET_v0.2.0.json",
       "sha256": "2cbcab1256c4b0adab53189d31941ab926e0649dff6878e39558297b5221053c",
       "contract_type": "content_evidence"
+    },
+    {
+      "document_id": "MAGIC_LOGIN_MESSAGE_CANDIDATE_EVIDENCE",
+      "canonical_filename": "MAGIC_LOGIN_MESSAGE_EVIDENCE_PACKET_v0.1.0.json",
+      "repository_path": "docs/delivery/content-evidence/content_media/magic_login_messages/MAGIC_LOGIN_MESSAGE_EVIDENCE_PACKET_v0.1.0.json",
+      "sha256": "096401942a84e8c002d9f67d30537e70e1479e8bb2e521814b98e706b262b517",
+      "contract_type": "content_evidence",
+      "status": "CANDIDATE_NOT_APPROVED"
     }
   ]
 }

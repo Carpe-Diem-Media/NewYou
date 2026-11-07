@@ -1,0 +1,11 @@
+subject: Sign in to {{platform_name}}
+
+Someone requested a sign-in link for {{platform_name}}.
+
+Open the link below. Signing in requires you to confirm on the page.
+
+{{magic_login_link}}
+
+If you did not request this, ignore this email. Do not share the link.
+
+{{platform_name}}

@@ -1,0 +1,11 @@
+subject: Meld aan by {{platform_name}}
+
+Iemand het ’n aanmeldskakel vir {{platform_name}} aangevra.
+
+Maak die skakel hieronder oop. Jy moet op die bladsy bevestig voordat jy aangemeld word.
+
+{{magic_login_link}}
+
+As jy nie hierdie versoek gerig het nie, ignoreer hierdie e-pos. Moenie die skakel deel nie.
+
+{{platform_name}}
