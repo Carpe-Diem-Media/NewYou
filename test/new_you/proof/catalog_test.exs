@@ -11,7 +11,7 @@ defmodule NewYou.Proof.CatalogTest do
 
     assert Map.keys(required.business_manifests) |> Enum.sort() ==
              Enum.sort(
-               ~w(registration_pmr_reconciliation audit_e2 browser_spine proof_capability_scanner_replay_supersession session_login_revocation_restart)
+               ~w(registration_pmr_reconciliation audit_e1 audit_e2 browser_spine proof_capability_scanner_replay_supersession session_login_revocation_restart)
              )
 
     assert length(required.self_test.cases) == 50
@@ -63,9 +63,10 @@ defmodule NewYou.Proof.CatalogTest do
     assert {:error, :unknown_coverage} = Catalog.lookup_manifest("unknown", "case.one")
 
     assert {:error, :missing_manifest} =
-             Catalog.lookup_manifest("audit_e1", "case.one")
+             Catalog.lookup_manifest("recovery_primary_email_change", "case.one")
 
     assert {:error, :unknown_case} = Catalog.lookup_manifest("harness", "unknown.case")
+    assert {:error, :unknown_case} = Catalog.lookup_manifest("audit_e1", "unknown.case")
 
     manifest = hd(Catalog.required().self_test.cases)
     assert {:ok, ^manifest} = Catalog.lookup_manifest("harness", manifest.case_id)

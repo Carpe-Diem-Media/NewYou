@@ -28,7 +28,12 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:create, :register},
                {:read, :get_by_subject},
                {:read, :read},
-               {:update, :mark_email_verified}
+               {:update, :mark_email_verified},
+               {:update, :place_security_hold},
+               {:update, :record_security_hold_attempt},
+               {:update, :release_security_hold},
+               {:update, :review_security_hold},
+               {:update, :update_privileged_mfa}
              ]
 
     assert AshAuthentication.Strategy.routes(password) == []
