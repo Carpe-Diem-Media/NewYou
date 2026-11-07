@@ -13,15 +13,20 @@ defmodule NewYou.Identity.MagicLoginRequestTimingTest do
       eligible = account(true)
       ineligible = account(false)
 
-      for email <- [
-            eligible.email,
-            "unknown-#{Ecto.UUID.generate()}@example.test",
-            ineligible.email
-          ] do
-        {result, elapsed} = request(email, operation())
-        assert result == :ok
-        assert_response_window(elapsed)
-      end
+      elapsed_by_class =
+        for email <- [
+              eligible.email,
+              "unknown-#{Ecto.UUID.generate()}@example.test",
+              ineligible.email
+            ] do
+          {result, elapsed} = request(email, operation())
+          assert result == :ok
+          assert_response_window(elapsed)
+          elapsed
+        end
+
+      assert Enum.max(elapsed_by_class) - Enum.min(elapsed_by_class) < 150,
+             "Account classes did not share the same padded response window"
 
       assert magic_count(eligible.account_id) == 1
       assert magic_count(ineligible.account_id) == 0
@@ -115,6 +120,107 @@ defmodule NewYou.Identity.MagicLoginRequestTimingTest do
     end)
   end
 
+  test "slow application work is cancelled before the neutral response and cannot commit later" do
+    P805.with_fixture(fn ->
+      account = account(true)
+      operation = operation()
+      parent = self()
+      reference = make_ref()
+
+      {requester, requester_monitor} =
+        database_worker(fn ->
+          Process.put(RegistrationSeam, {:pause, parent, reference})
+          outcome = request(account.email, operation)
+          send(parent, {reference, :result, outcome})
+        end)
+
+      try do
+        assert_receive {^reference, :before_commit, worker, _backend, _transaction}, 1_000
+        worker_monitor = Process.monitor(worker)
+        assert_receive {^reference, :result, {:ok, elapsed}}, 1_000
+        assert_response_window(elapsed)
+        assert_receive {:DOWN, ^worker_monitor, :process, ^worker, :killed}, 1_000
+        send(worker, {reference, :release})
+        assert magic_count(account.account_id) == 0
+        assert intent_count() == 0
+      after
+        if Process.alive?(requester), do: Process.exit(requester, :kill)
+        Process.demonitor(requester_monitor, [:flush])
+      end
+
+      {result, elapsed} = request(account.email, operation)
+      assert result == :ok
+      assert_response_window(elapsed)
+      assert magic_count(account.account_id) == 1
+      assert intent_count() == 1
+    end)
+  end
+
+  test "the work deadline survives death of the requesting process" do
+    P805.with_fixture(fn ->
+      account = account(true)
+      operation = operation()
+      parent = self()
+      reference = make_ref()
+
+      {requester, requester_monitor} =
+        database_worker(fn ->
+          Process.put(RegistrationSeam, {:pause, parent, reference})
+          request(account.email, operation)
+        end)
+
+      assert_receive {^reference, :before_commit, worker, _backend, _transaction}, 1_000
+      worker_monitor = Process.monitor(worker)
+      Process.exit(requester, :kill)
+      assert_receive {:DOWN, ^requester_monitor, :process, ^requester, :killed}, 1_000
+      assert_receive {:DOWN, ^worker_monitor, :process, ^worker, :killed}, 1_000
+      send(worker, {reference, :release})
+      assert magic_count(account.account_id) == 0
+      assert intent_count() == 0
+
+      {result, elapsed} = request(account.email, operation)
+      assert result == :ok
+      assert_response_window(elapsed)
+      assert magic_count(account.account_id) == 1
+      assert intent_count() == 1
+    end)
+  end
+
+  test "worker admission exhaustion remains neutral for every Account class" do
+    P805.with_fixture(fn ->
+      eligible = account(true)
+      ineligible = account(false)
+
+      blockers =
+        for _ <- 1..32 do
+          {:ok, pid} =
+            Task.Supervisor.start_child(NewYou.Identity.MagicLogin.RequestSupervisor, fn ->
+              receive do
+                :release -> :ok
+              end
+            end)
+
+          {pid, Process.monitor(pid)}
+        end
+
+      try do
+        for email <- [eligible.email, ineligible.email, "unknown@example.test"] do
+          {result, elapsed} = request(email, operation())
+          assert result == :ok
+          assert_response_window(elapsed)
+        end
+
+        assert magic_count(eligible.account_id) == 0
+        assert intent_count() == 0
+      after
+        for {pid, monitor} <- blockers do
+          send(pid, :release)
+          finish_worker(pid, monitor)
+        end
+      end
+    end)
+  end
+
   defp account(verified?) do
     input = P805.request()
     {:ok, registration} = Identity.register(input)
@@ -136,7 +242,7 @@ defmodule NewYou.Identity.MagicLoginRequestTimingTest do
 
   defp assert_response_window(elapsed) do
     assert elapsed >= 500, "public request bypassed its common response floor"
-    assert elapsed < 1_500, "public request exceeded its bounded database-work envelope"
+    assert elapsed < 1_000, "public request exceeded its common response window"
   end
 
   defp magic_count(account_id) do

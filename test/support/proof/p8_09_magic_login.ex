@@ -165,7 +165,7 @@ defmodule NewYou.Proof.P809MagicLogin do
     replacement_operation = operation()
 
     try do
-      {issuer, issuer_monitor} =
+      {_issuer, issuer_monitor} =
         Scenario.spawn(scenario, :magic_issuer, fn ->
           :ok = Sandbox.checkout(Repo, sandbox: false)
           Process.put(RegistrationSeam, {:pause, parent, reference})
@@ -180,9 +180,10 @@ defmodule NewYou.Proof.P809MagicLogin do
           end
         end)
 
-      {issuer_backend, _issuer_transaction} =
+      {issuer_worker, issuer_backend, _issuer_transaction} =
         receive do
-          {^reference, :before_commit, ^issuer, backend, transaction} -> {backend, transaction}
+          {^reference, :before_commit, worker, backend, transaction} ->
+            {worker, backend, transaction}
         after
           15_000 -> raise "magic-login replacement issue checkpoint deadline"
         end
@@ -219,7 +220,7 @@ defmodule NewYou.Proof.P809MagicLogin do
         is_binary(issuer_transaction) and issuer_transaction != consumer_transaction
       )
 
-      send(issuer, {reference, :release})
+      send(issuer_worker, {reference, :release})
 
       issue_committed = await_result(reference, :issue_result)
       consume_result = await_result(reference, :consume_result)

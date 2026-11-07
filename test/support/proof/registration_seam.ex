@@ -27,4 +27,14 @@ defmodule NewYou.Proof.RegistrationSeam do
         callback.()
     end
   end
+
+  @doc "Carry only the TEST checkpoint into a bounded request worker."
+  def inherit(callback) when is_function(callback, 0) do
+    checkpoint = Process.get(__MODULE__)
+
+    fn ->
+      Process.put(__MODULE__, checkpoint)
+      callback.()
+    end
+  end
 end

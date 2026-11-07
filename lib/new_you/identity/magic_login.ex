@@ -17,37 +17,85 @@ defmodule NewYou.Identity.MagicLogin do
     @request_work_timeout_ms 250
     @request_response_floor_ms 500
 
+    @doc """
+    Runs one bounded issuance attempt and always returns a neutral response after
+    the common minimum window. A timeout cancels the worker; an interrupted
+    transaction rolls back. If commit wins cancellation, the retained operation ID
+    makes an unchanged retry harmless. Request success never authenticates.
+    """
     @spec request(term(), term(), term()) :: :ok
     def request(email, locale, operation_id) do
-      response_at = System.monotonic_time(:millisecond) + @request_response_floor_ms
+      started = System.monotonic_time(:millisecond)
+      deadline = started + @request_work_timeout_ms
+      response_at = started + @request_response_floor_ms
 
       try do
-        Ash.transact(
-          [Account, Token, MessageIntent, DeliveryAttempt],
-          fn ->
-            with true <- locale in ["en", "af"],
-                 {:ok, operation_id} <- Ecto.UUID.cast(operation_id),
-                 {:ok, email} <- Email.canonicalize(email),
-                 {:ok, %Account{} = account} <- find_account(email) do
-              issue_locked(account.id, email, locale, operation_id)
-            else
-              _ -> :ok
-            end
-          end,
-          timeout: @request_work_timeout_ms
-        )
+        callback = request_callback(fn -> request_transaction(email, locale, operation_id) end)
+
+        task =
+          Task.Supervisor.async_nolink(
+            NewYou.Identity.MagicLogin.RequestSupervisor,
+            fn -> bounded_request(callback, deadline) end
+          )
+
+        Task.yield(task, remaining(deadline)) || Task.shutdown(task, :brutal_kill)
       rescue
         _ -> :ok
       catch
         _, _ -> :ok
       after
-        # Wait after transaction release, including failure/timeout. The shorter
-        # database budget prevents a held Account lock from exposing a long tail.
-        # Scheduler/host pauses are outside this deliberate timing treatment.
-        Process.sleep(max(response_at - System.monotonic_time(:millisecond), 0))
+        # Pad every outcome after work finishes or cancellation, outside all locks.
+        # Host/scheduler pauses are outside this deliberate timing treatment.
+        Process.sleep(remaining(response_at))
       end
 
       :ok
+    end
+
+    defp bounded_request(callback, deadline) do
+      if remaining(deadline) > 0 do
+        # An unlinked one-shot timer survives caller death. The worker cannot keep
+        # issuing after its deadline merely because the request process vanished.
+        {:ok, timer} = :timer.kill_after(remaining(deadline))
+
+        try do
+          callback.()
+        rescue
+          _ -> :ok
+        catch
+          _, _ -> :ok
+        after
+          :timer.cancel(timer)
+        end
+      end
+
+      :ok
+    end
+
+    defp remaining(deadline), do: max(deadline - System.monotonic_time(:millisecond), 0)
+
+    defp request_transaction(email, locale, operation_id) do
+      Ash.transact(
+        [Account, Token, MessageIntent, DeliveryAttempt],
+        fn ->
+          with true <- locale in ["en", "af"],
+               {:ok, operation_id} <- Ecto.UUID.cast(operation_id),
+               {:ok, email} <- Email.canonicalize(email),
+               {:ok, %Account{} = account} <- find_account(email) do
+            issue_locked(account.id, email, locale, operation_id)
+          else
+            _ -> :ok
+          end
+        end,
+        timeout: @request_work_timeout_ms
+      )
+    end
+
+    if Mix.env() == :test do
+      defp request_callback(callback),
+        do: NewYou.Proof.RegistrationSeam.inherit(callback)
+    else
+      defp request_callback(callback), do: callback
     end
 
     defp issue_locked(id, email, locale, operation_id) do

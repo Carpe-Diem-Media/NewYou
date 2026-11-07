@@ -5,6 +5,13 @@ defmodule NewYou.Application do
 
   use Application
 
+  @magic_login_enabled Mix.env() in [:dev, :test] and
+                         Application.compile_env(
+                           :new_you,
+                           :verification_development_fixtures,
+                           false
+                         )
+
   @impl true
   def start(_type, _args) do
     children =
@@ -20,6 +27,7 @@ defmodule NewYou.Application do
         {Phoenix.PubSub, name: NewYou.PubSub}
       ] ++
         identity_children() ++
+        magic_login_children() ++
         [
           # Start a worker by calling: NewYou.Worker.start_link(arg)
           # {NewYou.Worker, arg},
@@ -37,6 +45,14 @@ defmodule NewYou.Application do
   defp identity_children do
     if Application.get_env(:new_you, :identity_registration_expiry_enabled, true) do
       [NewYou.Identity.RegistrationOperationExpiry]
+    else
+      []
+    end
+  end
+
+  defp magic_login_children do
+    if @magic_login_enabled do
+      [{Task.Supervisor, name: NewYou.Identity.MagicLogin.RequestSupervisor, max_children: 32}]
     else
       []
     end
