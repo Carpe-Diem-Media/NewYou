@@ -323,6 +323,8 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
     assert html =~ "phx-click=\"save\""
     assert html =~ "bg-design-primary"
     assert html =~ "hover:bg-design-primary-deep"
+    assert html =~ "focus-visible:outline-design-primary"
+    assert html =~ "focus-visible:outline-offset-2"
     assert html =~ "Continue"
   end
 

@@ -1,3 +1,8 @@
+/* Hallmark · theme: locked DESIGN.md · scope: existing system · surface: absolute · change: text-input height alias */
+/* Critique: preserve the approved palette, typography and component dimensions. */
+/* Hallmark · waive 7b · DESIGN.md locks the absolute surface values · the magic-login form needs the approved paper contrast */
+/* Hallmark · waive 37 · DESIGN.md defines one Inter family with numeric weights · the magic-login input keeps the locked text face */
+/* Hallmark · waive 39b · DESIGN.md specifies a 58px text-input height · preserve the existing component geometry and touch target */
 /* Executable token layer mapped from the root DESIGN.md. */
 @theme static {
   --color-design-primary: #0061ef;
@@ -79,6 +84,7 @@
   --spacing-design-button-block: 14.3px;
   --spacing-design-button-inline: 24px;
   --spacing-design-button-height: 48px;
+  --spacing-design-input-height: 58px;
 
   --breakpoint-design-tablet: 744px;
   --breakpoint-design-desktop: 1128px;

@@ -24,7 +24,7 @@ defmodule NewYouWeb.Components.Design.Button do
     <button
       type={@type}
       disabled={@disabled}
-      class="inline-flex items-center justify-center h-design-button-height px-design-button-inline py-design-button-block rounded-design-xl bg-design-primary text-design-on-primary font-design-sans font-design-bold text-design-button-md leading-design-button-md tracking-design-button-md hover:bg-design-primary-deep active:bg-design-primary-deep"
+      class="inline-flex items-center justify-center h-design-button-height px-design-button-inline py-design-button-block rounded-design-xl bg-design-primary text-design-on-primary font-design-sans font-design-bold text-design-button-md leading-design-button-md tracking-design-button-md hover:bg-design-primary-deep active:bg-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
       {@rest}
     >
       {render_slot(@inner_block)}

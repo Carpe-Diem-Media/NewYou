@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang={@locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>{NewYouWeb.MagicLoginCopy.text!("confirm.title", @locale)}</title>
+    <link rel="stylesheet" href={~p"/assets/css/app.css"} />
+  </head>
+  <body>
+    <main id="main" class="min-h-svh bg-design-canvas text-design-ink font-design-sans">
+      <header class="mx-auto w-full max-w-7xl border-b border-design-hairline px-design-base py-design-lg design-tablet:px-design-lg design-desktop:px-design-2xl">
+        <p class="font-design-bold text-design-body-sm">{NewYou.platform_name()}</p>
+      </header>
+      <section
+        aria-labelledby="magic-login-heading"
+        class="mx-auto grid w-full max-w-7xl content-start gap-design-lg px-design-base py-design-2xl design-tablet:px-design-lg design-desktop:px-design-2xl"
+      >
+        <h1
+          id="magic-login-heading"
+          class="max-w-3xl text-balance font-design-bold text-design-display-sm leading-design-display-sm tracking-design-display-sm design-tablet:text-design-display-md design-tablet:leading-design-display-md design-tablet:tracking-design-display-md"
+        >
+          {NewYouWeb.MagicLoginCopy.text!("confirm.title", @locale)}
+        </h1>
+        <p class="max-w-prose text-design-body-sm leading-design-body-sm">
+          {NewYouWeb.MagicLoginCopy.text!("confirm.body", @locale)}
+        </p>
+        <.form
+          for={%{}}
+          action="/login/magic/confirm"
+          method="post"
+          id="magic-login-confirmation"
+          class="grid gap-design-base justify-items-start"
+        >
+          <input type="hidden" name="proof" value={@proof} />
+          <input type="hidden" name="locale" value={@locale} />
+          <.primary_button type="submit">
+            {NewYouWeb.MagicLoginCopy.text!("confirm.action", @locale)}
+          </.primary_button>
+        </.form>
+      </section>
+    </main>
+  </body>
+</html>

@@ -19,6 +19,10 @@ defmodule NewYou.Identity.Session do
     check_constraints do
       check_constraint :state, "sessions_state",
         check: "state IN ('active', 'expired', 'revoked', 'logged_out')"
+
+      check_constraint :authentication_method, "sessions_authentication_provenance",
+        check:
+          "(authentication_method = 'password' AND authentication_proof_jti IS NULL) OR (authentication_method = 'magic_login' AND authentication_proof_jti IS NOT NULL)"
     end
   end
 
@@ -30,7 +34,16 @@ defmodule NewYou.Identity.Session do
 
     create :issue do
       public? false
-      accept [:account_id, :token_jti, :expires_at, :idle_expires_at, :last_seen_at]
+
+      accept [
+        :account_id,
+        :token_jti,
+        :expires_at,
+        :idle_expires_at,
+        :last_seen_at,
+        :authentication_method,
+        :authentication_proof_jti
+      ]
     end
 
     update :revoke do
@@ -73,6 +86,14 @@ defmodule NewYou.Identity.Session do
   attributes do
     uuid_v7_primary_key :id
     create_timestamp :created_at
+
+    attribute :authentication_method, :atom,
+      allow_nil?: false,
+      default: :password,
+      constraints: [one_of: [:password, :magic_login]],
+      public?: false
+
+    attribute :authentication_proof_jti, :string, sensitive?: true, public?: false
 
     attribute :ended_at, :utc_datetime do
       public? false
@@ -126,5 +147,6 @@ defmodule NewYou.Identity.Session do
 
   identities do
     identity :one_session_per_token, [:token_jti]
+    identity :one_session_per_magic_proof, [:authentication_proof_jti]
   end
 end

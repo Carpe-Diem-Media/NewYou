@@ -1,8 +1,9 @@
 defmodule NewYou.Communications do
   @moduledoc """
   Communications owns the durable message obligation, attempt admissions and
-  delivery evidence. Identity establishes the intent and encrypted capability
-  inside its source transaction. The id-only executor rechecks current owners,
+  delivery evidence. Identity establishes the intent inside its source transaction.
+  Verification uses its authorized encrypted capability. Magic login obtains a
+  transient serialization of the same current proof from Identity. The id-only executor rechecks current owners,
   commits admission, then invokes its provider outside authoritative transactions.
   Provider evidence never changes Identity truth. Production egress is disabled.
   """
@@ -25,6 +26,98 @@ defmodule NewYou.Communications do
   @spec reconcile(String.t(), atom(), String.t(), binary()) :: {:ok, :recorded} | {:error, atom()}
   def reconcile(id, outcome, reference, signature),
     do: NewYou.Communications.Executor.reconcile(id, outcome, reference, signature)
+
+  @magic_login_fields [
+    :source_operation_id,
+    :source_reference,
+    :destination,
+    :destination_provenance,
+    :destination_authorized_at,
+    :locale,
+    :role,
+    :source_purpose,
+    :render_schema,
+    :content_item_id,
+    :content_version_id,
+    :translation_version_id,
+    :content_sha256,
+    :platform_name,
+    :render_digest
+  ]
+
+  @doc "Establish a magic-login delivery obligation without retaining its bearer."
+  @spec establish_magic_login(map()) ::
+          {:ok, MessageIntent.t()} | {:error, :magic_login_unavailable}
+  def establish_magic_login(attrs) when is_map(attrs) do
+    with true <- valid_magic_login_attrs?(attrs),
+         {:ok, content_binding} <- NewYou.Content.MagicLoginMessage.binding(attrs.locale) do
+      platform_name = NewYou.platform_name()
+      render_schema = "magic-login-v1"
+
+      render_digest =
+        :crypto.hash(
+          :sha256,
+          :erlang.term_to_binary({render_schema, platform_name}, [:deterministic])
+        )
+        |> Base.encode16(case: :lower)
+
+      params =
+        attrs
+        |> Map.take([
+          :source_operation_id,
+          :source_reference,
+          :destination,
+          :destination_provenance,
+          :destination_authorized_at,
+          :locale,
+          :role,
+          :source_purpose,
+          :render_schema
+        ])
+        |> Map.merge(content_binding)
+        |> Map.merge(%{platform_name: platform_name, render_digest: render_digest})
+
+      transact_magic_login(params)
+    else
+      _ -> {:error, :magic_login_unavailable}
+    end
+  rescue
+    _ -> {:error, :magic_login_unavailable}
+  end
+
+  def establish_magic_login(_), do: {:error, :magic_login_unavailable}
+
+  defp transact_magic_login(params) do
+    case Ash.transact([MessageIntent], fn -> establish_magic_login_intent(params) end) do
+      {:ok, {:ok, %MessageIntent{} = intent}} -> {:ok, intent}
+      _ -> {:error, :magic_login_unavailable}
+    end
+  end
+
+  defp valid_magic_login_attrs?(attrs) do
+    attrs[:role] == :magic_login and attrs[:source_purpose] == "magic_login" and
+      attrs[:render_schema] == "magic-login-v1" and
+      attrs[:destination_provenance] == "identity_magic_login_issuance" and
+      attrs[:locale] in ["en", "af"]
+  end
+
+  defp establish_magic_login_intent(params) do
+    with {:ok, intent} <-
+           Ash.create(MessageIntent, params,
+             action: :establish,
+             domain: __MODULE__,
+             authorize?: false,
+             upsert?: true,
+             upsert_identity: :causal_obligation,
+             upsert_fields: [],
+             touch_update_defaults?: false
+           ),
+         true <- Enum.all?(@magic_login_fields, &(Map.get(intent, &1) == Map.get(params, &1))) do
+      {:ok, intent}
+    else
+      _ -> {:error, :magic_login_unavailable}
+    end
+  end
 
   @development_fixtures Application.compile_env(
                           :new_you,

@@ -1,6 +1,6 @@
 defmodule NewYou.Communications.MessageIntent do
   @moduledoc """
-  The Communications-owned durable obligation for an Identity verification challenge.
+  The Communications-owned durable obligation for an Identity proof delivery.
   Destination is sensitive and fixed at issuance; it is not current Identity truth.
   """
   use Ash.Resource,
@@ -24,8 +24,13 @@ defmodule NewYou.Communications.MessageIntent do
         message: "is unsupported"
 
       check_constraint :role, "message_intents_role",
-        check: "role = 'account_verification'",
+        check: "role IN ('account_verification', 'magic_login')",
         message: "is unsupported"
+
+      check_constraint :source_purpose, "message_intents_role_purpose_schema",
+        check:
+          "(role = 'account_verification' AND source_purpose = 'email_verification' AND render_schema = 'verification-v1') OR (role = 'magic_login' AND source_purpose = 'magic_login' AND render_schema = 'magic-login-v1')",
+        message: "does not match the message role"
 
       check_constraint :source_reference, "message_intents_source_reference",
         check: "source_reference ~ '^[0-9a-v]{24}$'",
@@ -148,7 +153,10 @@ defmodule NewYou.Communications.MessageIntent do
         :translation_version_id,
         :content_sha256,
         :platform_name,
-        :render_digest
+        :render_digest,
+        :role,
+        :source_purpose,
+        :render_schema
       ]
     end
   end
@@ -184,7 +192,7 @@ defmodule NewYou.Communications.MessageIntent do
     attribute :role, :atom,
       allow_nil?: false,
       default: :account_verification,
-      constraints: [one_of: [:account_verification]],
+      constraints: [one_of: [:account_verification, :magic_login]],
       public?: false
 
     attribute :source_purpose, :string,

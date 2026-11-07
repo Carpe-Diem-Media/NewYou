@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang={@locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>{NewYouWeb.MagicLoginCopy.text!("request.title", @locale)}</title>
+    <link rel="stylesheet" href={~p"/assets/css/app.css"} />
+  </head>
+  <body>
+    <main id="main" class="min-h-svh bg-design-canvas text-design-ink font-design-sans">
+      <header class="mx-auto w-full max-w-7xl border-b border-design-hairline px-design-base py-design-lg design-tablet:px-design-lg design-desktop:px-design-2xl">
+        <p class="font-design-bold text-design-body-sm">{NewYou.platform_name()}</p>
+      </header>
+      <section
+        aria-labelledby="magic-login-heading"
+        class="mx-auto grid w-full max-w-7xl content-start gap-design-lg px-design-base py-design-2xl design-tablet:px-design-lg design-desktop:px-design-2xl"
+      >
+        <h1
+          id="magic-login-heading"
+          class="max-w-3xl text-balance font-design-bold text-design-display-sm leading-design-display-sm tracking-design-display-sm design-tablet:text-design-display-md design-tablet:leading-design-display-md design-tablet:tracking-design-display-md"
+        >
+          {NewYouWeb.MagicLoginCopy.text!("request.title", @locale)}
+        </h1>
+        <p class="max-w-prose text-design-body-sm leading-design-body-sm">
+          {NewYouWeb.MagicLoginCopy.text!("request.body", @locale)}
+        </p>
+        <.form
+          for={%{}}
+          action="/login/magic"
+          method="post"
+          id="magic-login-request"
+          class="grid w-full max-w-prose gap-design-base justify-items-start"
+        >
+          <input type="hidden" name="locale" value={@locale} />
+          <input type="hidden" name="operation_id" value={@operation_id} />
+          <label class="text-design-body-sm font-design-bold text-design-ink" for="email">
+            {NewYouWeb.CopyRegistry.text!("identity.registration.email.label", @locale)}
+          </label>
+          <input
+            class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base pt-design-lg pb-design-sm text-design-body-xs leading-design-body-xs text-design-on-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+            id="email"
+            name="email"
+            type="email"
+            required
+            autocomplete="email"
+          />
+          <.primary_button type="submit">
+            {NewYouWeb.MagicLoginCopy.text!("request.action", @locale)}
+          </.primary_button>
+        </.form>
+      </section>
+    </main>
+  </body>
+</html>

@@ -69,14 +69,40 @@ defmodule NewYou.Communications.Executor do
   end
 
   defp prepare_current(intent, attempts) do
-    case NewYou.Identity.DeliveryEligibility.verification(
-           intent.source_reference,
-           intent.destination
-         ) do
-      :ok -> prepare_eligible(intent, attempts)
-      {:error, :source_invalid} -> close_source(intent)
+    case source_eligibility(intent) do
+      :ok ->
+        prepare_eligible(intent, attempts)
+
+      {:error, :source_invalid} ->
+        close_source(intent)
+
+      {:error, :capability_unavailable} ->
+        with {:ok, _} <- disposition(intent, :held), do: {:ok, :held}
     end
   end
+
+  defp source_eligibility(
+         %{role: :account_verification, source_purpose: "email_verification"} = intent
+       ),
+       do:
+         NewYou.Identity.DeliveryEligibility.verification(
+           intent.source_reference,
+           intent.destination
+         )
+
+  defp source_eligibility(%{role: :magic_login, source_purpose: "magic_login"} = intent) do
+    case NewYou.Identity.magic_login_delivery(
+           intent.source_reference,
+           intent.destination,
+           intent.locale
+         ) do
+      {:ok, bearer} when is_binary(bearer) and byte_size(bearer) > 0 -> :ok
+      {:error, :capability_unavailable} -> {:error, :capability_unavailable}
+      _ -> {:error, :source_invalid}
+    end
+  end
+
+  defp source_eligibility(_), do: {:error, :source_invalid}
 
   defp prepare_eligible(intent, attempts) do
     cond do
@@ -119,11 +145,15 @@ defmodule NewYou.Communications.Executor do
   end
 
   defp delivery_payload(intent) do
-    with :ok <-
-           NewYou.Identity.DeliveryEligibility.verification(
-             intent.source_reference,
-             intent.destination
-           ),
+    case {intent.role, intent.source_purpose} do
+      {:account_verification, "email_verification"} -> verification_payload(intent)
+      {:magic_login, "magic_login"} -> magic_login_payload(intent)
+      _ -> {:error, :source_invalid}
+    end
+  end
+
+  defp verification_payload(intent) do
+    with :ok <- source_eligibility(intent),
          {:ok, bytes} <- NewYou.Content.VerificationMessage.eligible(intent),
          true <- valid_render?(intent),
          {:ok, bearer} <- capability(intent),
@@ -144,6 +174,33 @@ defmodule NewYou.Communications.Executor do
     end
   end
 
+  defp magic_login_payload(intent) do
+    with :ok <- source_eligibility(intent),
+         {:ok, bytes} <- NewYou.Content.MagicLoginMessage.eligible(intent),
+         true <- valid_magic_login_render?(intent),
+         {:ok, bearer} <-
+           NewYou.Identity.magic_login_delivery(
+             intent.source_reference,
+             intent.destination,
+             intent.locale
+           ),
+         true <- DeliveryProvider.available?() do
+      link =
+        "https://proof.invalid/login/magic/confirm?locale=" <>
+          intent.locale <> "&proof=" <> URI.encode_www_form(bearer)
+
+      body =
+        bytes
+        |> String.replace("{{platform_name}}", intent.platform_name)
+        |> String.replace("{{magic_login_link}}", link)
+
+      {:ok, %NewYou.Communications.DeliveryPayload{destination: intent.destination, body: body}}
+    else
+      {:error, :source_invalid} -> {:error, :source_invalid}
+      _ -> {:error, :delivery_prerequisite_unavailable}
+    end
+  end
+
   defp valid_render?(intent) do
     digest =
       :crypto.hash(
@@ -153,6 +210,18 @@ defmodule NewYou.Communications.Executor do
       |> Base.encode16(case: :lower)
 
     intent.render_schema == "verification-v1" and
+      intent.render_provenance == "application_platform_name" and intent.render_digest == digest
+  end
+
+  defp valid_magic_login_render?(intent) do
+    digest =
+      :crypto.hash(
+        :sha256,
+        :erlang.term_to_binary({"magic-login-v1", intent.platform_name}, [:deterministic])
+      )
+      |> Base.encode16(case: :lower)
+
+    intent.render_schema == "magic-login-v1" and
       intent.render_provenance == "application_platform_name" and intent.render_digest == digest
   end
 
@@ -371,11 +440,11 @@ defmodule NewYou.Communications.Executor do
     do: {:ok, :recorded}
 
   defp flag_current_conflict(intent, attempt) do
-    case NewYou.Identity.DeliveryEligibility.verification(
-           intent.source_reference,
-           intent.destination
-         ) do
+    case source_eligibility(intent) do
       :ok ->
+        flag_conflict(intent, attempt)
+
+      {:error, :capability_unavailable} ->
         flag_conflict(intent, attempt)
 
       {:error, :source_invalid} ->

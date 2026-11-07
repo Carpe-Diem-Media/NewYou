@@ -263,7 +263,7 @@ components:
     rounded: "{rounded.sm}"
     padding: "24px 16px 8px"
     height: "58px"
-    borderColor: "{colors.hairline-cool}"
+    borderColor: "{colors.ink-muted}"
   faq-row:
     backgroundColor: "{colors.canvas}"
     textColor: "{colors.ink}"
@@ -291,6 +291,8 @@ components:
 - Existing NewYou dark-mode and validation/error tokens are temporary compatibility authority only for states this file does not define.
 - Existing DaisyUI and default Tailwind visual styling is grandfathered implementation and frozen against new use.
 - New design primitives require an explicit authority change in this file first.
+- The existing `text-input.height` of 58px maps to `--spacing-design-input-height`; this component alias does not extend the general spacing scale.
+- Participant form input boundaries use the existing `{colors.ink-muted}` token to meet Hallmark's 3:1 control contrast floor. The captured cool hairline below remains historical source evidence.
 
 ## Overview
 

@@ -73,6 +73,13 @@ defmodule NewYou.Identity.Account do
   end
 
   actions do
+    action :authenticate_magic_link, :map do
+      description "Explicit participant confirmation consumes one current magic-login proof and issues the shared Session atomically."
+      public? false
+      argument :proof, :string, allow_nil?: false, sensitive?: true
+      run NewYou.Identity.Actions.AuthenticateMagicLink
+    end
+
     action :confirm_email, :atom do
       description "Explicit purpose-bound email verification; no Session issuance"
       public? false

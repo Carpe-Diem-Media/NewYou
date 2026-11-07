@@ -2,8 +2,8 @@ defmodule NewYou.Identity do
   use Ash.Domain, otp_app: :new_you
 
   @moduledoc """
-  Identity owns Accounts, credentials, PMR assignment, verification Tokens, and
-  registration and resend operation bindings.
+  Identity owns Accounts, credentials, PMR assignment, purpose-bound Tokens,
+  durable Sessions, and registration and resend operation bindings.
 
   Registration coordinates with Audit and Communications through their owner
   interfaces. Communications owns MessageIntents and protected envelopes; Audit owns
@@ -43,6 +43,33 @@ defmodule NewYou.Identity do
     resource NewYou.Identity.ResendOperation
     resource NewYou.Identity.Session
   end
+
+  @doc "Request optional existing-Account sign-in. Every public outcome is neutral; this never registers or authenticates an Account."
+  @spec request_magic_login(term(), term(), term()) :: :ok
+  def request_magic_login(email, locale, operation_id),
+    do: NewYou.Identity.MagicLogin.request(email, locale, operation_id)
+
+  @doc "Consume a magic-login proof only after explicit participant confirmation. Returns the existing Session transport or one neutral failure."
+  @spec authenticate_magic_link(term()) :: {:ok, map()} | {:error, :authentication_unavailable}
+  def authenticate_magic_link(proof) when is_binary(proof) and byte_size(proof) in 1..8192 do
+    Account
+    |> Ash.ActionInput.for_action(:authenticate_magic_link, %{proof: proof}, authorize?: false)
+    |> Ash.run_action()
+    |> case do
+      {:ok, credentials} -> {:ok, credentials}
+      _ -> {:error, :authentication_unavailable}
+    end
+  rescue
+    _ -> {:error, :authentication_unavailable}
+  end
+
+  def authenticate_magic_link(_), do: {:error, :authentication_unavailable}
+
+  @doc "Trusted Communications-only seam inside its transaction. Revalidate current Identity proof and return its transient serialization; never persist the result."
+  @spec magic_login_delivery(String.t(), String.t(), String.t()) ::
+          {:ok, binary()} | {:error, :source_invalid | :capability_unavailable}
+  def magic_login_delivery(reference, destination, locale),
+    do: NewYou.Identity.MagicLogin.delivery(reference, destination, locale)
 
   @doc """
   Authenticate a password and atomically issue an Identity-owned Session and token.
