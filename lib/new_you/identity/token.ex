@@ -1,4 +1,11 @@
 defmodule NewYou.Identity.Token do
+  @moduledoc """
+  Identity's existing AshAuthentication proof and session-token authority.
+
+  Magic-login issuance stores fixed claim metadata, never the signed bearer.
+  A current magic-login purpose may become consumed, superseded or revoked;
+  transient delivery signing cannot change that state or its original expiry.
+  """
   use Ash.Resource,
     otp_app: :new_you,
     domain: NewYou.Identity,
@@ -13,9 +20,41 @@ defmodule NewYou.Identity.Token do
   postgres do
     table "tokens"
     repo NewYou.Repo
+    identity_wheres_to_sql one_current_magic_login: "purpose = 'magic_login'"
+
+    check_constraints do
+      check_constraint :magic_request_id, "tokens_magic_login_metadata",
+        check:
+          "(purpose NOT IN ('magic_login', 'magic_login_superseded', 'magic_login_consumed') AND magic_request_id IS NULL AND magic_claims IS NULL AND magic_account_binding IS NULL AND magic_locale IS NULL) OR (magic_request_id IS NOT NULL AND magic_claims IS NOT NULL AND magic_account_binding IS NOT NULL AND magic_locale IS NOT NULL AND magic_locale IN ('en', 'af'))"
+    end
   end
 
   actions do
+    create :issue_magic_login do
+      description "Create one new magic-login proof. Never upsert or reissue an existing JTI."
+      public? false
+      accept [:magic_request_id, :magic_claims, :magic_account_binding, :magic_locale]
+      argument :token, :string, allow_nil?: false, sensitive?: true
+      validate present([:magic_request_id, :magic_claims, :magic_account_binding, :magic_locale])
+      change set_attribute(:purpose, "magic_login")
+      change AshAuthentication.TokenResource.StoreTokenChange
+      change NewYou.Identity.Changes.SetTokenAccount
+    end
+
+    update :supersede_magic_login do
+      public? false
+      accept []
+      change filter(expr(purpose == "magic_login"))
+      change set_attribute(:purpose, "magic_login_superseded")
+    end
+
+    update :consume_magic_login do
+      public? false
+      accept []
+      change filter(expr(purpose == "magic_login" and expires_at > now()))
+      change set_attribute(:purpose, "magic_login_consumed")
+    end
+
     read :read do
       primary? true
       public? false
@@ -89,6 +128,11 @@ defmodule NewYou.Identity.Token do
   end
 
   attributes do
+    attribute :magic_request_id, :uuid, sensitive?: true, public?: false
+    attribute :magic_claims, :map, sensitive?: true, public?: false
+    attribute :magic_account_binding, :binary, sensitive?: true, public?: false
+    attribute :magic_locale, :string, constraints: [match: ~r/\A(en|af)\z/], public?: false
+
     attribute :jti, :string do
       primary_key? true
       allow_nil? false
@@ -126,5 +170,10 @@ defmodule NewYou.Identity.Token do
       attribute_writable? false
       public? false
     end
+  end
+
+  identities do
+    identity :one_current_magic_login, [:account_id], where: expr(purpose == "magic_login")
+    identity :magic_login_request, [:magic_request_id]
   end
 end

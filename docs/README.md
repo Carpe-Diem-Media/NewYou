@@ -21,5 +21,6 @@ Implementation maps and their review requirements live in development documentat
 - [P8-11 Audit E2 recovery addendum](development/p8-11-audit-recovery-addendum.md)
 - [P8-07 explicit email verification implementation handoff](development/p8-07-verification-handoff.md)
 - [P8-08 password Session implementation handoff](development/p8-08-password-session-handoff.md)
+- [P8-09 magic-login implementation handoff](development/p8-09-magic-login-handoff.md)
 
 These maps describe source at a recorded revision. Verify current code before reuse; they are not semantic authority routes or live status ledgers.

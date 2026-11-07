@@ -9,6 +9,7 @@ defmodule NewYouWeb.RegistrationBoundary do
   alias NewYouWeb.RegistrationController
   alias NewYouWeb.EmailVerificationController
   alias NewYouWeb.PasswordSessionController
+  alias NewYouWeb.MagicLoginController
 
   @impl Plug
   def init(opts), do: opts
@@ -36,6 +37,18 @@ defmodule NewYouWeb.RegistrationBoundary do
 
   def call(%Plug.Conn{method: "GET", request_path: "/login"} = conn, _opts),
     do: dispatch_browser_request(conn, :new, PasswordSessionController)
+
+  def call(%Plug.Conn{method: "GET", request_path: "/login/magic"} = conn, _opts),
+    do: dispatch_browser_request(conn, :new, MagicLoginController)
+
+  def call(%Plug.Conn{method: "POST", request_path: "/login/magic"} = conn, _opts),
+    do: dispatch_browser_request(conn, :request, MagicLoginController)
+
+  def call(%Plug.Conn{method: "GET", request_path: "/login/magic/confirm"} = conn, _opts),
+    do: dispatch_browser_request(conn, :show, MagicLoginController)
+
+  def call(%Plug.Conn{method: "POST", request_path: "/login/magic/confirm"} = conn, _opts),
+    do: dispatch_browser_request(conn, :confirm, MagicLoginController)
 
   def call(%Plug.Conn{method: "POST", request_path: "/login"} = conn, _opts),
     do: dispatch_browser_request(conn, :create, PasswordSessionController)

@@ -88,6 +88,7 @@ defmodule NewYou.Proof.Catalog do
       NewYou.Proof.P805Catalog.registrations() ++
         NewYou.Proof.P807Catalog.registrations() ++
         NewYou.Proof.P809Catalog.registrations() ++
+        NewYou.Proof.P809MagicCatalog.registrations() ++
         NewYou.Proof.P811Catalog.registrations()
 
   @spec validate_compiled_registrations(map(), [registration()]) :: :ok | {:error, [atom()]}
@@ -350,6 +351,7 @@ defmodule NewYou.Proof.Catalog do
       NewYou.Proof.P805Catalog.manifests()
       |> Map.merge(NewYou.Proof.P807Catalog.manifests())
       |> Map.merge(NewYou.Proof.P809Catalog.manifests())
+      |> Map.merge(NewYou.Proof.P809MagicCatalog.manifests())
       |> Map.merge(NewYou.Proof.P811Catalog.manifests())
 
   defp digest(term) do

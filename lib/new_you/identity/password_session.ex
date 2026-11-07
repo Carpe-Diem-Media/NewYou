@@ -48,24 +48,38 @@ defmodule NewYou.Identity.PasswordSession do
          true <- current.email == email,
          true <- eligible?(current),
          true <- current.hashed_password == account.hashed_password,
-         {:ok, bearer, claims} <-
+         {:ok, credentials} <- issue_current(current) do
+      checkpoint()
+      {:ok, credentials}
+    else
+      _ -> {:error, :authentication_unavailable}
+    end
+  end
+
+  @doc false
+  # Internal Identity seam. Caller holds the current eligible Account lock in the
+  # same Token/Session transaction. Shared issuance preserves password semantics.
+  def issue_current(current, provenance \\ %{}) do
+    with {:ok, bearer, claims} <-
            Jwt.token_for_user(current, %{}, purpose: :user, authorize?: false),
          {:ok, expires_at} <- DateTime.from_unix(claims["exp"]),
          now <- DateTime.utc_now() |> DateTime.truncate(:second),
          {:ok, session} <-
            Ash.create(
              Session,
-             %{
-               account_id: current.id,
-               token_jti: claims["jti"],
-               expires_at: expires_at,
-               idle_expires_at: DateTime.add(now, @idle_seconds),
-               last_seen_at: now
-             },
+             Map.merge(
+               %{
+                 account_id: current.id,
+                 token_jti: claims["jti"],
+                 expires_at: expires_at,
+                 idle_expires_at: DateTime.add(now, @idle_seconds),
+                 last_seen_at: now
+               },
+               provenance
+             ),
              action: :issue,
              authorize?: false
            ) do
-      checkpoint()
       {:ok, %{session_id: session.id, token: bearer}}
     else
       _ -> {:error, :authentication_unavailable}

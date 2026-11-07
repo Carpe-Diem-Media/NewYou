@@ -400,8 +400,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
       for {column, value} <- [
             {"content_sha256", String.duplicate("0", 64)},
             {"render_digest", String.duplicate("0", 64)},
-            {"translation_version_id", "withdrawn-or-unknown"},
-            {"source_purpose", "password_reset"}
+            {"translation_version_id", "withdrawn-or-unknown"}
           ] do
         original = Map.fetch!(intent, String.to_existing_atom(column))
 
@@ -418,6 +417,17 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
           Ecto.UUID.dump!(intent.id)
         ])
       end
+
+      # The role/purpose/schema invariant now rejects this mismatch at storage,
+      # before the executor can observe or admit the invalid obligation.
+      assert_raise Postgrex.Error, fn ->
+        Repo.query!("UPDATE message_intents SET source_purpose = $1 WHERE id = $2", [
+          "password_reset",
+          Ecto.UUID.dump!(intent.id)
+        ])
+      end
+
+      assert [] == attempts()
     end)
   after
     Process.delete(:p810_provider)

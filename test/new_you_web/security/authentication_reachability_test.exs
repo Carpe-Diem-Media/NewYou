@@ -1,7 +1,7 @@
 defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
   use ExUnit.Case, async: true
 
-  test "authentication remains password-only with no sign-in or OAuth strategy routes" do
+  test "the framework strategy remains password-only with no generated sign-in or OAuth routes" do
     resources =
       :new_you
       |> Ash.Info.domains()
@@ -23,6 +23,7 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
              Enum.map(Ash.Resource.Info.actions(NewYou.Identity.Account), &{&1.type, &1.name})
            ) ==
              [
+               {:action, :authenticate_magic_link},
                {:action, :confirm_email},
                {:create, :register},
                {:read, :get_by_subject},
@@ -55,7 +56,7 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
     refute Map.has_key?(conn.assigns, :current_account)
   end
 
-  test "router exposes only the reviewed public, registration and explicit verification endpoints" do
+  test "router exposes only the reviewed public, registration and explicit proof endpoints" do
     routes =
       NewYouWeb.Router.__routes__()
       |> Enum.map(&{&1.verb, &1.path, &1.plug, &1.plug_opts})
@@ -69,6 +70,10 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:post, "/verification/resend", NewYouWeb.RegistrationController, :resend},
                {:get, "/verification/confirm", NewYouWeb.EmailVerificationController, :show},
                {:post, "/verification/confirm", NewYouWeb.EmailVerificationController, :confirm},
+               {:get, "/login/magic", NewYouWeb.MagicLoginController, :new},
+               {:post, "/login/magic", NewYouWeb.MagicLoginController, :request},
+               {:get, "/login/magic/confirm", NewYouWeb.MagicLoginController, :show},
+               {:post, "/login/magic/confirm", NewYouWeb.MagicLoginController, :confirm},
                {:get, "/legal/terms", NewYouWeb.RegistrationController, :terms},
                {:get, "/legal/privacy", NewYouWeb.RegistrationController, :privacy}
              ])
