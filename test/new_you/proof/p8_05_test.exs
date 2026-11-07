@@ -70,8 +70,21 @@ defmodule NewYou.Proof.P805Test do
     assert {:ok, observations, cleanup} =
              FullCatalog.execute(manifests, Catalog.compiled_business_registrations())
 
-    assert Enum.all?(observations, &(&1["verdict"] == "PASS")),
-           "bounded proof observations: #{inspect(observations)}"
+    failures =
+      observations
+      |> Enum.reject(&(&1["verdict"] == "PASS"))
+      |> Enum.map(fn observation ->
+        failed_codes =
+          observation["observations"]
+          |> Enum.filter(&(&1["value"] == false))
+          |> Enum.map(& &1["code"])
+
+        observation
+        |> Map.take(["case_id", "verdict", "status", "reason_codes", "duration_ms"])
+        |> Map.put("failed_observations", failed_codes)
+      end)
+
+    assert failures == [], "bounded proof failures: #{inspect(failures, limit: :infinity)}"
 
     assert length(observations) == length(@case_ids) + 14
     assert cleanup["verdict"] == "PASS"

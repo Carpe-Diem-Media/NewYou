@@ -30,6 +30,15 @@ defmodule NewYou.Communications.ProtectedEnvelope do
   end
 
   actions do
+    read :read do
+      primary? true
+      public? false
+    end
+
+    destroy :clear do
+      public? false
+    end
+
     create :store do
       public? false
 

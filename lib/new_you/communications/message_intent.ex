@@ -7,7 +7,8 @@ defmodule NewYou.Communications.MessageIntent do
     otp_app: :new_you,
     domain: NewYou.Communications,
     data_layer: AshPostgres.DataLayer,
-    authorizers: [Ash.Policy.Authorizer]
+    authorizers: [Ash.Policy.Authorizer],
+    extensions: [AshStateMachine, AshOban]
 
   postgres do
     table "message_intents"
@@ -32,10 +33,103 @@ defmodule NewYou.Communications.MessageIntent do
     end
   end
 
+  state_machine do
+    initial_states [:open]
+    default_initial_state :open
+    state_attribute :dispatch_disposition
+
+    transitions do
+      transition :hold, from: [:open, :held, :reconciliation_required], to: :held
+      transition :resume, from: [:open, :held, :reconciliation_required], to: :open
+
+      transition :require_reconciliation,
+        from: [:open, :held, :reconciliation_required],
+        to: :reconciliation_required
+
+      transition :close, from: [:open, :held, :reconciliation_required, :closed], to: :closed
+      # Only a delivery-observed closure may freeze for contradictory evidence.
+      # Source-invalid and other terminal closures cannot regain dispatch.
+      transition :flag_evidence_conflict,
+        from: [:open, :held, :reconciliation_required, :closed],
+        to: :reconciliation_required
+    end
+  end
+
+  oban do
+    triggers do
+      trigger :delivery do
+        action :execute_delivery
+        where expr(dispatch_disposition != :closed)
+        scheduler_cron "* * * * *"
+        queue :communications
+        lock_for_update? false
+        log_errors? false
+        log_final_error? false
+        max_attempts 5
+        worker_module_name NewYou.Communications.Workers.Delivery
+        scheduler_module_name NewYou.Communications.Schedulers.Delivery
+      end
+    end
+  end
+
   actions do
     read :read do
       primary? true
       public? false
+
+      pagination do
+        keyset? true
+        required? false
+      end
+    end
+
+    action :execute_delivery, :atom do
+      description "Revalidate, durably admit and execute outside any provider-spanning transaction."
+      argument :primary_key, :map, allow_nil?: false
+      public? false
+      transaction? false
+      run NewYou.Communications.Actions.ExecuteDelivery
+    end
+
+    update :hold do
+      accept [:terminal_reason]
+      public? false
+      change transition_state(:held)
+    end
+
+    update :resume do
+      accept [:terminal_reason]
+      public? false
+      change transition_state(:open)
+    end
+
+    update :require_reconciliation do
+      accept [:terminal_reason]
+      public? false
+      change transition_state(:reconciliation_required)
+    end
+
+    update :close do
+      accept [:terminal_reason]
+      public? false
+      change transition_state(:closed)
+    end
+
+    update :flag_evidence_conflict do
+      description "Freeze live or delivery-observed dispatch for this intent's conflicting attempt."
+      accept []
+      argument :attempt_id, :uuid, allow_nil?: false
+      public? false
+
+      change filter(
+               expr(
+                 (dispatch_disposition != :closed or terminal_reason == "delivery_observed") and
+                   exists(delivery_attempts, id == ^arg(:attempt_id) and conflict?)
+               )
+             )
+
+      change set_attribute(:terminal_reason, "conflicting_provider_evidence")
+      change transition_state(:reconciliation_required)
     end
 
     create :establish do
@@ -60,7 +154,18 @@ defmodule NewYou.Communications.MessageIntent do
   end
 
   policies do
-    policy always() do
+    policy action([:read, :execute_delivery]) do
+      authorize_if AshOban.Checks.AshObanInteraction
+    end
+
+    policy action([
+             :establish,
+             :hold,
+             :resume,
+             :require_reconciliation,
+             :close,
+             :flag_evidence_conflict
+           ]) do
       forbid_if always()
     end
   end
@@ -126,6 +231,13 @@ defmodule NewYou.Communications.MessageIntent do
     attribute :terminal_reason, :string, public?: false
     create_timestamp :created_at
     update_timestamp :updated_at
+  end
+
+  relationships do
+    has_many :delivery_attempts, NewYou.Communications.DeliveryAttempt do
+      public? false
+      destination_attribute :message_intent_id
+    end
   end
 
   identities do

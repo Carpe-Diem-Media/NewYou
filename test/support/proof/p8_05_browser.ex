@@ -4,6 +4,16 @@ defmodule NewYou.Proof.P805Browser do
   alias NewYou.Identity
   require Ash.Query
 
+  @failure_codes ~w(
+    browser.unavailable browser.protocol browser.protocol_timeout browser.context_lost
+    browser.evaluation browser.navigation_timeout browser.stopped browser.unclassified
+    browser.protocol_timeout.Target.createBrowserContext browser.protocol_timeout.Target.createTarget
+    browser.protocol_timeout.Target.attachToTarget browser.protocol_timeout.Page.enable
+    browser.protocol_timeout.Runtime.enable browser.protocol_timeout.Runtime.evaluate
+    browser.protocol_timeout.Page.navigate browser.protocol_timeout.Target.disposeBrowserContext
+    browser.protocol_timeout.Browser.close
+  )
+
   def run_login(request, locale) do
     reference = make_ref()
 
@@ -174,7 +184,21 @@ defmodule NewYou.Proof.P805Browser do
       ])
 
     Port.command(port, payload <> "\n")
-    collect(port, "")
+    result = collect(port, "")
+
+    case result["failure"] do
+      nil ->
+        :ok
+
+      code when code in @failure_codes ->
+        SelfTest.observe_manifest!(code, false)
+        raise "proof browser failed with bounded diagnostic"
+
+      _ ->
+        raise "proof browser returned an unrecognized diagnostic"
+    end
+
+    result
   end
 
   defp collect_sessions(reference, sessions) do
