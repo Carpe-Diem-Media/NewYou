@@ -1,0 +1,56 @@
+input = IO.gets("") |> Jason.decode!()
+
+Application.put_env(
+  :new_you,
+  :identity_token_signing_secret,
+  Base.decode64!(input["signing_secret"])
+)
+
+:ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo, sandbox: false)
+
+try do
+  result =
+    case input["mode"] do
+      "authorize" ->
+        credentials = %{
+          session_id: input["credentials"]["session_id"],
+          token: input["credentials"]["token"]
+        }
+
+        case Ash.transact(
+               [
+                 NewYou.Identity.Account,
+                 NewYou.Identity.Session,
+                 NewYou.Identity.Token,
+                 NewYou.Identity.IdentityGrant
+               ],
+               fn ->
+                 NewYou.Identity.PrivilegedAccess.authorize_locked(
+                   credentials,
+                   input["grant_id"],
+                   input["target_id"],
+                   :release_security_hold
+                 )
+               end
+             ) do
+          {:ok, {:ok, _}} -> "P813_AUTHORIZED"
+          _ -> "P813_DENIED"
+        end
+
+      "materialize" ->
+        {:ok, _} =
+          NewYou.Audit.materialize_registration_evidence(
+            %{primary_key: %{id: input["obligation_id"]}},
+            authorize?: false
+          )
+
+        "P813_MATERIALIZED"
+
+      _ ->
+        "P813_DENIED"
+    end
+
+  IO.puts(result)
+after
+  Ecto.Adapters.SQL.Sandbox.checkin(NewYou.Repo)
+end

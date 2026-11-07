@@ -763,8 +763,8 @@ defmodule NewYou.Proof.P805 do
       )
 
     Repo.query!(
-      "DELETE FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[])) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = ANY($1::uuid[]))",
-      [operations]
+      "DELETE FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[]))) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = ANY($1::uuid[]))",
+      [operations, emails]
     )
 
     # Transactional DDL takes table locks. Only these synthetic fixture rows
@@ -778,13 +778,18 @@ defmodule NewYou.Proof.P805 do
         )
 
         Repo.query!(
-          "DELETE FROM evidence_records WHERE obligation_id IN (SELECT id FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]))",
-          [operations]
+          "DELETE FROM evidence_records WHERE obligation_id IN (SELECT id FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])))",
+          [operations, emails]
         )
 
         Repo.query!(
-          "DELETE FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[])",
-          [operations]
+          "DELETE FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[]))",
+          [operations, emails]
+        )
+
+        Repo.query!(
+          "DELETE FROM evidence_records WHERE actor_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+          [emails]
         )
 
         Repo.query!("ALTER TABLE evidence_records ENABLE TRIGGER evidence_records_immutable")
@@ -824,6 +829,11 @@ defmodule NewYou.Proof.P805 do
     Repo.query!("DELETE FROM registration_operations WHERE operation_id = ANY($1::uuid[])", [
       operations
     ])
+
+    Repo.query!(
+      "DELETE FROM identity_grants WHERE subject_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR approver_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+      [emails]
+    )
 
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
   end

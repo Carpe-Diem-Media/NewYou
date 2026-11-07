@@ -157,3 +157,14 @@ case NewYou.Communications.Keyring.from_environment(
   {:ok, keyring} -> config :new_you, :communications_keyring, keyring
   :error -> :ok
 end
+
+case NewYou.Communications.Keyring.from_environment(
+       System.get_env("NEWYOU_IDENTITY_MFA_ACTIVE_KEY_VERSION"),
+       System.get_env("NEWYOU_IDENTITY_MFA_KEYS_JSON")
+     ) do
+  {:ok, %{active: active, keys: keys}} ->
+    config :new_you, :identity_mfa_keyring, %{active_version: active, keys: keys}
+
+  :error ->
+    :ok
+end

@@ -12,6 +12,11 @@ config :new_you, :identity_registration_legal_versions, %{
 
 config :new_you, :identity_registration_expiry_enabled, false
 
+config :new_you, :identity_mfa_keyring, %{
+  active_version: "test-bootstrap",
+  keys: %{"test-bootstrap" => :crypto.strong_rand_bytes(32)}
+}
+
 config :ash,
   policies: [show_policy_breakdowns?: true],
   keyset_signing_secret: "X6qc21Qe1JMpA11OGt/0A+9HNSNalkN9Eb6Jgo4/LZU",
