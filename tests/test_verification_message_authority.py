@@ -49,8 +49,10 @@ class VerificationMessageAuthorityTests(unittest.TestCase):
 
     def test_current_authority_successors_and_decisions_are_routed(self) -> None:
         routes = {row["document_id"]: row for row in ROUTER["governing_documents"] + ROUTER["supporting_documents"]}
-        self.assertEqual("00_PLATFORM_v1.13.0.md", routes["PLATFORM_PRODUCT_LAW"]["canonical_filename"])
-        self.assertEqual("01_DECISIONS_v1.13.0.md", routes["PRODUCT_DECISIONS"]["canonical_filename"])
+        for document_id, stem in (("PLATFORM_PRODUCT_LAW", "00_PLATFORM"), ("PRODUCT_DECISIONS", "01_DECISIONS")):
+            route = routes[document_id]
+            self.assertGreaterEqual(tuple(map(int, route["semver"].split("."))), (1, 13, 0))
+            self.assertEqual(f"{stem}_v{route['semver']}.md", route["canonical_filename"])
         self.assertEqual("PLATFORM_OPERATING_MODEL_v1.3.0.md", routes["PLATFORM_OPERATING_MODEL"]["canonical_filename"])
         self.assertIn("DEC-320", self.decisions)
         self.assertIn("DEC-319", self.decisions)

@@ -20,17 +20,17 @@
     },
     {
       "document_id": "PLATFORM_PRODUCT_LAW",
-      "canonical_filename": "00_PLATFORM_v1.13.0.md",
-      "repository_path": "docs/governance/product/00_PLATFORM_v1.13.0.md",
-      "sha256": "eac45fab280eaa157bb3e3268463f879c1c09648566c5c84a900bcbc25215413",
-      "semver": "1.13.0"
+      "canonical_filename": "00_PLATFORM_v1.14.0.md",
+      "repository_path": "docs/governance/product/00_PLATFORM_v1.14.0.md",
+      "sha256": "bcec310103319441d12c6efae1c7c779a013a503b3831da630abb4a55187314b",
+      "semver": "1.14.0"
     },
     {
       "document_id": "PRODUCT_DECISIONS",
-      "canonical_filename": "01_DECISIONS_v1.13.0.md",
-      "repository_path": "docs/governance/product/01_DECISIONS_v1.13.0.md",
-      "sha256": "fbe84ea762b1ff298080d3938307938b69c85f85284d6b6104a8da1bf093aa9d",
-      "semver": "1.13.0"
+      "canonical_filename": "01_DECISIONS_v1.14.0.md",
+      "repository_path": "docs/governance/product/01_DECISIONS_v1.14.0.md",
+      "sha256": "d97cb742deefa744279b47686bf5148cceea4b95839fe5b32ad6bbe7d2b6b1fd",
+      "semver": "1.14.0"
     },
     {
       "document_id": "ARCHITECTURE_LAW",

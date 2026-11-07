@@ -1,0 +1,37 @@
+{
+  "record_id": "WELL-97-OWNER-APPROVALS-V1",
+  "approved_head": "387d1f1ff30c4ddd8fb8b3b5f5e95758dfb07e78",
+  "actor_identity": "requesting-user:93dd4a5e-f360-444f-8363-3d90272308c9",
+  "authority_basis": "Direct user decisions explicitly made as accountable Product owner and accountable Content & Media owner; no runtime identity or grant inferred.",
+  "source": {
+    "thread_link": "<t3-thread://v2/fdfd1f03-53cf-41e7-8d37-6f5313c72d55/93dd4a5e-f360-444f-8363-3d90272308c9>",
+    "thread_id": "93dd4a5e-f360-444f-8363-3d90272308c9",
+    "item_id": "turn-item:message:async-answer%3Aruntime-request%3Aprovider%3Acodex%3Aprovider-turn%3Aprovider-turn%253Aprovider%253Acodex%253Anative-turn%253A01a1b585-fd20-7c03-9543-b05c6e7407dd%3Anative-request%3Aasync%253Acall_85cdf6845cf541269bc739bbd3324e56%3A784b18c2-f1a1-4a10-bbaf-99f088164afd",
+    "position": 219,
+    "message_id": "async-answer:runtime-request:provider:codex:provider-turn:provider-turn%3Aprovider%3Acodex%3Anative-turn%3A01a1b585-fd20-7c03-9543-b05c6e7407dd:native-request:async%3Acall_85cdf6845cf541269bc739bbd3324e56:784b18c2-f1a1-4a10-bbaf-99f088164afd",
+    "received_at": "2026-11-07T12:43:33.367Z",
+    "created_by": "user",
+    "text": "WELL-97 AC4 requires an explicit Product-owner decision. As accountable Product owner, do you approve PR #202 at head 387d1f1: the proposed magic_login_message type for optional existing-Account email sign-in, editorial_low_risk for wording only, Identity security remaining HIGH, and use limited to local development, tests, development environments and bounded P8-09 proof? Production/public/paid-pilot/real-participant use stays prohibited.\nApprove as Product owner\n\nAs accountable Content & Media owner, do you approve the existing exact EN/AF V1 artifacts in PR #202 for that same bounded development scope, with UTF-8/LF, blank-line separators, one terminal LF and typed {{platform_name}} / {{magic_login_link}} tokens? EN: 278 bytes, SHA-256 3527fcea7813b4348dd9c2ff06ed0c617c7a8eb6a356e16c4afa63c6b168707b. AF: 327 bytes, SHA-256 05c09bd18c805572f7bbc75717f5f6a09d3b5eca44f6bb08959ae2bd4fdc3f89. These preserve the source HTML's five blank LF bytes that explain the earlier hash discrepancy.\nApprove exact artifacts as Content owner"
+  },
+  "plane_record": {
+    "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+    "workitem_id": "5e11e18d-2c02-4276-868b-fdcbea715141",
+    "comment_id": "f1c1a5d8-c92b-4a36-8a7d-2313559e2864",
+    "recorded_at": "2026-11-07T12:44:41.479057Z",
+    "provenance": "Agent transcription of direct user decisions; original user message above remains approval source."
+  },
+  "decisions": [
+    {
+      "decision_id": "WELL-97-PRODUCT-APPROVAL-387d1f1",
+      "owner": "Product",
+      "answer": "Approve as Product owner"
+    },
+    {
+      "decision_id": "WELL-97-CONTENT-APPROVAL-387d1f1",
+      "owner": "Content & Media",
+      "answer": "Approve exact artifacts as Content owner"
+    }
+  ],
+  "merge_authorized": false,
+  "runtime_release_authorized": false
+}

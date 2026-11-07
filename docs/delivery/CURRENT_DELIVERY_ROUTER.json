@@ -172,6 +172,14 @@
       "sha256": "096401942a84e8c002d9f67d30537e70e1479e8bb2e521814b98e706b262b517",
       "contract_type": "content_evidence",
       "status": "CANDIDATE_NOT_APPROVED"
+    },
+    {
+      "document_id": "MAGIC_LOGIN_MESSAGE_DEVELOPMENT_EVIDENCE",
+      "canonical_filename": "MAGIC_LOGIN_MESSAGE_EVIDENCE_PACKET_v0.2.0.json",
+      "repository_path": "docs/delivery/content-evidence/content_media/magic_login_messages/MAGIC_LOGIN_MESSAGE_EVIDENCE_PACKET_v0.2.0.json",
+      "sha256": "9ef29d3417acabc32a4cf0757150ef5bc5ed2510c968b3effc9618b7f44073ba",
+      "contract_type": "content_evidence",
+      "status": "DEVELOPMENT_ONLY_APPROVED; RUNTIME_RELEASE_PROHIBITED"
     }
   ]
 }

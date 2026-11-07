@@ -61,8 +61,9 @@ class WELL68DevelopmentAuthorityTests(unittest.TestCase):
         self.assertEqual("CURRENT", self.router["status"])
         product_route = next(row for row in self.router["governing_documents"] if row["document_id"] == "PLATFORM_PRODUCT_LAW")
         decisions_route = next(row for row in self.router["governing_documents"] if row["document_id"] == "PRODUCT_DECISIONS")
-        self.assertEqual("00_PLATFORM_v1.13.0.md", product_route["canonical_filename"])
-        self.assertEqual("01_DECISIONS_v1.13.0.md", decisions_route["canonical_filename"])
+        for route, stem in ((product_route, "00_PLATFORM"), (decisions_route, "01_DECISIONS")):
+            self.assertGreaterEqual(tuple(map(int, route["semver"].split("."))), (1, 13, 0))
+            self.assertEqual(f"{stem}_v{route['semver']}.md", route["canonical_filename"])
         self.assertEqual("PLATFORM_OPERATING_MODEL_v1.3.0.md", next(row for row in self.router["supporting_documents"] if row["document_id"] == "PLATFORM_OPERATING_MODEL")["canonical_filename"])
         self.assertNotIn("OPEN_WORK", {row["document_id"] for row in self.router["governing_documents"]})
         legacy = next(row for row in self.frozen_router["legacy_snapshots"] if row["document_id"] == "OPEN_WORK_FINAL_LEGACY_SNAPSHOT")
