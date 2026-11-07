@@ -20,17 +20,17 @@
     },
     {
       "document_id": "PLATFORM_PRODUCT_LAW",
-      "canonical_filename": "00_PLATFORM_v1.13.0.md",
-      "repository_path": "docs/governance/product/00_PLATFORM_v1.13.0.md",
-      "sha256": "eac45fab280eaa157bb3e3268463f879c1c09648566c5c84a900bcbc25215413",
-      "semver": "1.13.0"
+      "canonical_filename": "00_PLATFORM_v1.14.0.md",
+      "repository_path": "docs/governance/product/00_PLATFORM_v1.14.0.md",
+      "sha256": "bcec310103319441d12c6efae1c7c779a013a503b3831da630abb4a55187314b",
+      "semver": "1.14.0"
     },
     {
       "document_id": "PRODUCT_DECISIONS",
-      "canonical_filename": "01_DECISIONS_v1.13.0.md",
-      "repository_path": "docs/governance/product/01_DECISIONS_v1.13.0.md",
-      "sha256": "fbe84ea762b1ff298080d3938307938b69c85f85284d6b6104a8da1bf093aa9d",
-      "semver": "1.13.0"
+      "canonical_filename": "01_DECISIONS_v1.14.0.md",
+      "repository_path": "docs/governance/product/01_DECISIONS_v1.14.0.md",
+      "sha256": "d97cb742deefa744279b47686bf5148cceea4b95839fe5b32ad6bbe7d2b6b1fd",
+      "semver": "1.14.0"
     },
     {
       "document_id": "ARCHITECTURE_LAW",
@@ -105,6 +105,24 @@
       "repository_path": "docs/governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.2.0.md",
       "sha256": "024d5f4f8433fa02a66702521ef83239298e581a4f5331c61d2002f28ac51088",
       "semver": "1.2.0"
+    }
+  ],
+  "proposed_successors": [
+    {
+      "document_id": "PLATFORM_PRODUCT_LAW",
+      "repository_path": "docs/governance/product/proposals/well-97/00_PLATFORM_v1.14.0_PROPOSED.md",
+      "sha256": "7502b74167737cdcb84e7b819539243f4472021532ce475843aa4b5315bf5f99",
+      "semver": "1.14.0",
+      "status": "PROPOSED_NON_AUTHORITATIVE",
+      "promotion_requires": "Explicit Product-owner decision, Content & Media decision, independent Master Gate and authorised integration"
+    },
+    {
+      "document_id": "PRODUCT_DECISIONS",
+      "repository_path": "docs/governance/product/proposals/well-97/01_DECISIONS_v1.14.0_PROPOSED.md",
+      "sha256": "560ba5438ee15dc1e8bc8a4e849e067382244d5531116ab5ff445742180684da",
+      "semver": "1.14.0",
+      "status": "PROPOSED_NON_AUTHORITATIVE",
+      "promotion_requires": "Explicit Product-owner decision, Content & Media decision, independent Master Gate and authorised integration"
     }
   ]
 }

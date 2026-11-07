@@ -36,7 +36,7 @@
       "document_id": "DELIVERY_ATLAS",
       "canonical_filename": "DELIVERY_ATLAS_WORKING_v0.4.31.md",
       "repository_path": "docs/delivery/execution/DELIVERY_ATLAS_WORKING_v0.4.31.md",
-      "sha256": "a4a8b6eef3a7b45986459f27b09c0bde090183b5836f3e8f8bfb200182d30c1c",
+      "sha256": "049858878a27c809806d5ccaab496d568cf3e886f3930b77b9ad2d397e0187cb",
       "contract_type": "execution"
     },
     {
@@ -50,7 +50,7 @@
       "document_id": "P8_05_REGISTRATION",
       "canonical_filename": "p8-05-registration-jit-spec.md",
       "repository_path": "docs/delivery/execution/p8-05-registration-jit-spec.md",
-      "sha256": "3db061b3942651df012e9eb633f2536eb6e3aaf2ef95444469d528ff073f6f0b",
+      "sha256": "6847f36c7412f1cfc495b2ca3d1cdff98f77a9993bc9111656ae309959787fe9",
       "contract_type": "execution"
     },
     {
@@ -164,6 +164,22 @@
       "repository_path": "docs/delivery/content-evidence/content_media/verification_messages/VERIFICATION_MESSAGE_EVIDENCE_PACKET_v0.2.0.json",
       "sha256": "2cbcab1256c4b0adab53189d31941ab926e0649dff6878e39558297b5221053c",
       "contract_type": "content_evidence"
+    },
+    {
+      "document_id": "MAGIC_LOGIN_MESSAGE_CANDIDATE_EVIDENCE",
+      "canonical_filename": "MAGIC_LOGIN_MESSAGE_EVIDENCE_PACKET_v0.1.0.json",
+      "repository_path": "docs/delivery/content-evidence/content_media/magic_login_messages/MAGIC_LOGIN_MESSAGE_EVIDENCE_PACKET_v0.1.0.json",
+      "sha256": "096401942a84e8c002d9f67d30537e70e1479e8bb2e521814b98e706b262b517",
+      "contract_type": "content_evidence",
+      "status": "CANDIDATE_NOT_APPROVED"
+    },
+    {
+      "document_id": "MAGIC_LOGIN_MESSAGE_DEVELOPMENT_EVIDENCE",
+      "canonical_filename": "MAGIC_LOGIN_MESSAGE_EVIDENCE_PACKET_v0.2.0.json",
+      "repository_path": "docs/delivery/content-evidence/content_media/magic_login_messages/MAGIC_LOGIN_MESSAGE_EVIDENCE_PACKET_v0.2.0.json",
+      "sha256": "9ef29d3417acabc32a4cf0757150ef5bc5ed2510c968b3effc9618b7f44073ba",
+      "contract_type": "content_evidence",
+      "status": "DEVELOPMENT_ONLY_APPROVED; RUNTIME_RELEASE_PROHIBITED"
     }
   ]
 }

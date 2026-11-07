@@ -13,7 +13,7 @@ P8-05 is the first production-path Phase 8 proof slice. Its bilingual browser pa
 
 The Account remains unverified and has no Session. The participant sees a localized verification-pending page. P8-05 does not consume verification proof, log the participant in, execute Communications or Audit durable workers, contact a provider, or certify the full TB-001 proof.
 
-The live authority route is `docs/README.md`, `docs/governance/CURRENT_GOVERNANCE_ROUTER.json` and `docs/delivery/CURRENT_DELIVERY_ROUTER.json`, including Product `docs/governance/product/00_PLATFORM_v1.13.0.md` and Decision Register `docs/governance/product/01_DECISIONS_v1.13.0.md` / DEC-319–DEC-320. Product §§15.1A and 21E.19–21E.20 and DEC-319/DEC-320 govern development/runtime authority separation and verification-message eligibility; this section records the corresponding P8-05 semantic contract. Plane owns current ticket state and readiness. The frozen Open Work snapshot is historical evidence only, not current execution authorization. PR #151 and the Identity v0.2.0 successor record the existing reconciled owner contract. The current TB-001 proof remains `INCOMPLETE / COVERAGE-INCOMPLETE`, ten required business/browser manifests remain unavailable, and Phase 8 is not certified. Phase 9 remains `NOT STARTED / NOT AUTHORISED`.
+The live authority route is `docs/README.md`, `docs/governance/CURRENT_GOVERNANCE_ROUTER.json` and `docs/delivery/CURRENT_DELIVERY_ROUTER.json`, including Product `docs/governance/product/00_PLATFORM_v1.14.0.md` and Decision Register `docs/governance/product/01_DECISIONS_v1.14.0.md` / DEC-319–DEC-320. Product §§15.1A and 21E.19–21E.20 and DEC-319/DEC-320 govern development/runtime authority separation and verification-message eligibility; this section records the corresponding P8-05 semantic contract. Plane owns current ticket state and readiness. The frozen Open Work snapshot is historical evidence only, not current execution authorization. PR #151 and the Identity v0.2.0 successor record the existing reconciled owner contract. The current TB-001 proof remains `INCOMPLETE / COVERAGE-INCOMPLETE`, ten required business/browser manifests remain unavailable, and Phase 8 is not certified. Phase 9 remains `NOT STARTED / NOT AUTHORISED`.
 
 This spec follows the outcome contract in Plane WELL-6. Live GitHub authority controls if a Plane description or this planning artifact becomes stale. It records the accepted WELL-48 owner decisions and reconciles them with the Identity v0.2.0 status successor; it changes no Product, Architecture, Domain, Roadmap, TB-001 or Domain ownership.
 
@@ -282,7 +282,7 @@ Independent planning review and implementation/JIT verification remain complete 
 
 ## Source references
 
-- `docs/README.md` and `docs/governance/CURRENT_GOVERNANCE_ROUTER.json` for live authority routing; `docs/governance/product/00_PLATFORM_v1.13.0.md` §§15.1A, 21E.1, 21E.7, 21E.18–21E.20 and `docs/governance/product/01_DECISIONS_v1.13.0.md` DEC-319/DEC-320 for identity, content and development/runtime authority.
+- `docs/README.md` and `docs/governance/CURRENT_GOVERNANCE_ROUTER.json` for live authority routing; `docs/governance/product/00_PLATFORM_v1.14.0.md` §§15.1A, 21E.1, 21E.7, 21E.18–21E.20 and `docs/governance/product/01_DECISIONS_v1.14.0.md` DEC-319/DEC-320 for identity, content and development/runtime authority.
 - `docs/history/02_OPEN_WORK_v1.2.90.md` is the frozen legacy status snapshot and historical evidence only; live P8-05 execution state is in Plane.
 - `docs/delivery/content-evidence/content_media/verification_messages/VERIFICATION_MESSAGE_EVIDENCE_PACKET_v0.2.0.json` for the development-only fixture decision and separately pending runtime/release evidence.
 - `docs/delivery/content-evidence/content_media/LEGAL_BASELINE_CONTENT_MANIFEST_v0.1.0.json` for exact non-authoritative English development-baseline content IDs and provenance.
@@ -291,7 +291,7 @@ Independent planning review and implementation/JIT verification remain complete 
 - `docs/delivery/jit/communications/FP-001_COMMUNICATIONS_JIT_DOMAIN_DOSSIER_WORKING_v0.1.0.md` §§4–8 for MessageIntent authority, exact content/locale binding, resend, durable execution, and protected delivery.
 - `docs/delivery/jit/audit-evidence/FP-001_AUDIT_EVIDENCE_JIT_DOMAIN_DOSSIER_WORKING_v0.1.0.md` §§5–6 for selected audit evidence and E2 boundaries.
 - `docs/governance/supporting/FRONTEND_EXPERIENCE_SYSTEM_v1.0.1.md` §§5.2 and 7.2 for pending experience and approved bilingual content.
-- `docs/governance/product/01_DECISIONS_v1.13.0.md` OQ-035 for unresolved abuse thresholds; OQ-013 and OQ-016 remain generally deferred by WELL-63.
+- `docs/governance/product/01_DECISIONS_v1.14.0.md` OQ-035 for unresolved abuse thresholds; OQ-013 and OQ-016 remain generally deferred by WELL-63.
 - [ISO/IEC 7064:2003, Check character systems](https://www.iso.org/standard/31531.html) for check-character error-detection properties.
 - [RFC 5321 §2.4](https://www.rfc-editor.org/rfc/rfc5321.html) for mailbox local-part and domain comparison rules.
 

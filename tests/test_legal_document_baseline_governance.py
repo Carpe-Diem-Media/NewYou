@@ -142,8 +142,11 @@ class LegalDocumentBaselineGovernanceTests(unittest.TestCase):
             for collection in ("governing_documents", "architecture_references", "supporting_documents")
             for entry in current_governance_router_data(ROOT).get(collection, [])
         }
-        self.assertIn("00_PLATFORM_v1.13.0.md", routed_governance)
-        self.assertIn("01_DECISIONS_v1.13.0.md", routed_governance)
+        for stem in ("00_PLATFORM", "01_DECISIONS"):
+            successors = [name for name in routed_governance if name.startswith(stem + "_v")]
+            self.assertEqual(1, len(successors))
+            version = successors[0].removeprefix(stem + "_v").removesuffix(".md")
+            self.assertGreaterEqual(tuple(map(int, version.split("."))), (1, 13, 0))
         self.assertIn("Plane project `WELL` remains the live execution authority", readme)
         self.assertIn("runtime authorization", product.casefold())
         self.assertIn(

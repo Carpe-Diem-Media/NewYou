@@ -1,0 +1,359 @@
+{
+  "packet_id": "magic-login-message-email-candidate-evidence-v0.1.0",
+  "status": "CANDIDATE_NOT_APPROVED",
+  "owner": "Content & Media",
+  "base_sha": "da9b745ae4dea95c84882c36c7413094d8dcaaad",
+  "product_proposal": {
+    "status": "PROPOSED_NON_AUTHORITATIVE",
+    "recommended_type": "magic_login_message",
+    "recommended_wording_risk": "editorial_low_risk",
+    "identity_security_risk": "HIGH",
+    "documents": [
+      {
+        "document_id": "PLATFORM_PRODUCT_LAW",
+        "path": "docs/governance/product/proposals/well-97/00_PLATFORM_v1.14.0_PROPOSED.md",
+        "sha256": "7502b74167737cdcb84e7b819539243f4472021532ce475843aa4b5315bf5f99",
+        "predecessor": "docs/governance/product/00_PLATFORM_v1.13.0.md",
+        "predecessor_sha256": "eac45fab280eaa157bb3e3268463f879c1c09648566c5c84a900bcbc25215413",
+        "version": "1.14.0"
+      },
+      {
+        "document_id": "PRODUCT_DECISIONS",
+        "path": "docs/governance/product/proposals/well-97/01_DECISIONS_v1.14.0_PROPOSED.md",
+        "sha256": "560ba5438ee15dc1e8bc8a4e849e067382244d5531116ab5ff445742180684da",
+        "predecessor": "docs/governance/product/01_DECISIONS_v1.13.0.md",
+        "predecessor_sha256": "fbe84ea762b1ff298080d3938307938b69c85f85284d6b6104a8da1bf093aa9d",
+        "version": "1.14.0"
+      }
+    ]
+  },
+  "source": {
+    "path": "docs/delivery/content-evidence/content_media/magic_login_messages/WELL-12-candidate-comment.json",
+    "sha256": "23870df714eab0838a9260ba84f0dca81a772f590fb3445c62414c780225f74e",
+    "comment_id": "a8059c05-e55a-4802-9a29-5a1273257af1",
+    "authority": "unapproved candidate only"
+  },
+  "content_item_id": "NEWYOU-CONTENTITEM-MAGIC-LOGIN-MESSAGE-EMAIL",
+  "content_version_id": "NEWYOU-CONTENTVERSION-MAGIC-LOGIN-MESSAGE-EMAIL-V1",
+  "serialization": {
+    "format_id": "magic-login-message-subject-body-text-v1",
+    "encoding": "UTF-8",
+    "line_endings": "LF",
+    "bom": false,
+    "terminal_lf_count": 1,
+    "subject_prefix": "subject: ",
+    "subject_body_boundary": "one blank line",
+    "body_paragraph_boundary": "one blank line",
+    "digest_input": "exact file bytes",
+    "subject_digest_input": "subject value only, excluding prefix and LF",
+    "body_digest_input": "all bytes after first blank line, including terminal LF",
+    "normalization": "none; preserve literal Unicode including AF U+2019"
+  },
+  "token_allowlist": [
+    {
+      "literal": "{{platform_name}}",
+      "type": "platform_display_name",
+      "allowed_fields": [
+        "subject",
+        "body"
+      ],
+      "source": "approved platform configuration; single-line plain text"
+    },
+    {
+      "literal": "{{magic_login_link}}",
+      "type": "identity_magic_login_url",
+      "allowed_fields": [
+        "body"
+      ],
+      "source": "Identity-owned purpose-bound transient URL; no value in evidence or persisted render snapshot"
+    }
+  ],
+  "token_contract_sha256": "ed691f4d7e2a54a0f58f5ffd84c8d53f030d16bc41f025ddee48e1f6d877f573",
+  "locale_versions": [
+    {
+      "locale": "en",
+      "id": "NEWYOU-CONTENTTRANSLATIONVERSION-MAGIC-LOGIN-MESSAGE-EMAIL-EN-V1",
+      "artifact": {
+        "path": "docs/delivery/content-evidence/content_media/magic_login_messages/NEWYOU-MAGIC-LOGIN-MESSAGE-EMAIL-EN-V1.txt",
+        "bytes": 278,
+        "sha256": "3527fcea7813b4348dd9c2ff06ed0c617c7a8eb6a356e16c4afa63c6b168707b"
+      },
+      "subject": {
+        "offset": 9,
+        "bytes": 28,
+        "sha256": "59714f610786ab1c636526412aea4e4b46291dbf82e33796b87798ec7bbcf8c0"
+      },
+      "body": {
+        "offset": 39,
+        "bytes": 239,
+        "sha256": "9aa238fa297e184fdb1b8aa2f8e42ece3318221c441b944a6d1f127fa9059043"
+      },
+      "contiguous_rendering": {
+        "bytes": 273,
+        "sha256": "3e29c7fc2e55a215875b35ba92cb7b81186cf21d8a470d4c564a9e623708b015"
+      },
+      "copy_keys": {
+        "subject": "identity.login.magic_email.subject",
+        "body": "identity.login.magic_email.body"
+      }
+    },
+    {
+      "locale": "af",
+      "id": "NEWYOU-CONTENTTRANSLATIONVERSION-MAGIC-LOGIN-MESSAGE-EMAIL-AF-V1",
+      "artifact": {
+        "path": "docs/delivery/content-evidence/content_media/magic_login_messages/NEWYOU-MAGIC-LOGIN-MESSAGE-EMAIL-AF-V1.txt",
+        "bytes": 327,
+        "sha256": "05c09bd18c805572f7bbc75717f5f6a09d3b5eca44f6bb08959ae2bd4fdc3f89"
+      },
+      "subject": {
+        "offset": 9,
+        "bytes": 29,
+        "sha256": "7616ed543b6528d1ea59690a67a208c690096c0476451c082fefa73d411a375b"
+      },
+      "body": {
+        "offset": 40,
+        "bytes": 287,
+        "sha256": "7c8c41233061a00ca7db060f5e44473fc931457ca43460d655258e6795bdc272"
+      },
+      "contiguous_rendering": {
+        "bytes": 322,
+        "sha256": "e45d82eca89e990b1c1f99ad2995bef09a848eeaa9cfb20859bbac493c522205"
+      },
+      "copy_keys": {
+        "subject": "identity.login.magic_email.subject",
+        "body": "identity.login.magic_email.body"
+      }
+    }
+  ],
+  "binding": {
+    "resolution": "exact IDs only",
+    "latest_alias": false,
+    "silent_locale_fallback": false
+  },
+  "scope": {
+    "allowed": [
+      "local development",
+      "automated tests",
+      "development environments",
+      "bounded P8-09 Phase-8 proof"
+    ],
+    "prohibited": [
+      "production",
+      "public release",
+      "paid pilot",
+      "real-participant delivery"
+    ]
+  },
+  "lifecycle": {
+    "state": "candidate",
+    "states": [
+      "candidate",
+      "development_approved",
+      "superseded",
+      "withdrawn"
+    ],
+    "transitions": {
+      "candidate": [
+        "development_approved"
+      ],
+      "development_approved": [
+        "superseded",
+        "withdrawn"
+      ],
+      "superseded": [],
+      "withdrawn": []
+    },
+    "transition_guards": {
+      "candidate_to_development_approved": [
+        "accountable Product-owner approval",
+        "accountable Content & Media owner exact-byte approval",
+        "all exact subjects and token/scope bindings verified",
+        "no conflicting unresolved decision",
+        "complete append-only history"
+      ],
+      "terminal_transition": [
+        "accountable Content & Media owner decision",
+        "exact prior version and digest",
+        "supersession names an immutable successor"
+      ]
+    },
+    "idempotency_key": [
+      "decision_id",
+      "content_item_id",
+      "content_version_id",
+      "content_translation_version_id",
+      "locale",
+      "format_id",
+      "sha256",
+      "token_contract_sha256",
+      "applicability"
+    ],
+    "conflict": "STOP_AND_RECONCILE; never last-write-wins",
+    "reconciliation": "Append accountable owner resolution referencing every conflicting event; no new use until resolved. Never edit prior events or bytes.",
+    "history": "APPEND_ONLY; changed bytes require new ContentTranslationVersion ID and fresh approval; shared structure changes require successor ContentVersion.",
+    "terminal_for_new_use": [
+      "superseded",
+      "withdrawn"
+    ],
+    "recovery": "Revalidate complete reviewed history and all exact bindings before new use; missing history fails closed."
+  },
+  "eligibility": {
+    "development": false,
+    "runtime_release": false,
+    "production": false,
+    "public_release": false,
+    "paid_pilot": false,
+    "real_participant_delivery": false
+  },
+  "owner_decisions": [
+    {
+      "owner": "Product",
+      "status": "pending",
+      "actor_identity": null,
+      "accountable_owner_evidence": null,
+      "decision_id": null,
+      "decision_reference": null,
+      "decided_at": null,
+      "subjects": [
+        {
+          "document_id": "PLATFORM_PRODUCT_LAW",
+          "path": "docs/governance/product/proposals/well-97/00_PLATFORM_v1.14.0_PROPOSED.md",
+          "sha256": "7502b74167737cdcb84e7b819539243f4472021532ce475843aa4b5315bf5f99",
+          "predecessor": "docs/governance/product/00_PLATFORM_v1.13.0.md",
+          "predecessor_sha256": "eac45fab280eaa157bb3e3268463f879c1c09648566c5c84a900bcbc25215413",
+          "version": "1.14.0"
+        },
+        {
+          "document_id": "PRODUCT_DECISIONS",
+          "path": "docs/governance/product/proposals/well-97/01_DECISIONS_v1.14.0_PROPOSED.md",
+          "sha256": "560ba5438ee15dc1e8bc8a4e849e067382244d5531116ab5ff445742180684da",
+          "predecessor": "docs/governance/product/01_DECISIONS_v1.13.0.md",
+          "predecessor_sha256": "fbe84ea762b1ff298080d3938307938b69c85f85284d6b6104a8da1bf093aa9d",
+          "version": "1.14.0"
+        }
+      ],
+      "required_decision": "Accept/reject/revise exact proposed type, editorial_low_risk wording classification and bounded applicability; bind both proposal digests.",
+      "binding": {
+        "content_type": "magic_login_message",
+        "wording_risk": "editorial_low_risk",
+        "identity_security_risk": "HIGH",
+        "applicability": {
+          "allowed": [
+            "local development",
+            "automated tests",
+            "development environments",
+            "bounded P8-09 Phase-8 proof"
+          ],
+          "prohibited": [
+            "production",
+            "public release",
+            "paid pilot",
+            "real-participant delivery"
+          ]
+        }
+      }
+    },
+    {
+      "owner": "Content & Media",
+      "status": "pending",
+      "actor_identity": null,
+      "accountable_owner_evidence": null,
+      "decision_id": null,
+      "decision_reference": null,
+      "decided_at": null,
+      "subjects": [
+        {
+          "locale": "en",
+          "content_translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-MAGIC-LOGIN-MESSAGE-EMAIL-EN-V1",
+          "artifact": {
+            "path": "docs/delivery/content-evidence/content_media/magic_login_messages/NEWYOU-MAGIC-LOGIN-MESSAGE-EMAIL-EN-V1.txt",
+            "bytes": 278,
+            "sha256": "3527fcea7813b4348dd9c2ff06ed0c617c7a8eb6a356e16c4afa63c6b168707b"
+          },
+          "subject": {
+            "offset": 9,
+            "bytes": 28,
+            "sha256": "59714f610786ab1c636526412aea4e4b46291dbf82e33796b87798ec7bbcf8c0"
+          },
+          "body": {
+            "offset": 39,
+            "bytes": 239,
+            "sha256": "9aa238fa297e184fdb1b8aa2f8e42ece3318221c441b944a6d1f127fa9059043"
+          }
+        },
+        {
+          "locale": "af",
+          "content_translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-MAGIC-LOGIN-MESSAGE-EMAIL-AF-V1",
+          "artifact": {
+            "path": "docs/delivery/content-evidence/content_media/magic_login_messages/NEWYOU-MAGIC-LOGIN-MESSAGE-EMAIL-AF-V1.txt",
+            "bytes": 327,
+            "sha256": "05c09bd18c805572f7bbc75717f5f6a09d3b5eca44f6bb08959ae2bd4fdc3f89"
+          },
+          "subject": {
+            "offset": 9,
+            "bytes": 29,
+            "sha256": "7616ed543b6528d1ea59690a67a208c690096c0476451c082fefa73d411a375b"
+          },
+          "body": {
+            "offset": 40,
+            "bytes": 287,
+            "sha256": "7c8c41233061a00ca7db060f5e44473fc931457ca43460d655258e6795bdc272"
+          }
+        }
+      ],
+      "required_decision": "Accept/reject/revise exact EN/AF artifacts, identities, serialization, subject/body and whole-file digests, token contract and bounded applicability; acknowledge five-LF discrepancy resolution.",
+      "binding": {
+        "content_item_id": "NEWYOU-CONTENTITEM-MAGIC-LOGIN-MESSAGE-EMAIL",
+        "content_version_id": "NEWYOU-CONTENTVERSION-MAGIC-LOGIN-MESSAGE-EMAIL-V1",
+        "format_id": "magic-login-message-subject-body-text-v1",
+        "token_contract_sha256": "ed691f4d7e2a54a0f58f5ffd84c8d53f030d16bc41f025ddee48e1f6d877f573",
+        "applicability": {
+          "allowed": [
+            "local development",
+            "automated tests",
+            "development environments",
+            "bounded P8-09 Phase-8 proof"
+          ],
+          "prohibited": [
+            "production",
+            "public release",
+            "paid pilot",
+            "real-participant delivery"
+          ]
+        },
+        "product_proposal_digests": [
+          "7502b74167737cdcb84e7b819539243f4472021532ce475843aa4b5315bf5f99",
+          "560ba5438ee15dc1e8bc8a4e849e067382244d5531116ab5ff445742180684da"
+        ]
+      }
+    }
+  ],
+  "approval_events": [],
+  "approval_contract": {
+    "required_fields": [
+      "decision_id",
+      "actor_identity",
+      "accountable_owner_evidence",
+      "decision_reference",
+      "decided_at",
+      "decision",
+      "content_item_id",
+      "content_version_id",
+      "subjects",
+      "format_id",
+      "token_contract_sha256",
+      "applicability",
+      "product_proposal_digests"
+    ],
+    "recording": "APPEND_ONLY",
+    "provenance_verification": "Independent reviewer must verify actual accountable owner and source decision; nonempty fields alone are not approval.",
+    "candidate_packet_policy": "v0.1.0 is permanently candidate. Approved evidence requires a separately versioned packet after actual owner decisions and independent review, preserving this packet and source bytes."
+  },
+  "security": {
+    "assent_disposition": "WELL-91 unchanged",
+    "exclusive_expiry": "2026-11-18T00:00:00Z",
+    "authentication_input_rebinding": false,
+    "protected_bearer_retention_extension": false,
+    "runtime_changes": false
+  }
+}
