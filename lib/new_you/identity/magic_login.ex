@@ -14,22 +14,40 @@ defmodule NewYou.Identity.MagicLogin do
     alias NewYou.Identity.{Account, Email, PasswordSession, Session, Token}
     alias NewYou.Communications.{MessageIntent, DeliveryAttempt}
 
+    @request_work_timeout_ms 250
+    @request_response_floor_ms 500
+
     @spec request(term(), term(), term()) :: :ok
     def request(email, locale, operation_id) do
-      with true <- locale in ["en", "af"],
-           {:ok, operation_id} <- Ecto.UUID.cast(operation_id),
-           {:ok, email} <- Email.canonicalize(email),
-           {:ok, %Account{} = account} <- find_account(email) do
-        Ash.transact([Account, Token, MessageIntent, DeliveryAttempt], fn ->
-          issue_locked(account.id, email, locale, operation_id)
-        end)
-      else
+      response_at = System.monotonic_time(:millisecond) + @request_response_floor_ms
+
+      try do
+        Ash.transact(
+          [Account, Token, MessageIntent, DeliveryAttempt],
+          fn ->
+            with true <- locale in ["en", "af"],
+                 {:ok, operation_id} <- Ecto.UUID.cast(operation_id),
+                 {:ok, email} <- Email.canonicalize(email),
+                 {:ok, %Account{} = account} <- find_account(email) do
+              issue_locked(account.id, email, locale, operation_id)
+            else
+              _ -> :ok
+            end
+          end,
+          timeout: @request_work_timeout_ms
+        )
+      rescue
         _ -> :ok
+      catch
+        _, _ -> :ok
+      after
+        # Wait after transaction release, including failure/timeout. The shorter
+        # database budget prevents a held Account lock from exposing a long tail.
+        # Scheduler/host pauses are outside this deliberate timing treatment.
+        Process.sleep(max(response_at - System.monotonic_time(:millisecond), 0))
       end
 
       :ok
-    rescue
-      _ -> :ok
     end
 
     defp issue_locked(id, email, locale, operation_id) do
