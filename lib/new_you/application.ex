@@ -50,12 +50,12 @@ defmodule NewYou.Application do
     end
   end
 
-  defp magic_login_children do
-    if @magic_login_enabled do
+  if @magic_login_enabled do
+    defp magic_login_children do
       [{Task.Supervisor, name: NewYou.Identity.MagicLogin.RequestSupervisor, max_children: 32}]
-    else
-      []
     end
+  else
+    defp magic_login_children, do: []
   end
 
   # Tell Phoenix to update the endpoint configuration
