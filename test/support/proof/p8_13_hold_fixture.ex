@@ -1,7 +1,7 @@
 defmodule NewYou.Proof.P813HoldFixture do
   @moduledoc "Synthetic scoped Support fixtures. Protected hold actions always use real owner interfaces."
   alias NewYou.Identity
-  alias NewYou.Proof.P805
+  alias NewYou.Proof.{P805, PrivilegedAccessSeam}
 
   def with_fixture(callback) do
     P805.with_fixture(fn ->
@@ -86,12 +86,23 @@ defmodule NewYou.Proof.P813HoldFixture do
       Ecto.UUID.dump!(member.id)
     ])
 
-    Identity.step_up_privileged(
-      member.credentials,
-      member.password,
-      NimbleTOTP.verification_code(member.secret),
-      purpose
-    )
+    # Password verification can cross a TOTP boundary. Pin only this fixture's
+    # test clock so its generated code and the validator use the same instant.
+    captured = PrivilegedAccessSeam.timestamp()
+    previous = Process.put(PrivilegedAccessSeam, captured)
+
+    try do
+      Identity.step_up_privileged(
+        member.credentials,
+        member.password,
+        NimbleTOTP.verification_code(member.secret, time: captured),
+        purpose
+      )
+    after
+      if is_nil(previous),
+        do: Process.delete(PrivilegedAccessSeam),
+        else: Process.put(PrivilegedAccessSeam, previous)
+    end
   end
 
   def request(fixture, kind, version, operation_id \\ Ecto.UUID.generate()) do
