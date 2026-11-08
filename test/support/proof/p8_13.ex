@@ -204,6 +204,14 @@ defmodule NewYou.Proof.P813 do
       )
 
     request = %{request | grant_id: grant.id}
+
+    P805.check(
+      id,
+      "replacement_requires_fresh_assurance",
+      restart(:authorize, fixture, request) == :denied
+    )
+
+    {:ok, :ok} = P813HoldFixture.step_up(fixture.actor, :release_security_hold)
     {:ok, %{status: :released}} = Identity.release_security_hold(request)
     obligation = outcome!(request)
     before = P805.account!(request.target_id).hold_operations

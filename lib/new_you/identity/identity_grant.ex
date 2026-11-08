@@ -10,6 +10,7 @@ defmodule NewYou.Identity.IdentityGrant do
   postgres do
     table "identity_grants"
     repo NewYou.Repo
+    identity_wheres_to_sql one_active_assignment: "state = 'active'"
 
     check_constraints do
       check_constraint :role, "identity_grants_role", check: "role = 'support'"
@@ -55,11 +56,11 @@ defmodule NewYou.Identity.IdentityGrant do
     end
 
     update :revoke do
+      description "Revoke once and invalidate the subject's existing elevated Session assurance in the same transaction."
       public? false
+      require_atomic? false
       accept []
-      change set_attribute(:state, :revoked)
-      change set_attribute(:revoked_at, &DateTime.utc_now/0)
-      change increment(:version)
+      change NewYou.Identity.Changes.InvalidateGrantAssurance
     end
   end
 
@@ -125,5 +126,11 @@ defmodule NewYou.Identity.IdentityGrant do
       attribute_writable? true
       public? false
     end
+  end
+
+  identities do
+    identity :one_active_assignment,
+             [:subject_account_id, :role, :capability, :target_account_id],
+             where: expr(state == :active)
   end
 end

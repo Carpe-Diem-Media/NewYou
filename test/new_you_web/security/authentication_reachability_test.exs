@@ -28,6 +28,7 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:create, :register},
                {:read, :get_by_subject},
                {:read, :read},
+               {:update, :invalidate_grant_assurance},
                {:update, :mark_email_verified},
                {:update, :place_security_hold},
                {:update, :record_security_hold_attempt},

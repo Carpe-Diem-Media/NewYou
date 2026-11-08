@@ -101,23 +101,40 @@ defmodule NewYou.Identity.PrivilegedAccess do
   end
 
   defp enroll_locked(account, password) do
-    with :ok <- reauthenticate(account, password),
-         true <- account.mfa_enrollment_state == :disabled,
-         :ok <- not_locked?(account) do
-      secret = NimbleTOTP.secret()
-
-      case update_account(account, %{
-             pending_totp_secret: secret,
-             mfa_enrollment_state: :pending,
-             mfa_failed_attempts: 0,
-             mfa_locked_until: nil,
-             mfa_version: account.mfa_version + 1,
-             security_version: account.security_version + 1
-           }) do
-        {:ok, _} -> {:ok, secret}
+    with :ok <- not_locked?(account),
+         :ok <- reauthenticate_or_record_failure(account, password) do
+      case account.mfa_enrollment_state do
+        :disabled -> begin_enrollment(account)
+        :pending -> resume_enrollment(account)
         _ -> {:error, :unavailable}
       end
     else
+      {:denied, _} = denied -> denied
+      _ -> {:error, :unavailable}
+    end
+  end
+
+  defp begin_enrollment(account) do
+    secret = NimbleTOTP.secret()
+
+    case update_account(account, %{
+           pending_totp_secret: secret,
+           mfa_enrollment_state: :pending,
+           mfa_failed_attempts: 0,
+           mfa_locked_until: nil,
+           mfa_version: account.mfa_version + 1,
+           security_version: account.security_version + 1
+         }) do
+      {:ok, _} -> {:ok, secret}
+      _ -> {:error, :unavailable}
+    end
+  end
+
+  defp resume_enrollment(account) do
+    # Reauthentication may recover an interrupted setup response while pending.
+    # The Account lock keeps retries on one factor; activation closes this path.
+    case load_account(account.id, [:pending_totp_secret]) do
+      {:ok, [%{pending_totp_secret: secret}]} when is_binary(secret) -> {:ok, secret}
       _ -> {:error, :unavailable}
     end
   end

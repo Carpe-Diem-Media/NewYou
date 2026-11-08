@@ -11,6 +11,29 @@ Application.put_env(
 try do
   result =
     case input["mode"] do
+      "mfa_enroll" ->
+        ring = input["keyring"]
+
+        Application.put_env(:new_you, :identity_mfa_keyring, %{
+          active_version: ring["active_version"],
+          keys: Map.new(ring["keys"], fn {version, key} -> {version, Base.decode64!(key)} end)
+        })
+
+        credentials = %{
+          session_id: input["credentials"]["session_id"],
+          token: input["credentials"]["token"]
+        }
+
+        case NewYou.Identity.enroll_privileged_mfa(credentials, input["password"]) do
+          {:ok, %{secret: secret}} ->
+            if Base.encode64(:crypto.hash(:sha256, secret)) == input["expected_digest"],
+              do: "P813_ENROLLMENT_RESUMED",
+              else: "P813_ENROLLMENT_OTHER"
+
+          _ ->
+            "P813_DENIED"
+        end
+
       "authorize" ->
         credentials = %{
           session_id: input["credentials"]["session_id"],

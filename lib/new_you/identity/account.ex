@@ -126,6 +126,13 @@ defmodule NewYou.Identity.Account do
       ]
     end
 
+    update :invalidate_grant_assurance do
+      description "Advance current security authority when a scoped grant is revoked."
+      public? false
+      accept []
+      change increment(:security_version)
+    end
+
     update :place_security_hold do
       description "Private conditional containment write inside the current privileged Identity transaction."
       public? false

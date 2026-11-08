@@ -89,7 +89,7 @@ defmodule NewYou.Identity do
           {:ok, %{account_id: String.t()}} | {:error, :authentication_unavailable}
   def authorize_session(credentials), do: NewYou.Identity.PasswordSession.authorize(credentials)
 
-  @doc "Begin a pending Support MFA enrollment after password reauthentication on a current Session."
+  @doc "Begin or resume pending Support MFA setup after current Session/password reauthentication. Active factors never return setup material."
   @spec enroll_privileged_mfa(term(), term()) ::
           {:ok, %{secret: binary()}} | {:error, :privileged_access_unavailable}
   def enroll_privileged_mfa(credentials, password),

@@ -12,7 +12,7 @@ defmodule NewYou.Proof.P813Catalog do
     {"distinct_attempt_race", nil, "p813.distinct_attempt",
      ~w(independent_connections independent_transactions contention one_winner distinct_admissions one_transition)},
     {"restart", nil, nil,
-     ~w(first_boot reconstructed current_revocation second_boot outcome_recovered source_unchanged)},
+     ~w(first_boot reconstructed current_revocation replacement_requires_fresh_assurance second_boot outcome_recovered source_unchanged)},
     {"crash_after_admission", "transaction.after_commit", nil,
      ~w(admission_committed cut_consumed hold_retained same_attempt_retry one_admission)},
     {"crash_after_source", "transaction.after_commit", nil,

@@ -102,6 +102,17 @@ defmodule NewYou.Identity.Session do
         :step_up_security_version
       ]
     end
+
+    update :clear_step_up do
+      description "Clear elevated assurance atomically with a current Identity security change."
+      public? false
+      accept []
+      change set_attribute(:step_up_purpose, nil)
+      change set_attribute(:step_up_at, nil)
+      change set_attribute(:step_up_expires_at, nil)
+      change set_attribute(:step_up_mfa_version, nil)
+      change set_attribute(:step_up_security_version, nil)
+    end
   end
 
   policies do

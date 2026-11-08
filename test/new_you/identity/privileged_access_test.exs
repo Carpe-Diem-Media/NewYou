@@ -158,10 +158,12 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
 
       assert :error == authorize(actor.credentials, grant.id, target.id, :place_security_hold)
 
+      future_target = P813HoldFixture.member()
+
       future_grant =
         make_grant(
           actor,
-          target,
+          future_target,
           fixture.approver,
           :release_security_hold,
           DateTime.add(DateTime.utc_now(), 60),
@@ -172,14 +174,16 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
                authorize(
                  actor.credentials,
                  future_grant.id,
-                 target.id,
+                 future_target.id,
                  :release_security_hold
                )
+
+      expired_target = P813HoldFixture.member()
 
       expired_grant =
         make_grant(
           actor,
-          target,
+          expired_target,
           fixture.approver,
           :release_security_hold,
           DateTime.add(DateTime.utc_now(), -600),
@@ -190,7 +194,7 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
                authorize(
                  actor.credentials,
                  expired_grant.id,
-                 target.id,
+                 expired_target.id,
                  :release_security_hold
                )
 
