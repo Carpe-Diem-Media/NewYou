@@ -15,4 +15,15 @@ Mechanisms: USE Ash/AshPostgres guarded actions, PostgreSQL constraints, existin
 - [x] Exercise same-case and overlapping-case contention, stale/revoked authority, source failure, replay, permanent non-reuse and fresh-process reconstruction. Preserve original foreign histories through owner interfaces.
 - [x] Add full source-linked `docs/development/p8-14-reconciliation-handoff.md`, link it in docs index and audit its claims.
 - [ ] Run focused tests, `mix check`, `mix check.deep`, codegen and exact diff/security checks. Obtain independent review. Production input changes require fresh WELL-91 security assessment and owner exact-digest approval before rebinding the existing Assent exception. Do not claim review readiness until required checks pass.
-- [ ] Open the scoped PR, link it and record exact evidence in Plane. Do not merge.
+- [x] Open draft PR #205, link it and record evidence in Plane. It remains draft and Blocked; no merge.
+
+## Pre-binding hardening continuation
+
+Owner direction in WELL-15 comment `53a1051d-8250-4609-9fda-9f8ea8f0cc1f` keeps the ticket Blocked and PR #205 draft during correction. Security binding remains unchanged until source freeze, fresh independent HIGH assessment and explicit accountable-owner acceptance.
+
+- [x] Reproduce and repair approved-case recovery. Permit versioned re-review/rejection, retain superseded approval in immutable history, require fresh controls, and prove fresh-BEAM recovery.
+- [x] Reproduce candidate-only scope failure. Require and bind current grants targeted to both Accounts, including review, E1 and exact replay. Exercise either-grant revocation after admission and reversed overlapping cases.
+- [x] Prove existing Communications/Audit consequences with real records. Preserve source/provenance associations and deny retired-source delivery without a provider attempt. Clarify fixed policies do not inspect individual records.
+- [x] Reproduce subsecond freshness error and enforce the exact five-minute limit.
+- [x] Review corrections, complete exact-head engineering gates at `b79b255`, freeze production inputs and request a fresh HIGH assessment. The corrected implementation passes 574 tests, deep analysis and codegen; security gates remain blocked.
+- [ ] Record owner security decision before any binding update. Existing exact-input gate remains authoritative; WELL-91 standing-exception redesign is separate and unapproved.

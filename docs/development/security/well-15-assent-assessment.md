@@ -1,5 +1,9 @@
 # WELL-15 Assent and privileged-security assessment
 
+## Status after pre-binding hardening
+
+This assessment is historical evidence for `341f0e8fa762405bfd5750d48f21818996f53137`. Later WELL-15 production corrections change its covered inputs. Its digest is unapproved and cannot be rebound for the hardened implementation. A fresh independent HIGH assessment of frozen source and explicit accountable-owner acceptance are still required. No exception is approved by this document.
+
 ## Scope and disposition
 
 This independent HIGH / privileged_security assessment reviews source commit `341f0e8fa762405bfd5750d48f21818996f53137` against base `75185b44b535d0f6513dcab1922e06c35a48029a`, on 2026-11-08. The reviewer inspected the complete committed diff, including migrations, generated schema snapshots and tests, and the uncommitted [P8-14 handoff](../p8-14-reconciliation-handoff.md). The reviewer worked only in the existing WELL-15 worktree and wrote only this assessment.
