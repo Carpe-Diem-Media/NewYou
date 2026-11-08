@@ -44,6 +44,7 @@ defmodule NewYou.Identity do
     resource NewYou.Identity.ResendOperation
     resource NewYou.Identity.Session
     resource IdentityGrant
+    resource NewYou.Identity.ReconciliationCase
   end
 
   @doc "Request optional existing-Account sign-in. Every public outcome is neutral; this never registers or authenticates an Account."
@@ -121,6 +122,23 @@ defmodule NewYou.Identity do
   @spec release_security_hold(map()) :: {:ok, map()} | {:error, :security_hold_unavailable}
   def release_security_hold(request),
     do: NewYou.Identity.SecurityHold.run(:release_security_hold, request)
+
+  @doc "Open a duplicate-identity case using grant_id and canonical_grant_id scoped to its two Accounts. Detection never applies a canonical decision."
+  @spec open_reconciliation(map()) ::
+          {:ok, NewYou.Identity.ReconciliationCase.t()} | {:error, :reconciliation_unavailable}
+  defdelegate open_reconciliation(request), to: NewYou.Identity.Reconciliation, as: :open
+
+  @doc "Advance review under grants for both Accounts. Approval requires verified controls and owner review; reopening approval preserves its evidence and requires fresh review."
+  @spec review_reconciliation(map()) ::
+          {:ok, NewYou.Identity.ReconciliationCase.t()} | {:error, :reconciliation_unavailable}
+  defdelegate review_reconciliation(request), to: NewYou.Identity.Reconciliation, as: :review
+
+  @doc "Apply the reviewed canonical decision after independent Audit E1 admission. Replays preserve the committed outcome."
+  @spec apply_reconciliation(map()) ::
+          {:ok, NewYou.Identity.ReconciliationCase.t()} | {:error, :reconciliation_unavailable}
+  defdelegate apply_reconciliation(request),
+    to: NewYou.Identity.Reconciliation,
+    as: :apply_decision
 
   @doc "Log out the identified Session."
   @spec logout(term()) :: :ok | {:error, :authentication_unavailable}

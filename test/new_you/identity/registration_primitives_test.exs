@@ -684,7 +684,8 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
                NewYou.Identity.Session,
                NewYou.Identity.RegistrationOperation,
                NewYou.Identity.ResendOperation,
-               NewYou.Identity.IdentityGrant
+               NewYou.Identity.IdentityGrant,
+               NewYou.Identity.ReconciliationCase
              ])
 
     assert {:ok, %Postgrex.Result{rows: [["pmr"]], num_rows: 1}} =

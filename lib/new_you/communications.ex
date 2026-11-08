@@ -7,6 +7,18 @@ defmodule NewYou.Communications do
   commits admission, then invokes its provider outside authoritative transactions.
   Provider evidence never changes Identity truth. Production egress is disabled.
   """
+  @doc "Confirm the fixed policy for implemented verification and magic-login records. Preserve original source associations; execution rechecks Identity eligibility. This does not inspect individual records."
+  @spec review_identity_reconciliation(String.t(), String.t()) :: {:ok, map()}
+  def review_identity_reconciliation(candidate_id, canonical_id) do
+    {:ok,
+     %{
+       "policy" => "preserve_original_account_association",
+       "candidate_id" => candidate_id,
+       "canonical_id" => canonical_id,
+       "commands" => []
+     }}
+  end
+
   use Ash.Domain, otp_app: :new_you
 
   alias NewYou.Communications.{EnvelopeNonce, MessageIntent, ProtectedEnvelope}
