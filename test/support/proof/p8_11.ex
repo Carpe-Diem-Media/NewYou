@@ -297,6 +297,8 @@ defmodule NewYou.Proof.P811 do
         :attempt_id,
         :action_class,
         :case_id,
+        :canonical_grant_id,
+        :canonical_grant_version,
         :actor_id,
         :target_id,
         :grant_id,

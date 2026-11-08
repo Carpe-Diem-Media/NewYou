@@ -123,12 +123,12 @@ defmodule NewYou.Identity do
   def release_security_hold(request),
     do: NewYou.Identity.SecurityHold.run(:release_security_hold, request)
 
-  @doc "Open a scoped duplicate-identity case. Detection never applies a canonical decision."
+  @doc "Open a duplicate-identity case using grant_id and canonical_grant_id scoped to its two Accounts. Detection never applies a canonical decision."
   @spec open_reconciliation(map()) ::
           {:ok, NewYou.Identity.ReconciliationCase.t()} | {:error, :reconciliation_unavailable}
   defdelegate open_reconciliation(request), to: NewYou.Identity.Reconciliation, as: :open
 
-  @doc "Advance current case review. Approval requires current verified control of both candidates and owner review."
+  @doc "Advance review under grants for both Accounts. Approval requires verified controls and owner review; reopening approval preserves its evidence and requires fresh review."
   @spec review_reconciliation(map()) ::
           {:ok, NewYou.Identity.ReconciliationCase.t()} | {:error, :reconciliation_unavailable}
   defdelegate review_reconciliation(request), to: NewYou.Identity.Reconciliation, as: :review

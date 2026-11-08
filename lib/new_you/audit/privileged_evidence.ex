@@ -74,7 +74,7 @@ defmodule NewYou.Audit.PrivilegedEvidence do
   defp admission_envelope(envelope, action_class) do
     fields =
       if action_class == :identity_reconciliation,
-        do: @admission_fields ++ [:case_id],
+        do: @admission_fields ++ [:case_id, :canonical_grant_id, :canonical_grant_version],
         else: @admission_fields
 
     valid? =
@@ -82,10 +82,17 @@ defmodule NewYou.Audit.PrivilegedEvidence do
         Enum.all?(@uuid_fields, fn key -> valid_uuid?(envelope[key]) end) and
         valid_admission_versions?(envelope) and
         envelope.reason_code in @reasons and
-        (action_class != :identity_reconciliation or valid_uuid?(envelope[:case_id]))
+        valid_reconciliation_scope?(envelope, action_class)
 
     if valid?, do: {:ok, Map.put(envelope, :action_class, action_class)}, else: unavailable()
   end
+
+  defp valid_reconciliation_scope?(envelope, :identity_reconciliation) do
+    valid_uuid?(envelope[:case_id]) and valid_uuid?(envelope[:canonical_grant_id]) and
+      is_integer(envelope[:canonical_grant_version]) and envelope[:canonical_grant_version] > 0
+  end
+
+  defp valid_reconciliation_scope?(_envelope, _action_class), do: true
 
   defp valid_admission_versions?(envelope),
     do:

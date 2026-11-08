@@ -30,6 +30,8 @@ defmodule NewYou.Identity.ReconciliationTest do
       assert replay.version == applied.version
       assert [admission] = admissions(request.operation_id)
       assert admission.action_class == :identity_reconciliation
+      assert admission.canonical_grant_id == f.canonical_grant.id
+      assert admission.canonical_grant_version == f.canonical_grant.version
       assert [%{admission_id: admission_id, outcome: :succeeded}] = outcomes(request.operation_id)
       assert admission_id == admission.id
     end)
@@ -75,6 +77,236 @@ defmodule NewYou.Identity.ReconciliationTest do
     end)
   end
 
+  test "loser-only and survivor-only grants cannot authorize the pair" do
+    with_case(fn f ->
+      assert {:error, :reconciliation_unavailable} =
+               Identity.review_reconciliation(
+                 review_request(f)
+                 |> Map.delete(:canonical_grant_id)
+                 |> Map.put(:decision, :candidate)
+               )
+
+      assert {:error, :reconciliation_unavailable} =
+               Identity.review_reconciliation(%{
+                 review_request(f)
+                 | grant_id: f.canonical_grant.id,
+                   decision: :candidate
+               })
+
+      request = review_request(f) |> Map.put(:canonical_grant_id, f.reconciliation_grant.id)
+
+      assert {:error, :reconciliation_unavailable} =
+               Identity.review_reconciliation(%{request | decision: :candidate})
+
+      assert P805.account!(f.target.id).pmr_status == :active
+      assert P805.account!(f.survivor.id).reconciliation_version == 0
+    end)
+  end
+
+  test "apply requires both current target grants before admitting E1" do
+    with_case(fn f ->
+      {:ok, approved} = approve(f)
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      request = apply_request(f, approved)
+
+      for invalid <- [
+            Map.delete(request, :canonical_grant_id),
+            %{request | canonical_grant_id: f.reconciliation_grant.id},
+            %{request | grant_id: f.canonical_grant.id},
+            %{request | canonical_grant_id: f.grants.review.id}
+          ] do
+        assert {:error, :reconciliation_unavailable} = Identity.apply_reconciliation(invalid)
+      end
+
+      assert admissions(request.operation_id) == []
+      assert outcomes(request.operation_id) == []
+      assert P805.account!(f.target.id).pmr_status == :active
+      assert P805.account!(f.survivor.id).reconciliation_version == 0
+    end)
+  end
+
+  test "approved rejection preserves approval provenance and is terminal" do
+    with_case(fn f ->
+      {:ok, approved} = approve(f)
+
+      assert {:error, _} =
+               Ash.update(
+                 approved,
+                 %{
+                   status: :review,
+                   review: nil,
+                   history: approved.history ++ [%{"status" => "review"}],
+                   expected_version: approved.version
+                 },
+                 action: :record_review,
+                 authorize?: false
+               )
+
+      assert {:ok, rejected} =
+               Identity.review_reconciliation(%{
+                 review_request(f)
+                 | expected_version: approved.version,
+                   decision: :rejected
+               })
+
+      assert List.last(rejected.history)["superseded_review"] == approved.review
+      assert is_nil(rejected.review)
+
+      assert {:error, :reconciliation_unavailable} =
+               Identity.review_reconciliation(%{
+                 review_request(f)
+                 | expected_version: rejected.version,
+                   decision: :review
+               })
+    end)
+  end
+
+  test "the pair-scope migration preserves legacy evidence while rejecting new incomplete admissions" do
+    with_case(fn f ->
+      {:ok, approved} = approve(f)
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      request = apply_request(f, approved)
+      assert {:ok, _} = Identity.apply_reconciliation(request)
+
+      [[validated, expression]] =
+        NewYou.Repo.query!(
+          "SELECT convalidated, pg_get_expr(conbin, conrelid) FROM pg_constraint WHERE conname = 'evidence_records_assertion_shape'"
+        ).rows
+
+      refute validated
+
+      assert {:error, :proof_complete} =
+               NewYou.Repo.transaction(fn ->
+                 NewYou.Repo.query!(
+                   "CREATE TEMP TABLE well15_legacy_evidence (LIKE evidence_records INCLUDING DEFAULTS) ON COMMIT DROP"
+                 )
+
+                 NewYou.Repo.query!(
+                   "INSERT INTO well15_legacy_evidence SELECT * FROM evidence_records WHERE attempt_id = $1",
+                   [Ecto.UUID.dump!(request.operation_id)]
+                 )
+
+                 NewYou.Repo.query!(
+                   "UPDATE well15_legacy_evidence SET canonical_grant_id = NULL, canonical_grant_version = NULL"
+                 )
+
+                 NewYou.Repo.query!(
+                   "ALTER TABLE well15_legacy_evidence ADD CONSTRAINT pair_shape CHECK (" <>
+                     expression <> ") NOT VALID"
+                 )
+
+                 assert [[1]] =
+                          NewYou.Repo.query!("SELECT count(*) FROM well15_legacy_evidence").rows
+
+                 assert_raise Postgrex.Error, fn ->
+                   NewYou.Repo.query!(
+                     "INSERT INTO well15_legacy_evidence SELECT * FROM well15_legacy_evidence"
+                   )
+                 end
+
+                 NewYou.Repo.rollback(:proof_complete)
+               end)
+    end)
+  end
+
+  test "owner policies preserve pending message and Audit provenance while current delivery fails closed" do
+    with_case(fn f ->
+      accounts = Enum.map([f.target, f.survivor], &P805.account!(&1.id))
+
+      Enum.each(accounts, fn account ->
+        operation = Ecto.UUID.generate()
+        P805.track_operation(operation)
+        assert :ok = Identity.request_magic_login(to_string(account.email), "af", operation)
+      end)
+
+      destinations = Enum.map(accounts, &to_string(&1.email))
+
+      intents =
+        NewYou.Communications.MessageIntent
+        |> Ash.Query.filter(destination in ^destinations)
+        |> Ash.read!(authorize?: false)
+
+      assert Enum.sort(Enum.uniq(Enum.map(intents, & &1.role))) == [
+               :account_verification,
+               :magic_login
+             ]
+
+      loser_magic =
+        Enum.find(
+          intents,
+          &(&1.role == :magic_login and &1.destination == to_string(hd(accounts).email))
+        )
+
+      assert {:ok, {:ok, _}} =
+               Ash.transact([Identity.Account, Identity.Token], fn ->
+                 Identity.magic_login_delivery(
+                   loser_magic.source_reference,
+                   loser_magic.destination,
+                   "af"
+                 )
+               end)
+
+      operations =
+        Identity.RegistrationOperation
+        |> Ash.Query.filter(created_account_id in ^Enum.map(accounts, & &1.id))
+        |> Ash.read!(authorize?: false)
+
+      obligations =
+        Enum.flat_map(
+          operations,
+          &read(NewYou.Audit.EvidenceObligation, "source_operation_id", &1.operation_id)
+        )
+
+      assert length(obligations) == 2
+
+      Enum.each(obligations, fn obligation ->
+        assert {:ok, _} =
+                 NewYou.Audit.materialize_registration_evidence(
+                   %{primary_key: %{id: obligation.id}},
+                   authorize?: false
+                 )
+      end)
+
+      evidence =
+        Enum.flat_map(obligations, &read(NewYou.Audit.EvidenceRecord, "obligation_id", &1.id))
+
+      assert length(evidence) == 2
+      {:ok, approved} = approve(f)
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      assert {:ok, _} = Identity.apply_reconciliation(apply_request(f, approved))
+      Process.put(:p810_provider, fn _, _ -> flunk("retired Identity invoked provider") end)
+
+      try do
+        Enum.each(intents, fn intent ->
+          current = Ash.get!(NewYou.Communications.MessageIntent, intent.id, authorize?: false)
+          assert current.source_operation_id == intent.source_operation_id
+          assert current.source_reference == intent.source_reference
+          assert current.destination == intent.destination
+
+          if current.destination == loser_magic.destination do
+            assert {:ok, :source_invalid} = NewYou.Communications.execute(current.id)
+            assert {:ok, :closed} = NewYou.Communications.execute(current.id)
+
+            assert read(NewYou.Communications.DeliveryAttempt, "message_intent_id", current.id) ==
+                     []
+          end
+        end)
+      after
+        Process.delete(:p810_provider)
+      end
+
+      assert Enum.flat_map(
+               obligations,
+               &read(NewYou.Audit.EvidenceRecord, "obligation_id", &1.id)
+             ) == evidence
+
+      Enum.each(obligations, fn original ->
+        current = Ash.get!(NewYou.Audit.EvidenceObligation, original.id, authorize?: false)
+        assert current.source_operation_id == original.source_operation_id
+      end)
+    end)
+  end
+
   test "wrong scope and stale case version fail closed" do
     with_case(fn f ->
       assert {:error, :reconciliation_unavailable} =
@@ -89,6 +321,139 @@ defmodule NewYou.Identity.ReconciliationTest do
 
       assert {:error, :reconciliation_unavailable} =
                Identity.apply_reconciliation(%{apply_request(f, approved) | expected_version: 0})
+    end)
+  end
+
+  test "an approved case can invalidate its approval and obtain fresh review without losing provenance" do
+    with_case(fn f ->
+      {:ok, approved} = approve(f)
+      request = %{review_request(f) | expected_version: approved.version, decision: :review}
+      assert {:ok, reopened} = Identity.review_reconciliation(request)
+      assert reopened.status == :review
+      assert is_nil(reopened.review)
+      assert List.last(reopened.history)["superseded_review"] == approved.review
+      assert {:error, :reconciliation_unavailable} = Identity.review_reconciliation(request)
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+
+      assert {:error, :reconciliation_unavailable} =
+               Identity.apply_reconciliation(apply_request(f, approved))
+
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :review_reconciliation)
+
+      assert {:ok, refreshed} =
+               Identity.review_reconciliation(%{
+                 review_request(f)
+                 | expected_version: reopened.version
+               })
+
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+
+      assert {:ok, %{status: :applied}} =
+               Identity.apply_reconciliation(apply_request(f, refreshed))
+    end)
+  end
+
+  @tag timeout: 60_000
+  test "expired approval denies retries and a fresh BEAM reconstructs re-review recovery" do
+    with_case(fn f ->
+      Process.put(
+        {NewYou.Proof.ReconciliationSeam, :control_time},
+        DateTime.add(DateTime.utc_now(), -301, :second)
+      )
+
+      approved =
+        try do
+          {:ok, record} = approve(f)
+          record
+        after
+          Process.delete({NewYou.Proof.ReconciliationSeam, :control_time})
+        end
+
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      stale_request = apply_request(f, approved)
+
+      for _ <- 1..2 do
+        assert {:error, :reconciliation_unavailable} =
+                 Identity.apply_reconciliation(stale_request)
+      end
+
+      assert admissions(stale_request.operation_id) == []
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :review_reconciliation)
+
+      input = %{
+        mode: "recover_review",
+        request: %{review_request(f) | expected_version: approved.version, decision: :review},
+        signing_secret:
+          Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
+      }
+
+      port =
+        Port.open({:spawn_executable, System.find_executable("mix")}, [
+          :binary,
+          :exit_status,
+          args: ["run", "test/proof/p8_14_restart.exs"],
+          env: [{~c"MIX_ENV", ~c"test"}, {~c"ERL_FLAGS", ~c"+S 2:2"}]
+        ])
+
+      true = Port.command(port, Jason.encode!(input) <> "\n")
+
+      assert restart_output(port, "", System.monotonic_time(:millisecond) + 30_000) ==
+               "P814_REVIEW_RECOVERED"
+
+      reopened = Ash.get!(Identity.ReconciliationCase, approved.id, authorize?: false)
+      assert reopened.status == :review
+      assert List.last(reopened.history)["superseded_review"] == approved.review
+
+      assert {:ok, refreshed} =
+               Identity.review_reconciliation(%{
+                 review_request(f)
+                 | expected_version: reopened.version
+               })
+
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+
+      assert {:ok, %{status: :applied}} =
+               Identity.apply_reconciliation(apply_request(f, refreshed))
+    end)
+  end
+
+  test "control evidence exactly five minutes old remains eligible" do
+    with_case(fn f ->
+      {:ok, approved} = approve(f)
+      {:ok, checked_at, _} = DateTime.from_iso8601(hd(approved.review["controls"])["verified_at"])
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+
+      Process.put(
+        {NewYou.Proof.ReconciliationSeam, :control_time},
+        DateTime.add(checked_at, 300_000_000, :microsecond)
+      )
+
+      try do
+        assert {:ok, %{status: :applied}} =
+                 Identity.apply_reconciliation(apply_request(f, approved))
+      after
+        Process.delete({NewYou.Proof.ReconciliationSeam, :control_time})
+      end
+    end)
+  end
+
+  test "control evidence older than exactly five minutes fails closed" do
+    with_case(fn f ->
+      {:ok, approved} = approve(f)
+      {:ok, checked_at, _} = DateTime.from_iso8601(hd(approved.review["controls"])["verified_at"])
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+
+      Process.put(
+        {NewYou.Proof.ReconciliationSeam, :control_time},
+        DateTime.add(checked_at, 300_000_001, :microsecond)
+      )
+
+      try do
+        assert {:error, :reconciliation_unavailable} =
+                 Identity.apply_reconciliation(apply_request(f, approved))
+      after
+        Process.delete({NewYou.Proof.ReconciliationSeam, :control_time})
+      end
     end)
   end
 
@@ -153,37 +518,39 @@ defmodule NewYou.Identity.ReconciliationTest do
     end)
   end
 
-  test "revocation after E1 blocks apply under fresh authority" do
-    with_case(fn f ->
-      {:ok, approved} = approve(f)
-      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
-      request = apply_request(f, approved)
+  for grant_key <- [:reconciliation_grant, :canonical_grant] do
+    test "revocation of #{grant_key} after E1 blocks apply under fresh authority" do
+      with_case(fn f ->
+        {:ok, approved} = approve(f)
+        {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+        request = apply_request(f, approved)
 
-      Process.put(NewYou.Proof.ReconciliationSeam, fn
-        :after_admission ->
-          Ash.update!(
-            f.reconciliation_grant,
-            %{actor_id: f.approver.id, reason_code: :security_review},
-            action: :revoke,
-            authorize?: false
-          )
+        Process.put(NewYou.Proof.ReconciliationSeam, fn
+          :after_admission ->
+            Ash.update!(
+              Map.fetch!(f, unquote(grant_key)),
+              %{actor_id: f.approver.id, reason_code: :security_review},
+              action: :revoke,
+              authorize?: false
+            )
 
-          :ok
+            :ok
 
-        _ ->
-          :ok
+          _ ->
+            :ok
+        end)
+
+        try do
+          assert {:error, :reconciliation_unavailable} = Identity.apply_reconciliation(request)
+        after
+          Process.delete(NewYou.Proof.ReconciliationSeam)
+        end
+
+        assert [_] = admissions(request.operation_id)
+        assert [%{outcome: :failed}] = outcomes(request.operation_id)
+        assert P805.account!(f.target.id).pmr_status == :active
       end)
-
-      try do
-        assert {:error, :reconciliation_unavailable} = Identity.apply_reconciliation(request)
-      after
-        Process.delete(NewYou.Proof.ReconciliationSeam)
-      end
-
-      assert [_] = admissions(request.operation_id)
-      assert [%{outcome: :failed}] = outcomes(request.operation_id)
-      assert P805.account!(f.target.id).pmr_status == :active
-    end)
+    end
   end
 
   test "retired PMR and applied provenance cannot be revived or rewritten" do
@@ -253,13 +620,18 @@ defmodule NewYou.Identity.ReconciliationTest do
       {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
       {:ok, original} = Identity.apply_reconciliation(apply_request(f, approved))
       replacement = P813HoldFixture.member()
-      grant = P813HoldFixture.grant(f.actor, f.survivor, f.approver, :identity_reconciliation)
+      grant = f.canonical_grant
+
+      canonical_grant =
+        P813HoldFixture.grant(f.actor, replacement, f.approver, :identity_reconciliation)
+
       {:ok, :ok} = P813HoldFixture.step_up(f.actor, :review_reconciliation)
 
       {:ok, correction} =
         Identity.open_reconciliation(%{
           credentials: f.actor.credentials,
           grant_id: grant.id,
+          canonical_grant_id: canonical_grant.id,
           candidate_id: f.survivor.id,
           canonical_id: replacement.id,
           detection_basis: :verified_control,
@@ -272,7 +644,8 @@ defmodule NewYou.Identity.ReconciliationTest do
         | target: f.survivor,
           survivor: replacement,
           case: correction,
-          reconciliation_grant: grant
+          reconciliation_grant: grant,
+          canonical_grant: canonical_grant
       }
 
       {:ok, approved_correction} = approve(correction_fixture)
@@ -312,10 +685,14 @@ defmodule NewYou.Identity.ReconciliationTest do
                 :identity_reconciliation
               )
 
+            canonical_grant =
+              P813HoldFixture.grant(second_actor, f.target, f.approver, :identity_reconciliation)
+
             {:ok, reverse} =
               Identity.open_reconciliation(%{
                 credentials: second_actor.credentials,
                 grant_id: grant.id,
+                canonical_grant_id: canonical_grant.id,
                 candidate_id: f.survivor.id,
                 canonical_id: f.target.id,
                 operation_id: Ecto.UUID.generate(),
@@ -328,7 +705,8 @@ defmodule NewYou.Identity.ReconciliationTest do
                 target: f.survivor,
                 survivor: f.target,
                 case: reverse,
-                reconciliation_grant: grant
+                reconciliation_grant: grant,
+                canonical_grant: canonical_grant
             }
           else
             f
@@ -367,6 +745,17 @@ defmodule NewYou.Identity.ReconciliationTest do
 
         assert P805.account!(f.target.id).pmr_status == :retired
         assert P805.account!(f.survivor.id).pmr_status == :active
+
+        if unquote(mode) == :overlapping_cases do
+          {:ok, :ok} = P813HoldFixture.step_up(second_fixture.actor, :review_reconciliation)
+
+          assert {:ok, %{status: :rejected}} =
+                   Identity.review_reconciliation(%{
+                     review_request(second_fixture)
+                     | expected_version: second_case.version,
+                       decision: :rejected
+                   })
+        end
       end)
     end
   end
@@ -721,12 +1110,17 @@ defmodule NewYou.Identity.ReconciliationTest do
     P813HoldFixture.with_fixture(fn f ->
       survivor = P813HoldFixture.member()
       grant = P813HoldFixture.grant(f.actor, f.target, f.approver, :identity_reconciliation)
+
+      canonical_grant =
+        P813HoldFixture.grant(f.actor, survivor, f.approver, :identity_reconciliation)
+
       {:ok, :ok} = P813HoldFixture.step_up(f.actor, :review_reconciliation)
 
       {:ok, case_record} =
         Identity.open_reconciliation(%{
           credentials: f.actor.credentials,
           grant_id: grant.id,
+          canonical_grant_id: canonical_grant.id,
           candidate_id: f.target.id,
           canonical_id: survivor.id,
           operation_id: Ecto.UUID.generate(),
@@ -737,6 +1131,7 @@ defmodule NewYou.Identity.ReconciliationTest do
         Map.merge(f, %{
           survivor: survivor,
           reconciliation_grant: grant,
+          canonical_grant: canonical_grant,
           case: case_record,
           old_pmr: P805.account!(f.target.id).pmr
         })
@@ -748,6 +1143,7 @@ defmodule NewYou.Identity.ReconciliationTest do
     %{
       credentials: f.actor.credentials,
       grant_id: f.reconciliation_grant.id,
+      canonical_grant_id: f.canonical_grant.id,
       case_id: f.case.id,
       expected_version: f.case.version,
       controls: [f.target.credentials, f.survivor.credentials],
@@ -773,6 +1169,7 @@ defmodule NewYou.Identity.ReconciliationTest do
     %{
       credentials: f.actor.credentials,
       grant_id: f.reconciliation_grant.id,
+      canonical_grant_id: f.canonical_grant.id,
       case_id: record.id,
       expected_version: record.version,
       operation_id: Ecto.UUID.generate()

@@ -24,7 +24,8 @@ defmodule NewYou.Identity.Reconciliation do
     detected: [:candidate, :rejected],
     candidate: [:review, :rejected],
     review: [:approved, :rejected, :conflict],
-    conflict: [:review, :rejected]
+    conflict: [:review, :rejected],
+    approved: [:review, :rejected]
   }
 
   defmacrop checkpoint(point) do
@@ -35,11 +36,19 @@ defmodule NewYou.Identity.Reconciliation do
     end
   end
 
+  defmacrop control_time do
+    if Mix.env() == :test do
+      quote do: NewYou.Proof.ReconciliationSeam.control_time()
+    else
+      quote do: DateTime.utc_now()
+    end
+  end
+
   def open(request) when is_map(request) do
     with true <-
            keys?(
              request,
-             ~w(credentials grant_id candidate_id canonical_id operation_id detection_basis)a,
+             ~w(credentials grant_id canonical_grant_id candidate_id canonical_id operation_id detection_basis)a,
              [:compensates_id]
            ),
          true <- request.candidate_id != request.canonical_id,
@@ -68,7 +77,10 @@ defmodule NewYou.Identity.Reconciliation do
 
   def review(request) when is_map(request) do
     with true <-
-           keys?(request, ~w(credentials grant_id case_id expected_version controls decision)a),
+           keys?(
+             request,
+             ~w(credentials grant_id canonical_grant_id case_id expected_version controls decision)a
+           ),
          false <- Ash.DataLayer.in_transaction?(Account),
          {:ok, initial} when not is_nil(initial) <-
            Ash.get(ReconciliationCase, request.case_id, authorize?: false) do
@@ -87,7 +99,7 @@ defmodule NewYou.Identity.Reconciliation do
          {:ok, current} <- locked_case(initial.id),
          true <- current.version == request.expected_version,
          true <- request.decision in Map.get(@transitions, current.status, []),
-         :ok <- eligible_accounts(current, accounts),
+         :ok <- eligible_review_accounts(request.decision, current, accounts),
          {:ok, evidence} <- review_evidence(request, current, authority, accounts) do
       persist_review(current, request, authority, evidence)
     else
@@ -98,6 +110,11 @@ defmodule NewYou.Identity.Reconciliation do
   defp persist_review(current, request, authority, evidence) do
     operation_id = Ecto.UUID.generate()
     entry = Map.put(event(authority, request.decision), "operation_id", operation_id)
+
+    entry =
+      if current.status == :approved,
+        do: Map.put(entry, "superseded_review", current.review),
+        else: entry
 
     with {:ok, reviewed} <-
            Ash.update(
@@ -138,7 +155,11 @@ defmodule NewYou.Identity.Reconciliation do
   defp review_outcome(_current, _request, _authority, _operation_id), do: :ok
 
   def apply_decision(request) when is_map(request) do
-    with true <- keys?(request, ~w(credentials grant_id case_id expected_version operation_id)a),
+    with true <-
+           keys?(
+             request,
+             ~w(credentials grant_id canonical_grant_id case_id expected_version operation_id)a
+           ),
          false <- Ash.DataLayer.in_transaction?(Account),
          {:ok, initial} when not is_nil(initial) <-
            Ash.get(ReconciliationCase, request.case_id, authorize?: false),
@@ -292,6 +313,7 @@ defmodule NewYou.Identity.Reconciliation do
            |> Ash.Query.lock(:for_update)
            |> Ash.read(authorize?: false),
          true <- length(locked) == length(ids),
+         {:ok, _grants} <- lock_pair_grants(request.grant_id, request.canonical_grant_id),
          {:ok, authority} <-
            PrivilegedAccess.authorize_locked(
              request.credentials,
@@ -299,11 +321,32 @@ defmodule NewYou.Identity.Reconciliation do
              candidates.candidate_id,
              capability
            ),
+         {:ok, canonical_authority} <-
+           PrivilegedAccess.authorize_locked(
+             request.credentials,
+             request.canonical_grant_id,
+             candidates.canonical_id,
+             capability
+           ),
          true <- authority.actor.id not in [candidates.candidate_id, candidates.canonical_id] do
-      {:ok, authority, Map.new(locked, &{&1.id, &1})}
+      {:ok, Map.put(authority, :canonical_grant, canonical_authority.grant),
+       Map.new(locked, &{&1.id, &1})}
     else
       _ -> unavailable()
     end
+  end
+
+  # The union of actor, reviewer and candidate Accounts is already locked.
+  # Grant revocation takes its subject Account first, so these sorted locks
+  # cannot race a revoker or reverse the order for overlapping cases.
+  defp lock_pair_grants(candidate_grant_id, canonical_grant_id) do
+    ids = Enum.sort(Enum.uniq([candidate_grant_id, canonical_grant_id]))
+
+    IdentityGrant
+    |> Ash.Query.filter(id in ^ids)
+    |> Ash.Query.sort(id: :asc)
+    |> Ash.Query.lock(:for_update)
+    |> Ash.read(authorize?: false)
   end
 
   defp review_evidence(%{decision: :approved} = request, current, authority, accounts) do
@@ -318,6 +361,8 @@ defmodule NewYou.Identity.Reconciliation do
          "actor_id" => authority.actor.id,
          "grant_id" => authority.grant.id,
          "grant_version" => authority.grant.version,
+         "canonical_grant_id" => authority.canonical_grant.id,
+         "canonical_grant_version" => authority.canonical_grant.version,
          "mfa_version" => authority.actor.mfa_version,
          "security_version" => authority.actor.security_version,
          "controls" => controls,
@@ -347,7 +392,7 @@ defmodule NewYou.Identity.Reconciliation do
                 %{
                   "account_id" => id,
                   "session_id" => credentials.session_id,
-                  "verified_at" => DateTime.to_iso8601(DateTime.utc_now())
+                  "verified_at" => DateTime.to_iso8601(control_time())
                 }
               ]}}
 
@@ -367,23 +412,34 @@ defmodule NewYou.Identity.Reconciliation do
          true <-
            actor.mfa_enrollment_state == :active and actor.mfa_version == review["mfa_version"] and
              actor.security_version == review["security_version"],
-         {:ok, grant} when not is_nil(grant) <-
-           IdentityGrant
-           |> Ash.Query.filter(id == ^review["grant_id"])
-           |> Ash.Query.lock(:for_update)
-           |> Ash.read_one(authorize?: false),
+         {:ok, grants} <- lock_pair_grants(review["grant_id"], review["canonical_grant_id"]),
          true <-
-           grant.target_account_id == current.candidate_id and
-             grant.subject_account_id == actor.id and grant.version == review["grant_version"],
-         true <-
-           live_review_grant?(grant),
-         true <-
-           DateTime.compare(DateTime.utc_now(), grant.starts_at) != :lt and
-             DateTime.compare(DateTime.utc_now(), grant.expires_at) == :lt do
+           Enum.all?(
+             [
+               {review["grant_id"], review["grant_version"], current.candidate_id},
+               {review["canonical_grant_id"], review["canonical_grant_version"],
+                current.canonical_id}
+             ],
+             fn {id, version, target} ->
+               grant = Enum.find(grants, &(&1.id == id))
+
+               valid_recorded_grant?(grant, actor, target, version)
+             end
+           ) do
       :ok
     else
       _ -> unavailable()
     end
+  end
+
+  defp valid_recorded_grant?(nil, _actor, _target, _version), do: false
+
+  defp valid_recorded_grant?(grant, actor, target, version) do
+    grant.target_account_id == target and grant.subject_account_id == actor.id and
+      grant.approver_account_id != actor.id and grant.version == version and
+      live_review_grant?(grant) and
+      DateTime.compare(DateTime.utc_now(), grant.starts_at) != :lt and
+      DateTime.compare(DateTime.utc_now(), grant.expires_at) == :lt
   end
 
   defp live_review_grant?(grant),
@@ -392,12 +448,12 @@ defmodule NewYou.Identity.Reconciliation do
         IdentityGrant.permits?(grant, :review_reconciliation)
 
   defp current_controls(current) do
-    now = DateTime.utc_now()
+    now = control_time()
 
     valid? =
       Enum.all?(current.review["controls"], fn control ->
         with {:ok, checked_at, _} <- DateTime.from_iso8601(control["verified_at"]),
-             true <- DateTime.diff(now, checked_at) in 0..300,
+             true <- DateTime.diff(now, checked_at, :microsecond) in 0..300_000_000,
              {:ok, session} when not is_nil(session) <-
                Session
                |> Ash.Query.filter(id == ^control["session_id"])
@@ -463,6 +519,13 @@ defmodule NewYou.Identity.Reconciliation do
        }}
     end)
   end
+
+  # Closing a stale case changes only its provenance. It must remain possible
+  # after another case retires a candidate, under current authority for both.
+  defp eligible_review_accounts(:rejected, _current, _accounts), do: :ok
+
+  defp eligible_review_accounts(_decision, current, accounts),
+    do: eligible_accounts(current, accounts)
 
   defp eligible_accounts(current, accounts) do
     eligible? =
@@ -547,6 +610,8 @@ defmodule NewYou.Identity.Reconciliation do
       target_id: current.candidate_id,
       grant_id: authority.grant.id,
       grant_version: authority.grant.version,
+      canonical_grant_id: authority.canonical_grant.id,
+      canonical_grant_version: authority.canonical_grant.version,
       session_id: authority.session.id,
       expected_version: request.expected_version,
       reason_code: :security_review
@@ -563,6 +628,7 @@ defmodule NewYou.Identity.Reconciliation do
     do: %{
       "actor_id" => authority.actor.id,
       "grant_id" => authority.grant.id,
+      "canonical_grant_id" => authority.canonical_grant.id,
       "status" => Atom.to_string(status),
       "at" => DateTime.to_iso8601(DateTime.utc_now())
     }

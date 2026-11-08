@@ -7,7 +7,7 @@ defmodule NewYou.Communications do
   commits admission, then invokes its provider outside authoritative transactions.
   Provider evidence never changes Identity truth. Production egress is disabled.
   """
-  @doc "Review the bounded Identity consequence. Existing message histories keep their original Account association; current delivery rechecks Identity eligibility."
+  @doc "Confirm the fixed policy for implemented verification and magic-login records. Preserve original source associations; execution rechecks Identity eligibility. This does not inspect individual records."
   @spec review_identity_reconciliation(String.t(), String.t()) :: {:ok, map()}
   def review_identity_reconciliation(candidate_id, canonical_id) do
     {:ok,

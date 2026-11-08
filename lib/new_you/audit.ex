@@ -1,6 +1,6 @@
 defmodule NewYou.Audit do
   @moduledoc "Audit owns append-only admission and outcome assertions, never Identity authority or source replay."
-  @doc "Confirm append-only evidence keeps original Account provenance through Identity reconciliation. No Audit history is remapped."
+  @doc "Confirm the fixed append-only provenance policy for existing Audit records. No history is remapped; this does not inspect individual records."
   @spec review_identity_reconciliation(String.t(), String.t()) :: {:ok, map()}
   def review_identity_reconciliation(candidate_id, canonical_id) do
     {:ok,
