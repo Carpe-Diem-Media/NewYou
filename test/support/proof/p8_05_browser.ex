@@ -7,6 +7,7 @@ defmodule NewYou.Proof.P805Browser do
   @failure_codes ~w(
     browser.unavailable browser.protocol browser.protocol_timeout browser.context_lost
     browser.evaluation browser.navigation_timeout browser.stopped browser.unclassified
+    browser.protocol_timeout.Browser.getVersion
     browser.protocol_timeout.Target.createBrowserContext browser.protocol_timeout.Target.createTarget
     browser.protocol_timeout.Target.attachToTarget browser.protocol_timeout.Page.enable
     browser.protocol_timeout.Runtime.enable browser.protocol_timeout.Runtime.evaluate

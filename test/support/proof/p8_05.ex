@@ -34,12 +34,14 @@ defmodule NewYou.Proof.P805 do
       Process.delete(RegistrationSeam)
 
       try do
-        cleanup()
-        false = Repo.in_transaction?()
-        0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'p805_fault_%'")
+        # A bounded worker can disconnect a borrowed lease on cancellation.
+        # Teardown needs its own live connection, including in that failure path.
+        Sandbox.unboxed_run(Repo, fn ->
+          cleanup()
+          false = Repo.in_transaction?()
+          0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'p805_fault_%'")
+        end)
       after
-        :ok = Sandbox.checkin(Repo)
-
         Enum.each(previous, fn
           {key, {:ok, value}} -> Application.put_env(:new_you, key, value)
           {key, :error} -> Application.delete_env(:new_you, key)
