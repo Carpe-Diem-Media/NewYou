@@ -2,7 +2,7 @@
 
 ## Status after pre-binding hardening
 
-This assessment is historical evidence for `341f0e8fa762405bfd5750d48f21818996f53137`. Later WELL-15 production corrections change its covered inputs. Its digest is unapproved and cannot be rebound for the hardened implementation. A fresh independent HIGH assessment of frozen source and explicit accountable-owner acceptance are still required. No exception is approved by this document.
+This assessment is historical evidence for `341f0e8fa762405bfd5750d48f21818996f53137`. Later WELL-15 production corrections change its covered inputs. Its digest is unapproved and cannot be rebound for the hardened implementation. The [fresh frozen-source assessment](well-15-assent-frozen-assessment.md) supplies the later review. Explicit accountable-owner acceptance is still required. No exception is approved by this document.
 
 ## Scope and disposition
 
