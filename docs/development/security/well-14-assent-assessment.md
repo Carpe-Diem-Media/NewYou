@@ -27,7 +27,9 @@ The reviewer recommends presenting a narrow temporary non-reachability dispositi
 Explicit owner acceptance must precede any update to the approval pointer, digest and matching expectations in the existing three binding files. Preserve the superseded approval/digest as negative regression cases. Preserve scanner isolation, the unsuppressed finding, all rejection controls and immediate invalidation on covered input, dependency/toolchain, strategy/callback/direct-Assent/linking, advisory or stable-release compatibility changes. After acceptance, only the authorized binding fields and matching regressions may change before fresh audit, Smoke, engineering and exact-head CI verification. A changed canonical input requires another assessment and owner decision.
 
 
-## Corrected source assessment, 2026-11-08
+## First corrected source assessment, superseded
+
+Master Gate comment `dbdec687-53fd-4754-afb4-4ff7989f911a` superseded this review's no-blocking-defect conclusion. It identified the remaining role/scope authority and selected revocation E2 gaps, and the subsequent hosted application run failed after a proof-catalogue timeout. The `abc8d0de` assessment remains historical non-reachability evidence only. No owner acceptance covers that digest, and it cannot authorize the later source corrections.
 
 A fresh independent read-only review inspected corrected source `708b343c9a84009411f428d805f207f66dd4382d` and the revision-2 handoff at documentation head `0625388658ebaddf88ec2beeae944941d5ea5615`. It found no new blocking code or handoff defect. The reviewer checked the Master Gate findings directly rather than relying on the earlier no-findings conclusion.
 
