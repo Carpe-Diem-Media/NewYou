@@ -15,9 +15,9 @@ defmodule NewYou.Identity.IdentityGrant do
     check_constraints do
       check_constraint :role, "identity_grants_role", check: "role = 'support'"
 
-      check_constraint :capability, "identity_grants_capability",
+      check_constraint :scope, "identity_grants_scope",
         check:
-          "capability IN ('place_security_hold', 'review_security_hold', 'release_security_hold')"
+          "scope IN ('security_hold_restriction', 'security_hold_review', 'security_hold_release')"
 
       check_constraint :state, "identity_grants_state", check: "state IN ('active', 'revoked')"
 
@@ -39,27 +39,43 @@ defmodule NewYou.Identity.IdentityGrant do
       public? false
     end
 
-    create :provision do
-      description "Private provisioning action for a named, independently approved Support grant"
-      public? false
+    if Mix.env() in [:dev, :test] do
+      create :provision do
+        description "Private role/scope assignment for synthetic Phase-8 proof. Absent from production builds; runtime issuance needs its governed approval workflow."
+        public? false
 
-      accept [
-        :subject_account_id,
-        :role,
-        :capability,
-        :target_account_id,
-        :approver_account_id,
-        :reason_code,
-        :starts_at,
-        :expires_at
-      ]
+        accept [
+          :subject_account_id,
+          :role,
+          :scope,
+          :target_account_id,
+          :approver_account_id,
+          :reason_code,
+          :starts_at,
+          :expires_at
+        ]
+      end
     end
 
     update :revoke do
-      description "Revoke once and invalidate the subject's existing elevated Session assurance in the same transaction."
+      description "Revoke once, invalidate elevated Sessions and establish selected Audit E2 work in the same transaction."
       public? false
       require_atomic? false
       accept []
+
+      argument :actor_id, :uuid, allow_nil?: false
+
+      argument :reason_code, :atom do
+        allow_nil? false
+        constraints one_of: [:suspected_compromise, :security_review]
+      end
+
+      touches_resources [
+        NewYou.Identity.Account,
+        NewYou.Identity.Session,
+        NewYou.Audit.EvidenceObligation
+      ]
+
       change NewYou.Identity.Changes.InvalidateGrantAssurance
     end
   end
@@ -80,9 +96,15 @@ defmodule NewYou.Identity.IdentityGrant do
       public? false
     end
 
-    attribute :capability, :atom do
+    attribute :scope, :atom do
       allow_nil? false
-      constraints one_of: [:place_security_hold, :review_security_hold, :release_security_hold]
+
+      constraints one_of: [
+                    :security_hold_restriction,
+                    :security_hold_review,
+                    :security_hold_release
+                  ]
+
       public? false
     end
 
@@ -130,7 +152,23 @@ defmodule NewYou.Identity.IdentityGrant do
 
   identities do
     identity :one_active_assignment,
-             [:subject_account_id, :role, :capability, :target_account_id],
+             [:subject_account_id, :role, :scope, :target_account_id],
              where: expr(state == :active)
   end
+
+  # Product §15.1A fixes role/scope authority. These bounded Support scopes are
+  # JIT names for the selected hold operations; the target Account narrows each
+  # assignment. A caller cannot choose an additional per-subject capability.
+  @support_scope_capabilities %{
+    security_hold_restriction: [:place_security_hold],
+    security_hold_review: [:review_security_hold],
+    security_hold_release: [:release_security_hold]
+  }
+
+  @doc "Derive protected capabilities from the bounded Support role/scope catalogue. Current grant validity is checked by the owning action."
+  @spec permits?(map(), atom()) :: boolean()
+  def permits?(%{role: :support, scope: scope}, capability),
+    do: capability in Map.get(@support_scope_capabilities, scope, [])
+
+  def permits?(_grant, _capability), do: false
 end

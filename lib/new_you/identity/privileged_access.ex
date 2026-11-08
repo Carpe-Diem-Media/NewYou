@@ -406,7 +406,7 @@ defmodule NewYou.Identity.PrivilegedAccess do
   defp valid_grant?(grant, actor, target, capability) do
     now = now_usec()
 
-    grant.state == :active and grant.role == :support and grant.capability == capability and
+    grant.state == :active and IdentityGrant.permits?(grant, capability) and
       grant.subject_account_id == actor.id and grant.target_account_id == target.id and
       is_nil(grant.revoked_at) and grant.approver_account_id != actor.id and
       DateTime.compare(now, grant.starts_at) != :lt and

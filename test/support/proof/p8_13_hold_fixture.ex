@@ -4,42 +4,33 @@ defmodule NewYou.Proof.P813HoldFixture do
   alias NewYou.Proof.P805
 
   def with_fixture(callback) do
-    previous = Application.fetch_env(:new_you, :identity_mfa_keyring)
+    P805.with_fixture(fn ->
+      Application.put_env(:new_you, :identity_mfa_keyring, %{
+        active_version: "p813",
+        keys: %{"p813" => :crypto.strong_rand_bytes(32)}
+      })
 
-    Application.put_env(:new_you, :identity_mfa_keyring, %{
-      active_version: "p813",
-      keys: %{"p813" => :crypto.strong_rand_bytes(32)}
-    })
+      target = member()
+      approver = member()
+      actor = factor_member()
+      reviewer = factor_member()
 
-    try do
-      P805.with_fixture(fn ->
-        target = member()
-        approver = member()
-        actor = factor_member()
-        reviewer = factor_member()
+      grants = %{
+        place: grant(actor, target, approver, :security_hold_restriction),
+        release: grant(actor, target, approver, :security_hold_release),
+        review: grant(reviewer, target, approver, :security_hold_review)
+      }
 
-        grants = %{
-          place: grant(actor, target, approver, :place_security_hold),
-          release: grant(actor, target, approver, :release_security_hold),
-          review: grant(reviewer, target, approver, :review_security_hold)
-        }
-
-        callback.(%{
-          target: target,
-          approver: approver,
-          actor: actor,
-          reviewer: reviewer,
-          grants: grants
-        })
-      end)
-    after
-      Process.delete(NewYou.Proof.SecurityHoldSeam)
-
-      case previous do
-        {:ok, value} -> Application.put_env(:new_you, :identity_mfa_keyring, value)
-        :error -> Application.delete_env(:new_you, :identity_mfa_keyring)
-      end
-    end
+      callback.(%{
+        target: target,
+        approver: approver,
+        actor: actor,
+        reviewer: reviewer,
+        grants: grants
+      })
+    end)
+  after
+    Process.delete(NewYou.Proof.SecurityHoldSeam)
   end
 
   def member do
@@ -70,7 +61,7 @@ defmodule NewYou.Proof.P813HoldFixture do
     Map.put(member, :secret, secret)
   end
 
-  def grant(subject, target, approver, capability) do
+  def grant(subject, target, approver, scope) do
     Ash.create!(
       Identity.IdentityGrant,
       %{
@@ -78,7 +69,7 @@ defmodule NewYou.Proof.P813HoldFixture do
         target_account_id: target.id,
         approver_account_id: approver.id,
         role: :support,
-        capability: capability,
+        scope: scope,
         reason_code: :security_review,
         starts_at: DateTime.add(DateTime.utc_now(), -60),
         expires_at: DateTime.add(DateTime.utc_now(), 3600)

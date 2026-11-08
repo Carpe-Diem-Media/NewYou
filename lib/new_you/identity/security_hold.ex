@@ -207,7 +207,7 @@ defmodule NewYou.Identity.SecurityHold do
 
   defp review_grant_scope?(grant, reviewer, target) do
     grant.subject_account_id == reviewer.id and grant.target_account_id == target.id and
-      grant.role == :support and grant.capability == :review_security_hold and
+      IdentityGrant.permits?(grant, :review_security_hold) and
       grant.approver_account_id != reviewer.id
   end
 

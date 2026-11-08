@@ -11,6 +11,17 @@ Application.put_env(
 try do
   result =
     case input["mode"] do
+      "grant_production_boundary" ->
+        Mix.env(:prod)
+        Code.compiler_options(ignore_module_conflict: true, ignore_already_consolidated: true)
+        Code.compile_file("lib/new_you/identity/identity_grant.ex")
+
+        if is_nil(Ash.Resource.Info.action(NewYou.Identity.IdentityGrant, :provision)) do
+          "P813_PROVISION_ABSENT"
+        else
+          "P813_PROVISION_PRESENT"
+        end
+
       "mfa_enroll" ->
         ring = input["keyring"]
 

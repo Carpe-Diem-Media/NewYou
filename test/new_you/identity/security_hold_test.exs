@@ -27,7 +27,7 @@ defmodule NewYou.Identity.SecurityHoldTest do
       {:ok, %{status: :held}} =
         Identity.place_security_hold(P813HoldFixture.request(f, :place, 0))
 
-      review_grant = P813HoldFixture.grant(f.actor, f.target, f.approver, :review_security_hold)
+      review_grant = P813HoldFixture.grant(f.actor, f.target, f.approver, :security_hold_review)
       {:ok, :ok} = P813HoldFixture.step_up(f.actor, :review_security_hold)
 
       review = %{

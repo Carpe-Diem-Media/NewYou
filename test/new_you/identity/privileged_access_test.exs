@@ -225,7 +225,12 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
       assert :error == authorize(actor.credentials, grant.id, target.id, :release_security_hold)
 
       assert {:ok, :ok} = P813HoldFixture.step_up(actor, :release_security_hold)
-      Ash.update!(grant, %{}, action: :revoke, authorize?: false)
+
+      Ash.update!(grant, %{actor_id: fixture.approver.id, reason_code: :security_review},
+        action: :revoke,
+        authorize?: false
+      )
+
       assert :error == authorize(actor.credentials, grant.id, target.id, :release_security_hold)
     end)
   end
@@ -375,7 +380,15 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
         target_account_id: target.id,
         approver_account_id: approver.id,
         role: :support,
-        capability: capability,
+        scope:
+          Map.fetch!(
+            %{
+              place_security_hold: :security_hold_restriction,
+              review_security_hold: :security_hold_review,
+              release_security_hold: :security_hold_release
+            },
+            capability
+          ),
         reason_code: :security_review,
         starts_at: starts_at,
         expires_at: expires_at

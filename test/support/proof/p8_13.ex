@@ -22,6 +22,31 @@ defmodule NewYou.Proof.P813 do
     end)
   end
 
+  @doc false
+  def provisioning_after_production_compile do
+    restart_input(
+      %{
+        mode: "grant_production_boundary",
+        signing_secret:
+          Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
+      },
+      :unavailable
+    )
+  end
+
+  @doc false
+  def materialize_after_restart(obligation_id) do
+    restart_input(
+      %{
+        mode: "materialize",
+        obligation_id: obligation_id,
+        signing_secret:
+          Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
+      },
+      :materialized
+    )
+  end
+
   defp execute("p813.admission_cut" = id, _fixture, request) do
     scenario = Scenario.start()
 
@@ -192,7 +217,14 @@ defmodule NewYou.Proof.P813 do
   defp execute("p813.restart" = id, fixture, request) do
     P805.check(id, "first_boot", restart(:authorize, fixture, request) == :authorized)
     P805.check(id, "reconstructed", posture(request.target_id) == :held)
-    Ash.update!(fixture.grants.release, %{}, action: :revoke, authorize?: false)
+
+    Ash.update!(
+      fixture.grants.release,
+      %{actor_id: fixture.approver.id, reason_code: :security_review},
+      action: :revoke,
+      authorize?: false
+    )
+
     P805.check(id, "current_revocation", restart(:authorize, fixture, request) == :denied)
     # A different valid named grant provides the next distinct governed attempt.
     grant =
@@ -200,7 +232,7 @@ defmodule NewYou.Proof.P813 do
         fixture.actor,
         fixture.target,
         fixture.approver,
-        :release_security_hold
+        :security_hold_release
       )
 
     request = %{request | grant_id: grant.id}
@@ -472,6 +504,10 @@ defmodule NewYou.Proof.P813 do
           {%{input | mode: "authorize"}, :authorized}
       end
 
+    restart_input(input, expected)
+  end
+
+  defp restart_input(input, expected) do
     executable = System.find_executable("mix") || raise "mix unavailable"
 
     port =
@@ -487,6 +523,8 @@ defmodule NewYou.Proof.P813 do
     case restart_output(port, "", System.monotonic_time(:millisecond) + 30_000) do
       "P813_AUTHORIZED" -> expected
       "P813_MATERIALIZED" -> :materialized
+      "P813_PROVISION_ABSENT" -> :unavailable
+      "P813_PROVISION_PRESENT" -> :present
       _ -> :denied
     end
   end

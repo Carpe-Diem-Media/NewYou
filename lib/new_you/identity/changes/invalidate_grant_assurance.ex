@@ -42,12 +42,34 @@ defmodule NewYou.Identity.Changes.InvalidateGrantAssurance do
       |> Changeset.force_change_attribute(:revoked_at, DateTime.utc_now())
       |> Changeset.force_change_attribute(:version, grant.version + 1)
       |> Changeset.filter(expr(state == :active and version == ^grant.version))
+      |> Changeset.after_action(&establish_revocation_evidence/2)
     else
       _ -> unavailable(changeset)
     end
   end
 
   defp invalidate_or_replay(changeset, _account, _grant), do: unavailable(changeset)
+
+  defp establish_revocation_evidence(changeset, grant) do
+    # The locked transition runs once per grant. Use a fresh source operation
+    # identity so caller-selected hold operation ids cannot reserve its E2 key.
+    # The committed obligation retains that identity for executor recovery.
+    envelope = %{
+      source_operation_id: Ecto.UUID.generate(),
+      source_occurred_at: grant.revoked_at,
+      evidence_type: :identity_grant_revoked,
+      actor_id: Changeset.get_argument(changeset, :actor_id),
+      target_id: grant.subject_account_id,
+      grant_id: grant.id,
+      reason_code: Changeset.get_argument(changeset, :reason_code),
+      outcome: :succeeded
+    }
+
+    case NewYou.Audit.establish_identity_security_obligation(envelope) do
+      {:ok, _obligation} -> {:ok, grant}
+      {:error, _} -> {:error, "grant revocation evidence unavailable"}
+    end
+  end
 
   defp clear_sessions(account_id) do
     Session

@@ -63,6 +63,9 @@ defmodule NewYou.Proof.P805Test do
     assert Catalog.coverage_inventory() |> length() == 10
   end
 
+  # The aggregate includes independent BEAM boots across all owned families.
+  # Each case retains its own proof deadline; this bounds the complete run.
+  @tag timeout: 600_000
   test "runner executes every owned obligation and retains incomplete overall TB-001" do
     manifests = Catalog.required().business_manifests
     assert map_size(manifests) > 0
@@ -133,6 +136,51 @@ defmodule NewYou.Proof.P805Test do
     after_counts = P805.counts()
     :ok = Sandbox.checkin(NewYou.Repo)
     # Permanent PMR reservations are never removed, including fixture teardown.
+    assert Enum.drop(after_counts, -1) == Enum.drop(before_counts, -1)
+    assert List.last(after_counts) == List.last(before_counts) + 1
+  end
+
+  test "fixture guardian cleans committed records when the fixture owner is killed" do
+    alias NewYou.Proof.P805
+    alias Ecto.Adapters.SQL.Sandbox
+    previous_mfa = Application.fetch_env(:new_you, :identity_mfa_keyring)
+
+    :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
+    before_counts = P805.counts()
+    :ok = Sandbox.checkin(NewYou.Repo)
+    parent = self()
+
+    scenario = NewYou.Proof.Scenario.start()
+
+    {owner, monitor} =
+      NewYou.Proof.Scenario.spawn(scenario, :fixture_owner, fn ->
+        P805.with_fixture(fn ->
+          Application.put_env(:new_you, :identity_mfa_keyring, :synthetic_owner_death)
+          input = P805.request()
+          {:ok, _} = NewYou.Identity.register(input)
+          send(parent, {:fixture_committed, input.email})
+          receive do: (:never -> :ok)
+        end)
+      end)
+
+    email =
+      receive do
+        {:fixture_committed, email} -> email
+      after
+        15_000 -> flunk("fixture owner did not commit registration")
+      end
+
+    Process.exit(owner, :kill)
+    assert_receive {:DOWN, ^monitor, :process, ^owner, :killed}, 5_000
+    # Scenario teardown must await fixture cleanup before another case can run.
+    assert {:error, [:worker_failed]} = NewYou.Proof.Scenario.stop(scenario)
+    restored? = Application.fetch_env(:new_you, :identity_mfa_keyring) == previous_mfa
+    assert restored?, "fixture environment was not restored after owner death"
+
+    :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
+    assert P805.scalar("SELECT count(*) FROM accounts WHERE email = $1", [email]) == 0
+    after_counts = P805.counts()
+    :ok = Sandbox.checkin(NewYou.Repo)
     assert Enum.drop(after_counts, -1) == Enum.drop(before_counts, -1)
     assert List.last(after_counts) == List.last(before_counts) + 1
   end
