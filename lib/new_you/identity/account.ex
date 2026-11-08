@@ -4,7 +4,7 @@ defmodule NewYou.Identity.Account do
     domain: NewYou.Identity,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshAuthentication]
+    extensions: [AshAuthentication, AshCloak]
 
   authentication do
     strategies do
@@ -69,7 +69,22 @@ defmodule NewYou.Identity.Account do
       check_constraint :confirmed_age_18?, "accounts_adult_confirmation",
         check: "\"confirmed_age_18?\" IS TRUE",
         message: "must confirm age 18 or older"
+
+      check_constraint :mfa_enrollment_state, "accounts_mfa_enrollment_state",
+        check: "mfa_enrollment_state IN ('disabled', 'pending', 'active')",
+        message: "must be a supported MFA state"
+
+      check_constraint :hold_version, "accounts_hold_version", check: "hold_version >= 0"
+
+      check_constraint :hold_operations, "accounts_hold_operations",
+        check: "jsonb_typeof(hold_operations) = 'object'"
     end
+  end
+
+  cloak do
+    vault(NewYou.Identity.MfaVault)
+    attributes([:totp_secret, :pending_totp_secret])
+    decrypt_by_default([])
   end
 
   actions do
@@ -92,6 +107,77 @@ defmodule NewYou.Identity.Account do
       public? false
       accept []
       change set_attribute(:email_verified?, true)
+    end
+
+    update :update_privileged_mfa do
+      description "Private MFA transition inside a locked Identity transaction"
+      public? false
+
+      accept [
+        :totp_secret,
+        :pending_totp_secret,
+        :mfa_enrollment_state,
+        :mfa_confirmed_at,
+        :mfa_last_accepted_period,
+        :mfa_failed_attempts,
+        :mfa_locked_until,
+        :mfa_version,
+        :security_version
+      ]
+    end
+
+    update :invalidate_grant_assurance do
+      description "Advance current security authority when a scoped grant is revoked."
+      public? false
+      accept []
+      change increment(:security_version)
+    end
+
+    update :place_security_hold do
+      description "Private conditional containment write inside the current privileged Identity transaction."
+      public? false
+      accept [:hold_version, :security_version, :hold_operations]
+      argument :expected_hold_version, :integer, allow_nil?: false
+
+      change filter(
+               expr(security_posture == :normal and hold_version == ^arg(:expected_hold_version))
+             )
+
+      change set_attribute(:security_posture, :held)
+      change set_attribute(:hold_review, nil)
+    end
+
+    update :review_security_hold do
+      description "Record independent current security review tied to the held generation."
+      public? false
+      accept [:hold_review, :hold_operations]
+      argument :expected_hold_version, :integer, allow_nil?: false
+
+      change filter(
+               expr(security_posture == :held and hold_version == ^arg(:expected_hold_version))
+             )
+    end
+
+    update :release_security_hold do
+      description "Private release write after independently committed E1 admission and fresh current authority checks."
+      public? false
+      accept [:hold_version, :security_version, :hold_operations]
+      argument :expected_hold_version, :integer, allow_nil?: false
+
+      change filter(
+               expr(security_posture == :held and hold_version == ^arg(:expected_hold_version))
+             )
+
+      change set_attribute(:security_posture, :normal)
+      change set_attribute(:hold_review, nil)
+    end
+
+    update :record_security_hold_attempt do
+      description "Persist an admitted failed source attempt and its E2 obligation without changing posture."
+      public? false
+      accept [:hold_operations]
+      argument :expected_hold_version, :integer, allow_nil?: false
+      change filter(expr(hold_version == ^arg(:expected_hold_version)))
     end
 
     read :read do
@@ -154,6 +240,20 @@ defmodule NewYou.Identity.Account do
       default :normal
       constraints one_of: [:normal, :held]
     end
+
+    attribute :hold_version, :integer,
+      allow_nil?: false,
+      default: 0,
+      constraints: [min: 0],
+      public?: false
+
+    attribute :hold_review, :map, sensitive?: true, public?: false
+
+    attribute :hold_operations, :map,
+      allow_nil?: false,
+      default: %{},
+      sensitive?: true,
+      public?: false
 
     attribute :first_name, :string do
       allow_nil? false
@@ -225,6 +325,32 @@ defmodule NewYou.Identity.Account do
       allow_nil? false
       public? false
     end
+
+    attribute :mfa_enrollment_state, :atom do
+      allow_nil? false
+      default :disabled
+      constraints one_of: [:disabled, :pending, :active]
+      public? false
+    end
+
+    attribute :totp_secret, :binary do
+      allow_nil? true
+      sensitive? true
+      public? false
+    end
+
+    attribute :pending_totp_secret, :binary do
+      allow_nil? true
+      sensitive? true
+      public? false
+    end
+
+    attribute :mfa_confirmed_at, :utc_datetime_usec, public?: false
+    attribute :mfa_last_accepted_period, :integer, public?: false
+    attribute :mfa_failed_attempts, :integer, allow_nil?: false, default: 0, public?: false
+    attribute :mfa_locked_until, :utc_datetime_usec, public?: false
+    attribute :mfa_version, :integer, allow_nil?: false, default: 1, public?: false
+    attribute :security_version, :integer, allow_nil?: false, default: 1, public?: false
   end
 
   identities do

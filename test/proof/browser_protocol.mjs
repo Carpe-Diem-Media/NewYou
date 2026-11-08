@@ -1,5 +1,24 @@
 // Test-only coordination for the existing Chromium proof driver. No page data
 // or raw protocol errors cross this boundary.
+export function boundedProtocol(call, {now = () => performance.now()} = {}) {
+  const started = now();
+  return (method, params = {}, sessionId, timeout = 20000) => {
+    // Share one work budget across startup and commands. Reserve shutdown time
+    // inside the owning Elixir process's independent 45-second deadline.
+    const deadline = started + (method === 'Browser.close' ? 44000 : 40000);
+    const remaining = Math.min(timeout, Math.max(0, deadline - now()));
+    if (remaining === 0) return Promise.reject(new Error(`browser.protocol_timeout.${method}`));
+    return call(method, params, sessionId, remaining);
+  };
+}
+
+export async function createBrowserContext(call) {
+  // Cold Chromium startup precedes the normal protocol-command budget. The
+  // caller still bounds the complete browser process independently.
+  await call('Browser.getVersion', {}, undefined, 40000);
+  return call('Target.createBrowserContext');
+}
+
 export async function completeNavigation(action, loaded) {
   // A load can fail before the action settles. Observe rejection immediately,
   // then propagate it below rather than creating an unhandled rejection.
@@ -37,6 +56,7 @@ export function boundedFailureCode(error) {
     'browser.stopped'
   ]);
   const methods = [
+    'Browser.getVersion',
     'Target.createBrowserContext', 'Target.createTarget', 'Target.attachToTarget',
     'Page.enable', 'Runtime.enable', 'Runtime.evaluate', 'Page.navigate',
     'Target.disposeBrowserContext', 'Browser.close'

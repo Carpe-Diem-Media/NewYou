@@ -52,6 +52,11 @@ defmodule NewYou.Identity.Session do
       change filter(expr(state == :active))
       change set_attribute(:state, :revoked)
       change set_attribute(:ended_at, &DateTime.utc_now/0)
+      change set_attribute(:step_up_purpose, nil)
+      change set_attribute(:step_up_at, nil)
+      change set_attribute(:step_up_expires_at, nil)
+      change set_attribute(:step_up_mfa_version, nil)
+      change set_attribute(:step_up_security_version, nil)
     end
 
     update :logout do
@@ -60,6 +65,11 @@ defmodule NewYou.Identity.Session do
       change filter(expr(state == :active))
       change set_attribute(:state, :logged_out)
       change set_attribute(:ended_at, &DateTime.utc_now/0)
+      change set_attribute(:step_up_purpose, nil)
+      change set_attribute(:step_up_at, nil)
+      change set_attribute(:step_up_expires_at, nil)
+      change set_attribute(:step_up_mfa_version, nil)
+      change set_attribute(:step_up_security_version, nil)
     end
 
     update :expire do
@@ -68,12 +78,40 @@ defmodule NewYou.Identity.Session do
       change filter(expr(state == :active and (expires_at <= now() or idle_expires_at <= now())))
       change set_attribute(:state, :expired)
       change set_attribute(:ended_at, &DateTime.utc_now/0)
+      change set_attribute(:step_up_purpose, nil)
+      change set_attribute(:step_up_at, nil)
+      change set_attribute(:step_up_expires_at, nil)
+      change set_attribute(:step_up_mfa_version, nil)
+      change set_attribute(:step_up_security_version, nil)
     end
 
     update :touch do
       public? false
       accept [:last_seen_at, :idle_expires_at]
       change filter(expr(state == :active and expires_at > now() and idle_expires_at > now()))
+    end
+
+    update :set_step_up do
+      public? false
+
+      accept [
+        :step_up_purpose,
+        :step_up_at,
+        :step_up_expires_at,
+        :step_up_mfa_version,
+        :step_up_security_version
+      ]
+    end
+
+    update :clear_step_up do
+      description "Clear elevated assurance atomically with a current Identity security change."
+      public? false
+      accept []
+      change set_attribute(:step_up_purpose, nil)
+      change set_attribute(:step_up_at, nil)
+      change set_attribute(:step_up_expires_at, nil)
+      change set_attribute(:step_up_mfa_version, nil)
+      change set_attribute(:step_up_security_version, nil)
     end
   end
 
@@ -121,6 +159,16 @@ defmodule NewYou.Identity.Session do
       allow_nil? false
       public? false
     end
+
+    attribute :step_up_purpose, :atom do
+      constraints one_of: [:place_security_hold, :review_security_hold, :release_security_hold]
+      public? false
+    end
+
+    attribute :step_up_at, :utc_datetime_usec, public?: false
+    attribute :step_up_expires_at, :utc_datetime_usec, public?: false
+    attribute :step_up_mfa_version, :integer, public?: false
+    attribute :step_up_security_version, :integer, public?: false
 
     attribute :last_seen_at, :utc_datetime do
       allow_nil? false

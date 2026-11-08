@@ -14,7 +14,7 @@ defmodule NewYou.MixProject do
         end
       ],
       test_ignore_filters: [
-        ~r"^test/proof/(self_test|run|postgresql_probe|p8_09_restart|p8_09_magic_restart|p8_10_restart|p8_11_restart|fixtures/provider_fixtures)\.exs$"
+        ~r"^test/proof/(self_test|run|postgresql_probe|p8_09_restart|p8_09_magic_restart|p8_10_restart|p8_11_restart|p8_13_restart|fixtures/provider_fixtures)\.exs$"
       ],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -92,6 +92,8 @@ defmodule NewYou.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:ash_cloak, "== 0.4.0"},
+      {:nimble_totp, "== 1.0.0"},
       {:ash_state_machine, "== 0.3.0"},
       {:oban, "== 2.24.2"},
       {:ash_oban, "== 0.10.2"},

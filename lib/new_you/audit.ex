@@ -1,4 +1,5 @@
 defmodule NewYou.Audit do
+  @moduledoc "Audit owns append-only admission and outcome assertions, never Identity authority or source replay."
   use Ash.Domain, otp_app: :new_you
 
   resources do
@@ -16,4 +17,18 @@ defmodule NewYou.Audit do
         not_found_error?: false
     end
   end
+
+  @doc "Commit or replay the same minimised E1 attempt before the caller opens its protected source transaction."
+  @spec admit_security_hold_release(map()) ::
+          {:ok, NewYou.Audit.EvidenceRecord.t()} | {:error, :evidence_admission_unavailable}
+  defdelegate admit_security_hold_release(envelope),
+    to: NewYou.Audit.PrivilegedEvidence,
+    as: :admit
+
+  @doc "Establish selected security E2 work inside the owning source transaction. Executor recovery never calls Identity."
+  @spec establish_identity_security_obligation(map()) ::
+          {:ok, NewYou.Audit.EvidenceObligation.t()} | {:error, term()}
+  defdelegate establish_identity_security_obligation(envelope),
+    to: NewYou.Audit.PrivilegedEvidence,
+    as: :establish_outcome
 end

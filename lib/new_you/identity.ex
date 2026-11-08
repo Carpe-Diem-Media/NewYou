@@ -21,7 +21,8 @@ defmodule NewYou.Identity do
     RegistrationOperation,
     ResendOperation,
     RegistrationResult,
-    Token
+    Token,
+    IdentityGrant
   }
 
   @operation_lifetime_seconds 24 * 60 * 60
@@ -42,6 +43,7 @@ defmodule NewYou.Identity do
 
     resource NewYou.Identity.ResendOperation
     resource NewYou.Identity.Session
+    resource IdentityGrant
   end
 
   @doc "Request optional existing-Account sign-in. Every public outcome is neutral; this never registers or authenticates an Account."
@@ -86,6 +88,39 @@ defmodule NewYou.Identity do
   @spec authorize_session(term()) ::
           {:ok, %{account_id: String.t()}} | {:error, :authentication_unavailable}
   def authorize_session(credentials), do: NewYou.Identity.PasswordSession.authorize(credentials)
+
+  @doc "Begin or resume pending Support MFA setup after current Session/password reauthentication. Active factors never return setup material."
+  @spec enroll_privileged_mfa(term(), term()) ::
+          {:ok, %{secret: binary()}} | {:error, :privileged_access_unavailable}
+  def enroll_privileged_mfa(credentials, password),
+    do: NewYou.Identity.PrivilegedAccess.enroll_mfa(credentials, password)
+
+  @doc "Confirm pending Support MFA with the reauthenticated password and a current TOTP code."
+  @spec confirm_privileged_mfa(term(), term(), term()) ::
+          {:ok, :ok} | {:error, :privileged_access_unavailable}
+  def confirm_privileged_mfa(credentials, password, code),
+    do: NewYou.Identity.PrivilegedAccess.confirm_mfa(credentials, password, code)
+
+  @doc "Bind fresh password and TOTP assurance to the current Session for one Support capability."
+  @spec step_up_privileged(term(), term(), term(), term()) ::
+          {:ok, :ok} | {:error, :privileged_access_unavailable}
+  def step_up_privileged(credentials, password, code, purpose),
+    do: NewYou.Identity.PrivilegedAccess.step_up(credentials, password, code, purpose)
+
+  @doc "Place a version-bound security hold under current scoped Support authority and revoke the target's active Sessions."
+  @spec place_security_hold(map()) :: {:ok, map()} | {:error, :security_hold_unavailable}
+  def place_security_hold(request),
+    do: NewYou.Identity.SecurityHold.run(:place_security_hold, request)
+
+  @doc "Record independent current security review of one held generation. This does not release the hold."
+  @spec review_security_hold(map()) :: {:ok, map()} | {:error, :security_hold_unavailable}
+  def review_security_hold(request),
+    do: NewYou.Identity.SecurityHold.run(:review_security_hold, request)
+
+  @doc "Release a reviewed hold after Audit E1 commits and current Identity authority is revalidated. Admission survives source failure."
+  @spec release_security_hold(map()) :: {:ok, map()} | {:error, :security_hold_unavailable}
+  def release_security_hold(request),
+    do: NewYou.Identity.SecurityHold.run(:release_security_hold, request)
 
   @doc "Log out the identified Session."
   @spec logout(term()) :: :ok | {:error, :authentication_unavailable}

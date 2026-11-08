@@ -15,6 +15,7 @@ defmodule NewYou.Proof.Scenario do
   @forced_cleanup_timeout 1_000
   @max_timeout 30_000
   @cleanup_scope_key {__MODULE__, :cleanup_scope}
+  @worker_guardian_key {__MODULE__, :worker_guardian}
 
   @spec start() :: t()
   @spec start(keyword()) :: t()
@@ -71,11 +72,13 @@ defmodule NewYou.Proof.Scenario do
         receive do
           {:scenario_start, reference} when reference == scenario.reference ->
             Process.put(@cleanup_scope_key, scenario)
+            Process.put(@worker_guardian_key, guardian)
 
             try do
               fun.()
             after
               Process.delete(@cleanup_scope_key)
+              Process.delete(@worker_guardian_key)
             end
 
           _ ->
@@ -102,6 +105,24 @@ defmodule NewYou.Proof.Scenario do
         Process.demonitor(monitor, [:flush])
         Process.exit(pid, :kill)
         raise "could not register proof worker: #{inspect(reason)}"
+    end
+  end
+
+  @doc false
+  def register_cleanup_guardian(guardian) when is_pid(guardian) do
+    case Process.get(@worker_guardian_key) do
+      nil ->
+        :ok
+
+      worker_guardian ->
+        reference = make_ref()
+        send(worker_guardian, {:cleanup_guardian, self(), reference, guardian})
+
+        receive do
+          {:cleanup_guardian_registered, ^reference} -> :ok
+        after
+          @request_timeout -> raise "proof cleanup guardian did not register"
+        end
     end
   end
 
@@ -1304,9 +1325,25 @@ defmodule NewYou.Proof.Scenario do
     controller_monitor = Process.monitor(controller)
     owner_monitor = Process.monitor(owner)
 
+    guard_worker(worker, worker_monitor, controller_monitor, owner_monitor, %{})
+  end
+
+  defp guard_worker(worker, worker_monitor, controller_monitor, owner_monitor, cleanups) do
     receive do
+      {:cleanup_guardian, ^worker, reference, guardian} ->
+        monitor = Process.monitor(guardian)
+        send(worker, {:cleanup_guardian_registered, reference})
+
+        guard_worker(
+          worker,
+          worker_monitor,
+          controller_monitor,
+          owner_monitor,
+          Map.put(cleanups, monitor, guardian)
+        )
+
       {:DOWN, ^worker_monitor, :process, ^worker, _reason} ->
-        :ok
+        await_cleanup_guardians(cleanups, now_ms() + 4_000)
 
       {:DOWN, ref, :process, _pid, _reason}
       when ref == controller_monitor or ref == owner_monitor ->
@@ -1317,6 +1354,33 @@ defmodule NewYou.Proof.Scenario do
         after
           1_000 -> :ok
         end
+
+        await_cleanup_guardians(cleanups, now_ms() + 4_000)
+
+      {:DOWN, monitor, :process, _pid, reason} when is_map_key(cleanups, monitor) ->
+        if reason != :normal, do: exit(:fixture_cleanup_failed)
+
+        guard_worker(
+          worker,
+          worker_monitor,
+          controller_monitor,
+          owner_monitor,
+          Map.delete(cleanups, monitor)
+        )
+    end
+  end
+
+  defp await_cleanup_guardians(cleanups, _deadline) when map_size(cleanups) == 0, do: :ok
+
+  defp await_cleanup_guardians(cleanups, deadline) do
+    receive do
+      {:DOWN, monitor, :process, _pid, :normal} when is_map_key(cleanups, monitor) ->
+        await_cleanup_guardians(Map.delete(cleanups, monitor), deadline)
+
+      {:DOWN, monitor, :process, _pid, _reason} when is_map_key(cleanups, monitor) ->
+        exit(:fixture_cleanup_failed)
+    after
+      max(deadline - now_ms(), 0) -> exit(:fixture_cleanup_timeout)
     end
   end
 end

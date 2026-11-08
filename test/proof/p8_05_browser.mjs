@@ -2,7 +2,7 @@
 // No screenshots, traces, page bodies, credentials or raw browser diagnostics
 // leave this process. Only fixed facts, allow-listed error codes and opaque
 // operation IDs are returned.
-import { completeNavigation, settleBrowserExit, settleContextLoss, protocolError, boundedFailureCode } from './browser_protocol.mjs';
+import { boundedProtocol, createBrowserContext, completeNavigation, settleBrowserExit, settleContextLoss, protocolError, boundedFailureCode } from './browser_protocol.mjs';
 import { createHash } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync, mkdtempSync, rmSync } from 'node:fs';
@@ -17,6 +17,7 @@ const profile = mkdtempSync(join(tmpdir(), 'p805-browser-'));
 let browser;
 let browserStopped;
 let closeBrowser;
+let browserReady = false;
 let cleanup = false;
 let failure;
 // A closed runner pipe or cancellation also terminates the browser child.
@@ -59,16 +60,20 @@ try {
       }
     }
   });
-  function call(method, params = {}, sessionId) {
+  function requestProtocol(method, params = {}, sessionId, timeout = 20000) {
     return new Promise((resolve, reject) => {
       const id = ++sequence;
-      const timer = setTimeout(() => { pending.delete(id); reject(new Error(`browser.protocol_timeout.${method}`)); }, 20000);
+      const timer = setTimeout(() => { pending.delete(id); reject(new Error(`browser.protocol_timeout.${method}`)); }, timeout);
       pending.set(id, { resolve, reject, timer, method, sessionId });
       browser.stdio[3].write(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }) + '\0');
     });
   }
-  closeBrowser = () => call('Browser.close');
-  const context = await call('Target.createBrowserContext');
+  const call = boundedProtocol(requestProtocol);
+  // Leave shutdown time inside the outer 45-second browser-process deadline,
+  // even when the bounded cold-start readiness check has failed.
+  closeBrowser = () => call('Browser.close', {}, undefined, browserReady ? 20000 : 1000);
+  const context = await createBrowserContext(call);
+  browserReady = true;
   const { targetId } = await call('Target.createTarget', { url: 'about:blank', browserContextId: context.browserContextId });
   const { sessionId } = await call('Target.attachToTarget', { targetId, flatten: true });
   const cdp = (method, params) => call(method, params, sessionId);

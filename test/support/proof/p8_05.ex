@@ -13,7 +13,7 @@ defmodule NewYou.Proof.P805 do
   @terms "NEWYOU-TERMS-EN-DEV-2026-10-27-001"
   @privacy "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
   @tables ~w(accounts tokens registration_operations resend_operations message_intents communications_protected_envelopes communications_envelope_nonces evidence_obligations oban_jobs identity_pmr_reservations)
-  @environment ~w(identity_registration_binding_keys identity_token_signing_secret communications_keyring p8_05_browser_development_fixtures identity_pmr_generator)a
+  @environment ~w(identity_registration_binding_keys identity_token_signing_secret identity_mfa_keyring communications_keyring p8_05_browser_development_fixtures identity_pmr_generator)a
 
   def run(case_id), do: with_fixture(fn -> execute(case_id) end)
 
@@ -23,6 +23,9 @@ defmodule NewYou.Proof.P805 do
     configure()
     Process.put({__MODULE__, :operations}, [])
     Process.put({__MODULE__, :emails}, [])
+    {guardian, guardian_monitor} = start_fixture_guardian(previous)
+    Process.put({__MODULE__, :guardian}, guardian)
+    :ok = NewYou.Proof.Scenario.register_cleanup_guardian(guardian)
     :ok = Sandbox.checkout(Repo, sandbox: false)
 
     try do
@@ -31,16 +34,21 @@ defmodule NewYou.Proof.P805 do
       Process.delete(RegistrationSeam)
 
       try do
-        cleanup()
-        false = Repo.in_transaction?()
-        0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'p805_fault_%'")
+        # A bounded worker can disconnect a borrowed lease on cancellation.
+        # Teardown needs its own live connection, including in that failure path.
+        Sandbox.unboxed_run(Repo, fn ->
+          cleanup()
+          false = Repo.in_transaction?()
+          0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'p805_fault_%'")
+        end)
       after
-        :ok = Sandbox.checkin(Repo)
-
         Enum.each(previous, fn
           {key, {:ok, value}} -> Application.put_env(:new_you, key, value)
           {key, :error} -> Application.delete_env(:new_you, key)
         end)
+
+        stop_fixture_guardian(guardian, guardian_monitor)
+        Process.delete({__MODULE__, :guardian})
       end
 
       :ok = SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
@@ -89,13 +97,94 @@ defmodule NewYou.Proof.P805 do
   def track_operation(operation), do: track(%{operation_id: operation})
 
   defp track(request) do
+    guardian = Process.get({__MODULE__, :guardian})
+
+    if is_pid(guardian) do
+      register_fixture_value(guardian, :operation, request.operation_id)
+    end
+
     Process.put({__MODULE__, :operations}, [
       request.operation_id | Process.get({__MODULE__, :operations}, [])
     ])
 
     if is_binary(request[:email]) do
       {:ok, email} = Identity.Email.canonicalize(request.email)
+      if is_pid(guardian), do: register_fixture_value(guardian, :email, email)
       Process.put({__MODULE__, :emails}, [email | Process.get({__MODULE__, :emails}, [])])
+    end
+  end
+
+  defp register_fixture_value(guardian, kind, value) do
+    reference = make_ref()
+    send(guardian, {:track, self(), reference, kind, value})
+
+    receive do
+      {:fixture_tracked, ^reference} -> :ok
+    after
+      5_000 -> raise "P8-05 fixture guardian did not register fixture identity"
+    end
+  end
+
+  defp start_fixture_guardian(previous) do
+    owner = self()
+
+    {pid, monitor} =
+      spawn_monitor(fn ->
+        owner_monitor = Process.monitor(owner)
+        fixture_guardian(owner, owner_monitor, previous, [], [])
+      end)
+
+    {pid, monitor}
+  end
+
+  defp stop_fixture_guardian(guardian, monitor) do
+    send(guardian, :fixture_complete)
+
+    receive do
+      {:DOWN, ^monitor, :process, ^guardian, _reason} -> :ok
+    after
+      10_000 -> raise "P8-05 fixture guardian did not stop"
+    end
+  end
+
+  defp fixture_guardian(owner, owner_monitor, previous, operations, emails) do
+    receive do
+      {:track, ^owner, reference, :operation, operation} ->
+        send(owner, {:fixture_tracked, reference})
+        fixture_guardian(owner, owner_monitor, previous, [operation | operations], emails)
+
+      {:track, ^owner, reference, :email, email} ->
+        send(owner, {:fixture_tracked, reference})
+        fixture_guardian(owner, owner_monitor, previous, operations, [email | emails])
+
+      :fixture_complete ->
+        Process.demonitor(owner_monitor, [:flush])
+        :ok
+
+      {:DOWN, ^owner_monitor, :process, ^owner, _reason} ->
+        try do
+          cleanup_orphaned_fixture(operations, emails)
+        after
+          restore_environment(previous)
+        end
+    end
+  end
+
+  defp restore_environment(previous) do
+    Enum.each(previous, fn
+      {key, {:ok, value}} -> Application.put_env(:new_you, key, value)
+      {key, :error} -> Application.delete_env(:new_you, key)
+    end)
+  end
+
+  defp cleanup_orphaned_fixture(operations, emails) do
+    :ok = Sandbox.checkout(Repo, sandbox: false)
+
+    try do
+      cleanup(operations, emails)
+      :ok = SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
+    after
+      :ok = Sandbox.checkin(Repo)
     end
   end
 
@@ -741,10 +830,16 @@ defmodule NewYou.Proof.P805 do
   # Fixture teardown only, never an application mutation interface. PMR
   # reservations deliberately remain permanent, as in existing owner tests.
   defp cleanup do
-    operations =
-      Process.delete({__MODULE__, :operations}) |> Enum.uniq() |> Enum.map(&Ecto.UUID.dump!/1)
+    operations = Process.get({__MODULE__, :operations}, [])
+    emails = Process.get({__MODULE__, :emails}, [])
+    Process.delete({__MODULE__, :operations})
+    Process.delete({__MODULE__, :emails})
+    cleanup(operations, emails)
+  end
 
-    emails = Process.delete({__MODULE__, :emails}) |> Enum.uniq()
+  defp cleanup(operations, emails) do
+    operations = Enum.uniq(operations) |> Enum.map(&Ecto.UUID.dump!/1)
+    emails = Enum.uniq(emails)
 
     # Browser IDs are recovered through durable owner provenance even when the
     # browser process dies before it can return its generated operation IDs.
@@ -763,8 +858,8 @@ defmodule NewYou.Proof.P805 do
       )
 
     Repo.query!(
-      "DELETE FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[])) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = ANY($1::uuid[]))",
-      [operations]
+      "DELETE FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[]))) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = ANY($1::uuid[]))",
+      [operations, emails]
     )
 
     # Transactional DDL takes table locks. Only these synthetic fixture rows
@@ -778,13 +873,18 @@ defmodule NewYou.Proof.P805 do
         )
 
         Repo.query!(
-          "DELETE FROM evidence_records WHERE obligation_id IN (SELECT id FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]))",
-          [operations]
+          "DELETE FROM evidence_records WHERE obligation_id IN (SELECT id FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])))",
+          [operations, emails]
         )
 
         Repo.query!(
-          "DELETE FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[])",
-          [operations]
+          "DELETE FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[]))",
+          [operations, emails]
+        )
+
+        Repo.query!(
+          "DELETE FROM evidence_records WHERE actor_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+          [emails]
         )
 
         Repo.query!("ALTER TABLE evidence_records ENABLE TRIGGER evidence_records_immutable")
@@ -824,6 +924,11 @@ defmodule NewYou.Proof.P805 do
     Repo.query!("DELETE FROM registration_operations WHERE operation_id = ANY($1::uuid[])", [
       operations
     ])
+
+    Repo.query!(
+      "DELETE FROM identity_grants WHERE subject_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR approver_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+      [emails]
+    )
 
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
   end

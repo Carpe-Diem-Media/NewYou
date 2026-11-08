@@ -288,7 +288,24 @@ defmodule NewYou.Proof.P811 do
     fields =
       Ash.Resource.Info.attributes(Audit.EvidenceRecord) |> Enum.map(& &1.name) |> Enum.sort()
 
-    fields == Enum.sort([:id, :obligation_id, :created_at]) and
+    fields ==
+      Enum.sort([
+        :id,
+        :obligation_id,
+        :created_at,
+        :assertion_kind,
+        :attempt_id,
+        :action_class,
+        :actor_id,
+        :target_id,
+        :grant_id,
+        :grant_version,
+        :session_id,
+        :expected_version,
+        :reason_code,
+        :admitted_at,
+        :outcome
+      ]) and
       Enum.all?(
         jobs(obligation),
         &(&1.args == %{

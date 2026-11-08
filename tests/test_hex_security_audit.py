@@ -40,14 +40,14 @@ class AuditEvidenceTests(unittest.TestCase):
         self.assertIn('CONTROLLED DISPOSITION', self.decide())
 
     def test_owner_reauthorization_is_bound_to_exact_inputs(self):
-        self.assertEqual(audit.APPROVAL, 'edf58ed2-84b3-4390-b114-ef6bce3eb6f3')
+        self.assertEqual(audit.APPROVAL, 'db89b442-f288-4f94-9fef-c89512544e74')
         self.assertEqual(audit.APPROVED_INPUT_DIGEST,
-                         'a341992b4357f5bdba8a6df02bb45c9fc02489948d77d9aa6de15e9d4da04a4b')
+                         '63a6baf0a290195303bd3357f496b1dbcbe5ee3ce6057cd0a524085fbfef5005')
         self.assertEqual(audit.input_digest(ROOT), audit.APPROVED_INPUT_DIGEST)
         self.assertEqual(self.exception['approval_comment'],
-                         'edf58ed2-84b3-4390-b114-ef6bce3eb6f3')
+                         'db89b442-f288-4f94-9fef-c89512544e74')
         self.assertEqual(self.exception['input_digest'],
-                         'a341992b4357f5bdba8a6df02bb45c9fc02489948d77d9aa6de15e9d4da04a4b')
+                         '63a6baf0a290195303bd3357f496b1dbcbe5ee3ce6057cd0a524085fbfef5005')
         self.assertEqual(self.exception['owner'], 'JC')
         self.assertEqual(self.exception['package'], 'assent')
         self.assertEqual(self.exception['version'], '0.2.13')
@@ -55,6 +55,11 @@ class AuditEvidenceTests(unittest.TestCase):
 
     def test_superseded_approval_and_binding_are_rejected(self):
         for field, value in [
+                ('approval_comment', 'edf58ed2-84b3-4390-b114-ef6bce3eb6f3'),
+                ('input_digest', 'a341992b4357f5bdba8a6df02bb45c9fc02489948d77d9aa6de15e9d4da04a4b'),
+                ('approval_comment', '78dfc986-0fda-40b7-bdfc-ca3ad736e209'),
+                ('input_digest', '97a0e28a78db66db9a00ee8a1c6956ee0204821c99b94731222f87f1eea89ee7'),
+                ('input_digest', 'abc8d0de25a91cb3d8065b9088a4385f99d77f8bf2ef3aa45b276164a53e90b8'),
                 ('approval_comment', 'b181b491-4ade-4636-b62f-8d1ed1e11212'),
                 ('input_digest', 'ce90af42ac47556472fe22bc55d664ca17f18a349623487d5994d71d84ba7c2e'),
                 ('approval_comment', '41c24934-21d0-4b29-a86f-56532b27e5c9'),
@@ -81,6 +86,9 @@ class AuditEvidenceTests(unittest.TestCase):
 
     def test_old_baseline_inputs_cannot_use_new_approval(self):
         for digest in [
+                'a341992b4357f5bdba8a6df02bb45c9fc02489948d77d9aa6de15e9d4da04a4b',
+                '97a0e28a78db66db9a00ee8a1c6956ee0204821c99b94731222f87f1eea89ee7',
+                'abc8d0de25a91cb3d8065b9088a4385f99d77f8bf2ef3aa45b276164a53e90b8',
                 'ce90af42ac47556472fe22bc55d664ca17f18a349623487d5994d71d84ba7c2e',
                 '2c82e2c7608eaef0f4a6204041377b7a2300a23434eda8445307477bd147e9a0',
                 'b080e9cfcfa6c73e7d8cfd54ede395c13447fca45a904d0bd575661a245d1718',
