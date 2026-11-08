@@ -241,6 +241,44 @@ class PasswordResetMessageEvidenceTests(unittest.TestCase):
             self.write_packet(root, packet)
             self.assert_rejected(root, "Content & Media decision binding mismatch: en")
 
+    def test_coordinated_translation_id_substitution_is_rejected_by_canonical_identity(self):
+        temporary, root = self.copy_evidence()
+        with temporary:
+            packet = self.read_packet(root)
+            version = packet["locale_versions"][0]
+            substituted_id = "NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-EN-V2"
+            version["id"] = substituted_id
+            decision = next(
+                item for item in packet["owner_decisions"]
+                if item.get("owner") == "Content & Media" and item.get("locale") == "en"
+            )
+            decision["subjects"][0]["content_translation_version_id"] = substituted_id
+            decision["binding"]["content_translation_version_id"] = substituted_id
+            self.write_packet(root, packet)
+
+            self.assert_rejected(root, "canonical EN translation identity changed")
+
+    def test_coordinated_artifact_path_substitution_is_rejected_by_canonical_path(self):
+        for alternate_source in ("same_bytes", "af_locale"):
+            with self.subTest(alternate_source=alternate_source):
+                temporary, root = self.copy_evidence()
+                with temporary:
+                    packet = self.read_packet(root)
+                    version = packet["locale_versions"][0]
+                    if alternate_source == "same_bytes":
+                        alternate_path = (
+                            EN_REL.parent / "alternate-en-source.txt"
+                        )
+                        (root / alternate_path).write_bytes((root / EN_REL).read_bytes())
+                    else:
+                        alternate_path = AF_REL
+                    version["artifact"]["path"] = alternate_path.as_posix()
+                    raw = (root / alternate_path).read_bytes()
+                    self.refresh_locale_binding(root, packet, version, raw)
+                    self.write_packet(root, packet)
+
+                    self.assert_rejected(root, "canonical EN artifact path changed")
+
     def test_stale_owner_decision_identity_cannot_claim_current_approval(self):
         temporary, root = self.copy_evidence()
         with temporary:

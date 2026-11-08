@@ -335,6 +335,11 @@ def check_artifacts(
             continue
         version = versions[index]
         record(
+            version.get("id") == expected["id"],
+            f"canonical {expected['locale'].upper()} translation identity changed",
+            findings,
+        )
+        record(
             version.get("proposed_copy_keys")
             == {
                 "subject": expected["proposed_subject_key"],
@@ -344,6 +349,11 @@ def check_artifacts(
             findings,
         )
         artifact = version.get("artifact", {})
+        record(
+            artifact.get("path") == expected["path"],
+            f"canonical {expected['locale'].upper()} artifact path changed",
+            findings,
+        )
         path = safe_source_path(root, artifact.get("path", ""), findings)
         if path is None:
             continue
