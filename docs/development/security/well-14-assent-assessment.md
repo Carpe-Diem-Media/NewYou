@@ -1,5 +1,11 @@
 # WELL-14 Assent assessment
 
+## Original assessment, superseded
+
+The no-blocking-defect conclusion below was superseded by the independent Master Gate review recorded in WELL-14 comment `18e9f727-ebf8-4003-8798-70adf97d5e15` on 2026-11-08. That review found enrollment admission, pending setup recovery and active-assignment uniqueness defects, plus a grant-replacement assurance gap. The original assessment is historical evidence, not current implementation certification.
+
+Owner JC subsequently accepted only the original `97a0e28a` digest in WELL-91 comment `78dfc986-0fda-40b7-bdfc-ca3ad736e209`. Correcting those source defects invalidates that acceptance. It has not been applied to the scanner.
+
 An independent read-only HIGH / privileged_security reviewer inspected the complete WELL-14 diff from base `453b1204e03d126b6ad43b257006d7a44a4f95dd` to `797db5bcf56dac094b04a44c85b3e6fa1d49ac5e`. The reviewer found no blocking code, security or handoff defect. This assessment supplies technical evidence for accountable owner JC. It grants no owner acceptance, Master Gate certification or merge authority.
 
 The [lock](../../../mix.lock) retains vulnerable Assent 0.2.13. The [official advisory](https://github.com/pow-auth/assent/security/advisories/GHSA-9fr5-g44g-9526) describes unverified Sign in with Apple callback data overriding verified ID-token claims. Its aliases are `EEF-CVE-2026-117656`, `CVE-2026-117656` and `GHSA-9fr5-g44g-9526`. Versions below 0.3.2 are affected; 0.3.2 is patched. The pinned Hex 2.6.0 scanner reports severity metadata 9.5, while the current upstream GHSA lists CVSS 9.3. The [AshAuthentication 4.15.1 dependency range](https://hex.pm/packages/ash_authentication/4.15.1/dependencies), `> 0.2.0 and < 0.3.0`, excludes that patch. No unsupported override, prerelease or downgrade is proposed.
