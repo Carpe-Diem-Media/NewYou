@@ -40,14 +40,14 @@ class AuditEvidenceTests(unittest.TestCase):
         self.assertIn('CONTROLLED DISPOSITION', self.decide())
 
     def test_owner_reauthorization_is_bound_to_exact_inputs(self):
-        self.assertEqual(audit.APPROVAL, 'db89b442-f288-4f94-9fef-c89512544e74')
+        self.assertEqual(audit.APPROVAL, '7aa8d06b-6fdf-4824-8a18-e4b3ffe00b32')
         self.assertEqual(audit.APPROVED_INPUT_DIGEST,
-                         '63a6baf0a290195303bd3357f496b1dbcbe5ee3ce6057cd0a524085fbfef5005')
+                         'f76c43fa627e0fd11cd3e7c849144612433b0b7b552d2a577498670d110c0ebb')
         self.assertEqual(audit.input_digest(ROOT), audit.APPROVED_INPUT_DIGEST)
         self.assertEqual(self.exception['approval_comment'],
-                         'db89b442-f288-4f94-9fef-c89512544e74')
+                         '7aa8d06b-6fdf-4824-8a18-e4b3ffe00b32')
         self.assertEqual(self.exception['input_digest'],
-                         '63a6baf0a290195303bd3357f496b1dbcbe5ee3ce6057cd0a524085fbfef5005')
+                         'f76c43fa627e0fd11cd3e7c849144612433b0b7b552d2a577498670d110c0ebb')
         self.assertEqual(self.exception['owner'], 'JC')
         self.assertEqual(self.exception['package'], 'assent')
         self.assertEqual(self.exception['version'], '0.2.13')
@@ -55,6 +55,9 @@ class AuditEvidenceTests(unittest.TestCase):
 
     def test_superseded_approval_and_binding_are_rejected(self):
         for field, value in [
+                ('approval_comment', 'db89b442-f288-4f94-9fef-c89512544e74'),
+                ('input_digest', '63a6baf0a290195303bd3357f496b1dbcbe5ee3ce6057cd0a524085fbfef5005'),
+                ('input_digest', 'b0d5d125a42c0ea556631f609e42ac605537d463b9c0423defa21361124d4e64'),
                 ('approval_comment', 'edf58ed2-84b3-4390-b114-ef6bce3eb6f3'),
                 ('input_digest', 'a341992b4357f5bdba8a6df02bb45c9fc02489948d77d9aa6de15e9d4da04a4b'),
                 ('approval_comment', '78dfc986-0fda-40b7-bdfc-ca3ad736e209'),
@@ -86,6 +89,8 @@ class AuditEvidenceTests(unittest.TestCase):
 
     def test_old_baseline_inputs_cannot_use_new_approval(self):
         for digest in [
+                '63a6baf0a290195303bd3357f496b1dbcbe5ee3ce6057cd0a524085fbfef5005',
+                'b0d5d125a42c0ea556631f609e42ac605537d463b9c0423defa21361124d4e64',
                 'a341992b4357f5bdba8a6df02bb45c9fc02489948d77d9aa6de15e9d4da04a4b',
                 '97a0e28a78db66db9a00ee8a1c6956ee0204821c99b94731222f87f1eea89ee7',
                 'abc8d0de25a91cb3d8065b9088a4385f99d77f8bf2ef3aa45b276164a53e90b8',

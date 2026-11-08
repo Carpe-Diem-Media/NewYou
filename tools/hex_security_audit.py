@@ -21,10 +21,10 @@ import urllib.request
 HEX_VERSION = '2.6.0'
 APPROVED_SUMMARY = 'Unverified Sign in with Apple callback parameter can override verified ID token claims'
 APPROVED_URL = 'https://osv.dev/vulnerability/EEF-CVE-2026-117656'
-APPROVAL = 'db89b442-f288-4f94-9fef-c89512544e74'
+APPROVAL = '7aa8d06b-6fdf-4824-8a18-e4b3ffe00b32'
 IDS = {'EEF-CVE-2026-117656', 'CVE-2026-117656', 'GHSA-9fr5-g44g-9526'}
 # A change requires a new independent disposition, never an author-updated hash alone.
-APPROVED_INPUT_DIGEST = '63a6baf0a290195303bd3357f496b1dbcbe5ee3ce6057cd0a524085fbfef5005'
+APPROVED_INPUT_DIGEST = 'f76c43fa627e0fd11cd3e7c849144612433b0b7b552d2a577498670d110c0ebb'
 
 
 class AuditError(Exception):
