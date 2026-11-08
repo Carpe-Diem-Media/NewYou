@@ -866,6 +866,19 @@ defmodule NewYou.Proof.P805 do
     # are removed, and guards are restored before the transaction commits.
     {:ok, :ok} =
       Repo.transaction(fn ->
+        Repo.query!(
+          "ALTER TABLE reconciliation_cases DISABLE TRIGGER identity_reconciliation_immutable"
+        )
+
+        Repo.query!(
+          "DELETE FROM reconciliation_cases WHERE detected_by_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+          [emails]
+        )
+
+        Repo.query!(
+          "ALTER TABLE reconciliation_cases ENABLE TRIGGER identity_reconciliation_immutable"
+        )
+
         Repo.query!("ALTER TABLE evidence_records DISABLE TRIGGER evidence_records_immutable")
 
         Repo.query!(

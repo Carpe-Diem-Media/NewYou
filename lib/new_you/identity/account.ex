@@ -38,6 +38,10 @@ defmodule NewYou.Identity.Account do
     ]
 
     check_constraints do
+      check_constraint :pmr_status, "accounts_reconciliation_shape",
+        check:
+          "(pmr_status = 'active' AND canonical_account_id IS NULL) OR (pmr_status = 'retired' AND canonical_account_id IS NOT NULL AND canonical_account_id <> id AND account_status = 'closed_terminal' AND credential_status = 'revoked')"
+
       check_constraint :account_status, "accounts_account_status",
         check: "account_status IN ('open', 'closed_recoverable', 'closed_terminal')",
         message: "must be a supported Account lifecycle state"
@@ -107,6 +111,32 @@ defmodule NewYou.Identity.Account do
       public? false
       accept []
       change set_attribute(:email_verified?, true)
+    end
+
+    update :retire_reconciled_identity do
+      description "Close the non-surviving Account permanently inside the locked reconciliation apply. The PMR bytes remain reserved forever."
+      public? false
+      accept [:canonical_account_id]
+
+      change filter(
+               expr(
+                 account_status == :open and pmr_status == :active and
+                   is_nil(canonical_account_id)
+               )
+             )
+
+      change set_attribute(:account_status, :closed_terminal)
+      change set_attribute(:pmr_status, :retired)
+      change set_attribute(:credential_status, :revoked)
+      change increment(:security_version)
+      change increment(:reconciliation_version)
+    end
+
+    update :advance_reconciliation_version do
+      description "Invalidate overlapping case reviews when this Account participates in a committed decision."
+      public? false
+      accept []
+      change increment(:reconciliation_version)
     end
 
     update :update_privileged_mfa do
@@ -320,6 +350,20 @@ defmodule NewYou.Identity.Account do
       default false
       public? false
     end
+
+    attribute :pmr_status, :atom,
+      allow_nil?: false,
+      default: :active,
+      constraints: [one_of: [:active, :retired]],
+      public?: false
+
+    attribute :canonical_account_id, :uuid, public?: false
+
+    attribute :reconciliation_version, :integer,
+      allow_nil?: false,
+      default: 0,
+      constraints: [min: 0],
+      public?: false
 
     attribute :pmr, :string do
       allow_nil? false

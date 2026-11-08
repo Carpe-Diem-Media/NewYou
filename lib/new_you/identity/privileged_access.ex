@@ -7,7 +7,13 @@ defmodule NewYou.Identity.PrivilegedAccess do
   alias NewYou.Audit
   alias NewYou.Identity.{Account, IdentityGrant, Session, Token}
 
-  @purposes [:place_security_hold, :review_security_hold, :release_security_hold]
+  @purposes [
+    :place_security_hold,
+    :review_security_hold,
+    :release_security_hold,
+    :review_reconciliation,
+    :apply_reconciliation
+  ]
   @step_up_seconds 5 * 60
   @max_failed_codes 5
   @cooldown_seconds 15 * 60

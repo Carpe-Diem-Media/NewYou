@@ -17,7 +17,7 @@ defmodule NewYou.Identity.IdentityGrant do
 
       check_constraint :scope, "identity_grants_scope",
         check:
-          "scope IN ('security_hold_restriction', 'security_hold_review', 'security_hold_release')"
+          "scope IN ('security_hold_restriction', 'security_hold_review', 'security_hold_release', 'identity_reconciliation')"
 
       check_constraint :state, "identity_grants_state", check: "state IN ('active', 'revoked')"
 
@@ -102,7 +102,8 @@ defmodule NewYou.Identity.IdentityGrant do
       constraints one_of: [
                     :security_hold_restriction,
                     :security_hold_review,
-                    :security_hold_release
+                    :security_hold_release,
+                    :identity_reconciliation
                   ]
 
       public? false
@@ -157,12 +158,13 @@ defmodule NewYou.Identity.IdentityGrant do
   end
 
   # Product §15.1A fixes role/scope authority. These bounded Support scopes are
-  # JIT names for the selected hold operations; the target Account narrows each
+  # JIT names for the selected hold and reconciliation operations; the target Account narrows each
   # assignment. A caller cannot choose an additional per-subject capability.
   @support_scope_capabilities %{
     security_hold_restriction: [:place_security_hold],
     security_hold_review: [:review_security_hold],
-    security_hold_release: [:release_security_hold]
+    security_hold_release: [:release_security_hold],
+    identity_reconciliation: [:review_reconciliation, :apply_reconciliation]
   }
 
   @doc "Derive protected capabilities from the bounded Support role/scope catalogue. Current grant validity is checked by the owning action."

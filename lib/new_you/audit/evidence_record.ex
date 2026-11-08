@@ -13,7 +13,7 @@ defmodule NewYou.Audit.EvidenceRecord do
     check_constraints do
       check_constraint :assertion_kind, "evidence_records_assertion_shape",
         check:
-          "(assertion_kind = 'materialisation' AND obligation_id IS NOT NULL AND attempt_id IS NULL AND action_class IS NULL AND actor_id IS NULL AND target_id IS NULL AND grant_id IS NULL AND grant_version IS NULL AND session_id IS NULL AND expected_version IS NULL AND reason_code IS NULL AND admitted_at IS NULL AND outcome IS NULL) OR (assertion_kind = 'admission' AND obligation_id IS NULL AND attempt_id IS NOT NULL AND action_class IS NOT NULL AND action_class = 'security_hold_release' AND actor_id IS NOT NULL AND target_id IS NOT NULL AND grant_id IS NOT NULL AND grant_version IS NOT NULL AND grant_version > 0 AND session_id IS NOT NULL AND expected_version IS NOT NULL AND expected_version >= 0 AND reason_code IS NOT NULL AND reason_code IN ('suspected_compromise', 'security_review', 'verified_recovery', 'mistaken_hold') AND admitted_at IS NOT NULL AND outcome IS NOT NULL AND outcome = 'admitted')"
+          "(assertion_kind = 'materialisation' AND obligation_id IS NOT NULL AND attempt_id IS NULL AND action_class IS NULL AND actor_id IS NULL AND target_id IS NULL AND grant_id IS NULL AND grant_version IS NULL AND session_id IS NULL AND expected_version IS NULL AND reason_code IS NULL AND admitted_at IS NULL AND outcome IS NULL AND case_id IS NULL) OR (assertion_kind = 'admission' AND obligation_id IS NULL AND attempt_id IS NOT NULL AND action_class IS NOT NULL AND action_class IN ('security_hold_release', 'identity_reconciliation') AND ((action_class = 'security_hold_release' AND case_id IS NULL) OR (action_class = 'identity_reconciliation' AND case_id IS NOT NULL)) AND actor_id IS NOT NULL AND target_id IS NOT NULL AND grant_id IS NOT NULL AND grant_version IS NOT NULL AND grant_version > 0 AND session_id IS NOT NULL AND expected_version IS NOT NULL AND expected_version >= 0 AND reason_code IS NOT NULL AND reason_code IN ('suspected_compromise', 'security_review', 'verified_recovery', 'mistaken_hold') AND admitted_at IS NOT NULL AND outcome IS NOT NULL AND outcome = 'admitted')"
     end
   end
 
@@ -28,11 +28,35 @@ defmodule NewYou.Audit.EvidenceRecord do
       public? false
     end
 
+    create :admit_reconciliation do
+      description "Immutable E1 admission for one explicitly bound reconciliation case and attempt."
+      public? false
+
+      accept [
+        :attempt_id,
+        :case_id,
+        :actor_id,
+        :target_id,
+        :grant_id,
+        :grant_version,
+        :session_id,
+        :expected_version,
+        :reason_code,
+        :admitted_at,
+        :action_class
+      ]
+
+      change set_attribute(:assertion_kind, :admission)
+      change set_attribute(:action_class, :identity_reconciliation)
+      change set_attribute(:outcome, :admitted)
+    end
+
     create :admit_security_hold_release do
       description "Minimum immutable E1 assertion of an authorised attempt, never a completed release."
       public? false
 
       accept [
+        :action_class,
         :attempt_id,
         :actor_id,
         :target_id,
@@ -67,10 +91,11 @@ defmodule NewYou.Audit.EvidenceRecord do
       constraints: [one_of: [:materialisation, :admission]],
       public?: false
 
+    attribute :case_id, :uuid, public?: false
     attribute :attempt_id, :uuid, public?: false
 
     attribute :action_class, :atom,
-      constraints: [one_of: [:security_hold_release]],
+      constraints: [one_of: [:security_hold_release, :identity_reconciliation]],
       public?: false
 
     attribute :actor_id, :uuid, public?: false

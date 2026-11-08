@@ -1,5 +1,17 @@
 defmodule NewYou.Audit do
   @moduledoc "Audit owns append-only admission and outcome assertions, never Identity authority or source replay."
+  @doc "Confirm append-only evidence keeps original Account provenance through Identity reconciliation. No Audit history is remapped."
+  @spec review_identity_reconciliation(String.t(), String.t()) :: {:ok, map()}
+  def review_identity_reconciliation(candidate_id, canonical_id) do
+    {:ok,
+     %{
+       "policy" => "preserve_immutable_provenance",
+       "candidate_id" => candidate_id,
+       "canonical_id" => canonical_id,
+       "commands" => []
+     }}
+  end
+
   use Ash.Domain, otp_app: :new_you
 
   resources do
@@ -24,6 +36,12 @@ defmodule NewYou.Audit do
   defdelegate admit_security_hold_release(envelope),
     to: NewYou.Audit.PrivilegedEvidence,
     as: :admit
+
+  @doc "Commit a case-bound reconciliation E1 attempt independently of Identity apply."
+  @spec admit_reconciliation(map()) ::
+          {:ok, NewYou.Audit.EvidenceRecord.t()} | {:error, :evidence_admission_unavailable}
+  def admit_reconciliation(envelope),
+    do: NewYou.Audit.PrivilegedEvidence.admit(envelope, :identity_reconciliation)
 
   @doc "Establish selected security E2 work inside the owning source transaction. Executor recovery never calls Identity."
   @spec establish_identity_security_obligation(map()) ::

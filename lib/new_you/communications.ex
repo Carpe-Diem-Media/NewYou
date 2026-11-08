@@ -7,6 +7,18 @@ defmodule NewYou.Communications do
   commits admission, then invokes its provider outside authoritative transactions.
   Provider evidence never changes Identity truth. Production egress is disabled.
   """
+  @doc "Review the bounded Identity consequence. Existing message histories keep their original Account association; current delivery rechecks Identity eligibility."
+  @spec review_identity_reconciliation(String.t(), String.t()) :: {:ok, map()}
+  def review_identity_reconciliation(candidate_id, canonical_id) do
+    {:ok,
+     %{
+       "policy" => "preserve_original_account_association",
+       "candidate_id" => candidate_id,
+       "canonical_id" => canonical_id,
+       "commands" => []
+     }}
+  end
+
   use Ash.Domain, otp_app: :new_you
 
   alias NewYou.Communications.{EnvelopeNonce, MessageIntent, ProtectedEnvelope}

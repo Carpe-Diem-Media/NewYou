@@ -161,7 +161,14 @@ defmodule NewYou.Identity.Session do
     end
 
     attribute :step_up_purpose, :atom do
-      constraints one_of: [:place_security_hold, :review_security_hold, :release_security_hold]
+      constraints one_of: [
+                    :place_security_hold,
+                    :review_security_hold,
+                    :release_security_hold,
+                    :review_reconciliation,
+                    :apply_reconciliation
+                  ]
+
       public? false
     end
 

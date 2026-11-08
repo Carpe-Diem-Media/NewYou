@@ -6,8 +6,8 @@ defmodule NewYou.Audit.PrivilegedEvidence do
   @admission_fields ~w(attempt_id actor_id target_id grant_id grant_version session_id expected_version reason_code)a
   @uuid_fields ~w(attempt_id actor_id target_id grant_id session_id)a
   @reasons ~w(suspected_compromise security_review verified_recovery mistaken_hold)a
-  @outcome_fields ~w(source_operation_id source_occurred_at evidence_type actor_id target_id grant_id session_id reason_code admission_id outcome)a
-  @security_types ~w(security_hold_placement security_hold_review security_hold_release_result identity_mfa_confirmed identity_grant_revoked)a
+  @outcome_fields ~w(source_operation_id source_occurred_at evidence_type actor_id target_id grant_id session_id reason_code admission_id outcome case_id)a
+  @security_types ~w(security_hold_placement security_hold_review security_hold_release_result identity_mfa_confirmed identity_grant_revoked identity_reconciliation_result identity_reconciliation_review)a
 
   defmacrop checkpoint(point) do
     if Mix.env() == :test do
@@ -17,9 +17,12 @@ defmodule NewYou.Audit.PrivilegedEvidence do
     end
   end
 
-  def admit(envelope) when is_map(envelope) do
+  def admit(envelope, action_class \\ :security_hold_release)
+
+  def admit(envelope, action_class)
+      when is_map(envelope) and action_class in [:security_hold_release, :identity_reconciliation] do
     with false <- Ash.DataLayer.in_transaction?(EvidenceRecord),
-         {:ok, envelope} <- admission_envelope(envelope) do
+         {:ok, envelope} <- admission_envelope(envelope, action_class) do
       case read_admission(envelope.attempt_id) do
         {:ok, nil} -> create_admission(envelope)
         {:ok, record} -> bound_admission(record, envelope)
@@ -32,7 +35,7 @@ defmodule NewYou.Audit.PrivilegedEvidence do
     _ -> unavailable()
   end
 
-  def admit(_), do: unavailable()
+  def admit(_, _), do: unavailable()
 
   defp create_admission(envelope) do
     # The action commits synchronously. A unique-key loser reads the winner only
@@ -40,7 +43,11 @@ defmodule NewYou.Audit.PrivilegedEvidence do
     :ok = checkpoint(:before_admission)
 
     case Ash.create(EvidenceRecord, Map.put(envelope, :admitted_at, DateTime.utc_now()),
-           action: :admit_security_hold_release,
+           action:
+             if(envelope.action_class == :identity_reconciliation,
+               do: :admit_reconciliation,
+               else: :admit_security_hold_release
+             ),
            authorize?: false
          ) do
       {:ok, record} ->
@@ -61,19 +68,29 @@ defmodule NewYou.Audit.PrivilegedEvidence do
   end
 
   defp bound_admission(record, envelope) do
-    if Map.take(record, @admission_fields) == envelope, do: {:ok, record}, else: unavailable()
+    if Map.take(record, Map.keys(envelope)) == envelope, do: {:ok, record}, else: unavailable()
   end
 
-  defp admission_envelope(envelope) do
+  defp admission_envelope(envelope, action_class) do
+    fields =
+      if action_class == :identity_reconciliation,
+        do: @admission_fields ++ [:case_id],
+        else: @admission_fields
+
     valid? =
-      Enum.sort(Map.keys(envelope)) == Enum.sort(@admission_fields) and
+      Enum.sort(Map.keys(envelope)) == Enum.sort(fields) and
         Enum.all?(@uuid_fields, fn key -> valid_uuid?(envelope[key]) end) and
-        is_integer(envelope.grant_version) and envelope.grant_version > 0 and
-        is_integer(envelope.expected_version) and envelope.expected_version >= 0 and
-        envelope.reason_code in @reasons
+        valid_admission_versions?(envelope) and
+        envelope.reason_code in @reasons and
+        (action_class != :identity_reconciliation or valid_uuid?(envelope[:case_id]))
 
-    if valid?, do: {:ok, envelope}, else: unavailable()
+    if valid?, do: {:ok, Map.put(envelope, :action_class, action_class)}, else: unavailable()
   end
+
+  defp valid_admission_versions?(envelope),
+    do:
+      is_integer(envelope.grant_version) and envelope.grant_version > 0 and
+        is_integer(envelope.expected_version) and envelope.expected_version >= 0
 
   def establish_outcome(envelope) when is_map(envelope) do
     with true <- Ash.DataLayer.in_transaction?(EvidenceObligation),

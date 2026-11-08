@@ -18,12 +18,12 @@ defmodule NewYou.Audit.EvidenceObligation do
     check_constraints do
       check_constraint :evidence_type, "evidence_obligations_evidence_type",
         check:
-          "evidence_type IN ('account_registration_pmr_assignment', 'security_hold_placement', 'security_hold_review', 'security_hold_release_result', 'identity_mfa_confirmed', 'identity_grant_revoked')",
+          "evidence_type IN ('account_registration_pmr_assignment', 'security_hold_placement', 'security_hold_review', 'security_hold_release_result', 'identity_mfa_confirmed', 'identity_grant_revoked', 'identity_reconciliation_result', 'identity_reconciliation_review')",
         message: "must be a selected evidence type"
 
       check_constraint :evidence_type, "evidence_obligations_security_shape",
         check:
-          "evidence_type = 'account_registration_pmr_assignment' OR (actor_id IS NOT NULL AND target_id IS NOT NULL AND outcome IS NOT NULL AND outcome IN ('succeeded', 'denied', 'failed') AND (evidence_type <> 'security_hold_release_result' OR admission_id IS NOT NULL))"
+          "evidence_type = 'account_registration_pmr_assignment' OR (actor_id IS NOT NULL AND target_id IS NOT NULL AND outcome IS NOT NULL AND outcome IN ('succeeded', 'denied', 'failed') AND (evidence_type NOT IN ('security_hold_release_result', 'identity_reconciliation_result') OR admission_id IS NOT NULL))"
 
       check_constraint :state, "evidence_obligations_state",
         check: "state IN ('open', 'fulfilled')",
@@ -83,6 +83,7 @@ defmodule NewYou.Audit.EvidenceObligation do
         :grant_id,
         :session_id,
         :reason_code,
+        :case_id,
         :admission_id,
         :outcome
       ]
@@ -125,7 +126,9 @@ defmodule NewYou.Audit.EvidenceObligation do
                     :security_hold_review,
                     :security_hold_release_result,
                     :identity_mfa_confirmed,
-                    :identity_grant_revoked
+                    :identity_grant_revoked,
+                    :identity_reconciliation_result,
+                    :identity_reconciliation_review
                   ]
 
       public? false
@@ -156,6 +159,7 @@ defmodule NewYou.Audit.EvidenceObligation do
     create_timestamp :created_at
     update_timestamp :updated_at
 
+    attribute :case_id, :uuid, public?: false
     attribute :actor_id, :uuid, public?: false
     attribute :target_id, :uuid, public?: false
     attribute :grant_id, :uuid, public?: false

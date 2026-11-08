@@ -28,14 +28,20 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:create, :register},
                {:read, :get_by_subject},
                {:read, :read},
+               {:update, :advance_reconciliation_version},
                {:update, :invalidate_grant_assurance},
                {:update, :mark_email_verified},
                {:update, :place_security_hold},
                {:update, :record_security_hold_attempt},
                {:update, :release_security_hold},
+               {:update, :retire_reconciled_identity},
                {:update, :review_security_hold},
                {:update, :update_privileged_mfa}
              ]
+
+    for action <- [:advance_reconciliation_version, :retire_reconciled_identity] do
+      refute Ash.Resource.Info.action(NewYou.Identity.Account, action).public?
+    end
 
     assert AshAuthentication.Strategy.routes(password) == []
   end
