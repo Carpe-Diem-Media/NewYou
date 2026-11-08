@@ -82,6 +82,8 @@ The proof includes genuine PostgreSQL contention with distinct connections/trans
 
 [P813HoldFixture.step_up/2](../../test/support/proof/p8_13_hold_fixture.ex) formerly generated a TOTP code before password verification, while the validator captured its period afterward. Crossing a 30-second boundary could reject fixture setup. The helper now captures one instant through the existing [test-only clock seam](../../test/support/proof/privileged_access_seam.ex), uses it for generation and validation, and restores the caller's clock in `after`. The [fixture regression](../../test/new_you/proof/p8_13_test.exs) reproduced rejection with mismatched clocks before the fix and checks the accepted replay period and clock restoration after success and denial. The hosted failure's timing supports this cause but did not expose its underlying exception. A fresh hosted run remains required. This correction changes no application validation, replay rule or canonical security input.
 
+The later [CI proof correction](p8-05-proof.md#well-14-disconnected-lease-and-browser-startup-correction) at `f0e2d35a4d3b628802f87e856411f9299f10614f` covers recovery after a borrowed fixture lease disconnects and bounded Chromium startup. It changes test support only; the frozen application and security inputs remain identical.
+
 Observed interim runs passed the focused integration and existing Audit E2 suites. Final exact-head counts and CI belong in the PR and Plane, not in this descriptive map. Reproduce using the pinned toolchain and DevCore:
 
 ```sh
