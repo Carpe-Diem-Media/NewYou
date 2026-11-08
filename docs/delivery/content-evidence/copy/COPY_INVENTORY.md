@@ -1,6 +1,6 @@
 # Wellness Platform complete copy inventory
 
-This is a family-level inventory. Exact semantic items for NOW/SHARED_BASELINE are in `COPY_REGISTRY.json`; JIT/RELEASE families remain stubs until their feature context is sufficient.
+This is a family-level inventory. Exact semantic items already eligible for NOW/SHARED_BASELINE use are in `COPY_REGISTRY.json`. A candidate packet may propose immutable copy outside that runtime registry; it remains unavailable for use until owner decisions and a separately reviewed registry integration. JIT/RELEASE families remain stubs until their feature context is sufficient.
 
 | Copy family | Class | Readiness | Likely owner | Approval needs | Notes |
 | --- | --- | --- | --- | --- | --- |
@@ -24,7 +24,8 @@ This is a family-level inventory. Exact semantic items for NOW/SHARED_BASELINE a
 | IDENTITY / verification pending and resend | B | NOW | Content & Media + Identity | Content/language | P8-05 pending explanation, address, resend, neutral result, access limitation, safe public actions. No change-email in current slice. |
 | IDENTITY / verification result | B | JIT | Content & Media + Identity | Content/language | Verifying/verified/already/expired/invalid/superseded/unavailable/new request/continue. Do not invent lifecycle semantics. |
 | IDENTITY / login | B | JIT | Content & Media + Identity | Content/language + security review for sensitive states | Email/password, submit, recovery, create account, generic failure, unverified, processing, session expired. |
-| IDENTITY / password recovery | A+B | JIT | Content & Media + Identity | Security/content/language | Neutral submission, check email, reset, invalid link, new password, success, return. |
+| IDENTITY / password recovery UI | A+B | JIT | Content & Media + Identity | Security/content/language | Neutral submission, check email, reset form, invalid link, new password, success, return. The forms and journey copy remain JIT. |
+| IDENTITY / password-reset proof email | A | NOW | Content & Media + Identity + Communications | Product classification and exact EN/AF Content & Media decisions pending | Candidate subject/body artifacts and proposed semantic keys only. They remain outside the P8-05 pinned runtime registry. See the password-reset message evidence packet. This does not define password-reset UI copy or approve delivery. |
 | IDENTITY / change email | A | JIT | Identity + Content & Media | Security/content/language | Current/new email, reauth, pending verification, old-address notice, cancel, failure. Excluded from P8-05 pending slice. |
 | LEGAL / Terms governing body | A | RELEASE | Content & Media + Legal | Legal approval | English-only immutable governing document. Existing development baseline is non-production only. |
 | LEGAL / Privacy governing body | A | RELEASE | Content & Media + Privacy/Legal | Privacy/legal approval | English-only immutable governing document. Existing development baseline is non-production only. |

@@ -76,7 +76,7 @@ All newly drafted wording remains `candidate` unless explicitly mirrored from ex
 
 ## 4. Deferred / JIT copy
 
-Detailed substantive copy is intentionally deferred for login/recovery beyond generic keys, health intake, assessments, measurements, plans, programmes, habits, progress, journal, most public marketing pages, product/checkout/subscription/refund journeys, support, notifications, SEO and operator workflows. The platform knows these surfaces exist, but exact wording should be written against executable lifecycle/feature context rather than guessed now.
+Detailed substantive copy remains deferred for login and password-recovery UI beyond generic keys, health intake, assessments, measurements, plans, programmes, habits, progress, journal, most public marketing pages, product/checkout/subscription/refund journeys, support, notifications, SEO and operator workflows. The password-reset proof email has a separate EN/AF candidate under `content_media/password_reset_messages/`. Its Product classification and Content & Media decisions remain pending, so it is not approved or eligible for delivery.
 
 ## 5. Release-only blockers (separate from development blockers)
 
