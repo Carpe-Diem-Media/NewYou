@@ -301,12 +301,20 @@ defmodule NewYou.Identity.ReconciliationTest do
 
         second_fixture =
           if unquote(mode) == :overlapping_cases do
+            second_actor = f.reviewer
+            {:ok, :ok} = P813HoldFixture.step_up(second_actor, :review_reconciliation)
+
             grant =
-              P813HoldFixture.grant(f.actor, f.survivor, f.approver, :identity_reconciliation)
+              P813HoldFixture.grant(
+                second_actor,
+                f.survivor,
+                f.approver,
+                :identity_reconciliation
+              )
 
             {:ok, reverse} =
               Identity.open_reconciliation(%{
-                credentials: f.actor.credentials,
+                credentials: second_actor.credentials,
                 grant_id: grant.id,
                 candidate_id: f.survivor.id,
                 canonical_id: f.target.id,
@@ -316,7 +324,8 @@ defmodule NewYou.Identity.ReconciliationTest do
 
             %{
               f
-              | target: f.survivor,
+              | actor: second_actor,
+                target: f.survivor,
                 survivor: f.target,
                 case: reverse,
                 reconciliation_grant: grant
@@ -331,6 +340,15 @@ defmodule NewYou.Identity.ReconciliationTest do
             else: first_case
 
         {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+
+        if unquote(mode) == :overlapping_cases do
+          refute second_fixture.actor.id == f.actor.id
+          refute second_fixture.actor.credentials.session_id == f.actor.credentials.session_id
+          refute second_fixture.reconciliation_grant.id == f.reconciliation_grant.id
+          refute second_case.review["actor_id"] == first_case.review["actor_id"]
+          {:ok, :ok} = P813HoldFixture.step_up(second_fixture.actor, :apply_reconciliation)
+        end
+
         first_request = apply_request(f, first_case)
 
         second_request =
