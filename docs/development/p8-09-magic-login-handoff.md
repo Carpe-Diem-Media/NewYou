@@ -108,3 +108,41 @@ magic-login and Communications delivery path remains unchanged and does not use
 the framework MagicLink strategy or Sender. Earlier Assent disposition text above
 records prior source and remains historical; the current proposal and audit
 behavior are recorded in the addendum.
+
+## 10. WELL-98 current-authority successor check
+
+This update records the reader correction at implementation source SHA
+`2d23e43e99564a69da4cf363295dfe7d53c2302c`. The WELL-98 activation PR routes
+Product and Decisions v1.15.0. Earlier sections describe the v1.14 authority
+state at the time of the original P8-09 work.
+
+The approved magic-login packet remains bound to its immutable Product and
+Decision v1.14.0 documents, v1.13.0 predecessors, and WELL-97 proposal digests.
+`MagicLoginMessage.promoted_authority_current?/2` verifies that historical
+binding against those fixed values and source files. It then checks the current
+router against the exact Product and Decision v1.15.0 paths, filenames, versions
+and digests. The successor check also verifies the exact v1.14 predecessor
+digests, WELL-98 proposal digests, predecessor headers and v1.14-to-v1.15
+version lineage. A different route or a changed file fails closed.
+
+`MagicLoginMessage.read_file/2` accepts only the fixed v1.13, v1.14 and v1.15
+Product and Decision files and the specific WELL-97 and WELL-98 proposal files.
+It remains a bounded reader and does not accept arbitrary repository paths.
+The approved English and Afrikaans magic-login artifacts, packet, owner events,
+locale rules, security flags and development-only eligibility remain unchanged.
+The correction does not alter Identity proof or Session logic, Communications
+delivery, authentication strategies or the WELL-91 security disposition.
+
+The focused ExUnit regression first failed with `:content_ineligible` when the
+approved v1.14 packet was checked against the current v1.15 route. After the
+correction, `test/new_you/content/magic_login_message_test.exs` passed 16 tests,
+including exact current-route, digest, version, predecessor and historical
+approval checks. The Python route and approval evidence tests also passed. The
+password-reset packet is verified separately by
+`tools/check_password_reset_message_evidence.py`; this change does not add a
+password-reset runtime flow.
+
+Documentation impact: this existing handoff is updated because the current-law
+reader behavior changed. No separate vertical-slice handoff is required. The
+source paths and test names above are review locators; reviewers must verify
+them against the exact PR head.
