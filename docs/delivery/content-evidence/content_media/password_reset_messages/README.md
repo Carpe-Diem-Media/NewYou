@@ -16,6 +16,8 @@ The Product-owner decision for the exact proposed classification and scope is pe
 
 The JSON packet binds the exact subject/body artifacts, UTF-8/LF serialization, byte counts, SHA-256 digests, locale identities, proposed semantic copy keys and typed literal token allowlist. The only proposed tokens are `{{platform_name}}` and `{{password_reset_link}}`. No rendered URL, bearer value, account identifier, email address or secret appears in the source files.
 
+The current candidate pairs EN V1 with AF V2. AF V2 uses `wysig` for the password-change wording. The earlier AF V1 file remains unchanged as an unapproved prior candidate; this wording update does not record a supersession or owner approval. Content & Media approval and Afrikaans language review remain pending for AF V2.
+
 `{{password_reset_link}}` is a content-contract proposal only. The current P8-05 `CopyRegistry` supports `platform_name`; this ticket adds no reset renderer, token provider or password-reset application path.
 
 The packet requires an approved Product extension to be selected by current governance before any future `development_approved` state. A complete Product decision and separate Content & Media EN and AF decisions are all required. A partial locale approval does not make the paired message eligible. The current packet remains `candidate`; development, test, runtime, production, public-release, paid-pilot and real-participant eligibility are all false.

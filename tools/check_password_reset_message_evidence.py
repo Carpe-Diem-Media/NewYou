@@ -51,10 +51,10 @@ LOCALES = [
     },
     {
         "locale": "af",
-        "id": "NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-AF-V1",
+        "id": "NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2",
         "path": (
             "docs/delivery/content-evidence/content_media/password_reset_messages/"
-            "NEWYOU-PASSWORD-RESET-MESSAGE-EMAIL-AF-V1.txt"
+            "NEWYOU-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2.txt"
         ),
         "proposed_subject_key": "identity.password_reset.email.subject",
         "proposed_body_key": "identity.password_reset.email.body",

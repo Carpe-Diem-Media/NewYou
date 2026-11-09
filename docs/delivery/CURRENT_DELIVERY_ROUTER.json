@@ -177,7 +177,7 @@
       "document_id": "PASSWORD_RESET_MESSAGE_CANDIDATE_EVIDENCE",
       "canonical_filename": "PASSWORD_RESET_MESSAGE_EVIDENCE_PACKET_v0.1.0.json",
       "repository_path": "docs/delivery/content-evidence/content_media/password_reset_messages/PASSWORD_RESET_MESSAGE_EVIDENCE_PACKET_v0.1.0.json",
-      "sha256": "a474e349cbad12b21139a449637b5a9b3fc61e58105cb439d06280acd02e357a",
+      "sha256": "7d9df40d8b8ed8ca2c1bf204682a70d88425f4619a7663ac89db401036c01132",
       "contract_type": "content_evidence",
       "status": "CANDIDATE_NOT_APPROVED"
     },

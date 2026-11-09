@@ -24,6 +24,10 @@ AF_REL = Path(
     "docs/delivery/content-evidence/content_media/password_reset_messages/"
     "NEWYOU-PASSWORD-RESET-MESSAGE-EMAIL-AF-V1.txt"
 )
+AF_V2_REL = Path(
+    "docs/delivery/content-evidence/content_media/password_reset_messages/"
+    "NEWYOU-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2.txt"
+)
 ROUTER_REL = Path("docs/delivery/CURRENT_DELIVERY_ROUTER.json")
 REGISTRY_REL = Path("docs/delivery/content-evidence/copy/COPY_REGISTRY.json")
 CHECKSUMS_REL = Path("docs/delivery/content-evidence/copy/WORKSPACE_CHECKSUMS.tsv")
@@ -146,8 +150,30 @@ class PasswordResetMessageEvidenceTests(unittest.TestCase):
             )
             subject_line, body = raw.split(b"\n\n", 1)
             subject = subject_line[len(b"subject: "):].decode("utf-8")
-            self.assertTrue(subject.startswith("Reset " if version["locale"] == "en" else "Stel jou "))
+            self.assertTrue(subject.startswith("Reset " if version["locale"] == "en" else "Wysig jou "))
             self.assertIn(b"{{password_reset_link}}", body)
+
+    def test_afrikaans_candidate_uses_wysig_and_keeps_v1_immutable(self):
+        packet = self.read_packet(ROOT)
+        version = next(item for item in packet["locale_versions"] if item["locale"] == "af")
+
+        self.assertEqual(
+            "NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2",
+            version["id"],
+        )
+        self.assertEqual(AF_V2_REL.as_posix(), version["artifact"]["path"])
+
+        current = (ROOT / AF_V2_REL).read_text(encoding="utf-8")
+        self.assertTrue(current.startswith("subject: Wysig jou "))
+        self.assertIn("om jou {{platform_name}}-wagwoord te wysig.", current)
+        self.assertIn("Jou wagwoord bly onveranderd totdat jy die proses voltooi.", current)
+        self.assertNotRegex(current, r"(?i)terug\s*stel|terugstelling")
+
+        previous = ROOT / AF_REL
+        self.assertEqual(
+            "582fb5d79e8a03708491b1085432efc56de0b809c75e4a043b7cdb3ccd6fc303",
+            hashlib.sha256(previous.read_bytes()).hexdigest(),
+        )
 
     def test_changed_bytes_wrong_digest_and_wrong_locale_fail_closed(self):
         for mutation, finding in (
