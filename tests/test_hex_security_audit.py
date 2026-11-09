@@ -1,8 +1,5 @@
-"""Security boundary tests. Fixtures model the pinned Hex SARIF contract."""
-import copy
-import datetime as dt
+"""Security boundary tests for the fresh, unsuppressed Hex audit."""
 import json
-import shutil
 from pathlib import Path
 import tempfile
 import unittest
@@ -11,328 +8,213 @@ from unittest.mock import patch
 from tools import hex_security_audit as audit
 
 ROOT = Path(__file__).resolve().parents[1]
-DATETIME = dt.datetime
 
 
-def report(package='assent', version='0.2.13', advisory='EEF-CVE-2026-117656'):
-    return {'version': '2.1.0', 'runs': [{'tool': {'driver': {
-        'name': 'mix hex.audit', 'version': '2.6.0', 'rules': [{'id': advisory, 'shortDescription': {'text': audit.APPROVED_SUMMARY}, 'helpUri': audit.APPROVED_URL, 'properties': {'tags': ['security'], 'security-severity': '9.5'}}]}},
-        'results': [{'ruleId': advisory, 'ruleIndex': 0,
-                     'message': {'arguments': [package, version, advisory + ' (aka ' + ', '.join(sorted(audit.IDS - {advisory})) + ')', audit.APPROVED_SUMMARY, audit.APPROVED_URL]},
-                     'partialFingerprints': {'hexAudit/v1': f'advisory:hexpm/{package}:{advisory}'}}]}]}
+def report(results=None, rules=None):
+    return {
+        "version": "2.1.0",
+        "runs": [{
+            "tool": {"driver": {
+                "name": "mix hex.audit",
+                "version": audit.HEX_VERSION,
+                "rules": [] if rules is None else rules,
+            }},
+            "results": [] if results is None else results,
+        }],
+    }
+
+
+def finding(advisory="EEF-CVE-2026-117656", suppressions=None):
+    result = {
+        "ruleId": advisory,
+        "ruleIndex": 0,
+        "message": {"text": "security finding"},
+    }
+    if suppressions is not None:
+        result["suppressions"] = suppressions
+    return result
 
 
 class AuditEvidenceTests(unittest.TestCase):
-    def setUp(self):
-        self.exception = json.loads((ROOT / 'tools/hex_audit/assent_exception.json').read_text())
-        self.today = dt.date(2026, 11, 4)
-        clock_patch = patch.object(audit.dt, 'datetime', wraps=DATETIME)
-        self.clock = clock_patch.start()
-        self.addCleanup(clock_patch.stop)
-        self.clock.now.return_value = DATETIME(2026, 11, 4, tzinfo=dt.timezone.utc)
+    def test_clean_unsuppressed_report_passes(self):
+        self.assertIn("CLEAN", audit.disposition(report(), 0))
 
-    def decide(self, evidence=None, status=1, exception=None, today=None):
-        self.clock.now.return_value = DATETIME.combine(today or self.today, dt.time(), dt.timezone.utc)
-        return audit.disposition(report() if evidence is None else evidence, status,
-                                 self.exception if exception is None else exception, ROOT)
+    def test_every_advisory_or_retirement_finding_fails(self):
+        evidence = report(
+            results=[finding()],
+            rules=[{"id": "EEF-CVE-2026-117656"}],
+        )
+        with self.assertRaisesRegex(audit.AuditError, "EEF-CVE-2026-117656"):
+            audit.disposition(evidence, 1)
 
-    def test_exact_approved_finding_is_controlled_not_clean(self):
-        self.assertIn('CONTROLLED DISPOSITION', self.decide())
-
-    def test_owner_reauthorization_is_bound_to_exact_inputs(self):
-        self.assertEqual(audit.APPROVAL, '7aa8d06b-6fdf-4824-8a18-e4b3ffe00b32')
-        self.assertEqual(audit.APPROVED_INPUT_DIGEST,
-                         'f76c43fa627e0fd11cd3e7c849144612433b0b7b552d2a577498670d110c0ebb')
-        self.assertEqual(audit.input_digest(ROOT), audit.APPROVED_INPUT_DIGEST)
-        self.assertEqual(self.exception['approval_comment'],
-                         '7aa8d06b-6fdf-4824-8a18-e4b3ffe00b32')
-        self.assertEqual(self.exception['input_digest'],
-                         'f76c43fa627e0fd11cd3e7c849144612433b0b7b552d2a577498670d110c0ebb')
-        self.assertEqual(self.exception['owner'], 'JC')
-        self.assertEqual(self.exception['package'], 'assent')
-        self.assertEqual(self.exception['version'], '0.2.13')
-        self.assertEqual(self.exception['expires_on'], '2026-11-18')
-
-    def test_superseded_approval_and_binding_are_rejected(self):
-        for field, value in [
-                ('approval_comment', 'db89b442-f288-4f94-9fef-c89512544e74'),
-                ('input_digest', '63a6baf0a290195303bd3357f496b1dbcbe5ee3ce6057cd0a524085fbfef5005'),
-                ('input_digest', 'b0d5d125a42c0ea556631f609e42ac605537d463b9c0423defa21361124d4e64'),
-                ('approval_comment', 'edf58ed2-84b3-4390-b114-ef6bce3eb6f3'),
-                ('input_digest', 'a341992b4357f5bdba8a6df02bb45c9fc02489948d77d9aa6de15e9d4da04a4b'),
-                ('approval_comment', '78dfc986-0fda-40b7-bdfc-ca3ad736e209'),
-                ('input_digest', '97a0e28a78db66db9a00ee8a1c6956ee0204821c99b94731222f87f1eea89ee7'),
-                ('input_digest', 'abc8d0de25a91cb3d8065b9088a4385f99d77f8bf2ef3aa45b276164a53e90b8'),
-                ('approval_comment', 'b181b491-4ade-4636-b62f-8d1ed1e11212'),
-                ('input_digest', 'ce90af42ac47556472fe22bc55d664ca17f18a349623487d5994d71d84ba7c2e'),
-                ('approval_comment', '41c24934-21d0-4b29-a86f-56532b27e5c9'),
-                ('input_digest', '2c82e2c7608eaef0f4a6204041377b7a2300a23434eda8445307477bd147e9a0'),
-                ('approval_comment', 'f1705f90-2e2f-48e5-8df0-e3e1e4b2321f'),
-                ('input_digest', 'b080e9cfcfa6c73e7d8cfd54ede395c13447fca45a904d0bd575661a245d1718'),
-                ('approval_comment', '2804a409-64f4-4571-8df3-0da8c37da9ca'),
-                ('input_digest', '09dd14cb9d31fc9441767f8219224f9474e09eb6721291285d1e40dec16424a9'),
-                ('approval_comment', 'b8ac8764-c2c8-4dd9-b13e-802039e34790'),
-                ('input_digest', '59114f8ee39c86dc3642e992e1119e747cf85c9d4465a2ca54875d4a4253836b'),
-                ('approval_comment', '6153e770-7a49-49ad-87da-1513b07e15d1'),
-                ('input_digest', '9dba69b70b03f3c541a956fc0dd45a802678d0b72bcc3850a9058e4940134a55'),
-                ('approval_comment', '36143681-0274-42df-a8bb-5709dd9a1515'),
-                ('input_digest', '9054cd23327eb3ac64f5cbaf1c7672c33e1497cb09d4214c63cbd2e87ad54545'),
-                ('approval_comment', 'd9d80575-34d9-41cb-9879-5823873cb68a'),
-                ('input_digest', '2c4e97e5ca481ed7f436a87d770f56b64162e82722bcffe990f355e023ec21c1'),
-                ('approval_comment', 'e51fa0fa-431b-4e33-8b5a-863b9c1d4fbd'),
-                ('input_digest', '532a998b33c90ea736a045701624655b8313ec7239b81116fbfb06d6310c6699'),
-                ('approval_comment', '41bbcf5f-6473-4065-a531-4a5fa7bdf834'),
-                ('input_digest', 'bd4ddce56947edb853449b26793a974266e48e5762cf77d19dd1f2c24cba0d4d')]:
-            exception = dict(self.exception, **{field: value})
-            with self.subTest(field=field), self.assertRaisesRegex(audit.AuditError, 'Unauthorised'):
-                self.decide(exception=exception)
-
-    def test_old_baseline_inputs_cannot_use_new_approval(self):
-        for digest in [
-                '63a6baf0a290195303bd3357f496b1dbcbe5ee3ce6057cd0a524085fbfef5005',
-                'b0d5d125a42c0ea556631f609e42ac605537d463b9c0423defa21361124d4e64',
-                'a341992b4357f5bdba8a6df02bb45c9fc02489948d77d9aa6de15e9d4da04a4b',
-                '97a0e28a78db66db9a00ee8a1c6956ee0204821c99b94731222f87f1eea89ee7',
-                'abc8d0de25a91cb3d8065b9088a4385f99d77f8bf2ef3aa45b276164a53e90b8',
-                'ce90af42ac47556472fe22bc55d664ca17f18a349623487d5994d71d84ba7c2e',
-                '2c82e2c7608eaef0f4a6204041377b7a2300a23434eda8445307477bd147e9a0',
-                'b080e9cfcfa6c73e7d8cfd54ede395c13447fca45a904d0bd575661a245d1718',
-                '09dd14cb9d31fc9441767f8219224f9474e09eb6721291285d1e40dec16424a9',
-                '9dba69b70b03f3c541a956fc0dd45a802678d0b72bcc3850a9058e4940134a55',
-                '9054cd23327eb3ac64f5cbaf1c7672c33e1497cb09d4214c63cbd2e87ad54545',
-                '2c4e97e5ca481ed7f436a87d770f56b64162e82722bcffe990f355e023ec21c1',
-                '532a998b33c90ea736a045701624655b8313ec7239b81116fbfb06d6310c6699',
-                'bd4ddce56947edb853449b26793a974266e48e5762cf77d19dd1f2c24cba0d4d']:
-            with self.subTest(digest=digest), patch.object(audit, 'input_digest', return_value=digest):
-                with self.assertRaisesRegex(audit.AuditError, 'invalidated'):
-                    self.decide()
-
-    def test_real_changed_inputs_invalidate_reauthorized_disposition(self):
-        for changed in ['mix.lock', 'mix.exs', '.tool-versions', 'lib/new_callback.ex',
-                        'config/new_oauth.exs',
-                        'test/new_you_web/security/authentication_reachability_test.exs']:
-            with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:
-                root = Path(directory)
-                for name in ['mix.exs', 'mix.lock', '.tool-versions',
-                             'test/new_you_web/security/authentication_reachability_test.exs']:
-                    target = root / name
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copyfile(ROOT / name, target)
-                for name in ['lib', 'config']:
-                    shutil.copytree(ROOT / name, root / name)
-                self.assertEqual(audit.input_digest(root), audit.APPROVED_INPUT_DIGEST)
-                target = root / changed
-                target.write_bytes((target.read_bytes() if target.exists() else b'') + b'\n# changed\n')
-                with self.assertRaisesRegex(audit.AuditError, 'invalidated'):
-                    audit.disposition(report(), 1, self.exception, root)
-
-    def test_unexpected_second_finding_fails(self):
-        evidence = report()
-        other = report('other', '1.0', 'CVE-2026-9999')
-        evidence['runs'][0]['tool']['driver']['rules'] += other['runs'][0]['tool']['driver']['rules']
-        other['runs'][0]['results'][0]['ruleIndex'] = 1
-        evidence['runs'][0]['results'] += other['runs'][0]['results']
-        with self.assertRaisesRegex(audit.AuditError, 'Unexpected'):
-            self.decide(evidence)
-
-    def test_wrong_package_version_and_alias_fail(self):
-        for evidence in [report('other'), report(version='0.2.12'), report(advisory='CVE-2026-9999')]:
-            with self.subTest(evidence=evidence), self.assertRaises(audit.AuditError):
-                self.decide(evidence)
-
-    def test_known_primary_aliases_match(self):
-        for alias in ['EEF-CVE-2026-117656', 'CVE-2026-117656', 'GHSA-9fr5-g44g-9526']:
-            self.assertIn('CONTROLLED', self.decide(report(advisory=alias)))
-
-    def test_unmatched_exception_and_clean_without_exception(self):
-        evidence = report()
-        evidence['runs'][0]['results'] = []
-        evidence['runs'][0]['tool']['driver']['rules'] = []
-        with self.assertRaisesRegex(audit.AuditError, 'unmatched'):
-            self.decide(evidence, 0)
-        self.assertIn('CLEAN', self.decide(evidence, 0, {}))
-
-    def test_expiry_is_exclusive_at_start_of_deadline(self):
-        self.assertIn('CONTROLLED', self.decide(today=dt.date(2026, 11, 17)))
-        for day in [18, 19, 30]:
-            with self.assertRaisesRegex(audit.AuditError, 'expired'):
-                self.decide(today=dt.date(2026, 11, day))
-
-    def test_lifecycle_and_unauthorised_metadata_fail(self):
-        for field, value in [('state', 'proposed'), ('state', 'invalidated'), ('state', 'resolved'),
-                             ('state', 'superseded'), ('expires_on', '2026-11-19'),
-                             ('owner', 'someone'), ('approval_comment', 'fabricated')]:
-            exception = copy.deepcopy(self.exception)
-            exception[field] = value
-            with self.subTest(field=field, value=value), self.assertRaises(audit.AuditError):
-                self.decide(exception=exception)
-
-    def test_status_and_malformed_evidence_fail(self):
-        for evidence, status in [(report(), 0), (report(), 2), ({}, 1),
-                                 ({'version': '2.1.0', 'runs': []}, 0)]:
-            with self.subTest(status=status), self.assertRaises(audit.AuditError):
-                self.decide(evidence, status)
-
-    def test_negative_boolean_and_noninteger_rule_indexes_fail(self):
-        for index in [-1, True, '0', 1]:
-            evidence = report()
-            evidence['runs'][0]['results'][0]['ruleIndex'] = index
-            with self.subTest(index=index), self.assertRaises(audit.AuditError):
-                self.decide(evidence)
-
-    def test_changed_severity_or_missing_alias_is_invalid(self):
-        for field in ['severity', 'alias']:
-            evidence = report()
-            if field == 'severity':
-                evidence['runs'][0]['tool']['driver']['rules'][0]['properties']['security-severity'] = '10.0'
-            else:
-                evidence['runs'][0]['results'][0]['message']['arguments'][2] = 'EEF-CVE-2026-117656'
-            with self.subTest(field=field), self.assertRaises(audit.AuditError):
-                self.decide(evidence)
-
-    def test_changed_advisory_details_invalidate(self):
-        evidence = report()
-        evidence['runs'][0]['results'][0]['message']['arguments'][3] = 'new exploit details'
-        with self.assertRaisesRegex(audit.AuditError, 'changed'):
-            self.decide(evidence)
-
-    def test_supported_assent_backport_requires_revalidation(self):
-        with patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), patch.object(audit, 'latest_supported_assent_release', return_value='0.2.14'):
-            with self.assertRaisesRegex(audit.AuditError, 'revalidation'):
-                audit.execute(ROOT)
-
-    def test_retirement_cannot_use_advisory_exception(self):
-        evidence = report(advisory='HEX0003')
-        evidence['runs'][0]['results'][0]['partialFingerprints']['hexAudit/v1'] = 'retired:hexpm/assent'
+    def test_suppressed_findings_are_never_accepted(self):
+        evidence = report(results=[finding(suppressions=[{"kind": "external"}])])
         with self.assertRaises(audit.AuditError):
-            self.decide(evidence)
+            audit.disposition(evidence, 0)
 
-    def test_new_stable_auth_release_requires_revalidation(self):
-        with patch.object(audit, 'latest_authentication_release', return_value='4.15.2'):
-            with self.assertRaisesRegex(audit.AuditError, 'revalidation'):
-                audit.execute(ROOT)
+    def test_status_must_match_report(self):
+        for evidence, status in [
+            (report(), 1),
+            (report(results=[finding()]), 0),
+            ({}, 0),
+            ({"version": "2.1.0", "runs": []}, 0),
+        ]:
+            with self.subTest(status=status), self.assertRaises(audit.AuditError):
+                audit.disposition(evidence, status)
 
-    def test_real_new_production_file_changes_digest(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            for name in ['mix.exs', 'mix.lock', '.tool-versions',
-                         'test/new_you_web/security/authentication_reachability_test.exs']:
-                target = root / name
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_bytes((ROOT / name).read_bytes())
-            before = audit.input_digest(root)
-            (root / 'lib').mkdir()
-            (root / 'lib/new_apple_callback.ex').write_text('new caller')
-            self.assertNotEqual(before, audit.input_digest(root))
+    def test_locked_graph_contains_rc17_and_patched_assent(self):
+        deps = audit.locked_dependencies((ROOT / "mix.lock").read_text())
+        self.assertIn('{:ash_authentication, "== 5.0.0-rc.17"', deps)
+        self.assertIn('{:assent, "== 0.3.2"', deps)
 
-    def test_changed_dependency_graph_or_new_caller_invalidates(self):
-        with patch.object(audit, 'input_digest', return_value='changed'):
-            with self.assertRaisesRegex(audit.AuditError, 'invalidated'):
-                self.decide()
+    def test_old_exception_binding_is_removed_from_audit(self):
+        record = json.loads((ROOT / "tools/hex_audit/assent_exception.json").read_text())
+        self.assertEqual(record["state"], "retirement_proposed")
+        self.assertTrue(record["requires_independent_master_gate"])
+        self.assertNotIn("input_digest", record)
+        source = (ROOT / "tools/hex_security_audit.py").read_text()
+        self.assertNotIn("APPROVED_INPUT_DIGEST", source)
+        self.assertNotIn("CONTROLLED DISPOSITION", source)
+        self.assertNotIn("assent_exception.json", source)
 
-    def test_runner_must_execute_audit_in_fresh_home_before_disposition(self):
+    def test_runner_uses_a_fresh_home_and_locked_resolution(self):
         calls = []
+
         def run(command, **kwargs):
             calls.append((command, kwargs))
-            if 'hex.audit' in command:
-                (Path(kwargs['cwd']) / 'audit.sarif').write_text(json.dumps(report()))
-                return type('Result', (), {'returncode': 1})()
-            return type('Result', (), {'returncode': 0})()
-        with patch.object(audit, 'latest_supported_assent_release', return_value='0.2.13'), patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), patch.object(audit.subprocess, 'run', side_effect=run):
-            self.assertIn('CONTROLLED', audit.execute(ROOT))
-        self.assertEqual([c[0][1] for c in calls], ['local.hex', 'deps.get', 'hex.audit'])
-        self.assertIn('--check-locked', calls[1][0])
-        self.assertTrue(all(c[1]['cwd'] != ROOT for c in calls))
-        self.assertTrue(all(c[1]['env']['HEX_HOME'] != str(Path.home() / '.hex') for c in calls))
-        self.assertNotIn('HEX_IGNORE_ADVISORIES', calls[-1][1]['env'])
+            if "hex.audit" in command:
+                (Path(kwargs["cwd"]) / "audit.sarif").write_text(json.dumps(report()))
+            return type("Result", (), {"returncode": 0})()
 
-    def test_missing_report_cannot_be_fabricated_clean(self):
-        with patch.object(audit, 'latest_supported_assent_release', return_value='0.2.13'), patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), patch.object(audit.subprocess, 'run', return_value=type('Result', (), {'returncode': 0})()):
-            with self.assertRaises(audit.AuditError):
+        with patch.object(audit.subprocess, "run", side_effect=run):
+            self.assertIn("CLEAN", audit.execute(ROOT))
+
+        self.assertEqual([call[0][1] for call in calls], ["local.hex", "deps.get", "hex.audit"])
+        self.assertIn("--check-locked", calls[1][0])
+        self.assertTrue(all(call[1]["cwd"] != str(ROOT) for call in calls))
+        self.assertTrue(all(call[1]["env"]["HEX_HOME"] != str(Path.home() / ".hex") for call in calls))
+        self.assertNotIn("HEX_IGNORE_ADVISORIES", calls[-1][1]["env"])
+        self.assertEqual(calls[-1][1]["env"]["MIX_ENV"], "prod")
+
+    def test_runner_fails_for_any_findings(self):
+        calls = []
+
+        def run(command, **kwargs):
+            calls.append(command)
+            if "hex.audit" in command:
+                (Path(kwargs["cwd"]) / "audit.sarif").write_text(
+                    json.dumps(report(results=[finding()], rules=[{"id": "EEF-CVE-2026-117656"}]))
+                )
+                return type("Result", (), {"returncode": 1})()
+            return type("Result", (), {"returncode": 0})()
+
+        with patch.object(audit.subprocess, "run", side_effect=run):
+            with self.assertRaisesRegex(audit.AuditError, "EEF-CVE-2026-117656"):
                 audit.execute(ROOT)
 
-    def test_advisory_service_failure_or_malformed_report_fails(self):
-        for payload in [None, 'not JSON']:
-            def run(command, **kwargs):
-                if 'hex.audit' in command and payload is not None:
-                    (Path(kwargs['cwd']) / 'audit.sarif').write_text(payload)
-                return type('Result', (), {'returncode': 1 if 'hex.audit' in command else 0})()
-            with patch.object(audit, 'latest_supported_assent_release', return_value='0.2.13'), patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), patch.object(audit.subprocess, 'run', side_effect=run):
-                with self.subTest(payload=payload), self.assertRaises((audit.AuditError, ValueError)):
-                    audit.execute(ROOT)
-
-    def test_run_crossing_expiry_fails_at_final_decision(self):
-        started = dt.datetime(2026, 11, 17, 23, 59, 58, tzinfo=dt.timezone.utc)
-        for finished in [dt.datetime(2026, 11, 18, tzinfo=dt.timezone.utc),
-                         dt.datetime(2026, 11, 18, 0, 0, 10, tzinfo=dt.timezone.utc)]:
-            clock = [started]
-            class Clock(DATETIME):
-                @classmethod
-                def now(cls, tz=None):
-                    self.assertEqual(tz, dt.timezone.utc)
-                    return clock[0]
-            def run(command, **kwargs):
-                if 'hex.audit' in command:
-                    (Path(kwargs['cwd']) / 'audit.sarif').write_text(json.dumps(report()))
-                    clock[0] = finished
-                return type('Result', (), {'returncode': 1 if 'hex.audit' in command else 0})()
-            with self.subTest(finished=finished), patch.object(audit.dt, 'datetime', Clock), \
-                    patch.object(audit, 'latest_supported_assent_release', return_value='0.2.13'), \
-                    patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), \
-                    patch.object(audit.subprocess, 'run', side_effect=run), \
-                    patch('builtins.print') as output:
-                self.assertEqual(audit.main(), 1)
-                self.assertTrue(any('expired' in str(call) for call in output.call_args_list))
-                self.assertFalse(any('CONTROLLED DISPOSITION' in str(call) for call in output.call_args_list))
-
-    def test_network_failure_is_visible(self):
-        with patch.object(audit, 'latest_supported_assent_release', return_value='0.2.13'), patch.object(audit, 'latest_authentication_release', return_value='4.15.1'), patch.object(audit.subprocess, 'run', return_value=type('Result', (), {'returncode': 1})()):
-            with self.assertRaisesRegex(audit.AuditError, 'failed'):
+    def test_missing_or_malformed_report_fails(self):
+        with patch.object(
+            audit.subprocess,
+            "run",
+            return_value=type("Result", (), {"returncode": 0})(),
+        ):
+            with self.assertRaisesRegex(audit.AuditError, "evidence"):
                 audit.execute(ROOT)
+
+        def malformed(command, **kwargs):
+            if "hex.audit" in command:
+                (Path(kwargs["cwd"]) / "audit.sarif").write_text("not JSON")
+            return type("Result", (), {"returncode": 0})()
+
+        with patch.object(audit.subprocess, "run", side_effect=malformed):
+            with self.assertRaises(json.JSONDecodeError):
+                audit.execute(ROOT)
+
+    def test_runner_fails_if_lock_changes_during_resolution(self):
+        def run(command, **kwargs):
+            if command[1] == "deps.get":
+                lock = Path(kwargs["cwd"]) / "mix.lock"
+                lock.write_text(lock.read_text() + "\n")
+            if "hex.audit" in command:
+                (Path(kwargs["cwd"]) / "audit.sarif").write_text(json.dumps(report()))
+            return type("Result", (), {"returncode": 0})()
+
+        with patch.object(audit.subprocess, "run", side_effect=run):
+            with self.assertRaisesRegex(audit.AuditError, "lock changed"):
+                audit.execute(ROOT)
+
 
 class AuditRoutingTests(unittest.TestCase):
-    def test_sensitive_inputs_and_bypass_attempts_select_audit(self):
+    def test_security_sensitive_paths_select_the_audit(self):
         from tools.foundation_integrity_routing import classify_hex_audit_changes
-        for path in ['mix.exs', 'mix.lock', '.tool-versions', 'lib/new_caller.ex',
-                     'config/runtime.exs', 'tools/hex_security_audit.py',
-                     'tools/hex_audit/assent_exception.json', '.github/workflows/hex-security-audit.yml',
-                     '.github/workflows/foundation-integrity.yml', 'tools/foundation_integrity_routing.py',
-                     'tests/test_hex_security_audit.py', 'tests/test_foundation_merge_gate.py']:
+
+        for path in [
+            "mix.exs",
+            "mix.lock",
+            ".tool-versions",
+            "lib/new_caller.ex",
+            "config/runtime.exs",
+            "tools/hex_security_audit.py",
+            "tools/hex_audit/assent_exception.json",
+            ".github/workflows/hex-security-audit.yml",
+            ".github/workflows/foundation-integrity.yml",
+            "tools/foundation_integrity_routing.py",
+            "tests/test_hex_security_audit.py",
+            "tests/test_foundation_merge_gate.py",
+        ]:
             with self.subTest(path=path):
                 self.assertTrue(classify_hex_audit_changes([path]))
-        self.assertFalse(classify_hex_audit_changes(['docs/development/ordinary.md']))
+
+        self.assertFalse(classify_hex_audit_changes(["docs/development/ordinary.md"]))
         self.assertTrue(classify_hex_audit_changes([]))
 
     def test_nightly_main_and_required_aggregate(self):
-        workflow = (ROOT / '.github/workflows/hex-security-audit.yml').read_text()
-        self.assertIn('  schedule:', workflow)
+        workflow = (ROOT / ".github/workflows/hex-security-audit.yml").read_text()
+        self.assertIn("  schedule:", workflow)
         self.assertIn("github.ref == 'refs/heads/main'", workflow)
         self.assertIn("github.event_name == 'schedule' && 'main' || github.sha", workflow)
-        self.assertIn('python3 tools/hex_security_audit.py', workflow)
-        self.assertNotIn('actions/cache', workflow)
-        self.assertNotIn('continue-on-error', workflow)
-        integrity = (ROOT / '.github/workflows/foundation-integrity.yml').read_text()
-        self.assertIn('needs: [route, foundation-smoke, application-ci, hex-security-audit]', integrity)
-        self.assertIn('AUDIT_RESULT: ${{ needs.hex-security-audit.result }}', integrity)
-        self.assertIn('AUDIT_REQUIRED: ${{ needs.route.outputs.hex_audit_changes }}', integrity)
+        self.assertIn("python3 tools/hex_security_audit.py", workflow)
+        self.assertNotIn("actions/cache", workflow)
+        self.assertNotIn("continue-on-error", workflow)
+
+        integrity = (ROOT / ".github/workflows/foundation-integrity.yml").read_text()
+        self.assertIn("needs: [route, foundation-smoke, application-ci, hex-security-audit]", integrity)
+        self.assertIn("AUDIT_RESULT: ${{ needs.hex-security-audit.result }}", integrity)
+        self.assertIn("AUDIT_REQUIRED: ${{ needs.route.outputs.hex_audit_changes }}", integrity)
 
 
 class AggregateExecutionTests(unittest.TestCase):
-    def test_required_gate_executes_fail_closed_for_audit_outcomes(self):
+    def test_required_gate_fails_closed_for_audit_outcomes(self):
         import os
         import subprocess
-        workflow = (ROOT / '.github/workflows/foundation-integrity.yml').read_text()
-        block = workflow.split('  foundation-integrity:\n', 1)[1].split('        run: |\n', 1)[1]
-        script = '\n'.join(line[10:] for line in block.splitlines())
-        for required, result, success in [('true', 'success', True), ('true', 'failure', False),
-                ('true', 'skipped', False), ('true', 'cancelled', False), ('false', 'skipped', True),
-                ('false', 'success', False), ('', 'success', False), ('garbage', 'success', False)]:
-            env = dict(os.environ, ROUTE_RESULT='success', SMOKE_RESULT='success', APP_REQUIRED='false',
-                       APP_RESULT='skipped', AUDIT_REQUIRED=required, AUDIT_RESULT=result)
-            actual = subprocess.run(['bash', '-c', script], env=env, capture_output=True)
+
+        workflow = (ROOT / ".github/workflows/foundation-integrity.yml").read_text()
+        block = workflow.split("  foundation-integrity:\n", 1)[1].split("        run: |\n", 1)[1]
+        script = "\n".join(line[10:] for line in block.splitlines())
+
+        for required, result, success in [
+            ("true", "success", True),
+            ("true", "failure", False),
+            ("true", "skipped", False),
+            ("true", "cancelled", False),
+            ("false", "skipped", True),
+            ("false", "success", False),
+            ("", "success", False),
+            ("garbage", "success", False),
+        ]:
+            env = dict(
+                os.environ,
+                ROUTE_RESULT="success",
+                SMOKE_RESULT="success",
+                APP_REQUIRED="false",
+                APP_RESULT="skipped",
+                AUDIT_REQUIRED=required,
+                AUDIT_RESULT=result,
+            )
+            actual = subprocess.run(["bash", "-c", script], env=env, capture_output=True)
             with self.subTest(required=required, result=result):
                 self.assertEqual(actual.returncode == 0, success, actual.stdout)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -91,7 +91,26 @@ mix usage_rules.search_docs "search term" -p ash -p ash_postgres -p ash_authenti
 - `mix ash_postgres.setup_vector.docs`
 - `mix ash_postgres.squash_snapshots` - Cleans snapshots folder, leaving only one snapshot per resource
 - `mix ash_authentication.add_add_on` - Adds the provided add-on to your user resource
+- `mix ash_authentication.add_add_on.audit_log` - Adds an audit log add-on to your user resource
+- `mix ash_authentication.add_add_on.confirmation` - Adds email confirmation to your user resource
 - `mix ash_authentication.add_strategy` - Adds the provided strategy or strategies to your user resource
+- `mix ash_authentication.add_strategy.api_key` - Adds API key authentication to your user resource
+- `mix ash_authentication.add_strategy.apple` - Adds Apple Sign In authentication to your user resource
+- `mix ash_authentication.add_strategy.auth0` - Adds Auth0 OAuth authentication to your user resource
+- `mix ash_authentication.add_strategy.dynamic_oidc` - Adds a data-driven OIDC strategy + OidcConnection resource
+- `mix ash_authentication.add_strategy.github` - Adds GitHub OAuth authentication to your user resource
+- `mix ash_authentication.add_strategy.google` - Adds Google OAuth authentication to your user resource
+- `mix ash_authentication.add_strategy.magic_link` - Adds magic link authentication to your user resource
+- `mix ash_authentication.add_strategy.microsoft` - Adds Microsoft OAuth authentication to your user resource
+- `mix ash_authentication.add_strategy.oauth2` - Adds a generic OAuth2 authentication strategy to your user resource
+- `mix ash_authentication.add_strategy.oidc` - Adds a generic OpenID Connect authentication strategy to your user resource
+- `mix ash_authentication.add_strategy.okta` - Adds Okta OIDC authentication to your user resource
+- `mix ash_authentication.add_strategy.otp` - Adds one-time password (OTP) authentication to your user resource
+- `mix ash_authentication.add_strategy.password` - Adds password authentication to your user resource
+- `mix ash_authentication.add_strategy.recovery_code` - Adds the recovery code authentication strategy
+- `mix ash_authentication.add_strategy.slack` - Adds Slack OAuth authentication to your user resource
+- `mix ash_authentication.add_strategy.totp` - Adds TOTP authentication to your user resource
+- `mix ash_authentication.add_strategy.webauthn` - Adds WebAuthn/Passkey authentication to your user resource
 - `mix ash_authentication.install` - Installs AshAuthentication. Invoke with `mix igniter.install ash_authentication`
 - `mix ash_authentication.upgrade`
 <!-- usage-rules-skill-end -->

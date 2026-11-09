@@ -10,10 +10,16 @@
 ## Key Principles
 - Always use secrets management - never hardcode credentials
 - Enable tokens for magic_link, confirmation, OAuth2
-- UserIdentity resource required for all OAuth2/OIDC strategies (stores the provider's `iss`/`sub` claims; matching users by email is unsafe)
+- UserIdentity resource optional for OAuth2 (required for multiple providers per user)
 - API keys require strict policy controls and expiration management
 - Use prefixes for API keys to enable secret scanning compliance
 - Check existing strategies: `AshAuthentication.Info.strategies/1`
+
+## WebAuthn Strategy Notes
+- Origin must include the port for non-standard ports (e.g. `"https://localhost:4001"`); default derivation from `rp_id` omits the port
+- When reconstructing challenges from session data, `origin_verify_fun: {Wax, :origins_match?, []}` is hardcoded in the Plug
+- Token generation happens in `Actions.sign_in` via `Jwt.token_for_user/3`, not in an Ash preparation like Password
+- The `register` action creates a new user; adding a credential to an existing user requires a custom controller calling `Wax.register/3` directly
 
 ## Strategy Selection
 
@@ -27,7 +33,8 @@
 - Requires: API key resource, relationship to user, sign-in action
 
 **OAuth2** - Social/enterprise login (GitHub, Google, Auth0, Apple, OIDC, Slack)
-- Requires: custom actions, secrets, UserIdentity resource
+- Requires: custom actions, secrets
+- Optional: UserIdentity resource (for multiple providers per user)
 
 ## Password Strategy
 
@@ -161,15 +168,9 @@ end
 - Custom `register_with_[provider]` action
 - Secrets management
 - Tokens enabled
-- UserIdentity resource (stores the provider's `iss`/`sub` identity claims - matching users by email or other claims is unsafe)
 
-**How users are matched (sign-in and registration):**
-- Users are resolved by the `(strategy, sub)` identity, never by email. A provider identity belongs to exactly one local user, permanently.
-- A `sub` that has been seen before signs that user in.
-- A new `sub` whose email matches an existing account is only linked automatically when the provider's `email_verified` claim is trusted (`trust_email_verified?`). Otherwise the behaviour depends on `on_untrusted_email_match`.
-- `trust_email_verified?` defaults to `true` for GitHub/Google/Auth0/Slack/Apple and `false` elsewhere. Only enable it for providers that reliably assert email ownership.
-- `on_untrusted_email_match` controls the untrusted-email-matches-existing-account case: `:reject` (the default) refuses the sign-in (the user must sign in with their existing method to link the provider); `:confirm` issues a confirmation to the existing account's email and links the provider only once the recipient proves ownership by confirming. `:confirm` requires a `confirmation` add-on (enforced at compile time).
-- **Security note for `:confirm`**: confirming binds whatever provider identity initiated the flow, so the confirmation email must make clear *which* provider is being linked and that confirming grants it access — otherwise a user can be social-engineered into linking an attacker's provider account. The generated confirmation sender branches on `opts[:confirmation_type] == :identity_link` to produce this copy.
+**Optional for all OAuth2:**
+- UserIdentity resource (for multiple providers per user)
 
 ### OAuth2 Configuration Pattern
 ```elixir
@@ -181,7 +182,7 @@ authentication do
       client_secret MyApp.Secrets
       redirect_uri MyApp.Secrets
       # auth0 also needs: base_url
-      # apple also needs: team_id, private_key_id, private_key_path
+      # apple also needs: team_id, private_key_id, private_key_path or private_key
       # oidc also needs: openid_configuration_uri
       identity_resource MyApp.Accounts.UserIdentity
     end
@@ -197,14 +198,11 @@ actions do
     upsert_identity :unique_email
 
     change AshAuthentication.GenerateTokenChange
-
-    # Required: persists the provider's `iss`/`sub` identity claims
+    
+    # If UserIdentity resource is being used
     change AshAuthentication.Strategy.OAuth2.IdentityChange
 
-    change fn changeset, _ctx ->
-      user_info = Ash.Changeset.get_argument(changeset, :user_info)
-      Ash.Changeset.change_attributes(changeset, Map.take(user_info, ["email"]))
-    end
+    change {AshAuthentication.Strategy.OAuth2.UserInfoToAttributes, fields: [:email]}
   end
 end
 ```
@@ -319,15 +317,7 @@ actions do
     upsert_identity :email
 
     change AshAuthentication.GenerateTokenChange
-    # Required: persists the provider's `iss`/`sub` identity claims
-    change AshAuthentication.Strategy.OAuth2.IdentityChange
-    change fn changeset, _ctx ->
-      user_info = Ash.Changeset.get_argument(changeset, :user_info)
-
-      changeset
-      |> Ash.Changeset.change_attribute(:email, user_info["email"])
-      |> Ash.Changeset.change_attribute(:name, user_info["name"])
-    end
+    change {AshAuthentication.Strategy.OAuth2.UserInfoToAttributes, fields: [:email, :name]}
   end
 end
 ```

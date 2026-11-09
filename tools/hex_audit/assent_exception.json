@@ -1,10 +1,8 @@
 {
-  "state": "active",
-  "owner": "JC",
+  "state": "retirement_proposed",
   "package": "assent",
-  "version": "0.2.13",
-  "expires_on": "2026-11-18",
-  "follow_up": "WELL-91",
-  "approval_comment": "7aa8d06b-6fdf-4824-8a18-e4b3ffe00b32",
-  "input_digest": "f76c43fa627e0fd11cd3e7c849144612433b0b7b552d2a577498670d110c0ebb"
+  "previous_vulnerable_version": "0.2.13",
+  "replacement_version": "0.3.2",
+  "proposal_ticket": "WELL-100",
+  "requires_independent_master_gate": true
 }
