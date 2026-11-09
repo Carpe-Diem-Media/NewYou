@@ -62,8 +62,8 @@ defmodule NewYou.MixProject do
           # Mix environment that ran the sync.
           "ash-framework": [
             description:
-              "Use when working with Ash resources, domains, actions, changes, policies, data layers, or AshPostgres.",
-            usage_rules: [:ash, :ash_postgres, :ash_authentication]
+              "Use when working with Ash resources, domains, actions, policies, authentication, data layers, or AshPostgres.",
+            usage_rules: [:ash, :ash_postgres]
           ],
           "phoenix-framework": [
             description:
