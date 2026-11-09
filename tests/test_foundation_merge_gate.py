@@ -60,11 +60,11 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
         self.assertNotIn("FULL_REQUIRED:", workflow)
         self.assertNotIn("FULL_RESULT:", workflow)
 
-    def test_governance_full_still_routes_automatically(self):
+    def test_pr_router_never_calls_foundation_full(self):
         workflow = (WORKFLOWS / "foundation-integrity.yml").read_text(encoding="utf-8")
 
-        self.assertIn("uses: ./.github/workflows/foundation-full.yml", workflow)
-        self.assertIn("if: needs.route.outputs.foundation_full == 'true'", workflow)
+        self.assertNotIn("foundation-full.yml", workflow)
+        self.assertNotIn("foundation_full", workflow)
 
     def test_deep_application_lane_is_selected_by_code_routing(self):
         integrity = (WORKFLOWS / "foundation-integrity.yml").read_text(encoding="utf-8")
@@ -95,15 +95,17 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
         integrity = (WORKFLOWS / "foundation-integrity.yml").read_text(encoding="utf-8")
         self.assertIn("python -m unittest discover -s tests -p 'test_ci_attestation.py' -v", integrity)
 
-    def test_exact_sha_dispatch_is_owned_by_foundation_full(self):
+    def test_foundation_full_runs_only_in_scheduled_nightly_workflow(self):
         integrity = (WORKFLOWS / "foundation-integrity.yml").read_text(encoding="utf-8")
         full = (WORKFLOWS / "foundation-full.yml").read_text(encoding="utf-8")
+        nightly = (WORKFLOWS / "nightly-hardening.yml").read_text(encoding="utf-8")
 
         self.assertNotIn("  workflow_dispatch:", integrity)
         self.assertIn("  workflow_call:", full)
-        self.assertIn("  workflow_dispatch:", full)
-        self.assertIn("description: Exact 40-character commit SHA to certify.", full)
-        self.assertIn("if: github.event_name == 'workflow_dispatch'", full)
+        self.assertNotIn("workflow_dispatch:", full)
+        self.assertNotIn("workflow_dispatch:", nightly)
+        self.assertIn("    - cron: '0 2 * * *'\n      timezone: Africa/Johannesburg", nightly)
+        self.assertIn("uses: ./.github/workflows/foundation-full.yml", nightly)
 
 
 if __name__ == "__main__":

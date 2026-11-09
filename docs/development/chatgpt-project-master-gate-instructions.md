@@ -140,9 +140,9 @@ Foundation Smoke is the always-on current-routing safety net and validates both 
 
 Application CI runs for routed engineering changes.
 
-Foundation Full verifies governance, frozen history/provenance and the historical Python suite. Changes under `docs/governance/**` and `docs/history/**`, Full machinery, or unclassifiable paths start it automatically as non-blocking evidence; delivery contracts and ordinary application work do not select Full. Nightly/manual exact-SHA certification also runs it.
+Foundation Full verifies governance, frozen history/provenance and the historical Python suite only in the nightly hardening workflow, nominally at 02:00 Africa/Johannesburg. It has no PR or manual-dispatch path. Governance/history changes receive Foundation Smoke in PRs; unknown, empty or unreadable change ranges fail route. GitHub may delay or drop the scheduled run, so the configured time is not a guaranteed runner start.
 
-Do not wait for non-blocking Foundation Full unless the affected contract explicitly requires Full certification, but investigate a material failure caused by the PR rather than dismissing it.
+Do not wait for Foundation Full during PR verification. Investigate material regressions reported by a nightly run against `main` and bind triage to its recorded SHA.
 
 ## Merge and post-merge gate
 

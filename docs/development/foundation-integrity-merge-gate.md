@@ -4,7 +4,7 @@ This is the current operational CI contract. The workflows define executable beh
 
 ## Required gate
 
-The procedural Master Gate requires a successful **Foundation Integrity** check. GitHub Free does not enforce that requirement or protect `main` in this private repository. A writer can bypass the procedure, an owner-accepted risk described in [GitHub branch governance](github-branch-governance.md). Every pull request runs Foundation Smoke. Ordinary pushes to `main` do not start this workflow. Application CI runs when the change contains application or engineering paths. Foundation Full is separate, non-blocking evidence and is not part of the required aggregate.
+The procedural Master Gate requires a successful **Foundation Integrity** check. GitHub Free does not enforce that requirement or protect `main` in this private repository. A writer can bypass the procedure, an owner-accepted risk described in [GitHub branch governance](github-branch-governance.md). Every pull request runs Foundation Smoke. Ordinary pushes to `main` do not start this workflow. Application CI runs when the change contains application or engineering paths. Foundation Full runs only in the nightly hardening workflow and is not part of PR checks or the required aggregate.
 
 The aggregate requires successful routing and Smoke, plus successful Application CI and Hex security audit when selected. It does not wait for Foundation Full.
 
@@ -14,16 +14,16 @@ The repository path communicates the normal CI route:
 
 | Paths | Route |
 | --- | --- |
-| `docs/governance/**` | Smoke + Foundation Full |
-| `docs/history/**` | Smoke + Foundation Full |
-| Foundation Full/provenance machinery | Smoke + Foundation Full |
+| `docs/governance/**` | Smoke |
+| `docs/history/**` | Smoke |
+| Foundation Full/provenance machinery | Smoke |
 | `docs/delivery/**` | Smoke + applicable Application CI |
 | `docs/development/**` | Smoke + applicable engineering CI |
 | application source, migrations and tests | Smoke + Application CI |
 | `.agents/**`, `AGENTS.md` and normal engineering files | Smoke + applicable engineering CI |
-| unknown or unclassifiable paths | fail closed to Foundation Full |
+| unknown, empty or unclassifiable diffs | route job fails; Smoke still runs |
 
-Classification is explicit. Python files under `tests/` do not select Foundation Full by language or location alone. Foundation Full tests and tooling are named directly in the classifier; ordinary application, routing and Smoke tests stay on the Application CI route.
+Classification is explicit. Python files under `tests/` do not select Application CI by language or location alone. Foundation Full tests and tooling are named directly in the classifier so governance-owned changes can skip Application CI. No PR path selects Foundation Full. Unknown paths and unreadable ranges fail the required route job.
 
 Delivery state such as Ready, blockers, dependencies, PR review and Done remains in Plane project `WELL`; it is not mirrored into repository documents.
 
@@ -38,9 +38,9 @@ Smoke runs the path-classification regression tests and checks router identity, 
 
 ## Foundation Full
 
-Full runs for governance and frozen-history changes, Foundation Full/provenance machinery, and unknown paths that cannot safely be classified. It validates the frozen `docs/history/CURRENT_AUTHORITY_MANIFEST_v1.0.0.json` and historical certification suite. The frozen `docs/history/02_OPEN_WORK_v1.2.90.md` remains evidence only; it is not live execution authority.
+Full runs only through the scheduled Nightly hardening workflow against `main`. Its nominal schedule is 02:00 Africa/Johannesburg. It validates the frozen `docs/history/CURRENT_AUTHORITY_MANIFEST_v1.0.0.json` and historical certification suite. The frozen `docs/history/02_OPEN_WORK_v1.2.90.md` remains evidence only; it is not live execution authority.
 
-Full is also available for nightly and exact-SHA certification. A Full failure remains evidence and must be investigated when the changed PR affects that lane, even though Full does not block the required aggregate.
+Foundation Full has no PR or manual-dispatch trigger. A regression is detected after merge by a later nightly run and must be triaged against that run's recorded main SHA. GitHub may delay or drop scheduled starts, so 02:00 SAST is the configured target, not a guaranteed runner start.
 
 ## Application CI
 
@@ -103,21 +103,21 @@ require explicit fresh exact-SHA verification and independent reconciliation
 before Plane Done or dependent work. For that exception, check out the exact
 resulting-main SHA in a trusted isolated workspace, verify its SHA and tree,
 run Foundation Smoke and the applicable `mix check` and `mix check.deep` gates
-with DevCore, and record their output. Run Foundation Full by exact-SHA dispatch
-when the routed governance evidence requires it. Resolve provenance or review
-failures separately; passing fresh tests cannot repair an unreviewed merge.
+with DevCore, and record their output. Foundation Full remains deferred to the
+next nightly run and does not delay this verification. Resolve provenance or
+review failures separately; passing fresh tests cannot repair an unreviewed merge.
 The saved evidence is not itself a signature or a review approval; the
 independent reviewer must preserve and check its provenance. Reusing PR CI does not create a check run on main.
-Nightly hardening and manual Foundation Full certification remain separate.
+Foundation Full is part of nightly hardening only; there is no manual dispatch.
 
 ## Hex security audit
 
 WELL-83 adds an independent blocking Hex lane to the same required Foundation
-Integrity aggregate. Existing Application CI and Foundation Full selection remains
-unchanged. The audit selects dependency/toolchain inputs, production source and
-configuration, all workflows and tools, Python regression tests, and the compiled
-authentication reachability guard. Unknown or unreadable event ranges select the
-audit. These extra source/config inputs detect changes to exception reachability.
+Integrity aggregate. Foundation Full is not selected from PR paths. The audit
+selects dependency/toolchain inputs, production source and configuration, all
+workflows and tools, Python regression tests, and the compiled authentication
+reachability guard. Unknown or unreadable event ranges select the audit. These
+extra source/config inputs detect changes to exception reachability.
 The aggregate rejects a missing routing decision and any required audit result
 other than success. Smoke runs the audit boundary regression tests on every PR.
 

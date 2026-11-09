@@ -101,10 +101,10 @@
     },
     {
       "document_id": "DELIVERY_GOVERNANCE_STANDARD",
-      "canonical_filename": "DELIVERY_GOVERNANCE_STANDARD_v1.2.0.md",
-      "repository_path": "docs/governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.2.0.md",
-      "sha256": "024d5f4f8433fa02a66702521ef83239298e581a4f5331c61d2002f28ac51088",
-      "semver": "1.2.0"
+      "canonical_filename": "DELIVERY_GOVERNANCE_STANDARD_v1.3.0.md",
+      "repository_path": "docs/governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.3.0.md",
+      "sha256": "3f510c2fdcbab4ef873c0ec17d2a554203d642bdba7a7716b7fe8b67c43340d5",
+      "semver": "1.3.0"
     }
   ],
   "proposed_successors": [

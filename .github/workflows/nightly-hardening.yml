@@ -1,11 +1,12 @@
 name: Nightly hardening
 
-# Only main receives scheduled or manual hardening. No push/PR triggers and no
-# cache restore: Foundation Full and the deep gate start on fresh runners.
+# Only the scheduled main run receives hardening. GitHub may delay or drop a
+# scheduled start; the configured target is 02:00 Africa/Johannesburg.
+# No push/PR/manual triggers or cache restore: both lanes start on fresh runners.
 on:
   schedule:
-    - cron: '17 1 * * *'
-  workflow_dispatch:
+    - cron: '0 2 * * *'
+      timezone: Africa/Johannesburg
 
 permissions:
   contents: read
@@ -17,8 +18,6 @@ jobs:
   foundation-full:
     if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/foundation-full.yml
-    with:
-      sha: ${{ github.sha }}
 
   mix-check-deep:
     name: Nightly mix check.deep

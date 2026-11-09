@@ -364,17 +364,17 @@ Foundation Smoke runs on every PR and validates current routing and merge-gate t
 
 Application CI runs for routed engineering changes.
 
-Foundation Full is historical/provenance certification for applicable governance/provenance/workflow changes plus nightly/manual exact-SHA certification. It is not a routine implementation gate.
+Foundation Full is historical/provenance certification in the nightly hardening workflow only. Its schedule targets 02:00 Africa/Johannesburg; GitHub may delay or drop a scheduled start. It is not a pull request or manual-dispatch gate.
 
 The operational CI topology is documented in:
 
 "docs/development/foundation-integrity-merge-gate.md"
 
-Do not wait for non-blocking Foundation Full unless explicitly required.
+Do not wait for the nightly Foundation Full during routine implementation. The required PR gates are Foundation Smoke and routed Application CI/Hex security audit when applicable.
 
 Ordinary JIT implementation choices do not justify governance amendments merely to obtain Foundation Full evidence.
 
-Investigate any material CI or Foundation Full failure caused by the current PR even when that lane is non-blocking.
+Investigate material Foundation Full regressions reported by a nightly run against `main`, and use the recorded run SHA to identify affected changes.
 
 Before handoff:
 

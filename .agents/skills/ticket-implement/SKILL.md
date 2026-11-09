@@ -244,5 +244,5 @@ Do not:
 - broaden ticket scope because adjacent work looks convenient;
 - use derived/process-local state as business authority;
 - bypass owning Domain/Ash interfaces for business writes;
-- wait for non-blocking Foundation Full for ordinary implementation;
+- wait for the nightly Foundation Full for ordinary implementation; PR delivery uses Foundation Smoke and applicable Application CI/Hex lanes;
 - open a review-ready PR with known required verification left unrun or silently failing.
