@@ -272,7 +272,10 @@ def _check_current_routing_guidance(
             "docs/governance/**",
             "docs/history/**",
             "docs/delivery/**",
-            "Foundation Full",
+            "Foundation Full runs only through the scheduled Nightly hardening workflow",
+            "no pull request or manual-dispatch trigger",
+            "Unknown paths, empty ranges and unreadable ranges fail the route job",
+            "GitHub scheduled starts are best effort",
         )
     )
     _record(
@@ -594,23 +597,41 @@ def run_smoke_audit(
     smoke_match = re.search(r"(?ms)^  foundation-smoke:\n(.*?)(?=^  [a-zA-Z0-9_-]+:\n|\Z)", workflow)
     aggregate_match = re.search(r"(?m)^    needs: \[([^\]]+)\]$", workflow)
     aggregate_needs = {item.strip() for item in aggregate_match.group(1).split(",")} if aggregate_match else set()
+    nightly_path = root / ".github/workflows/nightly-hardening.yml"
+    nightly = nightly_path.read_text(encoding="utf-8") if nightly_path.is_file() else ""
+    full_path = root / ".github/workflows/foundation-full.yml"
+    full = full_path.read_text(encoding="utf-8") if full_path.is_file() else ""
+    full_callers = [
+        candidate.name
+        for candidate in (root / ".github/workflows").glob("*.yml")
+        if "uses: ./.github/workflows/foundation-full.yml"
+        in candidate.read_text(encoding="utf-8")
+    ]
     topology_ok = (
         smoke_match is not None
         and "if:" not in smoke_match.group(1)
-        and "foundation-full:" in workflow
-        and "if: needs.route.outputs.foundation_full == 'true'" in workflow
+        and "foundation-full.yml" not in workflow
+        and "foundation_full" not in workflow
         and "hex-security-audit:" in workflow
         and "AUDIT_RESULT: ${{ needs.hex-security-audit.result }}" in workflow
         and "application-ci:" in workflow
         and aggregate_needs == {"route", "foundation-smoke", "application-ci", "hex-security-audit"}
+        and "workflow_call:" in full
+        and "workflow_dispatch:" not in full
+        and "workflow_dispatch:" not in nightly
+        and "pull_request:" not in nightly
+        and "push:" not in nightly
+        and "    - cron: '0 2 * * *'\n      timezone: Africa/Johannesburg" in nightly
+        and "uses: ./.github/workflows/foundation-full.yml" in nightly
+        and full_callers == ["nightly-hardening.yml"]
     )
     _record(
         report,
         "smoke_merge_gate_topology",
         topology_ok,
-        "Foundation Smoke is always-on; Full is separately routed; required aggregate waits on Smoke and applicable Application CI"
+        "Foundation Smoke is always-on; Foundation Full runs only from the 02:00 SAST nightly; required aggregate waits on Smoke and applicable Application CI"
         if topology_ok
-        else "merge-gate topology must keep Smoke always-on, route Full separately and exclude Full from the required aggregate",
+        else "merge-gate topology must keep Smoke always-on, route Foundation Full only from the nightly schedule, and exclude Full from the PR workflow and required aggregate",
         path=".github/workflows/foundation-integrity.yml",
     )
 

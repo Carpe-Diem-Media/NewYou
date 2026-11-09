@@ -11,7 +11,7 @@ Start with `governance/CURRENT_GOVERNANCE_ROUTER.json` for durable authority and
 
 Authority remains Product Law → Architecture Law → Domain Law → governing Roadmap → applicable supporting authority → semantic Feature/JIT/proof contracts → implementation. Plane project `WELL` remains the live execution authority for work-item state, priority, blockers, dependencies, sequencing and review/merge readiness.
 
-The repository engineering contract is [AGENTS.md](../AGENTS.md). Foundation Smoke validates current routing and merge-gate topology. Foundation Full protects governance, frozen history and provenance. Application CI protects implementation and applicable delivery work.
+The repository engineering contract is [AGENTS.md](../AGENTS.md). Foundation Smoke validates current routing and merge-gate topology on every pull request. Foundation Full checks historical provenance in the nightly hardening run, nominally at 02:00 SAST. Application CI protects implementation and applicable delivery work.
 
 Implementation maps and their review requirements live in development documentation:
 

@@ -1161,21 +1161,22 @@ class Harden02ContractRecoveryTests(unittest.TestCase):
 
 
 class FoundationIntegrityWorkflowTests(unittest.TestCase):
-    def test_workflow_exact_head_dispatch_binds_checkout_and_github_sha(self):
+    def test_foundation_full_is_nightly_only_and_not_started_by_pr_or_dispatch(self):
         required_workflow = (ROOT / ".github" / "workflows" / "foundation-integrity.yml").read_text(
             encoding="utf-8"
         )
         workflow = (ROOT / ".github" / "workflows" / "foundation-full.yml").read_text(
             encoding="utf-8"
         )
-        self.assertIn("workflow_dispatch:", workflow)
-        self.assertIn("Verify exact-SHA dispatch checkout", workflow)
-        self.assertIn("github.event_name == 'workflow_dispatch'", workflow)
-        self.assertIn("EXPECTED_SHA: ${{ inputs.sha }}", workflow)
-        self.assertIn('expected="$EXPECTED_SHA"', workflow)
-        self.assertIn('actual="$(git rev-parse HEAD)"', workflow)
-        self.assertIn('if [[ "$actual" != "$expected" ]]', workflow)
-        self.assertIn("needs.route.outputs.foundation_full == 'true'", required_workflow)
+        nightly = (ROOT / ".github" / "workflows" / "nightly-hardening.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("foundation-full.yml", required_workflow)
+        self.assertNotIn("workflow_dispatch:", workflow)
+        self.assertNotIn("workflow_dispatch:", nightly)
+        self.assertIn("workflow_call:", workflow)
+        self.assertIn("uses: ./.github/workflows/foundation-full.yml", nightly)
+        self.assertIn("    - cron: '0 2 * * *'\n      timezone: Africa/Johannesburg", nightly)
 
 
 if __name__ == "__main__":

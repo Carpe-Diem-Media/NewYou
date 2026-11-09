@@ -13,9 +13,9 @@ Do not claim success without evidence from this exact head.
 4. **Run applicable targeted tests** for the changed behaviour.
 5. **Run the deep gate where required:** `devcore-project run test -- mix check.deep`. Required for changes touching application code, dependencies or the architecture rules.
 6. **Confirm architecture and lifecycle invariants:** `mix check.architecture` passes; no new Repo, raw-SQL or Multi business writes; no Redis, extra Repo or speculative infrastructure; Tidewave remains DEV-only.
-7. **Confirm the CI-sensitive scope.** Changes under `docs/governance/**`, `docs/history/**`, Foundation Full machinery and provenance tests must match the ticket scope because they start Foundation Full. Delivery contracts, normal application tests and `.agents/**` do not select Full by location alone. Explain any routing-sensitive changes against the ticket.
+7. **Confirm the CI-sensitive scope.** Foundation Full runs only through nightly hardening and is not selected by PR paths. Every PR runs Foundation Smoke; classified application/engineering changes also run their routed Application CI and Hex audit lanes. Unknown or unreadable ranges fail routing. Explain any routing-sensitive changes against the ticket.
 8. **Reconcile Plane.** Confirm the issue state, blockers, dependency relations and follow-ups. Nothing delivery-affecting may remain only in chat, PR comments or TODOs.
-9. **Confirm required CI state** on the PR head SHA: required `Foundation Integrity` and any routed Application CI lanes are green for this SHA. Follow `docs/development/foundation-integrity-merge-gate.md`. Do not wait for non-blocking Foundation Full unless the task or governing authority explicitly requires full certification; report its state when it is still running.
+9. **Confirm required CI state** on the PR head SHA: required `Foundation Integrity` and any routed Application CI lanes are green for this SHA. Follow `docs/development/foundation-integrity-merge-gate.md`. Foundation Full is deferred to nightly hardening and is not part of PR certification.
 10. **Confirm a clean worktree** with `git status --short` empty, then report the SHA, checks run, Plane state and remaining risks.
 
 ## Implementation handoff review

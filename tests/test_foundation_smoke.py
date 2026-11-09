@@ -32,6 +32,11 @@ class FoundationSmokeTests(unittest.TestCase):
             ROOT / ".github/workflows/foundation-integrity.yml",
             root / ".github/workflows/foundation-integrity.yml",
         )
+        for workflow in ("foundation-full.yml", "nightly-hardening.yml"):
+            shutil.copy2(
+                ROOT / ".github/workflows" / workflow,
+                root / ".github/workflows" / workflow,
+            )
         return root
 
     def _mutate_router(self, root: Path, relative: Path, mutate) -> None:
@@ -253,7 +258,7 @@ class FoundationSmokeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             root = self._fixture(directory)
-            standard = root / "docs/governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.2.0.md"
+            standard = root / "docs/governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.3.0.md"
             standard.write_text(
                 standard.read_text(encoding="utf-8").replace(
                     "docs/delivery/CURRENT_DELIVERY_ROUTER.json", "docs/governance/CURRENT_GOVERNANCE_ROUTER.json"

@@ -4,9 +4,8 @@ name: Foundation Full
 # separate from the required merge gate and intentionally keeps using the
 # frozen pre-migration CURRENT_AUTHORITY_MANIFEST_v1.0.0.json baseline.
 #
-# Foundation Integrity starts it automatically as non-blocking evidence for
-# durable-governance/provenance/workflow PRs; Nightly hardening calls it on
-# main; workflow_dispatch provides deliberate exact-SHA certification.
+# Nightly hardening is the only caller and runs this against the scheduled
+# main SHA. It is not a PR or manual-dispatch lane.
 # Current delivery-state routing belongs to Plane and Foundation Smoke's lean
 # CURRENT_GOVERNANCE_ROUTER.json and CURRENT_DELIVERY_ROUTER.json instead.
 #
@@ -14,18 +13,6 @@ name: Foundation Full
 
 on:
   workflow_call:
-    inputs:
-      sha:
-        description: Exact commit SHA to check out when a caller supplies one; empty uses the caller SHA.
-        required: false
-        type: string
-        default: ""
-  workflow_dispatch:
-    inputs:
-      sha:
-        description: Exact 40-character commit SHA to certify.
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -39,25 +26,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.sha != '' && inputs.sha || github.sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
-      - name: Verify exact-SHA dispatch checkout
-        if: github.event_name == 'workflow_dispatch'
-        shell: bash
-        env:
-          EXPECTED_SHA: ${{ inputs.sha }}
-        run: |
-          set -euo pipefail
-          expected="$EXPECTED_SHA"
-          if ! [[ "$expected" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "sha must be a 40-character commit SHA; got: $expected"
-            exit 1
-          fi
-          actual="$(git rev-parse HEAD)"
-          if [[ "$actual" != "$expected" ]]; then
-            echo "Checked out ${actual} but requested ${expected}"
-            exit 1
-          fi
       - name: Set up Python
         uses: actions/setup-python@v7
         with:

@@ -5,13 +5,11 @@ name: Foundation Integrity
 # Foundation Smoke safety net, and calls two reusable lanes:
 #
 #   Normal engineering PR -> Foundation Smoke + applicable Application CI
-#   Durable-governance/provenance PR -> the same required fast gate + non-blocking
-#                                      Foundation Full historical evidence
+#   Governance/provenance PR -> Foundation Smoke + no location-based Application CI
 #
 # Foundation Smoke validates the current Governance and Delivery routers.
-# Foundation Full validates the frozen historical manifest and is intentionally
-# not a dependency of the required aggregate. Ordinary delivery-state changes
-# happen in Plane and therefore create no repository workflow run.
+# Foundation Full runs only through nightly hardening. Unknown paths or ranges
+# fail routing so a PR cannot silently skip CI.
 #
 # New PR heads cancel superseded runs so obsolete cold verification does not
 # queue behind current work.
@@ -32,7 +30,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       hex_audit_changes: ${{ steps.classify.outputs.hex_audit_changes }}
-      foundation_full: ${{ steps.classify.outputs.foundation_full }}
       application_changes: ${{ steps.classify.outputs.application_changes }}
       deep_application_changes: ${{ steps.classify.outputs.deep_application_changes }}
     steps:
@@ -89,12 +86,6 @@ jobs:
     needs: route
     if: needs.route.outputs.hex_audit_changes == 'true'
     uses: ./.github/workflows/hex-security-audit.yml
-
-  foundation-full:
-    name: Foundation Full
-    needs: route
-    if: needs.route.outputs.foundation_full == 'true'
-    uses: ./.github/workflows/foundation-full.yml
 
   foundation-integrity:
     name: Foundation Integrity

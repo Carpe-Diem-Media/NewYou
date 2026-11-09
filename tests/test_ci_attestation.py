@@ -187,10 +187,8 @@ class GitHubCollectionTest(unittest.TestCase):
             with self.assertRaises(AttestationError):
                 collect(42, self.e["head"], 100, trust_mode="private-procedural")
 
-    def test_nonblocking_full_does_not_delay_required_proof(self):
-        self.run["status"] = "in_progress"
-        self.jobs.append({"id": 99, "name": "Foundation Full / Foundation Full",
-                          "status": "in_progress", "conclusion": None})
+    def test_pr_attestation_requires_no_foundation_full_job(self):
+        self.assertFalse(any(job["name"].startswith("Foundation Full") for job in self.jobs))
         result = self.collect()
         self.assertEqual(result["required_check"]["conclusion"], "success")
 

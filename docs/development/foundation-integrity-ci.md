@@ -1,8 +1,8 @@
 # Foundation Integrity CI
 
-This document describes the Foundation Integrity lanes introduced for WELL-38.
-The lanes preserve governance certification while separating current routing
-checks from the complete historical suite.
+This document describes the Foundation Integrity lanes. Pull requests run the
+always-on current-state Smoke check and applicable engineering checks.
+Foundation Full remains a nightly historical/provenance check against `main`.
 
 ## Canonical commands
 
@@ -15,8 +15,8 @@ python -m unittest discover -s tests -p 'test_foundation_merge_gate.py' -v
 python -m tools.foundation_integrity_smoke --governance-router docs/governance/CURRENT_GOVERNANCE_ROUTER.json --delivery-router docs/delivery/CURRENT_DELIVERY_ROUTER.json --json
 ```
 
-Run the complete governance and historical certification lane for an exact
-checkout:
+The nightly Foundation Full job runs the complete governance and historical
+certification commands from its scheduled `main` checkout:
 
 ```bash
 python tools/run_foundation_full_tests.py
@@ -35,10 +35,10 @@ overlays `docs/history/` evidence so later provenance changes remain visible.
 Temporary links are removed when the suite exits; the repository and both
 current routers use only the semantic roots.
 
-For historical certification of an exact commit on GitHub Actions, run **Foundation Full** with the
-`workflow_dispatch` input `sha` set to the full 40-character commit SHA and use
-a workflow ref where Foundation Full is available. The workflow verifies that
-checked-out `HEAD` equals the input SHA.
+Foundation Full has no pull request or manual-dispatch trigger. The nightly
+workflow is its only caller. Its schedule targets 02:00 Africa/Johannesburg;
+GitHub may delay or drop scheduled starts, so this does not guarantee that a
+runner starts at exactly 02:00.
 
 ## CI routing
 
@@ -46,23 +46,25 @@ Every pull request runs Foundation Smoke; ordinary pushes to `main` do not. The 
 does not use path filters, so the required status check cannot disappear when
 files change.
 
-The route job compares the pull request base to its head. `docs/governance/**`, `docs/history/**` and explicit Foundation
-Full/provenance machinery select Full. `docs/delivery/**`,
+The route job compares the pull request base to its head. `docs/governance/**`,
+`docs/history/**` and explicit Foundation Full/provenance machinery run Smoke
+without selecting Application CI by location alone. `docs/delivery/**`,
 `docs/development/**`, `.agents/**`, application source and tests select
-Application CI as appropriate. Unknown paths and unresolvable pull-request
-diffs fail closed to Full. Python language and the generic `tests/**` root do
-not select Full by themselves. Git rename detection is disabled for path
+Application CI as appropriate. Unknown paths, empty ranges and unresolvable
+pull-request diffs fail the route job; they never select Foundation Full.
+Python language and the generic `tests/**` root do not select Application CI
+or Foundation Full by themselves. Git rename detection is disabled for path
 classification, so both source and destination are considered.
 
 Foundation Smoke runs on each PR. The required **Foundation Integrity** aggregate
-waits for Smoke, routed Application CI and the routed Hex security audit,
-but not for Full.
+waits for successful routing and Smoke, plus routed Application CI and the
+routed Hex security audit. Foundation Full is absent from the PR workflow.
 
 Routed application and engineering changes run the canonical `mix check` gate.
 The slower `mix check.deep` lane runs when application source, migrations or
 dependency/toolchain inputs change. Documentation-only delivery/development
-changes, agent guidance and test-only changes skip that lane. Application-only
-changes do not run the complete historical governance suite.
+changes, agent guidance and test-only changes skip that lane. No PR runs the
+complete historical governance suite.
 
 ## Lane responsibilities
 
@@ -72,12 +74,15 @@ history file presence and merge-gate topology. A governance route into delivery
 or history, a delivery route into governance or history, a missing file or an
 archive route fails this lane.
 
-**Foundation Full** runs the complete unit suite and full audit. It retains
+**Foundation Full** runs nightly on `main`, nominally at 02:00 SAST, and runs
+the complete unit suite and full audit. It retains
 historical certification, immutable hash, archive provenance, lifecycle,
 transition and fail-closed mutation checks. The frozen manifest is located at
 `docs/history/CURRENT_AUTHORITY_MANIFEST_v1.0.0.json`. The audit builds a
 temporary legacy-path view so its historical checks can continue without
-restoring a mixed current documentation root.
+restoring a mixed current documentation root. GitHub may delay or drop the
+scheduled run. A regression is therefore detected after merge and must be
+triaged against the main SHA recorded by the nightly run.
 
 ## Baseline evidence
 
