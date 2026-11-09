@@ -69,7 +69,24 @@ class AuditEvidenceTests(unittest.TestCase):
 
     def test_old_exception_binding_is_removed_from_audit(self):
         record = json.loads((ROOT / "tools/hex_audit/assent_exception.json").read_text())
-        self.assertEqual(record["state"], "retirement_proposed")
+        self.assertEqual(record["state"], "retirement_approved")
+        self.assertEqual(record["owner_approval"]["approver"], "JC")
+        self.assertEqual(record["owner_approval"]["plane_identity"], "jcschoeman123")
+        self.assertEqual(record["owner_approval"]["github_identity"], "JCSchoeman96")
+        self.assertEqual(
+            record["owner_approval"]["decision_comment"],
+            "WELL-91:feab6ecf-0a09-4b9c-8240-0d055e700075",
+        )
+        self.assertEqual(record["approved_candidate"]["ash_authentication"], "5.0.0-rc.17")
+        self.assertEqual(record["approved_candidate"]["assent"], "0.3.2")
+        self.assertEqual(
+            record["approved_candidate"]["base_sha"],
+            "f9bf634de80c95d39597e27100f98325356da705",
+        )
+        self.assertEqual(
+            record["approved_candidate"]["approved_head_sha"],
+            "2376dda3a530f31b99d633f9061df0ece2d6977b",
+        )
         self.assertTrue(record["requires_independent_master_gate"])
         self.assertNotIn("input_digest", record)
         source = (ROOT / "tools/hex_security_audit.py").read_text()

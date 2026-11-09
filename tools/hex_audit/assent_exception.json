@@ -1,8 +1,21 @@
 {
-  "state": "retirement_proposed",
+  "state": "retirement_approved",
   "package": "assent",
   "previous_vulnerable_version": "0.2.13",
   "replacement_version": "0.3.2",
   "proposal_ticket": "WELL-100",
+  "owner_approval": {
+    "approver": "JC",
+    "approval_date": "2026-11-09",
+    "plane_identity": "jcschoeman123",
+    "github_identity": "JCSchoeman96",
+    "decision_comment": "WELL-91:feab6ecf-0a09-4b9c-8240-0d055e700075"
+  },
+  "approved_candidate": {
+    "ash_authentication": "5.0.0-rc.17",
+    "assent": "0.3.2",
+    "base_sha": "f9bf634de80c95d39597e27100f98325356da705",
+    "approved_head_sha": "2376dda3a530f31b99d633f9061df0ece2d6977b"
+  },
   "requires_independent_master_gate": true
 }
