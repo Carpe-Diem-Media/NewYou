@@ -61,6 +61,16 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertEqual("application", classify_path(path))
 
+    def test_content_evidence_checkers_run_application_ci(self):
+        for path in [
+            "tools/check_magic_login_evidence.py",
+            "tools/check_password_reset_message_evidence.py",
+        ]:
+            with self.subTest(path=path):
+                self.assertEqual("application", classify_path(path))
+                self.assertEqual({"application_changes": True}, _route([path]))
+                self.assertFalse(classify_deep_application_changes([path]))
+
 
 class GovernanceRoutingTests(unittest.TestCase):
     """Governance changes run Smoke without selecting Full on a PR."""
