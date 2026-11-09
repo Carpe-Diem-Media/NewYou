@@ -38,6 +38,145 @@ defmodule NewYou.Content.MagicLoginMessageTest do
     end
   end
 
+  test "preserves the approved magic-login content under the exact Product v1.15 successor", %{
+    root: root
+  } do
+    governance_router_path = Path.join(root, "docs/governance/CURRENT_GOVERNANCE_ROUTER.json")
+    router = governance_router_path |> File.read!() |> Jason.decode!()
+
+    successor_routes = %{
+      "PLATFORM_PRODUCT_LAW" => "docs/governance/product/00_PLATFORM_v1.15.0.md",
+      "PRODUCT_DECISIONS" => "docs/governance/product/01_DECISIONS_v1.15.0.md"
+    }
+
+    governing_documents =
+      Enum.map(router["governing_documents"], fn document ->
+        case Map.fetch(successor_routes, document["document_id"]) do
+          {:ok, path} ->
+            bytes = File.read!(Path.join(root, path))
+
+            document
+            |> Map.put("canonical_filename", Path.basename(path))
+            |> Map.put("repository_path", path)
+            |> Map.put("sha256", :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower))
+            |> Map.put("semver", "1.15.0")
+
+          :error ->
+            document
+        end
+      end)
+
+    File.write!(
+      governance_router_path,
+      Jason.encode!(%{router | "governing_documents" => governing_documents})
+    )
+
+    for locale <- ["en", "af"] do
+      assert {:ok, binding} = MagicLoginMessage.binding(locale)
+      assert {:ok, bytes} = MagicLoginMessage.eligible(binding)
+      assert byte_size(bytes) == if(locale == "en", do: 278, else: 327)
+    end
+  end
+
+  test "rejects a wrong current Product successor route", %{root: root} do
+    for {field, value} <- [
+          {"repository_path", "docs/governance/product/00_PLATFORM_v1.14.0.md"},
+          {"canonical_filename", "00_PLATFORM_v1.14.0.md"},
+          {"sha256", String.duplicate("0", 64)},
+          {"semver", "1.14.0"}
+        ] do
+      governance_router_path = Path.join(root, "docs/governance/CURRENT_GOVERNANCE_ROUTER.json")
+      router = governance_router_path |> File.read!() |> Jason.decode!()
+
+      governing_documents =
+        Enum.map(router["governing_documents"], fn
+          %{"document_id" => "PLATFORM_PRODUCT_LAW"} = document ->
+            Map.put(document, field, value)
+
+          document ->
+            document
+        end)
+
+      File.write!(
+        governance_router_path,
+        Jason.encode!(%{router | "governing_documents" => governing_documents})
+      )
+
+      assert {:error, :content_ineligible} = MagicLoginMessage.binding("en")
+
+      # Each mutation starts from a fresh copy of the repository evidence.
+      if field != "semver" do
+        File.rm_rf!(root)
+        File.mkdir_p!(root)
+        {:ok, _} = File.cp_r(Path.join(@repo_root, "docs"), Path.join(root, "docs"))
+      end
+    end
+  end
+
+  test "rejects a missing current Product successor route", %{root: root} do
+    governance_router_path = Path.join(root, "docs/governance/CURRENT_GOVERNANCE_ROUTER.json")
+    router = governance_router_path |> File.read!() |> Jason.decode!()
+
+    governing_documents =
+      Enum.reject(router["governing_documents"], &(&1["document_id"] == "PRODUCT_DECISIONS"))
+
+    File.write!(
+      governance_router_path,
+      Jason.encode!(%{router | "governing_documents" => governing_documents})
+    )
+
+    assert {:error, :content_ineligible} = MagicLoginMessage.binding("af")
+  end
+
+  test "rejects a successor whose bytes change its Product predecessor lineage", %{root: root} do
+    path =
+      Path.join(root, "docs/governance/product/00_PLATFORM_v1.15.0.md")
+
+    bytes = File.read!(path)
+
+    changed =
+      String.replace(
+        bytes,
+        "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.14.0.md`",
+        "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.13.0.md`"
+      )
+
+    refute changed == bytes
+    File.write!(path, changed)
+
+    governance_router_path = Path.join(root, "docs/governance/CURRENT_GOVERNANCE_ROUTER.json")
+    router = governance_router_path |> File.read!() |> Jason.decode!()
+
+    governing_documents =
+      Enum.map(router["governing_documents"], fn
+        %{"document_id" => "PLATFORM_PRODUCT_LAW"} = document ->
+          Map.put(
+            document,
+            "sha256",
+            :crypto.hash(:sha256, changed) |> Base.encode16(case: :lower)
+          )
+
+        document ->
+          document
+      end)
+
+    File.write!(
+      governance_router_path,
+      Jason.encode!(%{router | "governing_documents" => governing_documents})
+    )
+
+    assert {:error, :content_ineligible} = MagicLoginMessage.binding("en")
+  end
+
+  test "rejects changed historical v1.14 approval provenance", %{root: root} do
+    path =
+      Path.join(root, "docs/governance/product/proposals/well-97/00_PLATFORM_v1.14.0_PROPOSED.md")
+
+    File.write!(path, File.read!(path) <> "\n")
+
+    assert {:error, :content_ineligible} = MagicLoginMessage.binding("af")
+  end
+
   test "rejects unsupported locales without fallback" do
     assert {:error, :content_ineligible} = MagicLoginMessage.binding("en-GB")
     assert {:error, :content_ineligible} = MagicLoginMessage.binding("zu")

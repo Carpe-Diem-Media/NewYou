@@ -42,6 +42,64 @@ defmodule NewYou.Content.MagicLoginMessage do
         "05c09bd18c805572f7bbc75717f5f6a09d3b5eca44f6bb08959ae2bd4fdc3f89"
       }
     }
+    @historical_promoted_authority [
+      %{
+        "document_id" => "PLATFORM_PRODUCT_LAW",
+        "path" => "docs/governance/product/00_PLATFORM_v1.14.0.md",
+        "sha256" => "bcec310103319441d12c6efae1c7c779a013a503b3831da630abb4a55187314b",
+        "predecessor" => "docs/governance/product/00_PLATFORM_v1.13.0.md",
+        "predecessor_sha256" =>
+          "eac45fab280eaa157bb3e3268463f879c1c09648566c5c84a900bcbc25215413",
+        "approved_amendment_path" =>
+          "docs/governance/product/proposals/well-97/00_PLATFORM_v1.14.0_PROPOSED.md",
+        "approved_amendment_sha256" =>
+          "7502b74167737cdcb84e7b819539243f4472021532ce475843aa4b5315bf5f99",
+        "version" => "1.14.0"
+      },
+      %{
+        "document_id" => "PRODUCT_DECISIONS",
+        "path" => "docs/governance/product/01_DECISIONS_v1.14.0.md",
+        "sha256" => "d97cb742deefa744279b47686bf5148cceea4b95839fe5b32ad6bbe7d2b6b1fd",
+        "predecessor" => "docs/governance/product/01_DECISIONS_v1.13.0.md",
+        "predecessor_sha256" =>
+          "fbe84ea762b1ff298080d3938307938b69c85f85284d6b6104a8da1bf093aa9d",
+        "approved_amendment_path" =>
+          "docs/governance/product/proposals/well-97/01_DECISIONS_v1.14.0_PROPOSED.md",
+        "approved_amendment_sha256" =>
+          "560ba5438ee15dc1e8bc8a4e849e067382244d5531116ab5ff445742180684da",
+        "version" => "1.14.0"
+      }
+    ]
+    @current_successor_authority [
+      %{
+        "document_id" => "PLATFORM_PRODUCT_LAW",
+        "canonical_filename" => "00_PLATFORM_v1.15.0.md",
+        "repository_path" => "docs/governance/product/00_PLATFORM_v1.15.0.md",
+        "sha256" => "c7f5510817028d28edd4eb29e71b9150e13d0354cccf1af23666e067e0eed0b8",
+        "semver" => "1.15.0",
+        "predecessor_path" => "docs/governance/product/00_PLATFORM_v1.14.0.md",
+        "predecessor_sha256" =>
+          "bcec310103319441d12c6efae1c7c779a013a503b3831da630abb4a55187314b",
+        "approved_amendment_path" =>
+          "docs/governance/product/proposals/well-98/00_PLATFORM_v1.15.0_PROPOSED.md",
+        "approved_amendment_sha256" =>
+          "a9ae584bccc984faca20aeed2428edc00a05ad54aead237a57a6d90388eedebb"
+      },
+      %{
+        "document_id" => "PRODUCT_DECISIONS",
+        "canonical_filename" => "01_DECISIONS_v1.15.0.md",
+        "repository_path" => "docs/governance/product/01_DECISIONS_v1.15.0.md",
+        "sha256" => "db57b0b73ed9faf8f3ade458c01d0d4798e4c2401172a35b9a1ad129ce8ae8d4",
+        "semver" => "1.15.0",
+        "predecessor_path" => "docs/governance/product/01_DECISIONS_v1.14.0.md",
+        "predecessor_sha256" =>
+          "d97cb742deefa744279b47686bf5148cceea4b95839fe5b32ad6bbe7d2b6b1fd",
+        "approved_amendment_path" =>
+          "docs/governance/product/proposals/well-98/01_DECISIONS_v1.15.0_PROPOSED.md",
+        "approved_amendment_sha256" =>
+          "b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017"
+      }
+    ]
 
     @spec binding(String.t()) :: {:ok, map()} | {:error, :content_ineligible}
     def binding(locale) when is_binary(locale) do
@@ -198,14 +256,29 @@ defmodule NewYou.Content.MagicLoginMessage do
     end
 
     defp promoted_authority_current?(root, packet) do
-      case {read_json(root, @governance_router_path), packet["promoted_authority"]} do
-        {{:ok, router}, [first, second]} ->
-          promoted_authority_matches?(root, router, first) and
-            promoted_authority_matches?(root, router, second)
-
-        _ ->
-          false
+      with {:ok, router} <- read_json(root, @governance_router_path),
+           true <- packet["promoted_authority"] == @historical_promoted_authority,
+           true <- historical_promoted_authority_matches?(root),
+           true <- current_successor_authority_matches?(root, router) do
+        true
+      else
+        _ -> false
       end
+    end
+
+    defp historical_promoted_authority_matches?(root) do
+      Enum.all?(@historical_promoted_authority, fn authority ->
+        file_digest(root, authority["path"]) == authority["sha256"] and
+          file_digest(root, authority["predecessor"]) == authority["predecessor_sha256"] and
+          file_digest(root, authority["approved_amendment_path"]) ==
+            authority["approved_amendment_sha256"]
+      end)
+    end
+
+    defp current_successor_authority_matches?(root, router) do
+      Enum.all?(@current_successor_authority, fn authority ->
+        promoted_authority_matches?(root, router, authority)
+      end)
     end
 
     defp promoted_authority_matches?(root, router, authority) do
@@ -215,12 +288,48 @@ defmodule NewYou.Content.MagicLoginMessage do
         |> Enum.filter(&(&1["document_id"] == authority["document_id"]))
 
       case entries do
-        [%{"repository_path" => path, "sha256" => sha, "semver" => version}] ->
-          path == authority["path"] and sha == authority["sha256"] and
-            version == authority["version"] and file_digest(root, path) == sha
+        [entry] ->
+          route =
+            Map.take(entry, [
+              "document_id",
+              "canonical_filename",
+              "repository_path",
+              "sha256",
+              "semver"
+            ])
+
+          expected_route =
+            Map.take(authority, [
+              "document_id",
+              "canonical_filename",
+              "repository_path",
+              "sha256",
+              "semver"
+            ])
+
+          route == expected_route and successor_lineage_matches?(root, authority)
 
         _ ->
           false
+      end
+    end
+
+    defp successor_lineage_matches?(root, authority) do
+      path = authority["repository_path"]
+      predecessor_path = authority["predecessor_path"]
+
+      with {:ok, bytes} <- read_file(root, path),
+           true <- digest(bytes) == authority["sha256"],
+           true <- file_digest(root, predecessor_path) == authority["predecessor_sha256"],
+           true <-
+             file_digest(root, authority["approved_amendment_path"]) ==
+               authority["approved_amendment_sha256"],
+           true <-
+             String.contains?(bytes, "**Predecessor:** `#{predecessor_path}`"),
+           true <- String.contains?(bytes, "**SemVer transition:** `v1.14.0 → v1.15.0`") do
+        true
+      else
+        _ -> false
       end
     end
 
@@ -263,7 +372,15 @@ defmodule NewYou.Content.MagicLoginMessage do
                 @governance_router_path,
                 "docs/delivery/content-evidence/content_media/magic_login_messages/WELL-12-candidate-comment.json",
                 "docs/governance/product/00_PLATFORM_v1.14.0.md",
-                "docs/governance/product/01_DECISIONS_v1.14.0.md"
+                "docs/governance/product/01_DECISIONS_v1.14.0.md",
+                "docs/governance/product/00_PLATFORM_v1.13.0.md",
+                "docs/governance/product/01_DECISIONS_v1.13.0.md",
+                "docs/governance/product/00_PLATFORM_v1.15.0.md",
+                "docs/governance/product/01_DECISIONS_v1.15.0.md",
+                "docs/governance/product/proposals/well-97/00_PLATFORM_v1.14.0_PROPOSED.md",
+                "docs/governance/product/proposals/well-97/01_DECISIONS_v1.14.0_PROPOSED.md",
+                "docs/governance/product/proposals/well-98/00_PLATFORM_v1.15.0_PROPOSED.md",
+                "docs/governance/product/proposals/well-98/01_DECISIONS_v1.15.0_PROPOSED.md"
               ] do
       read_regular_file(root, path)
     end

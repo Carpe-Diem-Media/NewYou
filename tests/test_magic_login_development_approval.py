@@ -1,6 +1,7 @@
 """Owner-approved development evidence must bind the immutable candidate exactly."""
 
 import copy
+import hashlib
 import json
 import unittest
 import shutil
@@ -89,6 +90,55 @@ class MagicLoginDevelopmentApprovalTests(unittest.TestCase):
                 self.assertEqual(expected.strip(), after_body[after_body.index("\n## DEC-321"):].strip())
                 after_body = after_body[:after_body.index("\n## DEC-321")]
             self.assertEqual(before_body.rstrip(), after_body.rstrip())
+
+    def test_current_authority_requires_exact_v1_15_route_and_predecessor(self):
+        for field, value in (
+            ("repository_path", "docs/governance/product/00_PLATFORM_v1.14.0.md"),
+            ("sha256", "0" * 64),
+            ("semver", "1.14.0"),
+        ):
+            with self.subTest(field=field), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                shutil.copytree(ROOT / "docs", root / "docs")
+                router_path = root / "docs/governance/CURRENT_GOVERNANCE_ROUTER.json"
+                router = json.loads(router_path.read_text())
+                next(
+                    item for item in router["governing_documents"]
+                    if item["document_id"] == "PLATFORM_PRODUCT_LAW"
+                )[field] = value
+                router_path.write_text(json.dumps(router))
+                self.assertTrue(validate_development(root, self.packet))
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copytree(ROOT / "docs", root / "docs")
+            router_path = root / "docs/governance/CURRENT_GOVERNANCE_ROUTER.json"
+            router = json.loads(router_path.read_text())
+            router["governing_documents"] = [
+                item for item in router["governing_documents"]
+                if item["document_id"] != "PRODUCT_DECISIONS"
+            ]
+            router_path.write_text(json.dumps(router))
+            self.assertTrue(validate_development(root, self.packet))
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copytree(ROOT / "docs", root / "docs")
+            successor_path = root / "docs/governance/product/00_PLATFORM_v1.15.0.md"
+            changed = successor_path.read_text().replace(
+                "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.14.0.md`",
+                "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.13.0.md`",
+            )
+            successor_path.write_text(changed)
+            router_path = root / "docs/governance/CURRENT_GOVERNANCE_ROUTER.json"
+            router = json.loads(router_path.read_text())
+            route = next(
+                item for item in router["governing_documents"]
+                if item["document_id"] == "PLATFORM_PRODUCT_LAW"
+            )
+            route["sha256"] = hashlib.sha256(changed.encode()).hexdigest()
+            router_path.write_text(json.dumps(router))
+            self.assertTrue(validate_development(root, self.packet))
 
 
 if __name__ == "__main__":

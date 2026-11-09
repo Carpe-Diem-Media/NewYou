@@ -20,17 +20,17 @@
     },
     {
       "document_id": "PLATFORM_PRODUCT_LAW",
-      "canonical_filename": "00_PLATFORM_v1.14.0.md",
-      "repository_path": "docs/governance/product/00_PLATFORM_v1.14.0.md",
-      "sha256": "bcec310103319441d12c6efae1c7c779a013a503b3831da630abb4a55187314b",
-      "semver": "1.14.0"
+      "canonical_filename": "00_PLATFORM_v1.15.0.md",
+      "repository_path": "docs/governance/product/00_PLATFORM_v1.15.0.md",
+      "sha256": "c7f5510817028d28edd4eb29e71b9150e13d0354cccf1af23666e067e0eed0b8",
+      "semver": "1.15.0"
     },
     {
       "document_id": "PRODUCT_DECISIONS",
-      "canonical_filename": "01_DECISIONS_v1.14.0.md",
-      "repository_path": "docs/governance/product/01_DECISIONS_v1.14.0.md",
-      "sha256": "d97cb742deefa744279b47686bf5148cceea4b95839fe5b32ad6bbe7d2b6b1fd",
-      "semver": "1.14.0"
+      "canonical_filename": "01_DECISIONS_v1.15.0.md",
+      "repository_path": "docs/governance/product/01_DECISIONS_v1.15.0.md",
+      "sha256": "db57b0b73ed9faf8f3ade458c01d0d4798e4c2401172a35b9a1ad129ce8ae8d4",
+      "semver": "1.15.0"
     },
     {
       "document_id": "ARCHITECTURE_LAW",
@@ -123,6 +123,22 @@
       "semver": "1.14.0",
       "status": "PROPOSED_NON_AUTHORITATIVE",
       "promotion_requires": "Explicit Product-owner decision, Content & Media decision, independent Master Gate and authorised integration"
+    },
+    {
+      "document_id": "PLATFORM_PRODUCT_LAW",
+      "repository_path": "docs/governance/product/proposals/well-98/00_PLATFORM_v1.15.0_PROPOSED.md",
+      "sha256": "a9ae584bccc984faca20aeed2428edc00a05ad54aead237a57a6d90388eedebb",
+      "semver": "1.15.0",
+      "status": "PROPOSED_NON_AUTHORITATIVE",
+      "promotion_requires": "Recorded exact owner decisions, independent Master Gate and authorised integration"
+    },
+    {
+      "document_id": "PRODUCT_DECISIONS",
+      "repository_path": "docs/governance/product/proposals/well-98/01_DECISIONS_v1.15.0_PROPOSED.md",
+      "sha256": "b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017",
+      "semver": "1.15.0",
+      "status": "PROPOSED_NON_AUTHORITATIVE",
+      "promotion_requires": "Recorded exact owner decisions, independent Master Gate and authorised integration"
     }
   ]
 }

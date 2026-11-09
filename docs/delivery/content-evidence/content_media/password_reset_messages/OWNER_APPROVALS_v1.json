@@ -1,0 +1,119 @@
+{
+  "record_id": "WELL-98-OWNER-APPROVALS-V1",
+  "approved_head": "64841ae010275dbd94f1fd3f0cc70f8d71af3bc7",
+  "actor_identity": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+  "attribution": {
+    "source": "User's direct confirmation of the five named roles, as transcribed into Plane comments.",
+    "authority": "Self-attested accountable roles by the requesting user; Plane records attribute each comment to the connected account.",
+    "independence": false,
+    "runtime_identity_or_grant": false
+  },
+  "plane_source": {
+    "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+    "workitem_id": "0609cc82-9dc8-4fb8-829f-2467b373ee74",
+    "summary_comment_id": "510ff609-f47a-4f54-8e77-9d2ba6345276",
+    "summary_recorded_at": "2026-11-09T07:01:28.745463Z",
+    "summary_comment_text": "WELL-98 — APPROVAL EVIDENCE INDEX / NEXT GOVERNANCE-ACTIVATION STEP — 2026-11-09\nThe user explicitly confirmed approval of all five named accountable roles after being asked if they were acting as Product owner, Content & Media owner (both locale versions), English Language Reviewer and Afrikaans Language Reviewer. Five separate exact-bound approval decisions have been recorded on this ticket; each Plane comment provides its decision ID, source attribution, content/version/digests and development-only scope:\nProduct approval WELL-98-PRODUCT-APPROVAL-20261109 — comment a6cedfea-2ee2-4c9b-97eb-a735793a4d92\nContent & Media EN V1 approval WELL-98-CONTENT-EN-V1-APPROVAL-20261109 — comment 85949fee-f36c-4d6c-b54f-890ef4ad04eb\nContent & Media AF V2 approval WELL-98-CONTENT-AF-V2-APPROVAL-20261109 — comment 56697c18-e585-403e-8b99-ef417d9acf6b\nEnglish language EN V1 approval WELL-98-LANG-EN-V1-APPROVAL-20261109 — comment b6c2dc5e-5622-49ac-8e12-a0f5855acce3\nAfrikaans language AF V2 approval WELL-98-LANG-AF-V2-APPROVAL-20261109 — comment 3fd2448a-39f3-4c61-bbaf-85253e3d2c5f\nIndependent verification confirmed all five comments exist exactly once. Current main remains 64841ae010275dbd94f1fd3f0cc70f8d71af3bc7; docs/governance/CURRENT_GOVERNANCE_ROUTER.json still selects Product and Decisions v1.14; merged packet CANDIDATE_NOT_APPROVED still has all eligibility flags false and no approval events. Source approval evidence is the user's direct self-attested ChatGPT reply transcribed by the assistant; it is not an independent runtime role/IdentityGrant, automatic publication, production grant or security exception.\nNext work: continue WELL-98 only to integrate the above attributable decisions in durable repo evidence, promote the approved narrow Product/Decisions successor with correct current routing and bounded Content development eligibility, preserve historical AF V1 and EN V1/AF V2 exact bytes, prove lifecycle and fail-closed guards in tests and obtain fresh independent exact-head Master Gate review and explicit merge authority. Do not start WELL-13, mark WELL-98 Done, or silently grant runtime/send/public-release/production rights yet. Keep WELL-91's Assent disposition separate."
+  },
+  "decisions": [
+    {
+      "decision_id": "WELL-98-PRODUCT-APPROVAL-20261109",
+      "accountable_owner": "Product",
+      "role": "accountable Product owner",
+      "decision": "APPROVE",
+      "actor_identity": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "plane_record": {
+        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+        "workitem_id": "0609cc82-9dc8-4fb8-829f-2467b373ee74",
+        "comment_id": "a6cedfea-2ee2-4c9b-97eb-a735793a4d92",
+        "recorded_at": "2026-11-09T06:59:05.698111Z",
+        "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+        "updated_by": null,
+        "edited_at": null,
+        "access": "INTERNAL"
+      },
+      "plane_comment_text": "WELL-98 — DISTINCT ACCOUNTABLE APPROVAL DECISION: Product owner — narrow password-reset message classification\nDecision ID: WELL-98-PRODUCT-APPROVAL-20261109. Decision: APPROVE as self-attested accountable Product owner. Exact documents: docs/governance/product/proposals/well-98/00_PLATFORM_v1.15.0_PROPOSED.md SHA-256 a9ae584bccc984faca20aeed2428edc00a05ad54aead237a57a6d90388eedebb and docs/governance/product/proposals/well-98/01_DECISIONS_v1.15.0_PROPOSED.md SHA-256 b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017 (proposed §§21E.23-24 / DEC-322). Approve narrow password_reset_message for existing-Account password-reset proof email only; editorial_low_risk for wording only; Class A / identity_security content; Identity security remains HIGH. Reject extension to verification, magic-login, general recovery or transactional messages.\nDecision source and attribution: The requesting user answered approved directly after being asked to confirm approval of all five specific WELL-98 roles (Product owner, Content & Media EN, Content & Media AF, English Language Reviewer, Afrikaans Language Reviewer). This is a self-attestation of accountability by the human requester, transcribed by the assistant into Plane. Plane author metadata identifies the connected account recording this evidence. Do not misrepresent this as a runtime Account/IdentityGrant, an independent second person's review, or agent-originated approval.\nSource baseline: approved review subject on merged main 64841ae010275dbd94f1fd3f0cc70f8d71af3bc7; proposal Product digest a9ae584bccc984faca20aeed2428edc00a05ad54aead237a57a6d90388eedebb, proposed Decisions digest b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017. Preserve direct user message provenance; no fabricated external signature or approver.\nScope: Local development, automated tests, development environments and bounded P8-12 Phase-8 proof only. No production, public release, paid pilot, real-participant delivery, Phase 9, runtime Content role, sender/provider grant or password-reset implementation permission.\nActivation guard: This individual approved decision does not mutate the merged candidate packet or current governance router. A subsequent independently reviewed governance/content activation PR must copy/verify attributable decision references and timestamps, immutable digest bindings, complete conflict-free history and exact-head CI before changing eligibility. Until then WELL-98 remains In Review, all packet eligibility FALSE and WELL-13 blocked."
+    },
+    {
+      "decision_id": "WELL-98-CONTENT-EN-V1-APPROVAL-20261109",
+      "accountable_owner": "Content & Media",
+      "role": "Content & Media owner, exact EN V1",
+      "decision": "APPROVE",
+      "actor_identity": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "plane_record": {
+        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+        "workitem_id": "0609cc82-9dc8-4fb8-829f-2467b373ee74",
+        "comment_id": "85949fee-f36c-4d6c-b54f-890ef4ad04eb",
+        "recorded_at": "2026-11-09T06:59:14.529529Z",
+        "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+        "updated_by": null,
+        "edited_at": null,
+        "access": "INTERNAL"
+      },
+      "plane_comment_text": "WELL-98 — DISTINCT ACCOUNTABLE APPROVAL DECISION: Content & Media owner — exact EN V1 candidate\nDecision ID: WELL-98-CONTENT-EN-V1-APPROVAL-20261109. Decision: APPROVE as self-attested accountable Content & Media owner, EN V1 only. ContentItem NEWYOU-CONTENTITEM-PASSWORD-RESET-MESSAGE-EMAIL; ContentVersion NEWYOU-CONTENTVERSION-PASSWORD-RESET-MESSAGE-EMAIL-V1; ContentTranslationVersion NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-EN-V1; locale EN; format password-reset-message-subject-body-text-v1; artifact docs/delivery/content-evidence/content_media/password_reset_messages/NEWYOU-PASSWORD-RESET-MESSAGE-EMAIL-EN-V1.txt, exact UTF-8 LF 369 bytes, SHA-256 71c213c2ae48edf499d7d6d4191d84076a366d6fbd59607c8b842c830d33928c; exact subject digest b35b81afdb9a203fb1bea2b31473fe331c4e76b3168b4848cf8e3b9f2175885d; body digest a197996da399f16f4c7e0564156c657acda8da60c8badf4fc12ac40a06b12076; token contract digest cbf191e4408d4a7120e00e93d6978dff7364c3246932d34d1dc1b04e11f8dfa1 (literal {{platform_name}} subject/body and {{password_reset_link}} body only). All exact digests/versions bound to Product proposal pair.\nDecision source and attribution: The requesting user answered approved directly after being asked to confirm approval of all five specific WELL-98 roles (Product owner, Content & Media EN, Content & Media AF, English Language Reviewer, Afrikaans Language Reviewer). This is a self-attestation of accountability by the human requester, transcribed by the assistant into Plane. Plane author metadata identifies the connected account recording this evidence. Do not misrepresent this as a runtime Account/IdentityGrant, an independent second person's review, or agent-originated approval.\nSource baseline: approved review subject on merged main 64841ae010275dbd94f1fd3f0cc70f8d71af3bc7; proposal Product digest a9ae584bccc984faca20aeed2428edc00a05ad54aead237a57a6d90388eedebb, proposed Decisions digest b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017. Preserve direct user message provenance; no fabricated external signature or approver.\nScope: Local development, automated tests, development environments and bounded P8-12 Phase-8 proof only. No production, public release, paid pilot, real-participant delivery, Phase 9, runtime Content role, sender/provider grant or password-reset implementation permission.\nActivation guard: This individual approved decision does not mutate the merged candidate packet or current governance router. A subsequent independently reviewed governance/content activation PR must copy/verify attributable decision references and timestamps, immutable digest bindings, complete conflict-free history and exact-head CI before changing eligibility. Until then WELL-98 remains In Review, all packet eligibility FALSE and WELL-13 blocked."
+    },
+    {
+      "decision_id": "WELL-98-CONTENT-AF-V2-APPROVAL-20261109",
+      "accountable_owner": "Content & Media",
+      "role": "Content & Media owner, exact AF V2",
+      "decision": "APPROVE",
+      "actor_identity": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "plane_record": {
+        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+        "workitem_id": "0609cc82-9dc8-4fb8-829f-2467b373ee74",
+        "comment_id": "56697c18-e585-403e-8b99-ef417d9acf6b",
+        "recorded_at": "2026-11-09T06:59:21.569208Z",
+        "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+        "updated_by": null,
+        "edited_at": null,
+        "access": "INTERNAL"
+      },
+      "plane_comment_text": "WELL-98 — DISTINCT ACCOUNTABLE APPROVAL DECISION: Content & Media owner — exact AF V2 candidate\nDecision ID: WELL-98-CONTENT-AF-V2-APPROVAL-20261109. Decision: APPROVE as self-attested accountable Content & Media owner, AF V2 only. ContentItem NEWYOU-CONTENTITEM-PASSWORD-RESET-MESSAGE-EMAIL; ContentVersion NEWYOU-CONTENTVERSION-PASSWORD-RESET-MESSAGE-EMAIL-V1; ContentTranslationVersion NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2; locale AF; format password-reset-message-subject-body-text-v1; artifact docs/delivery/content-evidence/content_media/password_reset_messages/NEWYOU-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2.txt, exact UTF-8 LF 401 bytes, SHA-256 ec1251d149b54692df2751760b72d1766d99537d4fa22b9b06da828bafe9ec93; exact subject digest 838cbddb44e06f68bc5979d122776ba5a3254f82e8150ad6797154d9c9926ee3; body digest b84ff20dafdbefd6cf97eeb5c575a9697da3e2a440783f01829d2a0a5b7c5698; token contract digest cbf191e4408d4a7120e00e93d6978dff7364c3246932d34d1dc1b04e11f8dfa1 (literal {{platform_name}} subject/body and {{password_reset_link}} body only). AF V1 remains unchanged, historical and unapproved; it has not been approved or superseded by this decision. Product proposal pair exact-bound.\nDecision source and attribution: The requesting user answered approved directly after being asked to confirm approval of all five specific WELL-98 roles (Product owner, Content & Media EN, Content & Media AF, English Language Reviewer, Afrikaans Language Reviewer). This is a self-attestation of accountability by the human requester, transcribed by the assistant into Plane. Plane author metadata identifies the connected account recording this evidence. Do not misrepresent this as a runtime Account/IdentityGrant, an independent second person's review, or agent-originated approval.\nSource baseline: approved review subject on merged main 64841ae010275dbd94f1fd3f0cc70f8d71af3bc7; proposal Product digest a9ae584bccc984faca20aeed2428edc00a05ad54aead237a57a6d90388eedebb, proposed Decisions digest b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017. Preserve direct user message provenance; no fabricated external signature or approver.\nScope: Local development, automated tests, development environments and bounded P8-12 Phase-8 proof only. No production, public release, paid pilot, real-participant delivery, Phase 9, runtime Content role, sender/provider grant or password-reset implementation permission.\nActivation guard: This individual approved decision does not mutate the merged candidate packet or current governance router. A subsequent independently reviewed governance/content activation PR must copy/verify attributable decision references and timestamps, immutable digest bindings, complete conflict-free history and exact-head CI before changing eligibility. Until then WELL-98 remains In Review, all packet eligibility FALSE and WELL-13 blocked."
+    },
+    {
+      "decision_id": "WELL-98-LANG-EN-V1-APPROVAL-20261109",
+      "accountable_owner": "English Language Reviewer",
+      "role": "English Language Reviewer, exact EN V1",
+      "decision": "APPROVE",
+      "actor_identity": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "plane_record": {
+        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+        "workitem_id": "0609cc82-9dc8-4fb8-829f-2467b373ee74",
+        "comment_id": "b6c2dc5e-5622-49ac-8e12-a0f5855acce3",
+        "recorded_at": "2026-11-09T06:59:27.114634Z",
+        "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+        "updated_by": null,
+        "edited_at": null,
+        "access": "INTERNAL"
+      },
+      "plane_comment_text": "WELL-98 — DISTINCT ACCOUNTABLE APPROVAL DECISION: English Language Reviewer — exact EN V1\nDecision ID: WELL-98-LANG-EN-V1-APPROVAL-20261109. Decision: APPROVE as self-attested English Language Reviewer for exact EN subject/body artifact NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-EN-V1 at docs/delivery/content-evidence/content_media/password_reset_messages/NEWYOU-PASSWORD-RESET-MESSAGE-EMAIL-EN-V1.txt, 369 UTF-8 LF bytes, SHA-256 71c213c2ae48edf499d7d6d4191d84076a366d6fbd59607c8b842c830d33928c, ContentItem NEWYOU-CONTENTITEM-PASSWORD-RESET-MESSAGE-EMAIL, ContentVersion NEWYOU-CONTENTVERSION-PASSWORD-RESET-MESSAGE-EMAIL-V1, format password-reset-message-subject-body-text-v1, token contract cbf191e4408d4a7120e00e93d6978dff7364c3246932d34d1dc1b04e11f8dfa1. This is language-quality evidence, not a Product/Content release or security decision.\nDecision source and attribution: The requesting user answered approved directly after being asked to confirm approval of all five specific WELL-98 roles (Product owner, Content & Media EN, Content & Media AF, English Language Reviewer, Afrikaans Language Reviewer). This is a self-attestation of accountability by the human requester, transcribed by the assistant into Plane. Plane author metadata identifies the connected account recording this evidence. Do not misrepresent this as a runtime Account/IdentityGrant, an independent second person's review, or agent-originated approval.\nSource baseline: approved review subject on merged main 64841ae010275dbd94f1fd3f0cc70f8d71af3bc7; proposal Product digest a9ae584bccc984faca20aeed2428edc00a05ad54aead237a57a6d90388eedebb, proposed Decisions digest b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017. Preserve direct user message provenance; no fabricated external signature or approver.\nScope: Local development, automated tests, development environments and bounded P8-12 Phase-8 proof only. No production, public release, paid pilot, real-participant delivery, Phase 9, runtime Content role, sender/provider grant or password-reset implementation permission.\nActivation guard: This individual approved decision does not mutate the merged candidate packet or current governance router. A subsequent independently reviewed governance/content activation PR must copy/verify attributable decision references and timestamps, immutable digest bindings, complete conflict-free history and exact-head CI before changing eligibility. Until then WELL-98 remains In Review, all packet eligibility FALSE and WELL-13 blocked."
+    },
+    {
+      "decision_id": "WELL-98-LANG-AF-V2-APPROVAL-20261109",
+      "accountable_owner": "Afrikaans Language Reviewer",
+      "role": "Afrikaans Language Reviewer, exact AF V2",
+      "decision": "APPROVE",
+      "actor_identity": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "plane_record": {
+        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+        "workitem_id": "0609cc82-9dc8-4fb8-829f-2467b373ee74",
+        "comment_id": "3fd2448a-39f3-4c61-bbaf-85253e3d2c5f",
+        "recorded_at": "2026-11-09T06:59:32.524540Z",
+        "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+        "updated_by": null,
+        "edited_at": null,
+        "access": "INTERNAL"
+      },
+      "plane_comment_text": "WELL-98 — DISTINCT ACCOUNTABLE APPROVAL DECISION: Afrikaans Language Reviewer — exact AF V2\nDecision ID: WELL-98-LANG-AF-V2-APPROVAL-20261109. Decision: APPROVE as self-attested Afrikaans Language Reviewer for exact AF subject/body artifact NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2 at docs/delivery/content-evidence/content_media/password_reset_messages/NEWYOU-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2.txt, 401 UTF-8 LF bytes, SHA-256 ec1251d149b54692df2751760b72d1766d99537d4fa22b9b06da828bafe9ec93, ContentItem NEWYOU-CONTENTITEM-PASSWORD-RESET-MESSAGE-EMAIL, ContentVersion NEWYOU-CONTENTVERSION-PASSWORD-RESET-MESSAGE-EMAIL-V1, format password-reset-message-subject-body-text-v1, token contract cbf191e4408d4a7120e00e93d6978dff7364c3246932d34d1dc1b04e11f8dfa1. Reviewer knowingly accepts the use of wysig in this password-reset follow-up email. AF V1 remains historical/unapproved. This is language-quality evidence, not a Product/Content release or security decision.\nDecision source and attribution: The requesting user answered approved directly after being asked to confirm approval of all five specific WELL-98 roles (Product owner, Content & Media EN, Content & Media AF, English Language Reviewer, Afrikaans Language Reviewer). This is a self-attestation of accountability by the human requester, transcribed by the assistant into Plane. Plane author metadata identifies the connected account recording this evidence. Do not misrepresent this as a runtime Account/IdentityGrant, an independent second person's review, or agent-originated approval.\nSource baseline: approved review subject on merged main 64841ae010275dbd94f1fd3f0cc70f8d71af3bc7; proposal Product digest a9ae584bccc984faca20aeed2428edc00a05ad54aead237a57a6d90388eedebb, proposed Decisions digest b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017. Preserve direct user message provenance; no fabricated external signature or approver.\nScope: Local development, automated tests, development environments and bounded P8-12 Phase-8 proof only. No production, public release, paid pilot, real-participant delivery, Phase 9, runtime Content role, sender/provider grant or password-reset implementation permission.\nActivation guard: This individual approved decision does not mutate the merged candidate packet or current governance router. A subsequent independently reviewed governance/content activation PR must copy/verify attributable decision references and timestamps, immutable digest bindings, complete conflict-free history and exact-head CI before changing eligibility. Until then WELL-98 remains In Review, all packet eligibility FALSE and WELL-13 blocked."
+    }
+  ],
+  "authorizations": {
+    "merge": false,
+    "password_reset_implementation": false,
+    "runtime_content_role": false,
+    "sender_or_provider": false,
+    "publication_or_release": false,
+    "production_or_real_participant": false,
+    "phase_9": false
+  }
+}
