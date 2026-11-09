@@ -143,7 +143,7 @@ No registry, dependency or advisory caches are restored. CLI output and SARIF st
 in job logs. Missing reports, malformed evidence, network failures and unexpected
 exit codes fail visibly. The audit is absent from ordinary `mix check`.
 
-### Assent disposition history and WELL-100 retirement proposal
+### Assent disposition history and WELL-100 retirement approval
 
 The former active record and approval in WELL-91 comment
 `b8ac8764-c2c8-4dd9-b13e-802039e34790` applied to PR #190 candidate
@@ -162,14 +162,18 @@ revalidate.
 
 The WELL-100 candidate resolves Assent `0.3.2`, which satisfies
 AshAuthentication `5.0.0-rc.17` and is fixed for the referenced advisory. The
-exception record now says `retirement_proposed`; the [WELL-100 addendum](ash-authentication-v5-well-100.md)
-and [WELL-91](https://app.plane.so/symphony-development/browse/WELL-91) record
-the evidence and outstanding decision. The record is not read by CI and is not an
-approval. Independent Master Gate must review the exact graph, advisory, route
-and action reachability and both clean audit results, then explicitly accept or
-reject the retirement proposal. WELL-91 remains open with its original expiry
-unchanged until that decision is recorded. Any new audit finding fails; no
-suppression, automatic renewal, environment escape hatch or broad ignore exists.
+exception record now says `retirement_approved`. The accountable maintainer
+approved retirement for dependency candidate head
+`2376dda3a530f31b99d633f9061df0ece2d6977b`; the decision is recorded in
+[WELL-91 comment `feab6ecf-0a09-4b9c-8240-0d055e700075`](https://app.plane.so/symphony-development/browse/WELL-91)
+and the [WELL-100 addendum](ash-authentication-v5-well-100.md). The record is
+not read by CI. Owner approval does not certify the current PR head or change
+`main`. Independent Master Gate must review the exact head, graph, advisory,
+route and action reachability, and both clean audit results before merge. The
+exception retirement becomes effective on `main` only when the approved change
+merges. WELL-91 remains in Planning with its original expiry unchanged. Any new
+audit finding fails; no suppression, automatic renewal, environment escape hatch
+or broad ignore exists.
 
 Each audit still runs from fresh temporary Hex/Mix homes, pins Hex `2.6.0`, uses
 the committed lock as exact dependency roots, verifies locked resolution and
@@ -185,8 +189,11 @@ same files alone. Independent Master Gate review remains the approval boundary.
   lock resolution and unchanged-lock checks. The former exception behavior is
   removed rather than rebound.
 - Lifecycle and authorization proof applies. There is no active exception state
-  to transition and no application capability is granted. WELL-100's explicit
-  retirement proposal remains subject to independent Master Gate decision.
+  to transition and no application capability is granted. The owner approved
+  retirement for dependency candidate head
+  `2376dda3a530f31b99d633f9061df0ece2d6977b`; independent Master Gate must
+  certify the current PR head before merge. Retirement takes effect on `main`
+  only when the approved change merges.
 - Routing/bypass proof applies. Tests cover dependency/source/config/tool/workflow
   changes and execute the aggregate shell against success, failure, cancellation,
   skipped and missing decisions. Smoke checks the aggregate dependency topology.
