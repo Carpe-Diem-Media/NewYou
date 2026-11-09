@@ -1,10 +1,21 @@
 {
-  "state": "active",
-  "owner": "JC",
+  "state": "retirement_approved",
   "package": "assent",
-  "version": "0.2.13",
-  "expires_on": "2026-11-18",
-  "follow_up": "WELL-91",
-  "approval_comment": "7aa8d06b-6fdf-4824-8a18-e4b3ffe00b32",
-  "input_digest": "f76c43fa627e0fd11cd3e7c849144612433b0b7b552d2a577498670d110c0ebb"
+  "previous_vulnerable_version": "0.2.13",
+  "replacement_version": "0.3.2",
+  "proposal_ticket": "WELL-100",
+  "owner_approval": {
+    "approver": "JC",
+    "approval_date": "2026-11-09",
+    "plane_identity": "jcschoeman123",
+    "github_identity": "JCSchoeman96",
+    "decision_comment": "WELL-91:feab6ecf-0a09-4b9c-8240-0d055e700075"
+  },
+  "approved_candidate": {
+    "ash_authentication": "5.0.0-rc.17",
+    "assent": "0.3.2",
+    "base_sha": "f9bf634de80c95d39597e27100f98325356da705",
+    "approved_head_sha": "2376dda3a530f31b99d633f9061df0ece2d6977b"
+  },
+  "requires_independent_master_gate": true
 }

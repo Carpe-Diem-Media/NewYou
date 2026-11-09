@@ -31,7 +31,12 @@ defmodule NewYou.Security.PasswordRevocationRegressionTest do
 
     for _ <- 1..2 do
       assert :ok =
-               AshAuthentication.Strategy.action(strategy, :log_out_everywhere, %{user: updated})
+               AshAuthentication.Strategy.action(
+                 strategy,
+                 :log_out_everywhere,
+                 %{user: updated},
+                 []
+               )
     end
 
     assert authenticated_user(control_token).id == control.id

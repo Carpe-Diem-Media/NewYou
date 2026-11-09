@@ -1,9 +1,15 @@
 ---
 name: ash-framework
-description: "Use when working with Ash resources, domains, actions, changes, policies, data layers, or AshPostgres."
+description: "Use when working with Ash resources, domains, actions, policies, authentication, data layers, or AshPostgres."
 metadata:
   managed-by: usage-rules
 ---
+
+## NewYou authentication security note
+
+For OAuth2/OIDC, never match or link a local Account by provider email or another provider-supplied claim. Resolve provider identities by the persisted `(iss, sub)` pair. AshAuthentication RC17 makes `UserIdentity` optional, but its validator warns that matching by email or any provider claim is unsafe. Do not trust `email_verified` by default; require a verified ownership path before treating a provider email as authoritative.
+
+NewYou has no configured OAuth2/OIDC strategy or callback. See the [WELL-100 compatibility and security note](../../../docs/development/ash-authentication-v5-well-100.md#9-oauth-identity-matching), the [RC17 usage guide](https://github.com/team-alembic/ash_authentication/blob/v5.0.0-rc.17/usage-rules.md) and the [RC17 validator](https://github.com/team-alembic/ash_authentication/blob/v5.0.0-rc.17/lib/ash_authentication/validations.ex). For current package APIs, use `mix usage_rules.search_docs "OAuth2" -p ash_authentication`.
 
 <!-- usage-rules-skill-start -->
 ## Additional References
@@ -41,14 +47,10 @@ metadata:
 - [migrations](references/ash_postgres/migrations.md)
 - [multitenancy](references/ash_postgres/multitenancy.md)
 
-### ash_authentication
-
-- [ash_authentication](references/ash_authentication/ash_authentication.md)
-
 ## Searching Documentation
 
 ```sh
-mix usage_rules.search_docs "search term" -p ash -p ash_postgres -p ash_authentication
+mix usage_rules.search_docs "search term" -p ash -p ash_postgres
 ```
 
 ## Available Mix Tasks
@@ -90,8 +92,4 @@ mix usage_rules.search_docs "search term" -p ash -p ash_postgres -p ash_authenti
 - `mix ash_postgres.setup_vector` - Sets up pgvector for AshPostgres
 - `mix ash_postgres.setup_vector.docs`
 - `mix ash_postgres.squash_snapshots` - Cleans snapshots folder, leaving only one snapshot per resource
-- `mix ash_authentication.add_add_on` - Adds the provided add-on to your user resource
-- `mix ash_authentication.add_strategy` - Adds the provided strategy or strategies to your user resource
-- `mix ash_authentication.install` - Installs AshAuthentication. Invoke with `mix igniter.install ash_authentication`
-- `mix ash_authentication.upgrade`
 <!-- usage-rules-skill-end -->

@@ -60,7 +60,7 @@ devcore-project run test -- mise exec -- mix check.deep
 
 The runner's Session family is partial and cannot certify TB-001. The restart case starts independent BEAM instances against the same database; it is not a database restore or deployment test.
 
-The earlier [run 42162117813](https://github.com/JCSchoeman96/NewYou/actions/runs/42162117813) failed at feature head `02b25748b78739704fb208fdd77651f33cbaea64` because its authentication inputs invalidated the previous Assent approval. Those historical failures remain failures. Independent HIGH / privileged_security reassessment is now recorded in [WELL-91](https://app.plane.so/symphony-development/browse/WELL-91), comment `b10715e7-6871-4d17-b25a-fb010e8d3f60`. Accountable owner JC explicitly accepted the narrow temporary Apple-callback non-reachability disposition in comment `6153e770-7a49-49ad-87da-1513b07e15d1` for that feature head and input digest `9dba69b70b03f3c541a956fc0dd45a802678d0b72bcc3850a9058e4940134a55`.
+The following records describe the prior security state at their named commits; see section 9 for the current WELL-100 status. The earlier [run 42162117813](https://github.com/JCSchoeman96/NewYou/actions/runs/42162117813) failed at feature head `02b25748b78739704fb208fdd77651f33cbaea64` because its authentication inputs invalidated the previous Assent approval. Those historical failures remain failures. Independent HIGH / privileged_security reassessment is now recorded in [WELL-91](https://app.plane.so/symphony-development/browse/WELL-91), comment `b10715e7-6871-4d17-b25a-fb010e8d3f60`. Accountable owner JC explicitly accepted the narrow temporary Apple-callback non-reachability disposition in comment `6153e770-7a49-49ad-87da-1513b07e15d1` for that feature head and input digest `9dba69b70b03f3c541a956fc0dd45a802678d0b72bcc3850a9058e4940134a55`.
 
 Binding commit `01b8d0b83a4e3e9e99bec2b900e98f4e5bf71c0b` updates the [audit approval constants](../../tools/hex_security_audit.py), [exception metadata](../../tools/hex_audit/assent_exception.json) and [audit regressions](../../tests/test_hex_security_audit.py). The 71 digest-bound files are unchanged from the approved feature head. Owner JC, vulnerable Assent `0.2.13`, follow-up WELL-91 and the exclusive hard expiry `2026-11-18T00:00:00Z` are unchanged. The scanner still reports the advisory without suppression; the wrapper grants only the approved controlled disposition. This is not remediation or a clean dependency audit. Changed covered inputs, reachability or advisory evidence invalidate the disposition; the fail-closed guards remain enforced by the audit and regression suite.
 
@@ -73,3 +73,14 @@ This evidence applies to the recorded revisions. A documentation-only successor 
 Start with the browser boundary and follow the controller to `Identity.authenticate_password/2` and `Identity.authorize_session/1`. Follow those into the Account/Token/Session transaction, then inspect the migrations, action filters, and the focused tests and P809 cases above. Do not use the cookie, a LiveView assign or a prior authorization result as current business authority. Any future protected mutation must recheck the relevant current authority at its own transaction boundary. Preserve the Account-before-Token-before-Session lock order where applicable.
 
 The implementing agent followed this path from the source map, checked the named entry points, Resource actions, constraints and test registrations, and recorded the limits above. This is a self-audit, not independent Master Gate. Before extending the slice, reread current source, live Plane and current authority; review changed input security and the production copy gate independently.
+
+## 9. WELL-100 framework compatibility update
+
+WELL-100 evaluates the current code against AshAuthentication
+`5.0.0-rc.17`; the exact source, dependency delta and verification results are in
+the [v5 compatibility addendum](ash-authentication-v5-well-100.md) at source SHA
+`33e821a572aeb3670299a3ea5ad6aad53d2c50ef`, draft PR #208. Password verification,
+Identity-owned Token/Session issuance and authorization are unchanged. The v5
+API adjustment applies only to a test helper call from `Strategy.action/3` to
+`action/4`. Earlier Assent disposition text above records prior source and remains
+historical; the current proposal and audit behavior are recorded in the addendum.

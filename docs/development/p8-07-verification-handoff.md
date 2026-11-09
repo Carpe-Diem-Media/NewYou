@@ -233,3 +233,14 @@ and distinguished virtual-transaction contention evidence from physical XIDs.
 That audit is a self-audit because
 the task explicitly prohibits spawning reviewers. It cannot certify merge
 authority or substitute for independent Master Gate.
+
+## 9. WELL-100 framework compatibility update
+
+WELL-100 evaluates the current code against AshAuthentication
+`5.0.0-rc.17`; the exact source, dependency delta and verification results are in
+the [v5 compatibility addendum](ash-authentication-v5-well-100.md) at source SHA
+`33e821a572aeb3670299a3ea5ad6aad53d2c50ef`, draft PR #208. This flow still calls
+`Identity.verify_email/1` and its private Account/Token transition. The framework
+upgrade adds no Confirmation add-on, route, migration or change to verification
+ownership. Older version references above describe their recorded historical
+revision.

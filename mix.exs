@@ -62,8 +62,8 @@ defmodule NewYou.MixProject do
           # Mix environment that ran the sync.
           "ash-framework": [
             description:
-              "Use when working with Ash resources, domains, actions, changes, policies, data layers, or AshPostgres.",
-            usage_rules: [:ash, :ash_postgres, :ash_authentication]
+              "Use when working with Ash resources, domains, actions, policies, authentication, data layers, or AshPostgres.",
+            usage_rules: [:ash, :ash_postgres]
           ],
           "phoenix-framework": [
             description:
@@ -99,7 +99,7 @@ defmodule NewYou.MixProject do
       {:ash_oban, "== 0.10.2"},
       {:argon2_elixir, "== 4.1.3"},
       {:picosat_elixir, "~> 0.2"},
-      {:ash_authentication, "== 4.15.1"},
+      {:ash_authentication, "== 5.0.0-rc.17"},
       {:tidewave, "== 0.9.2", only: [:dev]},
       {:ash_postgres, "== 2.15.2"},
       {:ash, "== 3.37.2"},

@@ -22,6 +22,7 @@ Implementation maps and their review requirements live in development documentat
 - [P8-07 explicit email verification implementation handoff](development/p8-07-verification-handoff.md)
 - [P8-08 password Session implementation handoff](development/p8-08-password-session-handoff.md)
 - [P8-09 magic-login implementation handoff](development/p8-09-magic-login-handoff.md)
+- [AshAuthentication v5 compatibility addendum (WELL-100)](development/ash-authentication-v5-well-100.md)
 - [P8-13 privileged-support implementation handoff](development/p8-13-privileged-support-handoff.md)
 - [P8-14 Identity reconciliation implementation handoff](development/p8-14-reconciliation-handoff.md)
 

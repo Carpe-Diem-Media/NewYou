@@ -143,65 +143,67 @@ No registry, dependency or advisory caches are restored. CLI output and SARIF st
 in job logs. Missing reports, malformed evidence, network failures and unexpected
 exit codes fail visibly. The audit is absent from ordinary `mix check`.
 
-### Retained Assent disposition lifecycle
+### Assent disposition history and WELL-100 retirement approval
 
-The active record is `tools/hex_audit/assent_exception.json`. Independent approval
-is WELL-91 comment `b8ac8764-c2c8-4dd9-b13e-802039e34790`, for PR #190 candidate
-`4bec2a65aefbe2c6359c3857a4a53f20a8cf997c`. The candidate's lock, source and config
-match WELL-83 base `c4da7161814a32ca9545a01e61ecbe450ac27a74`. JC remains accountable.
-WELL-91 remains open for remediation/revalidation. This implementation grants no
-new exception and no extension.
+The former active record and approval in WELL-91 comment
+`b8ac8764-c2c8-4dd9-b13e-802039e34790` applied to PR #190 candidate
+`4bec2a65aefbe2c6359c3857a4a53f20a8cf997c`, not the current dependency graph.
+Its input digest is invalidated by the WELL-100 lock and source changes. The
+approval, owner and exclusive expiry `2026-11-18T00:00:00Z` remain historical
+evidence; this PR does not renew or extend them.
 
-- Proposed records cannot disposition a failure. Activation requires independent
-  review of the exact dependency graph, authentication strategies/routes/callers,
-  advisory evidence, owner, follow-up and deadline through a reviewed PR.
-- Active records pass only for the sole unsuppressed finding, package `assent`,
-  version `0.2.13`, the exact EEF/CVE/GHSA alias set, reviewed summary, URL and
-  critical severity. The result says `CONTROLLED DISPOSITION`, never clean.
-- A changed lock, toolchain, `mix.exs`, any production source/config or the auth
-  guard invalidates the input digest. This deliberately includes newly added
-  files and unrelated production changes rather than risk missing a new caller.
-  Updating a hash does not grant approval. A new stable AshAuthentication release
-  also fails pending review, even if its Assent constraint has not changed.
-  A new stable Assent 0.2 backport also fails pending revalidation.
-  The release checks use the official Hex API, fail on unavailable/malformed
-  evidence and does not install a release. Changed advisory details or aliases,
-  new findings, retirement, wrong package/version and unmatched records fail.
-- Expiry is exclusive at `2026-11-18T00:00:00Z`, a conservative interpretation of
-  the latest authorised deadline. Dates before approval also fail. An expired or
-  invalidated record cannot return to active without a new independent decision.
-- Resolved or superseded records are terminal and cannot disposition findings.
-  A reviewed remediation removes the active record by replacing it with `{}`.
-  Only a fresh successful audit with zero findings then reports clean. A successor
-  needs its own independent approval and future tracked obligation. This ticket
-  does not authorise one.
+The current runner has no controlled-disposition path and does not read
+`tools/hex_audit/assent_exception.json`. It accepts only a complete clean SARIF
+report with no rules or results. Any result, including a suppressed one, fails.
+Malformed or missing evidence, conflicting exit status, a changed lock during
+resolution, or a dependency-resolution failure also fails closed. It no longer
+probes for a later parent or Assent release because no exception is available to
+revalidate.
 
-Each run reconstructs the decision from committed evidence and current UTC time.
-Retries start with a fresh home and registry fetch. No mutable lifecycle database,
-process state, automatic renewal, environment escape hatch or broad ignore exists.
-Audit script/workflow changes select the gate and require full-diff review. As with
-other repository CI, an author able to rewrite the scanner or tests cannot be
-restrained by those same files alone. Independent Master Gate review remains the
-approval boundary.
+The WELL-100 candidate resolves Assent `0.3.2`, which satisfies
+AshAuthentication `5.0.0-rc.17` and is fixed for the referenced advisory. The
+exception record now says `retirement_approved`. The accountable maintainer
+approved retirement for dependency candidate head
+`2376dda3a530f31b99d633f9061df0ece2d6977b`; the decision is recorded in
+[WELL-91 comment `feab6ecf-0a09-4b9c-8240-0d055e700075`](https://app.plane.so/symphony-development/browse/WELL-91)
+and the [WELL-100 addendum](ash-authentication-v5-well-100.md). The record is
+not read by CI. Owner approval does not certify the current PR head or change
+`main`. Independent Master Gate must review the exact head, graph, advisory,
+route and action reachability, and both clean audit results before merge. The
+exception retirement becomes effective on `main` only when the approved change
+merges. WELL-91 remains in Planning with its original expiry unchanged. Any new
+audit finding fails; no suppression, automatic renewal, environment escape hatch
+or broad ignore exists.
+
+Each audit still runs from fresh temporary Hex/Mix homes, pins Hex `2.6.0`, uses
+the committed lock as exact dependency roots, verifies locked resolution and
+byte-identical lock content, and prints its SARIF evidence. Audit script/workflow
+changes select the gate and require full-diff review. As with other repository
+CI, an author able to rewrite the scanner or tests cannot be restrained by those
+same files alone. Independent Master Gate review remains the approval boundary.
 
 ### HIGH / privileged_security proof matrix
 
-- Positive/negative and invariant proof applies. Tests cover exact disposition,
-  a second vulnerability, retirement/unrecognised rules, wrong package/version,
-  known and unknown aliases, changed severity/details, stale entries, expiry,
-  inactive/unauthorised metadata, malformed/missing reports and conflicting exits.
-- Lifecycle and authorization proof applies. Fixed approval/owner/deadline checks,
-  production-input binding, stable-release invalidation and exclusive expiry
-  reject unreviewed transitions. No application capability is granted.
+- Positive/negative and invariant proof applies. Tests cover a clean report, any
+  finding, suppressed findings, malformed/missing evidence, scanner mismatch,
+  lock resolution and unchanged-lock checks. The former exception behavior is
+  removed rather than rebound.
+- Lifecycle and authorization proof applies. There is no active exception state
+  to transition and no application capability is granted. The owner approved
+  retirement for dependency candidate head
+  `2376dda3a530f31b99d633f9061df0ece2d6977b`; independent Master Gate must
+  certify the current PR head before merge. Retirement takes effect on `main`
+  only when the approved change merges.
 - Routing/bypass proof applies. Tests cover dependency/source/config/tool/workflow
   changes and execute the aggregate shell against success, failure, cancellation,
   skipped and missing decisions. Smoke checks the aggregate dependency topology.
 - Failure/retry/recovery proof applies. Installation/resolution failures stop the
   run, missing evidence cannot become a fabricated clean result, subprocesses and
   metadata requests have timeouts, and retries reconstruct from fresh state.
-- Provider evidence applies to Hex only. The real fresh-home CLI run reports
-  Assent with exit 1; the wrapper makes its distinct controlled decision. The
-  stable parent release probe fails closed and never upgrades dependencies.
+- Provider evidence applies to Hex only. For the WELL-100 candidate, the real
+  fresh-home CLI run completed with exit 0 and no findings. The wrapper accepts
+  that clean report only; an audit finding fails the job. No stable-release probe
+  is needed because the exception path was removed.
 - Leakage review applies. Jobs have `contents: read` only, no application/database
   secrets, no persisted checkout credentials and no upload write permission.
   Package metadata and committed public lock evidence appear in diagnostics.
