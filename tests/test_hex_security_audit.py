@@ -49,8 +49,8 @@ class AuditEvidenceTests(unittest.TestCase):
 
     def test_suppressed_findings_are_never_accepted(self):
         evidence = report(results=[finding(suppressions=[{"kind": "external"}])])
-        with self.assertRaises(audit.AuditError):
-            audit.disposition(evidence, 0)
+        with self.assertRaisesRegex(audit.AuditError, "suppression"):
+            audit.disposition(evidence, 1)
 
     def test_status_must_match_report(self):
         for evidence, status in [
