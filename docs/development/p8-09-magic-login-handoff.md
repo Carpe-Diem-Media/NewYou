@@ -84,7 +84,7 @@ mise exec elixir@1.20.5-otp-29 erlang@29.1.2 -- python3 tools/hex_security_audit
 
 Observed at implementation SHA: the focused four-file run passed 22 tests. `mix check` passed all 481 tests and its engineering gates; `mix check.deep` passed with zero Dialyzer errors. Hosted exact-head observations are recorded in the PR and Plane after the final candidate is established. Hallmark's confirming render across EN/AF request and confirmation pages passed with 0 FAIL, 0 REFLEX and 0 WARN, with six waiver occurrences for the existing palette, numeric font weights and 58px component height. The additional independent Hallmark audit found the input correction that the confirming round verified. The root `DESIGN.md` records the input-height alias and accessible boundary token, mapped by [design tokens](../../assets/css/design-tokens.css); the shared primary button now has visible keyboard focus.
 
-The fresh isolated Hex audit at this SHA failed with `Exception invalidated by changed dependency/source/config inputs`. This is expected until independent HIGH security reassessment and explicit accountable-owner acceptance cover the changed digest. The vulnerable dependency remains Assent 0.2.13. No approval rebinding or deadline extension is implied by this document. [WELL-91](https://app.plane.so/symphony-development/browse/WELL-91) owns remediation; its exclusive expiry remains `2026-11-18T00:00:00Z`.
+The following records describe the prior security state at their named commits; see section 9 for the current WELL-100 status. The fresh isolated Hex audit at this SHA failed with `Exception invalidated by changed dependency/source/config inputs`. This is expected until independent HIGH security reassessment and explicit accountable-owner acceptance cover the changed digest. The vulnerable dependency remains Assent 0.2.13. No approval rebinding or deadline extension is implied by this document. [WELL-91](https://app.plane.so/symphony-development/browse/WELL-91) owns remediation; its exclusive expiry remains `2026-11-18T00:00:00Z`.
 
 A supplementary `MIX_ENV=prod mix compile --warnings-as-errors` probe failed. The same probe at base `03c95a5` also failed on disabled verification-fixture branches; the new disabled magic Content consumers have analogous unreachable-branch warnings. Required TEST gates are separate. Production compile readiness is tracked in [WELL-85](https://app.plane.so/symphony-development/browse/WELL-85). No production compilation, delivery, release or real-participant proof is claimed.
 
@@ -97,3 +97,14 @@ The timing correction changes two covered application inputs and invalidates the
 Start at `RegistrationBoundary` and `MagicLoginController`, follow the three Identity interfaces into `MagicLogin`, then inspect Token actions, Session issuance and database constraints. Follow issuance into `Communications.establish_magic_login/1`, its MessageIntent trigger, executor admission/invocation fencing, Content validation and the synthetic provider tests. Run the focused suite and the existing proof runner cases before changing lifecycle behavior. This cold-start walkthrough was checked against the implementation SHA, including source symbols, migration names, test registrations and public failure contracts. Independent Master Gate must repeat it at the reviewed PR head.
 
 Preserve Account-before-Token lock order, owning Ash writes, create-only proof issuance, original expiry, current content/locale checks and passive retrieval. Do not call framework JWT generation to rematerialize a delivery proof, introduce a magic ProtectedEnvelope without purpose authority, treat provider evidence as authentication, expose trusted executor/reconciliation seams as public routes, or turn Session provenance into a validity bypass. Production activation, reset, recovery and primary-email-change confirmation require their own current authority and implementation work. A covered source/config/dependency change invalidates the Assent input binding and requires fresh security review and owner acceptance before rebinding.
+
+## 9. WELL-100 framework compatibility update
+
+WELL-100 evaluates the current code against AshAuthentication
+`5.0.0-rc.17`; the exact source, dependency delta and verification results are in
+the [v5 compatibility addendum](ash-authentication-v5-well-100.md) at source SHA
+`33e821a572aeb3670299a3ea5ad6aad53d2c50ef`, draft PR #208. The Identity-owned
+magic-login and Communications delivery path remains unchanged and does not use
+the framework MagicLink strategy or Sender. Earlier Assent disposition text above
+records prior source and remains historical; the current proposal and audit
+behavior are recorded in the addendum.
