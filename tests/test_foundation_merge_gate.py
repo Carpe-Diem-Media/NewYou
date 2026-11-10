@@ -30,7 +30,7 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
                 commands = [
                     "uses: actions/checkout@v7",
                     "uses: erlef/setup-beam@v1",
-                    "run: mix deps.get --check-locked",
+                    "run: bash tools/ci/prepare_cached_dependencies.sh",
                     "run: mix deps.unlock --check-unused",
                     "      - name: Provision isolated TEST role and database",
                     f"run: mix {'check' if job == 'mix-check' else 'check.deep'}",
@@ -39,9 +39,23 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
                     self.assertIn(command + "\n", block)
                 positions = [block.index(command) for command in commands]
                 self.assertEqual(sorted(positions), positions)
-                self.assertNotIn("continue-on-error", block)
+                self.assertEqual(1, block.count("continue-on-error: true"))
+                restore = block.split("      - name: Restore dependency cache\n", 1)[1].split("      - name:", 1)[0]
+                self.assertIn("continue-on-error: true\n        uses: actions/cache/restore@v4", restore)
                 self.assertNotIn("run: mix deps.get\n", block)
                 self.assertNotIn("if:", block.split("    steps:", 1)[1])
+
+    def test_cache_writer_is_main_only_and_pr_jobs_restore_only(self):
+        warmer = (WORKFLOWS / "application-cache.yml").read_text(encoding="utf-8")
+        application = (WORKFLOWS / "application-ci.yml").read_text(encoding="utf-8")
+        self.assertIn("  push:\n    branches: [main]", warmer)
+        self.assertNotIn("pull_request", warmer)
+        self.assertNotIn("workflow_run", warmer)
+        self.assertIn("actions/cache/save@v4", warmer)
+        self.assertEqual(2, application.count("actions/cache/restore@v4"))
+        self.assertNotIn("actions/cache/save@v4", application)
+        self.assertNotIn("pull_request_target", warmer + application)
+        self.assertEqual(4, (application + warmer).count("app-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs') }}"))
 
     def test_mix_aliases_enforce_warnings_and_strict_security_parsing(self):
         mix = (ROOT / "mix.exs").read_text(encoding="utf-8")

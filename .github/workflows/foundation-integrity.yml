@@ -62,6 +62,8 @@ jobs:
           python-version: "3.12"
       - name: Run Foundation path-routing regression tests
         run: python -m unittest discover -s tests -p 'test_foundation_lane_routing.py' -v
+      - name: Run dependency cache recovery tests
+        run: python -m unittest discover -s tests -p 'test_ci_cache_recovery.py' -v
       - name: Run Hex security audit regression tests
         run: python -m unittest discover -s tests -p 'test_hex_security_audit.py' -v
       - name: Run Foundation Smoke tests

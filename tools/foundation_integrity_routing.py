@@ -41,6 +41,8 @@ from pathlib import PurePosixPath
 APPLICATION_FILES = frozenset(
     {
         "tools/hex_security_audit.py",
+        "tools/ci/prepare_cached_dependencies.sh",
+        "tools/ci/cache_manifest.py",
         "tools/check_magic_login_evidence.py",
         "tools/check_password_reset_message_evidence.py",
         ".github/workflows/hex-security-audit.yml",
@@ -55,6 +57,7 @@ APPLICATION_FILES = frozenset(
         "AGENTS.md",
         "docs/README.md",
         ".github/workflows/application-ci.yml",
+        ".github/workflows/application-cache.yml",
     }
 )
 

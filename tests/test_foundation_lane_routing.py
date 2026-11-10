@@ -12,6 +12,7 @@ from tools.foundation_integrity_routing import (
     classify_deep_application_changes,
     classify_deep_event,
     classify_event,
+    classify_hex_audit_changes,
     classify_path,
     main,
 )
@@ -60,6 +61,15 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
         ]:
             with self.subTest(path=path):
                 self.assertEqual("application", classify_path(path))
+
+    def test_cache_warmer_is_explicitly_routed_and_unknown_workflows_fail(self):
+        path = ".github/workflows/application-cache.yml"
+        self.assertEqual("application", classify_path(path))
+        self.assertEqual({"application_changes": True}, _route([path]))
+        self.assertFalse(classify_deep_application_changes([path]))
+        self.assertTrue(classify_hex_audit_changes([path]))
+        with self.assertRaises(ValueError):
+            _route([".github/workflows/application-cache-unknown.yml"])
 
     def test_content_evidence_checkers_run_application_ci(self):
         for path in [

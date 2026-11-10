@@ -1,0 +1,53 @@
+name: Warm application dependency cache
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  MIX_ENV: test
+
+jobs:
+  warm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - name: Identify runner image
+        id: cache_platform
+        run: echo "image=${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+      - name: Restore existing cache
+        id: cache
+        continue-on-error: true
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            deps
+            _build/test/lib
+            _build/ci-dependency-cache.json
+          key: app-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs') }}
+      - name: Prepare locked dependencies
+        env:
+          CACHE_RESTORE_OUTCOME: ${{ steps.cache.outcome }}
+          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+        run: bash tools/ci/prepare_cached_dependencies.sh
+      - name: Reject unused dependency locks
+        run: mix deps.unlock --check-unused
+      - name: Create cache integrity manifest
+        run: python3 tools/ci/cache_manifest.py write
+      - name: Save trusted dependency cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            deps
+            _build/test/lib
+            _build/ci-dependency-cache.json
+          key: app-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs') }}

@@ -27,7 +27,7 @@ env:
 jobs:
   mix-check:
     name: mix check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     services:
       postgres:
@@ -51,15 +51,24 @@ jobs:
         with:
           version-file: .tool-versions
           version-type: strict
-      - name: Restore dependency and build cache
-        uses: actions/cache@v4
+      - name: Identify runner image
+        id: cache_platform
+        run: echo "image=${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+      - name: Restore dependency cache
+        id: cache
+        continue-on-error: true
+        uses: actions/cache/restore@v4
         with:
           path: |
             deps
-            _build
-          key: app-ci-${{ runner.os }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
-      - name: Fetch locked dependencies
-        run: mix deps.get --check-locked
+            _build/test/lib
+            _build/ci-dependency-cache.json
+          key: app-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs') }}
+      - name: Prepare locked dependencies
+        env:
+          CACHE_RESTORE_OUTCOME: ${{ steps.cache.outcome }}
+          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+        run: bash tools/ci/prepare_cached_dependencies.sh
       - name: Reject unused dependency locks
         run: mix deps.unlock --check-unused
       - name: Provision isolated TEST role and database
@@ -85,7 +94,7 @@ jobs:
   mix-check-deep:
     name: mix check.deep
     if: inputs.deep_application_changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     services:
       postgres:
@@ -109,20 +118,29 @@ jobs:
         with:
           version-file: .tool-versions
           version-type: strict
-      - name: Restore dependency and build cache
-        uses: actions/cache@v4
+      - name: Identify runner image
+        id: cache_platform
+        run: echo "image=${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+      - name: Restore dependency cache
+        id: cache
+        continue-on-error: true
+        uses: actions/cache/restore@v4
         with:
           path: |
             deps
-            _build
-          key: app-ci-${{ runner.os }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
+            _build/test/lib
+            _build/ci-dependency-cache.json
+          key: app-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs') }}
       - name: Restore Dialyzer PLT cache
         uses: actions/cache@v4
         with:
           path: _build/plts
           key: dialyzer-plt-${{ runner.os }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
-      - name: Fetch locked dependencies
-        run: mix deps.get --check-locked
+      - name: Prepare locked dependencies
+        env:
+          CACHE_RESTORE_OUTCOME: ${{ steps.cache.outcome }}
+          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+        run: bash tools/ci/prepare_cached_dependencies.sh
       - name: Reject unused dependency locks
         run: mix deps.unlock --check-unused
       - name: Provision isolated TEST role and database
