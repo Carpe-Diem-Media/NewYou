@@ -174,6 +174,8 @@ Observed author verification used Elixir 1.20.5, OTP 29.1.2, Tailwind 4.3.3 and 
 - `mix assets.build` passed. `mix check.deep` passed with zero errors. The fast gate's formatting, compilation, design, architecture, usage-rule, Credo and Sobelow stages passed before its ExUnit stage failed.
 - Full `mix check` is blocked by the shared TEST database state tracked in WELL-114. Retained fixture rows predate this task; current main cannot load an `identity_recovery_completed` evidence type, and whole-resource Communications reads encounter unrelated rows. An unchanged Disposition test independently reproduced three failures. No shared fixture data was deleted. The full-suite failure is not waived.
 
+The first hosted PR run exposed missing CI classification for `DESIGN.md`, `.hallmark/log.json` and `.hallmark/preflight.json`. [The classifier](../../tools/foundation_integrity_routing.py) now names these exact engineering files. [Routing regressions](../../tests/test_foundation_lane_routing.py) reproduced all three failures before correction and preserve rejection of unclassified neighbours. Design-only changes select Application CI without forcing Dialyzer; the guide's Elixir source independently selects the deep lane. Foundation Full remains nightly-only. This routing correction changes no application behavior from the implementation revision above.
+
 ### Hallmark and visual review
 
 The existing `DESIGN.md` supplies the direction; there is no new theme, brand font or stock imagery. This is app scope, so the marketing hero review is inapplicable. The exact render command was:
