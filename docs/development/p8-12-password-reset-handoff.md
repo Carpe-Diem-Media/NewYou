@@ -144,3 +144,4 @@ The next required gate is independent Master Gate review of the exact PR head an
 - `test/support/proof/p8_05_browser.ex`
 - `test/support/proof/p8_12.ex`
 - `test/support/proof/p8_12_catalog.ex`
+- `tests/test_foundation_smoke.py`
