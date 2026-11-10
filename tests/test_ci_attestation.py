@@ -156,6 +156,68 @@ class GitHubCollectionTest(unittest.TestCase):
                 with self.assertRaises(AttestationError):
                     verify_trust_mode(mode, repository, current_branch)
 
+    def test_public_protected_mode_requires_live_applicable_ruleset_and_effective_rules(self):
+        from tools.ci_attestation import verify_trust_mode
+        repo = {"full_name": "JCSchoeman96/NewYou", "private": False,
+                "visibility": "public", "default_branch": "main"}
+        branch = {"name": "main", "protected": True}
+        ruleset = {
+            "id": 24191860, "name": "Protect main", "enforcement": "active",
+            "source": "JCSchoeman96/NewYou", "source_type": "Repository",
+            "current_user_can_bypass": "never",
+            "target": "branch", "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+            "bypass_actors": [],
+            "rules": [
+                {"type": "required_status_checks", "parameters": {
+                    "strict_required_status_checks_policy": True,
+                    "required_status_checks": [{"context": "Foundation Integrity"}]}},
+                {"type": "non_fast_forward"}, {"type": "deletion"},
+                {"type": "pull_request", "parameters": {"allowed_merge_methods": ["merge", "squash", "rebase"]}},
+            ],
+        }
+        effective_rules = [
+            {"type": rule["type"], "parameters": rule.get("parameters", {}),
+             "ruleset_id": ruleset["id"], "ruleset_source": "JCSchoeman96/NewYou",
+             "ruleset_source_type": "Repository"}
+            for rule in ruleset["rules"]
+        ]
+
+        verify_trust_mode("public-protected", repo, branch, ruleset, effective_rules)
+
+        cases = [
+            ("missing ruleset", None, effective_rules),
+            ("inactive ruleset", dict(ruleset, enforcement="disabled"), effective_rules),
+            ("wrong branch condition", dict(ruleset, conditions={"ref_name": {"include": ["refs/heads/release"], "exclude": []}}), effective_rules),
+            ("null conditions", dict(ruleset, conditions=None), effective_rules),
+            ("missing strict check", dict(ruleset, rules=[
+                rule for rule in ruleset["rules"] if rule["type"] != "required_status_checks"]), effective_rules),
+            ("wrong required check", dict(ruleset, rules=[
+                dict(rule, parameters=dict(rule["parameters"], required_status_checks=[{"context": "Other Check"}]))
+                if rule["type"] == "required_status_checks" else rule for rule in ruleset["rules"]]), effective_rules),
+            ("bypass actor", dict(ruleset, bypass_actors=[{"actor_type": "RepositoryRole", "actor_id": 5, "bypass_mode": "always"}]), effective_rules),
+            ("configured pull request rule missing parameters", dict(ruleset, rules=[
+                {"type": rule["type"]} if rule["type"] == "pull_request" else rule
+                for rule in ruleset["rules"]]), effective_rules),
+            ("effective pull request rule missing parameters", ruleset, [
+                {key: value for key, value in rule.items() if key != "parameters"}
+                if rule["type"] == "pull_request" else rule for rule in effective_rules]),
+            ("effective permissions omit deletion restriction", ruleset,
+             [rule for rule in effective_rules if rule["type"] != "deletion"]),
+        ]
+        for label, active_ruleset, active_rules in cases:
+            with self.subTest(case=label), self.assertRaises(AttestationError):
+                verify_trust_mode("public-protected", repo, branch, active_ruleset, active_rules)
+
+        for mode, repository, current_branch in [
+            ("private-procedural", repo, branch),
+            ("public-protected", dict(repo, full_name="other/repo"), branch),
+            ("public-protected", dict(repo, private=True, visibility="private"), branch),
+            ("public-protected", repo, dict(branch, name="release")),
+            ("public-protected", repo, dict(branch, protected=False)),
+        ]:
+            with self.subTest(mode=mode, repo=repository, branch=current_branch), self.assertRaises(AttestationError):
+                verify_trust_mode(mode, repository, current_branch, ruleset, effective_rules)
+
     def collect(self):
         from tools.ci_attestation import collect
         with self.patch("tools.ci_attestation._api", side_effect=self.api), self.patch("tools.ci_attestation._command", side_effect=self.log):
@@ -232,3 +294,140 @@ class ResultCollectionTest(GitHubCollectionTest):
                              trust_mode="private-procedural")
         self.assertEqual(result["result"]["main"], merge_sha)
         self.assertEqual(result["result"]["tree"], self.e["tree"])
+
+
+class PublicProtectedCollectionTest(unittest.TestCase):
+    def setUp(self):
+        GitHubCollectionTest.setUp(self)
+        self.repository.update(private=False, visibility="public")
+        self.branch.update(protected=True)
+        self.ruleset = {
+            "id": 24191860, "name": "Protect main", "target": "branch",
+            "source_type": "Repository", "source": "JCSchoeman96/NewYou",
+            "enforcement": "active", "current_user_can_bypass": "never", "bypass_actors": [],
+            "conditions": {"ref_name": {"exclude": [], "include": ["~DEFAULT_BRANCH"]}},
+            "rules": [
+                {"type": "pull_request", "parameters": {"allowed_merge_methods": ["merge", "squash", "rebase"]}},
+                {"type": "required_status_checks", "parameters": {
+                    "strict_required_status_checks_policy": True,
+                    "do_not_enforce_on_create": False,
+                    "required_status_checks": [{"context": "Foundation Integrity"}]}},
+                {"type": "non_fast_forward"}, {"type": "deletion"},
+            ],
+        }
+        self.effective_rules = [
+            {"type": rule["type"], "parameters": rule.get("parameters", {}),
+             "ruleset_id": 24191860, "ruleset_source": "JCSchoeman96/NewYou",
+             "ruleset_source_type": "Repository"}
+            for rule in self.ruleset["rules"]
+        ]
+
+    def log(self, *args):
+        return GitHubCollectionTest.log(self, *args)
+
+    def api(self, path):
+        if path == "repos/JCSchoeman96/NewYou/rulesets/24191860":
+            return copy.deepcopy(self.ruleset)
+        if path == "repos/JCSchoeman96/NewYou/rules/branches/main":
+            return copy.deepcopy(self.effective_rules)
+        return GitHubCollectionTest.api(self, path)
+
+    def collect_public(self):
+        from tools.ci_attestation import collect
+        with self.patch("tools.ci_attestation._api", side_effect=self.api), \
+                self.patch("tools.ci_attestation._api_rules", side_effect=self.api), \
+                self.patch("tools.ci_attestation._command", side_effect=self.log):
+            return collect(42, self.e["head"], 100, trust_mode="public-protected")
+
+    def test_public_collection_binds_current_ruleset_and_effective_rules(self):
+        result = self.collect_public()
+        self.assertEqual(result["ruleset"], self.ruleset)
+        self.assertEqual(result["effective_rules"], self.effective_rules)
+        self.assertEqual(result["candidate"], self.e["candidate"])
+
+    def test_public_collection_rejects_rule_api_errors_and_rule_changes(self):
+        from tools.ci_attestation import AttestationError
+        for failing_path in ("rulesets/24191860", "rules/branches/main"):
+            with self.subTest(api=failing_path):
+                def failing_api(path):
+                    if path.endswith(failing_path):
+                        raise AttestationError("API failure")
+                    return self.api(path)
+                with self.patch("tools.ci_attestation._api", side_effect=failing_api), \
+                        self.patch("tools.ci_attestation._api_rules", side_effect=failing_api), \
+                        self.patch("tools.ci_attestation._command", side_effect=self.log):
+                    from tools.ci_attestation import collect
+                    with self.assertRaises(AttestationError):
+                        collect(42, self.e["head"], 100, trust_mode="public-protected")
+
+        for failing_path in ("rulesets/24191860", "rules/branches/main"):
+            reads = 0
+            def failing_fresh_api(path):
+                nonlocal reads
+                if path.endswith(failing_path):
+                    reads += 1
+                    if reads > 1:
+                        raise AttestationError("fresh rules API failure")
+                return self.api(path)
+            with self.subTest(fresh_api=failing_path), \
+                    self.patch("tools.ci_attestation._api", side_effect=failing_fresh_api), \
+                    self.patch("tools.ci_attestation._api_rules", side_effect=failing_fresh_api), \
+                    self.patch("tools.ci_attestation._command", side_effect=self.log):
+                from tools.ci_attestation import collect
+                with self.assertRaises(AttestationError):
+                    collect(42, self.e["head"], 100, trust_mode="public-protected")
+
+        ruleset_reads = 0
+        def changing_rules(path):
+            nonlocal ruleset_reads
+            if path.endswith("rulesets/24191860"):
+                ruleset_reads += 1
+                current = copy.deepcopy(self.ruleset)
+                if ruleset_reads > 1:
+                    current["enforcement"] = "disabled"
+                return current
+            return self.api(path)
+        with self.patch("tools.ci_attestation._api", side_effect=changing_rules), \
+                self.patch("tools.ci_attestation._api_rules", side_effect=changing_rules), \
+                self.patch("tools.ci_attestation._command", side_effect=self.log):
+            from tools.ci_attestation import collect
+            with self.assertRaises(AttestationError):
+                collect(42, self.e["head"], 100, trust_mode="public-protected")
+
+        rules_reads = 0
+        def changing_effective_rules(path):
+            nonlocal rules_reads
+            if path.endswith("rules/branches/main"):
+                rules_reads += 1
+                active = copy.deepcopy(self.effective_rules)
+                if rules_reads > 1:
+                    return [rule for rule in active if rule["type"] != "deletion"]
+                return active
+            return self.api(path)
+        with self.patch("tools.ci_attestation._api", side_effect=changing_effective_rules), \
+                self.patch("tools.ci_attestation._api_rules", side_effect=changing_effective_rules), \
+                self.patch("tools.ci_attestation._command", side_effect=self.log):
+            from tools.ci_attestation import collect
+            with self.assertRaises(AttestationError):
+                collect(42, self.e["head"], 100, trust_mode="public-protected")
+
+    def test_public_postmerge_collection_rechecks_protection_and_result(self):
+        from tools.ci_attestation import collect
+        merge_sha = "f" * 40
+        self.pr.update(merged=True, state="closed", merge_commit_sha=merge_sha)
+        self.run["pull_requests"] = []
+        old_api = self.api
+        def api(path):
+            if path.endswith("commits/main"):
+                return {"sha": merge_sha}
+            if path.endswith("git/commits/" + merge_sha):
+                return {"tree": {"sha": self.e["tree"]},
+                        "parents": [{"sha": self.e["base"]}, {"sha": self.e["head"]}]}
+            return old_api(path)
+        with self.patch("tools.ci_attestation._api", side_effect=api), \
+                self.patch("tools.ci_attestation._api_rules", side_effect=api), \
+                self.patch("tools.ci_attestation._command", side_effect=self.log):
+            result = collect(42, self.e["head"], 100, candidate_sha=self.e["candidate"],
+                             after_merge=True, trust_mode="public-protected")
+        self.assertEqual(result["candidate"]["effective_rules"], self.effective_rules)
+        self.assertEqual(result["result"]["main"], merge_sha)

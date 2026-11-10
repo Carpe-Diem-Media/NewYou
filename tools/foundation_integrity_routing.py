@@ -40,6 +40,7 @@ from pathlib import PurePosixPath
 
 APPLICATION_FILES = frozenset(
     {
+        "tools/ci_attestation.py",
         "tools/hex_security_audit.py",
         "tools/ci/prepare_cached_dependencies.sh",
         "tools/ci/cache_manifest.py",
