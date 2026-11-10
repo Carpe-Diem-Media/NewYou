@@ -134,6 +134,20 @@ defmodule NewYou.Audit.RecoveryEvidenceTest do
 
     assert {:error, :evidence_outcome_unavailable} =
              Audit.establish_identity_security_obligation(Map.put(envelope, :proof_jti, "secret"))
+
+    # A nil actor describes automatic restriction only with a real owning case.
+    # A claimed case UUID cannot manufacture that causal relationship.
+    automatic =
+      Map.merge(envelope, %{
+        evidence_type: :security_hold_placement,
+        actor_id: nil,
+        reason_code: :verified_recovery
+      })
+
+    assert {:error, _} =
+             Ash.transact(Audit.EvidenceObligation, fn ->
+               Audit.establish_identity_security_obligation(automatic)
+             end)
   end
 
   defp recovery_admission(attempt_id) do

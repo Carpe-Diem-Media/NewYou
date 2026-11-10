@@ -112,8 +112,8 @@ defmodule NewYou.Audit.PrivilegedEvidence do
          true <- envelope[:evidence_type] in @security_types,
          true <- valid_outcome_scope?(envelope),
          true <- envelope[:outcome] in [:succeeded, :denied, :failed],
-         true <-
-           Enum.all?([:source_operation_id, :actor_id, :target_id], &valid_uuid?(envelope[&1])),
+         true <- Enum.all?([:source_operation_id, :target_id], &valid_uuid?(envelope[&1])),
+         true <- valid_outcome_actor?(envelope),
          {:ok, existing} <- read_outcome(envelope.source_operation_id) do
       create_or_replay_outcome(existing, envelope)
     else
@@ -150,6 +150,16 @@ defmodule NewYou.Audit.PrivilegedEvidence do
              valid_uuid?(envelope[:admission_id])),
       else: true
   end
+
+  # Automatic recovery restriction has a case/source cause, not a human actor.
+  # Preserve the named-actor requirement for every other security outcome.
+  defp valid_outcome_actor?(%{evidence_type: :security_hold_placement, actor_id: nil} = envelope) do
+    valid_uuid?(envelope[:case_id]) and envelope[:reason_code] == :verified_recovery and
+      envelope[:outcome] == :succeeded and
+      Enum.all?([:grant_id, :session_id, :admission_id], &is_nil(envelope[&1]))
+  end
+
+  defp valid_outcome_actor?(envelope), do: valid_uuid?(envelope[:actor_id])
 
   defp admission_action(:identity_reconciliation), do: :admit_reconciliation
   defp admission_action(:identity_recovery), do: :admit_recovery

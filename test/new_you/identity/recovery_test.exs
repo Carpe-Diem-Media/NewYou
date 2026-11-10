@@ -108,6 +108,21 @@ defmodule NewYou.Identity.RecoveryTest do
       {:ok, [recovery]} = cases(registered.account_id)
       assert recovery.required_assurance == 2
       {:ok, bearer} = delivery(recovery, request.email)
+
+      Process.put(
+        NewYou.Proof.RegistrationSeam,
+        {:observe, fn -> raise "restriction source cut" end}
+      )
+
+      assert Identity.submit_recovery_proof(bearer, operation()) ==
+               {:error, :recovery_unavailable}
+
+      Process.delete(NewYou.Proof.RegistrationSeam)
+
+      assert Ash.get!(Account, registered.account_id, authorize?: false).security_posture ==
+               :normal
+
+      assert is_nil(hold_obligation(id))
       assert Identity.submit_recovery_proof(bearer, operation()) == {:ok, :accepted}
       :ok = Identity.request_recovery(request.email, "af", operation())
       :ok = Identity.request_recovery(request.email, "af", id)
@@ -117,6 +132,13 @@ defmodule NewYou.Identity.RecoveryTest do
       assert held.required_assurance == 2
       assert held.satisfied_assurance == 1
       assert Ash.get!(Account, registered.account_id, authorize?: false).security_posture == :held
+
+      hold_evidence = hold_obligation(id)
+
+      assert hold_evidence.case_id == held.id
+      assert hold_evidence.target_id == registered.account_id
+      assert is_nil(hold_evidence.actor_id)
+      assert hold_evidence.outcome == :succeeded
 
       assert Identity.complete_recovery(bearer, "forbidden ordinary shortcut", operation()) ==
                {:error, :recovery_unavailable}
@@ -294,6 +316,7 @@ defmodule NewYou.Identity.RecoveryTest do
       assert held.required_assurance == 2
       assert held.satisfied_assurance == 0
       assert is_nil(held.proof_jti)
+      assert hold_obligation(held.operation_id).case_id == held.id
       after_account = Ash.get!(Account, registered.account_id, authorize?: false)
       refute after_account.email_verified?
       assert after_account.security_posture == :held
@@ -488,6 +511,12 @@ defmodule NewYou.Identity.RecoveryTest do
     apply(Identity, name, args)
   rescue
     UndefinedFunctionError -> {:error, :not_implemented}
+  end
+
+  defp hold_obligation(id) do
+    NewYou.Audit.EvidenceObligation
+    |> Ash.Query.filter(source_operation_id == ^id and evidence_type == :security_hold_placement)
+    |> Ash.read_one!(authorize?: false)
   end
 
   defp operation do

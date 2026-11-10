@@ -23,7 +23,7 @@ defmodule NewYou.Audit.EvidenceObligation do
 
       check_constraint :evidence_type, "evidence_obligations_security_shape",
         check:
-          "evidence_type = 'account_registration_pmr_assignment' OR (actor_id IS NOT NULL AND target_id IS NOT NULL AND outcome IS NOT NULL AND outcome IN ('succeeded', 'denied', 'failed') AND (evidence_type NOT IN ('security_hold_release_result', 'identity_reconciliation_result') OR admission_id IS NOT NULL) AND (evidence_type NOT IN ('identity_recovery_completed', 'identity_recovery_review') OR case_id IS NOT NULL) AND (evidence_type <> 'identity_recovery_review' OR admission_id IS NOT NULL))"
+          "evidence_type = 'account_registration_pmr_assignment' OR ((actor_id IS NOT NULL OR (evidence_type = 'security_hold_placement' AND case_id IS NOT NULL AND reason_code = 'verified_recovery' AND outcome = 'succeeded' AND grant_id IS NULL AND session_id IS NULL AND admission_id IS NULL)) AND target_id IS NOT NULL AND outcome IS NOT NULL AND outcome IN ('succeeded', 'denied', 'failed') AND (evidence_type NOT IN ('security_hold_release_result', 'identity_reconciliation_result') OR admission_id IS NOT NULL) AND (evidence_type NOT IN ('identity_recovery_completed', 'identity_recovery_review') OR case_id IS NOT NULL) AND (evidence_type <> 'identity_recovery_review' OR admission_id IS NOT NULL))"
 
       check_constraint :state, "evidence_obligations_state",
         check: "state IN ('open', 'fulfilled')",

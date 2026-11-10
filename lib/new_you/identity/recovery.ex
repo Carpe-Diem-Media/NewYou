@@ -349,7 +349,7 @@ defmodule NewYou.Identity.Recovery do
   defp graduate_assurance(_account, recovery), do: {:ok, recovery}
 
   defp hold_case(account, recovery) do
-    with {:ok, account} <- ensure_hold(account),
+    with {:ok, account} <- ensure_hold(account, recovery),
          :ok <- invalidate_sessions_and_devices(account.id) do
       transition(recovery, :require_review, %{
         required_assurance: 2,
@@ -358,10 +358,26 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
-  defp ensure_hold(%{security_posture: :held} = account), do: {:ok, account}
+  defp ensure_hold(%{security_posture: :held} = account, _recovery), do: {:ok, account}
 
-  defp ensure_hold(account),
-    do: Ash.update(account, %{}, action: :hold_for_recovery, authorize?: false)
+  defp ensure_hold(account, recovery) do
+    with {:ok, held} <- Ash.update(account, %{}, action: :hold_for_recovery, authorize?: false),
+         {:ok, _} <-
+           Audit.establish_identity_security_obligation(%{
+             source_operation_id: recovery.operation_id,
+             source_occurred_at: now(),
+             evidence_type: :security_hold_placement,
+             actor_id: nil,
+             target_id: account.id,
+             case_id: recovery.id,
+             reason_code: :verified_recovery,
+             outcome: :succeeded
+           }) do
+      {:ok, held}
+    else
+      _ -> unavailable()
+    end
+  end
 
   @doc false
   def finish(recovery, account, proof, password, operation_id, authority) do
