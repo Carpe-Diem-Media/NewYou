@@ -55,7 +55,7 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
         self.assertEqual(2, application.count("actions/cache/restore@v4"))
         self.assertNotIn("actions/cache/save@v4", application)
         self.assertNotIn("pull_request_target", warmer + application)
-        self.assertEqual(4, (application + warmer).count("app-deps-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs') }}"))
+        self.assertEqual(4, (application + warmer).count("app-deps-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs') }}"))
 
     def test_mix_aliases_enforce_warnings_and_strict_security_parsing(self):
         mix = (ROOT / "mix.exs").read_text(encoding="utf-8")
