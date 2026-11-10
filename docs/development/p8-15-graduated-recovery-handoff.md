@@ -2,7 +2,7 @@
 
 ## 1. Purpose, scope and version
 
-WELL-16 adds the bounded Identity-owned graduated-recovery lifecycle. This revision describes implementation/proof commit `efde91743c397ee9c94c26aea84aa50c58be5e98`, based on main `98fbeb8766ff1d20efe4f4f10baa6fc3abcc62f6`. The documentation head is separate. Implementation and handoff are in [draft PR #217](https://github.com/JCSchoeman96/NewYou/pull/217). Verify current source, routers and [live WELL-16](https://app.plane.so/symphony-development/browse/WELL-16) before reuse. This is a full handoff under the [implementation-handoff standard](implementation-handoff-standard.md), not semantic or execution authority.
+WELL-16 adds the bounded Identity-owned graduated-recovery lifecycle. This revision describes implementation/proof commit `d6768ecd5d3f9cbcd87fc7220f1a95b8d0a27370`, based on main `98fbeb8766ff1d20efe4f4f10baa6fc3abcc62f6`. The documentation head is separate. Implementation and handoff are in [draft PR #217](https://github.com/JCSchoeman96/NewYou/pull/217). Verify current source, routers and [live WELL-16](https://app.plane.so/symphony-development/browse/WELL-16) before reuse. This is a full handoff under the [implementation-handoff standard](implementation-handoff-standard.md), not semantic or execution authority.
 
 The delivery contract is incomplete. Product [§21E.19 and §21E.23](../governance/product/00_PLATFORM_v1.15.0.md) excludes recovery communications from verification and password-reset content classifications. No eligible recovery EN/AF packet is routed. Communications therefore records held, unbound obligations and admits no provider attempt. This PR grants no content approval, production/provider enablement, Phase-8 certification, Phase-9 authority or merge permission.
 
@@ -100,6 +100,22 @@ The child had required `Sandbox.checkin/1` to return `:ok`, but installed Ecto S
 The forced-lease regression failed before correction. An interim helper run passed 9/11 and exposed a nil boolean in the new test script; fixed-class diagnostics identified it without printing request details. The corrected 11-test concurrency/restart module passed. Strict Credo then identified one nesting issue; helper extraction fixed it, and strict Credo plus all 11 tests passed again. No production lifecycle, timeout, authorization, API, migration, approval or provider policy changed in this correction. Actual final-head wider checks and hosted CI remain recorded in PR/Plane evidence rather than inferred here.
 
 ## 8. Future-agent extension and review boundary
+
+### Owner-directed continuation and bounded proof
+
+The owner selected ordinary verified-email recovery with an expiring single-use link, explicit confirmation and guarded password replacement. New passkey/WebAuthn methods, further privileged MFA hardening and advanced recovery remain WELL-65 work. No existing stronger guard is removed, and no legacy Account migration, backfill, new dependency or rollout mechanism is introduced.
+
+At starting head `417fa7a`, hosted run [42875185645, attempt 1](https://github.com/JCSchoeman96/NewYou/actions/runs/42875185645) passed all six checks, including 653/653 fast tests. Its tested candidate `3fb33e10e78ae94007dede2d8a5e2f44fd7cc5e3` had the exact current main/head parents and the head tree. That is historical PR-candidate evidence, not verification of a subsequent head or resulting main.
+
+The latest [ordinary completion test](../../test/new_you/identity/recovery_test.exs) also counts Sessions after completion and replay, rejects the old password, then requires a fresh successful sign-in with the replacement password. [Two terminal-race tests](../../test/new_you/identity/recovery_concurrency_test.exs) invoke real Identity cancellation and completion on separate PostgreSQL connections in both commit orders. [P815.terminal_race/1](../../test/support/proof/p8_15.ex) requires distinct backend transactions and observed blocking, one terminal result, no losing credential effect, unchanged canonical email/security posture, the correct notice count and replay denial. Recovery's existing TEST-only checkpoint now also covers case termination; it compiles to `:ok` outside TEST. No production transaction, timeout or authority changes.
+
+An initial fixture attempted an outer Ash transaction and failed because recovery deliberately rejects ambient transactions. That failed test orchestration is preserved, not labelled a recovery defect. The corrected test then failed at the missing cancellation checkpoint before the observation point was added. Both terminal orders and the strengthened sign-in proof passed with all existing concurrency tests, 14/14 selected tests and 17 excluded. Strict Credo found no issues. These are proof additions for existing semantics, not a claim that an unsafe terminal transition was fixed. Full final-head local and hosted results are recorded separately in PR/Plane evidence.
+
+The [owner-decision request](p8-15-recovery-owner-decisions.md) pins all four unchanged candidate hashes, the exact packet and token contracts, the Product classification alternatives, language/Content decisions and missing support-contact binding. It also separates total-factor-loss verification from the implemented proof-backed manual path. No authority permits inventing an alternative claimant method; zero-factor completion remains denied.
+
+The live WELL-16 non-goal excludes implementing WELL-17 and requires its serialization/current-authority boundary. Current recovery-side fixture contention and stale-binding rejection are bounded evidence for that contract. They are not a real WELL-17 integration result. An absent future owner action alone is not a new permanent policy contradiction; independent review must assess the unchanged acceptance criterion and name any exact missing execution proof. No acceptance criterion was edited or marked passed by deferral.
+
+Real recovery email delivery, provider ambiguity and rendered confirmation remain unavailable pending attributable content decisions and their implementation. The current empty development GET plus protected POST transport is not a completed participant-facing email-to-browser journey. The PR remains Draft and WELL-16 remains Blocked. Candidate drafting and clean historical CI do not remove those limitations.
 
 ### Recovery content prepared for owner review
 
