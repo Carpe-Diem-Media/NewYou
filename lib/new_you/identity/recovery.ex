@@ -177,11 +177,15 @@ defmodule NewYou.Identity.Recovery do
       if account.email_verified? do
         issue_proof(account, recovery)
       else
-        with {:ok, _} <- transition(recovery, :require_review, %{}) do
-          checkpoint()
-          {:ok, :pending}
-        end
+        await_verified_channel(recovery)
       end
+    end
+  end
+
+  defp await_verified_channel(recovery) do
+    with {:ok, _} <- transition(recovery, :require_review, %{}) do
+      checkpoint()
+      {:ok, :pending}
     end
   end
 
