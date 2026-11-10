@@ -124,6 +124,14 @@ defmodule NewYouWeb.RegistrationControllerTest do
       html = conn |> get("/register?locale=en") |> html_response(200)
 
       assert_page_copy(html, @registration_copy_keys, "en")
+
+      assert_registration_label_copy(
+        html,
+        "registration-surname",
+        "identity.registration.surname.label",
+        "en"
+      )
+
       assert html =~ ~r/<html\b[^>]*\blang="en"/
       assert html =~ ~s(name="registration[preferred_language]")
       assert html =~ ~s(value="en")
@@ -144,6 +152,37 @@ defmodule NewYouWeb.RegistrationControllerTest do
       refute html =~ "privacy_version_id"
     end
 
+    test "does not treat an opaque CSRF token as Afrikaans copy", %{conn: conn} do
+      previous_token = Process.get(:plug_masked_csrf_token)
+      token = "Van" <> String.duplicate("A", 21)
+      Process.put(:plug_masked_csrf_token, token)
+
+      try do
+        html = conn |> get("/register?locale=en") |> html_response(200)
+
+        assert html =~ ~s(name="csrf-token" content="#{token}")
+        assert_page_copy(html, @registration_copy_keys, "en")
+      after
+        if previous_token do
+          Process.put(:plug_masked_csrf_token, previous_token)
+        else
+          Process.delete(:plug_masked_csrf_token)
+        end
+      end
+    end
+
+    test "still rejects Afrikaans participant copy added to the English page", %{conn: conn} do
+      html = conn |> get("/register?locale=en") |> html_response(200)
+
+      mixed_copy =
+        html <>
+          "<p>" <> expected_rendered_copy("identity.registration.surname.label", "af") <> "</p>"
+
+      assert_raise ExUnit.AssertionError, ~r/found identity.registration.surname.label\/af/, fn ->
+        assert_page_copy(mixed_copy, @registration_copy_keys, "en")
+      end
+    end
+
     test "renders the registered Afrikaans launch and registration copy without English fallback",
          %{
            conn: conn
@@ -151,6 +190,14 @@ defmodule NewYouWeb.RegistrationControllerTest do
       html = conn |> get("/register?locale=af") |> html_response(200)
 
       assert_page_copy(html, @registration_copy_keys, "af")
+
+      assert_registration_label_copy(
+        html,
+        "registration-surname",
+        "identity.registration.surname.label",
+        "af"
+      )
+
       assert html =~ ~r/<html\b[^>]*\blang="af"/
       assert html =~ ~s(value="af")
     end
@@ -705,20 +752,48 @@ defmodule NewYouWeb.RegistrationControllerTest do
 
   defp assert_page_copy(html, keys, locale) do
     other_locale = if locale == "en", do: "af", else: "en"
+    text_nodes = rendered_text_nodes(html)
 
     Enum.each(keys, fn key ->
-      assert html =~ expected_rendered_copy(key, locale), "missing #{key}/#{locale} from page"
+      own = expected_rendered_copy(key, locale)
+      other = expected_rendered_copy(key, other_locale)
 
-      own = expected_copy(key, locale)
-      other = expected_copy(key, other_locale)
+      if key == "shared.language.change" do
+        assert html =~ ~s(aria-label="#{own}"), "missing #{key}/#{locale} from page"
 
-      if own != other do
-        refute(
-          html =~ expected_rendered_copy(key, other_locale),
-          "found #{key}/#{other_locale} in #{locale} page"
-        )
+        if own != other do
+          refute html =~ ~s(aria-label="#{other}"),
+                 "found #{key}/#{other_locale} in #{locale} page"
+        end
+      else
+        assert own in text_nodes, "missing #{key}/#{locale} from page"
+
+        if own != other do
+          refute other in text_nodes,
+                 "found #{key}/#{other_locale} in #{locale} page"
+        end
       end
     end)
+  end
+
+  defp assert_registration_label_copy(html, field_id, key, locale) do
+    field_id = Regex.escape(field_id)
+
+    assert [label_text] =
+             Regex.run(
+               ~r/<label\b(?=[^>]*\bfor="#{field_id}")[^>]*>([^<]*)<\/label>/s,
+               html,
+               capture: :all_but_first
+             )
+
+    assert String.trim(label_text) == expected_rendered_copy(key, locale)
+  end
+
+  defp rendered_text_nodes(html) do
+    Regex.scan(~r/>([^<>]*)</s, html, capture: :all_but_first)
+    |> List.flatten()
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
   end
 
   defp expected_rendered_copy(key, locale) do
