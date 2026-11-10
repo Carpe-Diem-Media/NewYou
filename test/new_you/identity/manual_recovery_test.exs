@@ -61,8 +61,52 @@ defmodule NewYou.Identity.ManualRecoveryTest do
       assert {:error, :recovery_unavailable} =
                Identity.approve_manual_recovery(wrong_scope_request)
 
+      approval_failure = %{review_request | operation_id: operation()}
+
+      Process.put(NewYou.Proof.AuditSeam, fn :before_admission ->
+        raise "approval admission cut"
+      end)
+
+      assert {:error, :recovery_unavailable} =
+               Identity.approve_manual_recovery(approval_failure)
+
+      Process.delete(NewYou.Proof.AuditSeam)
+      refute admission(approval_failure.operation_id)
+      assert recovery_case(target.id).version == recovery.version
+
+      source_review_failure = %{review_request | operation_id: operation()}
+
+      Process.put(
+        NewYou.Proof.RegistrationSeam,
+        {:observe, fn -> raise "approval source cut" end}
+      )
+
+      assert {:error, :recovery_unavailable} =
+               Identity.approve_manual_recovery(source_review_failure)
+
+      Process.delete(NewYou.Proof.RegistrationSeam)
+
+      assert %EvidenceRecord{id: failed_review_admission} =
+               admission(source_review_failure.operation_id)
+
+      assert %EvidenceObligation{outcome: :failed, admission_id: ^failed_review_admission} =
+               outcome(source_review_failure.operation_id)
+
+      assert recovery_case(target.id).version == recovery.version
+
+      assert {:error, :recovery_unavailable} =
+               Identity.approve_manual_recovery(source_review_failure)
+
       assert {:ok, %{status: :approved, version: reviewed_version}} =
-               Identity.approve_manual_recovery(review_request)
+               after_process_loss(review_request, :approve_manual_recovery)
+
+      assert %EvidenceRecord{id: approval_admission_id} = admission(review_operation)
+
+      assert %EvidenceObligation{
+               evidence_type: :identity_recovery_review,
+               outcome: :succeeded,
+               admission_id: ^approval_admission_id
+             } = outcome(review_operation)
 
       assert {:ok, %{status: :approved, version: ^reviewed_version}} =
                Identity.approve_manual_recovery(review_request)
@@ -156,7 +200,7 @@ defmodule NewYou.Identity.ManualRecoveryTest do
                DateTime.utc_now()
              ) == :lt
 
-      complete_after_process_loss(request)
+      assert {:ok, :completed} = after_process_loss(request, :complete_manual_recovery)
 
       assert {:ok, :already_completed} =
                Identity.complete_manual_recovery(%{
@@ -174,7 +218,7 @@ defmodule NewYou.Identity.ManualRecoveryTest do
     end)
   end
 
-  defp complete_after_process_loss(request) do
+  defp after_process_loss(request, action) do
     alias NewYou.Proof.{Scenario, CutPoints, RegistrationSeam}
     alias Ecto.Adapters.SQL.Sandbox
     scenario = Scenario.start()
@@ -192,7 +236,7 @@ defmodule NewYou.Identity.ManualRecoveryTest do
           )
 
           try do
-            Identity.complete_manual_recovery(request)
+            apply(Identity, action, [request])
           after
             Sandbox.checkin(NewYou.Repo)
           end
@@ -211,8 +255,9 @@ defmodule NewYou.Identity.ManualRecoveryTest do
       assert Ash.get!(RecoveryCase, request.case_id, authorize?: false).state ==
                :held_manual_review
 
-      assert {:ok, :completed} = Identity.complete_manual_recovery(request)
+      assert {:ok, _} = result = apply(Identity, action, [request])
       assert %EvidenceObligation{outcome: :succeeded} = outcome(request.operation_id)
+      result
     after
       Scenario.stop(scenario)
     end

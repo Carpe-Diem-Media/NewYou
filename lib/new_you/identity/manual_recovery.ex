@@ -9,13 +9,36 @@ defmodule NewYou.Identity.ManualRecovery do
   @capability_approve :approve_manual_recovery
   @capability_complete :complete_manual_recovery
 
+  defmacrop checkpoint do
+    if Mix.env() == :test do
+      quote do: NewYou.Proof.RegistrationSeam.checkpoint()
+    else
+      quote do: :ok
+    end
+  end
+
   def approve(request) when is_map(request) do
     with true <- @enabled,
          {:ok, input} <- parse(request),
          {:ok, snapshot} <- recovery(input.case_id),
-         {:ok, result} <-
-           Recovery.transaction(fn -> approve_locked(input, snapshot.account_id) end) do
-      {:ok, result}
+         {:ok, preflight} <-
+           Recovery.transaction(fn -> approval_authority(input, snapshot.account_id) end),
+         {:ok, admission} <- Audit.admit_recovery(preflight.envelope) do
+      case source_approval(input, snapshot.account_id, preflight, admission) do
+        {:ok, result} ->
+          {:ok, result}
+
+        _ ->
+          record_failure(
+            input,
+            snapshot.account_id,
+            preflight,
+            admission,
+            :identity_recovery_review
+          )
+
+          unavailable()
+      end
     else
       _ -> unavailable()
     end
@@ -24,6 +47,12 @@ defmodule NewYou.Identity.ManualRecovery do
   end
 
   def approve(_), do: unavailable()
+
+  defp source_approval(input, target_id, preflight, admission) do
+    Recovery.transaction(fn -> approve_locked(input, target_id, preflight, admission) end)
+  rescue
+    _ -> unavailable()
+  end
 
   def complete(request) when is_map(request) do
     with true <- @enabled,
@@ -39,7 +68,14 @@ defmodule NewYou.Identity.ManualRecovery do
           {:ok, value}
 
         _ ->
-          record_completion_failure(input, snapshot.account_id, preflight, admission)
+          record_failure(
+            input,
+            snapshot.account_id,
+            preflight,
+            admission,
+            :identity_recovery_completed
+          )
+
           unavailable()
       end
     else
@@ -59,7 +95,7 @@ defmodule NewYou.Identity.ManualRecovery do
     _ -> unavailable()
   end
 
-  defp approve_locked(input, target_id) do
+  defp approval_authority(input, target_id) do
     with {:ok, authority} <-
            PrivilegedAccess.authorize_locked(
              input.credentials,
@@ -69,8 +105,20 @@ defmodule NewYou.Identity.ManualRecovery do
            ),
          {:ok, recovery} <- Recovery.lock_case(input.case_id),
          account <- authority.target,
-         :ok <- valid_approval_case(recovery, account, input) do
-      approve_current(input, authority, recovery, account)
+         :ok <- valid_approval_case(recovery, account, input),
+         :ok <- eligible_approval(recovery, account, authority) do
+      {:ok, %{authority: authority, envelope: admission(input, authority, recovery)}}
+    else
+      _ -> unavailable()
+    end
+  end
+
+  defp approve_locked(input, target_id, preflight, admission) do
+    with {:ok, current} <- approval_authority(input, target_id),
+         true <- current.envelope == preflight.envelope,
+         :ok <- valid_admission(admission, preflight.envelope),
+         {:ok, recovery} <- Recovery.lock_case(input.case_id) do
+      approve_current(input, current.authority, recovery, current.authority.target, admission)
     else
       _ -> unavailable()
     end
@@ -150,28 +198,33 @@ defmodule NewYou.Identity.ManualRecovery do
     end
   end
 
-  defp approve_current(input, authority, recovery, account) do
+  defp eligible_approval(recovery, account, authority) do
     with true <- recovery.state == :held_manual_review,
          true <- recovery.satisfied_assurance >= 1,
          true <- account.security_posture == :held,
          true <- Recovery.current?(recovery, account),
          true <- authority.actor.id != account.id do
-      if recovery.review["operation_id"] == input.operation_id and
-           recovery.version == input.expected_version + 1 do
-        {:ok, %{status: :approved, version: recovery.version}}
-      else
-        record_approval(input, authority, recovery, account)
-      end
+      :ok
     else
       _ -> unavailable()
     end
   end
 
-  defp record_approval(input, authority, recovery, account) do
+  defp approve_current(input, authority, recovery, account, admission) do
+    if recovery.review["operation_id"] == input.operation_id and
+         recovery.version == input.expected_version + 1 do
+      {:ok, %{status: :approved, version: recovery.version}}
+    else
+      record_approval(input, authority, recovery, account, admission)
+    end
+  end
+
+  defp record_approval(input, authority, recovery, account, admission) do
     review = review_record(input, authority, recovery, account)
 
     with {:ok, reviewed} <- Recovery.transition(recovery, :record_review, %{review: review}),
-         {:ok, _} <- review_evidence(input, authority, account, reviewed) do
+         {:ok, _} <- review_evidence(input, authority, account, reviewed, admission) do
+      checkpoint()
       {:ok, %{status: :approved, version: reviewed.version}}
     else
       _ -> unavailable()
@@ -325,29 +378,29 @@ defmodule NewYou.Identity.ManualRecovery do
     }
   end
 
-  defp review_evidence(input, authority, account, recovery) do
+  defp review_evidence(input, authority, account, recovery, admission) do
     Audit.establish_identity_security_obligation(%{
       source_operation_id: input.operation_id,
-      source_occurred_at: DateTime.utc_now(),
+      source_occurred_at: admission.admitted_at,
       evidence_type: :identity_recovery_review,
       actor_id: authority.actor.id,
       target_id: account.id,
       grant_id: authority.grant.id,
       session_id: authority.session.id,
       reason_code: input.reason_code,
-      admission_id: nil,
+      admission_id: admission.id,
       case_id: recovery.id,
       outcome: :succeeded
     })
   end
 
-  defp record_completion_failure(input, target_id, preflight, admission) do
+  defp record_failure(input, target_id, preflight, admission, evidence_type) do
     authority = preflight.authority
 
     outcome = %{
       source_operation_id: input.operation_id,
       source_occurred_at: admission.admitted_at,
-      evidence_type: :identity_recovery_completed,
+      evidence_type: evidence_type,
       actor_id: authority.actor.id,
       target_id: target_id,
       grant_id: authority.grant.id,

@@ -20,14 +20,19 @@ defmodule NewYou.Audit.RecoveryEvidenceTest do
             "ALTER TABLE evidence_obligations DISABLE TRIGGER evidence_obligations_no_delete"
           )
 
-          NewYou.Repo.query!("DELETE FROM evidence_records WHERE attempt_id = $1", [
-            Ecto.UUID.dump!(attempt_id)
-          ])
+          NewYou.Repo.query!(
+            "DELETE FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($1))",
+            [Enum.map(operation_ids, &Ecto.UUID.dump!/1)]
+          )
 
           NewYou.Repo.query!(
             "DELETE FROM evidence_obligations WHERE source_operation_id = ANY($1)",
             [Enum.map(operation_ids, &Ecto.UUID.dump!/1)]
           )
+
+          NewYou.Repo.query!("DELETE FROM evidence_records WHERE attempt_id = ANY($1)", [
+            Enum.map([attempt_id | operation_ids], &Ecto.UUID.dump!/1)
+          ])
 
           NewYou.Repo.query!(
             "ALTER TABLE evidence_obligations ENABLE TRIGGER evidence_obligations_no_delete"
@@ -67,7 +72,7 @@ defmodule NewYou.Audit.RecoveryEvidenceTest do
              Audit.admit_recovery(Map.put(envelope, :credential, "secret"))
   end
 
-  test "recovery E2 outcome binds completion and review evidence to the recovery case", %{
+  test "recovery outcomes bind the case and manual review requires linked E1", %{
     operation_ids: [completion_id, review_id]
   } do
     case_id = Ecto.UUID.generate()
@@ -85,6 +90,21 @@ defmodule NewYou.Audit.RecoveryEvidenceTest do
         case_id: case_id,
         outcome: :succeeded
       }
+
+      envelope =
+        if evidence_type == :identity_recovery_review do
+          {:ok, admission} =
+            Audit.admit_recovery(%{
+              recovery_admission(operation_id)
+              | case_id: case_id,
+                actor_id: envelope.actor_id,
+                target_id: envelope.target_id
+            })
+
+          Map.put(envelope, :admission_id, admission.id)
+        else
+          envelope
+        end
 
       assert {:ok, {:ok, obligation}} =
                Ash.transact(Audit.EvidenceObligation, fn ->

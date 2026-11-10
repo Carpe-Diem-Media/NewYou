@@ -144,7 +144,10 @@ defmodule NewYou.Audit.PrivilegedEvidence do
 
   defp valid_outcome_scope?(envelope) do
     if envelope[:evidence_type] in @recovery_types,
-      do: valid_uuid?(envelope[:case_id]),
+      do:
+        valid_uuid?(envelope[:case_id]) and
+          (envelope[:evidence_type] != :identity_recovery_review or
+             valid_uuid?(envelope[:admission_id])),
       else: true
   end
 
