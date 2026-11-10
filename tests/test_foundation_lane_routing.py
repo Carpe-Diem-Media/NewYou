@@ -71,6 +71,13 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             _route([".github/workflows/application-cache-unknown.yml"])
 
+    def test_attestation_collector_selects_engineering_and_hex_checks(self):
+        path = "tools/ci_attestation.py"
+        self.assertEqual("application", classify_path(path))
+        self.assertEqual({"application_changes": True}, _route([path]))
+        self.assertFalse(classify_deep_application_changes([path]))
+        self.assertTrue(classify_hex_audit_changes([path]))
+
     def test_content_evidence_checkers_run_application_ci(self):
         for path in [
             "tools/check_magic_login_evidence.py",

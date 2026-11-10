@@ -17,14 +17,50 @@ def require(condition: object, message: str) -> None:
         raise AttestationError(message)
 
 
-def verify_trust_mode(mode: str, repo: dict, branch: dict) -> None:
-    require(mode == "private-procedural", "explicit private-procedural mode is required")
+def verify_trust_mode(mode: str, repo: dict, branch: dict, ruleset: dict | None = None,
+                      effective_rules: list | None = None) -> None:
+    require(mode in ("private-procedural", "public-protected"), "explicit trust mode is required")
     require(isinstance(repo, dict) and isinstance(branch, dict), "repository or branch evidence is missing")
-    require(repo.get("full_name") == "JCSchoeman96/NewYou"
-            and repo.get("private") is True and repo.get("visibility") == "private"
+    public = mode == "public-protected"
+    require(repo.get("full_name") == "JCSchoeman96/NewYou" and repo.get("private") is (not public)
+            and repo.get("visibility") == ("public" if public else "private")
             and repo.get("default_branch") == "main", "repository identity or visibility is inconsistent")
-    require(branch.get("name") == "main" and branch.get("protected") is False,
+    require(branch.get("name") == "main" and branch.get("protected") is public,
             "main protection state is inconsistent")
+    if not public:
+        return
+    require(isinstance(ruleset, dict) and ruleset.get("id") == 24191860
+            and ruleset.get("source") == "JCSchoeman96/NewYou"
+            and ruleset.get("source_type") == "Repository" and ruleset.get("target") == "branch"
+            and ruleset.get("enforcement") == "active" and ruleset.get("bypass_actors") == []
+            and ruleset.get("current_user_can_bypass") == "never", "ruleset identity or enforcement is inconsistent")
+    conditions = ruleset.get("conditions")
+    require(isinstance(conditions, dict) and isinstance(conditions.get("ref_name"), dict),
+            "ruleset conditions are missing")
+    refs = conditions["ref_name"]
+    require(refs.get("include") == ["~DEFAULT_BRANCH"] and refs.get("exclude") == [],
+            "ruleset does not unambiguously cover main")
+    require(isinstance(effective_rules, list), "effective rules are missing")
+    required = {"pull_request", "required_status_checks", "non_fast_forward", "deletion"}
+    configured = ruleset.get("rules")
+    require(isinstance(configured, list) and all(isinstance(r, dict) for r in configured)
+            and all(isinstance(r, dict) for r in effective_rules), "rules are incomplete")
+    configured_by_type = {r.get("type"): r for r in configured}
+    effective_by_type = {r.get("type"): r for r in effective_rules if r.get("ruleset_id") == 24191860
+                         and r.get("ruleset_source") == "JCSchoeman96/NewYou"
+                         and r.get("ruleset_source_type") == "Repository"}
+    require(required <= configured_by_type.keys() and required <= effective_by_type.keys(),
+            "required rules are missing or not effective")
+    for rules in (configured_by_type, effective_by_type):
+        pull_request = rules["pull_request"].get("parameters")
+        require(isinstance(pull_request, dict) and isinstance(pull_request.get("allowed_merge_methods"), list)
+                and "merge" in pull_request["allowed_merge_methods"], "pull request rule is incomplete")
+        params = rules["required_status_checks"].get("parameters", {})
+        require(isinstance(params, dict), "status check rule is incomplete")
+        checks = params.get("required_status_checks")
+        require(params.get("strict_required_status_checks_policy") is True and isinstance(checks, list)
+                and any(isinstance(c, dict) and c.get("context") == "Foundation Integrity" for c in checks),
+                "strict Foundation Integrity check is missing")
 
 
 def validate_review_record(record: dict, head: str) -> None:
@@ -57,7 +93,8 @@ def verify_candidate(e: dict) -> None:
     require(isinstance(checkouts, list) and len(checkouts) >= 2
             and all(sha == e["candidate"] for sha in checkouts),
             "missing or inconsistent job checkouts")
-    verify_trust_mode(e.get("trust_mode"), e.get("repository", {}), e.get("branch", {}))
+    verify_trust_mode(e.get("trust_mode"), e.get("repository", {}), e.get("branch", {}),
+                      e.get("ruleset"), e.get("effective_rules"))
 
 
 def verify_result(candidate: dict, result: dict) -> None:
@@ -101,16 +138,28 @@ def _api(path: str) -> dict:
     return value
 
 
+def _api_rules(path: str) -> list:
+    import json
+    try:
+        value = json.loads(_command("gh", "api", path))
+    except ValueError as exc:
+        raise AttestationError("invalid GitHub API response") from exc
+    require(isinstance(value, list), "unexpected effective rules response")
+    return value
+
+
 def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: str | None = None,
             after_merge: bool = False, trust_mode: str | None = None) -> dict:
     """Collect run, checkout, PR, Git and repository evidence directly from GitHub."""
     repo = "JCSchoeman96/NewYou"
-    require(trust_mode == "private-procedural", "explicit private-procedural mode is required")
+    require(trust_mode in ("private-procedural", "public-protected"), "explicit trust mode is required")
     repository_response = _api(f"repos/{repo}")
     branch_response = _api(f"repos/{repo}/branches/main")
     repository = {k: repository_response.get(k) for k in ("full_name", "private", "visibility", "default_branch")}
     branch = {k: branch_response.get(k) for k in ("name", "protected")}
-    verify_trust_mode(trust_mode, repository, branch)
+    ruleset = _api(f"repos/{repo}/rulesets/24191860") if trust_mode == "public-protected" else None
+    effective_rules = _api_rules(f"repos/{repo}/rules/branches/main") if trust_mode == "public-protected" else None
+    verify_trust_mode(trust_mode, repository, branch, ruleset, effective_rules)
     pr = _api(f"repos/{repo}/pulls/{pr_number}")
     require(pr.get("base", {}).get("ref") == "main", "PR does not target main")
     require(pr.get("merged") is after_merge
@@ -179,6 +228,8 @@ def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: s
          "checkout_shas": checkouts, "trust_mode": trust_mode, "repository": repository, "branch": branch,
          "reviewed_head": reviewed_head, "run_id": run_id, "run_attempt": attempt,
          "check_suite_id": run["check_suite_id"], "job_ids": job_ids, "jobs": job_evidence}
+    if trust_mode == "public-protected":
+        e.update(ruleset=ruleset, effective_rules=effective_rules)
     verify_candidate(e)
     fresh_pr = _api(f"repos/{repo}/pulls/{pr_number}")
     require(fresh_pr["head"]["sha"] == head and fresh_pr["base"]["sha"] == base
@@ -194,7 +245,10 @@ def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: s
                       or any(p.get("number") == pr_number for p in item.get("pull_requests", []))]
     require(fresh_relevant and fresh_relevant[0].get("id") == run_id, "run was superseded while collecting evidence")
     require(_api(f"repos/{repo}/commits/main")["sha"] == main, "main changed while collecting evidence")
-    verify_trust_mode(trust_mode, _api(f"repos/{repo}"), _api(f"repos/{repo}/branches/main"))
+    fresh_ruleset = _api(f"repos/{repo}/rulesets/24191860") if trust_mode == "public-protected" else None
+    fresh_rules = _api_rules(f"repos/{repo}/rules/branches/main") if trust_mode == "public-protected" else None
+    verify_trust_mode(trust_mode, _api(f"repos/{repo}"), _api(f"repos/{repo}/branches/main"), fresh_ruleset, fresh_rules)
+    require(fresh_ruleset == ruleset and fresh_rules == effective_rules, "rules changed while collecting evidence")
     if after_merge:
         merge_sha = pr.get("merge_commit_sha")
         require(isinstance(merge_sha, str) and re.fullmatch(r"[0-9a-f]{40}", merge_sha), "missing PR merge SHA")
@@ -217,7 +271,7 @@ def main() -> int:
     parser.add_argument("--pr", type=int, required=True)
     parser.add_argument("--reviewed-head", required=True, help="exact head independently reviewed by Master Gate")
     parser.add_argument("--run", type=int, required=True)
-    parser.add_argument("--trust-mode", required=True, choices=("private-procedural",))
+    parser.add_argument("--trust-mode", required=True, choices=("private-procedural", "public-protected"))
     parser.add_argument("--review-record", required=True, help="independent review record JSON")
     parser.add_argument("--before", help="saved pre-merge evidence, required after merge")
     args = parser.parse_args()

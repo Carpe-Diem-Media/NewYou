@@ -1,10 +1,10 @@
 # Foundation Integrity merge gate
 
-This is the current operational CI contract. The workflows define executable behaviour; this document explains their lane boundaries.
+This is the current operational CI and merge contract. The workflows define the executable lanes; this document explains their boundaries and the independent review procedure.
 
 ## Required gate
 
-The procedural Master Gate requires a successful **Foundation Integrity** check. GitHub Free does not enforce that requirement or protect `main` in this private repository. A writer can bypass the procedure, an owner-accepted risk described in [GitHub branch governance](github-branch-governance.md). Every pull request runs Foundation Smoke. Ordinary pushes to `main` do not start this workflow. Application CI runs when the change contains application or engineering paths. Foundation Full runs only in the nightly hardening workflow and is not part of PR checks or the required aggregate.
+The public repository protects `main` with active ruleset `24191860`, which requires a pull request and a successful **Foundation Integrity** status check. An independent reviewer must inspect the exact PR head and full diff before a regular merge. Foundation Integrity comes from hosted pull request CI. Every pull request runs Foundation Smoke. Application CI and the Hex security audit run when changed paths select them. Foundation Full runs only in the scheduled nightly hardening workflow and is not part of PR checks or the required aggregate. The application cache warmer is separate. It may save dependency caches from trusted `main` pushes; PR runs may restore those caches but do not save them. Cache entries contain no test results or build output.
 
 The aggregate requires successful routing and Smoke, plus successful Application CI and Hex security audit when selected. It does not wait for Foundation Full.
 
@@ -50,68 +50,69 @@ The historical pre-migration suite and audit use temporary compatibility views i
 
 See [Foundation Integrity CI](foundation-integrity-ci.md) for certification history and command details.
 
-## Independent resulting-main attestation
+## Independent review and resulting-main reconciliation
 
-The independent Master Gate reviews the exact PR head and diff, confirms all
-review and security conditions, and verifies the private repository and
-unprotected branch state before merging. Capture evidence while the PR is open, after the
-required gate succeeds. The collector reads GitHub's PR, repository, branch, run,
-check-run, job, checkout-log and Git commit APIs. The reviewer supplies the
-head they independently reviewed; this command does not perform the review.
+The independent reviewer examines the complete diff at the exact PR head,
+confirms the current base and checks the hosted Foundation Integrity run,
+including the exact merge candidate checked out by each required job. Capture
+evidence while the PR is open and after all required checks succeed. The
+collector reads GitHub's PR, repository, ruleset, run, check-run, job,
+checkout-log and Git commit APIs. It binds the reviewer's exact head and
+attributable review record to hosted CI evidence. The collector does not
+perform the review or calculate the independent full-diff digest.
+
 Use a trusted checkout containing the reviewed attestation tool and a `gh`
-session authorised to read the repository and Actions logs.
-
-```bash
-python3 -m tools.ci_attestation before --trust-mode private-procedural --review-record review.json --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID > before.json
-```
-
-The independent reviewer supplies `reviewed_head`, `reviewer`, `review_reference`
-and the independently verified SHA-256 `diff_sha256` of the reviewed full diff
-in machine-copyable form. The trusted repository operator materializes
-`review.json` from that authentic, attributable review:
+session authorized to read the repository and Actions logs. The trusted
+operator materializes `review.json` from the independent review:
 
 ```json
 {"reviewed_head":"<40-character head SHA>","reviewer":"<independent reviewer>","review_reference":"<durable review reference>","diff_sha256":"<64-character SHA-256>"}
 ```
 
-Independently verify the review
-reference, reviewer, full diff and digest, and retain the record in trusted
-custody, together with collector output, process exit status, stderr and SHA-256
-digests. Do not commit these artifacts. The collector validates their presence and binding, but does not verify
-the review itself or calculate the diff digest. Record the command output and its digest with the independent review evidence.
-Do not use a file produced by an untrusted PR checkout. The PR Actions API's
-`head_sha` identifies the PR head, not the merge candidate. The collector
-requires the exact candidate from checkout logs for each executed required
-job, and verifies its parents and tree. It also requires the successful
-`Foundation Integrity` check identity from the latest run, the explicit
-private procedural mode and reported branch state. Full is non-blocking;
-investigate a relevant Full failure.
-Any changed head, base, candidate, run attempt, checkout, or review invalidates
-the evidence. Recapture and re-review as appropriate. Immediately before an
-authorised merge, recheck the PR and current main; use a merge commit with
-`gh pr merge PR_NUMBER --merge --match-head-commit REVIEWED_HEAD_SHA`. Do not
-use auto-merge or a bypass. This command requires separate merge authorisation.
+Independently verify the review reference, reviewer, complete diff and digest.
+Keep the record in trusted custody with collector output, process exit status,
+stderr and SHA-256 digests. Do not commit these artifacts or use a file from an
+untrusted PR checkout. The PR Actions API `head_sha` identifies the PR head,
+not the merge candidate. The collector must verify the exact candidate from
+checkout logs for every executed required job, including its parents and tree,
+and confirm the successful `Foundation Integrity` check identity. Foundation
+Full is non-blocking; investigate a relevant failure in its scheduled lane.
 
-After an authorised merge, immediately run from the trusted checkout:
+Before merge, run from the trusted checkout:
 
 ```bash
-python3 -m tools.ci_attestation after --trust-mode private-procedural --review-record review.json --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID --before before.json > after.json
+python3 -m tools.ci_attestation before --trust-mode public-protected --review-record review.json --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID > before.json
 ```
 
-The collector re-reads GitHub evidence and requires the resulting main to be
-the PR merge commit, with exactly the reviewed base and head as parents and
-the CI-tested candidate tree. It rejects squash and rebase merges, unknown
-methods, concurrent main drift, missing logs and mismatches. Those cases
-require explicit fresh exact-SHA verification and independent reconciliation
-before Plane Done or dependent work. For that exception, check out the exact
-resulting-main SHA in a trusted isolated workspace, verify its SHA and tree,
-run Foundation Smoke and the applicable `mix check` and `mix check.deep` gates
-with DevCore, and record their output. Foundation Full remains deferred to the
-next nightly run and does not delay this verification. Resolve provenance or
-review failures separately; passing fresh tests cannot repair an unreviewed merge.
-The saved evidence is not itself a signature or a review approval; the
-independent reviewer must preserve and check its provenance. Reusing PR CI does not create a check run on main.
-Foundation Full is part of nightly hardening only; there is no manual dispatch.
+Any changed head, base, candidate, run attempt, checkout or review invalidates
+the corresponding evidence. Recapture CI evidence and repeat review as needed.
+Immediately before a regular merge, recheck the PR, active ruleset and current
+`main`. Do not use a bypass or merge when a required check is missing or
+unsuccessful. Separate owner authorization is required before executing
+`gh pr merge PR_NUMBER --merge --match-head-commit REVIEWED_HEAD_SHA`. Do not use auto-merge.
+
+After merge, immediately reconcile resulting `main` using the trusted evidence:
+
+```bash
+python3 -m tools.ci_attestation after --trust-mode public-protected --review-record review.json --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID --before before.json > after.json
+```
+
+Preserve both outputs, exit statuses, stderr and digests in trusted custody.
+Do not commit them.
+
+The collector re-reads GitHub evidence and verifies that resulting `main` is
+the merge commit, has the reviewed base and head as parents, and has the tree
+tested by hosted PR CI. It rejects squash and rebase merges, unknown methods,
+concurrent `main` changes, missing logs and mismatches. This post-merge step is
+read-only. It does not repeat tests or create a check run on `main`. If
+reconciliation fails, stop completion and dependent work. Resolve the evidence
+or merge discrepancy through an authorized process, then obtain fresh
+independent review and hosted CI for any new candidate. Passing tests alone
+does not repair a merge that lacked required review or checks.
+
+The saved evidence is not itself a signature or review approval. The
+independent reviewer must preserve and verify its provenance. Foundation Full
+remains in the scheduled nightly lane; it is not a post-merge duplicate test.
 
 ## Hex security audit
 
