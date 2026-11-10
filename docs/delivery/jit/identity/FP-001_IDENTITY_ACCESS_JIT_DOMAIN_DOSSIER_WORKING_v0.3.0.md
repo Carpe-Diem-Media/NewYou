@@ -743,15 +743,9 @@ Resource names represent business concepts, not database tables, screens or work
 
 * The maintained authentication architecture is already selected in current authority. Implementation/proof must verify compatible versions, token-presence revocation, Argon2id cost, MFA/step-up integration, key rotation, scanner-safe proof consumption and multi-node/restart semantics before development-entry acceptance.
 
-### `CURRENT_PHASE_AND_IMPLEMENTATION_STATUS`
+### Execution-state authority
 
-This current-status routing reconciliation changes no Identity v0.2.0 semantic version or owner decision.
-
-* Identity v0.1.4 is the archived predecessor; v0.2.0 is CERTIFIED / CURRENT under PR #151.
-* Phase 7C and Final Feature Pack Contract v0.1.0 are COMPLETE / CERTIFIED / CURRENT under current Open Work. This dossier changes neither status nor proof classification.
-* TB-001 bounded Phase 8 proof execution is authorised and started; its current proof result remains INCOMPLETE / COVERAGE-INCOMPLETE and Phase 8 is not certified.
-* P8-05 registration implementation is AUTHORISED — BOUNDED PHASE 8 ARCHITECTURAL PROOF ONLY. WELL-45 remains a legal/privacy release gate; development baselines are NOT LEGALLY APPROVED. After this authorization is current and resulting-main verification succeeds, WELL-48, WELL-49 and WELL-50 may begin in parallel where dependencies permit; none is complete. WELL-50 depends on the agreed WELL-48 Account/PMR contract, not implementation completion. WELL-51 follows the required WELL-48–50 seams and owns the first integrated acceptance boundary; WELL-52 follows WELL-51; WELL-53 follows WELL-48–52 and closes the proof outcome.
-* Phase 9 / Vertical Slices remain NOT STARTED / NOT AUTHORISED.
+The v0.2.0 predecessor preserves the historical PR #151 routing, Phase-7C and P8-05 execution-status record. Those recorded states do not describe v0.3.0 or authorize new work. Current issue states, dependency completion and development-entry decisions belong to Plane. This successor supplies only the owner-approved F.3a semantic clarification; WELL-13 application development requires independently reviewed integration, resulting-main verification and a fresh Ready gate.
 
 ### `BLOCKS_RELEASE_ONLY`
 
@@ -789,34 +783,10 @@ No item is classified as a blocker merely because implementation detail is not y
 
 ## Z. STOP review
 
-The v0.1.3 durable-delivery correction and v0.1.4 content-ownership/scanner-safe proof corrections remain certified and unchanged. PR #76 certified v0.1.4; separate PR #77 made it current. PR #150 certified the v0.2.0 candidate, and PR #151 records the narrowly scoped RegistrationOperation resolution as current Identity JIT planning. This successor changes no Product, Architecture, Domain or Roadmap authority, creates no Domain or generic ledger, and authorises no P8-05 implementation. Current Phase 7C and bounded Phase 8 proof status remain as recorded by Open Work. No source code, migration, package, database runtime, browser test, Plane update or Atlas expansion is part of this successor.
+The v0.1.3 durable-delivery and v0.1.4 content-ownership/scanner-safe proof corrections, and v0.2.0 registration semantics, remain unchanged. The complete historical certification and execution-status records remain in the unchanged predecessor and archive snapshots linked above. They do not certify this v0.3.0 successor.
 
-## AA. Final state
+F.3a incorporates the accountable owner's approved password-reset security meaning. This successor changes no Product, Architecture, Domain or Roadmap authority and creates no Domain, Resource, source code, migration or package. It grants no application development, production, provider, Phase-9 or merge authority. The live Ready gate remains a separate prerequisite after independent review, authorised integration and resulting-main verification.
 
-```text
-PHASE 7A: COMPLETE
-IDENTITY v0.1.4: HISTORICAL / BYTE-IDENTICAL PREDECESSOR
-IDENTITY v0.2.0: CERTIFIED / CURRENT UNDER PR #151 STATUS SUCCESSOR
-REGISTRATION OPERATION: IDENTITY-OWNED EIGHTH ASH RESOURCE; ACCEPTED REQUEST-BINDING CONTRACT CANONICALLY RECORDED
-COMM-UPD-001 CONTENT OWNERSHIP CORRECTION: CERTIFIED / CURRENT
-COMM-UPD-002 SCANNER/PREFETCH-SAFE PROOF CONSUMPTION: CERTIFIED / CURRENT
-COMMUNICATIONS FINALISATION: BLOCKED / STOP
-OQ-034 AUTHORITY STATUS: RESOLVED / ARCHITECTURE SELECTION; PHASE 8 PROOF REQUIRED
-OQ-034 EXECUTABLE PROOF: INCOMPLETE / NOT CERTIFIED
-OQ-035 RESOLVED: NO
-OQ-036 RESOLVED: NO
-PHASE 7C: COMPLETE / CERTIFIED / CURRENT UNDER CURRENT OPEN WORK
-PHASE 8: AUTHORISED FOR BOUNDED ARCHITECTURAL PROOF ONLY; CURRENT PROOF INCOMPLETE
-P8-05 REGISTRATION IMPLEMENTATION: AUTHORISED — BOUNDED PHASE 8 ARCHITECTURAL PROOF ONLY
-PHASE 9 / VERTICAL SLICES: NOT STARTED / NOT AUTHORISED
-IMPLEMENTATION STARTED BY THIS SUCCESSOR: NO
-MIGRATIONS CREATED: NO
-PACKAGES ADDED: NO
-PLANE MUTATED: NO
-ATLAS EXPANDED: NO
-PR #70 v0.1.3 CERTIFICATION: COMPLETE / PASS; PRIOR CANDIDATE/CURRENT SNAPSHOT PRESERVED SEPARATELY
-PR #76 v0.1.4 CANDIDATE CERTIFICATION: COMPLETE / PASS; POST-MERGE EVIDENCE COMPLETE; DID NOT PROMOTE CURRENT STATUS
-CURRENT-STATUS PROMOTION: PR #77 STATUS SUCCESSOR
-```
+## AA. Provenance and scope
 
-The v0.1.3 promoted/current snapshot, PR #70 candidate, PR #76 candidate, PR #150 candidate, and prior promoted/current v0.1.4 snapshot remain separately archived. This current-status successor preserves their historical bytes and records v0.2.0 as the current route.
+The v0.2.0 predecessor remains byte-identical. The v0.1.3 promoted/current snapshot, PR #70 candidate, PR #76 candidate, PR #150 candidate and prior promoted/current v0.1.4 snapshot remain separately archived. Their recorded lifecycle states are historical evidence, not current execution authority for this successor. The current delivery router selects the exact Identity contract path and digest for its checkout; Plane records live delivery state.
