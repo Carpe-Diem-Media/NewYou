@@ -758,23 +758,17 @@ defmodule NewYouWeb.RegistrationControllerTest do
       own = expected_rendered_copy(key, locale)
       other = expected_rendered_copy(key, other_locale)
 
-      if key == "shared.language.change" do
-        assert html =~ ~s(aria-label="#{own}"), "missing #{key}/#{locale} from page"
+      assert copy_present?(html, text_nodes, key, own), "missing #{key}/#{locale} from page"
 
-        if own != other do
-          refute html =~ ~s(aria-label="#{other}"),
-                 "found #{key}/#{other_locale} in #{locale} page"
-        end
-      else
-        assert own in text_nodes, "missing #{key}/#{locale} from page"
-
-        if own != other do
-          refute other in text_nodes,
-                 "found #{key}/#{other_locale} in #{locale} page"
-        end
-      end
+      refute own != other and copy_present?(html, text_nodes, key, other),
+             "found #{key}/#{other_locale} in #{locale} page"
     end)
   end
+
+  defp copy_present?(html, _text_nodes, "shared.language.change", copy),
+    do: html =~ ~s(aria-label="#{copy}")
+
+  defp copy_present?(_html, text_nodes, _key, copy), do: copy in text_nodes
 
   defp assert_registration_label_copy(html, field_id, key, locale) do
     field_id = Regex.escape(field_id)
