@@ -294,6 +294,18 @@ components:
 - The existing `text-input.height` of 58px maps to `--spacing-design-input-height`; this component alias does not extend the general spacing scale.
 - Participant form input boundaries use the existing `{colors.ink-muted}` token to meet Hallmark's 3:1 control contrast floor. The captured cool hairline below remains historical source evidence.
 
+### Editable token contract and development reference
+
+The owner requested a token-driven NewYou style guide in WELL-112. The development-only guide may render every approved token as a labelled specimen, including palette swatches. A swatch is a reference sample, not permission to use its color as a general-purpose component surface.
+
+`assets/css/design-tokens.css` holds editable `:root` values and maps them into the existing `design-*` Tailwind namespaces. `--primary` maps to `colors.primary`, `--primary-hover` to `colors.primary-deep`, and `--secondary` to `colors.ink`. Secondary remains the neutral outline/text role; it does not authorise a second saturated CTA. `--radius` is the 16px card radius, with the other existing radius tiers remaining separate. `--box-shadow` is `none`, preserving the flat system. `--font-body` is the existing approved Inter fallback. The existing typography, spacing and palette values remain unchanged.
+
+The content container is 1280px, as specified below. `--gutter` and `--grid-gap` initially use the existing 24px spacing tier. A two-column grid starts at the 744px project tablet breakpoint and a three-column grid at the 1128px desktop breakpoint. Incomplete final rows may align to the start or centre while retaining the same card width. Guide-only preview widths use the project breakpoints and a 390px phone viewport; they do not add application breakpoints.
+
+The guide's card specimen uses the approved white surface, charcoal text, hairline border, 16px radius, 24px padding and no shadow. Its headings use `heading-sm`, and its body uses `body-xs`. Plain text links use the existing charcoal navigation style with an underline and visible focus. The secondary button uses the existing outline-button definition, 48px height, 24px horizontal padding and full radius. Disabled examples preserve native disabled semantics and the existing appearance because no separate disabled palette is approved.
+
+Editing a token updates all canonical consumers through CSS. Changes to locked visual values still require the corresponding intentional update to this file; the guide is a refinement tool and does not approve a replacement design by itself. Existing legacy screens remain on the temporary compatibility lane until deliberately migrated.
+
 ## Overview
 
 Headspace's marketing surface reads less like a meditation app and more like a children's storybook re-laid as a web product page. The base canvas is a **warm off-white** (`{colors.canvas}` — #f9f4f2), the load-bearing ink is a **warm charcoal** (`{colors.ink}` — #2d2c2b) running every h1, h2, h3, and body paragraph, and the single saturated voltage is a confident blue (`{colors.primary}` — #0061ef) on the "Try for free" CTA pill. Where most meditation brands reach for sage greens or terracotta to signal serenity, Headspace argues through its chrome that wellness can be playful — even loud — as long as the type stays warm and the canvas stays cream.

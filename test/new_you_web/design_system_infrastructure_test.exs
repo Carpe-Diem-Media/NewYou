@@ -6,17 +6,78 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
   alias Mix.Tasks.Design.Check
   alias NewYouWeb.Components.Design.Button
 
+  test "the palette contract resolves shared aliases without accepting unapproved colors" do
+    design = ~s|colors:\n  primary: "#0061ef"\n|
+
+    css =
+      ":root { --primary: #0061ef; }\n@theme static {\n--color-design-primary: var(--primary);\n}"
+
+    assert [] = Check.token_color_violations(design, css)
+
+    for invalid <- [
+          String.replace(css, "#0061ef", "#123456"),
+          String.replace(css, "var(--primary)", "var(--missing)"),
+          String.replace(css, "#0061ef", "var(--color-design-primary)")
+        ] do
+      assert [_ | _] = Check.token_color_violations(design, invalid)
+    end
+
+    assert [_ | _] =
+             Check.token_color_violations(
+               design,
+               css <> "\n--color-design-surprise: var(--missing);"
+             )
+  end
+
+  test "CSS can consume declared aliases while unknown references and raw values still fail" do
+    path = "assets/css/new-feature.css"
+
+    assert [] =
+             Check.violations(
+               path,
+               ".scope { color: var(--primary); border-radius: var(--radius); box-shadow: var(--box-shadow); }"
+             )
+
+    for value <- ["var(--unapproved)", "var(--primary, #123456)", "#0061ef"] do
+      assert [_ | _] = Check.violations(path, ".scope { color: #{value}; }")
+    end
+  end
+
+  test "secondary buttons keep caller semantics without caller-owned visual classes" do
+    html =
+      render_component(&Button.secondary_button/1, %{
+        :"phx-click" => "save",
+        :"aria-label" => "Save changes",
+        type: "submit",
+        disabled: true,
+        inner_block: [%{inner_block: fn _, _ -> "Save changes" end}]
+      })
+
+    assert html =~ ~s|type="submit"|
+    assert html =~ "disabled"
+    assert html =~ ~s|phx-click="save"|
+    assert html =~ ~s|aria-label="Save changes"|
+    assert html =~ "rounded-design-full"
+
+    assert_raise ArgumentError, ~r/does not accept caller-provided classes/, fn ->
+      render_component(&Button.secondary_button/1, %{
+        class: "bg-red-500",
+        inner_block: [%{inner_block: fn _, _ -> "Save" end}]
+      })
+    end
+  end
+
   test "the main stylesheet imports the executable design token layer" do
     app_css = File.read!(Path.expand("../../assets/css/app.css", __DIR__))
     tokens = File.read!(Path.expand("../../assets/css/design-tokens.css", __DIR__))
 
     assert app_css =~ ~s|@import "./design-tokens.css";|
-    assert tokens =~ "--color-design-primary: #0061ef;"
-    assert tokens =~ "--color-design-primary-deep: #0000ee;"
-    assert tokens =~ "--radius-design-xl: 32px;"
-    assert tokens =~ "--spacing-design-md: 12px;"
-    assert tokens =~ "--text-design-display-xl: 64px;"
-    assert tokens =~ "--leading-design-display-xl: 1.05;"
+    assert tokens =~ "--primary: #0061ef;"
+    assert tokens =~ "--primary-hover: #0000ee;"
+    assert tokens =~ "--radius-xl: 32px;"
+    assert tokens =~ "--space-md: 12px;"
+    assert tokens =~ "--text-display-xl: 64px;"
+    assert tokens =~ "--leading-display-xl: 1.05;"
     assert tokens =~ "--breakpoint-design-tablet: 744px;"
     assert tokens =~ "--breakpoint-design-desktop: 1128px;"
     assert tokens =~ "--breakpoint-design-wide: 1441px;"
@@ -298,8 +359,8 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
     changed_tokens =
       String.replace(
         tokens,
-        "--color-design-primary: #0061ef;",
-        "--color-design-primary: #123456;"
+        "--primary: #0061ef;",
+        "--primary: #123456;"
       )
 
     assert [_violation | _] = Check.token_color_violations(design, changed_tokens)

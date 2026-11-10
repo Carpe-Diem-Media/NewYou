@@ -85,13 +85,20 @@ defmodule Mix.Tasks.Design.Check do
 
   @doc false
   def token_color_violations(design, css) do
-    colors = fn source, pattern ->
-      Regex.scan(pattern, source, capture: :all_but_first)
+    expected =
+      Regex.scan(~r/^  ([\w-]+):\s*"(#[0-9a-fA-F]{3,8})"\s*$/m, design, capture: :all_but_first)
       |> Map.new(fn [name, color] -> {name, String.downcase(color)} end)
-    end
 
-    expected = colors.(design, ~r/^  ([\w-]+):\s*"(#[0-9a-fA-F]{3,8})"\s*$/m)
-    actual = colors.(css, ~r/^\s*--color-design-([\w-]+):\s*(#[0-9a-fA-F]{3,8});\s*$/m)
+    variables =
+      Regex.scan(@css_variable, css, capture: :all_but_first)
+      |> Map.new(fn [name, value] -> {name, String.trim(value)} end)
+
+    actual =
+      variables
+      |> Enum.filter(fn {name, _value} -> String.starts_with?(name, "--color-design-") end)
+      |> Map.new(fn {name, _value} ->
+        {String.replace_prefix(name, "--color-design-", ""), resolve_color(name, variables, [])}
+      end)
 
     missing =
       Enum.flat_map(expected, fn {name, value} ->
@@ -103,6 +110,23 @@ defmodule Mix.Tasks.Design.Check do
         Map.keys(actual) -- Map.keys(expected),
         &"unapproved color token --color-design-#{&1}"
       )
+  end
+
+  defp resolve_color(name, variables, visited) do
+    if name in visited do
+      nil
+    else
+      resolve_color_value(Map.get(variables, name), variables, [name | visited])
+    end
+  end
+
+  defp resolve_color_value(nil, _variables, _visited), do: nil
+
+  defp resolve_color_value(value, variables, visited) do
+    case Regex.run(~r/^var\((--[\w-]+)\)$/, value, capture: :all_but_first) do
+      [reference] -> resolve_color(reference, variables, visited)
+      _ -> String.downcase(value)
+    end
   end
 
   @doc false
@@ -338,10 +362,16 @@ defmodule Mix.Tasks.Design.Check do
     end
   end
 
-  defp approved_css?(value),
-    do:
-      value in ["0", "none", "transparent", "currentColor", "inherit"] or
-        (String.contains?(value, "var(--design-") and not Regex.match?(@raw_value, value))
+  defp approved_css?(value) do
+    references = Regex.scan(~r/var\((--[\w-]+)/, value, capture: :all_but_first) |> List.flatten()
+    tokens = File.read!("assets/css/design-tokens.css")
+
+    value in ["0", "none", "transparent", "currentColor", "inherit"] or
+      (references != [] and not Regex.match?(@raw_value, value) and
+         Enum.all?(references, fn name ->
+           String.starts_with?(name, "--design-") or String.contains?(tokens, name <> ":")
+         end))
+  end
 
   defp capture_matches(pattern, source) do
     Regex.scan(pattern, source, capture: :all_but_first, return: :index)
