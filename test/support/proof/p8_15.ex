@@ -161,7 +161,7 @@ defmodule NewYou.Proof.P815 do
     end)
   end
 
-  def unverified_restart_proof do
+  def unverified_restart_proof(opts \\ []) do
     P805.with_fixture(fn ->
       request = P805.request()
       {:ok, registration} = Identity.register(request)
@@ -176,6 +176,8 @@ defmodule NewYou.Proof.P815 do
         email: request.email,
         locale: "af",
         operation_id: id,
+        case_id: recovery.id,
+        expected_state: "held_manual_review",
         signing_secret: secret
       }
 
@@ -183,10 +185,31 @@ defmodule NewYou.Proof.P815 do
       assert Ash.get!(Account, registration.account_id, authorize?: false) == before_account
       assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).satisfied_assurance == 0
       assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
-      assert restart_call(input) == :requested
+      interrupted? = Keyword.get(opts, :interrupt_resume?, false)
+      expected = if interrupted?, do: :request_retried, else: :requested
+
+      assert restart_call(
+               Map.merge(input, %{
+                 expected_state: "proof_pending",
+                 interrupt_request: interrupted?
+               })
+             ) == expected
+
       resumed = Ash.get!(RecoveryCase, recovery.id, authorize?: false)
       assert resumed.state == :proof_pending
       assert resumed.required_assurance == 2
+      assert resumed.satisfied_assurance == 0
+      assert Enum.map(cases(registration.account_id), & &1.id) == [recovery.id]
+
+      assert P805.scalar("SELECT count(*) FROM tokens WHERE recovery_case_id=$1", [
+               Ecto.UUID.dump!(recovery.id)
+             ]) == 1
+
+      assert P805.scalar(
+               "SELECT count(*) FROM message_intents WHERE source_operation_id=$1 AND role='account_recovery'",
+               [Ecto.UUID.dump!(id)]
+             ) == 1
+
       {:ok, bearer} = delivery(resumed, request.email)
       assert Identity.cancel_recovery(bearer, operation()) == {:ok, :cancelled}
 
@@ -699,7 +722,14 @@ defmodule NewYou.Proof.P815 do
 
       {^port, {:exit_status, 0}} ->
         Enum.find_value(
-          [:requested, :delivery_matches, :accepted, :completed, :already_completed],
+          [
+            :requested,
+            :request_retried,
+            :delivery_matches,
+            :accepted,
+            :completed,
+            :already_completed
+          ],
           :error,
           fn result ->
             marker = "P815_" <> (Atom.to_string(result) |> String.upcase())

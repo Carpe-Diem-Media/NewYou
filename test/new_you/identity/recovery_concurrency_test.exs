@@ -19,6 +19,10 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.unverified_restart_proof() == :ok
   end
 
+  test "restarted recovery retries the same case after a bounded request loses its lease" do
+    assert P815.unverified_restart_proof(interrupt_resume?: true) == :ok
+  end
+
   test "recovery waits for an earlier email fixture commit and rejects its stale binding" do
     assert P815.prior_email_commit_race()
   end
