@@ -245,6 +245,23 @@ exit 0
                 self.assertNotEqual(0, result.returncode)
             self.assertEqual(0o664, protected.stat().st_mode & 0o777)
 
+    def test_symlink_parent_of_cache_root_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "deps").mkdir()
+            (root / "_build").mkdir()
+            target = root / "outside"
+            (target / "lib").mkdir(parents=True)
+            protected = target / "lib/file"
+            protected.write_text("content")
+            protected.chmod(0o664)
+            (root / "_build/test").symlink_to(target, target_is_directory=True)
+            manifest = ROOT / "tools/ci/cache_manifest.py"
+            for action in ("write", "check"):
+                result = subprocess.run(["python3", str(manifest), action], cwd=root, capture_output=True)
+                self.assertNotEqual(0, result.returncode)
+            self.assertEqual(0o664, protected.stat().st_mode & 0o777)
+
 
 if __name__ == "__main__":
     unittest.main()

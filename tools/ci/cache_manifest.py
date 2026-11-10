@@ -14,11 +14,16 @@ MANIFEST = Path("_build/ci-dependency-cache.json")
 ROOTS = (Path("deps"), Path("_build/test/lib"))
 
 
+def validate_roots():
+    for root in ROOTS:
+        if not root.is_dir() or any(path.is_symlink() for path in (root, *root.parents)):
+            raise ValueError(f"missing or symlinked cache directory: {root}")
+
+
 def normalize_file_modes():
     """Make producer files stable under the hosted runner's 0022 extraction umask."""
+    validate_roots()
     for root in ROOTS:
-        if root.is_symlink() or not root.is_dir():
-            raise ValueError(f"missing cache directory: {root}")
         for directory, _, files in os.walk(root, followlinks=False):
             for name in files:
                 path = Path(directory) / name
@@ -83,9 +88,8 @@ def describe_mismatch(expected, actual):
 
 def snapshot():
     entries = {}
+    validate_roots()
     for root in ROOTS:
-        if root.is_symlink() or not root.is_dir():
-            raise ValueError(f"missing cache directory: {root}")
         for directory, dirs, files in os.walk(root, followlinks=False):
             for name in sorted(dirs + files):
                 path = Path(directory) / name
