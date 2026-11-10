@@ -65,6 +65,31 @@ defmodule NewYou.Identity.RecoveryTest do
 
       assert Ash.get!(NewYou.Identity.DeviceAssurance, device_id, authorize?: false).state ==
                :revoked
+
+      # Completion invalidates prior authentication; only a fresh password sign-in
+      # may create the next Session. Idempotent completion must not create one.
+      session_count = fn ->
+        P805.scalar("SELECT count(*) FROM sessions WHERE account_id = $1", [
+          Ecto.UUID.dump!(registered.account_id)
+        ])
+      end
+
+      assert session_count.() == 1
+
+      assert Identity.authenticate_password(request.email, request.password) ==
+               {:error, :authentication_unavailable}
+
+      assert session_count.() == 1
+
+      assert {:ok, fresh_session} =
+               Identity.authenticate_password(
+                 request.email,
+                 "new independent recovery credential"
+               )
+
+      assert fresh_session.session_id != session.session_id
+      assert {:ok, _} = Identity.authorize_session(fresh_session)
+      assert session_count.() == 2
     end)
   end
 

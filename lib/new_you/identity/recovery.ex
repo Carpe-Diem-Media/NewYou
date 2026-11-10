@@ -498,8 +498,10 @@ defmodule NewYou.Identity.Recovery do
 
   defp terminate(recovery, proof, action, outcome) do
     with {:ok, _} <- transition(recovery, action, %{terminated_at: now()}),
-         {:ok, _} <- Ash.update(proof, %{}, action: :revoke_recovery, authorize?: false),
-         do: {:ok, outcome}
+         {:ok, _} <- Ash.update(proof, %{}, action: :revoke_recovery, authorize?: false) do
+      checkpoint()
+      {:ok, outcome}
+    end
   end
 
   @doc false

@@ -362,6 +362,83 @@ defmodule NewYou.Proof.P815 do
     end)
   end
 
+  def terminal_race(first_action) when first_action in [:complete, :cancel] do
+    P805.with_fixture(fn ->
+      {_request, registration, recovery, bearer} = pending_recovery()
+      assert Identity.submit_recovery_proof(bearer, operation()) == {:ok, :accepted}
+      before_account = Ash.get!(Account, registration.account_id, authorize?: false)
+      parent = self()
+      reference = make_ref()
+      first_operation = operation()
+      second_operation = operation()
+      second_action = if first_action == :complete, do: :cancel, else: :complete
+      scenario = Scenario.start()
+
+      try do
+        {first, first_monitor} =
+          Scenario.spawn(scenario, :first_terminal_action, fn ->
+            :ok = Sandbox.checkout(Repo, sandbox: false)
+            Process.put(RegistrationSeam, {:pause, parent, reference})
+
+            try do
+              result = terminal_action(first_action, bearer, first_operation)
+              send(parent, {reference, :first_result, result})
+            after
+              Sandbox.checkin(Repo)
+            end
+          end)
+
+        first_backend = await_checkpoint(reference)
+
+        {_second, second_monitor} =
+          Scenario.spawn(scenario, :second_terminal_action, fn ->
+            :ok = Sandbox.checkout(Repo, sandbox: false)
+
+            try do
+              send(parent, {reference, :second_backend, P805.scalar("SELECT pg_backend_pid()")})
+              result = terminal_action(second_action, bearer, second_operation)
+              send(parent, {reference, :second_result, result})
+            after
+              Sandbox.checkin(Repo)
+            end
+          end)
+
+        second_backend = receive_backend(reference, :second_backend)
+        assert_contention(second_backend, first_backend)
+        send(first, {reference, :release})
+        expected = if first_action == :complete, do: :completed, else: :cancelled
+        assert await_result(reference, :first_result) == {:ok, expected}
+        assert await_result(reference, :second_result) == {:error, :recovery_unavailable}
+        await_normal(first_monitor)
+        await_normal(second_monitor)
+        assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).state == expected
+        after_account = Ash.get!(Account, registration.account_id, authorize?: false)
+        increment = if first_action == :complete, do: 1, else: 0
+        assert after_account.credential_version == before_account.credential_version + increment
+        assert after_account.security_posture == :normal
+        assert after_account.email == before_account.email
+
+        assert P805.scalar(
+                 "SELECT count(*) FROM message_intents WHERE role = 'recovery_security_notice' AND source_operation_id = $1",
+                 [Ecto.UUID.dump!(first_operation)]
+               ) == increment
+
+        assert terminal_action(first_action, bearer, first_operation) ==
+                 {:ok, if(first_action == :complete, do: :already_completed, else: :cancelled)}
+
+        assert terminal_action(second_action, bearer, second_operation) ==
+                 {:error, :recovery_unavailable}
+      after
+        :ok = Scenario.stop(scenario)
+      end
+    end)
+  end
+
+  defp terminal_action(:complete, bearer, id),
+    do: Identity.complete_recovery(bearer, "terminal race replacement password", id)
+
+  defp terminal_action(:cancel, bearer, id), do: Identity.cancel_recovery(bearer, id)
+
   def stale_login_race do
     P805.with_fixture(fn ->
       {request, _registration, recovery, bearer} = pending_recovery()

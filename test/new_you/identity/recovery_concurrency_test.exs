@@ -31,6 +31,14 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.completion_race()
   end
 
+  test "completion commits before competing cancellation without reopening recovery" do
+    assert P815.terminal_race(:complete)
+  end
+
+  test "cancellation commits before competing completion without changing credentials" do
+    assert P815.terminal_race(:cancel)
+  end
+
   test "old password login waits for completion and cannot create a session" do
     assert P815.stale_login_race()
   end
