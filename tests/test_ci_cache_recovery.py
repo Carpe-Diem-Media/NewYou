@@ -89,6 +89,23 @@ exit 0
             (root / "deps/package").write_text("corrupt")
             self.assertNotEqual(0, run("check"))
 
+    def test_mismatch_diagnostics_are_bounded_and_do_not_disclose_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "deps").mkdir()
+            (root / "_build/test/lib").mkdir(parents=True)
+            for index in range(25):
+                (root / "deps" / f"sensitive-name-{index}").write_text("original")
+            manifest = ROOT / "tools/ci/cache_manifest.py"
+            subprocess.run(["python3", str(manifest), "write"], cwd=root, check=True)
+            for path in (root / "deps").iterdir():
+                path.write_text("changed")
+            result = subprocess.run(["python3", str(manifest), "check"], cwd=root, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("content_changed=25", result.stderr)
+            self.assertNotIn("sensitive-name", result.stderr)
+            self.assertLessEqual(result.stderr.count("path_sha256="), 10)
+
 
 if __name__ == "__main__":
     unittest.main()

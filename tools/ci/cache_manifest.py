@@ -5,10 +5,44 @@ import hashlib
 import json
 import os
 import sys
+from collections import Counter
 from pathlib import Path
 
 MANIFEST = Path("_build/ci-dependency-cache.json")
 ROOTS = (Path("deps"), Path("_build/test/lib"))
+
+
+def describe_mismatch(expected, actual):
+    """Report bounded metadata without exposing cached paths or file contents."""
+    if not isinstance(expected, dict) or not all(
+        isinstance(key, str) and isinstance(value, str) for key, value in expected.items()
+    ):
+        raise ValueError("invalid cache manifest format")
+    counts = Counter()
+    examples = []
+    for path in sorted(expected.keys() | actual.keys()):
+        before, after = expected.get(path), actual.get(path)
+        if before == after:
+            continue
+        if before is None:
+            kind = "unexpected"
+        elif after is None:
+            kind = "missing"
+        elif before.startswith("link:") or after.startswith("link:"):
+            kind = "link_changed"
+        else:
+            old_mode, _, old_digest = before.partition(":")
+            new_mode, _, new_digest = after.partition(":")
+            kind = "mode_changed" if old_digest == new_digest and old_mode != new_mode else "content_changed"
+        counts[kind] += 1
+        if len(examples) < 10:
+            root = "deps" if path.startswith("deps/") else "build" if path.startswith("_build/test/lib/") else "other"
+            fingerprint = hashlib.sha256(path.encode("utf-8")).hexdigest()
+            examples.append(f"{kind} root={root} path_sha256={fingerprint}")
+    summary = " ".join(f"{kind}={counts[kind]}" for kind in sorted(counts))
+    print(f"Cache mismatch counts: {summary}", file=sys.stderr)
+    for example in examples:
+        print(f"Cache mismatch: {example}", file=sys.stderr)
 
 
 def snapshot():
@@ -37,8 +71,11 @@ def main():
         actual = snapshot()
         if sys.argv[1] == "write":
             MANIFEST.write_text(json.dumps(actual, sort_keys=True), encoding="utf-8")
-        elif actual != json.loads(MANIFEST.read_text(encoding="utf-8")):
-            raise ValueError("cache contents do not match manifest")
+        else:
+            expected = json.loads(MANIFEST.read_text(encoding="utf-8"))
+            if actual != expected:
+                describe_mismatch(expected, actual)
+                raise ValueError("cache contents do not match manifest")
     except (OSError, ValueError) as error:
         print(f"Dependency cache validation failed: {error}", file=sys.stderr)
         return 1
