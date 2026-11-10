@@ -62,9 +62,9 @@
     },
     {
       "document_id": "FP001_IDENTITY_ACCESS_JIT",
-      "canonical_filename": "FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.2.0.md",
-      "repository_path": "docs/delivery/jit/identity/FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.2.0.md",
-      "sha256": "b50469ff708543495d08001a88a576b2d0bca4562bc1f73fc24449c81a7ed508",
+      "canonical_filename": "FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.3.0.md",
+      "repository_path": "docs/delivery/jit/identity/FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.3.0.md",
+      "sha256": "400bea9d56ed0e8cc07a9ae3a774978f876b961fcf3d90af549d9478b16d3ea5",
       "contract_type": "jit"
     },
     {

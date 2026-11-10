@@ -275,10 +275,12 @@ class FoundationSmokeTests(unittest.TestCase):
     def test_smoke_rejects_broken_current_identity_history_references(self):
         with tempfile.TemporaryDirectory() as directory:
             root = self._fixture(directory)
-            identity = root / (
-                "docs/delivery/jit/identity/"
-                "FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.2.0.md"
+            router = json.loads((root / DELIVERY_ROUTER).read_text(encoding="utf-8"))
+            identity_route = next(
+                entry for entry in router["delivery_contracts"]
+                if entry["document_id"] == "FP001_IDENTITY_ACCESS_JIT"
             )
+            identity = root / identity_route["repository_path"]
             identity.write_text(
                 identity.read_text(encoding="utf-8").replace(
                     "docs/history/platform/archive/identity_promotions/",
