@@ -46,7 +46,68 @@ defmodule NewYou.Identity do
     resource NewYou.Identity.Session
     resource IdentityGrant
     resource NewYou.Identity.ReconciliationCase
+    resource NewYou.Identity.RecoveryCase
   end
+
+  @doc "Start or reuse a recovery case. Every public request has the same neutral result. No provider delivery or login occurs."
+  @spec request_recovery(term(), term(), term()) :: :ok
+  def request_recovery(email, locale, operation_id),
+    do: NewYou.Identity.Recovery.request(email, locale, operation_id)
+
+  @doc "Accept current proof explicitly. Proof consumption and case assurance commit together."
+  @spec submit_recovery_proof(term(), term()) ::
+          {:ok, :accepted | :failed | :expired} | {:error, :recovery_unavailable}
+  def submit_recovery_proof(proof, operation_id),
+    do: recovery_action(:submit_recovery_proof, %{proof: proof, operation_id: operation_id})
+
+  @doc "Complete ordinary recovery once. An unchanged operation retry returns its committed receipt and cannot apply another password."
+  @spec complete_recovery(term(), term(), term()) ::
+          {:ok, :completed | :already_completed | :failed | :expired}
+          | {:error, :recovery_unavailable}
+  def complete_recovery(proof, password, operation_id),
+    do:
+      recovery_action(:complete_recovery, %{
+        proof: proof,
+        password: password,
+        operation_id: operation_id
+      })
+
+  @doc "Record case-bound current scoped manual review. This does not complete recovery or release a security hold."
+  @spec approve_manual_recovery(term()) ::
+          {:ok, %{status: :approved, version: non_neg_integer()}}
+          | {:error, :recovery_unavailable}
+  def approve_manual_recovery(request), do: recovery_action(:approve_manual_recovery, request)
+
+  @doc "Complete after distinct current scoped approval and independently committed E1 admission. All Identity effects and required owner obligations commit together."
+  @spec complete_manual_recovery(term()) ::
+          {:ok, :completed | :already_completed} | {:error, :recovery_unavailable}
+  def complete_manual_recovery(request), do: recovery_action(:complete_manual_recovery, request)
+
+  @doc "Cancel a current case with its purpose-bound claimant proof. Terminal cases remain final."
+  @spec cancel_recovery(term(), term()) ::
+          {:ok, :cancelled | :failed | :expired} | {:error, :recovery_unavailable}
+  def cancel_recovery(proof, operation_id),
+    do: recovery_action(:cancel_recovery, %{proof: proof, operation_id: operation_id})
+
+  @doc "Trusted transient proof serialization inside a delivery transaction. Content eligibility remains independently required before sending."
+  @spec recovery_delivery(term(), term(), term()) ::
+          {:ok, binary()} | {:error, :source_invalid | :capability_unavailable}
+  def recovery_delivery(reference, destination, locale),
+    do: NewYou.Identity.Recovery.delivery(reference, destination, locale)
+
+  defp recovery_action(name, request) when is_map(request) do
+    NewYou.Identity.RecoveryCase
+    |> Ash.ActionInput.for_action(name, %{request: request}, authorize?: false)
+    |> Ash.run_action()
+    |> case do
+      {:ok, result} -> {:ok, result}
+      _ -> {:error, :recovery_unavailable}
+    end
+  rescue
+    _ -> {:error, :recovery_unavailable}
+  end
+
+  defp recovery_action(_, _), do: {:error, :recovery_unavailable}
 
   @doc "Request a password-reset link through the neutral, bounded development boundary. No Account or Session is created."
   @spec request_password_reset(term(), term(), term()) :: :ok

@@ -30,6 +30,7 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:read, :get_by_subject},
                {:read, :read},
                {:update, :advance_reconciliation_version},
+               {:update, :hold_for_recovery},
                {:update, :invalidate_grant_assurance},
                {:update, :mark_email_verified},
                {:update, :place_security_hold},
@@ -38,6 +39,7 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:update, :replace_password},
                {:update, :retire_reconciled_identity},
                {:update, :review_security_hold},
+               {:update, :set_recovery_floor},
                {:update, :update_privileged_mfa}
              ]
 
@@ -45,7 +47,9 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
           :advance_reconciliation_version,
           :retire_reconciled_identity,
           :reset_password,
-          :replace_password
+          :replace_password,
+          :hold_for_recovery,
+          :set_recovery_floor
         ] do
       refute Ash.Resource.Info.action(NewYou.Identity.Account, action).public?
     end
@@ -89,6 +93,11 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:post, "/verification/resend", NewYouWeb.RegistrationController, :resend},
                {:get, "/verification/confirm", NewYouWeb.EmailVerificationController, :show},
                {:post, "/verification/confirm", NewYouWeb.EmailVerificationController, :confirm},
+               {:get, "/recovery/confirm", NewYouWeb.RecoveryController, :show},
+               {:post, "/recovery", NewYouWeb.RecoveryController, :request},
+               {:post, "/recovery/confirm", NewYouWeb.RecoveryController, :confirm},
+               {:post, "/recovery/complete", NewYouWeb.RecoveryController, :complete},
+               {:post, "/recovery/cancel", NewYouWeb.RecoveryController, :cancel},
                {:get, "/password/reset", NewYouWeb.PasswordResetController, :new},
                {:post, "/password/reset", NewYouWeb.PasswordResetController, :request},
                {:get, "/password/reset/confirm", NewYouWeb.PasswordResetController, :show},

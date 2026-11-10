@@ -30,6 +30,10 @@ defmodule NewYou.Identity.Token do
                            one_current_password_reset: "purpose = 'password_reset'"
 
     check_constraints do
+      check_constraint :recovery_case_id, "tokens_recovery_metadata",
+        check:
+          "(recovery_case_id IS NULL AND recovery_claims IS NULL AND purpose NOT IN ('recovery','recovery_consumed','recovery_revoked')) OR (recovery_case_id IS NOT NULL AND recovery_claims IS NOT NULL AND purpose IN ('recovery','recovery_consumed','recovery_revoked','revocation') AND COALESCE(recovery_claims->>'purpose' = 'recovery' AND recovery_claims->>'jti' = jti AND recovery_claims->>'sub' = subject AND recovery_claims->>'case_id' = recovery_case_id::text, false))"
+
       check_constraint :reset_request_id, "tokens_password_reset_metadata",
         check:
           "(purpose NOT IN ('password_reset', 'password_reset_superseded', 'password_reset_consumed') AND reset_request_id IS NULL AND reset_claims IS NULL AND reset_account_binding IS NULL AND reset_locale IS NULL AND reset_consumption_id IS NULL) OR (reset_request_id IS NOT NULL AND reset_claims IS NOT NULL AND reset_locale IS NOT NULL AND reset_locale IN ('en', 'af') AND ((purpose = 'password_reset_consumed' AND reset_consumption_id IS NOT NULL AND reset_account_binding IS NULL) OR (purpose <> 'password_reset_consumed' AND reset_consumption_id IS NULL AND reset_account_binding IS NOT NULL)))"
@@ -41,6 +45,30 @@ defmodule NewYou.Identity.Token do
   end
 
   actions do
+    create :issue_recovery do
+      public? false
+      accept [:recovery_case_id, :recovery_claims]
+      argument :token, :string, allow_nil?: false, sensitive?: true
+      validate present([:recovery_case_id, :recovery_claims])
+      change set_attribute(:purpose, "recovery")
+      change AshAuthentication.TokenResource.StoreTokenChange
+      change NewYou.Identity.Changes.SetTokenAccount
+    end
+
+    update :consume_recovery do
+      public? false
+      accept []
+      change filter(expr(purpose == "recovery" and expires_at > now()))
+      change set_attribute(:purpose, "recovery_consumed")
+    end
+
+    update :revoke_recovery do
+      public? false
+      accept []
+      change filter(expr(purpose in ["recovery", "recovery_consumed"]))
+      change set_attribute(:purpose, "recovery_revoked")
+    end
+
     create :issue_password_reset do
       description "Create one new password-reset proof. Never upsert or reissue an existing JTI."
       public? false
@@ -108,7 +136,12 @@ defmodule NewYou.Identity.Token do
 
     read :expired do
       description "Look up expired Identity tokens for framework cleanup"
-      filter expr(expires_at < now() and purpose != "password_reset_consumed")
+
+      filter expr(
+               expires_at < now() and is_nil(recovery_case_id) and
+                 purpose != "password_reset_consumed"
+             )
+
       public? false
     end
 
@@ -156,7 +189,13 @@ defmodule NewYou.Identity.Token do
 
     destroy :expunge_expired do
       public? false
-      change filter(expr(expires_at < now() and purpose != "password_reset_consumed"))
+
+      change filter(
+               expr(
+                 expires_at < now() and is_nil(recovery_case_id) and
+                   purpose != "password_reset_consumed"
+               )
+             )
     end
 
     update :revoke_all_stored_for_subject do
@@ -174,6 +213,8 @@ defmodule NewYou.Identity.Token do
   end
 
   attributes do
+    attribute :recovery_case_id, :uuid, sensitive?: true, public?: false
+    attribute :recovery_claims, :map, sensitive?: true, public?: false
     attribute :reset_request_id, :uuid, sensitive?: true, public?: false
     attribute :reset_claims, :map, sensitive?: true, public?: false
     attribute :reset_account_binding, :binary, sensitive?: true, public?: false
@@ -218,6 +259,12 @@ defmodule NewYou.Identity.Token do
   end
 
   relationships do
+    belongs_to :recovery_case, NewYou.Identity.RecoveryCase do
+      define_attribute? false
+      source_attribute :recovery_case_id
+      public? false
+    end
+
     belongs_to :account, NewYou.Identity.Account do
       allow_nil? false
       attribute_writable? false
@@ -226,6 +273,7 @@ defmodule NewYou.Identity.Token do
   end
 
   identities do
+    identity :recovery_case_proof, [:recovery_case_id]
     identity :one_current_password_reset, [:account_id], where: expr(purpose == "password_reset")
     identity :password_reset_request, [:reset_request_id]
     identity :password_reset_consumption, [:reset_consumption_id]

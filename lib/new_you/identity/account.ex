@@ -92,6 +92,22 @@ defmodule NewYou.Identity.Account do
   end
 
   actions do
+    update :set_recovery_floor do
+      public? false
+      accept [:recovery_assurance_floor]
+    end
+
+    update :hold_for_recovery do
+      public? false
+      accept []
+      change filter(expr(security_posture == :normal))
+      change set_attribute(:security_posture, :held)
+      change set_attribute(:hold_review, nil)
+      change set_attribute(:recovery_assurance_floor, 2)
+      change increment(:hold_version)
+      change increment(:security_version)
+    end
+
     action :reset_password, :atom do
       description "Explicit proof-bound password replacement with atomic Account-wide security consequences. Never signs in."
       public? false
@@ -278,6 +294,12 @@ defmodule NewYou.Identity.Account do
   end
 
   attributes do
+    attribute :recovery_assurance_floor, :integer,
+      default: 1,
+      allow_nil?: false,
+      public?: false,
+      constraints: [min: 1, max: 2]
+
     uuid_v7_primary_key :id
 
     attribute :account_status, :atom do

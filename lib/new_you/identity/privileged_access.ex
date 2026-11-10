@@ -12,7 +12,9 @@ defmodule NewYou.Identity.PrivilegedAccess do
     :review_security_hold,
     :release_security_hold,
     :review_reconciliation,
-    :apply_reconciliation
+    :apply_reconciliation,
+    :approve_manual_recovery,
+    :complete_manual_recovery
   ]
   @step_up_seconds 5 * 60
   @max_failed_codes 5
@@ -63,10 +65,18 @@ defmodule NewYou.Identity.PrivilegedAccess do
   @doc false
   def authorize_locked(credentials, grant_id, target_id, capability)
       when capability in @purposes do
+    authorize_locked(credentials, grant_id, target_id, capability, [])
+  end
+
+  def authorize_locked(_, _, _, _), do: unavailable()
+
+  @doc false
+  def authorize_locked(credentials, grant_id, target_id, capability, additional_account_ids)
+      when capability in @purposes and is_list(additional_account_ids) do
     with true <- Ash.DataLayer.in_transaction?(Account),
          {:ok, claims} <- verified_claims(credentials),
          {:ok, actor_id} <- account_id_from_subject(claims["sub"]),
-         {:ok, accounts} <- lock_accounts([actor_id, target_id]),
+         {:ok, accounts} <- lock_accounts([actor_id, target_id | additional_account_ids]),
          actor <- Map.fetch!(accounts, actor_id),
          target <- Map.fetch!(accounts, target_id),
          {:ok, %{session: session, token: token}} <-
@@ -79,13 +89,48 @@ defmodule NewYou.Identity.PrivilegedAccess do
            Jwt.verify(credentials.token, Account),
          true <- subject == AshAuthentication.user_to_subject(actor),
          true <- jti == token.jti do
-      {:ok, %{actor: actor, target: target, session: session, grant: grant}}
+      {:ok, %{actor: actor, target: target, session: session, grant: grant, accounts: accounts}}
     else
       _ -> unavailable()
     end
   end
 
-  def authorize_locked(_, _, _, _), do: unavailable()
+  def authorize_locked(_, _, _, _, _), do: unavailable()
+
+  @doc false
+  def authorize_recorded_locked(review, target_id, capability, actor)
+      when is_map(review) and capability in @purposes do
+    with true <- Ash.DataLayer.in_transaction?(Account),
+         true <- is_map(actor) and actor.id == review["reviewer_id"],
+         true <- eligible?(actor),
+         {:ok, [session]} <- lock_recorded_session(review["session_id"], actor.id),
+         {:ok, [token]} <- lock_user_token(session.token_jti, actor.id),
+         true <- token.purpose == "user" and before?(token.expires_at),
+         true <- before?(session.expires_at) and before?(session.idle_expires_at),
+         true <- not_revoked?(token.jti),
+         {:ok, grant} <- lock_grant(review["grant_id"]),
+         true <- grant.version == review["grant_version"],
+         true <- actor.mfa_version == review["mfa_version"],
+         true <- actor.security_version == review["security_version"],
+         true <- valid_step_up?(session, actor, capability),
+         {:ok, target} <-
+           Account |> Ash.Query.filter(id == ^target_id) |> Ash.read_one(authorize?: false),
+         true <- valid_grant?(grant, actor, target, capability) do
+      {:ok,
+       %{
+         actor: actor,
+         target: target,
+         session: session,
+         token: token,
+         grant: grant,
+         review: review
+       }}
+    else
+      _ -> unavailable()
+    end
+  end
+
+  def authorize_recorded_locked(_, _, _, _), do: unavailable()
 
   defp transact_session(credentials, callback) do
     case transaction([Account, Token, Session], fn ->
@@ -394,6 +439,13 @@ defmodule NewYou.Identity.PrivilegedAccess do
   defp lock_session(id, jti, account_id) do
     Session
     |> Ash.Query.filter(id == ^id and token_jti == ^jti and account_id == ^account_id)
+    |> Ash.Query.lock(:for_update)
+    |> Ash.read(domain: NewYou.Identity, authorize?: false)
+  end
+
+  defp lock_recorded_session(id, account_id) do
+    Session
+    |> Ash.Query.filter(id == ^id and account_id == ^account_id)
     |> Ash.Query.lock(:for_update)
     |> Ash.read(domain: NewYou.Identity, authorize?: false)
   end

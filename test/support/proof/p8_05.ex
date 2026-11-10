@@ -1040,7 +1040,7 @@ defmodule NewYou.Proof.P805 do
     # browser process dies before it can return its generated operation IDs.
     %{rows: discovered} =
       Repo.query!(
-        "SELECT operation_id FROM registration_operations WHERE created_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) UNION SELECT operation_id FROM resend_operations WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+        "SELECT operation_id FROM registration_operations WHERE created_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) UNION SELECT operation_id FROM resend_operations WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) UNION SELECT operation_id FROM recovery_cases WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) UNION SELECT completion_id FROM recovery_cases WHERE completion_id IS NOT NULL AND account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
         [emails]
       )
 
@@ -1142,6 +1142,19 @@ defmodule NewYou.Proof.P805 do
       "DELETE FROM device_assurances WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
       [emails]
     )
+
+    {:ok, :ok} =
+      Repo.transaction(fn ->
+        Repo.query!("ALTER TABLE recovery_cases DISABLE TRIGGER identity_recovery_immutable")
+
+        Repo.query!(
+          "DELETE FROM recovery_cases WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+          [emails]
+        )
+
+        Repo.query!("ALTER TABLE recovery_cases ENABLE TRIGGER identity_recovery_immutable")
+        :ok
+      end)
 
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
   end

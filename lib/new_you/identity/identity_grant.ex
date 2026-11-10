@@ -17,7 +17,7 @@ defmodule NewYou.Identity.IdentityGrant do
 
       check_constraint :scope, "identity_grants_scope",
         check:
-          "scope IN ('security_hold_restriction', 'security_hold_review', 'security_hold_release', 'identity_reconciliation')"
+          "scope IN ('security_hold_restriction', 'security_hold_review', 'security_hold_release', 'identity_reconciliation', 'identity_recovery')"
 
       check_constraint :state, "identity_grants_state", check: "state IN ('active', 'revoked')"
 
@@ -103,7 +103,8 @@ defmodule NewYou.Identity.IdentityGrant do
                     :security_hold_restriction,
                     :security_hold_review,
                     :security_hold_release,
-                    :identity_reconciliation
+                    :identity_reconciliation,
+                    :identity_recovery
                   ]
 
       public? false
@@ -164,7 +165,8 @@ defmodule NewYou.Identity.IdentityGrant do
     security_hold_restriction: [:place_security_hold],
     security_hold_review: [:review_security_hold],
     security_hold_release: [:release_security_hold],
-    identity_reconciliation: [:review_reconciliation, :apply_reconciliation]
+    identity_reconciliation: [:review_reconciliation, :apply_reconciliation],
+    identity_recovery: [:approve_manual_recovery, :complete_manual_recovery]
   }
 
   @doc "Derive protected capabilities from the bounded Support role/scope catalogue. Current grant validity is checked by the owning action."

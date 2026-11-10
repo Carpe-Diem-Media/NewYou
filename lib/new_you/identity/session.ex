@@ -166,7 +166,9 @@ defmodule NewYou.Identity.Session do
                     :review_security_hold,
                     :release_security_hold,
                     :review_reconciliation,
-                    :apply_reconciliation
+                    :apply_reconciliation,
+                    :approve_manual_recovery,
+                    :complete_manual_recovery
                   ]
 
       public? false

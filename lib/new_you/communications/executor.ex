@@ -114,6 +114,10 @@ defmodule NewYou.Communications.Executor do
     end
   end
 
+  defp source_eligibility(%{role: role})
+       when role in [:account_recovery, :recovery_security_notice],
+       do: {:error, :capability_unavailable}
+
   defp source_eligibility(_), do: {:error, :source_invalid}
 
   defp prepare_eligible(intent, attempts) do

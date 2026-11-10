@@ -43,6 +43,12 @@ defmodule NewYou.Audit do
   def admit_reconciliation(envelope),
     do: NewYou.Audit.PrivilegedEvidence.admit(envelope, :identity_reconciliation)
 
+  @doc "Commit a case-bound recovery E1 attempt independently of Identity recovery completion."
+  @spec admit_recovery(map()) ::
+          {:ok, NewYou.Audit.EvidenceRecord.t()} | {:error, :evidence_admission_unavailable}
+  def admit_recovery(envelope),
+    do: NewYou.Audit.PrivilegedEvidence.admit(envelope, :identity_recovery)
+
   @doc "Establish selected security E2 work inside the owning source transaction. Executor recovery never calls Identity."
   @spec establish_identity_security_obligation(map()) ::
           {:ok, NewYou.Audit.EvidenceObligation.t()} | {:error, term()}
