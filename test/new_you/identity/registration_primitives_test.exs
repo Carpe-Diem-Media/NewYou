@@ -682,6 +682,7 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
                NewYou.Identity.Account,
                NewYou.Identity.Token,
                NewYou.Identity.Session,
+               NewYou.Identity.DeviceAssurance,
                NewYou.Identity.RegistrationOperation,
                NewYou.Identity.ResendOperation,
                NewYou.Identity.IdentityGrant,

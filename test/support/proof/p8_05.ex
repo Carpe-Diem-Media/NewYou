@@ -943,6 +943,11 @@ defmodule NewYou.Proof.P805 do
       [emails]
     )
 
+    Repo.query!(
+      "DELETE FROM device_assurances WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+      [emails]
+    )
+
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
   end
 end

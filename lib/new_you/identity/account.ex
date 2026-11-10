@@ -92,6 +92,31 @@ defmodule NewYou.Identity.Account do
   end
 
   actions do
+    action :reset_password, :atom do
+      description "Explicit proof-bound password replacement with atomic Account-wide security consequences. Never signs in."
+      public? false
+      argument :proof, :string, allow_nil?: false, sensitive?: true
+      argument :password, :string, allow_nil?: false, sensitive?: true
+      argument :operation_id, :uuid, allow_nil?: false, sensitive?: true
+      run NewYou.Identity.Actions.ResetPassword
+    end
+
+    update :replace_password do
+      description "Private credential replacement inside the locked reset transaction."
+      public? false
+      require_atomic? false
+      accept []
+
+      argument :password, :string,
+        allow_nil?: false,
+        sensitive?: true,
+        constraints: [min_length: 1, max_length: 1024]
+
+      change {AshAuthentication.Strategy.Password.HashPasswordChange, strategy_name: :password}
+      change increment(:credential_version)
+      change increment(:security_version)
+    end
+
     action :authenticate_magic_link, :map do
       description "Explicit participant confirmation consumes one current magic-login proof and issues the shared Session atomically."
       public? false
@@ -395,6 +420,12 @@ defmodule NewYou.Identity.Account do
     attribute :mfa_locked_until, :utc_datetime_usec, public?: false
     attribute :mfa_version, :integer, allow_nil?: false, default: 1, public?: false
     attribute :security_version, :integer, allow_nil?: false, default: 1, public?: false
+
+    attribute :credential_version, :integer,
+      allow_nil?: false,
+      default: 1,
+      constraints: [min: 1],
+      public?: false
   end
 
   identities do

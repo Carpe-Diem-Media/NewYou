@@ -52,7 +52,14 @@ defmodule NewYou.Application do
 
   if @magic_login_enabled do
     defp magic_login_children do
-      [{Task.Supervisor, name: NewYou.Identity.MagicLogin.RequestSupervisor, max_children: 32}]
+      [
+        {Task.Supervisor, name: NewYou.Identity.MagicLogin.RequestSupervisor, max_children: 32},
+        Supervisor.child_spec(
+          {Task.Supervisor,
+           name: NewYou.Identity.PasswordReset.RequestSupervisor, max_children: 32},
+          id: NewYou.Identity.PasswordReset.RequestSupervisor
+        )
+      ]
     end
   else
     defp magic_login_children, do: []

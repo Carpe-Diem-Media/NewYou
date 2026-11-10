@@ -5,6 +5,11 @@ defmodule NewYou.Identity.Token do
   Magic-login issuance stores fixed claim metadata, never the signed bearer.
   A current magic-login purpose may become consumed, superseded or revoked;
   transient delivery signing cannot change that state or its original expiry.
+
+  Consumed password-reset rows retain their fixed non-bearer claims and confirmation
+  ID as immutable outcome receipts. Expired cleanup preserves those receipts, while
+  consumption clears the credential-derived binding. They cannot authorize another
+  reset, delivery or Session.
   """
   use Ash.Resource,
     otp_app: :new_you,
@@ -20,9 +25,15 @@ defmodule NewYou.Identity.Token do
   postgres do
     table "tokens"
     repo NewYou.Repo
-    identity_wheres_to_sql one_current_magic_login: "purpose = 'magic_login'"
+
+    identity_wheres_to_sql one_current_magic_login: "purpose = 'magic_login'",
+                           one_current_password_reset: "purpose = 'password_reset'"
 
     check_constraints do
+      check_constraint :reset_request_id, "tokens_password_reset_metadata",
+        check:
+          "(purpose NOT IN ('password_reset', 'password_reset_superseded', 'password_reset_consumed') AND reset_request_id IS NULL AND reset_claims IS NULL AND reset_account_binding IS NULL AND reset_locale IS NULL AND reset_consumption_id IS NULL) OR (reset_request_id IS NOT NULL AND reset_claims IS NOT NULL AND reset_locale IS NOT NULL AND reset_locale IN ('en', 'af') AND ((purpose = 'password_reset_consumed' AND reset_consumption_id IS NOT NULL AND reset_account_binding IS NULL) OR (purpose <> 'password_reset_consumed' AND reset_consumption_id IS NULL AND reset_account_binding IS NOT NULL)))"
+
       check_constraint :magic_request_id, "tokens_magic_login_metadata",
         check:
           "(purpose NOT IN ('magic_login', 'magic_login_superseded', 'magic_login_consumed') AND magic_request_id IS NULL AND magic_claims IS NULL AND magic_account_binding IS NULL AND magic_locale IS NULL) OR (magic_request_id IS NOT NULL AND magic_claims IS NOT NULL AND magic_account_binding IS NOT NULL AND magic_locale IS NOT NULL AND magic_locale IN ('en', 'af'))"
@@ -30,6 +41,41 @@ defmodule NewYou.Identity.Token do
   end
 
   actions do
+    create :issue_password_reset do
+      description "Create one new password-reset proof. Never upsert or reissue an existing JTI."
+      public? false
+      accept [:reset_request_id, :reset_claims, :reset_account_binding, :reset_locale]
+      argument :token, :string, allow_nil?: false, sensitive?: true
+      validate present([:reset_request_id, :reset_claims, :reset_account_binding, :reset_locale])
+      change set_attribute(:purpose, "password_reset")
+      change AshAuthentication.TokenResource.StoreTokenChange
+      change NewYou.Identity.Changes.SetTokenAccount
+    end
+
+    update :supersede_password_reset do
+      public? false
+      accept []
+      change filter(expr(purpose == "password_reset"))
+      change set_attribute(:purpose, "password_reset_superseded")
+    end
+
+    update :consume_password_reset do
+      public? false
+      accept [:reset_consumption_id]
+      validate present(:reset_consumption_id)
+      change filter(expr(purpose == "password_reset" and expires_at > now()))
+      change set_attribute(:purpose, "password_reset_consumed")
+      change set_attribute(:reset_account_binding, nil)
+    end
+
+    update :revoke_authentication do
+      description "Invalidate one linked authentication token without revoking independent proof purposes."
+      public? false
+      accept []
+      change filter(expr(purpose == "user"))
+      change set_attribute(:purpose, "revocation")
+    end
+
     create :issue_magic_login do
       description "Create one new magic-login proof. Never upsert or reissue an existing JTI."
       public? false
@@ -62,7 +108,7 @@ defmodule NewYou.Identity.Token do
 
     read :expired do
       description "Look up expired Identity tokens for framework cleanup"
-      filter expr(expires_at < now())
+      filter expr(expires_at < now() and purpose != "password_reset_consumed")
       public? false
     end
 
@@ -110,7 +156,7 @@ defmodule NewYou.Identity.Token do
 
     destroy :expunge_expired do
       public? false
-      change filter(expr(expires_at < now()))
+      change filter(expr(expires_at < now() and purpose != "password_reset_consumed"))
     end
 
     update :revoke_all_stored_for_subject do
@@ -128,6 +174,13 @@ defmodule NewYou.Identity.Token do
   end
 
   attributes do
+    attribute :reset_request_id, :uuid, sensitive?: true, public?: false
+    attribute :reset_claims, :map, sensitive?: true, public?: false
+    attribute :reset_account_binding, :binary, sensitive?: true, public?: false
+    attribute :reset_locale, :string, constraints: [match: ~r/\A(en|af)\z/], public?: false
+
+    attribute :reset_consumption_id, :uuid, sensitive?: true, public?: false
+
     attribute :magic_request_id, :uuid, sensitive?: true, public?: false
     attribute :magic_claims, :map, sensitive?: true, public?: false
     attribute :magic_account_binding, :binary, sensitive?: true, public?: false
@@ -173,6 +226,9 @@ defmodule NewYou.Identity.Token do
   end
 
   identities do
+    identity :one_current_password_reset, [:account_id], where: expr(purpose == "password_reset")
+    identity :password_reset_request, [:reset_request_id]
+    identity :password_reset_consumption, [:reset_consumption_id]
     identity :one_current_magic_login, [:account_id], where: expr(purpose == "magic_login")
     identity :magic_login_request, [:magic_request_id]
   end

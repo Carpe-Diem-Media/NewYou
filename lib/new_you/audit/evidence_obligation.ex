@@ -18,7 +18,7 @@ defmodule NewYou.Audit.EvidenceObligation do
     check_constraints do
       check_constraint :evidence_type, "evidence_obligations_evidence_type",
         check:
-          "evidence_type IN ('account_registration_pmr_assignment', 'security_hold_placement', 'security_hold_review', 'security_hold_release_result', 'identity_mfa_confirmed', 'identity_grant_revoked', 'identity_reconciliation_result', 'identity_reconciliation_review')",
+          "evidence_type IN ('account_registration_pmr_assignment', 'security_hold_placement', 'security_hold_review', 'security_hold_release_result', 'identity_mfa_confirmed', 'identity_grant_revoked', 'identity_reconciliation_result', 'identity_reconciliation_review', 'identity_password_reset')",
         message: "must be a selected evidence type"
 
       check_constraint :evidence_type, "evidence_obligations_security_shape",
@@ -128,7 +128,8 @@ defmodule NewYou.Audit.EvidenceObligation do
                     :identity_mfa_confirmed,
                     :identity_grant_revoked,
                     :identity_reconciliation_result,
-                    :identity_reconciliation_review
+                    :identity_reconciliation_review,
+                    :identity_password_reset
                   ]
 
       public? false

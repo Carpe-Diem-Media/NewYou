@@ -7,7 +7,7 @@ defmodule NewYou.Audit.PrivilegedEvidence do
   @uuid_fields ~w(attempt_id actor_id target_id grant_id session_id)a
   @reasons ~w(suspected_compromise security_review verified_recovery mistaken_hold)a
   @outcome_fields ~w(source_operation_id source_occurred_at evidence_type actor_id target_id grant_id session_id reason_code admission_id outcome case_id)a
-  @security_types ~w(security_hold_placement security_hold_review security_hold_release_result identity_mfa_confirmed identity_grant_revoked identity_reconciliation_result identity_reconciliation_review)a
+  @security_types ~w(security_hold_placement security_hold_review security_hold_release_result identity_mfa_confirmed identity_grant_revoked identity_reconciliation_result identity_reconciliation_review identity_password_reset)a
 
   defmacrop checkpoint(point) do
     if Mix.env() == :test do

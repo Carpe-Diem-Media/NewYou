@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang={@locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>{NewYouWeb.PasswordResetCopy.text!("request.accepted.title", @locale)}</title>
+    <link rel="stylesheet" href={~p"/assets/css/app.css"} />
+  </head>
+  <body>
+    <main id="main" class="min-h-svh bg-design-canvas text-design-ink font-design-sans">
+      <header class="mx-auto w-full max-w-7xl border-b border-design-hairline px-design-base py-design-lg design-tablet:px-design-lg design-desktop:px-design-2xl">
+        <p class="font-design-bold text-design-body-sm">{NewYou.platform_name()}</p>
+      </header>
+      <section
+        aria-labelledby="password-reset-heading"
+        class="mx-auto grid w-full max-w-7xl content-start gap-design-lg px-design-base py-design-2xl design-tablet:px-design-lg design-desktop:px-design-2xl"
+      >
+        <h1
+          id="password-reset-heading"
+          class="max-w-3xl text-balance font-design-bold text-design-display-sm leading-design-display-sm tracking-design-display-sm design-tablet:text-design-display-md design-tablet:leading-design-display-md design-tablet:tracking-design-display-md"
+        >
+          {NewYouWeb.PasswordResetCopy.text!("request.accepted.title", @locale)}
+        </h1>
+        <p role="status" class="max-w-prose text-design-body-sm leading-design-body-sm">
+          {NewYouWeb.PasswordResetCopy.text!("request.accepted.body", @locale)}
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

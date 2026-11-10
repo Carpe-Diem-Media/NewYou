@@ -51,6 +51,46 @@ defmodule NewYou.Proof.P805Browser do
     end
   end
 
+  def run_password_reset(proof, password, locale) do
+    reference = make_ref()
+
+    {:ok, server} =
+      Bandit.start_link(
+        plug: {NewYou.Proof.P805Browser.Endpoint, {self(), reference}},
+        ip: {127, 0, 0, 1},
+        port: 0
+      )
+
+    {:ok, {_address, port}} = ThousandIsland.listener_info(server)
+
+    try do
+      payload =
+        Jason.encode!(%{
+          mode: "password_reset",
+          port: port,
+          locale: locale,
+          proof: proof,
+          password: password,
+          complete_title: NewYouWeb.PasswordResetCopy.text!("confirm.complete.title", locale),
+          unavailable_title:
+            NewYouWeb.PasswordResetCopy.text!("confirm.unavailable.title", locale)
+        })
+
+      result =
+        run_port(
+          System.find_executable("node"),
+          Path.expand("../../proof/p8_05_browser.mjs", __DIR__),
+          payload
+        )
+
+      true = result["cleanup"]
+      Enum.each(result["operations"], &P805.track_operation/1)
+      Map.put(result["checks"], "no_session", collect_sessions(reference, []) == [true, true])
+    after
+      Supervisor.stop(server)
+    end
+  end
+
   def run_verification(registration, locale) do
     reference = make_ref()
 

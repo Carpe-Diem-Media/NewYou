@@ -131,6 +131,98 @@ defmodule NewYou.Communications do
     end
   end
 
+  @password_reset_fields [
+    :source_operation_id,
+    :source_reference,
+    :destination,
+    :destination_provenance,
+    :destination_authorized_at,
+    :locale,
+    :role,
+    :source_purpose,
+    :render_schema,
+    :content_item_id,
+    :content_version_id,
+    :translation_version_id,
+    :content_sha256,
+    :platform_name,
+    :render_digest
+  ]
+
+  @doc "Establish a password-reset delivery obligation without retaining its bearer."
+  @spec establish_password_reset(map()) ::
+          {:ok, MessageIntent.t()} | {:error, :password_reset_unavailable}
+  def establish_password_reset(attrs) when is_map(attrs) do
+    with true <- valid_password_reset_attrs?(attrs),
+         {:ok, content_binding} <- NewYou.Content.PasswordResetMessage.binding(attrs.locale) do
+      platform_name = NewYou.platform_name()
+      render_schema = "password-reset-v1"
+
+      render_digest =
+        :crypto.hash(
+          :sha256,
+          :erlang.term_to_binary({render_schema, platform_name}, [:deterministic])
+        )
+        |> Base.encode16(case: :lower)
+
+      params =
+        attrs
+        |> Map.take([
+          :source_operation_id,
+          :source_reference,
+          :destination,
+          :destination_provenance,
+          :destination_authorized_at,
+          :locale,
+          :role,
+          :source_purpose,
+          :render_schema
+        ])
+        |> Map.merge(content_binding)
+        |> Map.merge(%{platform_name: platform_name, render_digest: render_digest})
+
+      transact_password_reset(params)
+    else
+      _ -> {:error, :password_reset_unavailable}
+    end
+  rescue
+    _ -> {:error, :password_reset_unavailable}
+  end
+
+  def establish_password_reset(_), do: {:error, :password_reset_unavailable}
+
+  defp transact_password_reset(params) do
+    case Ash.transact([MessageIntent], fn -> establish_password_reset_intent(params) end) do
+      {:ok, {:ok, %MessageIntent{} = intent}} -> {:ok, intent}
+      _ -> {:error, :password_reset_unavailable}
+    end
+  end
+
+  defp valid_password_reset_attrs?(attrs) do
+    attrs[:role] == :password_reset and attrs[:source_purpose] == "password_reset" and
+      attrs[:render_schema] == "password-reset-v1" and
+      attrs[:destination_provenance] == "identity_password_reset_issuance" and
+      attrs[:locale] in ["en", "af"]
+  end
+
+  defp establish_password_reset_intent(params) do
+    with {:ok, intent} <-
+           Ash.create(MessageIntent, params,
+             action: :establish,
+             domain: __MODULE__,
+             authorize?: false,
+             upsert?: true,
+             upsert_identity: :causal_obligation,
+             upsert_fields: [],
+             touch_update_defaults?: false
+           ),
+         true <- Enum.all?(@password_reset_fields, &(Map.get(intent, &1) == Map.get(params, &1))) do
+      {:ok, intent}
+    else
+      _ -> {:error, :password_reset_unavailable}
+    end
+  end
+
   @development_fixtures Application.compile_env(
                           :new_you,
                           :verification_development_fixtures,

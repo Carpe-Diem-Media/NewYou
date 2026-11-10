@@ -24,12 +24,12 @@ defmodule NewYou.Communications.MessageIntent do
         message: "is unsupported"
 
       check_constraint :role, "message_intents_role",
-        check: "role IN ('account_verification', 'magic_login')",
+        check: "role IN ('account_verification', 'magic_login', 'password_reset')",
         message: "is unsupported"
 
       check_constraint :source_purpose, "message_intents_role_purpose_schema",
         check:
-          "(role = 'account_verification' AND source_purpose = 'email_verification' AND render_schema = 'verification-v1') OR (role = 'magic_login' AND source_purpose = 'magic_login' AND render_schema = 'magic-login-v1')",
+          "(role = 'account_verification' AND source_purpose = 'email_verification' AND render_schema = 'verification-v1') OR (role = 'magic_login' AND source_purpose = 'magic_login' AND render_schema = 'magic-login-v1') OR (role = 'password_reset' AND source_purpose = 'password_reset' AND render_schema = 'password-reset-v1')",
         message: "does not match the message role"
 
       check_constraint :source_reference, "message_intents_source_reference",
@@ -192,7 +192,7 @@ defmodule NewYou.Communications.MessageIntent do
     attribute :role, :atom,
       allow_nil?: false,
       default: :account_verification,
-      constraints: [one_of: [:account_verification, :magic_login]],
+      constraints: [one_of: [:account_verification, :magic_login, :password_reset]],
       public?: false
 
     attribute :source_purpose, :string,

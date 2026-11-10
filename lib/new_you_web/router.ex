@@ -28,6 +28,10 @@ defmodule NewYouWeb.Router do
     post "/verification/resend", RegistrationController, :resend, log: false
     get "/verification/confirm", EmailVerificationController, :show, log: false
     post "/verification/confirm", EmailVerificationController, :confirm, log: false
+    get "/password/reset", PasswordResetController, :new, log: false
+    post "/password/reset", PasswordResetController, :request, log: false
+    get "/password/reset/confirm", PasswordResetController, :show, log: false
+    post "/password/reset/confirm", PasswordResetController, :confirm, log: false
     get "/login/magic", MagicLoginController, :new, log: false
     post "/login/magic", MagicLoginController, :request, log: false
     get "/login/magic/confirm", MagicLoginController, :show, log: false
