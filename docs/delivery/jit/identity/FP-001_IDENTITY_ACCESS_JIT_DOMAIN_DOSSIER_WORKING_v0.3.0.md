@@ -44,7 +44,7 @@ The structured block describes this semantic successor only. The predecessor's c
 | Exact-head CI | [Run 40299236086](https://github.com/JCSchoeman96/NewYou/actions/runs/40299236086): routing, Foundation Smoke, Foundation Integrity and Foundation Full passed; Application CI skipped by path routing |
 | Resulting-main CI | [Run 40302375237](https://github.com/JCSchoeman96/NewYou/actions/runs/40302375237): routing, Foundation Smoke and Foundation Integrity passed; Foundation Full and Application CI skipped by main routing |
 | Exact-head semantic certification | COMPLETE as confirmed by the owner handoff; PR #150 has no separate review record in GitHub's review/comment API |
-| Current-status promotion | PR #151 status successor; this successor does not assert its own independent review or merge completion |
+| Historical current-status promotion | PR #151 promoted the v0.2.0 predecessor; it does not certify v0.3.0 |
 
 
 ### Inherited v0.1.4 certification evidence
@@ -62,7 +62,7 @@ The structured block describes this semantic successor only. The predecessor's c
 | Fresh independent exact-head review | PASS; [PR #70 attestation](https://github.com/JCSchoeman96/NewYou/pull/70#issuecomment-5980442552) |
 | Resulting-main Foundation Integrity | [Run 37205571249](https://github.com/JCSchoeman96/NewYou/actions/runs/37205571249), SUCCESS on the resulting-main SHA; 287 tests, 535 assertions, zero findings |
 | Fresh independent post-merge review | PASS on `df6190a06bdc8aa4b99f6ed3a18cb9e3e12e22fb` |
-| Durable post-merge attestation | COMPLETE; current v0.1.3 and Open Work v1.2.56 preserve the supplied attestation |
+| Durable post-merge attestation | COMPLETE; the historical v0.1.3 and Open Work v1.2.56 records preserve the supplied attestation |
 | v0.1.2 archive SHA-256 | `28dfe34dce0e9c48c737f666b112aeb89ccf45c0dfa10d2cfb81877def2538db` |
 | Exact v0.1.3 candidate archive SHA-256 | `52fe67fcf6335bc0f2675c772a15a5ccdf75150f2ac4d92c98d61a9c48369285` |
 
@@ -81,7 +81,7 @@ The v0.1.3 and PR #76/PR #77 evidence above belongs to the unchanged v0.1.4 pred
 
 PR #70 closed the durable-delivery contradiction for email verification, password reset, recovery and new-address primary-email-change confirmation. Provider acceptance or delivery grants Communications no Identity authority. The approved bounded protected-delivery retention remains limited to the crash-safe delivery purpose. Optional magic-link authentication and session bearer tokens remain outside this exception.
 
-This successor records no Product, Architecture, Domain or Roadmap amendment and changes no PMR semantics. It adds the Identity-owned RegistrationOperation Resource because registration idempotency requires independent durable request binding, terminal outcome, concurrency, security, retention and restart/recovery state. It selects no notification provider, email vendor, encryption product, KMS/vendor, queue or worker configuration, retry policy or OQ-036 resolution. MessageIntent and DeliveryAttempt remain the only required durable FP-001 Communications business concepts. Phase 7C status remains as recorded by current Open Work; this dossier is not Phase 7C or implementation authority.
+The v0.2.0 predecessor recorded no Product, Architecture, Domain or Roadmap amendment and changed no PMR semantics. It added the Identity-owned RegistrationOperation Resource because registration idempotency requires independent durable request binding, terminal outcome, concurrency, security, retention and restart/recovery state. It selects no notification provider, email vendor, encryption product, KMS/vendor, queue or worker configuration, retry policy or OQ-036 resolution. MessageIntent and DeliveryAttempt remain the only required durable FP-001 Communications business concepts. The predecessor recorded Phase 7C status through its then-current Open Work. That record is historical; current execution authority is Plane, and this dossier grants no development entry.
 
 ```text
 Phase 7A Skeleton (complete)
@@ -92,7 +92,7 @@ Phase 7A Skeleton (complete)
 
 ## A. Baseline and scope
 
-The original dossier baseline was certified `main` at `38022caea64cb2522ab8fc4db730099a94cd6600` and the reconciled Phase 7A skeleton candidate. The v0.1.3 durable-delivery correction is certified/current. The v0.1.4 predecessor remains preserved as historical certification evidence. This v0.2.0 status successor is based on resulting main `2db8772153bb957140570a6606cda88c5e0b8853` and current Product, Architecture, Domain and Roadmap authority. It covers Identity & Access only for the FP-001 outcome: a public visitor can become a verified individual 18+ account holder, receive exactly one canonical active PMR after successful Account creation, authenticate, recover access and traverse a controlled support/admin boundary without exposing unfinished product spaces.
+The original dossier baseline was certified `main` at `38022caea64cb2522ab8fc4db730099a94cd6600` and the reconciled Phase 7A skeleton candidate. The v0.1.3 durable-delivery correction is certified/current. The v0.1.4 predecessor remains preserved as historical certification evidence. The v0.2.0 predecessor was based on resulting main `2db8772153bb957140570a6606cda88c5e0b8853` and the then-current Product, Architecture, Domain and Roadmap authority. The inherited scope covers Identity & Access only for the FP-001 outcome: a public visitor can become a verified individual 18+ account holder, receive exactly one canonical active PMR after successful Account creation, authenticate, recover access and traverse a controlled support/admin boundary without exposing unfinished product spaces.
 
 In scope are the minimum account, email verification, password/magic-link authentication, session, device assurance, recovery, primary-email change, identity-side grant, compromise, duplicate-reconciliation and Platform Member Reference contracts needed for that outcome. Social login, passkeys, native clients, generic tenancy, participant MFA user experience/configuration, full deletion orchestration, relationship permissions, Commerce and Communications implementation remain outside this dossier.
 
@@ -509,7 +509,7 @@ Official sources checked on 2026-10-04:
 
 The contradiction follows from these contracts: token metadata cannot reproduce the authorised bearer link after volatile material is lost, including the new-address primary-email-change confirmation link. Bounded protected delivery retention corrects the dossier restriction without changing Identity authority.
 
-The PR #70 certification lifecycle is complete for v0.1.3. Its exact-head and resulting-main CI, unchanged merge, independent reviews and durable post-merge attestation are recorded above and in current Open Work v1.2.56. The predecessor is preserved byte-identically in archive. PR #76 certified the v0.1.4 candidate and supplied completed post-merge certification evidence; it did not make v0.1.4 current. This separate PR #77 status successor records v0.1.4 as CERTIFIED / CURRENT. Communications finalisation remains blocked pending the Communications dossier and applicable gates.
+The PR #70 certification lifecycle is complete for v0.1.3. Its exact-head and resulting-main CI, unchanged merge, independent reviews and durable post-merge attestation are recorded above and in historical Open Work v1.2.56. The predecessor is preserved byte-identically in archive. PR #76 certified the v0.1.4 candidate and supplied completed post-merge certification evidence; it did not make v0.1.4 current. The separate PR #77 status successor recorded v0.1.4 as CERTIFIED / CURRENT. Communications finalisation was then blocked pending the Communications dossier and applicable gates; these are predecessor records, not live execution status.
 
 ## K. OQ-034 Architecture Evaluation
 
