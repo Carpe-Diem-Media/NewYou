@@ -7,7 +7,7 @@ project and configuration. The cache contains dependency files only, never test
 results or the application build. Foundation Integrity remains PR-only and the
 nightly hardening job remains cold.
 
-The cache is optional. A missing or failed restore, a mismatched integrity
+The cache is optional. A missing, partial or failed restore, a mismatched integrity
 manifest, or failed dependency preparation causes a clean locked fetch and
 dependency compilation. The normal CI gates still execute. If a clean attempt
 fails, the job fails.

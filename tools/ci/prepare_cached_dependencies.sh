@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# A failed extraction can leave a partial tree. Never use it.
+# Only an exact match is compatible. A miss or failed extraction can still
+# leave restored files, so discard them before any dependency code runs.
 if [[ "${CACHE_RESTORE_OUTCOME:-success}" != success ]] ||
-   { [[ "${CACHE_HIT:-false}" == true ]] && ! python3 tools/ci/cache_manifest.py check; }; then
+   [[ "${CACHE_HIT:-false}" != true ]] ||
+   ! python3 tools/ci/cache_manifest.py check; then
   rm -rf deps _build/test
 fi
 

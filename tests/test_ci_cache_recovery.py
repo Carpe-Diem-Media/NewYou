@@ -13,17 +13,20 @@ SCRIPT = ROOT / "tools/ci/prepare_cached_dependencies.sh"
 
 
 class CacheRecoveryTests(unittest.TestCase):
-    def run_preparation(self, failure: str, restore: str = "success", hit: bool = False):
+    def run_preparation(self, failure: str, restore: str = "success", hit: str = "false", valid_manifest: bool = False):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "deps").mkdir()
             (root / "_build/test").mkdir(parents=True)
+            (root / "_build/test/lib").mkdir()
             (root / "deps/stale").touch()
             (root / "_build/test/stale").touch()
             bin_dir = root / "bin"
             bin_dir.mkdir()
             (root / "tools/ci").mkdir(parents=True)
             shutil.copy(ROOT / "tools/ci/cache_manifest.py", root / "tools/ci/cache_manifest.py")
+            if valid_manifest:
+                subprocess.run(["python3", str(root / "tools/ci/cache_manifest.py"), "write"], cwd=root, check=True)
             mix = bin_dir / "mix"
             mix.write_text('''#!/bin/sh
 echo "$*" >> calls
@@ -35,25 +38,34 @@ exit 0
 ''')
             mix.chmod(0o755)
             env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}", FAILURE=failure,
-                       CACHE_RESTORE_OUTCOME=restore, CACHE_HIT=str(hit).lower())
+                       CACHE_RESTORE_OUTCOME=restore, CACHE_HIT=hit)
             result = subprocess.run(["bash", str(SCRIPT)], cwd=root, env=env, capture_output=True, text=True)
             calls = root / "calls"
             return result.returncode, calls.read_text().splitlines() if calls.exists() else [], (root / "deps/stale").exists()
 
-    def test_compatible_or_missing_cache_uses_locked_preparation(self):
-        code, calls, stale = self.run_preparation("none")
-        self.assertEqual((0, ["deps.get --check-locked", "deps.compile --warnings-as-errors"], True), (code, calls, stale))
+    def test_non_exact_match_discards_restored_files_before_locked_preparation(self):
+        # Even an internally consistent manifest cannot make a partial key compatible.
+        code, calls, stale = self.run_preparation("none", valid_manifest=True)
+        self.assertEqual((0, ["deps.get --check-locked", "deps.compile --warnings-as-errors"], False), (code, calls, stale))
+
+    def test_empty_hit_output_discards_any_partial_files(self):
+        code, calls, stale = self.run_preparation("none", hit="")
+        self.assertEqual((0, ["deps.get --check-locked", "deps.compile --warnings-as-errors"], False), (code, calls, stale))
 
     def test_failed_restore_discards_partial_contents(self):
         code, calls, stale = self.run_preparation("none", "failure")
         self.assertEqual((0, ["deps.get --check-locked", "deps.compile --warnings-as-errors"], False), (code, calls, stale))
+
+    def test_exact_valid_cache_is_retained(self):
+        code, calls, stale = self.run_preparation("none", hit="true", valid_manifest=True)
+        self.assertEqual((0, ["deps.get --check-locked", "deps.compile --warnings-as-errors"], True), (code, calls, stale))
 
     def test_invalid_cache_rebuilds_once_from_clean_state(self):
         code, calls, stale = self.run_preparation("once")
         self.assertEqual((0, ["deps.get --check-locked", "deps.get --check-locked", "deps.compile --warnings-as-errors"], False), (code, calls, stale))
 
     def test_cache_hit_without_manifest_discards_cache_before_mix(self):
-        code, calls, stale = self.run_preparation("none", hit=True)
+        code, calls, stale = self.run_preparation("none", hit="true")
         self.assertEqual((0, ["deps.get --check-locked", "deps.compile --warnings-as-errors"], False), (code, calls, stale))
 
     def test_failure_after_clean_rebuild_fails_closed(self):
