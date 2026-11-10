@@ -327,31 +327,39 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
       {:ok, :verified} = Identity.verify_email(registration.verification_proof)
       {:ok, credentials} = Identity.authenticate_password(request.email, request.password)
       {:ok, %{secret: secret}} = Identity.enroll_privileged_mfa(credentials, request.password)
-      code = NimbleTOTP.verification_code(secret)
+      captured = System.os_time(:second)
+      previous = Process.put(NewYou.Proof.PrivilegedAccessSeam, captured)
+      code = NimbleTOTP.verification_code(secret, time: captured)
       wrong_code = if code == "000000", do: "000001", else: "000000"
 
-      assert {:error, :privileged_access_unavailable} =
-               Identity.confirm_privileged_mfa(credentials, "incorrect password", code)
+      try do
+        assert {:error, :privileged_access_unavailable} =
+                 Identity.confirm_privileged_mfa(credentials, "incorrect password", code)
 
-      assert P805.account!(registration.account_id).mfa_failed_attempts == 1
+        assert P805.account!(registration.account_id).mfa_failed_attempts == 1
 
-      assert {:error, :privileged_access_unavailable} =
-               Identity.confirm_privileged_mfa(credentials, request.password, wrong_code)
+        assert {:error, :privileged_access_unavailable} =
+                 Identity.confirm_privileged_mfa(credentials, request.password, wrong_code)
 
-      assert P805.account!(registration.account_id).mfa_failed_attempts == 2
-      assert {:ok, :ok} = Identity.confirm_privileged_mfa(credentials, request.password, code)
+        assert P805.account!(registration.account_id).mfa_failed_attempts == 2
+        assert {:ok, :ok} = Identity.confirm_privileged_mfa(credentials, request.password, code)
 
-      assert {:error, :privileged_access_unavailable} =
-               Identity.step_up_privileged(
-                 credentials,
-                 request.password,
-                 code,
-                 :place_security_hold
-               )
+        assert {:error, :privileged_access_unavailable} =
+                 Identity.step_up_privileged(
+                   credentials,
+                   request.password,
+                   code,
+                   :place_security_hold
+                 )
 
-      account = P805.account!(registration.account_id)
-      assert account.mfa_enrollment_state == :active
-      assert account.mfa_failed_attempts == 1
+        account = P805.account!(registration.account_id)
+        assert account.mfa_enrollment_state == :active
+        assert account.mfa_failed_attempts == 1
+      after
+        if is_nil(previous),
+          do: Process.delete(NewYou.Proof.PrivilegedAccessSeam),
+          else: Process.put(NewYou.Proof.PrivilegedAccessSeam, previous)
+      end
     end)
   end
 
