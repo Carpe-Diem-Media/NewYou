@@ -4,6 +4,8 @@ defmodule NewYou.Identity.RecoveryCase do
   State and assurance are separate. Account locks arbitrate every transition; the
   database prevents assurance reduction, history rewrite and terminal reopening.
   History contains only transition provenance, never submitted recovery material.
+  A zero-assurance held_manual_review case does not impose an Account security
+  hold. Current proof authority is required before a restrictive security effect.
   """
   use Ash.Resource,
     otp_app: :new_you,
@@ -55,7 +57,7 @@ defmodule NewYou.Identity.RecoveryCase do
     state_attribute :state
 
     transitions do
-      transition :await_proof, from: :requested, to: :proof_pending
+      transition :await_proof, from: [:requested, :held_manual_review], to: :proof_pending
       transition :accept_proof, from: :proof_pending, to: :additional_assurance
 
       transition :require_review,
@@ -122,6 +124,16 @@ defmodule NewYou.Identity.RecoveryCase do
           :terminated_at,
           :history
         ]
+
+        if name == :await_proof do
+          change filter(
+                   expr(
+                     state == :requested or
+                       (state == :held_manual_review and satisfied_assurance == 0 and
+                          is_nil(proof_jti) and is_nil(review))
+                   )
+                 )
+        end
 
         change increment(:version)
         change transition_state(destination)

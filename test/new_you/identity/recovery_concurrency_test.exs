@@ -7,6 +7,22 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.duplicate_request_race()
   end
 
+  test "parallel zero-assurance requests cannot impose an Account restriction" do
+    assert P815.duplicate_request_race(false)
+  end
+
+  test "parallel proof acceptance imposes one justified hold and one E2 consequence" do
+    assert P815.assurance_race()
+  end
+
+  test "zero-assurance recovery survives restart without restricting the Account" do
+    assert P815.unverified_restart_proof() == :ok
+  end
+
+  test "recovery waits for an earlier email fixture commit and rejects its stale binding" do
+    assert P815.prior_email_commit_race()
+  end
+
   test "competing completions serialize and only one credential change commits" do
     assert P815.completion_race()
   end

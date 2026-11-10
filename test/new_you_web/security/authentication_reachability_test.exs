@@ -39,7 +39,6 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:update, :replace_password},
                {:update, :retire_reconciled_identity},
                {:update, :review_security_hold},
-               {:update, :set_recovery_floor},
                {:update, :update_privileged_mfa}
              ]
 
@@ -48,8 +47,7 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
           :retire_reconciled_identity,
           :reset_password,
           :replace_password,
-          :hold_for_recovery,
-          :set_recovery_floor
+          :hold_for_recovery
         ] do
       refute Ash.Resource.Info.action(NewYou.Identity.Account, action).public?
     end

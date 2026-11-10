@@ -15,9 +15,52 @@ defmodule NewYou.Identity.ManualRecoveryTest do
     assert {:error, :recovery_unavailable} = Identity.complete_manual_recovery(%{})
   end
 
+  test "current scoped staff cannot turn zero claimant assurance into manual recovery" do
+    P813HoldFixture.with_fixture(fn fixture ->
+      NewYou.Repo.query!("UPDATE accounts SET \"email_verified?\"=false WHERE id=$1", [
+        Ecto.UUID.dump!(fixture.target.id)
+      ])
+
+      before_account = Ash.get!(Account, fixture.target.id, authorize?: false)
+      :ok = Identity.request_recovery(before_account.email, "en", operation())
+      recovery = recovery_case(fixture.target.id)
+
+      grant =
+        P813HoldFixture.grant(
+          fixture.reviewer,
+          fixture.target,
+          fixture.approver,
+          :identity_recovery
+        )
+
+      assert {:ok, :ok} = P813HoldFixture.step_up(fixture.reviewer, :approve_manual_recovery)
+
+      request = %{
+        credentials: fixture.reviewer.credentials,
+        grant_id: grant.id,
+        case_id: recovery.id,
+        expected_version: recovery.version,
+        operation_id: operation(),
+        reason_code: :verified_recovery
+      }
+
+      assert recovery.satisfied_assurance == 0
+      assert is_nil(recovery.proof_jti)
+      assert {:error, :recovery_unavailable} = Identity.approve_manual_recovery(request)
+
+      assert {:error, :recovery_unavailable} =
+               Identity.complete_manual_recovery(
+                 Map.put(request, :password, "no claimant evidence")
+               )
+
+      assert is_nil(admission(request.operation_id))
+      assert Ash.get!(Account, fixture.target.id, authorize?: false) == before_account
+    end)
+  end
+
   test "a distinct current scoped reviewer approves and a scoped actor completes once" do
     P813HoldFixture.with_fixture(fn fixture ->
-      _release_request = P813HoldFixture.reviewed_hold(fixture)
+      release_request = P813HoldFixture.reviewed_hold(fixture)
       target = Ash.get!(Account, fixture.target.id, authorize?: false)
       assert :ok = Identity.request_recovery(target.email, "en", operation())
       recovery = recovery_case(target.id)
@@ -215,6 +258,24 @@ defmodule NewYou.Identity.ManualRecoveryTest do
                target.credential_version + 1
 
       assert Ash.get!(Account, fixture.target.id, authorize?: false).security_posture == :held
+
+      assert {:error, %Postgrex.Error{postgres: %{code: :check_violation}}} =
+               NewYou.Repo.query("UPDATE accounts SET email=$1 WHERE id=$2", [
+                 "forbidden-" <> Ecto.UUID.generate() <> "@example.test",
+                 Ecto.UUID.dump!(fixture.target.id)
+               ])
+
+      assert {:ok, :ok} = P813HoldFixture.step_up(fixture.actor, :release_security_hold)
+      assert {:ok, %{status: :released}} = Identity.release_security_hold(release_request)
+      assert :ok = Identity.request_recovery(target.email, "en", operation())
+
+      next_case =
+        RecoveryCase
+        |> Ash.Query.filter(account_id == ^target.id and state == :proof_pending)
+        |> Ash.read_one!(authorize?: false)
+
+      assert next_case.id != recovery.id
+      assert next_case.required_assurance == 1
     end)
   end
 

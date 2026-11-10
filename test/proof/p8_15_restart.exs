@@ -6,6 +6,12 @@ Application.put_env(:new_you, :identity_token_signing_secret, secret)
 try do
   result =
     case input["mode"] do
+      "request" ->
+        :ok =
+          NewYou.Identity.request_recovery(input["email"], input["locale"], input["operation_id"])
+
+        :requested
+
       "deliver" ->
         NewYou.Identity.Account
         |> Ash.transact(fn ->

@@ -75,8 +75,25 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
-  defp reuse_or_start(%RecoveryCase{account_id: id}, %{id: id}, _locale, _operation_id),
-    do: {:ok, :pending}
+  defp reuse_or_start(
+         %RecoveryCase{account_id: id} = recovery,
+         %{id: id} = account,
+         _locale,
+         _operation_id
+       ) do
+    cond do
+      recovery.state in @terminal ->
+        {:ok, :pending}
+
+      DateTime.compare(now(), recovery.expires_at) != :lt ->
+        with {:ok, _} <- transition(recovery, :expire, %{terminated_at: now()}),
+             :ok <- revoke_case_proof(recovery),
+             do: {:ok, :pending}
+
+      true ->
+        resume_verified_channel(recovery, account)
+    end
+  end
 
   defp reuse_or_start(%RecoveryCase{}, _account, _locale, _operation_id), do: unavailable()
 
@@ -94,7 +111,7 @@ defmodule NewYou.Identity.Recovery do
 
   defp start_or_resume(current, account, locale, operation_id) do
     if DateTime.compare(now(), current.expires_at) == :lt do
-      {:ok, :pending}
+      resume_verified_channel(current, account)
     else
       with {:ok, _} <- transition(current, :expire, %{terminated_at: now()}),
            :ok <- revoke_case_proof(current) do
@@ -102,6 +119,24 @@ defmodule NewYou.Identity.Recovery do
       end
     end
   end
+
+  # A public request can resume only the same case after the existing Identity
+  # verification action proved the previously unavailable channel. No other
+  # credential/security/email change may be silently rebound to that case.
+  defp resume_verified_channel(
+         %{state: :held_manual_review, satisfied_assurance: 0, proof_jti: nil} = recovery,
+         %{email_verified?: true} = account
+       ) do
+    if recovery.account_binding ==
+         binding(%{account | email_verified?: false}, recovery.required_assurance) and
+         recovery.required_assurance >= required_assurance(account) do
+      issue_proof(account, recovery)
+    else
+      {:ok, :pending}
+    end
+  end
+
+  defp resume_verified_channel(_recovery, _account), do: {:ok, :pending}
 
   defp revoke_case_proof(%{proof_jti: nil}), do: :ok
 
@@ -124,19 +159,14 @@ defmodule NewYou.Identity.Recovery do
   defp start_case(account, locale, operation_id) do
     required = required_assurance(account)
 
-    with {:ok, account} <-
-           Ash.update(account, %{recovery_assurance_floor: required},
-             action: :set_recovery_floor,
-             authorize?: false
-           ),
-         {:ok, recovery} <-
+    with {:ok, recovery} <-
            Ash.create(
              RecoveryCase,
              %{
                operation_id: operation_id,
                account_id: account.id,
                required_assurance: required,
-               account_binding: binding(account),
+               account_binding: binding(account, required),
                locale: locale,
                expires_at: DateTime.add(now(), 3600, :second),
                history: [%{"state" => "requested", "version" => 0}]
@@ -147,7 +177,10 @@ defmodule NewYou.Identity.Recovery do
       if account.email_verified? do
         issue_proof(account, recovery)
       else
-        hold_case(account, recovery)
+        with {:ok, _} <- transition(recovery, :require_review, %{}) do
+          checkpoint()
+          {:ok, :pending}
+        end
       end
     end
   end
@@ -163,11 +196,8 @@ defmodule NewYou.Identity.Recovery do
       )
       |> Ash.exists?(authorize?: false)
 
-    required =
-      if privileged or account.mfa_enrollment_state == :active or
-           account.security_posture == :held or not account.email_verified?, do: 2, else: 1
-
-    max(required, account.recovery_assurance_floor)
+    if privileged or account.mfa_enrollment_state == :active or
+         account.security_posture == :held or not account.email_verified?, do: 2, else: 1
   end
 
   defp issue_proof(account, recovery) do
@@ -198,7 +228,11 @@ defmodule NewYou.Identity.Recovery do
              destination_authorized_at: proof.created_at,
              locale: recovery.locale
            }),
-         {:ok, _} <- transition(recovery, :await_proof, %{proof_jti: proof.jti}) do
+         {:ok, _} <-
+           transition(recovery, :await_proof, %{
+             proof_jti: proof.jti,
+             account_binding: binding(account, recovery.required_assurance)
+           }) do
       checkpoint()
       {:ok, :pending}
     else
@@ -349,11 +383,12 @@ defmodule NewYou.Identity.Recovery do
   defp graduate_assurance(_account, recovery), do: {:ok, recovery}
 
   defp hold_case(account, recovery) do
-    with {:ok, account} <- ensure_hold(account, recovery),
+    with true <- recovery.satisfied_assurance >= 1 and not is_nil(recovery.proof_acceptance_id),
+         {:ok, account} <- ensure_hold(account, recovery),
          :ok <- invalidate_sessions_and_devices(account.id) do
       transition(recovery, :require_review, %{
         required_assurance: 2,
-        account_binding: binding(account)
+        account_binding: binding(account, recovery.required_assurance)
       })
     end
   end
@@ -478,11 +513,13 @@ defmodule NewYou.Identity.Recovery do
     do:
       recovery.account_id == account.id and account.account_status == :open and
         account.credential_status == :active and
-        recovery.account_binding == binding(account) and
+        recovery.account_binding == binding(account, recovery.required_assurance) and
         recovery.required_assurance >= required_assurance(account)
 
   @doc false
-  def binding(account) do
+  # The final digest member is case-owned required assurance. Its v1 encoding
+  # also preserves existing case bindings without retaining an Account-wide floor.
+  def binding(account, required_assurance) do
     {:ok, {module, opts}} = AshAuthentication.Info.authentication_tokens_signing_secret(Account)
 
     {:ok, secret} =
@@ -504,7 +541,7 @@ defmodule NewYou.Identity.Recovery do
          account.email, account.hashed_password, account.credential_version,
          account.security_version, account.hold_version, account.email_verified?,
          account.credential_status, account.account_status, account.security_posture,
-         account.mfa_version, account.recovery_assurance_floor},
+         account.mfa_version, required_assurance},
         [:deterministic]
       )
     )

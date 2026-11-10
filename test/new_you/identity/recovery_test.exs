@@ -103,10 +103,20 @@ defmodule NewYou.Identity.RecoveryTest do
         authorize?: false
       )
 
+      {:ok, session} = Identity.authenticate_password(request.email, request.password)
+      before_request = Ash.get!(Account, registered.account_id, authorize?: false)
+      device = trusted_device(registered.account_id)
+
       id = operation()
       :ok = Identity.request_recovery(request.email, "af", id)
       {:ok, [recovery]} = cases(registered.account_id)
       assert recovery.required_assurance == 2
+      assert Ash.get!(Account, registered.account_id, authorize?: false) == before_request
+      assert {:ok, _} = Identity.authorize_session(session)
+
+      assert Ash.get!(NewYou.Identity.DeviceAssurance, device, authorize?: false).state ==
+               :trusted
+
       {:ok, bearer} = delivery(recovery, request.email)
 
       Process.put(
@@ -139,6 +149,10 @@ defmodule NewYou.Identity.RecoveryTest do
       assert hold_evidence.target_id == registered.account_id
       assert is_nil(hold_evidence.actor_id)
       assert hold_evidence.outcome == :succeeded
+      assert Identity.authorize_session(session) == {:error, :authentication_unavailable}
+
+      assert Ash.get!(NewYou.Identity.DeviceAssurance, device, authorize?: false).state ==
+               :revoked
 
       assert Identity.complete_recovery(bearer, "forbidden ordinary shortcut", operation()) ==
                {:error, :recovery_unavailable}
@@ -270,17 +284,6 @@ defmodule NewYou.Identity.RecoveryTest do
 
       assert Ash.get!(NewYou.Identity.RecoveryCase, recovery.id, authorize?: false).state ==
                :completed
-
-      Ash.get!(Account, registered.account_id, authorize?: false)
-      |> Ash.update!(%{recovery_assurance_floor: 2},
-        action: :set_recovery_floor,
-        authorize?: false
-      )
-
-      assert {:error, %Postgrex.Error{postgres: %{code: :check_violation}}} =
-               NewYou.Repo.query("UPDATE accounts SET recovery_assurance_floor=1 WHERE id=$1", [
-                 Ecto.UUID.dump!(registered.account_id)
-               ])
     end)
   end
 
@@ -306,23 +309,165 @@ defmodule NewYou.Identity.RecoveryTest do
     end)
   end
 
-  test "an unverified account enters durable hold and cannot create email verification" do
+  test "anonymous unverified requests do not restrict the Account and can resume after owner verification" do
     P805.with_fixture(fn ->
       request = P805.request()
       {:ok, registered} = Identity.register(request)
-      :ok = Identity.request_recovery(request.email, "af", operation())
+      before_account = Ash.get!(Account, registered.account_id, authorize?: false)
+      request_id = operation()
+      :ok = Identity.request_recovery(request.email, "af", request_id)
       {:ok, [held]} = cases(registered.account_id)
       assert held.state == :held_manual_review
       assert held.required_assurance == 2
       assert held.satisfied_assurance == 0
       assert is_nil(held.proof_jti)
-      assert hold_obligation(held.operation_id).case_id == held.id
+      assert is_nil(hold_obligation(held.operation_id))
       after_account = Ash.get!(Account, registered.account_id, authorize?: false)
       refute after_account.email_verified?
-      assert after_account.security_posture == :held
+      assert after_account == before_account
+      assert after_account.security_posture == :normal
 
-      assert Identity.authenticate_password(request.email, request.password) ==
-               {:error, :authentication_unavailable}
+      :ok = Identity.request_recovery(request.email, "af", operation())
+      assert {:ok, [^held]} = cases(registered.account_id)
+      assert Ash.get!(Account, registered.account_id, authorize?: false) == before_account
+
+      assert {:ok, :verified} = Identity.verify_email(registered.verification_proof)
+      :ok = Identity.request_recovery(request.email, "af", request_id)
+      assert {:ok, [resumed]} = cases(registered.account_id)
+      assert resumed.id == held.id
+      assert resumed.required_assurance == 2
+      assert resumed.satisfied_assurance == 0
+      assert resumed.state == :proof_pending
+      {:ok, bearer} = delivery(resumed, request.email)
+      assert {:ok, session} = Identity.authenticate_password(request.email, request.password)
+      assert {:ok, _} = Identity.authorize_session(session)
+
+      assert {:ok, :accepted} = Identity.submit_recovery_proof(bearer, operation())
+      assert Ash.get!(Account, registered.account_id, authorize?: false).security_posture == :held
+      assert hold_obligation(held.operation_id).case_id == held.id
+
+      assert Identity.authorize_session(session) == {:error, :authentication_unavailable}
+      assert {:ok, :cancelled} = Identity.cancel_recovery(bearer, operation())
+      # Case termination cannot silently release a justified Account hold.
+      assert Ash.get!(Account, registered.account_id, authorize?: false).security_posture == :held
+    end)
+  end
+
+  test "expiry of an unverified request and its retries never leave an Account restriction" do
+    P805.with_fixture(fn ->
+      request = P805.request()
+      {:ok, registered} = Identity.register(request)
+      before_account = Ash.get!(Account, registered.account_id, authorize?: false)
+      id = operation()
+      :ok = Identity.request_recovery(request.email, "af", id)
+      {:ok, [recovery]} = cases(registered.account_id)
+      Process.put({NewYou.Proof.RecoverySeam, :now}, DateTime.add(recovery.expires_at, 1))
+
+      try do
+        :ok = Identity.request_recovery(request.email, "af", id)
+
+        assert Ash.get!(NewYou.Identity.RecoveryCase, recovery.id, authorize?: false).state ==
+                 :expired
+
+        :ok = Identity.request_recovery(request.email, "af", id)
+        assert {:ok, [_]} = cases(registered.account_id)
+        :ok = Identity.request_recovery(request.email, "af", operation())
+      after
+        Process.delete({NewYou.Proof.RecoverySeam, :now})
+      end
+
+      assert Ash.get!(Account, registered.account_id, authorize?: false) == before_account
+      assert is_nil(hold_obligation(id))
+    end)
+  end
+
+  test "case assurance survives retries while a terminal case does not impose permanent Account policy" do
+    for terminal <- [:cancel, :expire] do
+      P805.with_fixture(fn ->
+        {request, registered} = account()
+        current = Ash.get!(Account, registered.account_id, authorize?: false)
+
+        Ash.update!(current, %{mfa_enrollment_state: :active},
+          action: :update_privileged_mfa,
+          authorize?: false
+        )
+
+        :ok = Identity.request_recovery(request.email, "af", operation())
+        {:ok, [recovery]} = cases(registered.account_id)
+        assert recovery.required_assurance == 2
+        {:ok, bearer} = delivery(recovery, request.email)
+
+        # Fixture representation of an earlier authorized factor-policy change.
+        Ash.get!(Account, registered.account_id, authorize?: false)
+        |> Ash.update!(%{mfa_enrollment_state: :disabled},
+          action: :update_privileged_mfa,
+          authorize?: false
+        )
+
+        :ok = Identity.request_recovery(request.email, "af", operation())
+        assert {:ok, [same]} = cases(registered.account_id)
+        assert same.id == recovery.id
+        assert same.required_assurance == 2
+
+        assert {:error, %Postgrex.Error{postgres: %{code: :check_violation}}} =
+                 NewYou.Repo.query(
+                   "UPDATE recovery_cases SET required_assurance=1,version=version+1,history=array_append(history,$1::jsonb) WHERE id=$2",
+                   [
+                     Jason.encode!(%{action: "lower", version: recovery.version + 1}),
+                     Ecto.UUID.dump!(recovery.id)
+                   ]
+                 )
+
+        case terminal do
+          :cancel ->
+            assert {:ok, :cancelled} = Identity.cancel_recovery(bearer, operation())
+
+          :expire ->
+            Process.put({NewYou.Proof.RecoverySeam, :now}, DateTime.add(recovery.expires_at, 1))
+        end
+
+        try do
+          :ok = Identity.request_recovery(request.email, "af", operation())
+        after
+          Process.delete({NewYou.Proof.RecoverySeam, :now})
+        end
+
+        {:ok, all} = cases(registered.account_id)
+        successor = Enum.find(all, &(&1.id != recovery.id))
+        assert successor.required_assurance == 1
+        assert successor.state == :proof_pending
+
+        assert Ash.get!(Account, registered.account_id, authorize?: false).security_posture ==
+                 :normal
+      end)
+    end
+  end
+
+  test "a successor case still requires stronger assurance while current Account risk remains" do
+    P805.with_fixture(fn ->
+      {request, registered} = account()
+
+      Ash.get!(Account, registered.account_id, authorize?: false)
+      |> Ash.update!(%{mfa_enrollment_state: :active},
+        action: :update_privileged_mfa,
+        authorize?: false
+      )
+
+      :ok = Identity.request_recovery(request.email, "af", operation())
+      {:ok, [recovery]} = cases(registered.account_id)
+      Process.put({NewYou.Proof.RecoverySeam, :now}, DateTime.add(recovery.expires_at, 1))
+
+      try do
+        :ok = Identity.request_recovery(request.email, "af", operation())
+      after
+        Process.delete({NewYou.Proof.RecoverySeam, :now})
+      end
+
+      {:ok, all} = cases(registered.account_id)
+      successor = Enum.find(all, &(&1.id != recovery.id))
+      assert successor.required_assurance == 2
+      assert successor.satisfied_assurance == 0
+      assert successor.state == :proof_pending
     end)
   end
 
@@ -517,6 +662,17 @@ defmodule NewYou.Identity.RecoveryTest do
     NewYou.Audit.EvidenceObligation
     |> Ash.Query.filter(source_operation_id == ^id and evidence_type == :security_hold_placement)
     |> Ash.read_one!(authorize?: false)
+  end
+
+  defp trusted_device(account_id) do
+    id = Ecto.UUID.generate()
+
+    NewYou.Repo.query!(
+      "INSERT INTO device_assurances (id,account_id,fingerprint,state,security_version,expires_at) VALUES ($1,$2,$3,'trusted',1,now()+interval '1 day')",
+      [Ecto.UUID.dump!(id), Ecto.UUID.dump!(account_id), :crypto.strong_rand_bytes(32)]
+    )
+
+    id
   end
 
   defp operation do

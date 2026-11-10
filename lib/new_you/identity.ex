@@ -49,7 +49,7 @@ defmodule NewYou.Identity do
     resource NewYou.Identity.RecoveryCase
   end
 
-  @doc "Start or reuse a recovery case. Every public request has the same neutral result. No provider delivery or login occurs."
+  @doc "Start or reuse a recovery case with a neutral result. Requests alone do not change Account security or access. A missing channel remains unproven until the existing Identity verification boundary establishes it."
   @spec request_recovery(term(), term(), term()) :: :ok
   def request_recovery(email, locale, operation_id),
     do: NewYou.Identity.Recovery.request(email, locale, operation_id)

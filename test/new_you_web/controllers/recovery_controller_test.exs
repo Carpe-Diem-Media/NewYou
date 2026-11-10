@@ -102,13 +102,19 @@ defmodule NewYouWeb.RecoveryControllerTest do
       {:ok, registered} = Identity.register(request)
       {:ok, :verified} = Identity.verify_email(registered.verification_proof)
 
-      for email <- [request.email, "unknown@example.test", "invalid", nil] do
+      unverified = P805.request()
+      {:ok, other} = Identity.register(unverified)
+      before_account = Ash.get!(Account, other.account_id, authorize?: false)
+
+      for email <- [request.email, unverified.email, "unknown@example.test", "invalid", nil] do
         id = Ecto.UUID.generate()
         P805.track_operation(id)
         conn = post(build_conn(), "/recovery", %{email: email, locale: "af", operation_id: id})
         assert conn.status == 204
         assert conn.resp_body == ""
       end
+
+      assert Ash.get!(Account, other.account_id, authorize?: false) == before_account
     end)
   end
 

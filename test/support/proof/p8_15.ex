@@ -8,9 +8,18 @@ defmodule NewYou.Proof.P815 do
   alias NewYou.Proof.{CutPoints, P805, RegistrationSeam, Scenario}
   require Ash.Query
 
-  def duplicate_request_race do
+  def duplicate_request_race(verified? \\ true) do
     P805.with_fixture(fn ->
-      {request, registration} = account()
+      {request, registration} =
+        if verified? do
+          account()
+        else
+          request = P805.request()
+          {:ok, registration} = Identity.register(request)
+          {request, registration}
+        end
+
+      before_account = Ash.get!(Account, registration.account_id, authorize?: false)
       parent = self()
       reference = make_ref()
       first_operation = operation()
@@ -55,8 +64,211 @@ defmodule NewYou.Proof.P815 do
         await_normal(first_monitor)
         await_normal(second_monitor)
         assert length(cases(registration.account_id)) == 1
+        assert Ash.get!(Account, registration.account_id, authorize?: false) == before_account
+
+        unless verified? do
+          [recovery] = cases(registration.account_id)
+          assert recovery.satisfied_assurance == 0
+          assert recovery.state == :held_manual_review
+        end
+
+        :ok
       after
         :ok = Scenario.stop(scenario)
+      end
+    end)
+  end
+
+  def assurance_race do
+    P805.with_fixture(fn ->
+      {request, registration} = account()
+      before_account = Ash.get!(Account, registration.account_id, authorize?: false)
+
+      Ash.update!(before_account, %{mfa_enrollment_state: :active},
+        action: :update_privileged_mfa,
+        authorize?: false
+      )
+
+      {:ok, session} = Identity.authenticate_password(request.email, request.password)
+      request_id = operation()
+      :ok = Identity.request_recovery(request.email, "af", request_id)
+      [recovery] = cases(registration.account_id)
+      {:ok, bearer} = delivery(recovery, request.email)
+      acceptance_id = operation()
+      parent = self()
+      reference = make_ref()
+      scenario = Scenario.start()
+
+      try do
+        {first, first_monitor} =
+          Scenario.spawn(scenario, :first_acceptance, fn ->
+            :ok = Sandbox.checkout(Repo, sandbox: false)
+            Process.put(RegistrationSeam, {:pause, parent, reference})
+
+            try do
+              send(
+                parent,
+                {reference, :first_result, Identity.submit_recovery_proof(bearer, acceptance_id)}
+              )
+            after
+              Sandbox.checkin(Repo)
+            end
+          end)
+
+        first_backend = await_checkpoint(reference)
+
+        {_second, second_monitor} =
+          Scenario.spawn(scenario, :second_acceptance, fn ->
+            :ok = Sandbox.checkout(Repo, sandbox: false)
+
+            try do
+              send(parent, {reference, :second_backend, P805.scalar("SELECT pg_backend_pid()")})
+
+              send(
+                parent,
+                {reference, :second_result, Identity.submit_recovery_proof(bearer, acceptance_id)}
+              )
+            after
+              Sandbox.checkin(Repo)
+            end
+          end)
+
+        second_backend = receive_backend(reference, :second_backend)
+        assert_contention(second_backend, first_backend)
+        send(first, {reference, :release})
+        assert await_result(reference, :first_result) == {:ok, :accepted}
+        assert await_result(reference, :second_result) == {:ok, :accepted}
+        await_normal(first_monitor)
+        await_normal(second_monitor)
+        current = Ash.get!(Account, registration.account_id, authorize?: false)
+        assert current.security_posture == :held
+        assert current.security_version == before_account.security_version + 1
+        assert current.hold_version == before_account.hold_version + 1
+        assert Identity.authorize_session(session) == {:error, :authentication_unavailable}
+
+        assert P805.scalar(
+                 "SELECT count(*) FROM evidence_obligations WHERE source_operation_id=$1 AND evidence_type='security_hold_placement'",
+                 [Ecto.UUID.dump!(request_id)]
+               ) == 1
+
+        accepted = Ash.get!(RecoveryCase, recovery.id, authorize?: false)
+        assert accepted.required_assurance == 2
+        assert accepted.satisfied_assurance == 1
+        assert Enum.count(accepted.history, &(&1["action"] == "accept_proof")) == 1
+      after
+        Scenario.stop(scenario)
+      end
+    end)
+  end
+
+  def unverified_restart_proof do
+    P805.with_fixture(fn ->
+      request = P805.request()
+      {:ok, registration} = Identity.register(request)
+      id = operation()
+      before_account = Ash.get!(Account, registration.account_id, authorize?: false)
+      :ok = Identity.request_recovery(request.email, "af", id)
+      [recovery] = cases(registration.account_id)
+      secret = Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
+
+      input = %{
+        mode: "request",
+        email: request.email,
+        locale: "af",
+        operation_id: id,
+        signing_secret: secret
+      }
+
+      assert restart_call(input) == :requested
+      assert Ash.get!(Account, registration.account_id, authorize?: false) == before_account
+      assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).satisfied_assurance == 0
+      assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+      assert restart_call(input) == :requested
+      resumed = Ash.get!(RecoveryCase, recovery.id, authorize?: false)
+      assert resumed.state == :proof_pending
+      assert resumed.required_assurance == 2
+      {:ok, bearer} = delivery(resumed, request.email)
+      assert Identity.cancel_recovery(bearer, operation()) == {:ok, :cancelled}
+
+      assert Ash.get!(Account, registration.account_id, authorize?: false).security_posture ==
+               :normal
+
+      :ok
+    end)
+  end
+
+  # P8-16 has no apply interface on this base. This fixture models an earlier
+  # Account-owner email commit and proves only recovery's real lock/re-read guard.
+  def prior_email_commit_race do
+    P805.with_fixture(fn ->
+      {_request, registration, recovery, bearer} = pending_recovery()
+      replacement = "earlier-" <> Ecto.UUID.generate() <> "@example.test"
+      P805.request(%{email: replacement})
+      parent = self()
+      reference = make_ref()
+      scenario = Scenario.start()
+
+      try do
+        {writer, writer_monitor} =
+          Scenario.spawn(scenario, :earlier_email_fixture, fn ->
+            :ok = Sandbox.checkout(Repo, sandbox: false)
+
+            try do
+              {:ok, :ok} =
+                Repo.transaction(fn ->
+                  Repo.query!("UPDATE accounts SET email=$1 WHERE id=$2", [
+                    replacement,
+                    Ecto.UUID.dump!(registration.account_id)
+                  ])
+
+                  send(
+                    parent,
+                    {reference, :writer_backend, P805.scalar("SELECT pg_backend_pid()")}
+                  )
+
+                  receive do
+                    {^reference, :release} -> :ok
+                  after
+                    10_000 -> raise "email fixture release deadline"
+                  end
+                end)
+            after
+              Sandbox.checkin(Repo)
+            end
+          end)
+
+        writer_backend = receive_backend(reference, :writer_backend)
+
+        {_consumer, consumer_monitor} =
+          Scenario.spawn(scenario, :recovery_after_email, fn ->
+            :ok = Sandbox.checkout(Repo, sandbox: false)
+
+            try do
+              send(parent, {reference, :consumer_backend, P805.scalar("SELECT pg_backend_pid()")})
+
+              send(
+                parent,
+                {reference, :consumer_result, Identity.submit_recovery_proof(bearer, operation())}
+              )
+            after
+              Sandbox.checkin(Repo)
+            end
+          end)
+
+        consumer_backend = receive_backend(reference, :consumer_backend)
+        assert_contention(consumer_backend, writer_backend)
+        send(writer, {reference, :release})
+        assert await_result(reference, :consumer_result) == {:ok, :failed}
+        await_normal(writer_monitor)
+        await_normal(consumer_monitor)
+        assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).state == :failed
+        assert Ash.get!(Account, registration.account_id, authorize?: false).email == replacement
+        assert account_version(registration.account_id) == 1
+
+        assert Ash.get!(Token, recovery.proof_jti, authorize?: false).purpose ==
+                 "recovery_revoked"
+      after
+        Scenario.stop(scenario)
       end
     end)
   end
@@ -487,7 +699,7 @@ defmodule NewYou.Proof.P815 do
 
       {^port, {:exit_status, 0}} ->
         Enum.find_value(
-          [:delivery_matches, :accepted, :completed, :already_completed],
+          [:requested, :delivery_matches, :accepted, :completed, :already_completed],
           :error,
           fn result ->
             marker = "P815_" <> (Atom.to_string(result) |> String.upcase())
