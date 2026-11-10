@@ -183,6 +183,8 @@ defmodule NewYou.Identity.PasswordReset do
     @doc """
     Explicit reset under the Account lock. One fresh confirmation operation can
     commit; its retry reports the prior outcome without reapplying its password.
+    A fresh reset rejects the current password before proof consumption or any
+    security consequence. The configured hash provider verifies that comparison.
     A different operation using the consumed proof is a replay and fails closed.
     No Session is issued. Every failed write rolls back all consequences.
     """
@@ -252,6 +254,12 @@ defmodule NewYou.Identity.PasswordReset do
 
     defp replace_current(proof, account, password, operation_id) do
       with true <- valid_current?(proof, account),
+           {:ok, strategy} <- AshAuthentication.Info.strategy(Account, :password),
+           false <-
+             strategy.hash_provider.valid?(
+               password,
+               Map.fetch!(account, strategy.hashed_password_field)
+             ),
            {:ok, _} <-
              Ash.update(proof, %{reset_consumption_id: operation_id},
                action: :consume_password_reset,

@@ -7,6 +7,103 @@ defmodule NewYou.Identity.PasswordResetLifecycleTest do
   alias NewYou.Audit.EvidenceObligation
   alias NewYou.Proof.P805
 
+  test "current password rejection preserves the full reset boundary for a later different password" do
+    P805.with_fixture(fn ->
+      {request, registration} = account()
+      {:ok, credentials} = Identity.authenticate_password(request.email, request.password)
+      session = Ash.get!(Session, credentials.session_id, authorize?: false)
+
+      Ash.update!(
+        session,
+        %{
+          step_up_purpose: :place_security_hold,
+          step_up_at: DateTime.utc_now(),
+          step_up_expires_at: DateTime.add(DateTime.utc_now(), 300),
+          step_up_mfa_version: 1,
+          step_up_security_version: 1
+        },
+        action: :set_step_up,
+        authorize?: false
+      )
+
+      device_id = Ecto.UUID.generate()
+
+      Repo.query!(
+        "INSERT INTO device_assurances (id,account_id,fingerprint,state,security_version,expires_at) VALUES ($1,$2,$3,'trusted',1,now()+interval '1 day')",
+        [
+          Ecto.UUID.dump!(device_id),
+          Ecto.UUID.dump!(registration.account_id),
+          :crypto.strong_rand_bytes(32)
+        ]
+      )
+
+      {proof, bearer} = issue(request, registration)
+      confirmation_id = operation()
+      before_account = Ash.get!(Account, registration.account_id, authorize?: false)
+      before = reset_security_snapshot(registration.account_id)
+      result = Identity.reset_password(bearer, request.password, confirmation_id)
+      after_attempt = reset_security_snapshot(registration.account_id)
+
+      old_password_authenticates? =
+        match?({:ok, _}, Identity.authenticate_password(request.email, request.password))
+
+      # RED diagnostics contain only fixed outcomes and per-table equality facts.
+      # Account hashes, registration verifiers and bearer data stay in memory.
+      observed =
+        Map.new(before, fn {table, fingerprint} ->
+          {table, Map.fetch!(after_attempt, table) == fingerprint}
+        end)
+        |> Map.put(:result, result)
+        |> Map.put(:old_password_authenticates, old_password_authenticates?)
+
+      expected =
+        Map.new(before, fn {table, _fingerprint} -> {table, true} end)
+        |> Map.put(:result, {:error, :reset_unavailable})
+        |> Map.put(:old_password_authenticates, true)
+
+      assert observed == expected
+      assert Ash.get!(Token, proof.jti, authorize?: false).purpose == "password_reset"
+      assert {:ok, _} = Identity.authorize_session(credentials)
+
+      replacement = "a different password after the rejected reset"
+      assert {:ok, :reset} = Identity.reset_password(bearer, replacement, confirmation_id)
+      current = Ash.get!(Account, registration.account_id, authorize?: false)
+      assert current.credential_version == before_account.credential_version + 1
+      assert current.security_version == before_account.security_version + 1
+      assert Ash.get!(Token, proof.jti, authorize?: false).purpose == "password_reset_consumed"
+      assert {:error, :authentication_unavailable} = Identity.authorize_session(credentials)
+      assert Ash.get!(Token, session.token_jti, authorize?: false).purpose == "revocation"
+      assert Ash.get!(DeviceAssurance, device_id, authorize?: false).state == :revoked
+
+      binding =
+        Identity.RegistrationOperation
+        |> Ash.Query.filter(operation_id == ^request.operation_id)
+        |> Ash.read_one!(authorize?: false)
+
+      assert binding.state == :tombstoned
+      assert binding.password_verifier == nil
+
+      obligation =
+        EvidenceObligation
+        |> Ash.Query.filter(source_operation_id == ^confirmation_id)
+        |> Ash.read_one!(authorize?: false)
+
+      assert obligation.evidence_type == :identity_password_reset
+      assert obligation.outcome == :succeeded
+
+      assert {:error, :authentication_unavailable} =
+               Identity.authenticate_password(request.email, request.password)
+
+      assert {:ok, _} = Identity.authenticate_password(request.email, replacement)
+      committed = reset_security_snapshot(registration.account_id)
+
+      assert {:ok, :already_reset} =
+               Identity.reset_password(bearer, replacement, confirmation_id)
+
+      assert reset_security_snapshot(registration.account_id) == committed
+    end)
+  end
+
   test "expiry revocation supersession replay and wrong-purpose proofs fail closed" do
     P805.with_fixture(fn ->
       {request, registration} = account()
@@ -404,6 +501,32 @@ defmodule NewYou.Identity.PasswordResetLifecycleTest do
                Ash.destroy(consumed, action: :expunge_expired, authorize?: false)
              )
     end)
+  end
+
+  defp reset_security_snapshot(account_id) do
+    obligation_ids = "SELECT id FROM evidence_obligations WHERE target_id = $1 OR actor_id = $1"
+
+    for {table, where, order} <- [
+          {"accounts", "id = $1", "id"},
+          {"tokens", "account_id = $1", "jti"},
+          {"sessions", "account_id = $1", "id"},
+          {"device_assurances", "account_id = $1", "id"},
+          {"registration_operations", "created_account_id = $1", "id"},
+          {"evidence_obligations", "target_id = $1 OR actor_id = $1", "id"},
+          {"evidence_records", "obligation_id IN (#{obligation_ids})", "id"},
+          {"oban_jobs",
+           "args->'primary_key'->>'id' IN (SELECT id::text FROM (#{obligation_ids}) obligations)",
+           "id"}
+        ],
+        into: %{} do
+      rows =
+        Repo.query!(
+          "SELECT row_to_json(snapshot)::text FROM #{table} snapshot WHERE #{where} ORDER BY #{order}",
+          [Ecto.UUID.dump!(account_id)]
+        ).rows
+
+      {table, :crypto.hash(:sha256, :erlang.term_to_binary(rows, [:deterministic]))}
+    end
   end
 
   defp reset(bearer), do: Identity.reset_password(bearer, "replacement", operation())
