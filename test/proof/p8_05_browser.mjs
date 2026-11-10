@@ -108,6 +108,7 @@ try {
     const url = `${base}/password/reset/confirm?${new URLSearchParams({proof: input.proof, locale: input.locale})}`;
     await navigation(() => cdp('Page.navigate', {url}));
     checks.explicit_form = await evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && !!document.querySelector('#password-reset-confirmation [name="_csrf_token"]') && document.querySelector('[name="password"]').autocomplete === 'new-password'`);
+    checks.stylesheet_loaded = await evaluate(`document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
     operations.push(await evaluate(`document.querySelector('[name="operation_id"]').value`));
     await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
     await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});

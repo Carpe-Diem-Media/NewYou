@@ -181,6 +181,8 @@ defmodule NewYouWeb.PasswordResetControllerTest do
   end
 
   test "Chromium submits the bilingual confirmation and requires fresh login" do
+    # Focus and responsive checks must use current CSS even in a clean checkout.
+    Mix.Task.run("assets.build")
     assert Code.ensure_loaded?(NewYou.Proof.P805Browser)
     assert function_exported?(NewYou.Proof.P805Browser, :run_password_reset, 3)
 
@@ -210,6 +212,7 @@ defmodule NewYouWeb.PasswordResetControllerTest do
         assert checks["reset_complete"]
         assert checks["replay_denied"]
         assert checks["no_session"]
+        assert checks["stylesheet_loaded"]
         assert checks["keyboard_focus"]
         assert checks["responsive"]
         assert checks["reduced_motion"]
