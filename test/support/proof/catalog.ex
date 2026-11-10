@@ -89,6 +89,7 @@ defmodule NewYou.Proof.Catalog do
         NewYou.Proof.P807Catalog.registrations() ++
         NewYou.Proof.P809Catalog.registrations() ++
         NewYou.Proof.P809MagicCatalog.registrations() ++
+        NewYou.Proof.P812Catalog.registrations() ++
         NewYou.Proof.P811Catalog.registrations() ++
         NewYou.Proof.P813Catalog.registrations()
 
@@ -353,6 +354,7 @@ defmodule NewYou.Proof.Catalog do
       |> Map.merge(NewYou.Proof.P807Catalog.manifests())
       |> Map.merge(NewYou.Proof.P809Catalog.manifests())
       |> Map.merge(NewYou.Proof.P809MagicCatalog.manifests())
+      |> Map.merge(NewYou.Proof.P812Catalog.manifests())
       |> Map.merge(NewYou.Proof.P811Catalog.manifests())
       |> Map.merge(NewYou.Proof.P813Catalog.manifests())
 

@@ -18,6 +18,7 @@ class FoundationSmokeTests(unittest.TestCase):
     def _fixture(self, directory: str) -> Path:
         root = Path(directory)
         shutil.copy2(ROOT / "AGENTS.md", root / "AGENTS.md")
+        shutil.copy2(ROOT / "DESIGN.md", root / "DESIGN.md")
         for relative in ("docs/governance", "docs/delivery", "docs/history"):
             shutil.copytree(ROOT / relative, root / relative)
         shutil.copytree(ROOT / "docs/superpowers", root / "docs/superpowers")

@@ -62,7 +62,7 @@ defmodule NewYou.Identity.MagicLoginLifecycleTest do
       assert wrong_locale, "delivery accepted a different locale"
       assert tampered_outcome == :denied, "altered signed claims were accepted"
 
-      NewYou.Repo.query!("UPDATE tokens SET purpose = 'password_reset' WHERE jti = $1", [
+      NewYou.Repo.query!("UPDATE tokens SET purpose = 'account_recovery' WHERE jti = $1", [
         proof.jti
       ])
 

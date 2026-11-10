@@ -102,6 +102,27 @@ try {
     await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
     checks.protected_access = await evaluate(`location.pathname === '/session/protected'`);
     checks.reloaded_access = await evaluate(`fetch('/session/protected').then(r => r.status === 200)`);
+  } else if (input.mode === 'password_reset') {
+    await cdp('Emulation.setDeviceMetricsOverride', {width: 375, height: 800, deviceScaleFactor: 1, mobile: true});
+    await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+    const url = `${base}/password/reset/confirm?${new URLSearchParams({proof: input.proof, locale: input.locale})}`;
+    await navigation(() => cdp('Page.navigate', {url}));
+    checks.explicit_form = await evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && !!document.querySelector('#password-reset-confirmation [name="_csrf_token"]') && document.querySelector('[name="password"]').autocomplete === 'new-password'`);
+    checks.stylesheet_loaded = await evaluate(`document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
+    operations.push(await evaluate(`document.querySelector('[name="operation_id"]').value`));
+    await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    checks.keyboard_focus = await evaluate(`document.activeElement.name === 'password' && document.activeElement.matches(':focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+    checks.responsive = await evaluate(`document.documentElement.scrollWidth <= innerWidth`);
+    checks.reduced_motion = await evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0`);
+    await evaluate(`document.querySelector('[name="password"]').value=${JSON.stringify(input.password)}`);
+    await navigation(() => evaluate(`document.querySelector('#password-reset-confirmation').requestSubmit()`));
+    checks.reset_complete = await evaluate(`document.querySelector('h1').textContent.trim() === ${JSON.stringify(input.complete_title)} && !!document.querySelector('a[href="/login?locale=${input.locale}"]') && !document.querySelector('[name="proof"]') && !document.body.textContent.includes(${JSON.stringify(input.proof)}) && !document.body.textContent.includes(${JSON.stringify(input.password)})`);
+    await navigation(() => cdp('Page.navigate', {url}));
+    operations.push(await evaluate(`document.querySelector('[name="operation_id"]').value`));
+    await evaluate(`document.querySelector('[name="password"]').value=${JSON.stringify(input.password)}`);
+    await navigation(() => evaluate(`document.querySelector('#password-reset-confirmation').requestSubmit()`));
+    checks.replay_denied = await evaluate(`document.querySelector('h1').textContent.trim() === ${JSON.stringify(input.unavailable_title)} && !document.querySelector('[name="proof"]')`);
   } else if (input.mode === 'verification') {
     const file = 'docs/development/fixtures/p8-07-copy-v1.json';
     const fixture = JSON.parse(readFileSync(file, 'utf8'));

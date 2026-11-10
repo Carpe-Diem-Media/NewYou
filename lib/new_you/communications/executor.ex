@@ -102,6 +102,18 @@ defmodule NewYou.Communications.Executor do
     end
   end
 
+  defp source_eligibility(%{role: :password_reset, source_purpose: "password_reset"} = intent) do
+    case NewYou.Identity.password_reset_delivery(
+           intent.source_reference,
+           intent.destination,
+           intent.locale
+         ) do
+      {:ok, bearer} when is_binary(bearer) and byte_size(bearer) > 0 -> :ok
+      {:error, :capability_unavailable} -> {:error, :capability_unavailable}
+      _ -> {:error, :source_invalid}
+    end
+  end
+
   defp source_eligibility(_), do: {:error, :source_invalid}
 
   defp prepare_eligible(intent, attempts) do
@@ -148,6 +160,7 @@ defmodule NewYou.Communications.Executor do
     case {intent.role, intent.source_purpose} do
       {:account_verification, "email_verification"} -> verification_payload(intent)
       {:magic_login, "magic_login"} -> magic_login_payload(intent)
+      {:password_reset, "password_reset"} -> password_reset_payload(intent)
       _ -> {:error, :source_invalid}
     end
   end
@@ -201,6 +214,33 @@ defmodule NewYou.Communications.Executor do
     end
   end
 
+  defp password_reset_payload(intent) do
+    with :ok <- source_eligibility(intent),
+         {:ok, bytes} <- NewYou.Content.PasswordResetMessage.eligible(intent),
+         true <- valid_password_reset_render?(intent),
+         {:ok, bearer} <-
+           NewYou.Identity.password_reset_delivery(
+             intent.source_reference,
+             intent.destination,
+             intent.locale
+           ),
+         true <- DeliveryProvider.available?() do
+      link =
+        "https://proof.invalid/password/reset/confirm?locale=" <>
+          intent.locale <> "&proof=" <> URI.encode_www_form(bearer)
+
+      body =
+        bytes
+        |> String.replace("{{platform_name}}", intent.platform_name)
+        |> String.replace("{{password_reset_link}}", link)
+
+      {:ok, %NewYou.Communications.DeliveryPayload{destination: intent.destination, body: body}}
+    else
+      {:error, :source_invalid} -> {:error, :source_invalid}
+      _ -> {:error, :delivery_prerequisite_unavailable}
+    end
+  end
+
   defp valid_render?(intent) do
     digest =
       :crypto.hash(
@@ -222,6 +262,18 @@ defmodule NewYou.Communications.Executor do
       |> Base.encode16(case: :lower)
 
     intent.render_schema == "magic-login-v1" and
+      intent.render_provenance == "application_platform_name" and intent.render_digest == digest
+  end
+
+  defp valid_password_reset_render?(intent) do
+    digest =
+      :crypto.hash(
+        :sha256,
+        :erlang.term_to_binary({"password-reset-v1", intent.platform_name}, [:deterministic])
+      )
+      |> Base.encode16(case: :lower)
+
+    intent.render_schema == "password-reset-v1" and
       intent.render_provenance == "application_platform_name" and intent.render_digest == digest
   end
 

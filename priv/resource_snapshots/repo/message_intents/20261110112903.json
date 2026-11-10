@@ -1,0 +1,349 @@
+{
+  "attributes": [
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"uuid_generate_v7()\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": true,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"identity\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "source_owner",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "source_operation_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "source_reference",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"account_verification\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "role",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"email_verification\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "source_purpose",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "destination",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "destination_provenance",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "destination_authorized_at",
+      "type": "timestamptz(6)"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "locale",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "content_item_id",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "content_version_id",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "translation_version_id",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "content_sha256",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "platform_name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"verification-v1\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "render_schema",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"application_platform_name\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "render_provenance",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "render_digest",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"open\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "dispatch_disposition",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "terminal_reason",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "created_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
+    }
+  ],
+  "base_filter": null,
+  "check_constraints": [
+    {
+      "attribute": [
+        "locale"
+      ],
+      "base_filter": null,
+      "check": "locale IN ('en', 'af')",
+      "name": "message_intents_locale"
+    },
+    {
+      "attribute": [
+        "dispatch_disposition"
+      ],
+      "base_filter": null,
+      "check": "dispatch_disposition IN ('open', 'held', 'reconciliation_required', 'closed')",
+      "name": "message_intents_disposition"
+    },
+    {
+      "attribute": [
+        "role"
+      ],
+      "base_filter": null,
+      "check": "role IN ('account_verification', 'magic_login', 'password_reset')",
+      "name": "message_intents_role"
+    },
+    {
+      "attribute": [
+        "source_purpose"
+      ],
+      "base_filter": null,
+      "check": "(role = 'account_verification' AND source_purpose = 'email_verification' AND render_schema = 'verification-v1') OR (role = 'magic_login' AND source_purpose = 'magic_login' AND render_schema = 'magic-login-v1') OR (role = 'password_reset' AND source_purpose = 'password_reset' AND render_schema = 'password-reset-v1')",
+      "name": "message_intents_role_purpose_schema"
+    },
+    {
+      "attribute": [
+        "source_reference"
+      ],
+      "base_filter": null,
+      "check": "source_reference ~ '^[0-9a-v]{24}$'",
+      "name": "message_intents_source_reference"
+    }
+  ],
+  "create_table_options": null,
+  "custom_indexes": [],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "64A01586970FACA90DA105B9EB47E281C337C27BC9A3BB685FC57A4DD0BE9C3B",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "message_intents_causal_obligation_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "source_owner"
+        },
+        {
+          "type": "atom",
+          "value": "source_reference"
+        },
+        {
+          "type": "atom",
+          "value": "role"
+        }
+      ],
+      "name": "causal_obligation",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
+  "multitenancy": {
+    "attribute": null,
+    "global": null,
+    "strategy": null
+  },
+  "repo": "Elixir.NewYou.Repo",
+  "schema": null,
+  "table": "message_intents",
+  "temporal": null
+}

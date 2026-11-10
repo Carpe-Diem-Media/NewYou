@@ -42,7 +42,7 @@ defmodule NewYou.Proof.P805Test do
 
   @case_ids ~w(p805.accepted p805.rejected p805.envelope_rollback p805.rollback_account p805.rollback_token p805.rollback_intent p805.rollback_nonce p805.rollback_obligation p805.rollback_operation p805.audit_schedule_rollback p805.commit_rollback p805.replay_neutrality p805.pmr_collision p805.retired_pmr p805.same_email_race p805.canonical_email_race p805.same_operation_race p805.pmr_collision_race p805.post_commit_recovery p805.resend p805.resend_binding p805.browser_en p805.browser_af)
 
-  test "bounded P8-05, P8-07, P8-08, P8-09, P8-11 and P8-13 cases do not manufacture complete coverage" do
+  test "bounded P8-05, P8-07, P8-08, P8-09, P8-11, P8-12 and P8-13 cases do not manufacture complete coverage" do
     manifests = Catalog.required().business_manifests
     assert Enum.all?(Map.values(manifests), &(&1.scope == :partial))
     registrations = Catalog.compiled_business_registrations()
@@ -50,7 +50,7 @@ defmodule NewYou.Proof.P805Test do
 
     expected =
       @case_ids ++
-        ~w(p807.consume_race p807.interrupted_consume p807.browser_en p807.browser_af p809.reconnect p809.interrupted_issue p809.hold_race p809.beam_restart p809.browser_en p809.browser_af p809.magic_consume_race p809.magic_issue_consume_race p809.magic_restart p811.interrupted_materialisation p811.existing_assertion p811.concurrent_execution p811.restart_backlog p813.admission_cut p813.capture_failure p813.source_failure p813.same_attempt_race p813.distinct_attempt_race p813.restart p813.crash_after_admission p813.crash_after_source)
+        ~w(p807.consume_race p807.interrupted_consume p807.browser_en p807.browser_af p809.reconnect p809.interrupted_issue p809.hold_race p809.beam_restart p809.browser_en p809.browser_af p809.magic_consume_race p809.magic_issue_consume_race p809.magic_restart p811.interrupted_materialisation p811.existing_assertion p811.concurrent_execution p811.restart_backlog p813.admission_cut p813.capture_failure p813.source_failure p813.same_attempt_race p813.distinct_attempt_race p813.restart p813.crash_after_admission p813.crash_after_source p812.reset_race p812.stale_login_race p812.interrupted_reset p812.restart)
 
     assert Enum.sort(Enum.map(cases, & &1.case_id)) == Enum.sort(expected)
     assert Enum.sort(Enum.map(registrations, & &1.case_id)) == Enum.sort(expected)
@@ -89,7 +89,7 @@ defmodule NewYou.Proof.P805Test do
 
     assert failures == [], "bounded proof failures: #{inspect(failures, limit: :infinity)}"
 
-    assert length(observations) == length(@case_ids) + 25
+    assert length(observations) == length(@case_ids) + 29
     assert cleanup["verdict"] == "PASS"
 
     for observation <- observations do

@@ -25,6 +25,7 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
              [
                {:action, :authenticate_magic_link},
                {:action, :confirm_email},
+               {:action, :reset_password},
                {:create, :register},
                {:read, :get_by_subject},
                {:read, :read},
@@ -34,12 +35,18 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:update, :place_security_hold},
                {:update, :record_security_hold_attempt},
                {:update, :release_security_hold},
+               {:update, :replace_password},
                {:update, :retire_reconciled_identity},
                {:update, :review_security_hold},
                {:update, :update_privileged_mfa}
              ]
 
-    for action <- [:advance_reconciliation_version, :retire_reconciled_identity] do
+    for action <- [
+          :advance_reconciliation_version,
+          :retire_reconciled_identity,
+          :reset_password,
+          :replace_password
+        ] do
       refute Ash.Resource.Info.action(NewYou.Identity.Account, action).public?
     end
 
@@ -82,6 +89,10 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:post, "/verification/resend", NewYouWeb.RegistrationController, :resend},
                {:get, "/verification/confirm", NewYouWeb.EmailVerificationController, :show},
                {:post, "/verification/confirm", NewYouWeb.EmailVerificationController, :confirm},
+               {:get, "/password/reset", NewYouWeb.PasswordResetController, :new},
+               {:post, "/password/reset", NewYouWeb.PasswordResetController, :request},
+               {:get, "/password/reset/confirm", NewYouWeb.PasswordResetController, :show},
+               {:post, "/password/reset/confirm", NewYouWeb.PasswordResetController, :confirm},
                {:get, "/login/magic", NewYouWeb.MagicLoginController, :new},
                {:post, "/login/magic", NewYouWeb.MagicLoginController, :request},
                {:get, "/login/magic/confirm", NewYouWeb.MagicLoginController, :show},

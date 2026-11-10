@@ -76,8 +76,8 @@ defmodule NewYou.Identity.EmailVerificationTest do
       user = account(registration)
 
       {:ok, wrong, _} =
-        AshAuthentication.Jwt.token_for_user(user, %{"purpose" => "password_reset"},
-          purpose: :password_reset,
+        AshAuthentication.Jwt.token_for_user(user, %{"purpose" => "account_recovery"},
+          purpose: :account_recovery,
           authorize?: false
         )
 
@@ -159,7 +159,7 @@ defmodule NewYou.Identity.EmailVerificationTest do
     P805.with_fixture(fn ->
       {:ok, registration} = Identity.register(P805.request())
       jti = token_jti(registration.verification_proof)
-      NewYou.Repo.query!("UPDATE tokens SET purpose = 'password_reset' WHERE jti = $1", [jti])
+      NewYou.Repo.query!("UPDATE tokens SET purpose = 'account_recovery' WHERE jti = $1", [jti])
 
       assert {:error, :verification_unavailable} =
                Identity.verify_email(registration.verification_proof)
