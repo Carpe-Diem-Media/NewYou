@@ -25,3 +25,9 @@ Apply `docs/development/implementation-handoff-standard.md` prospectively after 
 Independent Master Gate verifies required documentation against the exact reviewed head, including owner interfaces, lifecycle/failure behaviour, persistence constraints, executable tests and proof limits. Check the implementation SHA, all material locators and claims, and the cold-start walkthrough for a new substantial slice. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for that PR. A changed head invalidates prior certification. No separate routine after-merge documentation ticket or unrelated blocker is required.
 
 Handoffs remain descriptive implementation maps beneath routed authority. They do not replace source inspection, exact-head checks, resulting-main reconciliation or Plane's live execution state.
+
+## Independent review and attestation handoff
+
+After independent Master Gate approval, require the reviewer to supply `reviewed_head`, `reviewer`, `review_reference` and independently verified full-diff `diff_sha256` in machine-copyable form. Verify the authentic review reference, reviewer, exact head, full diff and digest independently before a trusted operator materializes `review.json`. Never substitute an author's self-certification or untrusted PR content.
+
+Identify the trusted operator and follow the before/after collector and private evidence custody procedure in `docs/development/foundation-integrity-merge-gate.md` and `AGENTS.md`. Record collector output, exit status, stderr and digests. Separate merge authorization remains required. Resulting-main certification must pass before Plane Done or dependent implementation; use the documented fail-closed fallback when proof is unavailable.

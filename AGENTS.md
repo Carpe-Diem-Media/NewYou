@@ -389,6 +389,20 @@ The implementing agent does not self-certify merge authority and does not silent
 
 Master Gate independently verifies the exact PR head, complete diff, durable authority, live Plane acceptance contract, scope, ownership, lifecycle, persistence, concurrency/idempotency, retries/failure/recovery, security/privacy/safety, dependency/API correctness, tests and exact-head CI.
 
+### Mandatory independent review and merge attestation
+
+Every PR entering merge certification must follow `docs/development/foundation-integrity-merge-gate.md`. Independent Master Gate supplies the independently verified `reviewed_head`, `reviewer`, `review_reference` and full-diff `diff_sha256` in machine-copyable form. The review reference must identify an authentic, attributable independent review. The implementing agent must not invent or self-certify this evidence.
+
+The trusted repository operator identifies and preserves the review evidence and completes the following as part of the normal handoff:
+
+1. Materialize `review.json` from the independent review and verify its provenance, reviewer, full diff and digest.
+2. Run `tools.ci_attestation before` against the exact reviewed head, review record and required successful hosted CI run. Preserve `review.json`, `before.json`, process exit status, stderr and SHA-256 digests in trusted private custody.
+3. Recheck that the PR head, base, candidate, CI and review evidence remain valid. Merge only with separate explicit authorization.
+4. Immediately after an authorized merge, run `tools.ci_attestation after` using the original trusted evidence. Verify resulting-main commit, parents, candidate tree and all collector assertions, and preserve the output and its evidence.
+5. Do not mark the Plane ticket Done or unblock dependent implementation until independent resulting-main certification passes.
+
+Do not commit attestation artifacts or manufacture them from untrusted PR content. A changed reviewed head invalidates certification; other changed inputs invalidate the applicable evidence as described in the procedure. If the collector cannot establish proof, follow its documented fail-closed fallback. A passing collector does not replace independent review. Neither review nor attestation authorizes a merge.
+
 Master Gate reviews JIT implementation choices for correctness and compliance. It must not reject a compliant internal engineering choice merely because governance did not pre-specify it.
 
 A reviewer claiming an upstream governance contradiction must satisfy the same three-part contradiction test before blocking integration.

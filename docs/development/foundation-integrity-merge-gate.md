@@ -65,8 +65,10 @@ session authorised to read the repository and Actions logs.
 python3 -m tools.ci_attestation before --trust-mode private-procedural --review-record review.json --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID > before.json
 ```
 
-The independent reviewer records `reviewed_head`, `reviewer`, `review_reference`
-and the SHA-256 `diff_sha256` of the reviewed full diff in `review.json`:
+The independent reviewer supplies `reviewed_head`, `reviewer`, `review_reference`
+and the independently verified SHA-256 `diff_sha256` of the reviewed full diff
+in machine-copyable form. The trusted repository operator materializes
+`review.json` from that authentic, attributable review:
 
 ```json
 {"reviewed_head":"<40-character head SHA>","reviewer":"<independent reviewer>","review_reference":"<durable review reference>","diff_sha256":"<64-character SHA-256>"}
@@ -74,7 +76,8 @@ and the SHA-256 `diff_sha256` of the reviewed full diff in `review.json`:
 
 Independently verify the review
 reference, reviewer, full diff and digest, and retain the record in trusted
-custody. The collector validates their presence and binding, but does not verify
+custody, together with collector output, process exit status, stderr and SHA-256
+digests. Do not commit these artifacts. The collector validates their presence and binding, but does not verify
 the review itself or calculate the diff digest. Record the command output and its digest with the independent review evidence.
 Do not use a file produced by an untrusted PR checkout. The PR Actions API's
 `head_sha` identifies the PR head, not the merge candidate. The collector
