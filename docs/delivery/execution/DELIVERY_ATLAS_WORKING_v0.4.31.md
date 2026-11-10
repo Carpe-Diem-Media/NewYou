@@ -91,7 +91,7 @@ The current sources that establish this chain are:
 
 | Authority level | Current source | Atlas relationship |
 |---|---|---|
-| Product Law | `docs/governance/product/PROJECT_NORTH_STAR_AND_MVP_v1.3.0.md`; `docs/governance/product/00_PLATFORM_v1.14.0.md`; `docs/governance/product/01_DECISIONS_v1.14.0.md` | Defines product purpose, approved outcomes, policy, MVP boundaries, non-negotiables and formal gates. |
+| Product Law | `docs/governance/product/PROJECT_NORTH_STAR_AND_MVP_v1.3.0.md`; `docs/governance/product/00_PLATFORM_v1.15.0.md`; `docs/governance/product/01_DECISIONS_v1.15.0.md` | Defines product purpose, approved outcomes, policy, MVP boundaries, non-negotiables and formal gates. |
 | Architecture Law | `docs/governance/architecture/03_ARCHITECTURE_v1.1.1.md` and the accepted Architecture Law represented by it (`docs/governance/architecture/references/ARCHITECTURE_LAW_WORKING_v0.36.0.md`) | Defines architectural authority, state authority, interaction rules, failure behaviour, performance doctrine and deferred mechanisms. |
 | Domain Law | `docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md` | Defines who owns durable business truth and the domain-level dependency direction (20 Domains). |
 | Roadmap | `docs/governance/roadmap/05_ROADMAP_v1.2.5.md` | Defines approved delivery phases, Feature Pack outcomes, dependencies, gates and sequencing (17 Feature Packs). |

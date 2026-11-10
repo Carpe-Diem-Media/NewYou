@@ -1,61 +1,71 @@
-# Password-reset message candidate
+# Password-reset message development approval package
 
-**Status:** CANDIDATE_NOT_APPROVED. These files are a review package. They do not make an approved or eligible content version.
+**Status:** `DEVELOPMENT_ONLY_APPROVED; RUNTIME_RELEASE_PROHIBITED` in this PR branch. The approval packet becomes current after independent Master Gate certification and authorised merge. It grants no password-reset implementation permission.
 
-Base main was `022a0eb1bb93b5b84a722d132e0ee1d084fc3a67`. WELL-98 is the source of the live delivery state. The current governance router still selects Product and Decision v1.14.0.
+The PR base is `561835b8c099b632ef78684ff99d5d03e3a559aa`. That main still routes Product and Decisions v1.14.0. This branch promotes the exact approved WELL-98 Product proposals to v1.15.0 and adds a separate development evidence route. Do not use the v0.2 packet as current main authority before integration.
 
-## Candidate classification and authority
+## Approved Product classification
 
-Propose the narrow Product type `password_reset_message` for the email that carries Identity-issued, purpose-bound password-reset proof to an existing Account. Recommend `editorial_low_risk` for wording only. The message does not issue or consume proof or change credentials. Identity security risk remains HIGH. The candidate proposes Class A content with `identity_security` risk; these classifications are separate. Proposed semantic keys are recorded in this packet and are not added to the P8-05 pinned runtime registry.
+Product §§21E.23–21E.24 and DEC-322 approve the narrow `password_reset_message` type for an email carrying Identity-issued, purpose-bound password-reset proof to an existing Account. The wording risk is `editorial_low_risk`; this classifies wording only. The message is Class A content with `identity_security` risk, and Identity security remains HIGH. It does not cover reset pages/forms, recovery-case notices, password-change notices, verification, magic login, primary-email change, marketing, safety, practitioner, entitlement or general transactional messages.
 
-Content & Media owns the exact immutable message versions and development-eligibility decisions. After Product approves the type, its separate EN and AF decisions can grant only bounded development eligibility to those exact content versions. Identity & Access owns proof, Account and credential state, and Session consequences. Communications owns each MessageIntent, DeliveryAttempt and current delivery decision. Audit & Evidence owns selected evidence of Identity outcomes. None of the candidate content grants authority to those Domains.
+Content & Media owns the immutable content identities, exact locale bytes and bounded development eligibility. Identity & Access owns proof, Account and credential state, and Session consequences. Communications owns `MessageIntent`, delivery attempts and current delivery decisions. Audit & Evidence owns selected source-outcome evidence. No ownership is transferred.
 
-The Product-owner decision for the exact proposed classification and scope is pending. Content & Media owner decisions for the exact EN and AF version bytes, digests, token contract and scope are also pending. English and Afrikaans language review evidence is pending. A future dependency-cleared Ready implementation ticket separately authorizes its implementation work; none of these content decisions grants that permission. Runtime, sender/provider, publication, release and production grants remain separate and are not granted here. No decision IDs, actors, approval evidence or timestamps have been invented.
+The exact source proposals remain available under `../../../../governance/product/proposals/well-98/`. Their approved source digests are `a9ae584bccc984faca20aeed2428edc00a05ad54aead237a57a6d90388eedebb` (Product Law) and `b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017` (Decision Register). The current v1.15.0 routes are recorded in `docs/governance/CURRENT_GOVERNANCE_ROUTER.json`.
 
-## Immutable candidate identities
+## Exact approved locale versions
 
-The JSON packet binds the exact subject/body artifacts, UTF-8/LF serialization, byte counts, SHA-256 digests, locale identities, proposed semantic copy keys and typed literal token allowlist. The only proposed tokens are `{{platform_name}}` and `{{password_reset_link}}`. No rendered URL, bearer value, account identifier, email address or secret appears in the source files.
+Both source artifacts use UTF-8, LF line endings, one blank line between subject and body, and one terminal LF. Their bytes are unchanged from the approved review subject.
 
-The current candidate pairs EN V1 with AF V2. AF V2 uses `wysig` for the password-change wording. The earlier AF V1 file remains unchanged as an unapproved prior candidate; this wording update does not record a supersession or owner approval. Content & Media approval and Afrikaans language review remain pending for AF V2.
+| Locale | Immutable translation version | Bytes | SHA-256 | Language decision |
+|---|---|---:|---|---|
+| EN | `NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-EN-V1` | 369 | `71c213c2ae48edf499d7d6d4191d84076a366d6fbd59607c8b842c830d33928c` | English review approved |
+| AF | `NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2` | 401 | `ec1251d149b54692df2751760b72d1766d99537d4fa22b9b06da828bafe9ec93` | Afrikaans review approved; `wysig` accepted |
 
-`{{password_reset_link}}` is a content-contract proposal only. The current P8-05 `CopyRegistry` supports `platform_name`; this ticket adds no reset renderer, token provider or password-reset application path.
+The token allowlist remains exactly `{{platform_name}}` and `{{password_reset_link}}`; the canonical token-contract SHA-256 is `cbf191e4408d4a7120e00e93d6978dff7364c3246932d34d1dc1b04e11f8dfa1`. Only literal tokens appear in source evidence. No rendered bearer URL, credential or participant identifier is included.
 
-The packet requires an approved Product extension to be selected by current governance before any future `development_approved` state. A complete Product decision and separate Content & Media EN and AF decisions are all required. A partial locale approval does not make the paired message eligible. The current packet remains `candidate`; development, test, runtime, production, public-release, paid-pilot and real-participant eligibility are all false.
+AF V1 is unchanged historical, unapproved content. Its SHA-256 remains `582fb5d79e8a03708491b1085432efc56de0b809c75e4a043b7cdb3ccd6fc303`. The v0.1.0 candidate packet is also retained byte-for-byte at its original path with all eligibility flags false and no approval events.
 
-## Lifecycle and authorization contract
+The semantic keys remain outside the P8-05 pinned runtime `COPY_REGISTRY.json`. This PR does not add a reset renderer or runtime registry integration.
 
-The proposed lifecycle is `candidate → development_approved → superseded | withdrawn`. Promotion requires the exact Product classification and current approved extension, the exact immutable parent and locale identities, exact bytes and digests, the token contract, allowed applicability, complete owner evidence and a conflict-free append-only history. `development_approved` makes only these exact EN/AF versions eligible for local development, tests, development environments and bounded P8-12 proof. It does not authorize implementing password reset; a separate Ready implementation ticket is required. Runtime grants and release authorization remain separate.
+## Five Plane decisions and provenance
 
-Repeated application of the same decision ID with the same complete version, locale, digest, token and scope binding is idempotent. Reusing the ID with changed data conflicts. Conflicting decisions for one immutable identity stop new use until accountable owners reconcile them. Superseded and withdrawn versions stay available as history but are terminal for new use. Changed bytes need a new locale-version identity and fresh approval.
+Plane WELL-98 summary comment `510ff609-f47a-4f54-8e77-9d2ba6345276` indexes the five separate exact-bound decisions. `OWNER_APPROVALS_v1.json` preserves each comment's text, comment ID, Plane-recorded creation time, actor metadata and approved scope. All five Plane comments identify the same connected account (`2d75ac08-a11c-4fe1-9545-c1d885f83955`) and record the requester's self-attested roles. This is not independent review, an Identity Account/role/Grant, or proof of runtime capability. The original direct user-decision time is not represented; `recorded_at` is the Plane comment creation time.
 
-## Ten-dimension engineering assessment
-
-| Dimension | Assessment | Evidence or reason |
+| Decision | Plane comment | Recorded at (UTC) |
 |---|---|---|
-| Authorization | APPLICABLE | Product-owner classification, Content & Media EN/AF content-eligibility decisions and English/Afrikaans language reviews are separate pending records. Content eligibility does not authorize reset implementation; the future implementation ticket must independently be Ready. None grants runtime, sender, publication, release or production authority. |
-| Lifecycle and state machines | APPLICABLE | The candidate packet records the required states, transitions, guards, terminal-use rules, exact bindings and append-only history. It remains at `candidate`. |
-| Database invariants | APPLICABLE | No Resource, table or migration is proposed. The checker proves unique identities, exact locale-to-file binding, UTF-8/LF serialization, byte counts, digests and the closed token allowlist from actual files. PostgreSQL enforcement belongs to WELL-13. |
-| Transactions | NOT APPLICABLE | This ticket records no runtime state changes. Future eligibility requires the complete Product decision and both exact locale decisions together; a partial set cannot claim eligibility. File creation and owner approval are not publication. |
-| Concurrency | APPLICABLE | Conflicting decisions for the same immutable identity require owner reconciliation. The contract rejects last-write-wins. It adds no runtime concurrency mechanism. |
-| Idempotency | APPLICABLE | Exact decision replay on the same identity, locale, bytes, digest, token contract and scope is idempotent. Reuse of an ID with changed binding fails closed. |
-| Multi-tenancy and scope isolation | NOT APPLICABLE | Product Law and DEC-268 define one operating platform with controlled product spaces, not generic tenant isolation. This candidate has no tenant-specific content authority; it retains the stated P8-12 and environment scope. |
-| Cache consistency | APPLICABLE | No cache is added. Future delivery must revalidate current eligibility; a queued message or cached copy does not preserve eligibility after withdrawal. |
-| Multi-node behavior | NOT APPLICABLE | This candidate introduces no process-local approval state or node affinity. The files, byte counts, digests and decision bindings are deterministic. Delivery behavior belongs to WELL-13. |
-| Production boundaries | APPLICABLE | The candidate is ineligible everywhere. Any future development approval is limited to local development, tests, development environments and bounded P8-12 proof. Production, public release, paid pilots, real participants and Phase 9 remain excluded. |
+| `WELL-98-PRODUCT-APPROVAL-20261109` | `a6cedfea-2ee2-4c9b-97eb-a735793a4d92` | 2026-11-09 06:59:05.698111 |
+| `WELL-98-CONTENT-EN-V1-APPROVAL-20261109` | `85949fee-f36c-4d6c-b54f-890ef4ad04eb` | 2026-11-09 06:59:14.529529 |
+| `WELL-98-CONTENT-AF-V2-APPROVAL-20261109` | `56697c18-e585-403e-8b99-ef417d9acf6b` | 2026-11-09 06:59:21.569208 |
+| `WELL-98-LANG-EN-V1-APPROVAL-20261109` | `b6c2dc5e-5622-49ac-8e12-a0f5855acce3` | 2026-11-09 06:59:27.114634 |
+| `WELL-98-LANG-AF-V2-APPROVAL-20261109` | `3fd2448a-39f3-4c61-bbaf-85253e3d2c5f` | 2026-11-09 06:59:32.524540 |
 
-## Source baseline
+The Product approval binds both exact proposal digests and classification. Content & Media separately approves exact EN V1 and AF V2 bytes, subject/body metadata, token digest and applicability. The two language reviews bind their exact locale bytes. Each is a separate event; a language review does not substitute for Product or Content approval.
 
-- Product Law §21E.3 requires an approved extension for new content types. §21E.19 excludes password recovery from `verification_message`. §21E.21 excludes password reset from `magic_login_message`. §21E.4 separates content wording risk from Identity security.
-- Product §21E.22 and DEC-321 establish the bounded magic-login approval pattern but apply only to that purpose and P8-09.
-- Domain Law §§6.1, 6.7, 6.15 and 6.18 keep Identity, Content & Media, Communications and Audit ownership separate.
-- Architecture Law §§6.4, 10.1 and 10.4 require purpose-bounded recovery, immutable locale content and exact message provenance.
-- Identity JIT §§J.1 and J.1a keep bearer material out of ordinary evidence and make passive scanner retrieval non-consuming.
-- Communications JIT §5 assigns MessageIntent and delivery lifecycle to Communications. The Audit JIT selection matrix assigns the source reset result to Identity and does not create a duplicate central delivery ledger.
-- Roadmap FP-001 and live WELL-13 define the Phase-8 password-reset outcome. WELL-13 remains blocked by this prerequisite and other existing dependencies.
-- `COPY_INVENTORY.md` keeps `identity.recovery.family` as JIT UI/journey copy and records separate proposed Class A keys for this email. Those keys are absent from the pinned `COPY_REGISTRY.json` until owner decisions and a separately reviewed registry integration.
+## Lifecycle, authorization and fail-closed rules
 
-## Assessment limits
+The governed lifecycle is `candidate → development_approved → superseded | withdrawn`. This packet records `development_approved`; the predecessor v0.1 packet remains an unchanged candidate. Promotion requires the current approved Product route, all five attributable decisions, exact EN/AF identities and bytes, the token contract, exact scope, complete history and no unresolved conflict. The route and packet become current only after merge.
 
-This is a Product/Content candidate and evidence checker. It adds no Ash Resource, database table, migration, transaction, cache, service, runtime approval path or password-reset application code. It changes no Assent exception, authentication configuration, security guard or release configuration. WELL-91's existing Assent disposition remains unchanged and expires at `2026-11-18T00:00:00Z`.
+Approval events are append-only. Reapplying the same decision ID to the same identity, locale, format, bytes/digest, token contract and applicability is idempotent. Reuse of an ID with changed fields, or conflicting decisions for an immutable identity, stops new use for owner reconciliation; last-write-wins is prohibited. Changed bytes require a new locale-version identity and approval. Supersession requires an immutable successor. Superseded and withdrawn versions remain historical and are terminal for new use. Current eligibility must be revalidated before every new use; queued or cached content does not preserve eligibility after withdrawal.
 
-Documentation-impact determination: this candidate package is its own source-linked Product and Content review record. It does not create an implemented vertical slice, so a runtime implementation handoff is not applicable.
+Eligibility is limited to local development, automated tests, development environments and bounded P8-12 Phase-8 proof. Production, public release, paid pilots, real participants and Phase 9 remain prohibited. No runtime Content role, Identity grant, sender/provider approval, publication, release, password-reset implementation permission or security exception is granted. WELL-13 remains blocked by WELL-98.
+
+## Engineering assessment
+
+| Dimension | Assessment | Evidence or limit |
+|---|---|---|
+| Authorization | APPLICABLE | Product classification, C&M EN/AF exact-byte decisions and two exact locale reviews are separately recorded. Development eligibility is distinct from implementation and runtime permission. |
+| Lifecycle and state machines | APPLICABLE | Packet binds states, transitions, approval guards, append-only history, terminal states, replay/conflict rules, withdrawal and current revalidation. |
+| Database invariants | APPLICABLE | No database change. Checker proves fixed IDs and paths, locale order, source bytes, encoding, lengths, digests and closed token contract. Runtime PostgreSQL enforcement belongs to the implementation ticket. |
+| Transactions | NOT APPLICABLE | No runtime transaction is added. The checker accepts eligibility only when every required decision and current Product route verify together. |
+| Concurrency | APPLICABLE | Conflicting decision identities or bindings fail closed and require explicit owner reconciliation; no concurrency framework is added. |
+| Idempotency | APPLICABLE | Exact replay of the same full decision binding is idempotent; changed reuse conflicts. |
+| Multi-tenancy and scope isolation | NOT APPLICABLE | No tenant-specific content authority is introduced. Existing environment and P8-12 applicability bounds remain exact. |
+| Cache consistency | APPLICABLE | No cache is added. Current eligibility must be rechecked; queued or cached content cannot survive withdrawal as eligible. |
+| Multi-node behavior | NOT APPLICABLE | Evidence is deterministic file bytes, digests and decision IDs. No process-local approval state or node affinity is introduced. |
+| Production boundaries | APPLICABLE | Production, public release, paid pilot, real-participant use and Phase 9 remain prohibited. Runtime and implementation permissions are false. |
+
+## Verification and documentation impact
+
+This PR changes Product/Decision authority, development-only content evidence and the existing `NewYou.Content.MagicLoginMessage` current-authority check. The latter continues to verify the historical v1.14 magic-login approval and separately validates the exact v1.15 current route, digest and predecessor lineage. It does not implement the password-reset runtime feature or change Identity, Communications or Audit business logic, authentication configuration, dependencies, release configuration or WELL-91's Assent disposition. The existing P8-09 implementation handoff is updated with this reader correction; no new vertical-slice handoff is needed.
+
+Focused validation uses `python3 -m unittest tests.test_password_reset_message_content_evidence tests.test_password_reset_message_activation` and `python3 tools/check_password_reset_message_evidence.py`. Repository and hosted verification results are recorded in the activation PR and Plane review handoff.

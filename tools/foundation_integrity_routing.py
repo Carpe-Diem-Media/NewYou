@@ -41,6 +41,8 @@ from pathlib import PurePosixPath
 APPLICATION_FILES = frozenset(
     {
         "tools/hex_security_audit.py",
+        "tools/check_magic_login_evidence.py",
+        "tools/check_password_reset_message_evidence.py",
         ".github/workflows/hex-security-audit.yml",
         "mix.exs",
         "mix.lock",

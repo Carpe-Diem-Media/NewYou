@@ -199,12 +199,62 @@ def validate_development(root: Path, packet: dict) -> list[str]:
         check(seen == expected_events, "missing, conflicting or mismatched exact owner approval")
         governance = json.loads((root / "docs/governance/CURRENT_GOVERNANCE_ROUTER.json").read_text())
         check([x["document_id"] for x in packet["promoted_authority"]] == ["PLATFORM_PRODUCT_LAW", "PRODUCT_DECISIONS"], "both approved law successors required")
+        current_authority = {
+            "PLATFORM_PRODUCT_LAW": {
+                "repository_path": "docs/governance/product/00_PLATFORM_v1.15.0.md",
+                "sha256": "c7f5510817028d28edd4eb29e71b9150e13d0354cccf1af23666e067e0eed0b8",
+                "semver": "1.15.0",
+                "predecessor": "docs/governance/product/00_PLATFORM_v1.14.0.md",
+                "predecessor_sha256": "bcec310103319441d12c6efae1c7c779a013a503b3831da630abb4a55187314b",
+                "approved_amendment_path": "docs/governance/product/proposals/well-98/00_PLATFORM_v1.15.0_PROPOSED.md",
+                "approved_amendment_sha256": "a9ae584bccc984faca20aeed2428edc00a05ad54aead237a57a6d90388eedebb",
+            },
+            "PRODUCT_DECISIONS": {
+                "repository_path": "docs/governance/product/01_DECISIONS_v1.15.0.md",
+                "sha256": "db57b0b73ed9faf8f3ade458c01d0d4798e4c2401172a35b9a1ad129ce8ae8d4",
+                "semver": "1.15.0",
+                "predecessor": "docs/governance/product/01_DECISIONS_v1.14.0.md",
+                "predecessor_sha256": "d97cb742deefa744279b47686bf5148cceea4b95839fe5b32ad6bbe7d2b6b1fd",
+                "approved_amendment_path": "docs/governance/product/proposals/well-98/01_DECISIONS_v1.15.0_PROPOSED.md",
+                "approved_amendment_sha256": "b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017",
+            },
+        }
         for document, approved in zip(packet["promoted_authority"], candidate["product_proposal"]["documents"]):
             load_artifact(document)
             check(document["predecessor"] == approved["predecessor"] and document["predecessor_sha256"] == approved["predecessor_sha256"], "law predecessor drift")
             check(document["approved_amendment_path"] == approved["path"] and document["approved_amendment_sha256"] == approved["sha256"], "law approval subject drift")
             route = next(x for x in governance["governing_documents"] if x["document_id"] == document["document_id"])
-            check(route["repository_path"] == document["path"] and route["sha256"] == document["sha256"] and route["semver"] == "1.14.0", "approved authority route mismatch")
+            expected_current = current_authority[document["document_id"]]
+            check(
+                route.get("repository_path") == expected_current["repository_path"]
+                and route.get("canonical_filename") == Path(expected_current["repository_path"]).name
+                and route.get("sha256") == expected_current["sha256"]
+                and route.get("semver") == expected_current["semver"],
+                "approved authority route mismatch",
+            )
+            successor_bytes = load_artifact(
+                {
+                    "path": expected_current["repository_path"],
+                    "sha256": expected_current["sha256"],
+                }
+            )
+            check(
+                f"**Predecessor:** `{expected_current['predecessor']}`" in successor_bytes.decode("utf-8")
+                and "**SemVer transition:** `v1.14.0 → v1.15.0`" in successor_bytes.decode("utf-8"),
+                "current authority successor lineage mismatch",
+            )
+            load_artifact(
+                {
+                    "path": expected_current["predecessor"],
+                    "sha256": expected_current["predecessor_sha256"],
+                }
+            )
+            load_artifact(
+                {
+                    "path": expected_current["approved_amendment_path"],
+                    "sha256": expected_current["approved_amendment_sha256"],
+                }
+            )
     except (KeyError, TypeError, ValueError, OSError, StopIteration, IndexError) as error:
         errors.append("malformed approval evidence: " + str(error))
     return errors

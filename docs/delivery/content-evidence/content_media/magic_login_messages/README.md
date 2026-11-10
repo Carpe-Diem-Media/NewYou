@@ -1,13 +1,13 @@
 # Magic-login message approval package
 
-WELL-97 records accountable Product and Content & Media owner approval of the exact PR #202 candidate at head `387d1f1ff30c4ddd8fb8b3b5f5e95758dfb07e78`. The v0.2.0 packet approves only bounded development use. The v0.1.0 packet and original proposals remain immutable candidate history. This branch routes the approved Product/Decision v1.14.0 successors; main remains v1.13.0 until authorised integration. Final independent Master Gate, new-head CI and merge authorisation remain required.
+WELL-97 records accountable Product and Content & Media owner approval of the exact PR #202 candidate at head `387d1f1ff30c4ddd8fb8b3b5f5e95758dfb07e78`. The v0.2.0 packet approves only bounded development use. The v0.1.0 packet and original proposals remain immutable candidate history. The current Product/Decision v1.15.0 successors preserve the approved magic-login clauses and add the separately approved WELL-98 reset clauses. Final independent Master Gate, new-head CI and merge authorisation remain required.
 
 ## Review entry points
 
 - [Owner decisions and original user-message provenance](OWNER_APPROVALS_v1.json)
 - [Development-approved evidence packet](MAGIC_LOGIN_MESSAGE_EVIDENCE_PACKET_v0.2.0.json)
-- [Approved Product v1.14.0 successor](../../../../governance/product/00_PLATFORM_v1.14.0.md)
-- [Approved Decision v1.14.0 successor](../../../../governance/product/01_DECISIONS_v1.14.0.md)
+- [Current Product v1.15.0 successor](../../../../governance/product/00_PLATFORM_v1.15.0.md)
+- [Current Decision v1.15.0 successor](../../../../governance/product/01_DECISIONS_v1.15.0.md)
 
 - [Proposed Product v1.14.0 amendment successor](../../../../governance/product/proposals/well-97/00_PLATFORM_v1.14.0_PROPOSED.md)
 - [Proposed Decision v1.14.0 amendment successor](../../../../governance/product/proposals/well-97/01_DECISIONS_v1.14.0_PROPOSED.md)

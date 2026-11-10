@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from tools.check_password_reset_message_evidence import validate as validate_candidate_packet
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -125,15 +126,20 @@ class PasswordResetMessageEvidenceTests(unittest.TestCase):
         if expected_finding:
             self.assertIn(expected_finding, " ".join(evidence["findings"]))
 
-    def test_candidate_evidence_is_valid_but_never_eligible(self):
+    def test_candidate_packet_stays_ineligible_and_approved_successor_is_development_only(self):
         result = self.run_checker(ROOT)
 
         self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
         evidence = json.loads(result.stdout)
         self.assertEqual("PASS", evidence["integrity"])
         self.assertFalse(evidence["candidate_eligible"])
-        self.assertFalse(evidence["development_eligible"])
+        self.assertTrue(evidence["development_eligible"])
         self.assertFalse(evidence["runtime_release_eligible"])
+
+        historical_candidate = validate_candidate_packet(ROOT)
+        self.assertEqual("PASS", historical_candidate["integrity"])
+        self.assertFalse(historical_candidate["candidate_eligible"])
+        self.assertFalse(historical_candidate["development_eligible"])
 
         packet = self.read_packet(ROOT)
         for version in packet["locale_versions"]:
@@ -153,7 +159,7 @@ class PasswordResetMessageEvidenceTests(unittest.TestCase):
             self.assertTrue(subject.startswith("Reset " if version["locale"] == "en" else "Wysig jou "))
             self.assertIn(b"{{password_reset_link}}", body)
 
-    def test_afrikaans_candidate_uses_wysig_and_keeps_v1_immutable(self):
+    def test_approved_afrikaans_v2_uses_wysig_and_keeps_v1_historical(self):
         packet = self.read_packet(ROOT)
         version = next(item for item in packet["locale_versions"] if item["locale"] == "af")
 
