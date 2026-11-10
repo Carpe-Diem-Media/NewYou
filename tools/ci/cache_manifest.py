@@ -4,6 +4,7 @@
 import hashlib
 import json
 import os
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -22,6 +23,7 @@ def describe_mismatch(expected, actual):
     examples = []
     for path in sorted(expected.keys() | actual.keys()):
         before, after = expected.get(path), actual.get(path)
+        details = ""
         if before == after:
             continue
         if before is None:
@@ -34,11 +36,13 @@ def describe_mismatch(expected, actual):
             old_mode, _, old_digest = before.partition(":")
             new_mode, _, new_digest = after.partition(":")
             kind = "mode_changed" if old_digest == new_digest and old_mode != new_mode else "content_changed"
+            if kind == "mode_changed" and re.fullmatch(r"[0-7]{1,4}", old_mode) and re.fullmatch(r"[0-7]{1,4}", new_mode):
+                details = f" mode={old_mode}->{new_mode}"
         counts[kind] += 1
         if len(examples) < 10:
             root = "deps" if path.startswith("deps/") else "build" if path.startswith("_build/test/lib/") else "other"
             fingerprint = hashlib.sha256(path.encode("utf-8")).hexdigest()
-            examples.append(f"{kind} root={root} path_sha256={fingerprint}")
+            examples.append(f"{kind} root={root} path_sha256={fingerprint}{details}")
     summary = " ".join(f"{kind}={counts[kind]}" for kind in sorted(counts))
     print(f"Cache mismatch counts: {summary}", file=sys.stderr)
     for example in examples:
