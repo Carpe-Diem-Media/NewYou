@@ -13,7 +13,8 @@ SCRIPT = ROOT / "tools/ci/prepare_cached_dependencies.sh"
 
 
 class CacheRecoveryTests(unittest.TestCase):
-    def archived_preparation(self, *, tamper=False, fail_first=False, hit="true", restore="success"):
+    def archived_preparation(self, *, tamper=False, broken_archive=False, fail_first=False,
+                             hit="true", restore="success"):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             producer = root / "producer"
@@ -36,10 +37,20 @@ class CacheRecoveryTests(unittest.TestCase):
             archive = root / "cache.tar"
             subprocess.run(["tar", "--posix", "-cf", str(archive), "-P", "-C", str(producer),
                             "--files-from", str(file_list)], check=True)
-            subprocess.run(["tar", "-xf", str(archive), "-P", "-C", str(consumer)], check=True,
-                           preexec_fn=lambda: os.umask(0o022))
-            self.assertEqual(0o644, (consumer / "deps/pkg/source").stat().st_mode & 0o777)
-            self.assertEqual(0o755, (consumer / "deps/pkg/executable").stat().st_mode & 0o777)
+            if broken_archive:
+                with archive.open("r+b") as stream:
+                    stream.truncate(513)
+            extraction = subprocess.run(["tar", "-xf", str(archive), "-P", "-C", str(consumer)],
+                                        capture_output=True, preexec_fn=lambda: os.umask(0o022))
+            if broken_archive:
+                self.assertNotEqual(0, extraction.returncode)
+                (consumer / "deps").mkdir(exist_ok=True)
+                (consumer / "deps/partial").touch()
+                restore = "failure"
+            else:
+                self.assertEqual(0, extraction.returncode, extraction.stderr)
+                self.assertEqual(0o644, (consumer / "deps/pkg/source").stat().st_mode & 0o777)
+                self.assertEqual(0o755, (consumer / "deps/pkg/executable").stat().st_mode & 0o777)
             (consumer / "tools/ci").mkdir(parents=True)
             shutil.copy(manifest_script, consumer / "tools/ci/cache_manifest.py")
             bin_dir = consumer / "bin"
@@ -57,6 +68,8 @@ exit 0
                        FAIL_ONCE="1" if fail_first else "0")
             result = subprocess.run(["bash", str(SCRIPT)], cwd=consumer, env=env,
                                     capture_output=True, text=True)
+            if broken_archive:
+                self.assertFalse((consumer / "deps/partial").exists())
             return (result, (consumer / "calls").read_text().splitlines(),
                     (consumer / "deps/pkg/link").is_symlink(),
                     (consumer / "deps/pkg/source").exists())
@@ -70,6 +83,13 @@ exit 0
 
     def test_real_tar_roundtrip_tamper_is_discarded_before_mix(self):
         result, calls, link, source = self.archived_preparation(tamper=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(["deps.get --check-locked:clean", "deps.compile --warnings-as-errors:clean"], calls)
+        self.assertFalse(link)
+        self.assertFalse(source)
+
+    def test_truncated_tar_restore_is_discarded_before_mix(self):
+        result, calls, link, source = self.archived_preparation(broken_archive=True)
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual(["deps.get --check-locked:clean", "deps.compile --warnings-as-errors:clean"], calls)
         self.assertFalse(link)

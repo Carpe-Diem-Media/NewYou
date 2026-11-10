@@ -32,8 +32,8 @@ manifest check after a fresh GNU tar round trip under umask `0022`.
 
 Regression tests in [`test_ci_cache_recovery.py`](../../tests/test_ci_cache_recovery.py) exercise tar extraction,
 group-writable and executable files, symlinks, a payload inconsistent with its
-manifest, non-exact keys, restore failure and clean retry. This CI-only change
-has no application or Domain interface handoff; this note records its proof and
+manifest, a truncated archive, non-exact keys, restore failure and clean retry.
+This CI-only change has no application or Domain interface handoff; this note records its proof and
 limits. A v2 cache must still be produced on trusted main and successfully
 validated by a later real PR before warm reuse or a speedup can be claimed.
 
