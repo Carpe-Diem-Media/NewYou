@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+"""Run the repository-owned founder-development attestation command."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from tools.newyou_attest import main
+
+raise SystemExit(main())

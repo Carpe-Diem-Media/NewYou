@@ -391,9 +391,13 @@ Master Gate independently verifies the exact PR head, complete diff, durable aut
 
 ### Mandatory independent review and merge attestation
 
-Every PR entering merge certification must follow `docs/development/foundation-integrity-merge-gate.md`. Independent Master Gate supplies the independently verified `reviewed_head`, `reviewer`, `review_reference` and full-diff `diff_sha256` in machine-copyable form. The review reference must identify an authentic, attributable independent review. The implementing agent must not invent or self-certify this evidence.
+Every PR entering merge certification must follow `docs/development/foundation-integrity-merge-gate.md`. Independent Master Gate reviews the exact full diff and applicable law; the implementing agent must not invent or self-certify that review. The strict procedure requires an authentic, attributable independent review reference. The founder-development procedure below instead records the founder account's adoption of ChatGPT's independent technical review, without requiring a public ChatGPT conversation link.
 
-The trusted repository operator identifies and preserves the review evidence and completes the following as part of the normal handoff:
+Founder-development mode is limited to founder-stage development where no stricter control applies. An authenticated owner-account comment adopts the independent review and binds the PR, base, head, full binary diff and hosted CI evidence. The founder accepts that shared GitHub credentials authenticate the account, not an independently provable physical founder action: an implementation agent with those credentials can create the same comment. The implementation review and owner acceptance remain separate workflow steps, but this mode cannot technically enforce actor separation or prove ChatGPT authorship. It does not replace regulated release, production security, privileged two-person or other independently mandated controls. Neither adoption nor attestation authorizes a merge.
+
+The founder-development operator uses `tools/newyou-attest prepare --pr N` and, immediately after a separately authorized merge, `tools/newyou-attest verify-after --pr N`. The procedure, trust assumptions, private custody and failure rules are specified in the merge-gate document. This mode becomes available only after the change establishing it is integrated into `main`; the PR introducing it must follow the previously applicable procedure or a separately authorized transition.
+
+In the strict procedure, the trusted repository operator identifies and preserves the review evidence and completes the following as part of the normal handoff:
 
 1. Materialize `review.json` from the independent review and verify its provenance, reviewer, full diff and digest.
 2. Run `tools.ci_attestation before` against the exact reviewed head, review record and required successful hosted CI run. Preserve `review.json`, `before.json`, process exit status, stderr and SHA-256 digests in trusted private custody.

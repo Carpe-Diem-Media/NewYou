@@ -123,8 +123,8 @@ def checkout_from_log(log: str) -> str:
 def _command(*args: str) -> str:
     import subprocess
     try:
-        return subprocess.run(args, check=True, capture_output=True, text=True).stdout
-    except (OSError, subprocess.CalledProcessError) as exc:
+        return subprocess.run(args, check=True, capture_output=True, text=True, timeout=60).stdout
+    except (OSError, subprocess.SubprocessError) as exc:
         raise AttestationError(f"cannot collect GitHub evidence: {exc}") from exc
 
 
