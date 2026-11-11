@@ -50,7 +50,91 @@ The historical pre-migration suite and audit use temporary compatibility views i
 
 See [Foundation Integrity CI](foundation-integrity-ci.md) for certification history and command details.
 
-## Independent review and resulting-main reconciliation
+## Founder-development attestation mode
+
+This optional procedure applies only to founder-stage development when no
+stricter independent, regulated, production-security or two-person requirement
+applies. Independent Master Gate still reviews the full exact-head diff and
+applicable law, and the founder adopts ChatGPT's independent technical review
+and its findings. The implementation agent cannot self-review. A public
+ChatGPT share URL is not required in this mode.
+
+The founder has accepted a limited trust model: a GitHub comment authenticates
+the owner account, not a physical person. An agent with the shared credential
+can publish the same comment. The tool cannot enforce distinct actors or prove
+that ChatGPT authored a review. The independent review and account adoption
+remain separate procedural duties. A comment is an account attestation, not a
+cryptographic signature or merge authorization. This exception does not waive
+any stricter control elsewhere. Apply the strict procedure below when a
+separately attributable review or additional approver is required.
+
+Once this mode is integrated into `main`, use a clean trusted checkout of
+current `main` with `gh` authenticated for repository and Actions access:
+
+```bash
+./tools/newyou-attest prepare --pr N
+```
+
+The command reads the live candidate and CI, computes the binary diff digest,
+and returns `AWAITING_OWNER_REVIEW` with the exact comment to post on the PR.
+After independently reviewing the complete diff, applicable law and findings,
+the founder posts that comment using the owner account. Run `prepare` again;
+`PREMERGE_VERIFIED` means the evidence was collected, not that a merge was
+authorized. The comment binds the PR, base, head, diff digest, candidate tree,
+run and required check. It must be unedited, posted after CI completion and less
+than seven days old at verification and at merge. A new binding needs a new
+comment and verification. A newer owner marker supersedes older markers.
+GitHub timestamps and account access do not provide cryptographic proof of
+authorship or a complete immutable edit history.
+
+Immediately before merging, recheck the live PR, review, ruleset, required
+checks and current `main`. The founder separately posts the exact merge
+authorization text returned by `prepare` as another owner-account comment.
+That authorization binds the same candidate and inherits the shared-credential
+limitation. Use the regular merge method with the reviewed head; never use auto-merge. After
+that separately authorized merge, immediately run:
+
+```bash
+./tools/newyou-attest verify-after --pr N
+```
+
+`POSTMERGE_VERIFIED` records the collector's resulting-main proof. Independent
+resulting-main certification and Plane reconciliation remain mandatory; this
+tool does not merge or move Plane state. If either operation fails, stop and
+resolve the cause before proceeding. A failure, changed head/base or changed
+CI invalidates the affected evidence; rerun with a fresh review as needed.
+
+Evidence is stored under `$XDG_STATE_HOME/newyou/attestations/pr-N/<head>/`,
+or `~/.local/state/newyou/attestations/pr-N/<head>/` when XDG_STATE_HOME is
+unset. Owner-only directories and files, a per-head lock, separate attempt
+directories, a final manifest and SHA-256 checks protect ordinary custody and
+retries. Incomplete attempts are preserved and never used as proofs. These
+hashes detect accidental corruption, not a malicious process running as the
+same operating-system user that can rewrite both evidence and manifests.
+The operator must protect the workstation and credentials. Do not commit or
+publish private evidence. Original approval comments and GitHub source URLs
+are recorded; failures save sanitized diagnostics without credentials.
+
+The lifecycle is `PARTIAL → AWAITING_OWNER_REVIEW → REVIEW_VERIFIED →
+PREMERGE_VERIFIED → MERGE_AUTHORISED → POSTMERGE_VERIFIED`. `PARTIAL` is an
+incomplete attempt without a committed manifest. An awaiting attempt records
+the exact adoption request. Review verification is an in-process guard;
+pre-merge verification persists the adoption and candidate together only
+after all guards pass. Merge authorization is a separate account comment,
+checked during post-merge reconciliation, not an instruction to this tool to
+merge. Post-merge verification persists a new proof. Failed or superseded
+attempts are not proofs. Retries create additional attempts; the per-head lock
+rejects simultaneous writers. A complete manifest is checked before reuse;
+incomplete attempts remain available for diagnosis but are not reused.
+In the collector-compatible review record, `reviewer` names the adopting
+GitHub account, not a claim of human independence or ChatGPT authentication.
+
+The commands have no Laya dependency. The establishing PR itself remains
+subject to the current `main` procedure until the amendment is integrated, or
+to a separately authorized and documented transition; the new mode cannot
+bootstrap its own approval.
+
+## Strict independent review and resulting-main reconciliation
 
 The independent reviewer examines the complete diff at the exact PR head,
 confirms the current base and checks the hosted Foundation Integrity run,
