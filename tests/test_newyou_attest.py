@@ -145,12 +145,37 @@ class SyntheticWorkflowTests(unittest.TestCase):
                 'body': waiting['approval_text']})
             prepared = attest.prepare(42, state)
             self.assertEqual('PREMERGE_VERIFIED', prepared['status'])
+            authorization = merge_comment(comments[0], prepared['binding'])
+            for mutation in ({'updated_at': '2026-01-01T02:00:00Z'},
+                             {'body': attest.merge_authorization_message(dict(prepared['binding'], run_id=101))},
+                             {'created_at': '2025-12-30T00:00:00Z', 'updated_at': '2025-12-30T00:00:00Z'}):
+                comments.append(dict(authorization, **mutation))
+                with self.subTest(mutation=mutation), self.assertRaises(attest.AttestationError):
+                    attest.prepare(42, state)
+                comments.pop()
+            comments.append(authorization)
+            self.assertEqual('MERGE_AUTHORISED', attest.prepare(42, state)['status'])
+            with patch.object(attest, 'owner_comments', side_effect=[copy.deepcopy(comments),
+                    copy.deepcopy(comments), [copy.deepcopy(comments[0])]]):
+                with self.assertRaises(attest.AttestationError):
+                    attest.prepare(42, state)
+            superseded = dict(authorization, id=9,
+                html_url='https://github.com/JCSchoeman96/NewYou/pull/42#issuecomment-9',
+                body='NEWYOU FOUNDER DEVELOPMENT MERGE AUTHORIZATION V1\nwithdrawn')
+            comments.append(superseded)
+            with self.assertRaises(attest.AttestationError):
+                attest.prepare(42, state)
+            comments.pop()
+            comments.pop()
+            self.assertEqual('PREMERGE_VERIFIED', attest.prepare(42, state)['status'])
+            comments.append(dict(authorization, user={'id': 99, 'login': 'other'}))
+            self.assertEqual('PREMERGE_VERIFIED', attest.prepare(42, state)['status'])
+            comments.pop()
             fixture.pr.update(merged=True, state='closed', merge_commit_sha=merged_sha,
                               merged_at='2026-01-02T00:00:00Z')
             fixture.run['pull_requests'] = []
             with self.assertRaises(attest.AttestationError):
                 attest.verify_after(42, fixture.e['head'], state)
-            authorization = merge_comment(comments[0], prepared['binding'])
             for mutation in ({'body': 'go ahead'}, {'user': {'id': 99, 'login': 'agent'}},
                              {'updated_at': '2026-01-01T02:00:00Z'},
                              {'body': attest.merge_authorization_message(dict(prepared['binding'], run_id=101))}):
@@ -182,7 +207,7 @@ class SyntheticWorkflowTests(unittest.TestCase):
                  patch.object(attest, 'gather_after', return_value={'candidate': data, 'result': result}), \
                  patch.object(attest, 'utc_now', return_value='2026-01-02T00:00:00Z'), \
                  patch('tools.ci_attestation._api', side_effect=lambda path: {'full_name':attest.REPOSITORY,'owner':{'id':12}} if path == f'repos/{attest.REPOSITORY}' else {'merged':True,'merged_at':'2026-01-02T00:00:00Z'}):
-                self.assertEqual('PREMERGE_VERIFIED', attest.prepare(42, state)['status'])
+                self.assertEqual('MERGE_AUTHORISED', attest.prepare(42, state)['status'])
                 self.assertEqual('POSTMERGE_VERIFIED', attest.verify_after(42, data['head'], state)['status'])
                 with patch.object(attest, 'owner_comments', return_value=[]):
                     with self.assertRaises(attest.AttestationError):

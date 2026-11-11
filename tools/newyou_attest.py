@@ -307,6 +307,24 @@ def source_urls(binding: dict) -> dict:
             'comments': f'{api}/issues/{binding["pr"]}/comments'}
 
 
+def select_merge_authorization(comments: list, binding: dict, owner_id: int,
+                               approval: dict, as_of: str) -> dict | None:
+    authorizations = [c for c in comments if isinstance(c, dict) and isinstance(c.get('user'), dict)
+                      and c['user'].get('id') == owner_id and isinstance(c.get('body'), str)
+                      and c['body'].startswith('NEWYOU FOUNDER DEVELOPMENT MERGE AUTHORIZATION V1')]
+    if not authorizations:
+        return None
+    require(all(isinstance(c.get('id'), int) and not isinstance(c.get('id'), bool)
+                and c['id'] > 0 for c in authorizations), 'invalid merge authorization id')
+    authorization = max(authorizations, key=lambda c: c['id'])
+    require(authorization['id'] > approval['id'], 'merge authorization must follow owner adoption')
+    require(authorization.get('body') == merge_authorization_message(binding),
+            'merge authorization differs or has been superseded')
+    verify_approval(dict(authorization, body=approval_message(binding)), binding, owner_id)
+    verify_approval_freshness(authorization, approval['created_at'], as_of)
+    return authorization
+
+
 def prepare(pr: int, state_home) -> dict:
     """Collect CI, request owner-account adoption, then persist a pre-merge proof."""
     import copy
@@ -335,8 +353,15 @@ def prepare(pr: int, state_home) -> dict:
         fresh_binding, fresh_proof, fresh_owner = gather_before(pr)
         require((fresh_binding, fresh_proof, fresh_owner) == (binding, proof, owner_id),
                 'candidate or CI changed while verifying approval')
-        require(select_approval(owner_comments(pr), binding, owner_id) == approval,
+        fresh_comments = owner_comments(pr)
+        require(select_approval(fresh_comments, binding, owner_id) == approval,
                 'owner approval changed while collecting evidence')
+        authorization = select_merge_authorization(fresh_comments, binding, owner_id, approval, utc_now())
+        final_comments = owner_comments(pr)
+        require(select_approval(final_comments, binding, owner_id) == approval,
+                'owner approval changed while collecting evidence')
+        require(select_merge_authorization(final_comments, binding, owner_id, approval, utc_now()) == authorization,
+                'merge authorization changed while collecting evidence')
         review = {'reviewed_head': binding['head'], 'reviewer': approval['user']['login'],
                   'review_reference': approval['html_url'], 'diff_sha256': binding['diff_sha256'],
                   'mode': 'founder-development', 'owner_account_id': owner_id,
@@ -351,12 +376,22 @@ def prepare(pr: int, state_home) -> dict:
         outcome = {'status': 'PREMERGE_VERIFIED', 'attempt': attempt, 'binding': binding,
                    'message': 'Separate owner merge authorization remains required.',
                    'merge_authorization_text': merge_authorization_message(binding)}
+        if authorization is not None:
+            outcome.update(status='MERGE_AUTHORISED',
+                           message='Owner-account merge authorization verified; this command does not merge.')
         custody.save_attempt({'status.json': _json_bytes(record), 'review.json': _json_bytes(review),
                                         'before.json': _json_bytes(before), 'sources.json': _json_bytes(source_urls(binding)),
                                         'exit.json': _json_bytes({'exit': 0}),
                                         'stdout.txt': _json_bytes(outcome), 'stderr.txt': b''}, name=attempt)
         stored = custody.read_attempt(attempt)
         require(json.loads(stored['before.json']) == before, 'saved pre-merge evidence differs')
+        if authorization is not None:
+            auth_attempt = custody.save_attempt({'status.json': _json_bytes({'status': 'MERGE_AUTHORISED',
+                                                                              'premerge_attempt': attempt}),
+                                                 'authorization.json': _json_bytes(authorization),
+                                                 'exit.json': _json_bytes({'exit': 0}),
+                                                 'stdout.txt': _json_bytes(outcome), 'stderr.txt': b''})
+            custody.read_attempt(auth_attempt)
         return outcome
 
 
@@ -417,20 +452,8 @@ def verify_after(pr: int, head: str, state_home) -> dict:
         merged = ci._api(f'repos/{REPOSITORY}/pulls/{pr}')
         require(merged.get('merged') is True, 'PR has not been merged')
         verify_approval_freshness(status['approval'], binding['ci_completed_at'], merged.get('merged_at'))
-        authorizations = [c for c in comments if isinstance(c, dict) and isinstance(c.get('user'), dict)
-                          and c['user'].get('id') == owner_id and isinstance(c.get('body'), str)
-                          and c['body'].startswith('NEWYOU FOUNDER DEVELOPMENT MERGE AUTHORIZATION V1')]
-        require(bool(authorizations), 'separate merge authorization is missing')
-        authorization = max(authorizations, key=lambda c: c.get('id', 0))
-        require(isinstance(authorization.get('id'), int)
-                and authorization['id'] > status['approval']['id'],
-                'merge authorization must follow owner adoption')
-        require(authorization.get('body') == merge_authorization_message(binding),
-                'merge authorization differs or has been superseded')
-        # Apply the same account, PR URL and unedited-comment checks.
-        equivalent = dict(authorization, body=approval_message(binding))
-        verify_approval(equivalent, binding, owner_id)
-        verify_approval_freshness(authorization, status['approval']['created_at'], merged.get('merged_at'))
+        authorization = select_merge_authorization(comments, binding, owner_id, status['approval'], merged.get('merged_at'))
+        require(authorization is not None, 'separate merge authorization is missing')
         result = gather_after(pr, binding, before)
         candidate = copy.deepcopy(result['candidate'])
         candidate['review_record'] = review
@@ -438,7 +461,8 @@ def verify_after(pr: int, head: str, state_home) -> dict:
         ci.verify_result(before, result['result'])
         require(select_approval(owner_comments(pr), binding, status['owner_id']) == status['approval'],
                 'owner approval changed during reconciliation')
-        require(authorization in owner_comments(pr), 'merge authorization changed during reconciliation')
+        require(select_merge_authorization(owner_comments(pr), binding, owner_id, status['approval'], merged.get('merged_at')) == authorization,
+                'merge authorization changed during reconciliation')
         after = {'status': 'POSTMERGE_VERIFIED', 'premerge_attempt': name, 'result': result,
                  'merge_authorization': authorization}
         attempt = uuid.uuid4().hex

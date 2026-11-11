@@ -91,7 +91,10 @@ Immediately before merging, recheck the live PR, review, ruleset, required
 checks and current `main`. The founder separately posts the exact merge
 authorization text returned by `prepare` as another owner-account comment.
 That authorization binds the same candidate and inherits the shared-credential
-limitation. Use the regular merge method with the reviewed head; never use auto-merge. After
+limitation. Run `prepare` again immediately before merging and require
+`MERGE_AUTHORISED`. It rechecks the candidate, review and separate owner-account
+authorization. The result does not perform the merge. Use the regular merge
+method with the reviewed head; never use auto-merge. After
 that separately authorized merge, immediately run:
 
 ```bash
@@ -121,8 +124,9 @@ incomplete attempt without a committed manifest. An awaiting attempt records
 the exact adoption request. Review verification is an in-process guard;
 pre-merge verification persists the adoption and candidate together only
 after all guards pass. Merge authorization is a separate account comment,
-checked during post-merge reconciliation, not an instruction to this tool to
-merge. Post-merge verification persists a new proof. Failed or superseded
+checked by `prepare` before merge and again during post-merge reconciliation,
+not an instruction to this tool to merge. Post-merge verification persists a
+new proof. Failed or superseded
 attempts are not proofs. Retries create additional attempts; the per-head lock
 rejects simultaneous writers. A complete manifest is checked before reuse;
 incomplete attempts remain available for diagnosis but are not reused.
