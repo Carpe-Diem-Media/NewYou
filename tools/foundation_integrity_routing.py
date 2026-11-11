@@ -44,6 +44,8 @@ APPLICATION_FILES = frozenset(
         ".opencode/lib/laya.mjs",
         ".opencode/tests/laya.test.mjs",
         "tools/ci_attestation.py",
+        "tools/newyou_attest.py",
+        "tools/newyou-attest",
         "tools/hex_security_audit.py",
         "tools/ci/prepare_cached_dependencies.sh",
         "tools/ci/cache_manifest.py",

@@ -83,7 +83,14 @@ defmodule NewYou.Proof.P805Test do
           |> Enum.map(& &1["code"])
 
         observation
-        |> Map.take(["case_id", "verdict", "status", "reason_codes", "duration_ms"])
+        |> Map.take([
+          "case_id",
+          "verdict",
+          "status",
+          "reason_codes",
+          "duration_ms",
+          "assertion_ids"
+        ])
         |> Map.put("failed_observations", failed_codes)
       end)
 
@@ -118,26 +125,32 @@ defmodule NewYou.Proof.P805Test do
   test "fixture cleanup recovers committed browser provenance when operation IDs were not returned" do
     alias NewYou.Proof.P805
     alias Ecto.Adapters.SQL.Sandbox
-    :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
-    before_counts = P805.counts()
-    :ok = Sandbox.checkin(NewYou.Repo)
+    parent = self()
 
     assert_raise RuntimeError, "synthetic browser result lost", fn ->
       P805.with_fixture(fn ->
         input = P805.request()
-        # The browser supplies a different operation ID. The fixture owner knows
-        # only its pre-registered synthetic email when the result is lost.
-        {:ok, _} = NewYou.Identity.register(%{input | operation_id: Ecto.UUID.generate()})
+        browser_operation_id = Ecto.UUID.generate()
+
+        {:ok, registration} =
+          NewYou.Identity.register(%{input | operation_id: browser_operation_id})
+
+        pmr = P805.account!(registration.account_id).pmr
+        snapshot = capture_fixture(browser_operation_id, input.email)
+        assert fixture_rows(snapshot) == List.duplicate(1, 8)
+        send(parent, {:committed_fixture, snapshot, pmr})
         raise "synthetic browser result lost"
       end)
     end
 
-    :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
-    after_counts = P805.counts()
-    :ok = Sandbox.checkin(NewYou.Repo)
-    # Permanent PMR reservations are never removed, including fixture teardown.
-    assert Enum.drop(after_counts, -1) == Enum.drop(before_counts, -1)
-    assert List.last(after_counts) == List.last(before_counts) + 1
+    assert_receive {:committed_fixture, snapshot, pmr}
+
+    Sandbox.unboxed_run(NewYou.Repo, fn ->
+      assert fixture_rows(snapshot) == List.duplicate(0, 8)
+
+      assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [pmr]) ==
+               1
+    end)
   end
 
   test "fixture guardian cleans committed records when the fixture owner is killed" do
@@ -145,9 +158,6 @@ defmodule NewYou.Proof.P805Test do
     alias Ecto.Adapters.SQL.Sandbox
     previous_mfa = Application.fetch_env(:new_you, :identity_mfa_keyring)
 
-    :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
-    before_counts = P805.counts()
-    :ok = Sandbox.checkin(NewYou.Repo)
     parent = self()
 
     scenario = NewYou.Proof.Scenario.start()
@@ -157,15 +167,18 @@ defmodule NewYou.Proof.P805Test do
         P805.with_fixture(fn ->
           Application.put_env(:new_you, :identity_mfa_keyring, :synthetic_owner_death)
           input = P805.request()
-          {:ok, _} = NewYou.Identity.register(input)
-          send(parent, {:fixture_committed, input.email})
+          {:ok, registration} = NewYou.Identity.register(input)
+          account = P805.account!(registration.account_id)
+          snapshot = capture_fixture(input.operation_id, input.email)
+          assert fixture_rows(snapshot) == List.duplicate(1, 8)
+          send(parent, {:fixture_committed, snapshot, account.pmr})
           receive do: (:never -> :ok)
         end)
       end)
 
-    email =
+    {snapshot, pmr} =
       receive do
-        {:fixture_committed, email} -> email
+        {:fixture_committed, snapshot, pmr} -> {snapshot, pmr}
       after
         15_000 -> flunk("fixture owner did not commit registration")
       end
@@ -177,12 +190,277 @@ defmodule NewYou.Proof.P805Test do
     restored? = Application.fetch_env(:new_you, :identity_mfa_keyring) == previous_mfa
     assert restored?, "fixture environment was not restored after owner death"
 
-    :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
-    assert P805.scalar("SELECT count(*) FROM accounts WHERE email = $1", [email]) == 0
-    after_counts = P805.counts()
-    :ok = Sandbox.checkin(NewYou.Repo)
-    assert Enum.drop(after_counts, -1) == Enum.drop(before_counts, -1)
-    assert List.last(after_counts) == List.last(before_counts) + 1
+    Sandbox.unboxed_run(NewYou.Repo, fn ->
+      assert fixture_rows(snapshot) == List.duplicate(0, 8)
+
+      assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [pmr]) ==
+               1
+    end)
+  end
+
+  for path <- [:success, :assertion_failure] do
+    @path path
+    test "fixture preservation cleans its committed rows on the #{@path} path" do
+      alias Ecto.Adapters.SQL.Sandbox
+      alias NewYou.Proof.P805
+      parent = self()
+      path = @path
+
+      historical_before =
+        Sandbox.unboxed_run(NewYou.Repo, &historical_foreign_evidence_signature/0)
+
+      exercise = fn ->
+        with_preserved_registration(fn owned, untracked, pmr ->
+          send(parent, {:preserved_fixture, owned, untracked, pmr})
+
+          Sandbox.unboxed_run(NewYou.Repo, fn ->
+            assert fixture_rows(owned) == List.duplicate(0, 8)
+            assert fixture_rows(untracked) == List.duplicate(1, 8)
+            assert historical_foreign_evidence_signature() == historical_before
+          end)
+
+          preservation_assertion(path)
+        end)
+      end
+
+      exercise_preservation(path, exercise)
+
+      assert_receive {:preserved_fixture, owned, untracked, pmr}
+
+      Sandbox.unboxed_run(NewYou.Repo, fn ->
+        assert fixture_rows(owned) == List.duplicate(0, 8)
+        assert fixture_rows(untracked) == List.duplicate(0, 8)
+
+        assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [pmr]) ==
+                 1
+
+        assert historical_foreign_evidence_signature() == historical_before
+      end)
+    end
+  end
+
+  test "cleanup observation finds orphan nonces and jobs after their parents disappear" do
+    alias Ecto.Adapters.SQL.Sandbox
+    alias NewYou.Proof.P805
+
+    snapshot =
+      P805.with_fixture(fn ->
+        request = P805.request()
+        {:ok, _} = NewYou.Identity.register(request)
+        snapshot = capture_fixture(request.operation_id, request.email)
+        assert fixture_rows(snapshot) == List.duplicate(1, 8)
+        snapshot
+      end)
+
+    Sandbox.unboxed_run(NewYou.Repo, fn ->
+      assert fixture_rows(snapshot) == List.duplicate(0, 8)
+
+      # Only synthetic children are inserted, and the transaction always rolls
+      # back. Their parents are already absent, so joins cannot find these leaks.
+      assert {:error, :synthetic_leak_probe} =
+               NewYou.Repo.transaction(fn ->
+                 NewYou.Repo.query!(
+                   "INSERT INTO communications_envelope_nonces (nonce) VALUES ($1)",
+                   [hd(snapshot.nonces)]
+                 )
+
+                 NewYou.Repo.query!(
+                   "INSERT INTO oban_jobs (queue, worker, args) VALUES ('audit', 'NewYou.Audit.Workers.RegistrationEvidence', $1)",
+                   [%{"primary_key" => %{"id" => Ecto.UUID.load!(hd(snapshot.obligation_ids))}}]
+                 )
+
+                 counts = fixture_rows(snapshot)
+                 assert Enum.at(counts, 5) == 1
+                 assert Enum.at(counts, 7) == 1
+                 refute counts == List.duplicate(0, 8)
+                 NewYou.Repo.rollback(:synthetic_leak_probe)
+               end)
+
+      assert fixture_rows(snapshot) == List.duplicate(0, 8)
+    end)
+  end
+
+  test "partial consequence counts find children after fixture parents disappear" do
+    alias NewYou.Proof.P805
+
+    P805.with_fixture(fn ->
+      request = P805.request()
+
+      assert {:error, :partial_consequence_probe} =
+               NewYou.Repo.transaction(fn ->
+                 {:ok, _} = NewYou.Identity.register(request)
+
+                 NewYou.Repo.query!(
+                   "DELETE FROM registration_operations WHERE operation_id = $1",
+                   [Ecto.UUID.dump!(request.operation_id)]
+                 )
+
+                 NewYou.Repo.query!(
+                   "INSERT INTO communications_envelope_nonces (nonce) VALUES ($1)",
+                   [:crypto.strong_rand_bytes(12)]
+                 )
+
+                 NewYou.Repo.query!(
+                   "INSERT INTO oban_jobs (queue, worker, args) VALUES ('audit', 'NewYou.Audit.Workers.RegistrationEvidence', $1)",
+                   [%{"primary_key" => %{"id" => Ecto.UUID.generate()}}]
+                 )
+
+                 counts = P805.counts()
+                 assert Enum.at(counts, 0) == 1
+                 assert Enum.at(counts, 1) == 1
+                 assert Enum.at(counts, 6) == 2
+                 assert Enum.at(counts, 8) == 2
+                 NewYou.Repo.rollback(:partial_consequence_probe)
+               end)
+
+      assert Enum.all?(Enum.drop(P805.counts(), -1), &(&1 == 0))
+    end)
+  end
+
+  test "a fresh recovery process observes parentless replay consequences" do
+    alias NewYou.Proof.P805
+
+    P805.with_fixture(fn ->
+      task =
+        Task.async(fn ->
+          :ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo, sandbox: false)
+
+          try do
+            assert {:error, :replay_probe} =
+                     NewYou.Repo.transaction(fn ->
+                       before = P805.counts([], [])
+
+                       NewYou.Repo.query!(
+                         "INSERT INTO communications_envelope_nonces (nonce) VALUES ($1)",
+                         [:crypto.strong_rand_bytes(12)]
+                       )
+
+                       assert Enum.at(P805.counts([], []), 6) == Enum.at(before, 6) + 1
+                       NewYou.Repo.rollback(:replay_probe)
+                     end)
+          after
+            Ecto.Adapters.SQL.Sandbox.checkin(NewYou.Repo)
+          end
+        end)
+
+      Task.await(task, 15_000)
+    end)
+  end
+
+  defp preservation_assertion(:success), do: :ok
+
+  defp preservation_assertion(:assertion_failure),
+    do: flunk("synthetic preservation assertion failure")
+
+  defp exercise_preservation(:success, exercise), do: exercise.()
+
+  defp exercise_preservation(:assertion_failure, exercise) do
+    assert_raise ExUnit.AssertionError, ~r/synthetic preservation assertion failure/, exercise
+  end
+
+  defp with_preserved_registration(callback) do
+    alias NewYou.Proof.P805
+    operation_id = Ecto.UUID.generate()
+    email = "untracked-#{Ecto.UUID.generate()}@example.test"
+
+    # Choose cleanup identities before any committed write can happen.
+    # The second fixture runs even when creation or an intermediate assertion fails.
+    try do
+      {owned, untracked, pmr} =
+        P805.with_fixture(fn ->
+          request = P805.request()
+          {:ok, _} = NewYou.Identity.register(request)
+          owned = capture_fixture(request.operation_id, request.email)
+          untracked_request = %{request | operation_id: operation_id, email: email}
+          {:ok, registration} = NewYou.Identity.register(untracked_request)
+          untracked = capture_fixture(operation_id, email)
+          assert fixture_rows(owned) == List.duplicate(1, 8)
+          assert fixture_rows(untracked) == List.duplicate(1, 8)
+          {owned, untracked, P805.account!(registration.account_id).pmr}
+        end)
+
+      callback.(owned, untracked, pmr)
+    after
+      P805.with_fixture(fn -> P805.request(%{operation_id: operation_id, email: email}) end)
+    end
+  end
+
+  defp capture_fixture(operation_id, email) do
+    operation = Ecto.UUID.dump!(operation_id)
+    account_ids = fixture_ids("SELECT id FROM accounts WHERE email = $1", [email])
+
+    intent_ids =
+      fixture_ids("SELECT id FROM message_intents WHERE source_operation_id = $1", [operation])
+
+    obligation_ids =
+      fixture_ids("SELECT id FROM evidence_obligations WHERE source_operation_id = $1", [
+        operation
+      ])
+
+    primary_keys = Enum.map(intent_ids ++ obligation_ids, &Ecto.UUID.load!/1)
+
+    %{
+      operation: operation,
+      account_ids: account_ids,
+      token_ids:
+        fixture_ids("SELECT jti FROM tokens WHERE account_id = ANY($1::uuid[])", [account_ids]),
+      intent_ids: intent_ids,
+      envelope_ids:
+        fixture_ids(
+          "SELECT message_intent_id FROM communications_protected_envelopes WHERE message_intent_id = ANY($1::uuid[])",
+          [intent_ids]
+        ),
+      nonces:
+        fixture_ids(
+          "SELECT nonce FROM communications_protected_envelopes WHERE message_intent_id = ANY($1::uuid[])",
+          [intent_ids]
+        ),
+      obligation_ids: obligation_ids,
+      primary_keys: primary_keys,
+      job_ids:
+        fixture_ids(
+          "SELECT id FROM oban_jobs WHERE args->'primary_key'->>'id' = ANY($1::text[])",
+          [primary_keys]
+        )
+    }
+  end
+
+  defp fixture_ids(query, parameters) do
+    %{rows: rows} = NewYou.Repo.query!(query, parameters)
+    Enum.map(rows, &hd/1)
+  end
+
+  defp fixture_rows(snapshot) do
+    # All child selectors use identities captured while parents still existed.
+    # Stable ownership selectors also catch additional same-fixture children.
+    queries = [
+      {"SELECT count(*) FROM accounts WHERE id = ANY($1::uuid[])", [snapshot.account_ids]},
+      {"SELECT count(*) FROM registration_operations WHERE operation_id = $1",
+       [snapshot.operation]},
+      {"SELECT count(*) FROM tokens WHERE jti = ANY($1::text[]) OR account_id = ANY($2::uuid[])",
+       [snapshot.token_ids, snapshot.account_ids]},
+      {"SELECT count(*) FROM message_intents WHERE id = ANY($1::uuid[]) OR source_operation_id = $2",
+       [snapshot.intent_ids, snapshot.operation]},
+      {"SELECT count(*) FROM communications_protected_envelopes WHERE message_intent_id = ANY($1::uuid[]) OR nonce = ANY($2::bytea[])",
+       [snapshot.envelope_ids, snapshot.nonces]},
+      {"SELECT count(*) FROM communications_envelope_nonces WHERE nonce = ANY($1::bytea[])",
+       [snapshot.nonces]},
+      {"SELECT count(*) FROM evidence_obligations WHERE id = ANY($1::uuid[]) OR source_operation_id = $2",
+       [snapshot.obligation_ids, snapshot.operation]},
+      {"SELECT count(*) FROM oban_jobs WHERE id = ANY($1::bigint[]) OR args->'primary_key'->>'id' = ANY($2::text[])",
+       [snapshot.job_ids, snapshot.primary_keys]}
+    ]
+
+    Enum.map(queries, fn {query, parameters} -> NewYou.Proof.P805.scalar(query, parameters) end)
+  end
+
+  defp historical_foreign_evidence_signature do
+    %{rows: rows} =
+      NewYou.Repo.query!(
+        "SELECT id::text, source_operation_id::text, evidence_type, created_at::text FROM evidence_obligations WHERE evidence_type = 'identity_recovery_completed' ORDER BY id"
+      )
+
+    :crypto.hash(:sha256, :erlang.term_to_binary(rows))
   end
 
   test "missing owned callback remains a missing case and cannot become a passing family" do

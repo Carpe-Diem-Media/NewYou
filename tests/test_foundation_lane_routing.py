@@ -84,6 +84,12 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
         self.assertFalse(classify_deep_application_changes([path]))
         self.assertTrue(classify_hex_audit_changes([path]))
 
+    def test_founder_attestation_tools_select_engineering_ci(self):
+        for path in ["tools/newyou_attest.py", "tools/newyou-attest", "tests/test_newyou_attest.py"]:
+            with self.subTest(path=path):
+                self.assertEqual("application", classify_path(path))
+                self.assertEqual({"application_changes": True}, _route([path]))
+
     def test_content_evidence_checkers_run_application_ci(self):
         for path in [
             "tools/check_magic_login_evidence.py",
