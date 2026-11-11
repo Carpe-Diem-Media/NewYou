@@ -136,15 +136,17 @@ defmodule NewYou.Proof.P805Test do
           NewYou.Identity.register(%{input | operation_id: browser_operation_id})
 
         pmr = P805.account!(registration.account_id).pmr
-        send(parent, {:committed_fixture, input.email, browser_operation_id, pmr})
+        snapshot = capture_fixture(browser_operation_id, input.email)
+        assert fixture_rows(snapshot) == List.duplicate(1, 8)
+        send(parent, {:committed_fixture, snapshot, pmr})
         raise "synthetic browser result lost"
       end)
     end
 
-    assert_receive {:committed_fixture, email, operation_id, pmr}
+    assert_receive {:committed_fixture, snapshot, pmr}
 
     Sandbox.unboxed_run(NewYou.Repo, fn ->
-      assert fixture_rows(operation_id, email) == [0, 0, 0, 0, 0, 0, 0, 0]
+      assert fixture_rows(snapshot) == List.duplicate(0, 8)
 
       assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [pmr]) ==
                1
@@ -167,14 +169,16 @@ defmodule NewYou.Proof.P805Test do
           input = P805.request()
           {:ok, registration} = NewYou.Identity.register(input)
           account = P805.account!(registration.account_id)
-          send(parent, {:fixture_committed, input.email, input.operation_id, account.pmr})
+          snapshot = capture_fixture(input.operation_id, input.email)
+          assert fixture_rows(snapshot) == List.duplicate(1, 8)
+          send(parent, {:fixture_committed, snapshot, account.pmr})
           receive do: (:never -> :ok)
         end)
       end)
 
-    {email, operation_id, pmr} =
+    {snapshot, pmr} =
       receive do
-        {:fixture_committed, email, operation_id, pmr} -> {email, operation_id, pmr}
+        {:fixture_committed, snapshot, pmr} -> {snapshot, pmr}
       after
         15_000 -> flunk("fixture owner did not commit registration")
       end
@@ -187,95 +191,200 @@ defmodule NewYou.Proof.P805Test do
     assert restored?, "fixture environment was not restored after owner death"
 
     Sandbox.unboxed_run(NewYou.Repo, fn ->
-      assert fixture_rows(operation_id, email) == [0, 0, 0, 0, 0, 0, 0, 0]
+      assert fixture_rows(snapshot) == List.duplicate(0, 8)
 
       assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [pmr]) ==
                1
     end)
   end
 
-  test "fixture cleanup removes only tracked rows and preserves historical foreign evidence" do
+  for path <- [:success, :assertion_failure] do
+    @path path
+    test "fixture preservation cleans its committed rows on the #{@path} path" do
+      alias Ecto.Adapters.SQL.Sandbox
+      alias NewYou.Proof.P805
+      parent = self()
+      path = @path
+
+      historical_before =
+        Sandbox.unboxed_run(NewYou.Repo, &historical_foreign_evidence_signature/0)
+
+      exercise = fn ->
+        with_preserved_registration(fn owned, untracked, pmr ->
+          send(parent, {:preserved_fixture, owned, untracked, pmr})
+
+          Sandbox.unboxed_run(NewYou.Repo, fn ->
+            assert fixture_rows(owned) == List.duplicate(0, 8)
+            assert fixture_rows(untracked) == List.duplicate(1, 8)
+            assert historical_foreign_evidence_signature() == historical_before
+          end)
+
+          preservation_assertion(path)
+        end)
+      end
+
+      exercise_preservation(path, exercise)
+
+      assert_receive {:preserved_fixture, owned, untracked, pmr}
+
+      Sandbox.unboxed_run(NewYou.Repo, fn ->
+        assert fixture_rows(owned) == List.duplicate(0, 8)
+        assert fixture_rows(untracked) == List.duplicate(0, 8)
+
+        assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [pmr]) ==
+                 1
+
+        assert historical_foreign_evidence_signature() == historical_before
+      end)
+    end
+  end
+
+  test "cleanup observation finds orphan nonces and jobs after their parents disappear" do
     alias Ecto.Adapters.SQL.Sandbox
     alias NewYou.Proof.P805
 
-    historical_before =
-      Sandbox.unboxed_run(NewYou.Repo, fn -> historical_foreign_evidence_signature() end)
-
-    {owned, untracked, untracked_pmr} =
+    snapshot =
       P805.with_fixture(fn ->
-        owned = P805.request()
-        {:ok, _} = NewYou.Identity.register(owned)
-
-        untracked = %{
-          owned
-          | operation_id: Ecto.UUID.generate(),
-            email: "untracked-#{Ecto.UUID.generate()}@example.test"
-        }
-
-        {:ok, registration} = NewYou.Identity.register(untracked)
-        {owned, untracked, P805.account!(registration.account_id).pmr}
+        request = P805.request()
+        {:ok, _} = NewYou.Identity.register(request)
+        snapshot = capture_fixture(request.operation_id, request.email)
+        assert fixture_rows(snapshot) == List.duplicate(1, 8)
+        snapshot
       end)
 
     Sandbox.unboxed_run(NewYou.Repo, fn ->
-      assert fixture_rows(owned.operation_id, owned.email) == [0, 0, 0, 0, 0, 0, 0, 0]
-      assert fixture_rows(untracked.operation_id, untracked.email) == [1, 1, 1, 1, 1, 1, 1, 1]
+      assert fixture_rows(snapshot) == List.duplicate(0, 8)
 
-      assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [
-               untracked_pmr
-             ]) == 1
+      # Only synthetic children are inserted, and the transaction always rolls
+      # back. Their parents are already absent, so joins cannot find these leaks.
+      assert {:error, :synthetic_leak_probe} =
+               NewYou.Repo.transaction(fn ->
+                 NewYou.Repo.query!(
+                   "INSERT INTO communications_envelope_nonces (nonce) VALUES ($1)",
+                   [hd(snapshot.nonces)]
+                 )
 
-      assert historical_foreign_evidence_signature() == historical_before
-    end)
+                 NewYou.Repo.query!(
+                   "INSERT INTO oban_jobs (queue, worker, args) VALUES ('audit', 'NewYou.Audit.Workers.RegistrationEvidence', $1)",
+                   [%{"primary_key" => %{"id" => Ecto.UUID.load!(hd(snapshot.obligation_ids))}}]
+                 )
 
-    P805.with_fixture(fn ->
-      _ = P805.request(%{operation_id: untracked.operation_id, email: untracked.email})
-    end)
+                 counts = fixture_rows(snapshot)
+                 assert Enum.at(counts, 5) == 1
+                 assert Enum.at(counts, 7) == 1
+                 refute counts == List.duplicate(0, 8)
+                 NewYou.Repo.rollback(:synthetic_leak_probe)
+               end)
 
-    Sandbox.unboxed_run(NewYou.Repo, fn ->
-      assert fixture_rows(untracked.operation_id, untracked.email) == [0, 0, 0, 0, 0, 0, 0, 0]
-
-      assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [
-               untracked_pmr
-             ]) == 1
-
-      assert historical_foreign_evidence_signature() == historical_before
+      assert fixture_rows(snapshot) == List.duplicate(0, 8)
     end)
   end
 
-  defp fixture_rows(operation_id, email) do
-    operation = Ecto.UUID.dump!(operation_id)
+  defp preservation_assertion(:success), do: :ok
 
-    [
-      NewYou.Proof.P805.scalar("SELECT count(*) FROM accounts WHERE email = $1", [email]),
-      NewYou.Proof.P805.scalar(
-        "SELECT count(*) FROM registration_operations WHERE operation_id = $1",
-        [operation]
-      ),
-      NewYou.Proof.P805.scalar(
-        "SELECT count(*) FROM tokens WHERE account_id IN (SELECT id FROM accounts WHERE email = $1)",
-        [email]
-      ),
-      NewYou.Proof.P805.scalar(
-        "SELECT count(*) FROM message_intents WHERE source_operation_id = $1",
-        [operation]
-      ),
-      NewYou.Proof.P805.scalar(
-        "SELECT count(*) FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = $1",
-        [operation]
-      ),
-      NewYou.Proof.P805.scalar(
-        "SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = $1)",
-        [operation]
-      ),
-      NewYou.Proof.P805.scalar(
-        "SELECT count(*) FROM evidence_obligations WHERE source_operation_id = $1",
-        [operation]
-      ),
-      NewYou.Proof.P805.scalar(
-        "SELECT count(*) FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = $1) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = $1)",
-        [operation]
-      )
+  defp preservation_assertion(:assertion_failure),
+    do: flunk("synthetic preservation assertion failure")
+
+  defp exercise_preservation(:success, exercise), do: exercise.()
+
+  defp exercise_preservation(:assertion_failure, exercise) do
+    assert_raise ExUnit.AssertionError, ~r/synthetic preservation assertion failure/, exercise
+  end
+
+  defp with_preserved_registration(callback) do
+    alias NewYou.Proof.P805
+    operation_id = Ecto.UUID.generate()
+    email = "untracked-#{Ecto.UUID.generate()}@example.test"
+
+    # Choose cleanup identities before any committed write can happen.
+    # The second fixture runs even when creation or an intermediate assertion fails.
+    try do
+      {owned, untracked, pmr} =
+        P805.with_fixture(fn ->
+          request = P805.request()
+          {:ok, _} = NewYou.Identity.register(request)
+          owned = capture_fixture(request.operation_id, request.email)
+          untracked_request = %{request | operation_id: operation_id, email: email}
+          {:ok, registration} = NewYou.Identity.register(untracked_request)
+          untracked = capture_fixture(operation_id, email)
+          assert fixture_rows(owned) == List.duplicate(1, 8)
+          assert fixture_rows(untracked) == List.duplicate(1, 8)
+          {owned, untracked, P805.account!(registration.account_id).pmr}
+        end)
+
+      callback.(owned, untracked, pmr)
+    after
+      P805.with_fixture(fn -> P805.request(%{operation_id: operation_id, email: email}) end)
+    end
+  end
+
+  defp capture_fixture(operation_id, email) do
+    operation = Ecto.UUID.dump!(operation_id)
+    account_ids = fixture_ids("SELECT id FROM accounts WHERE email = $1", [email])
+
+    intent_ids =
+      fixture_ids("SELECT id FROM message_intents WHERE source_operation_id = $1", [operation])
+
+    obligation_ids =
+      fixture_ids("SELECT id FROM evidence_obligations WHERE source_operation_id = $1", [
+        operation
+      ])
+
+    primary_keys = Enum.map(intent_ids ++ obligation_ids, &Ecto.UUID.load!/1)
+
+    %{
+      operation: operation,
+      account_ids: account_ids,
+      token_ids:
+        fixture_ids("SELECT jti FROM tokens WHERE account_id = ANY($1::uuid[])", [account_ids]),
+      intent_ids: intent_ids,
+      envelope_ids:
+        fixture_ids(
+          "SELECT message_intent_id FROM communications_protected_envelopes WHERE message_intent_id = ANY($1::uuid[])",
+          [intent_ids]
+        ),
+      nonces:
+        fixture_ids(
+          "SELECT nonce FROM communications_protected_envelopes WHERE message_intent_id = ANY($1::uuid[])",
+          [intent_ids]
+        ),
+      obligation_ids: obligation_ids,
+      primary_keys: primary_keys,
+      job_ids:
+        fixture_ids(
+          "SELECT id FROM oban_jobs WHERE args->'primary_key'->>'id' = ANY($1::text[])",
+          [primary_keys]
+        )
+    }
+  end
+
+  defp fixture_ids(query, parameters) do
+    %{rows: rows} = NewYou.Repo.query!(query, parameters)
+    Enum.map(rows, &hd/1)
+  end
+
+  defp fixture_rows(snapshot) do
+    # All child selectors use identities captured while parents still existed.
+    # Stable ownership selectors also catch additional same-fixture children.
+    queries = [
+      {"SELECT count(*) FROM accounts WHERE id = ANY($1::uuid[])", [snapshot.account_ids]},
+      {"SELECT count(*) FROM registration_operations WHERE operation_id = $1",
+       [snapshot.operation]},
+      {"SELECT count(*) FROM tokens WHERE jti = ANY($1::text[]) OR account_id = ANY($2::uuid[])",
+       [snapshot.token_ids, snapshot.account_ids]},
+      {"SELECT count(*) FROM message_intents WHERE id = ANY($1::uuid[]) OR source_operation_id = $2",
+       [snapshot.intent_ids, snapshot.operation]},
+      {"SELECT count(*) FROM communications_protected_envelopes WHERE message_intent_id = ANY($1::uuid[]) OR nonce = ANY($2::bytea[])",
+       [snapshot.envelope_ids, snapshot.nonces]},
+      {"SELECT count(*) FROM communications_envelope_nonces WHERE nonce = ANY($1::bytea[])",
+       [snapshot.nonces]},
+      {"SELECT count(*) FROM evidence_obligations WHERE id = ANY($1::uuid[]) OR source_operation_id = $2",
+       [snapshot.obligation_ids, snapshot.operation]},
+      {"SELECT count(*) FROM oban_jobs WHERE id = ANY($1::bigint[]) OR args->'primary_key'->>'id' = ANY($2::text[])",
+       [snapshot.job_ids, snapshot.primary_keys]}
     ]
+
+    Enum.map(queries, fn {query, parameters} -> NewYou.Proof.P805.scalar(query, parameters) end)
   end
 
   defp historical_foreign_evidence_signature do

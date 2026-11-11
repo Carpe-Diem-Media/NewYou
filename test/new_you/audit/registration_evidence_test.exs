@@ -450,25 +450,129 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
         Repo.query!(statement, [Ecto.UUID.dump!(id)])
       end
     end
-
-    assert %{rows: [[true]]} =
-             Repo.query!("""
-             SELECT EXISTS (
-               SELECT 1 FROM pg_trigger
-               WHERE tgname = 'evidence_obligations_no_truncate'
-                 AND tgrelid = 'public.evidence_obligations'::regclass
-                 AND (tgtype & 32) = 32
-             )
-             """)
   end
 
-  test "operation scoped reads ignore and preserve unrelated historical foreign obligations" do
+  test "both Audit tables attach enabled truncate guards whose installed function rejects truncation" do
+    # Never TRUNCATE a shared Audit table. Check its exact trigger attachment,
+    # then exercise the same installed function on disposable transaction-local
+    # tables. This proves attachment plus function behavior, not a destructive
+    # end-to-end TRUNCATE of historical evidence.
+    for table <- ~w(evidence_records evidence_obligations) do
+      trigger = table <> "_no_truncate"
+
+      assert %{rows: [[34, enabled, 0, nil, "public", "audit_e2_immutable"]]} =
+               Repo.query!(
+                 """
+                 SELECT t.tgtype, t.tgenabled::text, t.tgnargs, t.tgqual::text,
+                        n.nspname::text, p.proname::text
+                 FROM pg_trigger t
+                 JOIN pg_proc p ON p.oid = t.tgfoid
+                 JOIN pg_namespace n ON n.oid = p.pronamespace
+                 WHERE t.tgname = $1 AND t.tgrelid = $2::text::regclass AND NOT t.tgisinternal
+                 """,
+                 [trigger, "public." <> table]
+               )
+
+      assert enabled in ["O", "A"]
+      probe = "well114_" <> table
+      Repo.query!("CREATE TEMP TABLE #{probe} (marker integer) ON COMMIT DROP")
+      Repo.query!("INSERT INTO pg_temp.#{probe} VALUES (1)")
+
+      Repo.query!("""
+      CREATE TRIGGER #{trigger} BEFORE TRUNCATE ON pg_temp.#{probe}
+      FOR EACH STATEMENT EXECUTE FUNCTION public.audit_e2_immutable()
+      """)
+
+      error = assert_raise Postgrex.Error, fn -> Repo.query!("TRUNCATE pg_temp.#{probe}") end
+      assert error.postgres.code == :check_violation
+      assert error.postgres.message == "audit_e2_immutable"
+      assert %{rows: [[1]]} = Repo.query!("SELECT count(*) FROM pg_temp.#{probe}")
+
+      # Negative control proves this probe can distinguish a missing guard.
+      Repo.query!("ALTER TABLE pg_temp.#{probe} DISABLE TRIGGER #{trigger}")
+      Repo.query!("TRUNCATE pg_temp.#{probe}")
+      assert %{rows: [[0]]} = Repo.query!("SELECT count(*) FROM pg_temp.#{probe}")
+    end
+  end
+
+  test "operation scoped reads do not decode a synthetic unsupported foreign obligation" do
     before = foreign_obligation_signature()
     request = valid_request()
+    assert {:ok, %{account_id: account_id}} = NewYou.Identity.register(request)
+    foreign_id = Ecto.UUID.generate()
+    foreign_operation = Ecto.UUID.generate()
+    unsupported = "well114_unsupported_foreign"
+    scoped_read = make_ref()
 
-    assert {:ok, _} = NewYou.Identity.register(request)
-    assert [%{source_operation_id: operation_id}] = audit_records("EvidenceObligation")
-    assert operation_id == request.operation_id
+    constraint_query =
+      "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = 'public.evidence_obligations'::regclass AND conname = 'evidence_obligations_evidence_type'"
+
+    %{rows: [[constraint_before]]} = Repo.query!(constraint_query)
+
+    # The explicit transaction always rolls back the synthetic row and DDL.
+    # Its table lock excludes writers while the CHECK is absent. No retained
+    # row is edited, and the immutable-provenance trigger remains enabled.
+    assert {:error, decoder_error} =
+             Repo.transaction(fn ->
+               assert Repo.in_transaction?()
+               Repo.query!("SET LOCAL lock_timeout = '2s'")
+
+               Repo.query!(
+                 "ALTER TABLE evidence_obligations DROP CONSTRAINT evidence_obligations_evidence_type"
+               )
+
+               Repo.query!(
+                 """
+                 INSERT INTO evidence_obligations
+                   (id, source_operation_id, evidence_type, source_occurred_at, state, actor_id, target_id, outcome)
+                 VALUES ($1, $2, $3, now(), 'open', $4, $4, 'succeeded')
+                 """,
+                 [
+                   Ecto.UUID.dump!(foreign_id),
+                   Ecto.UUID.dump!(foreign_operation),
+                   unsupported,
+                   Ecto.UUID.dump!(account_id)
+                 ]
+               )
+
+               assert [%{source_operation_id: operation_id}] = audit_records("EvidenceObligation")
+               assert operation_id == request.operation_id
+
+               assert foreign_obligation_signature() == before
+
+               assert %{rows: [[^unsupported]]} =
+                        Repo.query!(
+                          "SELECT evidence_type FROM evidence_obligations WHERE id = $1",
+                          [Ecto.UUID.dump!(foreign_id)]
+                        )
+
+               send(self(), {:scoped_read_passed, scoped_read})
+
+               # Ash rolls decoder errors back through the enclosing transaction.
+               # Selecting only our incompatible row is a clean-CI negative control.
+               NewYou.Audit.EvidenceObligation
+               |> Ash.Query.filter(id == ^foreign_id)
+               |> Ash.read!(domain: NewYou.Audit, authorize?: false)
+
+               flunk("unsupported synthetic evidence type unexpectedly decoded")
+             end)
+
+    assert_receive {:scoped_read_passed, ^scoped_read}
+    assert %Ash.Query{errors: errors} = decoder_error
+
+    assert Enum.any?(errors, fn error ->
+             message = Exception.message(error)
+             message =~ unsupported and message =~ "cannot load"
+           end)
+
+    assert %{rows: [[0]]} =
+             Repo.query!(
+               "SELECT count(*) FROM evidence_obligations WHERE id = $1",
+               [Ecto.UUID.dump!(foreign_id)]
+             )
+
+    assert %{rows: [[^constraint_before]]} = Repo.query!(constraint_query)
+
     assert foreign_obligation_signature() == before
   end
 
