@@ -243,28 +243,34 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
         Ecto.UUID.dump!(actor.id)
       ])
 
-      period = div(System.os_time(:second), 30)
-      code = NimbleTOTP.verification_code(actor.secret)
+      timestamp = div(System.os_time(:second), 30) * 30 + 29
+      period = div(timestamp, 30)
+      code = NimbleTOTP.verification_code(actor.secret, time: timestamp)
+      assert rem(timestamp, 30) == 29
       scenario = Scenario.start()
 
       try do
         assert {:ok, %{outcomes: outcomes}} =
                  Concurrent.run(scenario, %{
                    first: fn ->
-                     Identity.step_up_privileged(
-                       actor.credentials,
-                       actor.password,
-                       code,
-                       :release_security_hold
-                     )
+                     with_totp_timestamp(timestamp, fn ->
+                       Identity.step_up_privileged(
+                         actor.credentials,
+                         actor.password,
+                         code,
+                         :release_security_hold
+                       )
+                     end)
                    end,
                    second: fn ->
-                     Identity.step_up_privileged(
-                       actor.credentials,
-                       actor.password,
-                       code,
-                       :release_security_hold
-                     )
+                     with_totp_timestamp(timestamp, fn ->
+                       Identity.step_up_privileged(
+                         actor.credentials,
+                         actor.password,
+                         code,
+                         :release_security_hold
+                       )
+                     end)
                    end
                  })
 
@@ -282,6 +288,18 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
         Scenario.stop(scenario)
       end
     end)
+  end
+
+  defp with_totp_timestamp(timestamp, callback) do
+    previous = Process.put(NewYou.Proof.PrivilegedAccessSeam, timestamp)
+
+    try do
+      callback.()
+    after
+      if is_nil(previous),
+        do: Process.delete(NewYou.Proof.PrivilegedAccessSeam),
+        else: Process.put(NewYou.Proof.PrivilegedAccessSeam, previous)
+    end
   end
 
   test "failed reauthentication establishes a durable cooldown shared by fresh callers" do
