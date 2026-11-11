@@ -317,6 +317,36 @@ defmodule NewYou.Proof.P805Test do
     end)
   end
 
+  test "a fresh recovery process observes parentless replay consequences" do
+    alias NewYou.Proof.P805
+
+    P805.with_fixture(fn ->
+      task =
+        Task.async(fn ->
+          :ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo, sandbox: false)
+
+          try do
+            assert {:error, :replay_probe} =
+                     NewYou.Repo.transaction(fn ->
+                       before = P805.counts([], [])
+
+                       NewYou.Repo.query!(
+                         "INSERT INTO communications_envelope_nonces (nonce) VALUES ($1)",
+                         [:crypto.strong_rand_bytes(12)]
+                       )
+
+                       assert Enum.at(P805.counts([], []), 6) == Enum.at(before, 6) + 1
+                       NewYou.Repo.rollback(:replay_probe)
+                     end)
+          after
+            Ecto.Adapters.SQL.Sandbox.checkin(NewYou.Repo)
+          end
+        end)
+
+      Task.await(task, 15_000)
+    end)
+  end
+
   defp preservation_assertion(:success), do: :ok
 
   defp preservation_assertion(:assertion_failure),

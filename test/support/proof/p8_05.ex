@@ -758,8 +758,6 @@ defmodule NewYou.Proof.P805 do
   end
 
   @doc false
-  def new_consequence_ids(nil, _kind), do: []
-
   def new_consequence_ids(baseline, kind) do
     {table, column, type} = consequence_key(kind)
 
@@ -779,7 +777,8 @@ defmodule NewYou.Proof.P805 do
   defp scoped_counts(operations, emails) do
     operations = operations |> Enum.uniq() |> Enum.map(&Ecto.UUID.dump!/1)
     emails = Enum.uniq(emails)
-    baseline = Process.get({__MODULE__, :consequence_baseline})
+    baseline = Process.get({__MODULE__, :consequence_baseline}) || capture_consequence_ids()
+    Process.put({__MODULE__, :consequence_baseline}, baseline)
     new_tokens = new_consequence_ids(baseline, :tokens)
     new_nonces = new_consequence_ids(baseline, :nonces)
     new_jobs = new_consequence_ids(baseline, :jobs)
