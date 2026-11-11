@@ -1,8 +1,13 @@
 import hashlib
 import json
 import re
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
+
+from tools import check_magic_login_evidence as magic
+from tools import check_password_reset_message_evidence as reset
 
 ROOT = Path(__file__).resolve().parents[1]
 DIR = ROOT / 'docs/delivery/content-evidence/content_media/recovery_messages'
@@ -13,6 +18,27 @@ def sha(data):
 
 
 class RecoveryEvidenceTest(unittest.TestCase):
+    def test_existing_auditors_reject_changed_current_route_and_proposal(self):
+        magic_packet = json.loads((ROOT / magic.PACKET_PATH.with_name(magic.PACKET_PATH.name.replace('v0.1.0', 'v0.2.0'))).read_text())
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            shutil.copytree(ROOT / 'docs', root / 'docs')
+            self.assertEqual([], magic.validate_development(root, magic_packet))
+            self.assertEqual([], reset.validate_development(root)['findings'])
+            proposal = root / 'docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md'
+            original = proposal.read_bytes()
+            proposal.write_bytes(original + b'\n')
+            self.assertTrue(magic.validate_development(root, magic_packet))
+            self.assertTrue(reset.validate_development(root)['findings'])
+            proposal.write_bytes(original)
+            router_path = root / 'docs/governance/CURRENT_GOVERNANCE_ROUTER.json'
+            router = json.loads(router_path.read_text())
+            duplicate = next(x for x in router['governing_documents'] if x['document_id'] == 'PLATFORM_PRODUCT_LAW')
+            router['governing_documents'].append(duplicate)
+            router_path.write_text(json.dumps(router))
+            self.assertTrue(magic.validate_development(root, magic_packet))
+            self.assertTrue(reset.validate_development(root)['findings'])
+
     def test_approved_subjects_and_tokens_are_exact_and_scoped(self):
         packet = json.loads((DIR / 'RECOVERY_MESSAGE_DEVELOPMENT_EVIDENCE_PACKET_v0.2.0.json').read_text())
         candidate = DIR / 'RECOVERY_MESSAGE_CANDIDATE_EVIDENCE_PACKET_v0.1.0.json'
