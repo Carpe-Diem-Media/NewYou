@@ -273,3 +273,4 @@ html:has(.ds-guide), body:has(.ds-guide) { overflow-x: clip; }
 .ds-fluid-bound-probe[data-bound="space-max"] { font-size: var(--fluid-space-max); }
 .ds-fluid-bound-probe[data-bound="gutter-min"] { font-size: var(--fluid-gutter-min); }
 .ds-fluid-bound-probe[data-bound="gutter-max"] { font-size: var(--fluid-gutter-max); }
+.ds-fluid-bound-probe { display: none; }

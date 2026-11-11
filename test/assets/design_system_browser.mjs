@@ -153,6 +153,10 @@ try {
     assert.equal(output.measured, output.actual, `${id} readout uses its computed CSS`)
   }
 
+  assert.equal(await page.$$eval(".ds-fluid-bound-probe", probes => probes.every(probe =>
+    probe.getBoundingClientRect().height === 0
+  )), true, "endpoint probes must not affect visible line layout")
+
   await page.setViewport({width: 1200, height: 900})
   const fluidAdaptation = await page.evaluate(async () => {
     const root = document.documentElement
