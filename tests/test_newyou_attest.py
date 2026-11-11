@@ -246,6 +246,9 @@ class SyntheticWorkflowTests(unittest.TestCase):
             original_manifest = manifest.read_bytes()
             with attest.Custody(state, 42, fixture.e['head']) as custody:
                 package = custody.read_attempt(saved_auth.parent.name)
+                wrong_auth = dict(package)
+                wrong_auth['authorization.json'] = attest._json_bytes(dict(authorization, body='different'))
+                custody.save_attempt(wrong_auth)
                 package['status.json'] = attest._json_bytes({'status': 'MERGE_AUTHORISED',
                                                                'premerge_attempt': 'f' * 32})
                 custody.save_attempt(package)
