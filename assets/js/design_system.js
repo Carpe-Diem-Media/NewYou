@@ -104,7 +104,7 @@ export const DesignSystem = {
     this.el.querySelectorAll("[data-css-support]").forEach(output => {
       const supports = {
         oklch: CSS.supports("color", "oklch(from red l c h)"),
-        "color-mix": CSS.supports("color", "color-mix(in oklch, red, blue)"),
+        "color-mix": CSS.supports("color", "color-mix(in oklab, red, white)"),
         progress: CSS.supports("width", "calc(progress(1, 0, 2) * 1px)")
       }
       output.textContent = supports[output.dataset.cssSupport] ? "Supported" : "Not supported"

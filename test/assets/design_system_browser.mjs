@@ -239,6 +239,45 @@ try {
   assert.match(surfaceChecks.result, /:1 \/ (AA|AAA|Large text only|Insufficient text contrast)/)
   assert.equal(await page.evaluate(() => [...document.querySelectorAll(".ds-treatment")].every(item => item.getAttribute("aria-hidden") === "true")), true)
 
+  const colorFallbacks = await page.evaluate(() => {
+    const removeColorSupports = container => {
+      for (let index = container.cssRules.length - 1; index >= 0; index--) {
+        const rule = container.cssRules[index]
+        if (rule.type === CSSRule.SUPPORTS_RULE &&
+            /oklch\(from|color-mix\(|linear-gradient\(135deg in oklab/.test(rule.conditionText)) {
+          container.deleteRule(index)
+        } else if (rule.cssRules) removeColorSupports(rule)
+      }
+    }
+    for (const sheet of document.styleSheets) {
+      try { removeColorSupports(sheet) } catch {}
+    }
+    const root = getComputedStyle(document.documentElement)
+    const context = document.createElement("canvas").getContext("2d")
+    const rgb = value => {
+      context.fillStyle = value
+      context.fillRect(0, 0, 1, 1)
+      return [...context.getImageData(0, 0, 1, 1).data]
+    }
+    const value = name => root.getPropertyValue(name).trim()
+    return {
+      primary: rgb(getComputedStyle(document.querySelector("[data-swatch='primary']")).backgroundColor),
+      source: rgb(value("--palette-primary-srgb")),
+      tint: value("--design-surface-tint"), canvas: value("--canvas"),
+      shade: value("--design-surface-shade"), hairline: value("--hairline"),
+      overlay: value("--design-overlay"), ink: value("--secondary"),
+      gradient: getComputedStyle(document.querySelector("[data-treatment='gradient']")).backgroundImage
+    }
+  })
+  assert.deepEqual(colorFallbacks.primary, colorFallbacks.source, "sRGB palette fallback preserves source colors")
+  assert.equal(colorFallbacks.tint, colorFallbacks.canvas, "unsupported mixing retains the canvas tint fallback")
+  assert.equal(colorFallbacks.shade, colorFallbacks.hairline, "unsupported mixing retains the hairline shade fallback")
+  assert.equal(colorFallbacks.overlay, colorFallbacks.ink, "unsupported mixing retains an opaque ink scrim")
+  assert.match(colorFallbacks.gradient, /^linear-gradient\(/, "conventional gradient fallback still renders")
+  assert.doesNotMatch(colorFallbacks.gradient, /in oklab/, "advanced gradient interpolation was removed")
+  await page.reload({waitUntil: "domcontentloaded"})
+  await page.waitForFunction(() => window.liveSocket?.isConnected())
+
   await page.keyboard.press("Tab")
   const focus = await page.evaluate(() => {
     const css = getComputedStyle(document.activeElement)
