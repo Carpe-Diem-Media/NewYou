@@ -68,6 +68,15 @@ cryptographic signature or merge authorization. This exception does not waive
 any stricter control elsewhere. Apply the strict procedure below when a
 separately attributable review or additional approver is required.
 
+After the repository transfer, the collector binds the repository and ruleset to
+`Carpe-Diem-Media/NewYou`. Founder adoption and merge authorization remain bound
+to the founder's GitHub account, whose active organization-owner membership is
+checked through the GitHub API. GitHub may label that account's comments
+`MEMBER`; that label alone does not authorize another member or agent. The
+authenticated `gh` session must be able to read organization membership. Shared
+credentials still cannot prove a distinct physical action. The operator must
+use a trusted, reviewed collector and follow the existing fail-closed procedure.
+
 Once this mode is integrated into `main`, use a clean trusted checkout of
 current `main` with `gh` authenticated for repository and Actions access:
 

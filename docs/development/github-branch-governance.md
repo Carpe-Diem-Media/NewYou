@@ -1,6 +1,6 @@
 # GitHub branch governance
 
-The public `JCSchoeman96/NewYou` repository protects `main` with the active
+The public `Carpe-Diem-Media/NewYou` repository protects `main` with the active
 ruleset `24191860` (`Protect main`). The ruleset strictly requires the
 `Foundation Integrity` status check and a pull request before changes can
 enter `main`.

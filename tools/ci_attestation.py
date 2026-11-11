@@ -22,7 +22,7 @@ def verify_trust_mode(mode: str, repo: dict, branch: dict, ruleset: dict | None 
     require(mode in ("private-procedural", "public-protected"), "explicit trust mode is required")
     require(isinstance(repo, dict) and isinstance(branch, dict), "repository or branch evidence is missing")
     public = mode == "public-protected"
-    require(repo.get("full_name") == "JCSchoeman96/NewYou" and repo.get("private") is (not public)
+    require(repo.get("id") == 1332946467 and repo.get("full_name") == "Carpe-Diem-Media/NewYou" and repo.get("private") is (not public)
             and repo.get("visibility") == ("public" if public else "private")
             and repo.get("default_branch") == "main", "repository identity or visibility is inconsistent")
     require(branch.get("name") == "main" and branch.get("protected") is public,
@@ -30,7 +30,7 @@ def verify_trust_mode(mode: str, repo: dict, branch: dict, ruleset: dict | None 
     if not public:
         return
     require(isinstance(ruleset, dict) and ruleset.get("id") == 24191860
-            and ruleset.get("source") == "JCSchoeman96/NewYou"
+            and ruleset.get("source") == "Carpe-Diem-Media/NewYou"
             and ruleset.get("source_type") == "Repository" and ruleset.get("target") == "branch"
             and ruleset.get("enforcement") == "active" and ruleset.get("bypass_actors") == []
             and ruleset.get("current_user_can_bypass") == "never", "ruleset identity or enforcement is inconsistent")
@@ -47,7 +47,7 @@ def verify_trust_mode(mode: str, repo: dict, branch: dict, ruleset: dict | None 
             and all(isinstance(r, dict) for r in effective_rules), "rules are incomplete")
     configured_by_type = {r.get("type"): r for r in configured}
     effective_by_type = {r.get("type"): r for r in effective_rules if r.get("ruleset_id") == 24191860
-                         and r.get("ruleset_source") == "JCSchoeman96/NewYou"
+                         and r.get("ruleset_source") == "Carpe-Diem-Media/NewYou"
                          and r.get("ruleset_source_type") == "Repository"}
     require(required <= configured_by_type.keys() and required <= effective_by_type.keys(),
             "required rules are missing or not effective")
@@ -151,11 +151,11 @@ def _api_rules(path: str) -> list:
 def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: str | None = None,
             after_merge: bool = False, trust_mode: str | None = None) -> dict:
     """Collect run, checkout, PR, Git and repository evidence directly from GitHub."""
-    repo = "JCSchoeman96/NewYou"
+    repo = "Carpe-Diem-Media/NewYou"
     require(trust_mode in ("private-procedural", "public-protected"), "explicit trust mode is required")
     repository_response = _api(f"repos/{repo}")
     branch_response = _api(f"repos/{repo}/branches/main")
-    repository = {k: repository_response.get(k) for k in ("full_name", "private", "visibility", "default_branch")}
+    repository = {k: repository_response.get(k) for k in ("id", "full_name", "private", "visibility", "default_branch")}
     branch = {k: branch_response.get(k) for k in ("name", "protected")}
     ruleset = _api(f"repos/{repo}/rulesets/24191860") if trust_mode == "public-protected" else None
     effective_rules = _api_rules(f"repos/{repo}/rules/branches/main") if trust_mode == "public-protected" else None

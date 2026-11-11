@@ -4,7 +4,7 @@
 
 ## Canonical sources
 
-Canonical repository: `https://github.com/JCSchoeman96/NewYou`.
+Canonical repository: `https://github.com/Carpe-Diem-Media/NewYou`.
 
 GitHub is canonical for **durable governance and implementation evidence**. Plane project `WELL` is canonical for **live execution state beneath that durable law**.
 

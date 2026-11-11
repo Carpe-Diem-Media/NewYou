@@ -6,7 +6,28 @@ import re
 
 from tools.ci_attestation import AttestationError, require
 
-REPOSITORY = 'JCSchoeman96/NewYou'
+REPOSITORY = 'Carpe-Diem-Media/NewYou'
+FOUNDER_LOGIN = 'JCSchoeman96'
+FOUNDER_ID = 216185530
+ORGANIZATION_ID = 352920747
+REPOSITORY_ID = 1332946467
+
+
+def founder_account_id(repository: dict) -> int:
+    """Resolve the founder account independently of the organization owner ID."""
+    from tools import ci_attestation as ci
+    owner = repository.get('owner', {})
+    require(repository.get('id') == REPOSITORY_ID and repository.get('full_name') == REPOSITORY
+            and owner.get('id') == ORGANIZATION_ID and owner.get('login') == 'Carpe-Diem-Media'
+            and owner.get('type') == 'Organization', 'repository owner is unverifiable')
+    membership = ci._api(f'orgs/Carpe-Diem-Media/memberships/{FOUNDER_LOGIN}')
+    require(membership.get('state') == 'active' and membership.get('role') == 'admin'
+            and membership.get('organization', {}).get('id') == ORGANIZATION_ID
+            and membership.get('organization', {}).get('login') == 'Carpe-Diem-Media'
+            and membership.get('user', {}).get('id') == FOUNDER_ID
+            and membership.get('user', {}).get('login') == FOUNDER_LOGIN,
+            'founder organization ownership is unverifiable')
+    return FOUNDER_ID
 
 
 def approval_message(binding: dict) -> str:
@@ -32,7 +53,7 @@ def verify_approval(comment: dict, binding: dict, owner_id: int) -> dict:
     require(isinstance(identifier, int) and not isinstance(identifier, bool) and identifier > 0,
             'invalid approval id')
     require(isinstance(comment.get('user'), dict) and comment['user'].get('id') == owner_id
-            and comment.get('author_association') == 'OWNER', 'approval is not from owner account')
+            and comment.get('author_association') in ('MEMBER', 'OWNER'), 'approval is not from owner account')
     require(isinstance(comment['user'].get('login'), str) and bool(comment['user']['login']),
             'owner login is missing')
     created = comment.get('created_at')
@@ -246,7 +267,7 @@ def git_diff_digest(base: str, head: str) -> str:
     for value in (base, head):
         require(isinstance(value, str) and re.fullmatch(r'[0-9a-f]{40}', value), 'invalid Git object id')
     # Fetch immutable objects from the canonical repository, not a caller-selected URL.
-    _git('fetch', '--no-tags', '--no-write-fetch-head', 'https://github.com/JCSchoeman96/NewYou.git', base, head)
+    _git('fetch', '--no-tags', '--no-write-fetch-head', 'https://github.com/Carpe-Diem-Media/NewYou.git', base, head)
     patch = _git('diff', '--binary', '--no-ext-diff', '--no-textconv', base, head)
     return hashlib.sha256(patch).hexdigest()
 
@@ -272,14 +293,12 @@ def gather_before(pr: int) -> tuple[dict, dict, int]:
     require(ci._api(f'repos/{REPOSITORY}/actions/runs/{run_id}') == run, 'CI run changed during collection')
     require(proof['base'] == base and proof['head'] == head, 'PR changed during collection')
     repository = ci._api(f'repos/{REPOSITORY}')
-    owner = repository.get('owner', {})
-    require(repository.get('full_name') == REPOSITORY and isinstance(owner.get('id'), int)
-            and owner.get('login') == REPOSITORY.split('/')[0], 'repository owner is unverifiable')
+    owner_id = founder_account_id(repository)
     binding = {'pr': pr, 'base': base, 'head': head, 'candidate': proof['candidate'], 'tree': proof['tree'],
                'diff_sha256': git_diff_digest(base, head), 'run_id': run_id,
                'run_attempt': proof['run_attempt'], 'check_id': proof['required_check']['id'],
                'ci_completed_at': run['updated_at'], 'ci_url': run['html_url']}
-    return binding, proof, owner['id']
+    return binding, proof, owner_id
 
 
 def gather_after(pr: int, binding: dict, before: dict) -> dict:
@@ -435,9 +454,7 @@ def verify_after(pr: int, head: str, state_home) -> dict:
                 authorizations.append((name, status['premerge_attempt'], json.loads(files['authorization.json'])))
         require(bool(choices), 'no valid pre-merge evidence exists for this PR and head')
         repository = ci._api(f'repos/{REPOSITORY}')
-        owner_id = repository.get('owner', {}).get('id')
-        require(repository.get('full_name') == REPOSITORY and isinstance(owner_id, int),
-                'repository owner changed')
+        owner_id = founder_account_id(repository)
         comments = owner_comments(pr)
         markers = [c for c in comments if isinstance(c, dict) and isinstance(c.get('user'), dict)
                    and c['user'].get('id') == owner_id and isinstance(c.get('id'), int)
@@ -485,6 +502,8 @@ def verify_after(pr: int, head: str, state_home) -> dict:
                 'owner approval changed during reconciliation')
         require(select_merge_authorization(owner_comments(pr), binding, owner_id, status['approval'], merged.get('merged_at')) == authorization,
                 'merge authorization changed during reconciliation')
+        require(founder_account_id(ci._api(f'repos/{REPOSITORY}')) == owner_id,
+                'founder authority changed during reconciliation')
         after = {'status': 'POSTMERGE_VERIFIED', 'premerge_attempt': name, 'authorization_attempt': auth_name, 'result': result,
                  'merge_authorization': authorization}
         attempt = uuid.uuid4().hex

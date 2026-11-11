@@ -23,7 +23,7 @@ def evidence():
         "required_check": {"id": 12, "name": "Foundation Integrity", "status": "completed", "conclusion": "success"},
         "checkout_shas": ["c" * 40, "c" * 40],
         "trust_mode": "private-procedural",
-        "repository": {"full_name": "JCSchoeman96/NewYou", "private": True,
+        "repository": {"id": 1332946467, "full_name": "Carpe-Diem-Media/NewYou", "private": True,
                        "visibility": "private", "default_branch": "main"},
         "branch": {"name": "main", "protected": False},
         "reviewed_head": "a" * 40,
@@ -112,7 +112,7 @@ class GitHubCollectionTest(unittest.TestCase):
         self.branch = self.e["branch"].copy()
 
     def api(self, path):
-        if path == "repos/JCSchoeman96/NewYou":
+        if path == "repos/Carpe-Diem-Media/NewYou":
             return self.repository
         if path.endswith("branches/main"):
             return self.branch
@@ -137,7 +137,7 @@ class GitHubCollectionTest(unittest.TestCase):
 
     def test_private_procedural_mode_requires_explicit_verified_identity(self):
         from tools.ci_attestation import verify_trust_mode
-        repo = {"full_name": "JCSchoeman96/NewYou", "private": True,
+        repo = {"id": 1332946467, "full_name": "Carpe-Diem-Media/NewYou", "private": True,
                 "visibility": "private", "default_branch": "main"}
         branch = {"name": "main", "protected": False}
         verify_trust_mode("private-procedural", repo, branch)
@@ -158,12 +158,12 @@ class GitHubCollectionTest(unittest.TestCase):
 
     def test_public_protected_mode_requires_live_applicable_ruleset_and_effective_rules(self):
         from tools.ci_attestation import verify_trust_mode
-        repo = {"full_name": "JCSchoeman96/NewYou", "private": False,
+        repo = {"id": 1332946467, "full_name": "Carpe-Diem-Media/NewYou", "private": False,
                 "visibility": "public", "default_branch": "main"}
         branch = {"name": "main", "protected": True}
         ruleset = {
             "id": 24191860, "name": "Protect main", "enforcement": "active",
-            "source": "JCSchoeman96/NewYou", "source_type": "Repository",
+            "source": "Carpe-Diem-Media/NewYou", "source_type": "Repository",
             "current_user_can_bypass": "never",
             "target": "branch", "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
             "bypass_actors": [],
@@ -177,7 +177,7 @@ class GitHubCollectionTest(unittest.TestCase):
         }
         effective_rules = [
             {"type": rule["type"], "parameters": rule.get("parameters", {}),
-             "ruleset_id": ruleset["id"], "ruleset_source": "JCSchoeman96/NewYou",
+             "ruleset_id": ruleset["id"], "ruleset_source": "Carpe-Diem-Media/NewYou",
              "ruleset_source_type": "Repository"}
             for rule in ruleset["rules"]
         ]
@@ -303,7 +303,7 @@ class PublicProtectedCollectionTest(unittest.TestCase):
         self.branch.update(protected=True)
         self.ruleset = {
             "id": 24191860, "name": "Protect main", "target": "branch",
-            "source_type": "Repository", "source": "JCSchoeman96/NewYou",
+            "source_type": "Repository", "source": "Carpe-Diem-Media/NewYou",
             "enforcement": "active", "current_user_can_bypass": "never", "bypass_actors": [],
             "conditions": {"ref_name": {"exclude": [], "include": ["~DEFAULT_BRANCH"]}},
             "rules": [
@@ -317,7 +317,7 @@ class PublicProtectedCollectionTest(unittest.TestCase):
         }
         self.effective_rules = [
             {"type": rule["type"], "parameters": rule.get("parameters", {}),
-             "ruleset_id": 24191860, "ruleset_source": "JCSchoeman96/NewYou",
+             "ruleset_id": 24191860, "ruleset_source": "Carpe-Diem-Media/NewYou",
              "ruleset_source_type": "Repository"}
             for rule in self.ruleset["rules"]
         ]
@@ -326,9 +326,9 @@ class PublicProtectedCollectionTest(unittest.TestCase):
         return GitHubCollectionTest.log(self, *args)
 
     def api(self, path):
-        if path == "repos/JCSchoeman96/NewYou/rulesets/24191860":
+        if path == "repos/Carpe-Diem-Media/NewYou/rulesets/24191860":
             return copy.deepcopy(self.ruleset)
-        if path == "repos/JCSchoeman96/NewYou/rules/branches/main":
+        if path == "repos/Carpe-Diem-Media/NewYou/rules/branches/main":
             return copy.deepcopy(self.effective_rules)
         return GitHubCollectionTest.api(self, path)
 
@@ -344,6 +344,11 @@ class PublicProtectedCollectionTest(unittest.TestCase):
         self.assertEqual(result["ruleset"], self.ruleset)
         self.assertEqual(result["effective_rules"], self.effective_rules)
         self.assertEqual(result["candidate"], self.e["candidate"])
+
+    def test_public_collection_rejects_different_repository_id(self):
+        self.repository['id'] = 1
+        with self.assertRaises(AttestationError):
+            self.collect_public()
 
     def test_public_collection_rejects_rule_api_errors_and_rule_changes(self):
         from tools.ci_attestation import AttestationError

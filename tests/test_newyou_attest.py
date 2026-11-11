@@ -13,6 +13,26 @@ def merge_comment(approval, binding, identifier=8):
 
 
 class FounderApprovalTests(unittest.TestCase):
+    def test_founder_comment_with_member_association_is_accepted(self):
+        comment = dict(self.comment, author_association='MEMBER')
+        self.assertEqual(7, attest.verify_approval(comment, self.binding, 12)['id'])
+
+    def test_founder_must_be_active_organization_owner(self):
+        from unittest.mock import patch
+        repository = {'id': 1332946467, 'full_name': 'Carpe-Diem-Media/NewYou',
+                      'owner': {'id': 352920747, 'login': 'Carpe-Diem-Media', 'type': 'Organization'}}
+        membership = {'state': 'active', 'role': 'admin',
+                      'organization': {'id': 352920747, 'login': 'Carpe-Diem-Media'},
+                      'user': {'id': 216185530, 'login': 'JCSchoeman96'}}
+        with patch('tools.ci_attestation._api', return_value=membership):
+            self.assertEqual(216185530, attest.founder_account_id(repository))
+        for change in ({'state': 'pending'}, {'role': 'member'},
+                       {'user': {'id': 1, 'login': 'JCSchoeman96'}},
+                       {'organization': {'id': 1, 'login': 'Carpe-Diem-Media'}}):
+            with self.subTest(change=change), patch('tools.ci_attestation._api', return_value=dict(membership, **change)):
+                with self.assertRaises(attest.AttestationError):
+                    attest.founder_account_id(repository)
+
     def setUp(self):
         self.binding = {"pr": 42, "base": "a" * 40, "head": "b" * 40,
                         "diff_sha256": "c" * 64, "run_id": 101,
@@ -20,7 +40,7 @@ class FounderApprovalTests(unittest.TestCase):
         self.comment = {"id": 7, "user": {"id": 12, "login": "owner"},
                         "author_association": "OWNER", "created_at": "2026-01-01T00:00:00Z",
                         "updated_at": "2026-01-01T00:00:00Z",
-                        "html_url": "https://github.com/JCSchoeman96/NewYou/pull/42#issuecomment-7",
+                        "html_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/42#issuecomment-7",
                         "body": attest.approval_message(self.binding)}
 
     def test_exact_owner_approval_is_accepted(self):
@@ -28,7 +48,8 @@ class FounderApprovalTests(unittest.TestCase):
 
     def test_forged_edited_or_stale_approval_fails(self):
         mutations = [
-            {"user": {"id": 13}}, {"author_association": "MEMBER"},
+            {"user": {"id": 355419376, "login": "JC-Agents"}, "author_association": "MEMBER"},
+            {"user": {"id": 13}}, {"author_association": "COLLABORATOR"},
             {"updated_at": "2026-01-02T00:00:00Z"}, {"body": "go ahead"},
             {"html_url": "https://example.test/issuecomment-7"}, {"id": None},
         ]
@@ -130,6 +151,7 @@ class SyntheticWorkflowTests(unittest.TestCase):
              patch.object(attest, 'gather_before', return_value=(binding, data, 12)), \
              patch.object(attest, 'gather_after', return_value={'candidate': data, 'result': result}), \
              patch.object(attest, 'utc_now', return_value='2026-01-02T00:00:00Z'), \
+             patch.object(attest, 'founder_account_id', return_value=12), \
              patch('tools.ci_attestation._api', side_effect=lambda path: {'full_name': attest.REPOSITORY, 'owner': {'id': 12}}
                    if path == f'repos/{attest.REPOSITORY}' else {'merged': True, 'merged_at': '2026-01-02T00:00:00Z'}):
             with patch.object(attest, 'owner_comments', return_value=[review, older]):
@@ -148,12 +170,14 @@ class SyntheticWorkflowTests(unittest.TestCase):
         from unittest.mock import patch
         fixture = PublicProtectedCollectionTest(methodName='test_public_collection_binds_current_ruleset_and_effective_rules')
         fixture.setUp()
-        fixture.repository['owner'] = {'id': 12, 'login': 'JCSchoeman96'}
+        fixture.repository.update(id=1332946467, owner={'id': 352920747, 'login': 'Carpe-Diem-Media', 'type': 'Organization'})
         fixture.run.update(conclusion='success', updated_at='2026-01-01T00:00:00Z',
-                           html_url='https://github.com/JCSchoeman96/NewYou/actions/runs/100')
+                           html_url='https://github.com/Carpe-Diem-Media/NewYou/actions/runs/100')
         comments = []
         merged_sha = 'f' * 40
         def api(path):
+            if path == 'orgs/Carpe-Diem-Media/memberships/JCSchoeman96':
+                return {'state': 'active', 'role': 'admin', 'organization': {'id': 352920747, 'login': 'Carpe-Diem-Media'}, 'user': {'id': 216185530, 'login': 'JCSchoeman96'}}
             if fixture.pr['merged'] and path.endswith('commits/main'):
                 return {'sha': merged_sha}
             if fixture.pr['merged'] and path.endswith('git/commits/' + merged_sha):
@@ -169,10 +193,10 @@ class SyntheticWorkflowTests(unittest.TestCase):
              patch.object(attest, 'utc_now', return_value='2026-01-02T00:00:00Z'):
             waiting = attest.prepare(42, state)
             self.assertEqual('AWAITING_OWNER_REVIEW', waiting['status'])
-            comments.append({'id': 7, 'user': {'id': 12, 'login': 'JCSchoeman96'},
-                'author_association': 'OWNER', 'created_at': '2026-01-01T01:00:00Z',
+            comments.append({'id': 7, 'user': {'id': 216185530, 'login': 'JCSchoeman96'},
+                'author_association': 'MEMBER', 'created_at': '2026-01-01T01:00:00Z',
                 'updated_at': '2026-01-01T01:00:00Z',
-                'html_url': 'https://github.com/JCSchoeman96/NewYou/pull/42#issuecomment-7',
+                'html_url': 'https://github.com/Carpe-Diem-Media/NewYou/pull/42#issuecomment-7',
                 'body': waiting['approval_text']})
             prepared = attest.prepare(42, state)
             self.assertEqual('PREMERGE_VERIFIED', prepared['status'])
@@ -214,7 +238,7 @@ class SyntheticWorkflowTests(unittest.TestCase):
                 with self.assertRaises(attest.AttestationError):
                     attest.prepare(42, state)
             superseded = dict(authorization, id=9,
-                html_url='https://github.com/JCSchoeman96/NewYou/pull/42#issuecomment-9',
+                html_url='https://github.com/Carpe-Diem-Media/NewYou/pull/42#issuecomment-9',
                 body='NEWYOU FOUNDER DEVELOPMENT MERGE AUTHORIZATION V1\nwithdrawn')
             comments.append(superseded)
             with self.assertRaises(attest.AttestationError):
@@ -275,7 +299,7 @@ class SyntheticWorkflowTests(unittest.TestCase):
                    'diff_sha256': 'f' * 64, 'run_id': 101, 'run_attempt': 1, 'check_id': 12, 'ci_completed_at': '2025-12-31T00:00:00Z'}
         comment = {'id': 7, 'user': {'id': 12, 'login': 'owner'}, 'author_association': 'OWNER',
                    'created_at': '2026-01-01T00:00:00Z', 'updated_at': '2026-01-01T00:00:00Z',
-                   'html_url': 'https://github.com/JCSchoeman96/NewYou/pull/42#issuecomment-7',
+                   'html_url': 'https://github.com/Carpe-Diem-Media/NewYou/pull/42#issuecomment-7',
                    'body': attest.approval_message(binding)}
         result = {'method': 'merge', 'merge_sha': 'e' * 40, 'main': 'e' * 40,
                   'parents': [data['base'], data['head']], 'tree': data['tree']}
@@ -284,8 +308,12 @@ class SyntheticWorkflowTests(unittest.TestCase):
                  patch.object(attest, 'owner_comments', return_value=[comment, merge_comment(comment, binding)]), \
                  patch.object(attest, 'gather_after', return_value={'candidate': data, 'result': result}), \
                  patch.object(attest, 'utc_now', return_value='2026-01-02T00:00:00Z'), \
-                 patch('tools.ci_attestation._api', side_effect=lambda path: {'full_name':attest.REPOSITORY,'owner':{'id':12}} if path == f'repos/{attest.REPOSITORY}' else {'merged':True,'merged_at':'2026-01-02T00:00:00Z'}):
+                 patch.object(attest, 'founder_account_id', return_value=12), \
+             patch('tools.ci_attestation._api', side_effect=lambda path: {'full_name':attest.REPOSITORY,'owner':{'id':12}} if path == f'repos/{attest.REPOSITORY}' else {'merged':True,'merged_at':'2026-01-02T00:00:00Z'}):
                 self.assertEqual('MERGE_AUTHORISED', attest.prepare(42, state)['status'])
+                with patch.object(attest, 'founder_account_id', side_effect=[12, 13]):
+                    with self.assertRaises(attest.AttestationError):
+                        attest.verify_after(42, data['head'], state)
                 self.assertEqual('POSTMERGE_VERIFIED', attest.verify_after(42, data['head'], state)['status'])
                 with patch.object(attest, 'owner_comments', return_value=[]):
                     with self.assertRaises(attest.AttestationError):
@@ -306,7 +334,7 @@ class SyntheticWorkflowTests(unittest.TestCase):
                     attest.verify_after(42, data['head'], state)
             stale = {'id':7, 'user':{'id':12, 'login':'owner'}, 'author_association':'OWNER',
                      'created_at':'2026-01-01T00:00:00Z', 'updated_at':'2026-01-01T00:00:00Z',
-                     'html_url':'https://github.com/JCSchoeman96/NewYou/pull/42#issuecomment-7',
+                     'html_url':'https://github.com/Carpe-Diem-Media/NewYou/pull/42#issuecomment-7',
                      'body':attest.approval_message(dict(binding, head='d'*40))}
             with patch.object(attest, 'gather_before', return_value=(binding, data, 12)), \
                  patch.object(attest, 'owner_comments', return_value=[stale]):
@@ -417,6 +445,7 @@ class EvidenceBindingTests(unittest.TestCase):
         result={'method':'merge','merge_sha':'e'*40,'main':'e'*40,'parents':[second['base'],second['head']], 'tree':second['tree']}
         with tempfile.TemporaryDirectory() as state, \
              patch.object(attest,'utc_now',return_value='2026-01-02T00:00:00Z'), \
+             patch.object(attest, 'founder_account_id', return_value=12), \
              patch('tools.ci_attestation._api',side_effect=lambda path: {'full_name':attest.REPOSITORY,'owner':{'id':12}} if path == f'repos/{attest.REPOSITORY}' else {'merged':True,'merged_at':'2026-01-02T00:00:00Z'}):
             with patch.object(attest,'gather_before',return_value=(binding(first),first,12)), patch.object(attest,'owner_comments',return_value=[comment(first,7)]):
                 attest.prepare(42,state)
