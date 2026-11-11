@@ -315,7 +315,15 @@ def prepare(pr: int, state_home) -> dict:
     binding, proof, owner_id = gather_before(pr)
     ci.verify_candidate(proof)
     with Custody(state_home, pr, binding['head']) as custody:
-        approval = select_approval(owner_comments(pr), binding, owner_id)
+        comments = owner_comments(pr)
+        try:
+            approval = select_approval(comments, binding, owner_id)
+            if approval is not None:
+                verify_approval_freshness(approval, binding['ci_completed_at'], utc_now())
+        except AttestationError:
+            # An invalid, edited, stale or superseded marker cannot be reused.
+            # Give the owner a fresh exact binding without creating a proof.
+            approval = None
         if approval is None:
             result = {'status': 'AWAITING_OWNER_REVIEW', 'binding': binding,
                       'approval_text': approval_message(binding)}
@@ -323,7 +331,6 @@ def prepare(pr: int, state_home) -> dict:
                                   'sources.json': _json_bytes(source_urls(binding)), 'exit.json': _json_bytes({'exit': 2}),
                                   'stdout.txt': _json_bytes(result), 'stderr.txt': b''})
             return result
-        verify_approval_freshness(approval, binding['ci_completed_at'], utc_now())
         # Re-collect exact candidate and owner comment immediately before saving.
         fresh_binding, fresh_proof, fresh_owner = gather_before(pr)
         require((fresh_binding, fresh_proof, fresh_owner) == (binding, proof, owner_id),

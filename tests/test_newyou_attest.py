@@ -201,6 +201,13 @@ class SyntheticWorkflowTests(unittest.TestCase):
                 self.assertEqual('AWAITING_OWNER_REVIEW', attest.prepare(42, state)['status'])
                 with self.assertRaises(attest.AttestationError):
                     attest.verify_after(42, data['head'], state)
+            stale = {'id':7, 'user':{'id':12, 'login':'owner'}, 'author_association':'OWNER',
+                     'created_at':'2026-01-01T00:00:00Z', 'updated_at':'2026-01-01T00:00:00Z',
+                     'html_url':'https://github.com/JCSchoeman96/NewYou/pull/42#issuecomment-7',
+                     'body':attest.approval_message(dict(binding, head='d'*40))}
+            with patch.object(attest, 'gather_before', return_value=(binding, data, 12)), \
+                 patch.object(attest, 'owner_comments', return_value=[stale]):
+                self.assertEqual('AWAITING_OWNER_REVIEW', attest.prepare(42, state)['status'])
 
 
 class ApprovalFreshnessTests(unittest.TestCase):
