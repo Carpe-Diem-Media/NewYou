@@ -1,0 +1,9 @@
+subject: Jou {{platform_name}}-rekeningherstel is voltooi
+
+Jou rekeningherstel is voltooi en jou wagwoord is verander.
+
+Vorige aanmeldings is beëindig. Voorheen vertroude toestelle word nie meer vertrou nie. Enige afsonderlike sekuriteitsbeperking op jou rekening geld steeds.
+
+As jy nie hierdie rekeningherstel gemagtig het nie, kontak {{platform_name}} se ondersteuning by {{support_contact}}. Moenie jou wagwoord of enige herstelskakel deel nie.
+
+{{platform_name}}

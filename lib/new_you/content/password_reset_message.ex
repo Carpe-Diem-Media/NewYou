@@ -59,6 +59,17 @@ defmodule NewYou.Content.PasswordResetMessage do
       }
     ]
 
+    @current_authority %{
+      "PLATFORM_PRODUCT_LAW" =>
+        {"docs/governance/product/00_PLATFORM_v1.16.0.md",
+         "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174"},
+      "PRODUCT_DECISIONS" =>
+        {"docs/governance/product/01_DECISIONS_v1.16.0.md",
+         "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8"}
+    }
+    @recovery_proposal "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md"
+    @recovery_proposal_sha "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64"
+
     @spec binding(String.t()) :: {:ok, map()} | {:error, :content_ineligible}
     def binding(locale) when is_binary(locale) do
       with {:ok, root} <- evidence_root(),
@@ -225,7 +236,8 @@ defmodule NewYou.Content.PasswordResetMessage do
              Enum.zip(authority, @product_authority)
              |> Enum.all?(fn {actual, expected} ->
                authority_binding_matches?(actual, expected) and
-                 authority_files_match?(root, expected) and routed_authority?(router, expected)
+                 authority_files_match?(root, expected) and
+                 routed_authority?(root, router, expected)
              end) do
         true
       else
@@ -264,7 +276,9 @@ defmodule NewYou.Content.PasswordResetMessage do
       )
     end
 
-    defp routed_authority?(router, authority) do
+    defp routed_authority?(root, router, authority) do
+      {path, sha} = Map.fetch!(@current_authority, authority["document_id"])
+
       entries =
         Enum.filter(
           router["governing_documents"],
@@ -273,9 +287,22 @@ defmodule NewYou.Content.PasswordResetMessage do
 
       case entries do
         [entry] ->
-          entry["repository_path"] == authority["path"] and
-            entry["canonical_filename"] == Path.basename(authority["path"]) and
-            entry["sha256"] == authority["sha256"] and entry["semver"] == "1.15.0"
+          entry["repository_path"] == path and entry["canonical_filename"] == Path.basename(path) and
+            entry["sha256"] == sha and entry["semver"] == "1.16.0" and
+            file_digest(root, path) == sha and
+            file_digest(root, @recovery_proposal) == @recovery_proposal_sha and
+            successor_lineage?(root, path, authority["path"])
+
+        _ ->
+          false
+      end
+    end
+
+    defp successor_lineage?(root, path, predecessor) do
+      case read_file(root, path) do
+        {:ok, bytes} ->
+          String.contains?(bytes, "**Predecessor:** `#{predecessor}`") and
+            String.contains?(bytes, "**SemVer transition:** `v1.15.0 → v1.16.0`")
 
         _ ->
           false
@@ -319,15 +346,17 @@ defmodule NewYou.Content.PasswordResetMessage do
                 @candidate_path,
                 @approvals_path,
                 @delivery_router_path,
-                @governance_router_path
+                @governance_router_path,
+                @recovery_proposal
               ] do
       read_regular_file(root, path)
     end
 
     defp read_file(root, path) when is_binary(path) do
-      if path in Enum.map(Map.values(@translations), fn {_id, artifact, _size, _sha} ->
-           artifact
-         end) or
+      if path in Enum.map(Map.values(@current_authority), &elem(&1, 0)) or
+           path in Enum.map(Map.values(@translations), fn {_id, artifact, _size, _sha} ->
+             artifact
+           end) or
            path in Enum.flat_map(
              @product_authority,
              &[&1["path"], &1["predecessor"], &1["proposal"]]
