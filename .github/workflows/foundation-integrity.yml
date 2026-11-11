@@ -60,6 +60,8 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      - name: Run OpenCode Laya regression tests
+        run: node --test .opencode/tests/laya.test.mjs
       - name: Run Foundation path-routing regression tests
         run: python -m unittest discover -s tests -p 'test_foundation_lane_routing.py' -v
       - name: Run dependency cache recovery tests

@@ -71,6 +71,12 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             _route([".github/workflows/application-cache-unknown.yml"])
 
+    def test_opencode_plugin_selects_engineering_checks(self):
+        for path in [".opencode/plugins/laya.ts", ".opencode/lib/laya.mjs", ".opencode/tests/laya.test.mjs"]:
+            with self.subTest(path=path):
+                self.assertEqual("application", classify_path(path))
+                self.assertEqual({"application_changes": True}, _route([path]))
+
     def test_attestation_collector_selects_engineering_and_hex_checks(self):
         path = "tools/ci_attestation.py"
         self.assertEqual("application", classify_path(path))

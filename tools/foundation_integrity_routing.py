@@ -40,6 +40,9 @@ from pathlib import PurePosixPath
 
 APPLICATION_FILES = frozenset(
     {
+        ".opencode/plugins/laya.ts",
+        ".opencode/lib/laya.mjs",
+        ".opencode/tests/laya.test.mjs",
         "tools/ci_attestation.py",
         "tools/hex_security_audit.py",
         "tools/ci/prepare_cached_dependencies.sh",
