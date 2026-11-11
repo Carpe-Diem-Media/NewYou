@@ -43,3 +43,8 @@ Files: assets/css/design-system.css; docs/development/design_system.md; existing
 - [ ] Run installed Hallmark app-scope lint/render on affected CSS and the development route. Fix introduced FAILs and record concrete REFLEX waivers; do not initiate redesign or theme selection.
 - [ ] Update the existing implementation guide with token ownership, candidate status, progressive enhancement, observed commands and exact limitations. Inspect the complete final diff and record the exact implementation head.
 - [ ] Update the draft PR and link it immediately after push. Keep WELL-114 certification open. No merge or completed-delivery claim; report observed verification and remaining exact-head CI/review requirements.
+
+
+## Review corrections
+
+The spec review requested directly comparable pixel bounds. Each minimum and maximum now retains its authored rem token and adds a CSS-computed pixel output from a hidden probe. The quality review requested forcing color-function fallbacks as well as fluid fallbacks; the browser script now disables those support blocks and checks the documented conservative results. The capability readout uses the exact Oklab mixing syntax of the stylesheet. These are development reviews only; the independent delivery certification gap remains open.

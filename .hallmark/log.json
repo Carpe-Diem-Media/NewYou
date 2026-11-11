@@ -1,5 +1,34 @@
 [
- {
+{
+ "date": "2026-11-11",
+ "entry": "WELL-112 owner-approved token refinement",
+ "theme": "locked DESIGN.md",
+ "shape": "app screen",
+ "genre": "modern-minimal",
+ "scope": "existing guide extension",
+ "implementation_sha": "4b1a17ac90a39027222367928e822281027ea13b",
+ "signature": "computed color and fluid token comparisons",
+ "sections": [
+  "surface treatments",
+  "fluid comparisons"
+ ],
+ "material": "existing palette, CSS-derived opaque pairs, seeded local noise and real browser-computed sizing",
+ "verification": {
+  "command": "HALLMARK_PUPPETEER=/tmp/newyou-refinement-tools CHROME_PATH=/usr/bin/google-chrome node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-system.css --scope app --genre modern-minimal --url http://127.0.0.1:4237/dev/design-system --json",
+  "observed": {
+   "fails": 0,
+   "open_reflex": 0,
+   "warnings": 0,
+   "waived": 1,
+   "rejected": 0,
+   "screenshots": 5
+  },
+  "waiver": "Gate 37 misidentifies numeric weight tokens as font families. The only family is the existing Inter fallback.",
+  "review": "Fresh bounded spec and code-quality reviews found no remaining actionable issue after adding resolved endpoint measurements and forced color fallback checks. These reviews are not Master Gate certification.",
+  "limits": "WELL-114 independent post-merge certification remains open in Plane under the explicit owner exception; no merge or completed-delivery certification."
+ }
+},
+{
   "scope": "app",
   "shape": "app screen",
   "theme": "locked DESIGN.md",
