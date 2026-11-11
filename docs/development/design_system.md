@@ -225,3 +225,6 @@ Engineering evidence for the refinement:
 - `python3 -m unittest tests.test_foundation_lane_routing tests.test_foundation_smoke` passed 50 tests. `git diff --check` passed.
 
 The old dirty-TEST failures above are historical. The merged WELL-114 correction and its separately owner-authorized environment repair removed that technical blocker; this implementation performed no reset or historical-row cleanup. Missing independent resulting-main certification remains a distinct delivery gate in Plane. Hosted CI for the updated draft PR and independent Master Gate review remain separate from these local observations.
+
+
+Final visual correction at `52a56259b912c930cd44517d0cbe5c942387babb`: empty endpoint probes are explicitly excluded from layout. A browser regression first failed because the probes had nonzero height; it then passed after the CSS correction, while all computed endpoint outputs still matched. The final browser suite, asset build, supported Hallmark render and design check passed again. The final change after the recorded engineering suite affects only CSS probe display and the corresponding browser assertion; it changes no Elixir or HEEx source. Exact-head hosted CI remains required for integration.

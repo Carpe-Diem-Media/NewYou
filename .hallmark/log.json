@@ -6,7 +6,7 @@
  "shape": "app screen",
  "genre": "modern-minimal",
  "scope": "existing guide extension",
- "implementation_sha": "4b1a17ac90a39027222367928e822281027ea13b",
+ "implementation_sha": "52a56259b912c930cd44517d0cbe5c942387babb",
  "signature": "computed color and fluid token comparisons",
  "sections": [
   "surface treatments",
