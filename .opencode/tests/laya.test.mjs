@@ -4,8 +4,8 @@ import { classify } from '../lib/laya.mjs';
 
 const reply = (choice, confidence = 0.8) => ({ ok: true, json: async () => ({answers: {task_type: {choice, answer_confidence: confidence}}}) });
 
-test('accepts a safe English or Afrikaans task and only returns allowed fields', async () => {
-  for (const summary of ['fix software bug', 'maak sagteware fout reg']) {
+test('accepts an allowlisted English task and only returns allowed fields', async () => {
+  for (const summary of ['fix software bug', 'review code']) {
     const result = await classify(summary, async (url, options) => {
       assert.equal(url, 'http://127.0.0.1:8000/v1/systemone');
       assert.equal(options.redirect, 'error');
@@ -17,7 +17,7 @@ test('accepts a safe English or Afrikaans task and only returns allowed fields',
 });
 
 test('rejects arbitrary or potentially sensitive text before any request', async () => {
-  for (const summary of ['token=secret', 'a'.repeat(301), '', 'fix bug for alice@example.com']) {
+  for (const summary of ['maak sagteware fout reg', 'token=secret', 'a'.repeat(301), '', 'fix bug for alice@example.com']) {
     let sent = false;
     const result = await classify(summary, async () => { sent = true; });
     assert.equal(result.status, 'invalid_input');
@@ -52,8 +52,8 @@ test('cancels a delayed request when its timeout signal fires', async () => {
 
 test('handles malformed JSON and omits unexpected response fields', async () => {
   assert.equal((await classify('review code', async () => ({ok:true, json:async () => {throw Error('bad json')}}))).status, 'unavailable');
-  const result = await classify('review code', async () => ({ok:true,json:async () => ({answers:{task_type:{choice:'coding',answer_confidence:0.5,extra:'ignored'}},extra:'ignored'})}));
-  assert.deepEqual(result,{status:'ok',classification:'coding',confidence:0.5,advisory_only:true});
+  const result = await classify('review code', async () => ({ok:true,json:async () => ({answers:{task_type:{choice:'coding',answer_confidence:0.8,extra:'ignored'}},extra:'ignored'})}));
+  assert.deepEqual(result,{status:'ok',classification:'coding',confidence:0.8,advisory_only:true});
 });
 
 test('handles a real refused loopback connection', async () => {
@@ -64,4 +64,11 @@ test('handles a real refused loopback connection', async () => {
   await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   const result = await classify('fix software bug', (_endpoint, options) => fetch(`http://127.0.0.1:${port}/`, options));
   assert.deepEqual(result, {status:'unavailable', advisory_only:true});
+});
+
+test('abstains below the confidence threshold and accepts the boundary', async () => {
+  assert.deepEqual(await classify('fix software bug', async () => reply('coding', 0.5999)),
+    {status:'uncertain', confidence:0.5999, advisory_only:true});
+  assert.deepEqual(await classify('fix software bug', async () => reply('coding', 0.6)),
+    {status:'ok', classification:'coding', confidence:0.6, advisory_only:true});
 });

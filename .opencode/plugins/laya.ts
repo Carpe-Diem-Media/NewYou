@@ -13,8 +13,6 @@ export default Plugin.define({
           properties: { summary: { type:'string', enum:[
             'fix software bug', 'implement software feature', 'review code',
             'research a technical question', 'write documentation', 'other task',
-            'maak sagteware fout reg', 'implementeer sagteware funksie', 'hersien kode',
-            'ondersoek tegniese vraag', 'skryf dokumentasie', 'ander taak',
           ] } },
           required: ['summary'], additionalProperties: false,
         },

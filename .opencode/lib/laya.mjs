@@ -3,8 +3,6 @@
 const summaries = new Set([
   'fix software bug', 'implement software feature', 'review code',
   'research a technical question', 'write documentation', 'other task',
-  'maak sagteware fout reg', 'implementeer sagteware funksie', 'hersien kode',
-  'ondersoek tegniese vraag', 'skryf dokumentasie', 'ander taak',
 ]);
 const endpoint = 'http://127.0.0.1:8000/v1/systemone';
 const labels = new Set(['coding', 'research', 'writing', 'other']);
@@ -29,6 +27,10 @@ export async function classify(summary, send = fetch) {
     if (!labels.has(answer?.choice) || typeof answer.answer_confidence !== 'number' ||
         !Number.isFinite(answer.answer_confidence) || answer.answer_confidence < 0 || answer.answer_confidence > 1) {
       return {status:'invalid_response', advisory_only:true};
+    }
+    // A conservative usability threshold, not a calibrated probability of correctness.
+    if (answer.answer_confidence < 0.6) {
+      return {status:'uncertain', confidence:answer.answer_confidence, advisory_only:true};
     }
     return {status:'ok', classification:answer.choice, confidence:answer.answer_confidence, advisory_only:true};
   } catch {
