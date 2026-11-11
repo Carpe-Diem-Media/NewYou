@@ -1,8 +1,8 @@
-# WELL-16 recovery approval and acceptance requests
+# WELL-16 recovery decisions and remaining promotion gates
 
-This is a pending decision request for [WELL-16](https://app.plane.so/symphony-development/browse/WELL-16) and [draft PR #217](https://github.com/JCSchoeman96/NewYou/pull/217). It grants no approval and changes no governing contract or acceptance criterion. Source reconnaissance started at `417fa7afdc4981cfad59e78a03dec363ef82c32b`, with main `98fbeb8766ff1d20efe4f4f10baa6fc3abcc62f6`. Subsequent proof changes and exact-head checks belong in the PR and Plane ledger.
+This tracks decisions and evidence limits for [WELL-16](https://app.plane.so/symphony-development/browse/WELL-16) and [draft PR #217](https://github.com/JCSchoeman96/NewYou/pull/217). It grants no approval and changes no governing contract or acceptance criterion. Source reconnaissance started at `417fa7afdc4981cfad59e78a03dec363ef82c32b`, with main `98fbeb8766ff1d20efe4f4f10baa6fc3abcc62f6`. Subsequent proof changes and exact-head checks belong in the PR and Plane ledger.
 
-## Content decisions required before implementation activation
+## Recorded content decisions, pending governed eligibility
 
 The four existing V1 files remain unchanged in [the candidate package](../delivery/content-evidence/content_media/recovery_messages/README.md). Each digest below is SHA-256 of the complete UTF-8 file bytes, including its terminal LF.
 
@@ -13,17 +13,13 @@ The four existing V1 files remain unchanged in [the candidate package](../delive
 
 The [candidate evidence packet](../delivery/content-evidence/content_media/recovery_messages/RECOVERY_MESSAGE_CANDIDATE_EVIDENCE_PACKET_v0.1.0.json) has whole-file SHA-256 `be05db014e6a3beb947ef0394fd2e846d557d3367322e3308184eb099c327544`. It pins subject/body digests, proposed immutable locale identities and exact typed token contracts. Proof tokens are `platform_name` and protected `account_recovery_link`. Notice tokens are `platform_name` and literal non-secret `support_contact`. No rendered bearer belongs in an approval record.
 
-Request the following attributable decisions through the authorised Product and Content process:
+The requested decisions are now recorded in [WELL-110](https://app.plane.so/symphony-development/browse/WELL-110). The [approval provenance addendum](p8-15-owner-approval-provenance.md) lists the independently retrieved Product event, four Content events, four exact-version language events, role attestation and support-contact decision. Product selected the dedicated `account_recovery_proof_message` and `account_recovery_completion_notice` types. The approved temporary development support binding is `jc@carpediem.co.za`; mailbox operations remain unverified. Do not ask for duplicate decisions or modify the immutable V1 files.
 
-1. Product approves the narrow `account_recovery_proof_message` classification, wording risk and bounded applicability in the [classification proposal](../delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md). For the notice, choose `account_recovery_completion_notice` or an expressly bounded use of `safety_notice`. No existing verification or password-reset approval authorises either recovery role under Product §§21E.19 and 21E.23.
-2. Content & Media establishes ownership, issues or ratifies the exact immutable identities, and approves these four byte versions and their token contracts. Proposed IDs are not issued authority until that decision exists.
-3. Accountable English and Afrikaans reviewers record exact-version language decisions for both purposes. The independent candidate drafting review is useful evidence but supplies no owner approval.
-4. The accountable owner supplies and approves the actual non-secret `support_contact` value and its binding. No contact is proposed here.
-5. The decisions explicitly limit eligibility to local development, automated tests, development environments and bounded WELL-16 Phase-8 proof. They grant no production, public-release, paid-pilot, real-participant or Phase-9 permission.
+These approvals do not yet establish active eligibility. Current Product/Decisions v1.15.0 and routing remain unchanged. WELL-110 must promote the selected classifications and append-only exact Content evidence through a separate reviewed governance PR. The original candidate packet retains empty histories and false eligibility flags. Communications roles `account_recovery` and `recovery_security_notice` remain held/content-unbound, with provider admission disabled.
 
-Until those decisions are authentic, exact-bound and currently eligible, Communications roles `account_recovery` and `recovery_security_notice` remain held and content-unbound. Provider admission stays disabled. Activation still needs protected link rendering, current eligibility checks, exact locale selection and actual delivery/reconciliation tests. A GET currently returns an empty development response; it implements no participant confirmation form. The existing POST owner interfaces and scanner/CSRF proofs do not establish a complete rendered email-to-browser journey.
+Read-only source guards prepare future admission without granting Content or provider permission. Actual content binding, protected rendering, current-eligibility checks, exact locale selection and delivery/reconciliation tests remain open. A GET still returns an empty development response with no participant confirmation form. Existing POST owner interfaces and scanner/CSRF proofs do not establish a complete rendered email-to-browser journey.
 
-## Manual claimant verification and WELL-65
+## Manual claimant verification, WELL-111 and future ownership
 
 [Product §21J.7](../governance/product/00_PLATFORM_v1.15.0.md) requires governed manual verification when ordinary recovery is unavailable, a temporary hold, sensitive-action restrictions, second-person approval for privileged Accounts and full Audit. [DEC-250](../governance/product/01_DECISIONS_v1.15.0.md) requires graduated automated and manual recovery. [Identity JIT §F.6](../delivery/jit/identity/FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.3.0.md) requires missing-assurance review, stronger privileged assurance and second-person approval.
 
@@ -37,7 +33,9 @@ The narrow three-part insufficiency is:
 2. Staff permission, two-person approval and Audit E1 cannot establish claimant ownership. No internal representation can supply absent identity evidence. Existing verified-channel recovery cannot prove a channel the claimant no longer controls.
 3. Permitting completion would invent the evidence threshold for replacing an Account credential. That is a durable security decision, not a JIT field or action choice.
 
-Request Product/Identity to decide whether WELL-16's bounded acceptance may retain the demonstrated proof-backed manual path and fail closed for total factor loss while WELL-65 owns a future approved alternative. If this changes the intended requirement for delivery now, an explicit upstream Product/Identity scope decision and corresponding Plane clarification are required before acceptance. Moving future work to WELL-65 by comment alone cannot waive current law. This request neither approves an alternative method nor changes the zero-assurance guard. Existing MFA, privileged review and hold-release requirements remain mandatory.
+The owner selected Option B in [WELL-111](https://app.plane.so/symphony-development/browse/WELL-111), event `9c0a8fd0-a7a6-4555-910f-ef261b71d73e`. This retains bounded proof-backed Phase-8 recovery and fail-closed zero-factor handling. Readiness comment `6ccd7b22-1e20-4afd-851d-e0e7dbc6a07f` requires necessary durable authority and Plane acceptance clarification before accepting that boundary. The remaining action is promotion of the recorded decision, not another owner choice.
+
+[WELL-115](https://app.plane.so/symphony-development/browse/WELL-115) owns future ordinary-member lost-all-factor recovery before supported release. [WELL-65](https://app.plane.so/symphony-development/browse/WELL-65) owns privileged MFA/passkey hardening. Neither supplies a currently approved zero-factor evidence method. Existing MFA, privileged review, second-person, E1/E2 and hold-release requirements remain mandatory. This implementation neither amends current Product/Identity law nor rewrites WELL-16 acceptance.
 
 ## Primary-email boundary and WELL-17
 
@@ -49,4 +47,4 @@ No new email policy is needed to implement this boundary. Actual two-sided WELL-
 
 ## Disposition
 
-These are requests and evidence limits. WELL-16 remains Blocked and PR #217 remains Draft. No approval, provider success, Master Gate PASS, merge authority or Phase-8 certification is asserted. The [implementation handoff](p8-15-graduated-recovery-handoff.md) and live Plane ledger remain the places to record subsequent engineering results. Accountable decisions must remain distinguishable from this author's interpretation.
+These are recorded owner decisions, pending promotion gates and evidence limits. WELL-16 remains Blocked and PR #217 remains Draft. No approval, provider success, Master Gate PASS, merge authority or Phase-8 certification is asserted. The [implementation handoff](p8-15-graduated-recovery-handoff.md) and live Plane ledger remain the places to record subsequent engineering results. Accountable decisions must remain distinguishable from this author's interpretation.
