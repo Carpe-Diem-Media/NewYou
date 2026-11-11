@@ -403,6 +403,7 @@ def verify_after(pr: int, head: str, state_home) -> dict:
     from tools import ci_attestation as ci
     with Custody(state_home, pr, head) as custody:
         choices = []
+        authorizations = []
         for name in sorted(os.listdir(custody.attempts_fd)):
             if not re.fullmatch(r'[0-9a-f]{32}', name):
                 raise AttestationError('unsafe attempt directory')
@@ -424,6 +425,14 @@ def verify_after(pr: int, head: str, state_home) -> dict:
                 require(json.loads(files['exit.json']) == {'exit': 0}, 'pre-merge collection failed')
                 require(json.loads(files['sources.json']) == source_urls(status['binding']), 'source URLs changed')
                 choices.append((name, status, json.loads(files['review.json']), json.loads(files['before.json'])))
+            elif status.get('status') == 'MERGE_AUTHORISED':
+                require(set(files) == {'status.json', 'authorization.json', 'exit.json', 'stdout.txt', 'stderr.txt'}
+                        and set(status) == {'status', 'premerge_attempt'}
+                        and isinstance(status['premerge_attempt'], str)
+                        and re.fullmatch(r'[0-9a-f]{32}', status['premerge_attempt'])
+                        and json.loads(files['exit.json']) == {'exit': 0},
+                        'invalid merge authorization evidence package')
+                authorizations.append((name, status['premerge_attempt'], json.loads(files['authorization.json'])))
         require(bool(choices), 'no valid pre-merge evidence exists for this PR and head')
         repository = ci._api(f'repos/{REPOSITORY}')
         owner_id = repository.get('owner', {}).get('id')
@@ -454,6 +463,19 @@ def verify_after(pr: int, head: str, state_home) -> dict:
         verify_approval_freshness(status['approval'], binding['ci_completed_at'], merged.get('merged_at'))
         authorization = select_merge_authorization(comments, binding, owner_id, status['approval'], merged.get('merged_at'))
         require(authorization is not None, 'separate merge authorization is missing')
+        eligible_by_name = {n: (s, r, b) for n, s, r, b in eligible}
+        relevant = [(auth_name, pre_name, saved) for auth_name, pre_name, saved in authorizations
+                    if pre_name in eligible_by_name]
+        require(all(isinstance(saved, dict) and isinstance(saved.get('id'), int)
+                    and not isinstance(saved['id'], bool) and saved['id'] > 0
+                    for _, _, saved in relevant), 'invalid saved merge authorization')
+        require(not relevant or authorization['id'] >= max(saved['id'] for _, _, saved in relevant),
+                'latest recorded merge authorization was removed')
+        verified_authorizations = [(auth_name, pre_name) for auth_name, pre_name, saved in authorizations
+                                   if pre_name in eligible_by_name and saved == authorization]
+        require(bool(verified_authorizations), 'no saved merge authorization for this pre-merge proof')
+        auth_name, name = verified_authorizations[0]
+        status, review, before = eligible_by_name[name]
         result = gather_after(pr, binding, before)
         candidate = copy.deepcopy(result['candidate'])
         candidate['review_record'] = review
@@ -463,7 +485,7 @@ def verify_after(pr: int, head: str, state_home) -> dict:
                 'owner approval changed during reconciliation')
         require(select_merge_authorization(owner_comments(pr), binding, owner_id, status['approval'], merged.get('merged_at')) == authorization,
                 'merge authorization changed during reconciliation')
-        after = {'status': 'POSTMERGE_VERIFIED', 'premerge_attempt': name, 'result': result,
+        after = {'status': 'POSTMERGE_VERIFIED', 'premerge_attempt': name, 'authorization_attempt': auth_name, 'result': result,
                  'merge_authorization': authorization}
         attempt = uuid.uuid4().hex
         outcome = {'status': 'POSTMERGE_VERIFIED', 'attempt': attempt, 'merge_sha': result['result']['merge_sha'],

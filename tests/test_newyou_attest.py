@@ -111,6 +111,37 @@ class ApprovalSelectionTests(FounderApprovalTests):
 
 
 class SyntheticWorkflowTests(unittest.TestCase):
+    def test_deleted_newer_authorization_cannot_replay_older_attempt(self):
+        import tempfile
+        from tests.test_ci_attestation import evidence
+        from unittest.mock import patch
+        data = evidence(); data.update(run_id=101, run_attempt=1)
+        binding = {'pr': 42, 'base': data['base'], 'head': data['head'],
+                   'candidate': data['candidate'], 'tree': data['tree'], 'diff_sha256': 'f' * 64,
+                   'run_id': 101, 'run_attempt': 1, 'check_id': 12, 'ci_completed_at': '2025-12-31T00:00:00Z'}
+        review = {'id': 7, 'user': {'id': 12, 'login': 'owner'}, 'author_association': 'OWNER',
+                  'created_at': '2026-01-01T00:00:00Z', 'updated_at': '2026-01-01T00:00:00Z',
+                  'html_url': f'https://github.com/{attest.REPOSITORY}/pull/42#issuecomment-7',
+                  'body': attest.approval_message(binding)}
+        older, newer = merge_comment(review, binding, 8), merge_comment(review, binding, 9)
+        result = {'method': 'merge', 'merge_sha': 'e' * 40, 'main': 'e' * 40,
+                  'parents': [data['base'], data['head']], 'tree': data['tree']}
+        with tempfile.TemporaryDirectory() as state, \
+             patch.object(attest, 'gather_before', return_value=(binding, data, 12)), \
+             patch.object(attest, 'gather_after', return_value={'candidate': data, 'result': result}), \
+             patch.object(attest, 'utc_now', return_value='2026-01-02T00:00:00Z'), \
+             patch('tools.ci_attestation._api', side_effect=lambda path: {'full_name': attest.REPOSITORY, 'owner': {'id': 12}}
+                   if path == f'repos/{attest.REPOSITORY}' else {'merged': True, 'merged_at': '2026-01-02T00:00:00Z'}):
+            with patch.object(attest, 'owner_comments', return_value=[review, older]):
+                attest.prepare(42, state)
+            with patch.object(attest, 'owner_comments', return_value=[review, older, newer]):
+                attest.prepare(42, state)
+            with patch.object(attest, 'owner_comments', return_value=[review, older]):
+                with self.assertRaises(attest.AttestationError):
+                    attest.verify_after(42, data['head'], state)
+            with patch.object(attest, 'owner_comments', return_value=[review, older, newer]):
+                self.assertEqual('POSTMERGE_VERIFIED', attest.verify_after(42, data['head'], state)['status'])
+
     def test_full_synthetic_workflow_uses_actual_collector(self):
         import tempfile
         from tests.test_ci_attestation import PublicProtectedCollectionTest
@@ -146,6 +177,29 @@ class SyntheticWorkflowTests(unittest.TestCase):
             prepared = attest.prepare(42, state)
             self.assertEqual('PREMERGE_VERIFIED', prepared['status'])
             authorization = merge_comment(comments[0], prepared['binding'])
+            comments.append(authorization)
+            fixture.pr.update(merged=True, state='closed', merge_commit_sha=merged_sha,
+                              merged_at='2026-01-02T00:00:00Z')
+            fixture.run['pull_requests'] = []
+            with self.assertRaises(attest.AttestationError):
+                attest.verify_after(42, fixture.e['head'], state)
+            fixture.pr.update(merged=False, state='open', merge_commit_sha=fixture.e['candidate'])
+            fixture.run['pull_requests'] = [{'number': 42}]
+            original_write = attest.Custody._write
+            def interrupted(fd, name, data):
+                if name == 'authorization.json':
+                    raise OSError('interrupted authorization write')
+                return original_write(fd, name, data)
+            with patch.object(attest.Custody, '_write', side_effect=interrupted):
+                with self.assertRaises(OSError):
+                    attest.prepare(42, state)
+            fixture.pr.update(merged=True, state='closed', merge_commit_sha=merged_sha)
+            fixture.run['pull_requests'] = []
+            with self.assertRaises(attest.AttestationError):
+                attest.verify_after(42, fixture.e['head'], state)
+            fixture.pr.update(merged=False, state='open', merge_commit_sha=fixture.e['candidate'])
+            fixture.run['pull_requests'] = [{'number': 42}]
+            comments.pop()
             for mutation in ({'updated_at': '2026-01-01T02:00:00Z'},
                              {'body': attest.merge_authorization_message(dict(prepared['binding'], run_id=101))},
                              {'created_at': '2025-12-30T00:00:00Z', 'updated_at': '2025-12-30T00:00:00Z'}):
@@ -184,6 +238,27 @@ class SyntheticWorkflowTests(unittest.TestCase):
                     attest.verify_after(42, fixture.e['head'], state)
                 comments.pop()
             comments.append(authorization)
+            from pathlib import Path
+            attempts = Path(state, 'newyou', 'attestations', 'pr-42', fixture.e['head'], 'attempts')
+            saved_auth = next(path for path in attempts.glob('*/authorization.json')
+                              if (path.parent / 'manifest.json').exists())
+            manifest = saved_auth.parent / 'manifest.json'
+            original_manifest = manifest.read_bytes()
+            with attest.Custody(state, 42, fixture.e['head']) as custody:
+                package = custody.read_attempt(saved_auth.parent.name)
+                package['status.json'] = attest._json_bytes({'status': 'MERGE_AUTHORISED',
+                                                               'premerge_attempt': 'f' * 32})
+                custody.save_attempt(package)
+            manifest.unlink()
+            with self.assertRaises(attest.AttestationError):
+                attest.verify_after(42, fixture.e['head'], state)
+            manifest.write_bytes(original_manifest)
+            manifest.chmod(0o600)
+            original_auth = saved_auth.read_bytes()
+            saved_auth.write_bytes(b'{}')
+            with self.assertRaises(attest.AttestationError):
+                attest.verify_after(42, fixture.e['head'], state)
+            saved_auth.write_bytes(original_auth)
             self.assertEqual('POSTMERGE_VERIFIED', attest.verify_after(42, fixture.e['head'], state)['status'])
 
     def test_prepare_then_after_and_tamper_rejection(self):
@@ -343,6 +418,8 @@ class EvidenceBindingTests(unittest.TestCase):
             with patch.object(attest,'gather_before',return_value=(binding(first),first,12)), patch.object(attest,'owner_comments',return_value=[comment(first,7)]):
                 attest.prepare(42,state)
             with patch.object(attest,'gather_before',return_value=(binding(second),second,12)), patch.object(attest,'owner_comments',return_value=[comment(first,7),comment(second,8)]):
+                attest.prepare(42,state)
+            with patch.object(attest,'gather_before',return_value=(binding(second),second,12)), patch.object(attest,'owner_comments',return_value=[comment(first,7),comment(second,8),merge_comment(comment(second,8),binding(second),9)]):
                 attest.prepare(42,state)
             with patch.object(attest,'gather_after',return_value={'candidate':second,'result':result}), patch.object(attest,'owner_comments',return_value=[comment(first,7),comment(second,8),merge_comment(comment(second,8),binding(second),9)]):
                 self.assertEqual('POSTMERGE_VERIFIED',attest.verify_after(42,second['head'],state)['status'])
