@@ -273,9 +273,7 @@ defmodule NewYou.Proof.P805Race do
         params
       )
 
-    operation =
-      P805.read(Identity.RegistrationOperation, Identity)
-      |> Enum.find(&(&1.operation_id == input.operation_id))
+    [operation] = P805.registration_operations(input.operation_id)
 
     projection =
       P805PublicResponse.project(

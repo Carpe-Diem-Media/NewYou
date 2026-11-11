@@ -1,13 +1,18 @@
 defmodule NewYou.Audit.RegistrationEvidenceTest do
   use NewYou.DataCase, async: false
+  require Ash.Query
 
   @terms_id "NEWYOU-TERMS-EN-DEV-2026-10-27-001"
   @privacy_id "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
 
   setup do
+    Process.put({__MODULE__, :operation_ids}, [])
+    Process.put({__MODULE__, :emails}, [])
+    Process.put({__MODULE__, :generated_pmrs}, [])
     previous_keys = Application.get_env(:new_you, :identity_registration_binding_keys)
     previous_token_secret = Application.get_env(:new_you, :identity_token_signing_secret)
     previous_communications_keyring = Application.get_env(:new_you, :communications_keyring)
+    previous_pmr_generator = Application.get_env(:new_you, :identity_pmr_generator)
 
     Application.put_env(:new_you, :identity_registration_binding_keys, %{
       active_version: "test-v1",
@@ -21,15 +26,25 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
       keys: %{"test-v1" => :crypto.strong_rand_bytes(32)}
     })
 
+    Application.put_env(:new_you, :identity_pmr_generator, fn ->
+      {:ok, pmr} = NewYou.Identity.PMR.generate()
+
+      Process.put(
+        {__MODULE__, :generated_pmrs},
+        [pmr | Process.get({__MODULE__, :generated_pmrs}, [])]
+      )
+
+      {:ok, pmr}
+    end)
+
     on_exit(fn ->
       restore_app_env(:identity_registration_binding_keys, previous_keys)
       restore_app_env(:identity_token_signing_secret, previous_token_secret)
       restore_app_env(:communications_keyring, previous_communications_keyring)
+      restore_app_env(:identity_pmr_generator, previous_pmr_generator)
     end)
 
-    {:ok,
-     nonce_count: row_count("communications_envelope_nonces"),
-     pmr_reservation_count: row_count("identity_pmr_reservations")}
+    {:ok, nonce_count: row_count("communications_envelope_nonces")}
   end
 
   test "successful registration creates one open E2 obligation and its Audit job" do
@@ -99,10 +114,8 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
       assert {:error, _} = accept_registration_directly(input, assigned_pmr)
     end
 
-    assert NewYou.Identity.Account |> Ash.read!(domain: NewYou.Identity, authorize?: false) == []
-
-    assert NewYou.Identity.RegistrationOperation
-           |> Ash.read!(domain: NewYou.Identity, authorize?: false) == []
+    assert identity_records(NewYou.Identity.Account) == []
+    assert identity_records(NewYou.Identity.RegistrationOperation) == []
 
     assert audit_records("EvidenceObligation") == []
     assert scheduled_audit_jobs() == []
@@ -123,7 +136,8 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
 
   test "a neutral duplicate-email registration creates no additional E2 obligation or job" do
     first_request = valid_request()
-    duplicate_request = %{valid_request() | email: "alice+campaign.example@EXAMPLE.COM"}
+    duplicate_email = String.replace(first_request.email, "@example.test", "@EXAMPLE.TEST")
+    duplicate_request = %{valid_request() | email: duplicate_email}
 
     assert {:ok, %{account_id: account_id}} = NewYou.Identity.register(first_request)
     assert is_binary(account_id)
@@ -135,68 +149,59 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
   end
 
   test "a failed Audit schedule rolls back all registration acceptance writes", %{
-    nonce_count: nonce_count,
-    pmr_reservation_count: pmr_reservation_count
+    nonce_count: nonce_count
   } do
     reject_inserts("oban_jobs", "audit_schedule_failure")
 
     assert {:error, :registration_unavailable} = NewYou.Identity.register(valid_request())
 
-    assert NewYou.Identity.Account |> Ash.read!(domain: NewYou.Identity, authorize?: false) == []
-
-    assert NewYou.Identity.RegistrationOperation
-           |> Ash.read!(domain: NewYou.Identity, authorize?: false) == []
+    assert identity_records(NewYou.Identity.Account) == []
+    assert identity_records(NewYou.Identity.RegistrationOperation) == []
 
     assert audit_records("EvidenceObligation") == []
     assert row_count("tokens") == 0
     assert row_count("message_intents") == 0
     assert row_count("communications_protected_envelopes") == 0
     assert row_count("communications_envelope_nonces") == nonce_count
-    assert row_count("identity_pmr_reservations") == pmr_reservation_count
+    assert fixture_pmr_reservation_count() == 0
     assert scheduled_audit_jobs() == []
   end
 
   test "a failed obligation creation rolls back all registration acceptance writes", %{
-    nonce_count: nonce_count,
-    pmr_reservation_count: pmr_reservation_count
+    nonce_count: nonce_count
   } do
     reject_inserts("evidence_obligations", "evidence_obligation_failure")
 
     assert {:error, :registration_unavailable} = NewYou.Identity.register(valid_request())
 
-    assert NewYou.Identity.Account |> Ash.read!(domain: NewYou.Identity, authorize?: false) == []
-
-    assert NewYou.Identity.RegistrationOperation
-           |> Ash.read!(domain: NewYou.Identity, authorize?: false) == []
+    assert identity_records(NewYou.Identity.Account) == []
+    assert identity_records(NewYou.Identity.RegistrationOperation) == []
 
     assert audit_records("EvidenceObligation") == []
     assert row_count("tokens") == 0
     assert row_count("message_intents") == 0
     assert row_count("communications_protected_envelopes") == 0
     assert row_count("communications_envelope_nonces") == nonce_count
-    assert row_count("identity_pmr_reservations") == pmr_reservation_count
+    assert fixture_pmr_reservation_count() == 0
     assert scheduled_audit_jobs() == []
   end
 
   test "a later Identity write failure rolls back the inserted Audit job", %{
-    nonce_count: nonce_count,
-    pmr_reservation_count: pmr_reservation_count
+    nonce_count: nonce_count
   } do
     reject_inserts("registration_operations", "late_identity_acceptance_failure")
 
     assert {:error, :registration_unavailable} = NewYou.Identity.register(valid_request())
 
-    assert NewYou.Identity.Account |> Ash.read!(domain: NewYou.Identity, authorize?: false) == []
-
-    assert NewYou.Identity.RegistrationOperation
-           |> Ash.read!(domain: NewYou.Identity, authorize?: false) == []
+    assert identity_records(NewYou.Identity.Account) == []
+    assert identity_records(NewYou.Identity.RegistrationOperation) == []
 
     assert audit_records("EvidenceObligation") == []
     assert row_count("tokens") == 0
     assert row_count("message_intents") == 0
     assert row_count("communications_protected_envelopes") == 0
     assert row_count("communications_envelope_nonces") == nonce_count
-    assert row_count("identity_pmr_reservations") == pmr_reservation_count
+    assert fixture_pmr_reservation_count() == 0
     assert scheduled_audit_jobs() == []
   end
 
@@ -357,9 +362,15 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
   end
 
   test "the durable scheduler recreates missing execution from open obligations" do
-    assert {:ok, _} = NewYou.Identity.register(valid_request())
+    request = valid_request()
+    assert {:ok, _} = NewYou.Identity.register(request)
     [obligation] = audit_records("EvidenceObligation")
-    Repo.query!("DELETE FROM oban_jobs WHERE queue = 'audit'")
+
+    Repo.query!(
+      "DELETE FROM oban_jobs WHERE queue = 'audit' AND args->'primary_key'->>'id' = $1",
+      [obligation.id]
+    )
+
     trigger = AshOban.Info.oban_trigger(NewYou.Audit.EvidenceObligation, :registration_evidence)
 
     configured =
@@ -389,6 +400,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
 
   test "PostgreSQL preserves pending provenance and refuses terminal insertion" do
     assert {:ok, _} = NewYou.Identity.register(valid_request())
+    [obligation] = audit_records("EvidenceObligation")
 
     for assignment <- [
           "source_operation_id = gen_random_uuid()",
@@ -398,7 +410,10 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
           "created_at = now()"
         ] do
       assert_raise Postgrex.Error, fn ->
-        Repo.query!("UPDATE evidence_obligations SET " <> assignment)
+        Repo.query!(
+          "UPDATE evidence_obligations SET " <> assignment <> " WHERE id = $1",
+          [Ecto.UUID.dump!(obligation.id)]
+        )
       end
     end
 
@@ -411,7 +426,8 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
   end
 
   test "PostgreSQL preserves evidence and its terminal immutable provenance" do
-    assert {:ok, _} = NewYou.Identity.register(valid_request())
+    request = valid_request()
+    assert {:ok, _} = NewYou.Identity.register(request)
     [obligation] = audit_records("EvidenceObligation")
 
     assert {:ok, _} =
@@ -419,17 +435,41 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
                authorize?: false
              )
 
-    for statement <- [
-          "UPDATE evidence_records SET created_at = now()",
-          "DELETE FROM evidence_records",
-          "TRUNCATE evidence_records",
-          "UPDATE evidence_obligations SET source_occurred_at = now()",
-          "UPDATE evidence_obligations SET state = 'open', fulfilled_at = NULL",
-          "DELETE FROM evidence_obligations",
-          "TRUNCATE evidence_obligations CASCADE"
+    [record] = audit_records("EvidenceRecord")
+
+    for {statement, id} <- [
+          {"UPDATE evidence_records SET created_at = now() WHERE id = $1", record.id},
+          {"DELETE FROM evidence_records WHERE id = $1", record.id},
+          {"UPDATE evidence_obligations SET source_occurred_at = now() WHERE id = $1",
+           obligation.id},
+          {"UPDATE evidence_obligations SET state = 'open', fulfilled_at = NULL WHERE id = $1",
+           obligation.id},
+          {"DELETE FROM evidence_obligations WHERE id = $1", obligation.id}
         ] do
-      assert_raise Postgrex.Error, fn -> Repo.query!(statement) end
+      assert_raise Postgrex.Error, fn ->
+        Repo.query!(statement, [Ecto.UUID.dump!(id)])
+      end
     end
+
+    assert %{rows: [[true]]} =
+             Repo.query!("""
+             SELECT EXISTS (
+               SELECT 1 FROM pg_trigger
+               WHERE tgname = 'evidence_obligations_no_truncate'
+                 AND tgrelid = 'public.evidence_obligations'::regclass
+                 AND (tgtype & 32) = 32
+             )
+             """)
+  end
+
+  test "operation scoped reads ignore and preserve unrelated historical foreign obligations" do
+    before = foreign_obligation_signature()
+    request = valid_request()
+
+    assert {:ok, _} = NewYou.Identity.register(request)
+    assert [%{source_operation_id: operation_id}] = audit_records("EvidenceObligation")
+    assert operation_id == request.operation_id
+    assert foreign_obligation_signature() == before
   end
 
   test "PostgreSQL rejects a second assertion even through a direct insert" do
@@ -467,7 +507,11 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     # Synthetic corruption is possible only after deliberately disabling a DB
     # guard. The sandbox rolls back this fixture and its transactional DDL.
     Repo.query!("ALTER TABLE evidence_records DISABLE TRIGGER evidence_records_immutable")
-    Repo.query!("DELETE FROM evidence_records")
+
+    Repo.query!("DELETE FROM evidence_records WHERE obligation_id = $1", [
+      Ecto.UUID.dump!(obligation.id)
+    ])
+
     Repo.query!("ALTER TABLE evidence_records ENABLE TRIGGER evidence_records_immutable")
 
     assert {:error, error} =
@@ -511,17 +555,29 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
   end
 
   defp valid_request do
-    %{
+    request = %{
       operation_id: Ecto.UUID.generate(),
       first_name: "Alice",
       surname: "Example",
-      email: "alice+campaign.example@example.com",
+      email: "alice-#{Ecto.UUID.generate()}@example.test",
       password: Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
       preferred_language: :en,
       confirmed_age_18?: true,
       terms_version_id: @terms_id,
       privacy_version_id: @privacy_id
     }
+
+    Process.put(
+      {__MODULE__, :operation_ids},
+      [request.operation_id | Process.get({__MODULE__, :operation_ids}, [])]
+    )
+
+    Process.put(
+      {__MODULE__, :emails},
+      [request.email | Process.get({__MODULE__, :emails}, [])]
+    )
+
+    request
   end
 
   defp valid_pmr do
@@ -541,27 +597,46 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
 
   defp audit_records(resource_name) do
     resource = Module.concat([NewYou, Audit, resource_name])
+    operation_ids = fixture_operation_ids()
 
-    if Code.ensure_loaded?(resource) do
-      Ash.read!(resource, domain: Module.concat([NewYou, Audit]), authorize?: false)
-    else
-      []
+    cond do
+      resource == NewYou.Audit.EvidenceObligation and operation_ids != [] ->
+        resource
+        |> Ash.Query.filter(source_operation_id in ^operation_ids)
+        |> Ash.read!(domain: NewYou.Audit, authorize?: false)
+
+      resource == NewYou.Audit.EvidenceRecord ->
+        obligation_ids = Enum.map(audit_records("EvidenceObligation"), & &1.id)
+
+        if obligation_ids == [] do
+          []
+        else
+          resource
+          |> Ash.Query.filter(obligation_id in ^obligation_ids)
+          |> Ash.read!(domain: NewYou.Audit, authorize?: false)
+        end
+
+      Code.ensure_loaded?(resource) ->
+        []
+
+      true ->
+        []
     end
   end
 
   defp scheduled_audit_jobs do
-    case Repo.query!("SELECT to_regclass('public.oban_jobs')") do
-      %{rows: [[nil]]} ->
-        []
+    obligation_ids = Enum.map(audit_records("EvidenceObligation"), & &1.id)
 
-      %{rows: [[_table]]} ->
-        %{rows: rows} =
-          Repo.query!(
-            "SELECT queue, args FROM public.oban_jobs WHERE queue = $1 ORDER BY id",
-            ["audit"]
-          )
+    if obligation_ids == [] do
+      []
+    else
+      %{rows: rows} =
+        Repo.query!(
+          "SELECT queue, args FROM public.oban_jobs WHERE queue = $1 AND args->'primary_key'->>'id' = ANY($2::text[]) ORDER BY id",
+          ["audit", obligation_ids]
+        )
 
-        Enum.map(rows, fn [queue, args] -> %{queue: queue, args: args} end)
+      Enum.map(rows, fn [queue, args] -> %{queue: queue, args: args} end)
     end
   end
 
@@ -570,14 +645,86 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
       Ash.get!(NewYou.Identity.Account, account_id, domain: NewYou.Identity, authorize?: false)
 
     operations =
-      Ash.read!(NewYou.Identity.RegistrationOperation, domain: NewYou.Identity, authorize?: false)
+      NewYou.Identity.RegistrationOperation
+      |> Ash.Query.filter(created_account_id == ^account_id)
+      |> Ash.read!(domain: NewYou.Identity, authorize?: false)
 
-    %{account: account, operations: operations, token_count: row_count("tokens")}
+    token_count =
+      NewYou.Identity.Token
+      |> Ash.Query.filter(account_id == ^account_id)
+      |> Ash.read!(domain: NewYou.Identity, authorize?: false)
+      |> length()
+
+    %{account: account, operations: operations, token_count: token_count}
   end
 
   defp row_count(table) do
-    %{rows: [[count]]} = Repo.query!("SELECT count(*) FROM #{table}")
+    operation_ids = Enum.map(fixture_operation_ids(), &Ecto.UUID.dump!/1)
+
+    {query, params} =
+      case table do
+        "tokens" ->
+          {"SELECT count(*) FROM tokens WHERE account_id IN (SELECT created_account_id FROM registration_operations WHERE operation_id = ANY($1::uuid[]))",
+           [operation_ids]}
+
+        "message_intents" ->
+          {"SELECT count(*) FROM message_intents WHERE source_operation_id = ANY($1::uuid[])",
+           [operation_ids]}
+
+        "communications_protected_envelopes" ->
+          {"SELECT count(*) FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[])",
+           [operation_ids]}
+
+        "communications_envelope_nonces" ->
+          {"SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[]))",
+           [operation_ids]}
+      end
+
+    %{rows: [[count]]} = Repo.query!(query, params)
     count
+  end
+
+  defp fixture_pmr_reservation_count do
+    pmrs = Process.get({__MODULE__, :generated_pmrs}, []) |> Enum.uniq()
+
+    %{rows: [[count]]} =
+      Repo.query!(
+        "SELECT count(*) FROM identity_pmr_reservations WHERE pmr = ANY($1::text[])",
+        [pmrs]
+      )
+
+    count
+  end
+
+  defp fixture_operation_ids do
+    Process.get({__MODULE__, :operation_ids}, []) |> Enum.uniq()
+  end
+
+  defp identity_records(NewYou.Identity.Account) do
+    emails =
+      Process.get({__MODULE__, :emails}, [])
+      |> Enum.uniq()
+
+    NewYou.Identity.Account
+    |> Ash.Query.filter(email in ^emails)
+    |> Ash.read!(domain: NewYou.Identity, authorize?: false)
+  end
+
+  defp identity_records(NewYou.Identity.RegistrationOperation) do
+    operation_ids = fixture_operation_ids()
+
+    NewYou.Identity.RegistrationOperation
+    |> Ash.Query.filter(operation_id in ^operation_ids)
+    |> Ash.read!(domain: NewYou.Identity, authorize?: false)
+  end
+
+  defp foreign_obligation_signature do
+    %{rows: rows} =
+      Repo.query!(
+        "SELECT id::text, source_operation_id::text, evidence_type, created_at::text FROM evidence_obligations WHERE evidence_type = 'identity_recovery_completed' ORDER BY id"
+      )
+
+    :crypto.hash(:sha256, :erlang.term_to_binary(rows))
   end
 
   defp reject_inserts(table, name) do

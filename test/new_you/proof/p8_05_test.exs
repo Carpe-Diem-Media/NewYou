@@ -83,7 +83,14 @@ defmodule NewYou.Proof.P805Test do
           |> Enum.map(& &1["code"])
 
         observation
-        |> Map.take(["case_id", "verdict", "status", "reason_codes", "duration_ms"])
+        |> Map.take([
+          "case_id",
+          "verdict",
+          "status",
+          "reason_codes",
+          "duration_ms",
+          "assertion_ids"
+        ])
         |> Map.put("failed_observations", failed_codes)
       end)
 
@@ -118,26 +125,30 @@ defmodule NewYou.Proof.P805Test do
   test "fixture cleanup recovers committed browser provenance when operation IDs were not returned" do
     alias NewYou.Proof.P805
     alias Ecto.Adapters.SQL.Sandbox
-    :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
-    before_counts = P805.counts()
-    :ok = Sandbox.checkin(NewYou.Repo)
+    parent = self()
 
     assert_raise RuntimeError, "synthetic browser result lost", fn ->
       P805.with_fixture(fn ->
         input = P805.request()
-        # The browser supplies a different operation ID. The fixture owner knows
-        # only its pre-registered synthetic email when the result is lost.
-        {:ok, _} = NewYou.Identity.register(%{input | operation_id: Ecto.UUID.generate()})
+        browser_operation_id = Ecto.UUID.generate()
+
+        {:ok, registration} =
+          NewYou.Identity.register(%{input | operation_id: browser_operation_id})
+
+        pmr = P805.account!(registration.account_id).pmr
+        send(parent, {:committed_fixture, input.email, browser_operation_id, pmr})
         raise "synthetic browser result lost"
       end)
     end
 
-    :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
-    after_counts = P805.counts()
-    :ok = Sandbox.checkin(NewYou.Repo)
-    # Permanent PMR reservations are never removed, including fixture teardown.
-    assert Enum.drop(after_counts, -1) == Enum.drop(before_counts, -1)
-    assert List.last(after_counts) == List.last(before_counts) + 1
+    assert_receive {:committed_fixture, email, operation_id, pmr}
+
+    Sandbox.unboxed_run(NewYou.Repo, fn ->
+      assert fixture_rows(operation_id, email) == [0, 0, 0, 0, 0, 0, 0, 0]
+
+      assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [pmr]) ==
+               1
+    end)
   end
 
   test "fixture guardian cleans committed records when the fixture owner is killed" do
@@ -145,9 +156,6 @@ defmodule NewYou.Proof.P805Test do
     alias Ecto.Adapters.SQL.Sandbox
     previous_mfa = Application.fetch_env(:new_you, :identity_mfa_keyring)
 
-    :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
-    before_counts = P805.counts()
-    :ok = Sandbox.checkin(NewYou.Repo)
     parent = self()
 
     scenario = NewYou.Proof.Scenario.start()
@@ -157,15 +165,16 @@ defmodule NewYou.Proof.P805Test do
         P805.with_fixture(fn ->
           Application.put_env(:new_you, :identity_mfa_keyring, :synthetic_owner_death)
           input = P805.request()
-          {:ok, _} = NewYou.Identity.register(input)
-          send(parent, {:fixture_committed, input.email})
+          {:ok, registration} = NewYou.Identity.register(input)
+          account = P805.account!(registration.account_id)
+          send(parent, {:fixture_committed, input.email, input.operation_id, account.pmr})
           receive do: (:never -> :ok)
         end)
       end)
 
-    email =
+    {email, operation_id, pmr} =
       receive do
-        {:fixture_committed, email} -> email
+        {:fixture_committed, email, operation_id, pmr} -> {email, operation_id, pmr}
       after
         15_000 -> flunk("fixture owner did not commit registration")
       end
@@ -177,12 +186,105 @@ defmodule NewYou.Proof.P805Test do
     restored? = Application.fetch_env(:new_you, :identity_mfa_keyring) == previous_mfa
     assert restored?, "fixture environment was not restored after owner death"
 
-    :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
-    assert P805.scalar("SELECT count(*) FROM accounts WHERE email = $1", [email]) == 0
-    after_counts = P805.counts()
-    :ok = Sandbox.checkin(NewYou.Repo)
-    assert Enum.drop(after_counts, -1) == Enum.drop(before_counts, -1)
-    assert List.last(after_counts) == List.last(before_counts) + 1
+    Sandbox.unboxed_run(NewYou.Repo, fn ->
+      assert fixture_rows(operation_id, email) == [0, 0, 0, 0, 0, 0, 0, 0]
+
+      assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [pmr]) ==
+               1
+    end)
+  end
+
+  test "fixture cleanup removes only tracked rows and preserves historical foreign evidence" do
+    alias Ecto.Adapters.SQL.Sandbox
+    alias NewYou.Proof.P805
+
+    historical_before =
+      Sandbox.unboxed_run(NewYou.Repo, fn -> historical_foreign_evidence_signature() end)
+
+    {owned, untracked, untracked_pmr} =
+      P805.with_fixture(fn ->
+        owned = P805.request()
+        {:ok, _} = NewYou.Identity.register(owned)
+
+        untracked = %{
+          owned
+          | operation_id: Ecto.UUID.generate(),
+            email: "untracked-#{Ecto.UUID.generate()}@example.test"
+        }
+
+        {:ok, registration} = NewYou.Identity.register(untracked)
+        {owned, untracked, P805.account!(registration.account_id).pmr}
+      end)
+
+    Sandbox.unboxed_run(NewYou.Repo, fn ->
+      assert fixture_rows(owned.operation_id, owned.email) == [0, 0, 0, 0, 0, 0, 0, 0]
+      assert fixture_rows(untracked.operation_id, untracked.email) == [1, 1, 1, 1, 1, 1, 1, 1]
+
+      assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [
+               untracked_pmr
+             ]) == 1
+
+      assert historical_foreign_evidence_signature() == historical_before
+    end)
+
+    P805.with_fixture(fn ->
+      _ = P805.request(%{operation_id: untracked.operation_id, email: untracked.email})
+    end)
+
+    Sandbox.unboxed_run(NewYou.Repo, fn ->
+      assert fixture_rows(untracked.operation_id, untracked.email) == [0, 0, 0, 0, 0, 0, 0, 0]
+
+      assert P805.scalar("SELECT count(*) FROM identity_pmr_reservations WHERE pmr = $1", [
+               untracked_pmr
+             ]) == 1
+
+      assert historical_foreign_evidence_signature() == historical_before
+    end)
+  end
+
+  defp fixture_rows(operation_id, email) do
+    operation = Ecto.UUID.dump!(operation_id)
+
+    [
+      NewYou.Proof.P805.scalar("SELECT count(*) FROM accounts WHERE email = $1", [email]),
+      NewYou.Proof.P805.scalar(
+        "SELECT count(*) FROM registration_operations WHERE operation_id = $1",
+        [operation]
+      ),
+      NewYou.Proof.P805.scalar(
+        "SELECT count(*) FROM tokens WHERE account_id IN (SELECT id FROM accounts WHERE email = $1)",
+        [email]
+      ),
+      NewYou.Proof.P805.scalar(
+        "SELECT count(*) FROM message_intents WHERE source_operation_id = $1",
+        [operation]
+      ),
+      NewYou.Proof.P805.scalar(
+        "SELECT count(*) FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = $1",
+        [operation]
+      ),
+      NewYou.Proof.P805.scalar(
+        "SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = $1)",
+        [operation]
+      ),
+      NewYou.Proof.P805.scalar(
+        "SELECT count(*) FROM evidence_obligations WHERE source_operation_id = $1",
+        [operation]
+      ),
+      NewYou.Proof.P805.scalar(
+        "SELECT count(*) FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = $1) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = $1)",
+        [operation]
+      )
+    ]
+  end
+
+  defp historical_foreign_evidence_signature do
+    %{rows: rows} =
+      NewYou.Repo.query!(
+        "SELECT id::text, source_operation_id::text, evidence_type, created_at::text FROM evidence_obligations WHERE evidence_type = 'identity_recovery_completed' ORDER BY id"
+      )
+
+    :crypto.hash(:sha256, :erlang.term_to_binary(rows))
   end
 
   test "missing owned callback remains a missing case and cannot become a passing family" do
