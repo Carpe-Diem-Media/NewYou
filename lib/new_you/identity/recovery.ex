@@ -246,15 +246,7 @@ defmodule NewYou.Identity.Recovery do
 
   @spec delivery(term(), term(), term()) :: {:ok, binary()} | {:error, atom()}
   def delivery(reference, destination, locale) do
-    with true <- :erlang.andalso(@enabled, NewYou.Repo.in_transaction?()),
-         {:ok, %Token{} = locator} <- token(reference),
-         {:ok, account} <- lock_account(locator.account_id),
-         {:ok, recovery} <- lock_case(locator.recovery_case_id),
-         {:ok, proof} <- token(reference, true),
-         true <- current?(recovery, account) and recovery.state == :proof_pending,
-         true <- proof.purpose == "recovery" and DateTime.compare(now(), proof.expires_at) == :lt,
-         true <-
-           account.email_verified? and account.email == destination and recovery.locale == locale,
+    with {:ok, _recovery, proof} <- delivery_source(reference, destination, locale),
          {:ok, bearer, claims} <-
            Joken.encode_and_sign(proof.recovery_claims, Config.token_signer(Account)),
          true <- claims == proof.recovery_claims,
@@ -265,6 +257,63 @@ defmodule NewYou.Identity.Recovery do
     end
   rescue
     _ -> {:error, :capability_unavailable}
+  end
+
+  @doc false
+  @spec delivery_eligibility(term(), term(), term(), term()) :: :ok | {:error, :source_invalid}
+  def delivery_eligibility(reference, destination, locale, operation_id) do
+    with {:ok, recovery, _proof} <- delivery_source(reference, destination, locale),
+         true <- recovery.operation_id == operation_id do
+      :ok
+    else
+      _ -> {:error, :source_invalid}
+    end
+  rescue
+    _ -> {:error, :source_invalid}
+  end
+
+  @doc false
+  @spec notice_eligibility(term(), term(), term()) :: :ok | {:error, :source_invalid}
+  def notice_eligibility(reference, locale, completion_id) do
+    with {:ok, _account, recovery, _proof} <- lock_delivery_source(reference),
+         true <- recovery.state == :completed and recovery.completion_id == completion_id,
+         true <- not is_nil(recovery.completed_at) and not is_nil(recovery.terminated_at),
+         true <- recovery.satisfied_assurance >= recovery.required_assurance,
+         true <- recovery.locale == locale do
+      :ok
+    else
+      _ -> {:error, :source_invalid}
+    end
+  rescue
+    _ -> {:error, :source_invalid}
+  end
+
+  defp delivery_source(reference, destination, locale) do
+    with {:ok, account, recovery, proof} <- lock_delivery_source(reference),
+         true <- current?(recovery, account) and recovery.state == :proof_pending,
+         true <- DateTime.compare(now(), recovery.expires_at) == :lt,
+         true <- proof.purpose == "recovery" and DateTime.compare(now(), proof.expires_at) == :lt,
+         true <- account.email_verified? and account.email == destination,
+         true <- recovery.locale == locale do
+      {:ok, recovery, proof}
+    else
+      _ -> {:error, :source_invalid}
+    end
+  end
+
+  defp lock_delivery_source(reference) do
+    with true <- :erlang.andalso(@enabled, NewYou.Repo.in_transaction?()),
+         {:ok, %Token{} = locator} <- token(reference),
+         {:ok, %Account{} = account} <- lock_account(locator.account_id),
+         {:ok, %RecoveryCase{} = recovery} <- lock_case(locator.recovery_case_id),
+         {:ok, %Token{} = proof} <- token(reference, true),
+         true <- proof.account_id == account.id and recovery.account_id == account.id,
+         true <- proof.recovery_case_id == recovery.id and recovery.proof_jti == proof.jti,
+         true <- proof.subject == AshAuthentication.user_to_subject(account) do
+      {:ok, account, recovery, proof}
+    else
+      _ -> {:error, :source_invalid}
+    end
   end
 
   @spec run(atom(), map()) :: {:ok, atom() | map()} | {:error, :recovery_unavailable}

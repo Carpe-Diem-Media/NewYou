@@ -6,7 +6,29 @@ defmodule NewYou.Identity.DeliveryEligibility do
   enters this interface and no Identity state changes here.
   """
   require Ash.Query
-  alias NewYou.Identity.{Account, Token}
+  alias NewYou.Identity.{Account, Recovery, Token}
+
+  @doc """
+  Checks the exact recovery issuance under Account, case and Token locks without
+  serializing or consuming its proof. Requires an owning transaction. This is
+  source eligibility only; content and provider admission remain separate gates.
+  """
+  @spec recovery(String.t(), String.t(), String.t(), Ecto.UUID.t()) ::
+          :ok | {:error, :source_invalid}
+  def recovery(reference, destination, locale, operation_id),
+    do: Recovery.delivery_eligibility(reference, destination, locale, operation_id)
+
+  @doc """
+  Checks the exact durable completion receipt under Account, case and Token locks.
+  Requires an owning transaction. Link expiry and later Account changes cannot
+  erase a committed notice obligation. Communications preserves the destination
+  authorised in the atomic completion handoff; this check never retargets it.
+  It grants no content eligibility, provider permission, Session or hold release.
+  """
+  @spec recovery_notice(String.t(), String.t(), Ecto.UUID.t()) ::
+          :ok | {:error, :source_invalid}
+  def recovery_notice(reference, locale, completion_id),
+    do: Recovery.notice_eligibility(reference, locale, completion_id)
 
   @spec verification(String.t(), String.t()) :: :ok | {:error, :source_invalid}
   def verification(reference, destination) do
