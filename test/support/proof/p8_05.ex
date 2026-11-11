@@ -29,8 +29,10 @@ defmodule NewYou.Proof.P805 do
     :ok = Sandbox.checkout(Repo, sandbox: false)
 
     try do
+      Process.put({__MODULE__, :consequence_baseline}, capture_consequence_ids())
       callback.()
     after
+      Process.delete({__MODULE__, :consequence_baseline})
       Process.delete(RegistrationSeam)
 
       try do
@@ -156,6 +158,10 @@ defmodule NewYou.Proof.P805 do
       {:track, ^owner, reference, :email, email} ->
         send(owner, {:fixture_tracked, reference})
         fixture_guardian(owner, owner_monitor, previous, operations, [email | emails])
+
+      {:fixture_values, ^owner, reference} ->
+        send(owner, {:fixture_values, reference, Enum.uniq(operations), Enum.uniq(emails)})
+        fixture_guardian(owner, owner_monitor, previous, operations, emails)
 
       :fixture_complete ->
         Process.demonitor(owner_monitor, [:flush])
@@ -515,14 +521,15 @@ defmodule NewYou.Proof.P805 do
           try do
             backend = scalar("SELECT pg_backend_pid()")
             snapshot = accepted_snapshot(input)
-            before_replay = counts()
+            before_replay = counts([input.operation_id], [input.email])
             {:ok, replay} = Identity.register(input)
 
             send(
               parent,
               {ref, :recovered, backend, snapshot.complete and snapshot.credential,
                replay.status == :verification_pending and is_binary(replay.account_id) and
-                 is_nil(replay.verification_proof), counts() == before_replay}
+                 is_nil(replay.verification_proof),
+               counts([input.operation_id], [input.email]) == before_replay}
             )
           after
             :ok = Sandbox.checkin(Repo)
@@ -578,7 +585,7 @@ defmodule NewYou.Proof.P805 do
       id,
       "separate_binding",
       operation.operation_id != input.operation_id and
-        read(Identity.ResendOperation, Identity)
+        resend_operations(operation.operation_id)
         |> Enum.any?(
           &(&1.operation_id == operation.operation_id and &1.account_id == result.account_id)
         )
@@ -589,7 +596,7 @@ defmodule NewYou.Proof.P805 do
       "superseded",
       replacement.jti != original.jti and
         Enum.any?(
-          read(Identity.Token, Identity),
+          tokens(result.account_id),
           &(&1.jti == original.jti and &1.purpose == "revocation")
         )
     )
@@ -673,7 +680,20 @@ defmodule NewYou.Proof.P805 do
   end
 
   def account!(id), do: Ash.get!(Identity.Account, id, domain: Identity, authorize?: false)
-  def read(resource, domain), do: Ash.read!(resource, domain: domain, authorize?: false)
+
+  def read(Identity.RegistrationOperation, Identity) do
+    {operations, _emails} = fixture_values()
+
+    Identity.RegistrationOperation
+    |> Ash.Query.filter(operation_id in ^operations)
+    |> Ash.read!(domain: Identity, authorize?: false)
+  end
+
+  def registration_operations(operation_id) do
+    Identity.RegistrationOperation
+    |> Ash.Query.filter(operation_id == ^operation_id)
+    |> Ash.read!(domain: Identity, authorize?: false)
+  end
 
   def intents(operation),
     do:
@@ -687,8 +707,106 @@ defmodule NewYou.Proof.P805 do
       |> Ash.Query.filter(account_id == ^account and purpose == "email_verification")
       |> Ash.read!(domain: Identity, authorize?: false)
 
-  def counts, do: Enum.map(@tables, &scalar("SELECT count(*) FROM #{&1}"))
+  defp tokens(account),
+    do:
+      Identity.Token
+      |> Ash.Query.filter(account_id == ^account)
+      |> Ash.read!(domain: Identity, authorize?: false)
+
+  defp resend_operations(operation),
+    do:
+      Identity.ResendOperation
+      |> Ash.Query.filter(operation_id == ^operation)
+      |> Ash.read!(domain: Identity, authorize?: false)
+
+  def counts do
+    {operations, emails} = fixture_values()
+    scoped_counts(operations, emails)
+  end
+
+  def counts(operations, emails), do: scoped_counts(operations, emails)
+
   def delta(before, after_counts), do: Enum.zip_with(after_counts, before, &(&1 - &2))
+
+  defp fixture_values do
+    case Process.get({__MODULE__, :guardian}) do
+      guardian when is_pid(guardian) ->
+        reference = make_ref()
+        send(guardian, {:fixture_values, self(), reference})
+
+        receive do
+          {:fixture_values, ^reference, operations, emails} -> {operations, emails}
+        after
+          5_000 -> raise "P8-05 fixture guardian did not return fixture identities"
+        end
+
+      _ ->
+        {Process.get({__MODULE__, :operations}, []), Process.get({__MODULE__, :emails}, [])}
+    end
+  end
+
+  # Identifier snapshots bound observations to writes after this synchronous
+  # fixture began. They never authorise cleanup. Unboxed proofs require
+  # exclusive TEST access; sandbox callers also retain their transaction isolation.
+  @doc false
+  def capture_consequence_ids do
+    Map.new([:tokens, :nonces, :jobs], fn kind ->
+      {table, column, _type} = consequence_key(kind)
+      %{rows: rows} = Repo.query!("SELECT #{column} FROM #{table}")
+      {kind, Enum.map(rows, &hd/1)}
+    end)
+  end
+
+  @doc false
+  def new_consequence_ids(baseline, kind) do
+    {table, column, type} = consequence_key(kind)
+
+    %{rows: rows} =
+      Repo.query!(
+        "SELECT #{column} FROM #{table} WHERE NOT (#{column} = ANY($1::#{type}[]))",
+        [Map.fetch!(baseline, kind)]
+      )
+
+    Enum.map(rows, &hd/1)
+  end
+
+  defp consequence_key(:tokens), do: {"tokens", "jti", "text"}
+  defp consequence_key(:nonces), do: {"communications_envelope_nonces", "nonce", "bytea"}
+  defp consequence_key(:jobs), do: {"oban_jobs", "id", "bigint"}
+
+  defp scoped_counts(operations, emails) do
+    operations = operations |> Enum.uniq() |> Enum.map(&Ecto.UUID.dump!/1)
+    emails = Enum.uniq(emails)
+    baseline = Process.get({__MODULE__, :consequence_baseline}) || capture_consequence_ids()
+    Process.put({__MODULE__, :consequence_baseline}, baseline)
+    new_tokens = new_consequence_ids(baseline, :tokens)
+    new_nonces = new_consequence_ids(baseline, :nonces)
+    new_jobs = new_consequence_ids(baseline, :jobs)
+
+    queries = [
+      {"SELECT count(*) FROM accounts WHERE email = ANY($1::text[])", [emails]},
+      {"SELECT count(*) FROM tokens WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR jti = ANY($2::text[])",
+       [emails, new_tokens]},
+      {"SELECT count(*) FROM registration_operations WHERE operation_id = ANY($2::uuid[]) OR created_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+       [emails, operations]},
+      {"SELECT count(*) FROM resend_operations WHERE operation_id = ANY($2::uuid[]) OR account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+       [emails, operations]},
+      {"SELECT count(*) FROM message_intents WHERE source_operation_id = ANY($1::uuid[])",
+       [operations]},
+      {"SELECT count(*) FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[])",
+       [operations]},
+      {"SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[])) OR n.nonce = ANY($2::bytea[])",
+       [operations, new_nonces]},
+      {"SELECT count(*) FROM evidence_obligations WHERE source_operation_id = ANY($2::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+       [emails, operations]},
+      {"SELECT count(*) FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($2::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = ANY($2::uuid[])) OR id = ANY($3::bigint[])",
+       [emails, operations, new_jobs]},
+      {"SELECT count(*) FROM identity_pmr_reservations WHERE pmr IN (SELECT pmr FROM accounts WHERE email = ANY($1::text[]))",
+       [emails]}
+    ]
+
+    Enum.map(queries, fn {query, params} -> scalar(query, params) end)
+  end
 
   def scalar(sql, args \\ []) do
     %{rows: [[value]]} = Repo.query!(sql, args)
@@ -776,10 +894,43 @@ defmodule NewYou.Proof.P805 do
   end
 
   defp raw_password_absent?(password) do
+    {operations, emails} = fixture_values()
+    operations = Enum.map(operations, &Ecto.UUID.dump!/1)
+
+    scoped_queries = %{
+      "accounts" => {"email = ANY($1::text[])", [emails]},
+      "tokens" =>
+        {"account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))", [emails]},
+      "registration_operations" =>
+        {"operation_id = ANY($2::uuid[]) OR created_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+         [emails, operations]},
+      "resend_operations" =>
+        {"operation_id = ANY($2::uuid[]) OR account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+         [emails, operations]},
+      "message_intents" => {"source_operation_id = ANY($1::uuid[])", [operations]},
+      "communications_protected_envelopes" =>
+        {"message_intent_id IN (SELECT id FROM message_intents WHERE source_operation_id = ANY($1::uuid[]))",
+         [operations]},
+      "communications_envelope_nonces" =>
+        {"nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[]))",
+         [operations]},
+      "evidence_obligations" =>
+        {"source_operation_id = ANY($2::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+         [emails, operations]},
+      "oban_jobs" =>
+        {"args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($2::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = ANY($2::uuid[]))",
+         [emails, operations]},
+      "identity_pmr_reservations" =>
+        {"pmr IN (SELECT pmr FROM accounts WHERE email = ANY($1::text[]))", [emails]}
+    }
+
     Enum.all?(@tables, fn table ->
+      {scope, parameters} = Map.fetch!(scoped_queries, table)
+      password_parameter = length(parameters) + 1
+
       scalar(
-        "SELECT count(*) FROM #{table} AS row WHERE strpos(row_to_json(row)::text, $1) > 0",
-        [password]
+        "SELECT count(*) FROM #{table} AS row WHERE (#{scope}) AND strpos(row_to_json(row)::text, $#{password_parameter}) > 0",
+        parameters ++ [password]
       ) == 0
     end)
   end
@@ -790,12 +941,56 @@ defmodule NewYou.Proof.P805 do
   end
 
   defp no_execution? do
-    scalar("SELECT count(*) FROM oban_jobs WHERE attempted_at IS NOT NULL OR attempt <> 0") == 0 and
-      read(Audit.EvidenceRecord, Audit) == []
+    {operations, emails} = fixture_values()
+    primary_keys = fixture_primary_keys(operations, emails)
+
+    scalar(
+      "SELECT count(*) FROM oban_jobs WHERE args->'primary_key'->>'id' = ANY($1::text[]) AND (attempted_at IS NOT NULL OR attempt <> 0)",
+      [primary_keys]
+    ) == 0 and evidence_records(operations, emails) == []
   end
 
-  defp communications_jobs,
-    do: scalar("SELECT count(*) FROM oban_jobs WHERE queue = 'communications'")
+  defp communications_jobs do
+    {operations, emails} = fixture_values()
+    primary_keys = fixture_primary_keys(operations, emails)
+
+    scalar(
+      "SELECT count(*) FROM oban_jobs WHERE queue = 'communications' AND args->'primary_key'->>'id' = ANY($1::text[])",
+      [primary_keys]
+    )
+  end
+
+  defp fixture_primary_keys(operations, emails) do
+    operations = Enum.map(operations, &Ecto.UUID.dump!/1)
+
+    %{rows: rows} =
+      Repo.query!(
+        "SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])) UNION SELECT id::text FROM message_intents WHERE source_operation_id = ANY($1::uuid[])",
+        [operations, emails]
+      )
+
+    Enum.map(rows, &hd/1)
+  end
+
+  defp evidence_records(operations, emails) do
+    operations = Enum.map(operations, &Ecto.UUID.dump!/1)
+
+    %{rows: rows} =
+      Repo.query!(
+        "SELECT id FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[]))",
+        [operations, emails]
+      )
+
+    obligation_ids = Enum.map(rows, &hd/1)
+
+    if obligation_ids == [] do
+      []
+    else
+      Audit.EvidenceRecord
+      |> Ash.Query.filter(obligation_id in ^obligation_ids)
+      |> Ash.read!(domain: Audit, authorize?: false)
+    end
+  end
 
   defp with_rejected_insert(table, callback) do
     suffix = System.unique_integer([:positive])

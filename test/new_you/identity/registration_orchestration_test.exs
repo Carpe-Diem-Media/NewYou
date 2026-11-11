@@ -13,10 +13,16 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
   @privacy_id "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
 
   setup do
+    Process.put({__MODULE__, :consequence_baseline}, NewYou.Proof.P805.capture_consequence_ids())
+    Process.put({__MODULE__, :operation_ids}, [])
+    Process.put({__MODULE__, :generated_pmrs}, [])
+    Process.put({__MODULE__, :emails}, [])
+
     previous = %{
       binding_keys: Application.get_env(:new_you, :identity_registration_binding_keys),
       token_secret: Application.get_env(:new_you, :identity_token_signing_secret),
-      communications_keyring: Application.get_env(:new_you, :communications_keyring)
+      communications_keyring: Application.get_env(:new_you, :communications_keyring),
+      pmr_generator: Application.get_env(:new_you, :identity_pmr_generator)
     }
 
     Application.put_env(:new_you, :identity_registration_binding_keys, %{
@@ -31,15 +37,25 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
       keys: %{"test-v1" => :crypto.strong_rand_bytes(32)}
     })
 
+    Application.put_env(:new_you, :identity_pmr_generator, fn ->
+      {:ok, pmr} = Identity.PMR.generate()
+
+      Process.put(
+        {__MODULE__, :generated_pmrs},
+        [pmr | Process.get({__MODULE__, :generated_pmrs}, [])]
+      )
+
+      {:ok, pmr}
+    end)
+
     on_exit(fn ->
       restore_env(:identity_registration_binding_keys, previous.binding_keys)
       restore_env(:identity_token_signing_secret, previous.token_secret)
       restore_env(:communications_keyring, previous.communications_keyring)
+      restore_env(:identity_pmr_generator, previous.pmr_generator)
     end)
 
-    {:ok,
-     nonce_count: row_count("communications_envelope_nonces"),
-     pmr_reservation_count: row_count("identity_pmr_reservations")}
+    {:ok, nonce_count: row_count("communications_envelope_nonces")}
   end
 
   test "registration commits one protected MessageIntent and the initial Audit schedule", %{
@@ -54,7 +70,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     [token] = records(Identity.Token, Identity)
     [intent] = records(MessageIntent, Communications)
     [obligation] = records(EvidenceObligation, NewYou.Audit)
-    [audit_job] = Repo.all(from job in Oban.Job)
+    [audit_job] = fixture_jobs()
 
     assert account.credential_status == :active
     assert account.hashed_password
@@ -86,7 +102,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert row_count("message_intents") == 1
     assert row_count("communications_protected_envelopes") == 1
     assert row_count("communications_envelope_nonces") == nonce_count + 1
-    assert length(Repo.all(from job in Oban.Job)) == 1
+    assert length(fixture_jobs()) == 1
   end
 
   test "an identical registration retry reuses its committed delivery consequence" do
@@ -101,7 +117,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert resource_count(MessageIntent, Communications) == 1
     assert resource_count(EvidenceObligation, NewYou.Audit) == 1
     assert row_count("communications_protected_envelopes") == 1
-    assert length(Repo.all(from job in Oban.Job)) == 1
+    assert length(fixture_jobs()) == 1
   end
 
   test "changed registration input reusing an operation ID has no new consequence" do
@@ -115,15 +131,15 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert resource_count(MessageIntent, Communications) == 1
     assert resource_count(EvidenceObligation, NewYou.Audit) == 1
     assert row_count("communications_protected_envelopes") == 1
-    assert length(Repo.all(from job in Oban.Job)) == 1
+    assert length(fixture_jobs()) == 1
   end
 
   test "a distinct operation for an existing canonical email adds no delivery or Audit state", %{
-    nonce_count: nonce_count,
-    pmr_reservation_count: pmr_reservation_count
+    nonce_count: nonce_count
   } do
     first = valid_request()
-    duplicate = %{valid_request() | email: "Alice+campaign.Example@EXAMPLE.COM"}
+    duplicate_email = String.replace(first.email, "@EXAMPLE.COM", "@example.com")
+    duplicate = valid_request(%{email: duplicate_email})
 
     assert {:ok, %{account_id: account_id}} = Identity.register(first)
     assert {:ok, %{account_id: nil}} = Identity.register(duplicate)
@@ -135,13 +151,13 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert resource_count(EvidenceObligation, NewYou.Audit) == 1
     assert row_count("communications_protected_envelopes") == 1
     assert row_count("communications_envelope_nonces") == nonce_count + 1
-    assert row_count("identity_pmr_reservations") == pmr_reservation_count + 1
-    assert length(Repo.all(from job in Oban.Job)) == 1
+    assert fixture_pmr_reservation_count() == 1
+    assert length(fixture_jobs()) == 1
   end
 
   test "repeated Account queries and resend revocation stay scoped to the selected Account" do
     request_a = valid_request()
-    request_b = %{valid_request() | email: "control@example.com"}
+    request_b = valid_request(%{email: "control@example.com"})
 
     assert {:ok, %{account_id: account_a, verification_proof: proof_a}} =
              Identity.register(request_a)
@@ -162,7 +178,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
 
     assert {:ok, :verification_pending} =
              Identity.resend_verification(%{
-               operation_id: Ecto.UUID.generate(),
+               operation_id: tracked_operation_id(),
                account_id: account_a
              })
 
@@ -182,8 +198,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
   end
 
   test "a protected-envelope failure rolls back every registration consequence", %{
-    nonce_count: nonce_count,
-    pmr_reservation_count: pmr_reservation_count
+    nonce_count: nonce_count
   } do
     reject_inserts("communications_protected_envelopes", "registration_envelope_failure")
 
@@ -196,15 +211,15 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert resource_count(EvidenceObligation, NewYou.Audit) == 0
     assert row_count("communications_protected_envelopes") == 0
     assert row_count("communications_envelope_nonces") == nonce_count
-    assert row_count("identity_pmr_reservations") == pmr_reservation_count
-    assert Repo.all(from job in Oban.Job) == []
+    assert fixture_pmr_reservation_count() == 0
+    assert fixture_jobs() == []
   end
 
   test "an accepted resend creates one replacement challenge and no central Audit schedule", %{
     nonce_count: nonce_count
   } do
     assert {:ok, %{account_id: account_id}} = Identity.register(valid_request())
-    operation_id = Ecto.UUID.generate()
+    operation_id = tracked_operation_id()
 
     assert {:ok, :verification_pending} =
              Identity.resend_verification(%{operation_id: operation_id, account_id: account_id})
@@ -223,7 +238,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert resource_count(EvidenceObligation, NewYou.Audit) == 1
     assert row_count("communications_protected_envelopes") == 2
     assert row_count("communications_envelope_nonces") == nonce_count + 2
-    assert length(Repo.all(from job in Oban.Job)) == 1
+    assert length(fixture_jobs()) == 1
     assert resend_intent.source_operation_id == operation_id
     refute resend_intent.source_reference == registration_intent.source_reference
     assert resend_intent.source_reference == replacement.jti
@@ -235,7 +250,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
   } do
     assert {:ok, %{account_id: account_id}} = Identity.register(valid_request())
     [original] = current_challenges()
-    operation_id = Ecto.UUID.generate()
+    operation_id = tracked_operation_id()
 
     reject_inserts("communications_protected_envelopes", "resend_envelope_failure")
 
@@ -250,12 +265,12 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert resource_count(EvidenceObligation, NewYou.Audit) == 1
     assert row_count("communications_protected_envelopes") == 1
     assert row_count("communications_envelope_nonces") == nonce_count + 1
-    assert length(Repo.all(from job in Oban.Job)) == 1
+    assert length(fixture_jobs()) == 1
   end
 
   test "same-ID resend replay does not create a second challenge, intent, or envelope" do
     assert {:ok, %{account_id: account_id}} = Identity.register(valid_request())
-    request = %{operation_id: Ecto.UUID.generate(), account_id: account_id}
+    request = %{operation_id: tracked_operation_id(), account_id: account_id}
 
     assert {:ok, :verification_pending} = Identity.resend_verification(request)
     [first_challenge] = current_challenges()
@@ -267,14 +282,14 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert resource_count(MessageIntent, Communications) == 2
     assert resource_count(EvidenceObligation, NewYou.Audit) == 1
     assert row_count("communications_protected_envelopes") == 2
-    assert length(Repo.all(from job in Oban.Job)) == 1
+    assert length(fixture_jobs()) == 1
   end
 
   test "resend by canonical email stays inside Identity and returns the neutral outcome" do
     registration = valid_request()
     assert {:ok, %{account_id: account_id}} = Identity.register(registration)
 
-    resend = %{operation_id: Ecto.UUID.generate(), email: registration.email}
+    resend = %{operation_id: tracked_operation_id(), email: registration.email}
     send_resend = &Identity.resend_verification_by_email/1
 
     assert {:ok, :verification_pending} = send_resend.(resend)
@@ -286,7 +301,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert resend_operation.account_id == account_id
 
     missing = %{
-      operation_id: Ecto.UUID.generate(),
+      operation_id: tracked_operation_id(),
       email: "missing-#{System.unique_integer([:positive])}@example.test"
     }
 
@@ -303,7 +318,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
 
     assert {:ok, %{account_id: account_id}} = Identity.register(registration)
     [original_challenge] = current_challenges()
-    operation_id = Ecto.UUID.generate()
+    operation_id = tracked_operation_id()
     unknown_email = "unknown-#{System.unique_integer([:positive])}@example.test"
 
     assert {:ok, :verification_pending} =
@@ -328,13 +343,13 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
 
   test "an unknown email replay stays terminal after that address becomes eligible" do
     email = "later-eligible-#{System.unique_integer([:positive])}@example.test"
-    operation_id = Ecto.UUID.generate()
+    operation_id = tracked_operation_id()
     resend = %{operation_id: operation_id, email: email}
 
     assert {:ok, :verification_pending} = Identity.resend_verification_by_email(resend)
     assert resource_count(Identity.ResendOperation, Identity) == 1
 
-    assert {:ok, %{account_id: account_id}} = Identity.register(%{valid_request() | email: email})
+    assert {:ok, %{account_id: account_id}} = Identity.register(valid_request(%{email: email}))
     [original_challenge] = current_challenges()
 
     assert {:ok, :verification_pending} = Identity.resend_verification_by_email(resend)
@@ -360,7 +375,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
         {:ok, account_id, account.email}
       end)
 
-    operation_id = Ecto.UUID.generate()
+    operation_id = tracked_operation_id()
     unknown_email = "concurrent-unknown-#{System.unique_integer([:positive])}@example.test"
     operation_ids = [operation_id]
     on_exit(fn -> cleanup_unboxed_registration(account_id, operation_ids) end)
@@ -405,8 +420,8 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
 
   test "replaying resend A after resend B leaves B as the current challenge" do
     assert {:ok, %{account_id: account_id}} = Identity.register(valid_request())
-    resend_a = %{operation_id: Ecto.UUID.generate(), account_id: account_id}
-    resend_b = %{operation_id: Ecto.UUID.generate(), account_id: account_id}
+    resend_a = %{operation_id: tracked_operation_id(), account_id: account_id}
+    resend_b = %{operation_id: tracked_operation_id(), account_id: account_id}
 
     assert {:ok, :verification_pending} = Identity.resend_verification(resend_a)
     assert {:ok, :verification_pending} = Identity.resend_verification(resend_b)
@@ -420,14 +435,14 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert resource_count(MessageIntent, Communications) == 3
     assert resource_count(EvidenceObligation, NewYou.Audit) == 1
     assert row_count("communications_protected_envelopes") == 3
-    assert length(Repo.all(from job in Oban.Job)) == 1
+    assert length(fixture_jobs()) == 1
   end
 
   test "a resend operation ID cannot be rebound to another account" do
     assert {:ok, %{account_id: account_a}} = Identity.register(valid_request())
-    second_request = %{valid_request() | email: "second@example.test"}
+    second_request = valid_request(%{email: "second@example.test"})
     assert {:ok, %{account_id: account_b}} = Identity.register(second_request)
-    operation_id = Ecto.UUID.generate()
+    operation_id = tracked_operation_id()
 
     assert {:ok, :verification_pending} =
              Identity.resend_verification(%{operation_id: operation_id, account_id: account_a})
@@ -443,7 +458,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
   test "a revoked Account receives a neutral resend response without new state" do
     assert {:ok, %{account_id: account_id}} = Identity.register(valid_request())
     [original] = current_challenges()
-    request = %{operation_id: Ecto.UUID.generate(), account_id: account_id}
+    request = %{operation_id: tracked_operation_id(), account_id: account_id}
 
     Repo.query!("UPDATE accounts SET credential_status = 'revoked' WHERE id = $1", [
       Ecto.UUID.dump!(account_id)
@@ -464,15 +479,19 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert operation.outcome == :neutral
     assert resource_count(MessageIntent, Communications) == 1
     assert row_count("communications_protected_envelopes") == 1
-    assert length(Repo.all(from job in Oban.Job)) == 1
+    assert length(fixture_jobs()) == 1
   end
 
   test "Token cleanup does not allow an accepted resend operation ID to be reused" do
     assert {:ok, %{account_id: account_id}} = Identity.register(valid_request())
-    request = %{operation_id: Ecto.UUID.generate(), account_id: account_id}
+    request = %{operation_id: tracked_operation_id(), account_id: account_id}
     assert {:ok, :verification_pending} = Identity.resend_verification(request)
 
-    Repo.query!("UPDATE tokens SET expires_at = now() - interval '1 hour'")
+    Repo.query!(
+      "UPDATE tokens SET expires_at = now() - interval '1 hour' WHERE account_id = $1",
+      [Ecto.UUID.dump!(account_id)]
+    )
+
     assert :ok = AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
 
     assert records(Identity.Token, Identity) == []
@@ -494,13 +513,13 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
 
     on_exit(fn -> cleanup_unboxed_registration(account_id) end)
 
-    same_id = %{operation_id: Ecto.UUID.generate(), account_id: account_id}
+    same_id = %{operation_id: tracked_operation_id(), account_id: account_id}
 
     assert_concurrent_resends(List.duplicate(same_id, 6))
 
     distinct_ids =
       for _ <- 1..2 do
-        %{operation_id: Ecto.UUID.generate(), account_id: account_id}
+        %{operation_id: tracked_operation_id(), account_id: account_id}
       end
 
     assert_concurrent_resends(distinct_ids)
@@ -513,11 +532,9 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     summary =
       Sandbox.unboxed_run(Repo, fn ->
         active_challenges =
-          Ash.read!(Identity.Token,
-            domain: Identity,
-            authorize?: false
-          )
-          |> Enum.filter(&(&1.account_id == account_id and &1.purpose == "email_verification"))
+          Identity.Token
+          |> Ash.Query.filter(account_id == ^account_id and purpose == "email_verification")
+          |> Ash.read!(domain: Identity, authorize?: false)
 
         intents = Enum.sum(Enum.map(operation_ids, &intent_count/1))
 
@@ -532,8 +549,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
           )
 
         %{
-          operations:
-            length(Ash.read!(Identity.ResendOperation, domain: Identity, authorize?: false)),
+          operations: length(records(Identity.ResendOperation, Identity)),
           active_challenges: active_challenges,
           intents: intents,
           envelopes: envelopes
@@ -546,32 +562,204 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert summary.envelopes == 4
   end
 
-  defp valid_request do
-    %{
-      operation_id: Ecto.UUID.generate(),
-      first_name: "Alice",
-      surname: "Example",
-      email: " Alice+campaign.Example@EXAMPLE.COM ",
-      password: Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
-      preferred_language: :af,
-      confirmed_age_18?: true,
-      terms_version_id: @terms_id,
-      privacy_version_id: @privacy_id
-    }
+  test "rollback observation finds an Account and Token without a RegistrationOperation" do
+    request = valid_request()
+    assert {:ok, %{account_id: account_id}} = Identity.register(request)
+
+    Repo.query!("DELETE FROM registration_operations WHERE operation_id = $1", [
+      Ecto.UUID.dump!(request.operation_id)
+    ])
+
+    assert records(Identity.RegistrationOperation, Identity) == []
+    assert [%{id: ^account_id}] = records(Identity.Account, Identity)
+    assert length(records(Identity.Token, Identity)) == 1
+  end
+
+  test "rollback observation finds a nonce without an envelope" do
+    nonce = :crypto.strong_rand_bytes(12)
+    Repo.query!("INSERT INTO communications_envelope_nonces (nonce) VALUES ($1)", [nonce])
+    assert row_count("communications_protected_envelopes") == 0
+    assert row_count("communications_envelope_nonces") == 1
+  end
+
+  test "rollback observation finds a job without an obligation or intent" do
+    primary_key = Ecto.UUID.generate()
+
+    Repo.query!(
+      "INSERT INTO oban_jobs (queue, worker, args) VALUES ('audit', 'NewYou.Audit.Workers.RegistrationEvidence', $1)",
+      [%{"primary_key" => %{"id" => primary_key}}]
+    )
+
+    assert records(EvidenceObligation, NewYou.Audit) == []
+    assert records(MessageIntent, Communications) == []
+    assert length(fixture_jobs()) == 1
+  end
+
+  defp valid_request(overrides \\ %{}) do
+    request =
+      Map.merge(
+        %{
+          operation_id: tracked_operation_id(),
+          first_name: "Alice",
+          surname: "Example",
+          email: " Alice+#{Ecto.UUID.generate()}@EXAMPLE.COM ",
+          password: Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
+          preferred_language: :af,
+          confirmed_age_18?: true,
+          terms_version_id: @terms_id,
+          privacy_version_id: @privacy_id
+        },
+        overrides
+      )
+
+    {:ok, email} = Identity.Email.canonicalize(request.email)
+    Process.put({__MODULE__, :emails}, [email | Process.get({__MODULE__, :emails}, [])])
+    request
   end
 
   defp current_challenges do
     Enum.filter(records(Identity.Token, Identity), &(&1.purpose == "email_verification"))
   end
 
-  defp records(resource, domain),
-    do: Ash.read!(resource, domain: domain, authorize?: false)
+  defp tracked_operation_id do
+    operation_id = Ecto.UUID.generate()
+
+    Process.put(
+      {__MODULE__, :operation_ids},
+      [operation_id | Process.get({__MODULE__, :operation_ids}, [])]
+    )
+
+    operation_id
+  end
+
+  defp new_consequence_ids(kind) do
+    NewYou.Proof.P805.new_consequence_ids(Process.get({__MODULE__, :consequence_baseline}), kind)
+  end
+
+  defp fixture_operation_ids do
+    Process.get({__MODULE__, :operation_ids}, []) |> Enum.uniq()
+  end
+
+  defp fixture_account_ids do
+    operation_ids = Enum.map(fixture_operation_ids(), &Ecto.UUID.dump!/1)
+
+    %{rows: rows} =
+      Repo.query!(
+        "SELECT id FROM accounts WHERE email = ANY($2::text[]) UNION SELECT created_account_id FROM registration_operations WHERE operation_id = ANY($1::uuid[]) AND created_account_id IS NOT NULL",
+        [operation_ids, Process.get({__MODULE__, :emails}, [])]
+      )
+
+    Enum.map(rows, &hd/1)
+  end
+
+  defp records(Identity.Account, Identity) do
+    account_ids = fixture_account_ids()
+
+    Identity.Account
+    |> Ash.Query.filter(id in ^account_ids)
+    |> Ash.read!(domain: Identity, authorize?: false)
+  end
+
+  defp records(Identity.Token, Identity) do
+    account_ids = fixture_account_ids()
+    token_ids = new_consequence_ids(:tokens)
+
+    Identity.Token
+    |> Ash.Query.filter(account_id in ^account_ids or jti in ^token_ids)
+    |> Ash.read!(domain: Identity, authorize?: false)
+  end
+
+  defp records(Identity.RegistrationOperation, Identity) do
+    operation_ids = fixture_operation_ids()
+
+    Identity.RegistrationOperation
+    |> Ash.Query.filter(operation_id in ^operation_ids)
+    |> Ash.read!(domain: Identity, authorize?: false)
+  end
+
+  defp records(Identity.ResendOperation, Identity) do
+    operation_ids = fixture_operation_ids()
+
+    Identity.ResendOperation
+    |> Ash.Query.filter(operation_id in ^operation_ids)
+    |> Ash.read!(domain: Identity, authorize?: false)
+  end
+
+  defp records(MessageIntent, Communications) do
+    operation_ids = fixture_operation_ids()
+
+    MessageIntent
+    |> Ash.Query.filter(source_operation_id in ^operation_ids)
+    |> Ash.read!(domain: Communications, authorize?: false)
+  end
+
+  defp records(EvidenceObligation, NewYou.Audit) do
+    operation_ids = fixture_operation_ids()
+
+    EvidenceObligation
+    |> Ash.Query.filter(source_operation_id in ^operation_ids)
+    |> Ash.read!(domain: NewYou.Audit, authorize?: false)
+  end
 
   defp resource_count(resource, domain), do: length(records(resource, domain))
 
   defp row_count(table) do
-    %{rows: [[count]]} = Repo.query!("SELECT count(*) FROM #{table}")
+    operation_ids = Enum.map(fixture_operation_ids(), &Ecto.UUID.dump!/1)
+
+    {query, params} =
+      case table do
+        "message_intents" ->
+          {"SELECT count(*) FROM message_intents WHERE source_operation_id = ANY($1::uuid[])",
+           [operation_ids]}
+
+        "communications_protected_envelopes" ->
+          {"SELECT count(*) FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[])",
+           [operation_ids]}
+
+        "communications_envelope_nonces" ->
+          {"SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[])) OR n.nonce = ANY($2::bytea[])",
+           [operation_ids, new_consequence_ids(:nonces)]}
+      end
+
+    %{rows: [[count]]} = Repo.query!(query, params)
     count
+  end
+
+  defp fixture_pmr_reservation_count do
+    pmrs = Process.get({__MODULE__, :generated_pmrs}, []) |> Enum.uniq()
+
+    %{rows: [[count]]} =
+      Repo.query!(
+        "SELECT count(*) FROM identity_pmr_reservations WHERE pmr = ANY($1::text[])",
+        [pmrs]
+      )
+
+    count
+  end
+
+  defp fixture_jobs do
+    operation_ids = Enum.map(fixture_operation_ids(), &Ecto.UUID.dump!/1)
+
+    %{rows: rows} =
+      Repo.query!(
+        "SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($1::uuid[]) UNION SELECT id::text FROM message_intents WHERE source_operation_id = ANY($1::uuid[])",
+        [operation_ids]
+      )
+
+    primary_keys = Enum.map(rows, &hd/1)
+
+    new_jobs = new_consequence_ids(:jobs)
+
+    if primary_keys == [] and new_jobs == [] do
+      []
+    else
+      Repo.all(
+        from job in Oban.Job,
+          where:
+            job.id in ^new_jobs or
+              fragment("?->'primary_key'->>'id' = ANY(?::text[])", job.args, ^primary_keys)
+      )
+    end
   end
 
   defp assert_concurrent_resends(requests) do
