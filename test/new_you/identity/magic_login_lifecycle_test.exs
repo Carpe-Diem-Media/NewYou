@@ -2,9 +2,39 @@ defmodule NewYou.Identity.MagicLoginLifecycleTest do
   use ExUnit.Case, async: false
   require Ash.Query
 
+  alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.Identity
   alias NewYou.Identity.{Account, Session, Token}
   alias NewYou.Proof.P805
+
+  test "a cancelled request loses its fixture lease but a bound retry proves fresh durable issuance" do
+    P805.with_fixture(fn ->
+      {request, registration} = verified_account()
+      prior = request_current_proof(request.email, registration.account_id, operation())
+      prior_bearer = delivery!(prior, request.email, "af")
+      interrupted_operation = operation()
+      checkpoint = make_ref()
+
+      Process.put(NewYou.Proof.RegistrationSeam, {:pause, self(), checkpoint})
+
+      try do
+        :ok = Identity.request_magic_login(request.email, "af", interrupted_operation)
+      after
+        Process.delete(NewYou.Proof.RegistrationSeam)
+      end
+
+      assert_received {^checkpoint, :before_commit, worker, _backend, _transaction}
+      refute Process.alive?(worker)
+      proof = request_current_proof(request.email, registration.account_id, interrupted_operation)
+      assert proof.magic_request_id == interrupted_operation
+      assert proof.jti != prior.jti
+      assert delivery_rejected?(prior.jti, request.email, "af")
+      assert consume(prior_bearer) == :denied
+      bearer = delivery!(proof, request.email, "af")
+      assert consume(bearer) == :accepted
+      assert consume(bearer) == :denied
+    end)
+  end
 
   test "expiry, revocation, supersession and replay fail closed" do
     P805.with_fixture(fn ->
@@ -12,8 +42,7 @@ defmodule NewYou.Identity.MagicLoginLifecycleTest do
 
       for disposition <- [:expired, :revoked, :superseded] do
         operation = operation()
-        :ok = Identity.request_magic_login(request.email, "af", operation)
-        proof = current_proof(registration.account_id)
+        proof = request_current_proof(request.email, registration.account_id, operation)
         bearer = delivery!(proof, request.email, "af")
 
         case disposition do
@@ -29,7 +58,7 @@ defmodule NewYou.Identity.MagicLoginLifecycleTest do
             ])
 
           :superseded ->
-            :ok = Identity.request_magic_login(request.email, "af", operation())
+            request_current_proof(request.email, registration.account_id, operation())
         end
 
         rejected = delivery_rejected?(proof.jti, request.email, "af")
@@ -39,8 +68,7 @@ defmodule NewYou.Identity.MagicLoginLifecycleTest do
       end
 
       operation = operation()
-      :ok = Identity.request_magic_login(request.email, "af", operation)
-      proof = current_proof(registration.account_id)
+      proof = request_current_proof(request.email, registration.account_id, operation)
       bearer = delivery!(proof, request.email, "af")
       first = consume(bearer)
       replay = consume(bearer)
@@ -256,6 +284,29 @@ defmodule NewYou.Identity.MagicLoginLifecycleTest do
       {:ok, bearer} when is_binary(bearer) -> bearer
       _ -> raise "expected current magic-login delivery proof"
     end
+  end
+
+  defp request_current_proof(email, account_id, operation_id) do
+    proof =
+      Enum.reduce_while(1..3, nil, fn _, _ ->
+        # Cancellation may disconnect the borrowed lease. A neutral response is
+        # not issuance proof: reacquire, then observe this exact durable operation.
+        Sandbox.unboxed_run(NewYou.Repo, fn ->
+          :ok = Identity.request_magic_login(email, "af", operation_id)
+        end)
+
+        :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
+
+        case current_proof(account_id) do
+          %Token{magic_request_id: ^operation_id} = current -> {:halt, current}
+          _ -> {:cont, nil}
+        end
+      end)
+
+    assert match?(%Token{magic_request_id: ^operation_id}, proof),
+           "request fixture did not commit the expected current magic proof"
+
+    proof
   end
 
   defp delivery_rejected?(jti, destination, locale) do
