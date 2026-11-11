@@ -123,8 +123,12 @@ defmodule Mix.Tasks.Design.Check do
   defp resolve_color_value(nil, _variables, _visited), do: nil
 
   defp resolve_color_value(value, variables, visited) do
-    case Regex.run(~r/^var\((--[\w-]+)\)$/, value, capture: :all_but_first) do
-      [reference] -> resolve_color(reference, variables, visited)
+    reference =
+      Regex.run(~r/^var\((--[\w-]+)\)$/, value, capture: :all_but_first) ||
+        Regex.run(~r/^oklch\(from var\((--[\w-]+)\) l c h\)$/, value, capture: :all_but_first)
+
+    case reference do
+      [name] -> resolve_color(name, variables, visited)
       _ -> String.downcase(value)
     end
   end

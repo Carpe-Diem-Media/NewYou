@@ -32,6 +32,8 @@
             <li><a href="#cards">Cards & icons</a></li>
             <li><a href="#layout">Layout & grids</a></li>
             <li><a href="#relationships">Colour pairs</a></li>
+            <li><a href="#surfaces">Surface treatments</a></li>
+            <li><a href="#fluid">Fluid comparisons</a></li>
             <li><a href="#shape">Radius & shadow</a></li>
           </ol>
         </nav>
@@ -253,6 +255,23 @@
           <.relationships />
         </section>
 
+        <section id="surfaces" aria-labelledby="surfaces-title">
+          <div class="ds-section-heading">
+            <h2 id="surfaces-title">Surface treatments</h2>
+            <p>Compare decorative treatments and derived opaque color pairs.</p>
+          </div>
+          <.relationships surface_only?={true} />
+          <.surfaces />
+        </section>
+
+        <section id="fluid" aria-labelledby="fluid-title">
+          <div class="ds-section-heading">
+            <h2 id="fluid-title">Fluid comparisons</h2>
+            <p>Compare candidate type and spacing values across viewport sizes.</p>
+          </div>
+          <.fluid />
+        </section>
+
         <section id="shape" aria-labelledby="shape-title">
           <div class="ds-section-heading">
             <h2 id="shape-title">Radius & shadow</h2>
@@ -285,7 +304,11 @@
         <footer id="editing" class="ds-editing">
           <h2>Refine at the source.</h2>
           <p>
-            Edit <code>assets/css/design-tokens.css</code>. Shared components and this guide read the same values.
+            Edit source colours once in <code>assets/css/design-tokens.css</code>
+            through tokens such as <code>--palette-primary-srgb</code>. Semantic tokens such as
+            <code>--primary</code>
+            keep their
+            component roles and can still be overridden deliberately.
           </p>
           <p class="ds-note">
             Keep approved changes in DESIGN.md. Legacy screens move to these tokens as they are deliberately migrated.

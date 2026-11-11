@@ -137,18 +137,183 @@ defmodule NewYouWeb.DesignSystemComponents do
     """
   end
 
+  def surfaces(assigns) do
+    ~H"""
+    <div class="ds-treatment-list">
+      <figure class="ds-treatment-item">
+        <div class="ds-treatment" data-treatment="gradient" aria-hidden="true"></div>
+        <figcaption>
+          <strong>Gradient wash</strong>
+          <p>Decorative only. Do not use the gradient as a text or control background.</p>
+          <.token_reference name="--design-gradient-soft" />
+          <.token_reference name="--background-image-design-wash" />
+        </figcaption>
+      </figure>
+      <figure class="ds-treatment-item">
+        <div class="ds-treatment" data-treatment="noise" aria-hidden="true"></div>
+        <figcaption>
+          <strong>Noise texture</strong>
+          <p>Decorative only. Keep text and controls outside the texture layer.</p>
+          <.token_reference name="--design-noise-image" />
+          <.token_reference name="--design-noise-opacity" />
+        </figcaption>
+      </figure>
+      <figure class="ds-treatment-item">
+        <div class="ds-treatment" data-treatment="overlay" aria-hidden="true"></div>
+        <figcaption>
+          <strong>Static scrim</strong>
+          <p>Candidate overlay token. This sample has no text and makes no contrast claim.</p>
+          <.token_reference name="--design-overlay" />
+        </figcaption>
+      </figure>
+    </div>
+    <p class="ds-note">
+      These surface treatments are candidates for review, not approved global component styles.
+      Contrast applies to opaque color pairs below. The guide does not score a whole gradient.
+    </p>
+    """
+  end
+
+  def fluid(assigns) do
+    ~H"""
+    <p class="ds-note">
+      These fluid values are comparison candidates. Existing app typography stays fixed at its approved tokens.
+    </p>
+    <dl class="ds-fluid-bounds">
+      <div>
+        <dt>Viewport start</dt><dd><.token_value name="--fluid-vmin" /></dd>
+      </div>
+      <div>
+        <dt>Viewport end</dt><dd><.token_value name="--fluid-vmax" /></dd>
+      </div>
+      <div>
+        <dt>Method</dt><dd><.token_value name="--fluid-method" /></dd>
+      </div>
+      <div>
+        <dt>CSS support</dt><dd><output data-css-support="oklch">Checking OKLCH support</output></dd>
+      </div>
+      <div>
+        <dt>CSS support</dt><dd>
+          <output data-css-support="color-mix">Checking color-mix support</output>
+        </dd>
+      </div>
+      <div>
+        <dt>CSS support</dt><dd>
+          <output data-css-support="progress">Checking progress() support</output>
+        </dd>
+      </div>
+    </dl>
+    <div class="ds-fluid-list">
+      <article class="ds-fluid-item">
+        <div id="fluid-display" class="ds-fluid-display">A little room to grow.</div>
+        <h3>Display size</h3>
+        <.token_reference name="--fluid-display-min" />
+        <.token_reference name="--fluid-display-max" />
+        <dl class="ds-fluid-measurements">
+          <div>
+            <dt>Minimum</dt><dd data-fluid-value="display-min">
+              <.token_value name="--fluid-display-min" />
+            </dd>
+          </div>
+          <div>
+            <dt>Current</dt><dd>
+              <output data-measure-target="fluid-display" data-measure-property="font-size">Current size measured in browser</output>
+            </dd>
+          </div>
+          <div>
+            <dt>Maximum</dt><dd data-fluid-value="display-max">
+              <.token_value name="--fluid-display-max" />
+            </dd>
+          </div>
+        </dl>
+      </article>
+      <article class="ds-fluid-item">
+        <p id="fluid-body" class="ds-fluid-body">
+          The browser reports the computed size of this paragraph.
+        </p>
+        <h3>Body size</h3>
+        <dl class="ds-fluid-measurements">
+          <div>
+            <dt>Minimum</dt><dd data-fluid-value="body-min">
+              <.token_value name="--fluid-body-min" />
+            </dd>
+          </div>
+          <div>
+            <dt>Current</dt><dd>
+              <output data-measure-target="fluid-body" data-measure-property="font-size">Current size measured in browser</output>
+            </dd>
+          </div>
+          <div>
+            <dt>Maximum</dt><dd data-fluid-value="body-max">
+              <.token_value name="--fluid-body-max" />
+            </dd>
+          </div>
+        </dl>
+      </article>
+      <article class="ds-fluid-item">
+        <div id="fluid-space" class="ds-fluid-space">Block spacing sample</div>
+        <h3>Block spacing</h3>
+        <dl class="ds-fluid-measurements">
+          <div>
+            <dt>Minimum</dt><dd data-fluid-value="space-min">
+              <.token_value name="--fluid-space-min" />
+            </dd>
+          </div>
+          <div>
+            <dt>Current</dt><dd>
+              <output data-measure-target="fluid-space" data-measure-property="padding-block-start">Current spacing measured in browser</output>
+            </dd>
+          </div>
+          <div>
+            <dt>Maximum</dt><dd data-fluid-value="space-max">
+              <.token_value name="--fluid-space-max" />
+            </dd>
+          </div>
+        </dl>
+      </article>
+      <article class="ds-fluid-item">
+        <div id="fluid-gutter" class="ds-fluid-gutter"><span>Inline gutter sample</span></div>
+        <h3>Inline gutter</h3>
+        <dl class="ds-fluid-measurements">
+          <div>
+            <dt>Minimum</dt><dd data-fluid-value="gutter-min">
+              <.token_value name="--fluid-gutter-min" />
+            </dd>
+          </div>
+          <div>
+            <dt>Current</dt><dd>
+              <output data-measure-target="fluid-gutter" data-measure-property="padding-inline-start">Current gutter measured in browser</output>
+            </dd>
+          </div>
+          <div>
+            <dt>Maximum</dt><dd data-fluid-value="gutter-max">
+              <.token_value name="--fluid-gutter-max" />
+            </dd>
+          </div>
+        </dl>
+      </article>
+    </div>
+    """
+  end
+
+  attr :surface_only?, :boolean, default: false
+
   def relationships(assigns) do
-    assigns =
-      assign(assigns, :pairs, [
-        {"canvas", "Ink on canvas", "--secondary", "--canvas"},
-        {"surface", "Ink on surface", "--secondary", "--surface"},
-        {"primary", "Primary action", "--on-primary", "--primary"},
-        {"saffron", "Ink on saffron", "--secondary", "--orb-saffron"},
-        {"pink", "Ink on pink", "--secondary", "--orb-pink"},
-        {"aqua", "Ink on aqua", "--secondary", "--orb-aqua"},
-        {"grass", "Light on grass", "--on-primary", "--orb-grass"},
-        {"ultraviolet", "Light on ultraviolet", "--on-primary", "--orb-ultraviolet"}
-      ])
+    pairs = [
+      {"canvas", "Ink on canvas", "--secondary", "--canvas"},
+      {"surface", "Ink on surface", "--secondary", "--surface"},
+      {"primary", "Primary action", "--on-primary", "--primary"},
+      {"saffron", "Ink on saffron", "--secondary", "--orb-saffron"},
+      {"pink", "Ink on pink", "--secondary", "--orb-pink"},
+      {"aqua", "Ink on aqua", "--secondary", "--orb-aqua"},
+      {"grass", "Light on grass", "--on-primary", "--orb-grass"},
+      {"ultraviolet", "Light on ultraviolet", "--on-primary", "--orb-ultraviolet"},
+      {"tint", "Surface tint", "--secondary", "--design-surface-tint"},
+      {"shade", "Surface shade", "--secondary", "--design-surface-shade"}
+    ]
+
+    pairs = if assigns.surface_only?, do: Enum.take(pairs, -2), else: pairs
+    assigns = assign(assigns, :pairs, pairs)
 
     ~H"""
     <div class="ds-relationships">

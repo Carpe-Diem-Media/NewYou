@@ -6,7 +6,8 @@ defmodule NewYouWeb.DesignSystemLiveTest do
   test "the guide renders all requested foundations and semantic examples", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/dev/design-system")
 
-    for section <- ~w(palette typography spacing buttons cards layout relationships shape) do
+    for section <-
+          ~w(palette typography spacing buttons cards layout relationships surfaces fluid shape) do
       assert has_element?(view, "section##{section}")
       assert has_element?(view, "nav a[href='##{section}']")
     end
@@ -16,6 +17,34 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     assert has_element?(view, "[data-token='--secondary']")
     assert has_element?(view, "[data-token='--radius']")
     assert has_element?(view, "[data-token='--box-shadow']")
+
+    assert has_element?(
+             view,
+             "#surfaces .ds-treatment[data-treatment='gradient'][aria-hidden='true']"
+           )
+
+    assert has_element?(
+             view,
+             "#surfaces .ds-treatment[data-treatment='noise'][aria-hidden='true']"
+           )
+
+    assert has_element?(
+             view,
+             "#surfaces .ds-treatment[data-treatment='overlay'][aria-hidden='true']"
+           )
+
+    assert has_element?(view, "#surfaces [data-pair='tint'][data-contrast-sample]")
+    assert has_element?(view, "#fluid .ds-fluid-display#fluid-display")
+    assert has_element?(view, "#fluid .ds-fluid-body#fluid-body")
+    assert has_element?(view, "#fluid .ds-fluid-space#fluid-space")
+    assert has_element?(view, "#fluid .ds-fluid-gutter#fluid-gutter")
+
+    assert has_element?(
+             view,
+             "#fluid [data-measure-target='fluid-display'][data-measure-property='font-size']"
+           )
+
+    assert has_element?(view, "#fluid [data-fluid-value='display-min']")
     assert has_element?(view, "button[disabled]", "Unavailable")
     assert has_element?(view, "button[disabled] .hero-lock-closed[aria-hidden='true']")
     assert has_element?(view, "#token-status[role='status']")

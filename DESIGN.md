@@ -306,6 +306,25 @@ The guide's card specimen uses the approved white surface, charcoal text, hairli
 
 Editing a token updates all canonical consumers through CSS. Changes to locked visual values still require the corresponding intentional update to this file; the guide is a refinement tool and does not approve a replacement design by itself. Existing legacy screens remain on the temporary compatibility lane until deliberately migrated.
 
+### Color representation and refinement candidates
+
+The owner approved extending the development reference with modern CSS color relationships, surface-treatment comparisons and fluid sizing. This intentionally extends the guide contract without replacing the flat application design or approving a new global surface role.
+
+The `--palette-*-srgb` variables in `assets/css/design-tokens.css` are the single authored source for the exact palette listed below. Existing semantic names such as `--primary`, `--secondary` and `--canvas` reference those sources. Where relative colors are supported, identity `oklch(from var(--palette-…-srgb) l c h)` conversion expresses the same color in OKLCH. The sRGB alias is the fallback. Do not change lightness, chroma, hue or alpha during this identity conversion. The palette check permits only this identity conversion and still rejects mismatches, unknown references, cycles and extra Tailwind palette roles. Changing a brand source still requires an intentional palette update here.
+
+Development-only candidate tokens define:
+
+- `--design-surface-tint`: 12% primary mixed with the white surface in Oklab. `--design-surface-shade`: 12% secondary ink mixed with the warm canvas. These are opaque reference pairs with measured text contrast, not new card or CTA variants.
+- `--design-overlay`: 72% secondary ink mixed with transparency. It demonstrates a static scrim. It does not approve a modal implementation, an interaction-blocking layer or universal text-on-image contrast.
+- `--design-gradient-soft`: a 135-degree canvas-to-tint wash, interpolated in Oklab where supported. The two-stop conventional gradient remains the fallback. It is a decorative specimen only, without a whole-background contrast claim. Tailwind exposes it as `bg-design-wash`.
+- `--design-noise-image`: a local, seeded, monochrome SVG turbulence texture, tiled at 128px and composited at `--design-noise-opacity` 0.06. Noise is static, pointer-transparent and decorative. It must not carry information or reduce control/text legibility. No external texture request or animation is introduced.
+
+Color-mix specimens fall back to existing opaque palette roles where the function is unsupported. The fallback scrim is opaque ink. The guide reports capabilities; fallback appearance is not presented as an identical mixed color.
+
+Fluid sizing is a separate candidate comparison, not an automatic change to existing `--text-*`, `--space-*`, line-height, tracking or breakpoint contracts. `--fluid-vmin` is 30rem and `--fluid-vmax` is 75rem. Keep the lower bound below the upper bound. `--fluid` is clamped to 0 to 1. Its progression is static minimum, feature-detected trigonometric ratio, then feature-detected native `progress()`. No JavaScript controls sizing.
+
+Independent semantic endpoints are display 2.5rem to 4rem, body 1rem to 1.125rem, section space 1rem to 3rem and gutter 1rem to 1.5rem. The display maximum is the existing 64px at the default 16px root. Rem-based endpoints intentionally grow with user font preferences; do not cap them with fixed pixels. These candidate values support direct visual comparison before a later explicit component-wide adoption. Breakpoints continue to control layout composition independently of continuous fluid sizing.
+
 ## Overview
 
 Headspace's marketing surface reads less like a meditation app and more like a children's storybook re-laid as a web product page. The base canvas is a **warm off-white** (`{colors.canvas}` — #f9f4f2), the load-bearing ink is a **warm charcoal** (`{colors.ink}` — #2d2c2b) running every h1, h2, h3, and body paragraph, and the single saturated voltage is a confident blue (`{colors.primary}` — #0061ef) on the "Try for free" CTA pill. Where most meditation brands reach for sage greens or terracotta to signal serenity, Headspace argues through its chrome that wellness can be playful — even loud — as long as the type stays warm and the canvas stays cream.

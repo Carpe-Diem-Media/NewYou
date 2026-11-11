@@ -4,24 +4,43 @@
 /* Hallmark · waive 37 · numeric weight tokens are not extra font families · the project retains its approved Inter fallback */
 /* Executable token values mapped from DESIGN.md. Edit here; canonical Tailwind consumers share these values. */
 :root {
-  --primary: #0061ef;
-  --primary-hover: #0000ee;
-  --secondary: #2d2c2b;
-  --ink-strong: #141313;
-  --ink-soft: #44423f;
-  --ink-muted: #4b4c4d;
-  --ink-meta: #63605d;
-  --canvas: #f9f4f2;
-  --surface: #ffffff;
-  --hairline: #e2ded9;
-  --hairline-cool: #d2d5de;
-  --on-primary: #ffffff;
-  --on-canvas: #000000;
-  --orb-saffron: #ffce00;
-  --orb-pink: #ffa1cc;
-  --orb-aqua: #00a4ff;
-  --orb-grass: #02873e;
-  --orb-ultraviolet: #3b197f;
+  /* Brand source values are authored once; semantic roles retain their existing names. */
+  --palette-primary-srgb: #0061ef;
+  --palette-primary-hover-srgb: #0000ee;
+  --palette-secondary-srgb: #2d2c2b;
+  --palette-ink-strong-srgb: #141313;
+  --palette-ink-soft-srgb: #44423f;
+  --palette-ink-muted-srgb: #4b4c4d;
+  --palette-ink-meta-srgb: #63605d;
+  --palette-canvas-srgb: #f9f4f2;
+  --palette-surface-srgb: #ffffff;
+  --palette-hairline-srgb: #e2ded9;
+  --palette-hairline-cool-srgb: #d2d5de;
+  --palette-on-primary-srgb: #ffffff;
+  --palette-on-canvas-srgb: #000000;
+  --palette-orb-saffron-srgb: #ffce00;
+  --palette-orb-pink-srgb: #ffa1cc;
+  --palette-orb-aqua-srgb: #00a4ff;
+  --palette-orb-grass-srgb: #02873e;
+  --palette-orb-ultraviolet-srgb: #3b197f;
+  --primary: var(--palette-primary-srgb);
+  --primary-hover: var(--palette-primary-hover-srgb);
+  --secondary: var(--palette-secondary-srgb);
+  --ink-strong: var(--palette-ink-strong-srgb);
+  --ink-soft: var(--palette-ink-soft-srgb);
+  --ink-muted: var(--palette-ink-muted-srgb);
+  --ink-meta: var(--palette-ink-meta-srgb);
+  --canvas: var(--palette-canvas-srgb);
+  --surface: var(--palette-surface-srgb);
+  --hairline: var(--palette-hairline-srgb);
+  --hairline-cool: var(--palette-hairline-cool-srgb);
+  --on-primary: var(--palette-on-primary-srgb);
+  --on-canvas: var(--palette-on-canvas-srgb);
+  --orb-saffron: var(--palette-orb-saffron-srgb);
+  --orb-pink: var(--palette-orb-pink-srgb);
+  --orb-aqua: var(--palette-orb-aqua-srgb);
+  --orb-grass: var(--palette-orb-grass-srgb);
+  --orb-ultraviolet: var(--palette-orb-ultraviolet-srgb);
   --font-body: Inter, sans-serif;
   --weight-regular: 400;
   --weight-medium: 500;
@@ -93,9 +112,96 @@
   --design-preview-height: 480px;
   --design-preview-scale: 1;
   --design-border-width: 1px;
+
+  /* Candidate surfaces, used only by labelled development specimens. */
+  --design-tint-strength: 12%;
+  --design-shade-strength: 12%;
+  --design-overlay-strength: 72%;
+  --design-surface-tint: var(--canvas);
+  --design-surface-shade: var(--hairline);
+  --design-overlay: var(--secondary);
+  --design-gradient-angle: 135deg;
+  --design-gradient-soft: linear-gradient(var(--design-gradient-angle), var(--canvas), var(--hairline));
+  --design-noise-opacity: 0.06;
+  --design-noise-size: 128px;
+  --design-noise-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 128 128'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='17' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cpath d='M0 0h128v128H0z' filter='url(%23grain)'/%3E%3C/svg%3E");
+  --design-treatment-height: 10rem;
+
+  /* Reference candidates. Fixed application typography and spacing remain unchanged. */
+  --fluid-vmin: 30rem;
+  --fluid-vmax: 75rem;
+  --fluid: 0;
+  --fluid-method: static;
+  --fluid-display-min: 2.5rem;
+  --fluid-display-max: 4rem;
+  --fluid-body-min: 1rem;
+  --fluid-body-max: 1.125rem;
+  --fluid-space-min: 1rem;
+  --fluid-space-max: 3rem;
+  --fluid-gutter-min: 1rem;
+  --fluid-gutter-max: 1.5rem;
+  --fluid-display: calc(var(--fluid-display-min) + var(--fluid) * (var(--fluid-display-max) - var(--fluid-display-min)));
+  --fluid-body: calc(var(--fluid-body-min) + var(--fluid) * (var(--fluid-body-max) - var(--fluid-body-min)));
+  --fluid-space: calc(var(--fluid-space-min) + var(--fluid) * (var(--fluid-space-max) - var(--fluid-space-min)));
+  --fluid-gutter: calc(var(--fluid-gutter-min) + var(--fluid) * (var(--fluid-gutter-max) - var(--fluid-gutter-min)));
+
+}
+
+/* Identity conversion preserves exact brand colors without rounded OKLCH constants. */
+@supports (color: oklch(from red l c h)) {
+  :root {
+    --primary: oklch(from var(--palette-primary-srgb) l c h);
+    --primary-hover: oklch(from var(--palette-primary-hover-srgb) l c h);
+    --secondary: oklch(from var(--palette-secondary-srgb) l c h);
+    --ink-strong: oklch(from var(--palette-ink-strong-srgb) l c h);
+    --ink-soft: oklch(from var(--palette-ink-soft-srgb) l c h);
+    --ink-muted: oklch(from var(--palette-ink-muted-srgb) l c h);
+    --ink-meta: oklch(from var(--palette-ink-meta-srgb) l c h);
+    --canvas: oklch(from var(--palette-canvas-srgb) l c h);
+    --surface: oklch(from var(--palette-surface-srgb) l c h);
+    --hairline: oklch(from var(--palette-hairline-srgb) l c h);
+    --hairline-cool: oklch(from var(--palette-hairline-cool-srgb) l c h);
+    --on-primary: oklch(from var(--palette-on-primary-srgb) l c h);
+    --on-canvas: oklch(from var(--palette-on-canvas-srgb) l c h);
+    --orb-saffron: oklch(from var(--palette-orb-saffron-srgb) l c h);
+    --orb-pink: oklch(from var(--palette-orb-pink-srgb) l c h);
+    --orb-aqua: oklch(from var(--palette-orb-aqua-srgb) l c h);
+    --orb-grass: oklch(from var(--palette-orb-grass-srgb) l c h);
+    --orb-ultraviolet: oklch(from var(--palette-orb-ultraviolet-srgb) l c h);
+  }
+}
+
+@supports (color: color-mix(in oklab, red, white)) {
+  :root {
+    --design-surface-tint: color-mix(in oklab, var(--primary) var(--design-tint-strength), var(--surface));
+    --design-surface-shade: color-mix(in oklab, var(--secondary) var(--design-shade-strength), var(--canvas));
+    --design-overlay: color-mix(in oklab, var(--secondary) var(--design-overlay-strength), transparent);
+  }
+}
+
+@supports (background-image: linear-gradient(135deg in oklab, red, white)) {
+  :root {
+    --design-gradient-soft: linear-gradient(var(--design-gradient-angle) in oklab, var(--canvas), var(--design-surface-tint));
+  }
+}
+
+/* Both operands have length units, so atan2 removes units without typed division. */
+@supports (width: calc(100px * tan(atan2(1px, 1px)))) {
+  :root {
+    --fluid: clamp(0, tan(atan2(calc(100vw - var(--fluid-vmin)), calc(var(--fluid-vmax) - var(--fluid-vmin)))), 1);
+    --fluid-method: trigonometric;
+  }
+}
+
+@supports (width: calc(100px * progress(50px, 0px, 100px))) {
+  :root {
+    --fluid: clamp(0, progress(100vw, var(--fluid-vmin), var(--fluid-vmax)), 1);
+    --fluid-method: native-progress;
+  }
 }
 
 @theme static {
+  --background-image-design-wash: var(--design-gradient-soft);
   --color-design-primary: var(--primary);
   --color-design-primary-deep: var(--primary-hover);
   --color-design-ink: var(--secondary);

@@ -6,6 +6,38 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
   alias Mix.Tasks.Design.Check
   alias NewYouWeb.Components.Design.Button
 
+  test "identity OKLCH conversion preserves palette authority without accepting color transforms" do
+    design = ~s|colors:\n  primary: "#0061ef"\n|
+
+    css = """
+    :root { --palette-primary-srgb: #0061ef; --primary: var(--palette-primary-srgb); }
+    @supports (color: oklch(from red l c h)) {
+      :root { --primary: oklch(from var(--palette-primary-srgb) l c h); }
+    }
+    @theme static { --color-design-primary: var(--primary); }
+    """
+
+    assert [] = Check.token_color_violations(design, css)
+
+    for invalid <- [
+          String.replace(css, "#0061ef", "#123456"),
+          String.replace(css, "l c h", "calc(l + 0.1) c h"),
+          String.replace(css, "l c h", "l c h / 0.5"),
+          String.replace(
+            css,
+            "oklch(from var(--palette-primary-srgb) l c h)",
+            "oklch(from var(--missing) l c h)"
+          ),
+          String.replace(
+            css,
+            "--palette-primary-srgb: #0061ef",
+            "--palette-primary-srgb: var(--primary)"
+          )
+        ] do
+      assert [_ | _] = Check.token_color_violations(design, invalid)
+    end
+  end
+
   test "the palette contract resolves shared aliases without accepting unapproved colors" do
     design = ~s|colors:\n  primary: "#0061ef"\n|
 
@@ -72,8 +104,9 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
     tokens = File.read!(Path.expand("../../assets/css/design-tokens.css", __DIR__))
 
     assert app_css =~ ~s|@import "./design-tokens.css";|
-    assert tokens =~ "--primary: #0061ef;"
-    assert tokens =~ "--primary-hover: #0000ee;"
+    assert tokens =~ "--palette-primary-srgb: #0061ef;"
+    assert tokens =~ "--primary: oklch(from var(--palette-primary-srgb) l c h);"
+    assert tokens =~ "--palette-primary-hover-srgb: #0000ee;"
     assert tokens =~ "--radius-xl: 32px;"
     assert tokens =~ "--space-md: 12px;"
     assert tokens =~ "--text-display-xl: 64px;"
@@ -359,8 +392,8 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
     changed_tokens =
       String.replace(
         tokens,
-        "--primary: #0061ef;",
-        "--primary: #123456;"
+        "--palette-primary-srgb: #0061ef;",
+        "--palette-primary-srgb: #123456;"
       )
 
     assert [_violation | _] = Check.token_color_violations(design, changed_tokens)

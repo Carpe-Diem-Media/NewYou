@@ -227,3 +227,40 @@ html:has(.ds-guide), body:has(.ds-guide) { overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) {
   .ds-guide *, .ds-guide *::before, .ds-guide *::after { animation: none; transition: none; scroll-behavior: auto; }
 }
+
+
+/* Owner-approved reference candidates; canonical application components stay flat. */
+.ds-candidate-note { @apply text-design-body-xs leading-design-body-xs border-l border-design-ink-muted pl-design-base mb-design-lg; max-width: 65ch; }
+.ds-feature-list { @apply flex flex-wrap gap-design-lg text-design-button-md mt-design-base; }
+.ds-treatment-list { @apply grid grid-cols-1 gap-design-xl; }
+.ds-treatment-item { @apply min-w-0; }
+.ds-treatment-item figcaption { @apply mt-design-base; overflow-wrap: anywhere; }
+.ds-treatment-item figcaption p { @apply text-design-button-md leading-design-body-xs mt-design-sm; }
+.ds-treatment { @apply rounded-design-md; position: relative; isolation: isolate; overflow: clip; min-height: var(--design-treatment-height); background-color: var(--canvas); border: var(--design-border-width) solid var(--hairline); }
+.ds-treatment[data-treatment="gradient"] { @apply bg-design-wash; }
+.ds-treatment[data-treatment="noise"]::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: var(--design-noise-image); background-size: var(--design-noise-size); opacity: var(--design-noise-opacity); }
+.ds-treatment[data-treatment="overlay"] { background-image: var(--design-gradient-soft); }
+.ds-treatment[data-treatment="overlay"]::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-color: var(--design-overlay); }
+.ds-color-pair[data-pair="tint"] { background-color: var(--design-surface-tint); color: var(--secondary); }
+.ds-color-pair[data-pair="shade"] { background-color: var(--design-surface-shade); color: var(--secondary); }
+.ds-fluid-display { font-size: var(--fluid-display); line-height: var(--leading-display-xl); font-weight: var(--weight-bold); overflow-wrap: break-word; min-width: 0; }
+.ds-fluid-body { font-size: var(--fluid-body); line-height: var(--leading-body-xs); overflow-wrap: break-word; }
+.ds-fluid-space { padding-block: var(--fluid-space); border-block: var(--design-border-width) solid var(--hairline); }
+.ds-fluid-gutter { padding-inline: var(--fluid-gutter); border-inline: var(--design-border-width) solid var(--hairline); }
+.ds-fluid-list { @apply grid grid-cols-1 gap-design-xl mt-design-xl; }
+.ds-fluid-item { @apply min-w-0 border-t border-design-hairline pt-design-lg; }
+.ds-fluid-measurements { @apply flex flex-wrap gap-design-lg text-design-button-md mt-design-base; }
+.ds-fluid-measurements > div { @apply flex flex-wrap gap-design-sm; }
+.ds-fluid-measurements dt { @apply text-design-ink-muted; }
+.ds-fluid-measurements dd { @apply tabular-nums; }
+@media (width >= theme(--breakpoint-design-tablet)) {
+  .ds-treatment-list { @apply grid-cols-3; }
+}
+.ds-token-value { overflow-wrap: anywhere; }
+.ds-fluid-bounds { @apply grid grid-cols-1 gap-design-lg mt-design-lg; }
+.ds-fluid-bounds dt { @apply text-design-button-md text-design-ink-muted; }
+.ds-fluid-bounds dd { @apply font-design-medium; }
+.ds-fluid-item h3 { @apply font-design-medium mt-design-base; }
+@media (width >= theme(--breakpoint-design-tablet)) {
+  .ds-fluid-bounds { @apply grid-cols-3; }
+}

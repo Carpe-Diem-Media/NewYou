@@ -20,12 +20,25 @@ export const contrastGrade = ratio => {
   return "Insufficient text contrast"
 }
 
-const sampleColor = (context, color) => {
-  context.clearRect(0, 0, 1, 1)
-  context.fillStyle = color
-  context.fillRect(0, 0, 1, 1)
-  const [r, g, b, alpha] = context.getImageData(0, 0, 1, 1).data
-  return alpha === 255 ? [r, g, b] : null
+export const sampleColor = (context, color) => {
+  if (!context || typeof color !== "string") return null
+  try {
+    const sentinels = ["#010203", "#040506"]
+    let unchangedForEverySentinel = true
+    for (const sentinel of sentinels) {
+      context.fillStyle = sentinel
+      context.fillStyle = color
+      if (context.fillStyle !== sentinel) unchangedForEverySentinel = false
+    }
+    if (unchangedForEverySentinel) return null
+    context.fillStyle = color
+    context.clearRect(0, 0, 1, 1)
+    context.fillRect(0, 0, 1, 1)
+    const [r, g, b, alpha] = context.getImageData(0, 0, 1, 1).data
+    return alpha === 255 ? [r, g, b] : null
+  } catch {
+    return null
+  }
 }
 
 export const DesignSystem = {
@@ -83,6 +96,18 @@ export const DesignSystem = {
       )
       const output = sample.parentElement.querySelector("[data-contrast-result]")
       output.textContent = ratio ? `${ratio.toFixed(2)}:1 / ${contrastGrade(ratio)}` : "Not measured: use opaque colors"
+    })
+    this.el.querySelectorAll("[data-measure-target][data-measure-property]").forEach(output => {
+      const target = this.el.querySelector(`#${CSS.escape(output.dataset.measureTarget)}`)
+      if (target) output.textContent = getComputedStyle(target).getPropertyValue(output.dataset.measureProperty).trim()
+    })
+    this.el.querySelectorAll("[data-css-support]").forEach(output => {
+      const supports = {
+        oklch: CSS.supports("color", "oklch(from red l c h)"),
+        "color-mix": CSS.supports("color", "color-mix(in oklch, red, blue)"),
+        progress: CSS.supports("width", "calc(progress(1, 0, 2) * 1px)")
+      }
+      output.textContent = supports[output.dataset.cssSupport] ? "Supported" : "Not supported"
     })
     const readout = this.el.querySelector("[data-viewport-readout]")
     if (readout) readout.textContent = `${window.innerWidth}px viewport`

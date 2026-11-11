@@ -113,8 +113,10 @@ Edit the `:root` block in [design-tokens.css](../../assets/css/design-tokens.css
 
 ```css
 :root {
-  --primary: #0061ef;
-  --secondary: #2d2c2b;
+  --palette-primary-srgb: #0061ef;
+  --palette-secondary-srgb: #2d2c2b;
+  --primary: var(--palette-primary-srgb);
+  --secondary: var(--palette-secondary-srgb);
   --radius: 16px;
   --box-shadow: none;
   --grid-gap: var(--space-lg);
@@ -128,9 +130,9 @@ Edit the `:root` block in [design-tokens.css](../../assets/css/design-tokens.css
 }
 ```
 
-The guide and canonical application components share these values. This does not migrate legacy DaisyUI or `ny-*` screens. `--secondary` is the existing neutral ink role, not another saturated CTA. `--radius` controls cards; the other approved component radii retain their separate tiers. `--box-shadow` starts at `none` because the approved system is flat.
+Edit source colors through `--palette-*-srgb`. A feature-detected identity OKLCH layer references these sources through the existing semantic names, so editing only the sRGB fallback alias does not change supported-browser colors. Inline developer-tool overrides on `--primary` remain possible. The guide and canonical application components share these values. This does not migrate legacy DaisyUI or `ny-*` screens. `--secondary` is the existing neutral ink role, not another saturated CTA. `--radius` controls cards; the other approved component radii retain their separate tiers. `--box-shadow` starts at `none` because the approved system is flat.
 
-Keep deliberate changes to locked values consistent with [DESIGN.md](../../DESIGN.md). `mix design.check` still checks the approved palette, resolves alias chains and rejects mismatches, unknown references, cycles and extra color tokens. Styles can consume declared aliases without an inline-style exemption or new raw values. The existing design-debt baseline remains intact.
+Keep deliberate changes to locked values consistent with [DESIGN.md](../../DESIGN.md). `mix design.check` still checks the approved palette, resolves alias chains and identity relative OKLCH conversions, and rejects mismatches, unknown references, cycles and extra color tokens. Styles can consume declared aliases without an inline-style exemption or new raw values. The existing design-debt baseline remains intact.
 
 Typography specimens show their exact scale size, even on a narrow screen. The responsive component preview separately demonstrates display sizes and grid reflow. The tablet, desktop and wide preview widths derive from the matching breakpoint tokens. Tailwind compiles media-query thresholds during the asset build; editing their CSS source requires rebuilding assets. The development watcher does this automatically. Changing a breakpoint property only in browser developer tools cannot rewrite an already compiled media query.
 
@@ -163,7 +165,7 @@ git diff --check
 [Browser proof](../../test/assets/design_system_browser.mjs) requires external `puppeteer-core` tooling and Chrome. It does not add an application package. Set `BROWSER_TOOLS_ROOT` to the directory containing that tooling's `package.json` and `node_modules`, and adjust the server URL if necessary:
 
 ```sh
-BROWSER_TOOLS_ROOT=/tmp/newyou-well-112-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4237 CHROME_PATH=/usr/bin/google-chrome node test/assets/design_system_browser.mjs
+BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4237 CHROME_PATH=/usr/bin/google-chrome node test/assets/design_system_browser.mjs
 ```
 
 Observed author verification used Elixir 1.20.5, OTP 29.1.2, Tailwind 4.3.3 and system Chrome:
@@ -172,7 +174,7 @@ Observed author verification used Elixir 1.20.5, OTP 29.1.2, Tailwind 4.3.3 and 
 - The two JavaScript contrast tests passed, including invalid channels and AA/AAA threshold boundaries.
 - Browser proof passed at 320, 390, 743, 744, 1127, 1128, 1440 and 1920px. Eighteen centred-row cases passed across tablet and desktop widths. LiveView URL controls, the real iframe width, live primary/radius/shadow propagation, contrast refresh, keyboard focus and reduced motion passed with no browser errors.
 - `mix assets.build` passed. `mix check.deep` passed with zero errors. The fast gate's formatting, compilation, design, architecture, usage-rule, Credo and Sobelow stages passed before its ExUnit stage failed.
-- Full `mix check` is blocked by the shared TEST database state tracked in WELL-114. Retained fixture rows predate this task; current main cannot load an `identity_recovery_completed` evidence type, and whole-resource Communications reads encounter unrelated rows. An unchanged Disposition test independently reproduced three failures. No shared fixture data was deleted. The full-suite failure is not waived.
+- Historical initial verification: full `mix check` was blocked by the shared TEST database state tracked in WELL-114. Retained fixture rows predate this task; current main cannot load an `identity_recovery_completed` evidence type, and whole-resource Communications reads encounter unrelated rows. An unchanged Disposition test independently reproduced three failures. No shared fixture data was deleted. The full-suite failure is not waived.
 
 The first hosted PR run exposed missing CI classification for `DESIGN.md`, `.hallmark/log.json` and `.hallmark/preflight.json`. [The classifier](../../tools/foundation_integrity_routing.py) now names these exact engineering files. [Routing regressions](../../tests/test_foundation_lane_routing.py) reproduced all three failures before correction and preserve rejection of unclassified neighbours. Design-only changes select Application CI without forcing Dialyzer; the guide's Elixir source independently selects the deep lane. Foundation Full remains nightly-only. This routing correction changes no application behavior from the implementation revision above.
 
@@ -191,3 +193,18 @@ The initial rendered FAIL at 320px was a wrapped navigation control; shorter ind
 Documentation impact: this section is the source-linked handoff for the developer reference and shared styling extension. Ash interfaces, persistence constraints, asynchronous schedules and business recovery are inapplicable. A cold-start walkthrough followed the route, validated display choices, semantic components, token mapping, browser measurements and executable tests against the implementation revision above. Full-suite certification remains subject to WELL-114; independent Master Gate, exact-head hosted CI, trusted-operator attestation and owner merge authorization remain required before integration.
 
 References studied: [Frames layouts](https://getframes.io/layouts/?brx_c0563d=style-guide), [Automatic CSS documentation](https://docs.automaticcss.com/), [Tailwind v4 theme variables](https://tailwindcss.com/docs/theme), and the local LiveFrame `AutomaticCSS.FidelityResolver`. These inform implementation; NewYou's repository authority controls the result. No LiveFrame or WordPress runtime dependency was added.
+
+
+### Refinement token ownership
+
+The owner accepted OKLCH representation, color-mix relationships, decorative surface comparisons and fluid sizing candidates. The current palette is authored once in `--palette-*-srgb` variables. Relative `oklch(from var(...) l c h)` preserves the exact color rather than rounding new constants. Unsupported relative-color syntax retains the original sRGB aliases. [Palette enforcement](../../lib/mix/tasks/design.check.ex) recognizes only the identity conversion, with regression tests rejecting channel changes, transparency, unknown references and cycles.
+
+`--design-surface-tint` and `--design-surface-shade` are opaque color-mix specimens with browser-measured contrast against the existing ink. The gradient, seeded SVG noise and translucent scrim remain decorative candidates in `#surfaces`. Their captions state usage limits, and the guide does not infer whole-gradient or image-overlay contrast from a single flat color. The SVG is a local data URL with no external request. `--design-noise-opacity`, `--design-noise-size`, `--design-gradient-angle` and `--design-overlay-strength` control the treatment. The `bg-design-wash` Tailwind utility consumes the shared gradient token. Existing application cards retain `--box-shadow: none` and the approved flat surface.
+
+The `#fluid` specimens read independent semantic endpoints for display, body, block padding and inline gutters. The viewport boundaries are `--fluid-vmin` and `--fluid-vmax`. Keep the start below the end. The static minimum works without advanced math; a feature-detected trigonometric ratio supplies continuous interpolation, and native `progress()` overrides it where supported. All tiers use the same endpoint tokens. The displayed method comes from CSS, and the current-size outputs read computed styles of the actual specimens. JavaScript does not resize text or implement the fluid formula.
+
+Rem endpoints preserve user root-font preferences. At a 16px root, display reaches 64px; at a larger root, that maximum grows with the user preference. Existing fixed typography, spacing, line-height, tracking and responsive breakpoints remain the canonical application baseline. The fluid scale and surface candidates require later deliberate adoption in application components; adding reference specimens does not migrate legacy screens.
+
+The canvas sampler rejects invalid assignments, transparent colors and unavailable/throwing contexts. It accepts equivalent valid color representations without reusing stale canvas state. Capability labels describe the actual relative OKLCH, color-mix and progress feature checks. Without JavaScript, the CSS specimens remain visible and measurement text makes no claim that a browser value has been read.
+
+Documentation impact: this extends the existing developer-reference map; no new Domain lifecycle, persistence, authorization or background job is introduced. Independent post-merge certification for WELL-114 remains recorded in Plane. The owner explicitly permitted UI work with that gap open; this is not permission to merge or certify delivery complete.
