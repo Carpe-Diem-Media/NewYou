@@ -280,6 +280,43 @@ defmodule NewYou.Proof.P805Test do
     end)
   end
 
+  test "partial consequence counts find children after fixture parents disappear" do
+    alias NewYou.Proof.P805
+
+    P805.with_fixture(fn ->
+      request = P805.request()
+
+      assert {:error, :partial_consequence_probe} =
+               NewYou.Repo.transaction(fn ->
+                 {:ok, _} = NewYou.Identity.register(request)
+
+                 NewYou.Repo.query!(
+                   "DELETE FROM registration_operations WHERE operation_id = $1",
+                   [Ecto.UUID.dump!(request.operation_id)]
+                 )
+
+                 NewYou.Repo.query!(
+                   "INSERT INTO communications_envelope_nonces (nonce) VALUES ($1)",
+                   [:crypto.strong_rand_bytes(12)]
+                 )
+
+                 NewYou.Repo.query!(
+                   "INSERT INTO oban_jobs (queue, worker, args) VALUES ('audit', 'NewYou.Audit.Workers.RegistrationEvidence', $1)",
+                   [%{"primary_key" => %{"id" => Ecto.UUID.generate()}}]
+                 )
+
+                 counts = P805.counts()
+                 assert Enum.at(counts, 0) == 1
+                 assert Enum.at(counts, 1) == 1
+                 assert Enum.at(counts, 6) == 2
+                 assert Enum.at(counts, 8) == 2
+                 NewYou.Repo.rollback(:partial_consequence_probe)
+               end)
+
+      assert Enum.all?(Enum.drop(P805.counts(), -1), &(&1 == 0))
+    end)
+  end
+
   defp preservation_assertion(:success), do: :ok
 
   defp preservation_assertion(:assertion_failure),

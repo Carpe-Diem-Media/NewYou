@@ -13,8 +13,10 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
   @privacy_id "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
 
   setup do
+    Process.put({__MODULE__, :consequence_baseline}, NewYou.Proof.P805.capture_consequence_ids())
     Process.put({__MODULE__, :operation_ids}, [])
     Process.put({__MODULE__, :generated_pmrs}, [])
+    Process.put({__MODULE__, :emails}, [])
 
     previous = %{
       binding_keys: Application.get_env(:new_you, :identity_registration_binding_keys),
@@ -137,7 +139,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
   } do
     first = valid_request()
     duplicate_email = String.replace(first.email, "@EXAMPLE.COM", "@example.com")
-    duplicate = %{valid_request() | email: duplicate_email}
+    duplicate = valid_request(%{email: duplicate_email})
 
     assert {:ok, %{account_id: account_id}} = Identity.register(first)
     assert {:ok, %{account_id: nil}} = Identity.register(duplicate)
@@ -155,7 +157,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
 
   test "repeated Account queries and resend revocation stay scoped to the selected Account" do
     request_a = valid_request()
-    request_b = %{valid_request() | email: "control@example.com"}
+    request_b = valid_request(%{email: "control@example.com"})
 
     assert {:ok, %{account_id: account_a, verification_proof: proof_a}} =
              Identity.register(request_a)
@@ -347,7 +349,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert {:ok, :verification_pending} = Identity.resend_verification_by_email(resend)
     assert resource_count(Identity.ResendOperation, Identity) == 1
 
-    assert {:ok, %{account_id: account_id}} = Identity.register(%{valid_request() | email: email})
+    assert {:ok, %{account_id: account_id}} = Identity.register(valid_request(%{email: email}))
     [original_challenge] = current_challenges()
 
     assert {:ok, :verification_pending} = Identity.resend_verification_by_email(resend)
@@ -438,7 +440,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
 
   test "a resend operation ID cannot be rebound to another account" do
     assert {:ok, %{account_id: account_a}} = Identity.register(valid_request())
-    second_request = %{valid_request() | email: "second@example.test"}
+    second_request = valid_request(%{email: "second@example.test"})
     assert {:ok, %{account_id: account_b}} = Identity.register(second_request)
     operation_id = tracked_operation_id()
 
@@ -560,18 +562,59 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     assert summary.envelopes == 4
   end
 
-  defp valid_request do
-    %{
-      operation_id: tracked_operation_id(),
-      first_name: "Alice",
-      surname: "Example",
-      email: " Alice+#{Ecto.UUID.generate()}@EXAMPLE.COM ",
-      password: Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
-      preferred_language: :af,
-      confirmed_age_18?: true,
-      terms_version_id: @terms_id,
-      privacy_version_id: @privacy_id
-    }
+  test "rollback observation finds an Account and Token without a RegistrationOperation" do
+    request = valid_request()
+    assert {:ok, %{account_id: account_id}} = Identity.register(request)
+
+    Repo.query!("DELETE FROM registration_operations WHERE operation_id = $1", [
+      Ecto.UUID.dump!(request.operation_id)
+    ])
+
+    assert records(Identity.RegistrationOperation, Identity) == []
+    assert [%{id: ^account_id}] = records(Identity.Account, Identity)
+    assert length(records(Identity.Token, Identity)) == 1
+  end
+
+  test "rollback observation finds a nonce without an envelope" do
+    nonce = :crypto.strong_rand_bytes(12)
+    Repo.query!("INSERT INTO communications_envelope_nonces (nonce) VALUES ($1)", [nonce])
+    assert row_count("communications_protected_envelopes") == 0
+    assert row_count("communications_envelope_nonces") == 1
+  end
+
+  test "rollback observation finds a job without an obligation or intent" do
+    primary_key = Ecto.UUID.generate()
+
+    Repo.query!(
+      "INSERT INTO oban_jobs (queue, worker, args) VALUES ('audit', 'NewYou.Audit.Workers.RegistrationEvidence', $1)",
+      [%{"primary_key" => %{"id" => primary_key}}]
+    )
+
+    assert records(EvidenceObligation, NewYou.Audit) == []
+    assert records(MessageIntent, Communications) == []
+    assert length(fixture_jobs()) == 1
+  end
+
+  defp valid_request(overrides \\ %{}) do
+    request =
+      Map.merge(
+        %{
+          operation_id: tracked_operation_id(),
+          first_name: "Alice",
+          surname: "Example",
+          email: " Alice+#{Ecto.UUID.generate()}@EXAMPLE.COM ",
+          password: Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
+          preferred_language: :af,
+          confirmed_age_18?: true,
+          terms_version_id: @terms_id,
+          privacy_version_id: @privacy_id
+        },
+        overrides
+      )
+
+    {:ok, email} = Identity.Email.canonicalize(request.email)
+    Process.put({__MODULE__, :emails}, [email | Process.get({__MODULE__, :emails}, [])])
+    request
   end
 
   defp current_challenges do
@@ -589,6 +632,10 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     operation_id
   end
 
+  defp new_consequence_ids(kind) do
+    NewYou.Proof.P805.new_consequence_ids(Process.get({__MODULE__, :consequence_baseline}), kind)
+  end
+
   defp fixture_operation_ids do
     Process.get({__MODULE__, :operation_ids}, []) |> Enum.uniq()
   end
@@ -598,8 +645,8 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
 
     %{rows: rows} =
       Repo.query!(
-        "SELECT DISTINCT created_account_id FROM registration_operations WHERE operation_id = ANY($1::uuid[]) AND created_account_id IS NOT NULL",
-        [operation_ids]
+        "SELECT id FROM accounts WHERE email = ANY($2::text[]) UNION SELECT created_account_id FROM registration_operations WHERE operation_id = ANY($1::uuid[]) AND created_account_id IS NOT NULL",
+        [operation_ids, Process.get({__MODULE__, :emails}, [])]
       )
 
     Enum.map(rows, &hd/1)
@@ -615,9 +662,10 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
 
   defp records(Identity.Token, Identity) do
     account_ids = fixture_account_ids()
+    token_ids = new_consequence_ids(:tokens)
 
     Identity.Token
-    |> Ash.Query.filter(account_id in ^account_ids)
+    |> Ash.Query.filter(account_id in ^account_ids or jti in ^token_ids)
     |> Ash.read!(domain: Identity, authorize?: false)
   end
 
@@ -669,8 +717,8 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
            [operation_ids]}
 
         "communications_envelope_nonces" ->
-          {"SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[]))",
-           [operation_ids]}
+          {"SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[])) OR n.nonce = ANY($2::bytea[])",
+           [operation_ids, new_consequence_ids(:nonces)]}
       end
 
     %{rows: [[count]]} = Repo.query!(query, params)
@@ -700,12 +748,16 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
 
     primary_keys = Enum.map(rows, &hd/1)
 
-    if primary_keys == [] do
+    new_jobs = new_consequence_ids(:jobs)
+
+    if primary_keys == [] and new_jobs == [] do
       []
     else
       Repo.all(
         from job in Oban.Job,
-          where: fragment("?->'primary_key'->>'id' = ANY(?::text[])", job.args, ^primary_keys)
+          where:
+            job.id in ^new_jobs or
+              fragment("?->'primary_key'->>'id' = ANY(?::text[])", job.args, ^primary_keys)
       )
     end
   end

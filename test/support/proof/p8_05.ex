@@ -29,8 +29,10 @@ defmodule NewYou.Proof.P805 do
     :ok = Sandbox.checkout(Repo, sandbox: false)
 
     try do
+      Process.put({__MODULE__, :consequence_baseline}, capture_consequence_ids())
       callback.()
     after
+      Process.delete({__MODULE__, :consequence_baseline})
       Process.delete(RegistrationSeam)
 
       try do
@@ -743,14 +745,49 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
+  # Identifier snapshots bound observations to writes after this synchronous
+  # fixture began. They never authorise cleanup. Unboxed proofs require
+  # exclusive TEST access; sandbox callers also retain their transaction isolation.
+  @doc false
+  def capture_consequence_ids do
+    Map.new([:tokens, :nonces, :jobs], fn kind ->
+      {table, column, _type} = consequence_key(kind)
+      %{rows: rows} = Repo.query!("SELECT #{column} FROM #{table}")
+      {kind, Enum.map(rows, &hd/1)}
+    end)
+  end
+
+  @doc false
+  def new_consequence_ids(nil, _kind), do: []
+
+  def new_consequence_ids(baseline, kind) do
+    {table, column, type} = consequence_key(kind)
+
+    %{rows: rows} =
+      Repo.query!(
+        "SELECT #{column} FROM #{table} WHERE NOT (#{column} = ANY($1::#{type}[]))",
+        [Map.fetch!(baseline, kind)]
+      )
+
+    Enum.map(rows, &hd/1)
+  end
+
+  defp consequence_key(:tokens), do: {"tokens", "jti", "text"}
+  defp consequence_key(:nonces), do: {"communications_envelope_nonces", "nonce", "bytea"}
+  defp consequence_key(:jobs), do: {"oban_jobs", "id", "bigint"}
+
   defp scoped_counts(operations, emails) do
     operations = operations |> Enum.uniq() |> Enum.map(&Ecto.UUID.dump!/1)
     emails = Enum.uniq(emails)
+    baseline = Process.get({__MODULE__, :consequence_baseline})
+    new_tokens = new_consequence_ids(baseline, :tokens)
+    new_nonces = new_consequence_ids(baseline, :nonces)
+    new_jobs = new_consequence_ids(baseline, :jobs)
 
     queries = [
       {"SELECT count(*) FROM accounts WHERE email = ANY($1::text[])", [emails]},
-      {"SELECT count(*) FROM tokens WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
-       [emails]},
+      {"SELECT count(*) FROM tokens WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR jti = ANY($2::text[])",
+       [emails, new_tokens]},
       {"SELECT count(*) FROM registration_operations WHERE operation_id = ANY($2::uuid[]) OR created_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
        [emails, operations]},
       {"SELECT count(*) FROM resend_operations WHERE operation_id = ANY($2::uuid[]) OR account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
@@ -759,12 +796,12 @@ defmodule NewYou.Proof.P805 do
        [operations]},
       {"SELECT count(*) FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[])",
        [operations]},
-      {"SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[]))",
-       [operations]},
+      {"SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[])) OR n.nonce = ANY($2::bytea[])",
+       [operations, new_nonces]},
       {"SELECT count(*) FROM evidence_obligations WHERE source_operation_id = ANY($2::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
        [emails, operations]},
-      {"SELECT count(*) FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($2::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = ANY($2::uuid[]))",
-       [emails, operations]},
+      {"SELECT count(*) FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($2::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = ANY($2::uuid[])) OR id = ANY($3::bigint[])",
+       [emails, operations, new_jobs]},
       {"SELECT count(*) FROM identity_pmr_reservations WHERE pmr IN (SELECT pmr FROM accounts WHERE email = ANY($1::text[]))",
        [emails]}
     ]

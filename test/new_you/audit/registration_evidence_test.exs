@@ -6,6 +6,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
   @privacy_id "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
 
   setup do
+    Process.put({__MODULE__, :consequence_baseline}, NewYou.Proof.P805.capture_consequence_ids())
     Process.put({__MODULE__, :operation_ids}, [])
     Process.put({__MODULE__, :emails}, [])
     Process.put({__MODULE__, :generated_pmrs}, [])
@@ -77,7 +78,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
   end
 
   test "the Identity owner action repeats registration admission and derives its binding" do
-    request = %{valid_request() | email: "Alice+campaign.Example@EXAMPLE.COM"}
+    request = valid_request(%{email: "Alice+campaign.Example@EXAMPLE.COM"})
     pmr = valid_pmr()
 
     assert {:ok, %{status: :verification_pending, account_id: account_id}} =
@@ -137,7 +138,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
   test "a neutral duplicate-email registration creates no additional E2 obligation or job" do
     first_request = valid_request()
     duplicate_email = String.replace(first_request.email, "@example.test", "@EXAMPLE.TEST")
-    duplicate_request = %{valid_request() | email: duplicate_email}
+    duplicate_request = valid_request(%{email: duplicate_email})
 
     assert {:ok, %{account_id: account_id}} = NewYou.Identity.register(first_request)
     assert is_binary(account_id)
@@ -658,18 +659,60 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     assert audit_records("EvidenceRecord") == []
   end
 
-  defp valid_request do
-    request = %{
-      operation_id: Ecto.UUID.generate(),
-      first_name: "Alice",
-      surname: "Example",
-      email: "alice-#{Ecto.UUID.generate()}@example.test",
-      password: Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
-      preferred_language: :en,
-      confirmed_age_18?: true,
-      terms_version_id: @terms_id,
-      privacy_version_id: @privacy_id
-    }
+  test "rollback token observation does not depend on a RegistrationOperation" do
+    request = valid_request()
+    assert {:ok, _} = NewYou.Identity.register(request)
+
+    Repo.query!("DELETE FROM registration_operations WHERE operation_id = $1", [
+      Ecto.UUID.dump!(request.operation_id)
+    ])
+
+    assert identity_records(NewYou.Identity.RegistrationOperation) == []
+    assert row_count("tokens") == 1
+  end
+
+  test "rollback observation ignores existing orphans and finds new nonce and Audit job identifiers" do
+    insert_orphan_consequences()
+    Process.put({__MODULE__, :consequence_baseline}, NewYou.Proof.P805.capture_consequence_ids())
+    assert row_count("communications_envelope_nonces") == 0
+    assert scheduled_audit_jobs() == []
+
+    insert_orphan_consequences()
+    assert audit_records("EvidenceObligation") == []
+    assert row_count("communications_envelope_nonces") == 1
+    assert length(scheduled_audit_jobs()) == 1
+  end
+
+  defp insert_orphan_consequences do
+    # DataCase rolls these synthetic records back, including assertion failures.
+    Repo.query!("INSERT INTO communications_envelope_nonces (nonce) VALUES ($1)", [
+      :crypto.strong_rand_bytes(12)
+    ])
+
+    Repo.query!(
+      "INSERT INTO oban_jobs (queue, worker, args) VALUES ('audit', 'NewYou.Audit.Workers.RegistrationEvidence', $1)",
+      [%{"primary_key" => %{"id" => Ecto.UUID.generate()}}]
+    )
+  end
+
+  defp valid_request(overrides \\ %{}) do
+    request =
+      Map.merge(
+        %{
+          operation_id: Ecto.UUID.generate(),
+          first_name: "Alice",
+          surname: "Example",
+          email: "alice-#{Ecto.UUID.generate()}@example.test",
+          password: Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
+          preferred_language: :en,
+          confirmed_age_18?: true,
+          terms_version_id: @terms_id,
+          privacy_version_id: @privacy_id
+        },
+        overrides
+      )
+
+    {:ok, canonical_email} = NewYou.Identity.Email.canonicalize(request.email)
 
     Process.put(
       {__MODULE__, :operation_ids},
@@ -678,7 +721,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
 
     Process.put(
       {__MODULE__, :emails},
-      [request.email | Process.get({__MODULE__, :emails}, [])]
+      [canonical_email | Process.get({__MODULE__, :emails}, [])]
     )
 
     request
@@ -731,13 +774,15 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
   defp scheduled_audit_jobs do
     obligation_ids = Enum.map(audit_records("EvidenceObligation"), & &1.id)
 
-    if obligation_ids == [] do
+    new_jobs = new_consequence_ids(:jobs)
+
+    if obligation_ids == [] and new_jobs == [] do
       []
     else
       %{rows: rows} =
         Repo.query!(
-          "SELECT queue, args FROM public.oban_jobs WHERE queue = $1 AND args->'primary_key'->>'id' = ANY($2::text[]) ORDER BY id",
-          ["audit", obligation_ids]
+          "SELECT queue, args FROM public.oban_jobs WHERE (queue = $1 AND args->'primary_key'->>'id' = ANY($2::text[])) OR id = ANY($3::bigint[]) ORDER BY id",
+          ["audit", obligation_ids, new_jobs]
         )
 
       Enum.map(rows, fn [queue, args] -> %{queue: queue, args: args} end)
@@ -768,8 +813,8 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     {query, params} =
       case table do
         "tokens" ->
-          {"SELECT count(*) FROM tokens WHERE account_id IN (SELECT created_account_id FROM registration_operations WHERE operation_id = ANY($1::uuid[]))",
-           [operation_ids]}
+          {"SELECT count(*) FROM tokens WHERE jti = ANY($1::text[]) OR account_id IN (SELECT id FROM accounts WHERE email = ANY($2::text[]))",
+           [new_consequence_ids(:tokens), Process.get({__MODULE__, :emails}, [])]}
 
         "message_intents" ->
           {"SELECT count(*) FROM message_intents WHERE source_operation_id = ANY($1::uuid[])",
@@ -780,8 +825,8 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
            [operation_ids]}
 
         "communications_envelope_nonces" ->
-          {"SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[]))",
-           [operation_ids]}
+          {"SELECT count(*) FROM communications_envelope_nonces n WHERE n.nonce IN (SELECT e.nonce FROM communications_protected_envelopes e JOIN message_intents i ON i.id = e.message_intent_id WHERE i.source_operation_id = ANY($1::uuid[])) OR n.nonce = ANY($2::bytea[])",
+           [operation_ids, new_consequence_ids(:nonces)]}
       end
 
     %{rows: [[count]]} = Repo.query!(query, params)
@@ -798,6 +843,10 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
       )
 
     count
+  end
+
+  defp new_consequence_ids(kind) do
+    NewYou.Proof.P805.new_consequence_ids(Process.get({__MODULE__, :consequence_baseline}), kind)
   end
 
   defp fixture_operation_ids do
