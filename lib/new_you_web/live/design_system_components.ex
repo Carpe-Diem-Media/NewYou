@@ -169,8 +169,28 @@ defmodule NewYouWeb.DesignSystemComponents do
     </div>
     <p class="ds-note">
       These surface treatments are candidates for review, not approved global component styles.
-      Contrast applies to opaque color pairs below. The guide does not score a whole gradient.
+      Contrast values belong to the opaque color pairs above. The guide does not score a whole gradient.
     </p>
+    """
+  end
+
+  attr :kind, :string, required: true
+  attr :edge, :string, required: true
+  attr :token, :string, required: true
+
+  def fluid_bound(assigns) do
+    ~H"""
+    <.token_value name={@token} />
+    <span
+      id={"fluid-#{@kind}-#{@edge}"}
+      class="ds-fluid-bound-probe"
+      data-bound={"#{@kind}-#{@edge}"}
+      aria-hidden="true"
+    ></span>
+    <output
+      data-measure-target={"fluid-#{@kind}-#{@edge}"}
+      data-measure-property="font-size"
+    >Resolved size measured in browser</output>
     """
   end
 
@@ -190,15 +210,17 @@ defmodule NewYouWeb.DesignSystemComponents do
         <dt>Method</dt><dd><.token_value name="--fluid-method" /></dd>
       </div>
       <div>
-        <dt>CSS support</dt><dd><output data-css-support="oklch">Checking OKLCH support</output></dd>
+        <dt>Relative OKLCH</dt><dd>
+          <output data-css-support="oklch">Checking relative OKLCH support</output>
+        </dd>
       </div>
       <div>
-        <dt>CSS support</dt><dd>
+        <dt>Color mixing</dt><dd>
           <output data-css-support="color-mix">Checking color-mix support</output>
         </dd>
       </div>
       <div>
-        <dt>CSS support</dt><dd>
+        <dt>Native progress()</dt><dd>
           <output data-css-support="progress">Checking progress() support</output>
         </dd>
       </div>
@@ -212,7 +234,7 @@ defmodule NewYouWeb.DesignSystemComponents do
         <dl class="ds-fluid-measurements">
           <div>
             <dt>Minimum</dt><dd data-fluid-value="display-min">
-              <.token_value name="--fluid-display-min" />
+              <.fluid_bound kind="display" edge="min" token="--fluid-display-min" />
             </dd>
           </div>
           <div>
@@ -222,7 +244,7 @@ defmodule NewYouWeb.DesignSystemComponents do
           </div>
           <div>
             <dt>Maximum</dt><dd data-fluid-value="display-max">
-              <.token_value name="--fluid-display-max" />
+              <.fluid_bound kind="display" edge="max" token="--fluid-display-max" />
             </dd>
           </div>
         </dl>
@@ -235,7 +257,7 @@ defmodule NewYouWeb.DesignSystemComponents do
         <dl class="ds-fluid-measurements">
           <div>
             <dt>Minimum</dt><dd data-fluid-value="body-min">
-              <.token_value name="--fluid-body-min" />
+              <.fluid_bound kind="body" edge="min" token="--fluid-body-min" />
             </dd>
           </div>
           <div>
@@ -245,7 +267,7 @@ defmodule NewYouWeb.DesignSystemComponents do
           </div>
           <div>
             <dt>Maximum</dt><dd data-fluid-value="body-max">
-              <.token_value name="--fluid-body-max" />
+              <.fluid_bound kind="body" edge="max" token="--fluid-body-max" />
             </dd>
           </div>
         </dl>
@@ -256,7 +278,7 @@ defmodule NewYouWeb.DesignSystemComponents do
         <dl class="ds-fluid-measurements">
           <div>
             <dt>Minimum</dt><dd data-fluid-value="space-min">
-              <.token_value name="--fluid-space-min" />
+              <.fluid_bound kind="space" edge="min" token="--fluid-space-min" />
             </dd>
           </div>
           <div>
@@ -266,7 +288,7 @@ defmodule NewYouWeb.DesignSystemComponents do
           </div>
           <div>
             <dt>Maximum</dt><dd data-fluid-value="space-max">
-              <.token_value name="--fluid-space-max" />
+              <.fluid_bound kind="space" edge="max" token="--fluid-space-max" />
             </dd>
           </div>
         </dl>
@@ -277,7 +299,7 @@ defmodule NewYouWeb.DesignSystemComponents do
         <dl class="ds-fluid-measurements">
           <div>
             <dt>Minimum</dt><dd data-fluid-value="gutter-min">
-              <.token_value name="--fluid-gutter-min" />
+              <.fluid_bound kind="gutter" edge="min" token="--fluid-gutter-min" />
             </dd>
           </div>
           <div>
@@ -287,7 +309,7 @@ defmodule NewYouWeb.DesignSystemComponents do
           </div>
           <div>
             <dt>Maximum</dt><dd data-fluid-value="gutter-max">
-              <.token_value name="--fluid-gutter-max" />
+              <.fluid_bound kind="gutter" edge="max" token="--fluid-gutter-max" />
             </dd>
           </div>
         </dl>

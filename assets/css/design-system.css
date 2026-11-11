@@ -264,3 +264,12 @@ html:has(.ds-guide), body:has(.ds-guide) { overflow-x: clip; }
 @media (width >= theme(--breakpoint-design-tablet)) {
   .ds-fluid-bounds { @apply grid-cols-3; }
 }
+/* Hidden probes resolve endpoint units through CSS, alongside the authored rem values. */
+.ds-fluid-bound-probe[data-bound="display-min"] { font-size: var(--fluid-display-min); }
+.ds-fluid-bound-probe[data-bound="display-max"] { font-size: var(--fluid-display-max); }
+.ds-fluid-bound-probe[data-bound="body-min"] { font-size: var(--fluid-body-min); }
+.ds-fluid-bound-probe[data-bound="body-max"] { font-size: var(--fluid-body-max); }
+.ds-fluid-bound-probe[data-bound="space-min"] { font-size: var(--fluid-space-min); }
+.ds-fluid-bound-probe[data-bound="space-max"] { font-size: var(--fluid-space-max); }
+.ds-fluid-bound-probe[data-bound="gutter-min"] { font-size: var(--fluid-gutter-min); }
+.ds-fluid-bound-probe[data-bound="gutter-max"] { font-size: var(--fluid-gutter-max); }

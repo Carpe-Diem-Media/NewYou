@@ -31,7 +31,8 @@ try {
   for (const width of [744, 1128, 1440]) {
     await page.setViewport({width, height: 900})
     for (const count of [1, 2, 4, 5, 7, 8]) {
-      await page.goto(`${base}/dev/design-system?alignment=center&count=${count}`, {waitUntil: "networkidle0"})
+      await page.goto(`${base}/dev/design-system?alignment=center&count=${count}`, {waitUntil: "domcontentloaded"})
+      await page.waitForSelector(`#card-grid > article:nth-child(${count})`)
       const balanced = await page.evaluate(() => {
         const grid = document.querySelector("#card-grid").getBoundingClientRect()
         const cards = [...document.querySelectorAll("#card-grid > article")].map(card => card.getBoundingClientRect())
@@ -88,6 +89,156 @@ try {
   assert.notEqual(changed.shadow, "none")
   assert.match(changed.contrast, /:1 \/ (AA|AAA)/)
 
+  const sourceColorChecks = await page.evaluate(async () => {
+    const root = document.documentElement
+    const sourceToken = "--palette-primary-srgb"
+    const oldSource = root.style.getPropertyValue(sourceToken)
+    const button = document.querySelector("#buttons button.bg-design-primary")
+    const swatch = document.querySelector("[data-swatch='primary']")
+    const before = getComputedStyle(swatch).backgroundColor
+    root.style.setProperty(sourceToken, "#004fbf")
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const buttonColor = getComputedStyle(button).backgroundColor
+    const swatchColor = getComputedStyle(swatch).backgroundColor
+    if (oldSource) root.style.setProperty(sourceToken, oldSource)
+    else root.style.removeProperty(sourceToken)
+    return {before, buttonColor, swatchColor}
+  })
+  assert.notEqual(sourceColorChecks.before, sourceColorChecks.swatchColor, "semantic color follows its source sRGB token")
+  assert.equal(sourceColorChecks.buttonColor, sourceColorChecks.swatchColor, "component and palette retain exact source color equivalence")
+
+  const fluidCases = []
+  for (const width of [320, 480, 840, 1200, 1920]) {
+    await page.setViewport({width, height: 900})
+    await page.waitForFunction(() => {
+      const output = document.querySelector("[data-measure-target='fluid-display']")
+      const target = document.querySelector("#fluid-display")
+      return output && target && output.textContent.trim() === getComputedStyle(target).fontSize
+    })
+    fluidCases.push(await page.evaluate(() => {
+      const sample = document.querySelector("#fluid-display")
+      const current = document.querySelector("[data-measure-target='fluid-display']").textContent.trim()
+      const rootSize = parseFloat(getComputedStyle(document.documentElement).fontSize)
+      const min = parseFloat(document.querySelector("[data-fluid-value='display-min'] [data-token]").textContent) * rootSize
+      const max = parseFloat(document.querySelector("[data-fluid-value='display-max'] [data-token]").textContent) * rootSize
+      const measurements = {
+        display: parseFloat(getComputedStyle(sample).fontSize),
+        body: parseFloat(getComputedStyle(document.querySelector("#fluid-body")).fontSize),
+        space: parseFloat(getComputedStyle(document.querySelector("#fluid-space")).paddingBlockStart),
+        gutter: parseFloat(getComputedStyle(document.querySelector("#fluid-gutter")).paddingInlineStart)
+      }
+      const bounds = Object.fromEntries(["display", "body", "space", "gutter"].map(kind => [kind, Object.fromEntries(["min", "max"].map(edge => [edge, document.querySelector(`[data-measure-target='fluid-${kind}-${edge}']`).textContent.trim()]))]))
+      return {width: innerWidth, size: measurements.display, current, min, max, measurements, bounds}
+    }))
+  }
+  assert.equal(fluidCases[0].size, fluidCases[0].min, "fluid size reaches minimum below vmin")
+  assert.equal(fluidCases[1].size, fluidCases[1].min, "fluid size begins at vmin")
+  assert.deepEqual(fluidCases[2].measurements, {display: 52, body: 17, space: 32, gutter: 20}, "each fluid token interpolates at the midpoint")
+  assert.deepEqual(fluidCases[2].bounds, {
+    display: {min: "40px", max: "64px"},
+    body: {min: "16px", max: "18px"},
+    space: {min: "16px", max: "48px"},
+    gutter: {min: "16px", max: "24px"}
+  }, "resolved pixel bounds compare directly with current computed values")
+  assert.equal(fluidCases[3].size, fluidCases[3].max, "fluid size reaches maximum at vmax")
+  assert.equal(fluidCases[4].size, fluidCases[4].max, "fluid size stays capped above vmax")
+  for (const item of fluidCases) {
+    assert.equal(item.current, `${item.size}px`, "readout uses computed CSS")
+  }
+  for (const [id, property] of [["fluid-body", "font-size"], ["fluid-space", "padding-block-start"], ["fluid-gutter", "padding-inline-start"]]) {
+    const output = await page.evaluate(({id, property}) => {
+      const target = document.querySelector(`#${id}`)
+      return {measured: document.querySelector(`[data-measure-target='${id}']`).textContent.trim(), actual: getComputedStyle(target).getPropertyValue(property).trim()}
+    }, {id, property})
+    assert.equal(output.measured, output.actual, `${id} readout uses its computed CSS`)
+  }
+
+  await page.setViewport({width: 1200, height: 900})
+  const fluidAdaptation = await page.evaluate(async () => {
+    const root = document.documentElement
+    const before = getComputedStyle(document.querySelector("#fluid-display")).fontSize
+    root.style.setProperty("--fluid-vmin", "60rem")
+    root.style.setProperty("--fluid-vmax", "90rem")
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const afterViewportTokens = getComputedStyle(document.querySelector("#fluid-display")).fontSize
+    root.style.removeProperty("--fluid-vmin")
+    root.style.removeProperty("--fluid-vmax")
+    const oldFontSize = root.style.fontSize
+    root.style.fontSize = "20px"
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const afterRootFont = getComputedStyle(document.querySelector("#fluid-display")).fontSize
+    if (oldFontSize) root.style.fontSize = oldFontSize
+    else root.style.removeProperty("font-size")
+    return {before, afterViewportTokens, afterRootFont}
+  })
+  assert.notEqual(fluidAdaptation.before, fluidAdaptation.afterViewportTokens, "viewport-bound token edits affect fluid size")
+  assert.notEqual(fluidAdaptation.before, fluidAdaptation.afterRootFont, "root font enlargement affects rem-based fluid bounds")
+
+  await page.setViewport({width: 1500, height: 900})
+  const rootZoomSize = await page.evaluate(async () => {
+    const root = document.documentElement
+    const oldFontSize = root.style.fontSize
+    root.style.fontSize = "20px"
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const size = getComputedStyle(document.querySelector("#fluid-display")).fontSize
+    if (oldFontSize) root.style.fontSize = oldFontSize
+    else root.style.removeProperty("font-size")
+    return size
+  })
+  assert.equal(rootZoomSize, "80px", "fluid maximum scales with enlarged root font size")
+
+  await page.setViewport({width: 840, height: 900})
+  const fallbackMethods = await page.evaluate(async () => {
+    const rules = []
+    const visit = container => [...container.cssRules].forEach((rule, index) => {
+      if (rule.type === CSSRule.SUPPORTS_RULE) rules.push({container, index, condition: rule.conditionText})
+      if (rule.cssRules) visit(rule)
+    })
+    for (const sheet of document.styleSheets) {
+      try { visit(sheet) } catch {}
+    }
+    const removeSupport = async matcher => {
+      const match = rules.find(item => item.condition.includes(matcher) && item.container.cssRules[item.index])
+      if (!match) return false
+      match.container.deleteRule(match.index)
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+      return true
+    }
+    const nativeRemoved = await removeSupport("progress(")
+    let root = getComputedStyle(document.documentElement)
+    const afterNative = root.getPropertyValue("--fluid-method").trim()
+    const sizeAfterNative = getComputedStyle(document.querySelector("#fluid-display")).fontSize
+    const trigRemoved = await removeSupport("tan(atan2(")
+    root = getComputedStyle(document.documentElement)
+    const afterTrig = root.getPropertyValue("--fluid-method").trim()
+    const sizeAfterTrig = getComputedStyle(document.querySelector("#fluid-display")).fontSize
+    return {nativeRemoved, afterNative, sizeAfterNative, trigRemoved, afterTrig, sizeAfterTrig}
+  })
+  assert.equal(fallbackMethods.nativeRemoved, true, "CSSOM can remove the native progress support rule")
+  assert.equal(fallbackMethods.afterNative, "trigonometric", "trigonometric method becomes active when native progress is unavailable")
+  assert.equal(fallbackMethods.sizeAfterNative, "52px", "trigonometric tier keeps fluid interpolation")
+  assert.equal(fallbackMethods.trigRemoved, true, "CSSOM can remove the trigonometric support rule")
+  assert.equal(fallbackMethods.afterTrig, "static", "static method remains when both progress tiers are unavailable")
+  assert.equal(fallbackMethods.sizeAfterTrig, "40px", "static fallback stays at the minimum")
+  await page.reload({waitUntil: "domcontentloaded"})
+  await page.waitForSelector("#fluid-display")
+
+  const surfaceChecks = await page.evaluate(async () => {
+    const tint = document.querySelector("[data-pair='tint']")
+    const oldPrimary = document.documentElement.style.getPropertyValue("--primary")
+    const initial = getComputedStyle(tint).backgroundColor
+    document.documentElement.style.setProperty("--primary", "#004fbf")
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    const changed = getComputedStyle(tint).backgroundColor
+    const result = tint.parentElement.querySelector("[data-contrast-result]").textContent
+    if (oldPrimary) document.documentElement.style.setProperty("--primary", oldPrimary)
+    else document.documentElement.style.removeProperty("--primary")
+    return {initial, changed, result}
+  })
+  assert.notEqual(surfaceChecks.initial, surfaceChecks.changed, "derived tint follows its source color token")
+  assert.match(surfaceChecks.result, /:1 \/ (AA|AAA|Large text only|Insufficient text contrast)/)
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll(".ds-treatment")].every(item => item.getAttribute("aria-hidden") === "true")), true)
+
   await page.keyboard.press("Tab")
   const focus = await page.evaluate(() => {
     const css = getComputedStyle(document.activeElement)
@@ -101,8 +252,23 @@ try {
 
   await page.click("[data-refresh-tokens]")
   await page.waitForFunction(() => document.querySelector("#token-status").textContent.includes("refreshed"))
+  const noScript = await browser.newPage()
+  await noScript.setJavaScriptEnabled(false)
+  await noScript.setViewport({width: 320, height: 800})
+  await noScript.goto(`${base}/dev/design-system`, {waitUntil: "domcontentloaded"})
+  await noScript.waitForSelector("#fluid-display")
+  const noScriptState = await noScript.evaluate(() => ({
+    visible: document.querySelector("#fluid").getBoundingClientRect().height > 0,
+    size: getComputedStyle(document.querySelector("#fluid-display")).fontSize,
+    placeholder: document.querySelector("[data-measure-target='fluid-display']").textContent.trim()
+  }))
+  assert.equal(noScriptState.visible, true, "fluid specimens render without JavaScript")
+  assert.equal(noScriptState.size, "40px", "CSS fluid sizing works without JavaScript")
+  assert.equal(noScriptState.placeholder, "Current size measured in browser", "no-script output remains an honest placeholder")
+  await noScript.close()
+
   assert.deepEqual(errors, [])
-  console.log("PASS: 8 responsive widths; 18 incomplete-row cases; LiveView URL state; iframe viewport; live color/radius/shadow propagation; contrast refresh; keyboard focus; reduced motion; no browser errors.")
+  console.log("PASS: responsive grid and URL state; iframe viewport; live token propagation; derived color pairs; fluid min/intermediate/max and computed readouts; contrast refresh; keyboard focus; reduced motion; no browser errors.")
 } finally {
   await browser.close()
 }

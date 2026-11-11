@@ -45,6 +45,21 @@ defmodule NewYouWeb.DesignSystemLiveTest do
            )
 
     assert has_element?(view, "#fluid [data-fluid-value='display-min']")
+
+    for kind <- ~w(display body space gutter), edge <- ~w(min max) do
+      target = "fluid-#{kind}-#{edge}"
+
+      assert has_element?(
+               view,
+               "#fluid span##{target}[data-bound='#{kind}-#{edge}'][aria-hidden='true']"
+             )
+
+      assert has_element?(
+               view,
+               "#fluid output[data-measure-target='#{target}'][data-measure-property='font-size']"
+             )
+    end
+
     assert has_element?(view, "button[disabled]", "Unavailable")
     assert has_element?(view, "button[disabled] .hero-lock-closed[aria-hidden='true']")
     assert has_element?(view, "#token-status[role='status']")
