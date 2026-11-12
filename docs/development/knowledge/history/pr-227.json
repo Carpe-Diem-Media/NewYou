@@ -8,14 +8,14 @@
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227/commits",
   "files": [
     {
-      "blob": "bc8d9d9e06c38ed455604d374085b8149b0b2645",
+      "blob": "e77b06f69ac13b92a4bcd3241f16d7f789adb26b",
       "mode": "100644",
       "old_blob": "aceda813c9d5b23a427a6d8438a1e6fa53d7d0f2",
       "old_mode": "100644",
       "old_path": ".hallmark/log.json",
       "old_sha256": "31ed17876f1821e3f837cace06d0573615c276b99ade5fcb5c4b38708456b20e",
       "path": ".hallmark/log.json",
-      "sha256": "025334959a3c8723f1457d51d478fe1610545c4a3c4512d6104ff62a1a7bd9d4",
+      "sha256": "d19828f5df181ba764c5b2d2600b4aa2d52603cac46137f8793f3ba9dc509cab",
       "status": "modified"
     },
     {
@@ -30,47 +30,58 @@
       "status": "modified"
     },
     {
-      "blob": "3fd81c698d859777c6d23bcc4ed75d34e9eb678b",
+      "blob": "fc63eb64c2b9cabb01fcdbea222708c3c10e07af",
       "mode": "100644",
       "old_blob": "b8f66ed5e28fd682bf40de67fcf7b0748cdc3d12",
       "old_mode": "100644",
       "old_path": "DESIGN.md",
       "old_sha256": "ffb88c9e8997e997dc75f47783f8a70a919c39a6f0b62b4e656e6e84777b1aed",
       "path": "DESIGN.md",
-      "sha256": "70e9411e8f490d02af43018a451392df437b257a14f387755d25471526a58fac",
+      "sha256": "17e2ffd53e98d35ff3726fb9be058cfa1d02d94389c2c8253496c95a60bad242",
       "status": "modified"
     },
     {
-      "blob": "de8234fec2adaeec12ac9ec556cf21320fe4414c",
+      "blob": "f6b69ad1366481b4dc8d5ef5c518dcdd6696b3fc",
       "mode": "100644",
       "old_blob": "840e633874a6f223f594b0feda3a02ecbcaad852",
       "old_mode": "100644",
       "old_path": "assets/css/app.css",
       "old_sha256": "00af014c8a6e82b87c25957e5a2d6a73069937bfb3674fbb32048f96544fa339",
       "path": "assets/css/app.css",
-      "sha256": "b411b6200a95738a8640cd377e3ff5ece304b2cf3489615922d492cdccac9c7c",
+      "sha256": "8531f1cee74c9ca856fa537da18845f770633bf8e26a35cd33d0bf735420549f",
       "status": "modified"
     },
     {
-      "blob": "a7afd9fa81d5b5c8e2f4144eb95d77e7d5c15613",
+      "blob": "9bffdd09e914893fad63807a0a6352286bcbcac8",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "assets/css/design-components.css",
+      "sha256": "9a9cc0017fa5f0d66fe389c57dd00de81583dfa4d84509778d91d4f264371d31",
+      "status": "added"
+    },
+    {
+      "blob": "4bc2eef02a44d5c012d1e1f220288e50bd04110e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/css/design-system.css",
-      "sha256": "a878dbcf9f685fb1039be168f334a7a078f91ab780e89db3ce7941fe4a59244e",
+      "sha256": "b673b9b1c2b6ea856c449442ea45f00a1d925572f88a2fedca4b9098e1bbb0e4",
       "status": "added"
     },
     {
-      "blob": "1ede87f8a0cfe161c3e2726bc964af6bbfd795fd",
+      "blob": "d2df25c555916947cd8de802119df55a44836ed4",
       "mode": "100644",
       "old_blob": "53acbf1c16b0dbfda02da449aae8b22155ec4ed4",
       "old_mode": "100644",
       "old_path": "assets/css/design-tokens.css",
       "old_sha256": "1ff08b553dee7f8427f22387a78aeba909c4be0165baa1b96d909b5ca42b8729",
       "path": "assets/css/design-tokens.css",
-      "sha256": "ba928c333c87a7f681388af3210e3fb5bd8edef19988e62fd8228b8677ef5c23",
+      "sha256": "945f5e38777fb8cd1303a5f4d7ba6128eec7c2053bae8be7995c29536dcca1c0",
       "status": "modified"
     },
     {
@@ -107,14 +118,14 @@
       "status": "added"
     },
     {
-      "blob": "3e2500cca45dae25d7c3c185d4aeab51803d515e",
+      "blob": "889b06c7aaa29c5e9729c7b8ad10ced817aa6a02",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "f012a5a405f8518c2e3787d86ab23919889b81292d7a370b238f7dcd7f084e97",
+      "sha256": "32c6c461577f0e0f108538d1e9fe9c5ddb46ea5c2839c28f095282d475a5471a",
       "status": "modified"
     },
     {
@@ -151,14 +162,25 @@
       "status": "added"
     },
     {
-      "blob": "e18f306e6e276e3c5c03a2f8d5d721ee182eddda",
+      "blob": "a78fd81405acc121ab0b0e06c69a99214855b561",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/superpowers/plans/2026-11-12-overhead-lighting.md",
+      "sha256": "f7d830473ff82e362418c39c64ea34ddb4f33354d540be7a9ee954fa0ce31210",
+      "status": "added"
+    },
+    {
+      "blob": "3cdb0c79318be8415ec340392a14739300b236ae",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/superpowers/specs/2026-11-12-overhead-lighting-design.md",
-      "sha256": "8766803767a0967493f53946a63cfd136e5018657d0a00ab7fedacaeed9df78e",
+      "sha256": "915161610b65517c9e679206ceeda15e1e61a4202ba1067d29c25ef4fb0e6e21",
       "status": "added"
     },
     {
@@ -173,25 +195,25 @@
       "status": "modified"
     },
     {
-      "blob": "f7307d452da845a10e681a37bff08b9d9ffc38d3",
+      "blob": "6ee2a5e3356d4f9dbd31d7f1a5b7355fe2af7832",
       "mode": "100644",
       "old_blob": "0785335bdcd83b612e5f32c860004db6e01ebb7f",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/components/design/button.ex",
       "old_sha256": "9d461b9ff2437f511937ad5acc7389fb6edbf9113d22ea626529aaef916d73c7",
       "path": "lib/new_you_web/components/design/button.ex",
-      "sha256": "310c2cd7992a2d6fac837577b78f1e1121a9718d1701c6d48aace4c02021f78a",
+      "sha256": "e7e28ed73fdcc5da76bfdd94bc9b43e52f8d401383be37fe4f01333d08983f8d",
       "status": "modified"
     },
     {
-      "blob": "aabf427e358ebb3ab21bb60113baeb0b06ed53ff",
+      "blob": "2bf2b81cc11b2e413fe7adf946177b5a64626f8e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "30e4c7a5656ce85e298e907e642c7ee88c374bb7a067a6f39b9b5a7cd6a95398",
+      "sha256": "b850f531c8d538661762b9010b710d0f3514d396c33a2499182d4707c8382fef",
       "status": "added"
     },
     {
@@ -272,14 +294,14 @@
       "status": "added"
     },
     {
-      "blob": "5b7671c199b38f69640cde6000d63cd2d063ce02",
+      "blob": "12eed88936c70c6532f7f4ecf8f7d031da4f998f",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.html.heex",
-      "sha256": "bb12041621d6ca622163a54596dc4b702a0defad3e607148e8b66aa2e2e3fc52",
+      "sha256": "a2b072c464f2a0dade2ef6b311743302321484357e9a2d561d61aeb8ebbacf91",
       "status": "added"
     },
     {
@@ -324,6 +346,17 @@
       "old_sha256": null,
       "path": "priv/static/fonts/inter/README.md",
       "sha256": "28f91b8131408627c0ff1ba93d0d42ddc8fd2a5b96b3f93e4932f8251bb596f9",
+      "status": "added"
+    },
+    {
+      "blob": "0c02801844d25ab62b6bd88f2553b9c6434c35c6",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_lighting_browser.mjs",
+      "sha256": "e61035c5b832de445d0e7cc459bac56971d2da739699b5b793fdcc13a91e1e29",
       "status": "added"
     },
     {
@@ -404,25 +437,25 @@
       "status": "modified"
     },
     {
-      "blob": "2e66e055cc9ca20d121ee573ef7bc1db65ebbacf",
+      "blob": "5b7f83d71a863ff89629aca00f8d5cbedb9a50d4",
       "mode": "100644",
       "old_blob": "38ece4da8846283f11e0913c9cf1062781929d11",
       "old_mode": "100644",
       "old_path": "test/new_you_web/design_system_infrastructure_test.exs",
       "old_sha256": "43a05589792cd2f8f2da727e985e76c6e41c1d10014b9bc765c52beddc73762a",
       "path": "test/new_you_web/design_system_infrastructure_test.exs",
-      "sha256": "96124fc324c696bddbba874cc13be23f0b34753ba650557b4cce6b981682d7f2",
+      "sha256": "324c7acab9cfc08fdfa7e523c87e98b85b5c0dc521f5b92be3197447c1f895eb",
       "status": "modified"
     },
     {
-      "blob": "5e897c7bdf7c79d126d495c89a53569348cf607f",
+      "blob": "4e31c77f8c6123b2bb6f488917bdd10bcd5047ec",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "7470a02e612bc40493e1e2424367d97ddb77bcfc1629a27de3594494e17d4bf8",
+      "sha256": "b507cb50bd362de47e2f0b75759f429bcaf9bea0e954422db4d61f299170c80d",
       "status": "added"
     },
     {
@@ -476,13 +509,13 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "Adds a development-only LiveView design guide that renders NewYou's shared token-driven components. Editing the canonical CSS values updates the guide and their application consumers together.",
-    "title": "WELL-112: Add live design guide and centralize site fonts",
+    "summary": "Adds a development-only LiveView design guide that renders NewYou's shared token-driven components. Editing canonical CSS values updates the guide and their application consumers together.",
+    "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-12T19:24:50.283672Z",
+    "checked_at": "2026-11-12T19:50:15.094767Z",
     "items": [
       {
         "description_sha256": "37e40677ccfc39b60b5e720efb6483fcc3575d647c09ff296a9e8faedd4a3e32",
@@ -583,7 +616,7 @@
       "name": null,
       "old_sha256": "f0699b68d4752fded89ce3848f4e17c27f291f0b6dea247956209ce79dfd3acd",
       "path": "lib/new_you_web/components/design/button.ex",
-      "sha256": "4005936cec262d718092c1e75164ca6032ef0b2b9a50c5a0845ef914366653fa",
+      "sha256": "c63e981912ae30279c84ba296a284e0ffa380b180fe0c018406cd6a2dd239465",
       "status": "parsed"
     },
     {
@@ -595,7 +628,7 @@
       "name": "primary_button",
       "old_sha256": "ec0a30b2a901bf639d64df6b7ceccc1a993a564ed8cd1c447a18614e400dc176",
       "path": "lib/new_you_web/components/design/button.ex",
-      "sha256": "de2f7febbc03aaa6e401275e147d7df2ecdd371d09279097458ea63a36136301",
+      "sha256": "0fba839b5bb1a5b567b68fff3b0d75b0295b95cc90b968faaf036d27441e37c3",
       "status": "parsed",
       "visibility": "public"
     },
@@ -608,12 +641,12 @@
       "name": "secondary_button",
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/button.ex",
-      "sha256": "ef7b2a108e0e668e1b9849de32fe48badcc2204fa761b713b4de146905f4a0b5",
+      "sha256": "41d22976afc8066ab4f48a5ce7aa4311f9ca9c5c0b68da3b71ee8f07ed746c2a",
       "status": "parsed",
       "visibility": "public"
     },
     {
-      "arity": 2,
+      "arity": 3,
       "change": "added",
       "declaration": "defp",
       "kind": "function",
@@ -621,7 +654,7 @@
       "name": "validate_rest!",
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/button.ex",
-      "sha256": "6833d6866ce8647376bbe7ba4f201dba4c2c64604fb496be182285252616eeb1",
+      "sha256": "34d09c8188c6fbc0f5f0a7357cfccd96440caaedba773b7c5994f3af6c3c3971",
       "status": "parsed",
       "visibility": "private"
     },
@@ -643,7 +676,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "f524a167e094d5f8e543f923f219f949ee8907097746a07f9533d8d33c5937c2",
+      "sha256": "9d12db33618a93393aab545186241385c33662b38a94e467e251b24eed21a4b8",
       "status": "parsed"
     },
     {
@@ -655,7 +688,7 @@
       "name": "design_card",
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "0d91f316aae014d5455f15b0bd0782270916bc38cc26fecaa20b5fb1474c34af",
+      "sha256": "20e56c35ee7c42bf2398943916e1558ec417a7dc2fb46e28c350a8321e5fe5df",
       "status": "parsed",
       "visibility": "public"
     },
@@ -1176,7 +1209,7 @@
       "name": null,
       "old_sha256": "f0e3f4de169e7b2a774860f89801eeefecb935aa7fbee659748927b432a5eece",
       "path": "test/new_you_web/design_system_infrastructure_test.exs",
-      "sha256": "9976ae4a6fce5f251ac6f467e012de3f0e94b08edebb03078d14ce268e234fad",
+      "sha256": "404284fd727acec72388bba05ca5b7e63e33c348ada4dbde2e70b9706c8dbd7e",
       "status": "parsed"
     },
     {
@@ -1197,7 +1230,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "45ac1e61d771fe14b21adffaa0e8517b4f5d34529447d8ca1cfabba43f86613f",
+      "sha256": "e1b1797944822b0fbc3ad34f723b54a4e71e8ebd8aa08ad2c330374f6afdde70",
       "status": "parsed"
     },
     {
@@ -1246,6 +1279,7 @@
     }
   ],
   "tests": [
+    "test/assets/design_lighting_browser.mjs",
     "test/assets/design_system_browser.mjs",
     "test/assets/design_system_test.mjs",
     "test/assets/design_typography_browser.mjs",
