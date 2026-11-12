@@ -396,3 +396,22 @@ labels with doubled text size, live primary-token propagation, forced colours
 and a solid-fill fallback. Candidate material amounts still need owner visual
 review before production-page adoption. This is a presentation extension with
 no Domain/schema/lifecycle change; the existing semantic-map exemption applies.
+
+Observed lighting verification at source
+`f5973a306045ce8a97de6a8cd1f1936d2d9d26f6`: final canonical `mix check` exits 0,
+637 tests passed in 326.8 seconds; `mix check.deep` exits 0 with zero errors/skips.
+The 33 focused tests, assets build, `mix design.check`, four Node contrast tests,
+54 Python routing/smoke tests and all three browser scripts pass. Guide Hallmark
+reports zero FAIL/open REFLEX/WARN and the existing numeric-weight waiver. Actual
+PNG samples give minimum white-label contrast of 5.08:1 at rest and 8.65:1 during
+hover/press. The proof also asserts raised-card and secondary edge direction,
+including reversed edges while pressed. The expanded token list fits at 320px.
+
+The bounded independent source review found no actionable defect. It did not
+execute checks or provide Master Gate certification. Runtime proof uses system
+Chrome and external Puppeteer; no Firefox/WebKit claim is made. A solid fallback
+is exercised by token overrides, without emulating an engine that lacks
+colour-mix support. Prior registration/Tidewave gate 26a and WELL-114 independent
+resulting-main certification remain open. The earlier global-count failures did
+not recur in this run; their cause is not thereby proved fixed. Hosted CI and
+independent review of the final PR head remain required before integration.

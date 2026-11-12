@@ -1,6 +1,48 @@
 [
   {
     "date": "2026-11-12",
+    "entry": "WELL-112 overhead lighting guide specimens",
+    "implementation_sha": "f5973a306045ce8a97de6a8cd1f1936d2d9d26f6",
+    "scope": "Owner-approved extension of existing guide; flat defaults preserved; no redesign workflow",
+    "verification": {
+      "command": "HALLMARK_PUPPETEER=/tmp/newyou-refinement-tools CHROME_PATH=/usr/bin/google-chrome node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-components.css assets/css/design-system.css --scope app --genre modern-minimal --url http://127.0.0.1:4237/dev/design-system --json",
+      "fails": 0,
+      "open_reflex": 0,
+      "warns": 0,
+      "waived": 1,
+      "rejected": 0,
+      "supported_source_files": 3,
+      "waiver": "Existing gate 37 misclassifies numeric 400/500/700 weights as font families. The authored project family remains Inter.",
+      "render": "Five supported viewport screenshots; focused lighting section inspected at 1440px."
+    },
+    "browser_proof": {
+      "script": "test/assets/design_lighting_browser.mjs",
+      "passed": [
+        "neutral lightness order",
+        "actual PNG gradient label samples",
+        "native default/hover/pressed/disabled",
+        "raised card and secondary edge direction",
+        "keyboard focus",
+        "320px reflow",
+        "long bilingual labels at 200% text size",
+        "live primary-token update",
+        "forced colours during press",
+        "solid fill fallback"
+      ],
+      "minimum_label_contrast": {
+        "rest": 5.08,
+        "hover": 8.65,
+        "pressed": 8.65
+      },
+      "regression": "Original guide and typography browser proofs pass. Expanded lighting-token list fits at 320px.",
+      "limits": "System Chrome/Puppeteer proof; no new Firefox/WebKit claim. Solid fallback is exercised through token overrides; unsupported colour-mix engines are not emulated."
+    },
+    "source_review": "Bounded independent source review found no actionable defects. Its noted edge-output coverage gap was addressed in the browser proof; it did not run tests or certify merge.",
+    "engineering": "At implementation source f5973a306045ce8a97de6a8cd1f1936d2d9d26f6: canonical mix check exits 0 with 637 passed in 326.8 seconds; mix check.deep exits 0 with zero errors/skips; 33 focused tests, assets, design enforcement, four Node and 54 Python routing/smoke tests pass.",
+    "inherited_gaps": "Registration/Tidewave gate 26a and WELL-114 independent resulting-main certification remain open. Guide checks do not certify the whole site or close those gates."
+  },
+  {
+    "date": "2026-11-12",
     "entry": "WELL-112 controlled component attributes",
     "implementation_sha": "4ee2ecfa4d8a5cbc2b275f8a62d2c0ba423e54b2",
     "scope": "existing button/card presentation refactor; established design preserved",
