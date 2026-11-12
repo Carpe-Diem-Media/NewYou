@@ -6,8 +6,8 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "10e8863582eefdf5cce4e2eeb8310b72951d0f24",
-    "semantics": "Source snapshot for PR #228. File hashes bind inspected implementation bytes; observed run evidence is recorded separately in Plane and GitHub."
+    "git_sha": "36e0563fa87ed9bf66e6576b8a91246724ec326e",
+    "semantics": "WELL-16 recovery capability introduced in PR #228; PR #229 updates only the reader's current Product authority lineage. File hashes bind inspected implementation bytes; observed run evidence is recorded separately in Plane and GitHub."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1115,7 +1115,7 @@
       "id": "content",
       "path": "lib/new_you/content/recovery_message.ex",
       "symbol": "defmodule NewYou.Content.RecoveryMessage",
-      "sha256": "28e11dd119e421c42d21e8bdaa826021149c3fee428fe3bd3fe6505c50560b7c"
+      "sha256": "8c8a4046d305467fbfeafb7b42f06f53e4ffc1b8238b21b6b4bd72ba5bf96d0a"
     },
     {
       "id": "audit",
