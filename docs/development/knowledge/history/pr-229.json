@@ -1,0 +1,124 @@
+{
+  "base_sha": "cd88e4dea92edef40777d02bb788d40b87d79eca",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229/checks",
+  "ci": {
+    "source": "external GitHub checks",
+    "status": "unknown"
+  },
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229/commits",
+  "files": [
+    {
+      "blob": "759cecdaa4e4cf257dd333708e8928b213254989",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/README.md",
+      "sha256": "9d61a895c9845d27c7a8fa08a2d1746836a697691888f6bb85b70269ebf1ca96",
+      "status": "added"
+    },
+    {
+      "blob": "c788ff900eb700673010d3fad8cc592cd97179f3",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/confirmation-af-candidate.txt",
+      "sha256": "f7f5cc32a6b7498ff741226f3f78e9fa85a76473244b62436336fcea4936cb9e",
+      "status": "added"
+    },
+    {
+      "blob": "c5bed846308ff7dc59d811fb3098534b09b5f441",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/confirmation-af-v1.txt",
+      "sha256": "be8a5049931e2a942c88fa4159715e0c0c460b55879a3d6b7a780d4f7f26e204",
+      "status": "added"
+    },
+    {
+      "blob": "f425f583a3e1ec2a3765d18cb759575ec28c2e41",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/confirmation-en-v1.txt",
+      "sha256": "225434e7cbdb52d7ea9a092927acbc8b9acde9a07b89f2572b633b3eb8b63ae5",
+      "status": "added"
+    },
+    {
+      "blob": "b4094ef6753ba8330de9659488255fd58d818b81",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/notice-af-candidate.txt",
+      "sha256": "027e88d41175e4e6598668d7197d65b111415963fbe16ae3139414f3a87d3d56",
+      "status": "added"
+    },
+    {
+      "blob": "470318dad322a220b87cefe08caedbabb98378a5",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/notice-af-v1.txt",
+      "sha256": "6effc50c65c2e592ac237984b236f3d4aa1723f92378268d424fc05810571f3e",
+      "status": "added"
+    },
+    {
+      "blob": "0b7c25eff4512838f5b3002a2a1e7f0cf1bb42fc",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/notice-en-v1.txt",
+      "sha256": "937b7aa3fb0018f12157946c7ace16d30503ddba8ab52f2a446cff98a1505abc",
+      "status": "added"
+    }
+  ],
+  "intent": {
+    "author": {
+      "id": 355419376,
+      "login": "JC-Agents"
+    },
+    "kind": "attributed_intent",
+    "summary": "Preserves the two Afrikaans message bodies explicitly approved by the owner for WELL-122. This draft presents the wording for review while the ticket remains in Planning.",
+    "title": "WELL-122: review Afrikaans email-change message candidates",
+    "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229"
+  },
+  "migrations": [],
+  "plane": {
+    "checked_at": "2026-11-12T20:22:24Z",
+    "items": [
+      {
+        "description_sha256": "abcb7e7d45311f90940da4c31a2287090e00dab51a1555df4fbfe8807ef59e73",
+        "id": "330aabfe-f4e5-48f4-9191-36be3d453e75",
+        "identifier": "WELL-122",
+        "name": "WELL-17 upstream \u2014 approve primary-email-change EN/AF confirmation and old-address notice development content",
+        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+        "sequence_id": 122,
+        "state": "Planning"
+      }
+    ],
+    "source": "connected-plane",
+    "status": "agent_verified"
+  },
+  "pr": 229,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229",
+  "range_base_sha": "cd88e4dea92edef40777d02bb788d40b87d79eca",
+  "schema_version": 1,
+  "symbols": [],
+  "tests": [],
+  "tickets": [
+    "WELL-122"
+  ]
+}
