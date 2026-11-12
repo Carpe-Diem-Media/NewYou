@@ -286,6 +286,9 @@ threshold_for_N_columns = N * minimum_card_size + (N - 1) * G
 
 An independent intrinsic recipe can express an upper column count and minimum
 card width using `repeat(auto-fit, minmax(min(100%, max(minimum, track_size)), 1fr))`.
+This is mathematical pseudocode: substitute typed length tokens and a `calc()`
+expression for its named operands before using it as CSS. The container must
+have a definite available inline size for the percentage-based fit calculation.
 The input column count must be a positive integer and gaps non-negative. Use a
 practical positive minimum width. `auto-fit` collapses empty tracks and permits
 items to stretch; `auto-fill` reserves them. Decide this per pattern. Add
@@ -483,6 +486,106 @@ certify future visual candidates, or replace the existing delivery gates.
 passed all 54 tests after the external typography-configuration locator was
 expressed separately from repository links. The first run had four failures
 caused by that citation. No smoke rule, fixture or application source was changed.
+
+## 11. Second-pass review and corrections
+
+Reviewed baseline: `40a6d7712c51bbeb2c7124708c8e5f16608c6a3c`. The second pass
+combined source tracing, a bounded independent review of the equations and
+reference code, rejection-case reproduction, and actual Chrome CSS checks.
+The independent review found the core interpolation, modular endpoint,
+equal-column threshold and doubled-track symmetry equations dimensionally
+consistent. Its findings concern the reference validator and the distinction
+between arithmetic proof and implemented selectors, not merge certification.
+
+### Corrected: reference input validation
+
+The original checker accepted NaN/infinite size endpoints, malformed or
+out-of-range RGB channels, and an overflowing viewport span. A short RGB tuple
+silently lost a luminance coefficient through `zip`; finite bounds alone did
+not ensure a finite difference. Its 104 positive arithmetic checks did not
+exercise these contracts. This was a defect in the research reference, not the
+application colour sampler, which already rejects malformed measurements.
+
+Added rejection cases first and observed failure, then corrected the reference:
+
+- Size endpoints must be finite and non-negative. The size helper is deliberately
+  not an implementation for signed tracking or translation values.
+- Viewport inputs and span must be finite and ordered. Values outside a valid
+  span return the relevant bound before unnecessary subtraction.
+- Colours require exactly three finite numeric sRGB channels in 0..1. Strings,
+  booleans, null, partial tuples and extra channels are rejected.
+- Added mid-grey reference values that exercise nonlinear sRGB conversion and
+  a near-threshold contrast pair; black/white anchors alone were insufficient.
+- Added fixed-viewport root-size cases and retained descending-size checks.
+
+The corrected command passes 126 arithmetic checks. This reference does not
+validate arbitrary edits to the production stylesheet. The current design
+enforcement scans palette/authority and bypass rules; it does not assert every
+fluid bound, percentage or numerical relationship. CSS token edits still need
+the applicable rendered checks. Do not describe the reference as automatic
+runtime token validation or a complete token dependency linter.
+
+### Confirmed: rem scaling also moves the viewport bounds
+
+At an 840px CSS viewport, the current display candidate computes to 52px with a
+16px root and 80px with a 32px root. This follows the rem endpoints and the moving
+30rem/75rem interpolation interval. It does not double the computed font size.
+This is why root resizing, text-only enlargement and browser zoom/reflow are
+separate checks. The candidate engine's behaviour is confirmed, not certified
+as satisfying all text-resize requirements. Do not replace those checks with
+an assumption that rem automatically supplies proportional enlargement.
+
+The [WCAG text-spacing guidance](https://www.w3.org/WAI/WCAG22/Understanding/text-spacing.html)
+requires preserving content/function when users apply line-height 1.5 times the
+font size, paragraph spacing 2 times, letter spacing 0.12 times and word spacing
+0.16 times. These are override-test conditions, not required default styles.
+
+### Confirmed: current token scope has an explicit limit
+
+An actual cloned canonical primary button was given local overrides for primary
+colour, XL radius and body font. The colour stayed at the root primary, the
+radius stayed 32px despite a 37px local input, and the family became monospace.
+This matches the current static colour/radius mappings and inline font mappings.
+
+Global root edits remain the supported contract and already have browser proof.
+Local colour/radius themes are not implemented by the research recommendations.
+If a future scope requires them, deliberately change the relevant mappings to
+consume local roles, redeclare local derived values as needed, and test flat,
+lit and raised consumers together. Do not claim that changing a child input
+already updates every inherited alias or lighting derivation. No production
+mapping or visual default was changed by this second pass.
+
+### Added: implemented CSS proof separate from arithmetic
+
+Run the additional read-only proof with external tooling:
+
+```sh
+BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools CHROME_PATH=/usr/bin/google-chrome node docs/development/research/design_math_browser.mjs
+```
+
+Observed result: 212 assertions pass in Chrome 155.0.8059.84. Coverage includes
+all four fluid consumers at 16/20/32px roots and five viewport widths, descending
+endpoint ranges, native/trigonometric/static selection, and real grid geometry
+for both start and centre alignment. Grid checks assert actual column count,
+last-row population and alignment for counts 1 through `2N + 1` at 744/1128/1440px.
+The script also reports the local token-scope observation without making that
+limitation an approved theme contract. Each browser mutation is confined to its
+page; there are no application writes or source modifications.
+
+Fallback selection uses CSSOM rule removal in Chrome. It is not a test of a
+browser that lacks those functions. The new intrinsic auto-fit pseudocode,
+future modular scale adoption, x-height leading, local themes and Firefox/WebKit
+remain outside this proof. Browser assertions count separately from arithmetic.
+
+The existing lighting proof was rerun and passed: neutral elevation order,
+directional/composited edges, native states, gradient label contrast, focus,
+320px long-label/200% text checks, token edits and forced-colour/solid fallbacks.
+The supported Hallmark command from the development guide, targeting
+`assets/css/design-tokens.css`, `assets/css/design-components.css` and
+`assets/css/design-system.css` with app scope and modern-minimal genre, rendered
+five screenshots and returned zero FAIL/open REFLEX/WARN/rejected waivers. The
+single existing numeric-weight/font-family waiver remained. This guide result
+does not close the earlier registration/Tidewave finding or WELL-114.
 
 Documentation impact: research only; no Domain, persistence, lifecycle or public
 application interface changes. No new capability map is required. WELL-114,

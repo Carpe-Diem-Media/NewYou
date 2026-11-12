@@ -8,17 +8,35 @@ import json
 import math
 
 
+def finite_number(value):
+    try:
+        return type(value) in (int, float) and math.isfinite(value)
+    except OverflowError:
+        return False
+
+
 def progress(value, lower, upper):
-    if not all(math.isfinite(v) for v in (value, lower, upper)) or upper <= lower:
+    if (not all(finite_number(v) for v in (value, lower, upper))
+            or upper <= lower or not math.isfinite(upper - lower)):
         raise ValueError("Finite ordered viewport bounds are required")
+    if value <= lower:
+        return 0.0
+    if value >= upper:
+        return 1.0
     return max(0.0, min(1.0, (value - lower) / (upper - lower)))
 
 
 def interpolate(value, lower, upper, start, end):
+    """Interpolate non-negative design sizes; signed properties need their own contract."""
+    if not all(finite_number(v) and v >= 0 for v in (start, end)):
+        raise ValueError("Finite non-negative size endpoints are required")
     return start + progress(value, lower, upper) * (end - start)
 
 
 def luminance(rgb):
+    if (not isinstance(rgb, (tuple, list)) or len(rgb) != 3
+            or not all(finite_number(v) and 0 <= v <= 1 for v in rgb)):
+        raise ValueError("Exactly three finite normalized sRGB channels are required")
     def linear(channel):
         return channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
 
@@ -38,6 +56,23 @@ def run():
         if not math.isclose(actual, expected, rel_tol=1e-10, abs_tol=1e-10):
             raise AssertionError(f"{actual} != {expected}")
         checks += 1
+
+    def rejects(operation):
+        nonlocal checks
+        try:
+            operation()
+        except ValueError:
+            checks += 1
+        else:
+            raise AssertionError("Invalid reference input was accepted")
+
+    for start, end in ((float("nan"), 18), (16, float("inf")), (-1, 18)):
+        rejects(lambda: interpolate(840, 480, 1200, start, end))
+    rejects(lambda: progress(0, -1e308, 1e308))
+    for color in ((1, 1), (1, 1, 1, 1), (-0.1, 0, 0), (2, 0, 0),
+                  (float("nan"), 0, 0), (float("inf"), 0, 0),
+                  None, "rgb", ("0", 0, 0), (True, 0, 0)):
+        rejects(lambda: luminance(color))
 
     for start, end in ((16, 18), (40, 64), (48, 16)):
         for width, expected in ((320, start), (480, start), (840, (start + end) / 2),
@@ -74,6 +109,12 @@ def run():
         for width, expected in ((480, 16 * 1.2 ** step), (1200, 18 * 1.333 ** step)):
             close(interpolate(width, 480, 1200, 16 * 1.2 ** step, 18 * 1.333 ** step), expected)
 
+    # A changed root scales both rem endpoints and the rem viewport boundaries.
+    # At the same CSS viewport, it does not necessarily scale the result proportionally.
+    for root_px, width, expected in ((16, 840, 52), (20, 840, 58),
+                                    (20, 600, 50), (20, 1500, 80), (32, 840, 80)):
+        close(interpolate(width, 30 * root_px, 75 * root_px, 2.5 * root_px, 4 * root_px), expected)
+
     for columns in range(1, 5):
         minimum, gap = 240, 24
         threshold = columns * minimum + (columns - 1) * gap
@@ -97,6 +138,9 @@ def run():
     close(contrast(black, white), 21)
     close(contrast(white, white), 1)
     close(contrast(black, white), contrast(white, black))
+    close(luminance((128 / 255, 128 / 255, 128 / 255)), 0.21586050011389926)
+    close(contrast((128 / 255, 128 / 255, 128 / 255), white), 3.9494396480491156)
+    close(contrast((119 / 255, 119 / 255, 119 / 255), white), 4.478089453577214)
 
     print(json.dumps({"checks_passed": checks, "scope": "independent arithmetic only",
                       "comparison_step": 3, "comparison": comparison}, indent=2))
