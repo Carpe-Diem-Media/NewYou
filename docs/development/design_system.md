@@ -26,7 +26,7 @@ DESIGN.md + executable tokens + semantic components
 
 - DESIGN.md is the authority for every visual concept and state it defines.
 - assets/css/design-tokens.css maps those concepts into namespaced Tailwind v4 theme utilities. It is executable representation, not a second source of truth.
-- The approved Inter fallback is used because the source font is not present; its line-height values apply DESIGN.md's approximately 5% increase to the extracted values.
+- The owner approved self-hosted Inter on 2026-11-12. Its existing line-height values retain DESIGN.md's approximately 5% increase to the extracted values.
 - New recurring visual primitives use semantic Phoenix components, beginning with NewYouWeb.Components.Design.Button.primary_button/1.
 - New tokens or design primitives require an explicit authority change in DESIGN.md first.
 
@@ -60,7 +60,7 @@ The scanner reads each source file as one buffer and reports the line from each 
 - Preserve native elements, ARIA attributes, form semantics, and LiveView phx-* bindings.
 - Keep browser focus indication; do not add outline-none without an approved visible focus treatment.
 - The primary button preserves its native disabled attribute. DESIGN.md does not define a disabled appearance, so a new disabled visual treatment requires an authority decision first.
-- Do not add brand font files or illustrations. The token layer uses the Inter fallback explicitly approved by DESIGN.md; no font asset is downloaded.
+- Inter is self-hosted under the owner's 2026-11-12 decision. Register font assets only in design-tokens.css and retain their licenses. Other brand fonts and illustrations still require explicit approval.
 
 ## DaisyUI migration status
 
@@ -85,11 +85,11 @@ DaisyUI can coexist with the canonical layer while existing components remain gr
     Do not fill dark-mode or validation gaps through guesswork.
     If the requested design requires a token/component/state not authorized by DESIGN.md or the existing compatibility tokens, STOP and report the missing design decision.
 
-The initial sloplint pass reports four REFLEX findings and no FAILs: it recommends tinting the explicitly specified white surface/on-primary and black on-canvas tokens, and counts numeric font-weight tokens (and Tailwind's imported Georgia default) as extra font families. Those color values map directly to DESIGN.md; Inter is the approved single project fallback, while legacy framework font defaults remain grandfathered.
+Historical pre-centralization evidence: the initial sloplint pass reported four REFLEX findings and no FAILs: it recommends tinting the explicitly specified white surface/on-primary and black on-canvas tokens, and counts numeric font-weight tokens (and Tailwind's imported Georgia default) as extra font families. Those color values map directly to DESIGN.md; At that initial revision Inter was the approved single project fallback and legacy framework font defaults remained grandfathered. The site-wide font decision below supersedes those family defaults.
 
 ## Migration state
 
-WELL-80 establishes the infrastructure only. Existing pages, forms, layouts, dark mode, validation/error styling, and DaisyUI usage remain unchanged. Migrate those scopes in separate reviewed work. Dark-mode authority, validation/error authority, and the remaining in-app product visual system are follow-up design decisions.
+WELL-80 establishes the infrastructure only. Existing page composition, forms, layouts, dark mode, validation/error styling, and DaisyUI usage remain unchanged. The later owner-approved font centralization applies across these pages without migrating their other styling. Migrate those scopes in separate reviewed work. Dark-mode authority, validation/error authority, and the remaining in-app product visual system are follow-up design decisions.
 
 ## LiveView visual reference
 
@@ -105,7 +105,7 @@ NEW_YOU_PORT=4237 mise exec -- devcore-project run dev -- mix phx.server
 
 Use a free permitted worktree port in `4221..4239`. The primary checkout uses `4220`. Run `devcore-project doctor` first. If existing migrations are pending, use the same DEV wrapper and worktree port for `mix ecto.migrate`; do not reset shared data or create another database stack.
 
-The guide contains all approved palette tokens, twelve type specimens, font weights, line heights, tracking, spacing, button/link examples, cards, Heroicons, grid controls, breakpoint/container measurements, foreground/background contrast and radius/shadow samples. Its specimens consume the shared CSS, not copies of the values in Elixir or JavaScript. The declared Inter fallback is not bundled; the page explicitly reports that the browser may use sans-serif.
+The guide contains all approved palette tokens, twelve type specimens, font weights, line heights, tracking, spacing, button/link examples, cards, Heroicons, grid controls, breakpoint/container measurements, foreground/background contrast and radius/shadow samples. Its specimens consume the shared CSS, not copies of the values in Elixir or JavaScript. Inter is bundled locally; the guide identifies the central body/display tokens and explains the sans-serif network-failure fallback.
 
 ### Edit one source
 
@@ -186,7 +186,7 @@ The existing `DESIGN.md` supplies the direction; there is no new theme, brand fo
 HALLMARK_PUPPETEER=/tmp/newyou-well-112-tools CHROME_PATH=/usr/bin/google-chrome node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-system.css --scope app --genre modern-minimal --url http://127.0.0.1:4237/dev/design-system --json
 ```
 
-The final observed result was zero FAIL, zero open REFLEX, zero WARN and three waived findings. Gate 7b's two findings are the exact approved black `on-canvas` reference swatch and its Tailwind mapping; tinting either would change locked values. Gate 37 treats numeric font weights as font families. The source has one approved Inter fallback family. The specimen-only line-height waiver records why the reference must retain the approved scale rather than rewrite it.
+The final observed result was zero FAIL, zero open REFLEX, zero WARN and three waived findings. Gate 7b's two findings are the exact approved black `on-canvas` reference swatch and its Tailwind mapping; tinting either would change locked values. Gate 37 treats numeric font weights as font families. At that historical revision the source had one approved Inter fallback family. The specimen-only line-height waiver records why the reference must retain the approved scale rather than rewrite it.
 
 The initial rendered FAIL at 320px was a wrapped navigation control; shorter index labels fixed it and the rerun passed. The independent fresh-context finish review reported one state-clarity finding on the disabled specimen. Its lock icon and explicit unavailable label now provide a non-color cue while the approved button appearance and native disabled behavior remain intact. The author checked the recapture. The existing Tidewave developer overlay can cover content in captured phone views; it is not part of the design system.
 
@@ -228,3 +228,42 @@ The old dirty-TEST failures above are historical. The merged WELL-114 correction
 
 
 Final visual correction at `52a56259b912c930cd44517d0cbe5c942387babb`: empty endpoint probes are explicitly excluded from layout. A browser regression first failed because the probes had nonzero height; it then passed after the CSS correction, while all computed endpoint outputs still matched. The final browser suite, asset build, supported Hallmark render and design check passed again. The final change after the recorded engineering suite affects only CSS probe display and the corresponding browser assertion; it changes no Elixir or HEEx source. Exact-head hosted CI remains required for integration.
+
+## Central font selection, 2026-11-12
+
+The owner approved locally served Inter and required future family changes to propagate throughout the site from one CSS edit. The editable family tokens live in `assets/css/design-tokens.css`:
+
+```css
+--font-body: Inter, sans-serif;
+--font-display: var(--font-body);
+```
+
+Change `--font-body` to select the site-wide family. Headings follow automatically. A deliberately separate heading family uses `--font-display` in that same token block. The root HTML and headings, canonical Tailwind family utilities, default sans/serif utility mappings and legacy `--ny-font-body`/`--ny-font-display` aliases consume those roles. Existing legacy family literals were removed rather than granting an enforcement exception. Legacy colors, sizing, states and composition remain on their existing lane. Source-code samples retain their existing monospace treatment.
+
+A token selects a font; it does not download an arbitrary family. A replacement custom font needs its licensed WOFF2 asset and one `@font-face` registration in the same CSS file. Change the family token after registering it. No per-page font declarations or Sass build is required. The single Inter variable asset preserves existing weights, including legacy 600, while canonical components keep 400/500/700. `font-display: swap` keeps fallback text available while loading. No metrics override is guessed; font-swap layout stability remains a measured review concern.
+
+The official upstream Inter 4.1 archive supplies `priv/static/fonts/inter/InterVariable.woff2` and its unmodified SIL Open Font License. `priv/static/fonts/inter/README.md` records upstream provenance and the font hash. The application already serves the fonts static path. No runtime CDN request or application dependency is added.
+
+Repeatable read-only browser proof:
+
+```sh
+BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4237 CHROME_PATH=/usr/bin/google-chrome node test/assets/design_typography_browser.mjs
+```
+
+The proof checks real font loading at weights 400/500/700; one-token family propagation across the guide, EN/AF registration, its language-choice page, the homepage and the guide preview; independent heading selection; five viewport widths; and readable server-rendered registration with visible inputs when font requests fail and JavaScript is disabled. This adds no form submission or Domain state mutation. The broader field/state/layout migration remains separate from this font baseline.
+
+Authentication proof pages retain their strict Content Security Policy, with `font-src 'self'` added so the same local font can load. Scripts, external fonts, arbitrary origins and frames remain disallowed by their existing policy. Exact-header controller regressions cover magic login, password reset, password session and verification. These proof pages remain behind their existing development gates; the browser test does not enable those gates.
+
+Documentation impact: this batch changes visual font selection/delivery and the minimum same-origin font permission needed by existing styled proof pages. It adds no Domain/application interface, lifecycle, persistence or schema contract. A new semantic capability map is exempt for this typography change; the existing registration map remains authoritative for its described implementation. The PR history record is regenerated through the required knowledge-capture command before review.
+
+Observed typography-batch verification:
+
+- DevCore doctor passed DEV and TEST reachability/authentication without exposing managed credentials. `mix assets.build` and `mix design.check` passed through their DevCore profiles.
+- The typography browser proof passed on all six live/reference routes at 320/390/744/1128/1920px, including real 400/500/700 font loading, live family overrides, independent heading selection, product keyboard focus and blocked-font/no-JavaScript fallback. The original `test/assets/design_system_browser.mjs` also passed. Both use the documented external Puppeteer setup and system Chrome; Firefox/WebKit, full text-zoom coverage and font-swap layout-shift measurement were not added by this batch.
+- `node --test test/assets/design_system_test.mjs` passed four tests. `mise exec -- python3 -m unittest tests.test_foundation_lane_routing tests.test_foundation_smoke` passed 54 tests after the smoke fixture was updated to include the newly referenced font provenance files. No smoke rule was weakened.
+- `ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check.deep` passed with zero errors/skips. The full `mix check` command passed its earlier engineering stages but exited 2 after 342.2 seconds: 630/632 tests passed. The unchanged EmailVerificationTest at line 55 reads all Token rows with `[original] = Ash.read!(Identity.Token, authorize?: false)` and fails in the retained TEST state. Its separate AF Chromium proof also failed; that cause remains unconfirmed. No reset or global-read workaround was applied. The failures are recorded on WELL-114.
+- The focused six-file controller/guide run passed 47/48; a passive magic-login count assertion failed, then its isolated rerun passed. That transient failure is retained in the evidence; its cause is unproven. The four exact CSP header regressions passed.
+- The documented two-file Hallmark command on the guide passed with zero FAIL/open REFLEX/WARN/rejected waivers and one numeric-weight/font-family waiver. The additional `sloplint.mjs assets/css/tokens.css --scope app --genre editorial --url 'http://127.0.0.1:4237/register?locale=en' --json` render reports one gate 26a FAIL on `body` after tabbing through the existing Tidewave toolbar. Direct keyboard inspection shows all twelve registration controls with immediate solid 2px focus outlines, followed by the non-product developer toolbar. The new browser regression verifies visible product focus on EN/AF registration and language choice. This DEV-tool finding is recorded, not waived or presented as an entirely green Hallmark result. Phone/desktop renders were inspected.
+- A bounded independent source review found no functional font/CSP/provenance issue and one stale documentation note, which was corrected. It did not supply independent merge certification.
+
+The font requirement is implemented; the complete WELL-112 candidate remains BLOCKED for delivery verification. Highest-risk uncertainty is the unconfirmed AF proof failure. Next actions are fixture/proof reconciliation under WELL-114, a clean product-only keyboard lint result that accounts for Tidewave, fresh exact-head hosted CI and independent Master Gate. After this baseline, the planned registration component/state/layout migration and cross-engine checks remain separate unfinished adoption work.

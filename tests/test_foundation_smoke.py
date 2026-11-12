@@ -36,6 +36,7 @@ class FoundationSmokeTests(unittest.TestCase):
             shutil.copy2(ROOT / source["path"], target)
         shutil.copytree(ROOT / "tools/hex_audit", root / "tools/hex_audit")
         shutil.copytree(ROOT / "priv/resource_snapshots", root / "priv/resource_snapshots")
+        shutil.copytree(ROOT / "priv/static/fonts", root / "priv/static/fonts")
         shutil.copytree(ROOT / ".agents/skills", root / ".agents/skills")
         (root / ".github/workflows").mkdir(parents=True, exist_ok=True)
         shutil.copy2(

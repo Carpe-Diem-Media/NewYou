@@ -41,7 +41,12 @@
   --orb-aqua: var(--palette-orb-aqua-srgb);
   --orb-grass: var(--palette-orb-grass-srgb);
   --orb-ultraviolet: var(--palette-orb-ultraviolet-srgb);
+  /* Site-wide font selection. Change --font-body once; headings follow by default. */
   --font-body: Inter, sans-serif;
+  --font-display: var(--font-body);
+  /* Compatibility aliases carry no independent family values. */
+  --ny-font-body: var(--font-body);
+  --ny-font-display: var(--font-display);
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-bold: 700;
@@ -221,7 +226,6 @@
   --color-design-orb-grass: var(--orb-grass);
   --color-design-orb-ultraviolet: var(--orb-ultraviolet);
 
-  --font-design-sans: var(--font-body);
   --font-weight-design-regular: var(--weight-regular);
   --font-weight-design-medium: var(--weight-medium);
   --font-weight-design-bold: var(--weight-bold);
@@ -288,4 +292,31 @@
   --breakpoint-design-tablet: 744px;
   --breakpoint-design-desktop: 1128px;
   --breakpoint-design-wide: 1441px;
+}
+
+/* Inline mappings keep utilities bound to the role at their point of use. */
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
+  --font-design-sans: var(--font-body);
+  --font-design-display: var(--font-display);
+}
+
+/* Register the asset once. UI family selection belongs to the tokens above. */
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/inter/InterVariable.woff2") format("woff2");
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
 }

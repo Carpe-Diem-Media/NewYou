@@ -121,6 +121,11 @@ defmodule NewYouWeb.EmailVerificationControllerTest do
         end
 
         page = get(build_conn(), url)
+
+        assert get_resp_header(page, "content-security-policy") == [
+                 "default-src 'none'; style-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+               ]
+
         [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
 
         missing =

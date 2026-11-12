@@ -91,6 +91,9 @@ html:has(.ds-guide), body:has(.ds-guide) { overflow-x: clip; }
 .ds-type-label { @apply flex flex-wrap items-baseline justify-between gap-design-sm text-design-button-md text-design-ink-muted; }
 .ds-type-content { @apply min-w-0; }
 .ds-type-sample { min-width: 0; overflow-wrap: break-word; }
+.ds-type-row:is([data-type^="display-"], [data-type^="heading-"]) .ds-type-sample {
+  font-family: var(--font-display);
+}
 .ds-type-measurements { @apply flex flex-wrap items-center gap-x-design-lg text-design-button-md text-design-ink-muted mt-design-sm; }
 .ds-type-row[data-type="display-xl"] .ds-type-sample { @apply text-design-display-xl leading-design-display-xl tracking-design-display-xl font-design-bold; }
 .ds-type-row[data-type="display-lg"] .ds-type-sample { @apply text-design-display-lg leading-design-display-lg tracking-design-display-lg font-design-bold; }

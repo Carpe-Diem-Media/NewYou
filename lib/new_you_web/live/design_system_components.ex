@@ -87,13 +87,18 @@ defmodule NewYouWeb.DesignSystemComponents do
     <div class="ds-font-specimen">
       <p class="ds-font-alphabet">Aa Bb Cc Dd Ee Ff Gg</p>
       <div class="ds-font-details">
-        <p>One shared type family</p>
+        <p>Site-wide body font</p>
         <.token_value name="--font-body" />
         <.token_reference name="--font-body" />
+        <p>Headings follow the body font unless overridden</p>
+        <.token_value name="--font-display" />
+        <.token_reference name="--font-display" />
       </div>
     </div>
     <p class="ds-note">
-      The CSS uses the approved Inter fallback. No font file is bundled; the browser may use sans-serif.
+      Inter is served locally. Change --font-body in design-tokens.css to update the site,
+      including existing pages. Set --font-display only when headings need a separate family.
+      If the font cannot load, text remains available in sans-serif.
     </p>
     <div class="ds-type-list">
       <div :for={{key, label, sample} <- @styles} class="ds-type-row" data-type={key}>
