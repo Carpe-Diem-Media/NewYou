@@ -8,14 +8,25 @@
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229/commits",
   "files": [
     {
-      "blob": "759cecdaa4e4cf257dd333708e8928b213254989",
+      "blob": "93caa130271eba7de977fa677c35c5632cce8eb2",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/CANDIDATE_EVIDENCE_v1.json",
+      "sha256": "c5100354efb12ffc68e68f7d6f5a528c121c8396dd82e2a182173de3837201a2",
+      "status": "added"
+    },
+    {
+      "blob": "6322cecaf8fa2d898f1119927b811f53b87e37dc",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/delivery/content-evidence/content_media/email_change_messages/README.md",
-      "sha256": "9d61a895c9845d27c7a8fa08a2d1746836a697691888f6bb85b70269ebf1ca96",
+      "sha256": "ec95242beb159d247b246ac0cd394cc73191d3ffb5e9004078ed6b917fb26222",
       "status": "added"
     },
     {
@@ -91,7 +102,7 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "Preserves the two Afrikaans message bodies explicitly approved by the owner for WELL-122. This draft presents the wording for review while the ticket remains in Planning.",
+    "summary": "Preserves the owner-approved English and Afrikaans primary-email-change messages for WELL-122. The two narrow Product classifications and development-only scope were also approved; Plane records the source decision.",
     "title": "WELL-122: review Afrikaans email-change message candidates",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229"
   },
