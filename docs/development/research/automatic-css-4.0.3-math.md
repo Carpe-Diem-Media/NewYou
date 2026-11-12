@@ -68,7 +68,9 @@ dependencies. These source locators identify evidence, not copied code:
   mobile/desktop spacing, section multipliers and contextual aliases.
 - A4: `assets/scss/modules/grid/auto-grid/_mixins.scss:1-17` and
   `grid/content-grid/_mixins.scss:1-40`, intrinsic tracks and named content lanes.
-- A5: `config/ui/typography.json:111,1167`, heading/text x-height leading defaults.
+- A5: the archive's `config/ui/` directory, file `typography.json`, lines 111
+  and 1167, heading/text x-height leading defaults. These are external archive
+  locations, not NewYou repository links.
 - A6: `assets/scss/modules/palette/main/_primary.scss:4-39` and
   `modules/color-relationships/_tokens.scss:1-21`, authored OKLCH shade channels
   and background-dependent semantic assignments.
@@ -476,6 +478,11 @@ Observed research proof: the reference command passed 104 arithmetic checks;
 `git diff --check` passed. Archive CRC verification and source hashes were
 checked independently. These results do not close the licensing uncertainty,
 certify future visual candidates, or replace the existing delivery gates.
+
+`python3 -m unittest tests.test_foundation_lane_routing tests.test_foundation_smoke`
+passed all 54 tests after the external typography-configuration locator was
+expressed separately from repository links. The first run had four failures
+caused by that citation. No smoke rule, fixture or application source was changed.
 
 Documentation impact: research only; no Domain, persistence, lifecycle or public
 application interface changes. No new capability map is required. WELL-114,
