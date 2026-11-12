@@ -129,6 +129,17 @@
       "status": "added"
     },
     {
+      "blob": "998c338555a56077e9f3c448f4b25b371cd49b83",
+      "mode": "100644",
+      "old_blob": "6d02e0a56c7c56b9fcf13d5922fe2e752ac12352",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/identity.recovery.json",
+      "old_sha256": "c3c50e59e2fffb2e5cf505f08f8cc5523d04e6aec87cb8af1bbb38b631542620",
+      "path": "docs/development/knowledge/identity.recovery.json",
+      "sha256": "3d32ad881a7ee2be495fc2c3b3b4d6f8057574c61fd9e9e19bbaffaba81b5b8b",
+      "status": "modified"
+    },
+    {
       "blob": "feb53ba7788d91fd1b00adf1fcf4e119646cf1ad",
       "mode": "100644",
       "old_blob": "bd417c919cdf286ba0075483fa01cead618d88b4",
@@ -206,6 +217,17 @@
       "status": "modified"
     },
     {
+      "blob": "faba7f6ffed1c7e9ceb8551033819ca79d512cd1",
+      "mode": "100644",
+      "old_blob": "fe95acb6ee085025294b0c7d9d164787c7a79ec3",
+      "old_mode": "100644",
+      "old_path": "tests/test_foundation_lane_routing.py",
+      "old_sha256": "7ca0c6cab28a6074d5e1feac12602fcc6c14703d7f25f7829c60654df07bb018",
+      "path": "tests/test_foundation_lane_routing.py",
+      "sha256": "b7490a51123aeaa0a34daa626292812f579b4749f869fe553a5a9d1f0c08facd",
+      "status": "modified"
+    },
+    {
       "blob": "8c8d1b656d06ad2d39ed4ef6394d37a823f2b8fc",
       "mode": "100644",
       "old_blob": null,
@@ -248,6 +270,17 @@
       "path": "tools/check_password_reset_message_evidence.py",
       "sha256": "72ccf8eb85605d97bc45af709b7c9f467f8f26eb6f1e2195f0713596496b00e0",
       "status": "modified"
+    },
+    {
+      "blob": "46826c046e18140ba019d6e31325460be610ae5a",
+      "mode": "100644",
+      "old_blob": "8d468282dc9dbbc1fe0038bcb85435b270075272",
+      "old_mode": "100644",
+      "old_path": "tools/foundation_integrity_routing.py",
+      "old_sha256": "7c142d6976c62bdb436882d62ff5966fa311e995a08dbc3d0452cfe5a64d4cf8",
+      "path": "tools/foundation_integrity_routing.py",
+      "sha256": "bebffa831a86bfa67c22ee5915314c141c251dc92a76f945758a52504bfaeda5",
+      "status": "modified"
     }
   ],
   "intent": {
@@ -262,7 +295,7 @@
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-12T21:30:59Z",
+    "checked_at": "2026-11-12T21:36:00Z",
     "items": [
       {
         "description_sha256": "25beff4441f53d827119f53b16b52cd8551e1ec07c051d2bb916d04daf81debd",
@@ -408,6 +441,7 @@
   ],
   "tests": [
     "test/new_you/content/magic_login_message_test.exs",
+    "tests/test_foundation_lane_routing.py",
     "tests/test_well122_email_change_evidence.py"
   ],
   "tickets": [
