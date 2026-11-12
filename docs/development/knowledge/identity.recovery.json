@@ -6,7 +6,7 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "825906913d80ddbc82c03bb5161506b7aca5f559",
+    "git_sha": "10e8863582eefdf5cce4e2eeb8310b72951d0f24",
     "semantics": "Source snapshot for PR #228. File hashes bind inspected implementation bytes; observed run evidence is recorded separately in Plane and GitHub."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -819,6 +819,14 @@
         "manual",
         "privilege"
       ]
+    },
+    {
+      "summary": "Passive confirmation renders the existing untrusted case UUID as a stable retry key only. A fresh browser explicitly POSTs again to recover the same accepted receipt without another case transition. GET never queries Identity or establishes proof; forged signatures cannot use the key to advance recovery.",
+      "source_ids": [
+        "controller",
+        "recovery",
+        "browser_test"
+      ]
     }
   ],
   "failure_recovery": [
@@ -936,7 +944,8 @@
     {
       "path": "test/new_you_web/controllers/recovery_controller_test.exs",
       "cases": [
-        "Scanner GET/HEAD, localized forms, actual CSRF-protected confirmation/password replacement/fresh sign-in, non-enumeration and telemetry."
+        "Scanner GET/HEAD, localized forms, actual CSRF-protected confirmation/password replacement/fresh sign-in, non-enumeration and telemetry.",
+        "Fresh browser reopens the delivered link after acceptance, explicitly recovers the same durable receipt without case advancement, then completes; a forged signature with the same form key is denied."
       ],
       "proves": "Real Phoenix transport calls owning Identity and Communications boundaries.",
       "limits": "Development switch only; no production exposure or claimant factor invented.",
@@ -1124,7 +1133,7 @@
       "id": "controller",
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
       "symbol": "defmodule NewYouWeb.RecoveryController",
-      "sha256": "d201f991d3837aecd2248751bddbc6b8fe1c324eeb5aec4e3276e63d61042c78"
+      "sha256": "165241ac5895da37866f60cfa88185d2fecc5f3c21b658cad4d9789a98332d59"
     },
     {
       "id": "html",
@@ -1196,7 +1205,7 @@
       "id": "browser_test",
       "path": "test/new_you_web/controllers/recovery_controller_test.exs",
       "symbol": "defmodule ",
-      "sha256": "88e9e3d2b93cfc8573372c4a04fdcf22725c46e0e3f5bfffad904fbe55afd16a"
+      "sha256": "a30013f9fa642df59de67a35f08d97fc8dcb6ad5bd7f457db637b19f3ea36a23"
     },
     {
       "id": "audit_test",
