@@ -75,12 +75,13 @@ For example, `primary_button/1` renders a native button with
 `class="ds-design-button ..."` and `data-variant="primary"`. Its component-owned
 `data-[variant=primary]:bg-design-primary` utility consumes the same root colour
 token as the guide. `secondary_button/1` emits `data-variant="secondary"` and
-`design_card/1` accepts only `variant="flat"`, emitting `data-variant="flat"`.
+`design_card/1` defaults to `variant="flat"`, emitting `data-variant="flat"`.
+The owner-approved lighting candidate additionally supports `variant="raised"`.
 These describe existing appearances; they do not approve new visual variants.
 
 Phoenix components own the emitted variant and all styling utilities. Callers use
 the semantic component functions and supported options. They cannot forward
-`class` or `data-variant` to replace controlled styling, including through atom or
+`class`, `data-variant` or `data-treatment` to replace controlled styling, including through atom or
 string keys in `rest`. Other metadata such as `data-tracking-id`, native HTML,
 ARIA and `phx-*` attributes still pass through. Data attributes are presentation
 and metadata only, never authorization or business-state authority.
@@ -95,9 +96,10 @@ equivalent, and needs an actual component contract before use. A presence
 selector such as `[data-loading]` also matches `data-loading="false"`; use exact
 value selectors or omit a false attribute.
 
-Keep variant styling in one place. These components use Tailwind attribute
-variants within their modules, so there is no parallel CSS rule defining their
-fills. If custom component CSS is needed later, scope selectors to the component
+Keep variant styling in one place. Flat components use Tailwind attribute variants within their modules.
+The opt-in lighting treatment uses the components layer in
+`assets/css/design-components.css`; flat fill utilities do not match lit controls,
+so the two paths do not compete over the same visual properties. If custom component CSS is needed later, scope selectors to the component
 class and put them in the components cascade layer. Avoid escalating specificity
 or adding `!important` to resolve competing definitions. Preserve token enforcement
 for attribute-selected utilities as well as ordinary utilities.
@@ -353,3 +355,44 @@ Observed typography-batch verification:
 - A bounded independent source review found no functional font/CSP/provenance issue and one stale documentation note, which was corrected. It did not supply independent merge certification.
 
 The font requirement is implemented; the complete WELL-112 candidate remains BLOCKED for delivery verification. Highest-risk uncertainty is the unconfirmed AF proof failure. Next actions are fixture/proof reconciliation under WELL-114, a clean product-only keyboard lint result that accounts for Tidewave, fresh exact-head hosted CI and independent Master Gate. After this baseline, the planned registration component/state/layout migration and cross-engine checks remain separate unfinished adoption work.
+
+## Overhead lighting specimens
+
+The owner approved adding the proposed soft-depth treatment to the guide.
+`/dev/design-system#lighting` compares flat and lit controls, flat and raised cards,
+and the neutral canvas/panel/raised surface hierarchy. The expandable Lighting
+tokens list reads current computed values from the same root variables.
+
+Use `treatment="lit"` on the existing primary/secondary button functions and
+`variant="raised"` on `design_card/1` for these opt-in examples. Default flat
+appearances remain unchanged. Button components own `data-treatment` and reject
+caller collisions, including forwarded atom/string keys. Cards retain their
+controlled `data-variant`. No browser-side value becomes business state.
+
+The root token block owns surface mix strengths, directional edge alpha, shadow
+geometry/strength and action gradient/rim colours. Gradients derive from the
+existing primary source; hover derives from the existing separately authored
+primary-hover source. Colour-mix enhancement adds the material treatment over
+solid/no-cast-shadow fallbacks. Pressed controls use inset edges and no cast
+shadow. Disabled controls do not receive hover/pressed treatment. Forced colours
+remove gradients and shadows while preserving native control identification.
+
+Lit buttons retain a 48px minimum height and grow for wrapped or resized labels.
+This preserves normal geometry while avoiding clipping at 200% text size. Flat
+controls retain their existing fixed-height implementation. Border width remains
+one pixel; casts are short and downward, without global shadows on ordinary
+content or a legacy-site retint. No animation is introduced.
+
+Repeatable proof with external browser tooling:
+
+```sh
+BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4237 CHROME_PATH=/usr/bin/google-chrome node test/assets/design_lighting_browser.mjs
+```
+
+The proof samples actual rendered button pixels beside the label across its
+vertical region in default, hover and pressed states. It also checks semantic
+lightness order, native states, keyboard focus, 320px reflow, long bilingual
+labels with doubled text size, live primary-token propagation, forced colours
+and a solid-fill fallback. Candidate material amounts still need owner visual
+review before production-page adoption. This is a presentation extension with
+no Domain/schema/lifecycle change; the existing semantic-map exemption applies.

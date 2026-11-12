@@ -296,6 +296,20 @@ components:
 
 ### Editable token contract and development reference
 
+Owner decision, 2026-11-12: implement the proposed overhead-lighting treatment in
+the development guide for visual refinement. Shared buttons may opt into
+`treatment="lit"` and cards into `variant="raised"`; their default flat appearances
+remain unchanged. This explicitly permits derived neutral elevation fills,
+one-pixel directional borders, short downward shadows, a subtle vertical primary
+CTA gradient and recessed pressed edges for those specimens. All values live in
+`assets/css/design-tokens.css`, derived from the existing brand palette. The
+component stylesheet owns the treatment, with native interaction states, visible
+focus and solid/forced-colour fallbacks. Preserve the existing font, 48px button
+height and radius roles. The guide compares flat and lit/raised examples; this
+decision supersedes flat/no-shadow restrictions only for those opt-in examples,
+not default production components, legacy screens or new dark/error states.
+Candidate amounts remain subject to rendered contrast and owner visual review.
+
 Owner decision, 2026-11-12: self-host Inter and centralize font selection across the whole site. `assets/css/design-tokens.css` owns `--font-body`, initially `Inter, sans-serif`, and `--font-display`, initially `var(--font-body)`. Change `--font-body` once to update normal UI text and headings together. Override `--font-display` only for an intentional separate heading family. Canonical, default Tailwind and existing `--ny-font-*` consumers resolve these same roles. The legacy font-family values are superseded; its colors, sizes, error and dark-mode behavior are not migrated by this decision. The registered local Inter variable face supports the existing weights, including canonical 400/500/700, with `font-display: swap` and a sans-serif fallback. A replacement custom family needs its font asset registered once in this same CSS file. New font assets must carry their license. This owner decision supersedes the earlier no-font-download implementation restriction for Inter.
 
 The owner requested a token-driven NewYou style guide in WELL-112. The development-only guide may render every approved token as a labelled specimen, including palette swatches. A swatch is a reference sample, not permission to use its color as a general-purpose component surface.

@@ -33,6 +33,7 @@
             <li><a href="#layout">Layout & grids</a></li>
             <li><a href="#relationships">Colour pairs</a></li>
             <li><a href="#surfaces">Surface treatments</a></li>
+            <li><a href="#lighting">Lighting & depth</a></li>
             <li><a href="#fluid">Fluid comparisons</a></li>
             <li><a href="#shape">Radius & shadow</a></li>
           </ol>
@@ -262,6 +263,81 @@
           </div>
           <.relationships surface_only?={true} />
           <.surfaces />
+        </section>
+
+        <section id="lighting" aria-labelledby="lighting-title">
+          <div class="ds-section-heading">
+            <h2 id="lighting-title">Lighting & depth</h2>
+            <p>Light from above. Compare flat foundations with the new soft-depth treatment.</p>
+          </div>
+          <div class="ds-lighting-stage">
+            <div class="ds-lighting-levels" aria-label="Neutral surface levels">
+              <div class="ds-lighting-level" data-level="canvas">
+                <span>Canvas</span><.token_reference name="--surface-canvas" />
+              </div>
+              <div class="ds-lighting-level" data-level="panel">
+                <span>Panel</span><.token_reference name="--surface-panel" />
+              </div>
+              <div class="ds-lighting-level" data-level="raised">
+                <span>Raised surface</span><.token_reference name="--surface-raised" />
+              </div>
+            </div>
+            <div class="ds-lighting-cards">
+              <.design_card title="Flat foundation">
+                The existing white surface, hairline edge and no cast shadow.
+              </.design_card>
+              <.design_card title="Light from above" variant="raised">
+                A lighter upper edge, shaded lower edge and a soft shadow beneath.
+              </.design_card>
+            </div>
+            <div class="ds-lighting-actions">
+              <div class="ds-lighting-action">
+                <span>Flat primary</span>
+                <.primary_button data-demo-action="flat-lighting">Primary action</.primary_button>
+              </div>
+              <div class="ds-lighting-action">
+                <span>Lit primary</span>
+                <.primary_button
+                  id="lighting-primary"
+                  treatment="lit"
+                  data-demo-action="lit-primary"
+                >Primary action</.primary_button>
+              </div>
+              <div class="ds-lighting-action">
+                <span>Quiet secondary</span>
+                <.secondary_button
+                  id="lighting-secondary"
+                  treatment="lit"
+                  data-demo-action="lit-secondary"
+                >Secondary action</.secondary_button>
+              </div>
+              <div class="ds-lighting-action">
+                <span>Disabled</span>
+                <.primary_button id="lighting-disabled" treatment="lit" disabled>
+                  <.icon name="hero-lock-closed" /> Unavailable
+                </.primary_button>
+              </div>
+            </div>
+            <p class="ds-lighting-note">
+              Hover, press, or use Tab to compare states. Raised edges catch light at the top;
+              pressing moves the shading inside the control. Disabled controls keep native behavior.
+            </p>
+          </div>
+          <p class="ds-note">
+            Candidate treatment for review. All fills, edges and shadows come from <code>assets/css/design-tokens.css</code>. Existing production defaults remain flat.
+          </p>
+          <details class="ds-lighting-token-list">
+            <summary>Lighting tokens</summary>
+            <dl>
+              <div :for={
+                token <-
+                  ~w(--surface-canvas --surface-panel --surface-raised --edge-highlight --edge-shade --shadow-control --shadow-raised --action-primary-gradient)
+              }>
+                <dt><.token_reference name={token} /></dt>
+                <dd><.token_value name={token} /></dd>
+              </div>
+            </dl>
+          </details>
         </section>
 
         <section id="fluid" aria-labelledby="fluid-title">

@@ -5,6 +5,28 @@
 
 html:has(.ds-guide), body:has(.ds-guide) { overflow-x: clip; }
 
+.ds-lighting-stage {
+  @apply grid min-w-0 gap-design-xl p-design-lg;
+  background-color: var(--surface-canvas);
+}
+.ds-lighting-levels { @apply grid min-w-0 gap-design-sm; }
+.ds-lighting-level {
+  @apply flex min-w-0 flex-wrap items-center justify-between gap-design-base p-design-base text-design-button-md;
+}
+.ds-lighting-level[data-level="canvas"] { background-color: var(--surface-canvas); }
+.ds-lighting-level[data-level="panel"] { background-color: var(--surface-panel); }
+.ds-lighting-level[data-level="raised"] { background-color: var(--surface-raised); }
+.ds-lighting-cards { @apply grid min-w-0 gap-design-lg; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+.ds-lighting-actions { @apply flex min-w-0 flex-wrap items-start gap-design-lg; }
+.ds-lighting-action { @apply flex min-w-0 max-w-full flex-col items-start gap-design-sm; }
+.ds-lighting-action > span { @apply text-design-button-md; }
+.ds-lighting-action .ds-design-button { max-width: 100%; }
+.ds-lighting-note { @apply text-design-button-md leading-design-body-xs; max-width: 65ch; }
+.ds-lighting-token-list { @apply my-design-lg text-design-button-md; }
+.ds-lighting-token-list summary { @apply py-design-sm; }
+.ds-lighting-token-list dl { @apply grid min-w-0 gap-design-base; }
+.ds-lighting-token-list dd { overflow-wrap: anywhere; }
+
 .ds-guide {
   @apply min-h-screen bg-design-canvas text-design-ink font-design-sans text-design-body-xs leading-design-body-xs;
   color-scheme: light;

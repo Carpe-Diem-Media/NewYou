@@ -1,14 +1,14 @@
 defmodule NewYouWeb.Components.Design.Card do
-  @moduledoc "Canonical flat card specimen with token-owned typography, border and geometry."
+  @moduledoc "Token-owned card with flat default and an opt-in raised lighting specimen."
   use Phoenix.Component
 
   attr :title, :string, required: true
-  attr :variant, :string, default: "flat", values: ~w(flat)
+  attr :variant, :string, default: "flat", values: ~w(flat raised)
   attr :rest, :global
   slot :inner_block, required: true
 
   @doc "Renders a noninteractive card; put any actions in its content as native links or buttons."
-  def design_card(%{variant: "flat"} = assigns) do
+  def design_card(%{variant: variant} = assigns) when variant in ~w(flat raised) do
     if Map.has_key?(assigns.rest, :class) or Map.has_key?(assigns.rest, "class") do
       raise ArgumentError, "design_card does not accept caller-provided classes"
     end
@@ -19,8 +19,8 @@ defmodule NewYouWeb.Components.Design.Card do
 
     ~H"""
     <article
-      class="ds-design-card flex min-w-0 flex-col gap-design-base rounded-design-md border data-[variant=flat]:border-design-hairline data-[variant=flat]:bg-design-surface p-design-lg text-design-ink font-design-sans shadow-design"
-      data-variant="flat"
+      class="ds-design-card flex min-w-0 flex-col gap-design-base rounded-design-md border data-[variant=flat]:border-design-hairline data-[variant=flat]:bg-design-surface p-design-lg text-design-ink font-design-sans data-[variant=flat]:shadow-design"
+      data-variant={@variant}
       {@rest}
     >
       <h3 class="text-design-heading-sm font-design-bold leading-design-heading-sm tracking-design-heading-sm">

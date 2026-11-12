@@ -1,9 +1,11 @@
 # Overhead lighting for NewYou
 
-Status: proposed for owner review. This document changes no runtime styling and
-does not replace DESIGN.md. It records the owner's request for a more dimensional
+Status: owner approved implementation as guide candidates on 2026-11-12.
+This document records the reviewed design; DESIGN.md carries the scoped specimen
+amendment. It records the owner's request for a more dimensional
 system with light from above, directional borders, restrained shadows and a more
-distinct primary CTA. Implementation starts after review of this proposal.
+distinct primary CTA. The owner explicitly requested adding the lighting, borders,
+gradients and shadows.
 
 Baseline: `e5d16610b99f36a31ba73a181590b93864d51cb6`, WELL-112 / draft PR #227.
 WELL-114's certification gap and the owner-authorized UI continuation exception
@@ -126,8 +128,8 @@ retint legacy screens or silently create dark-mode/error variants.
 
 ## Review boundary
 
-The owner request authorizes developing this direction. Exact material values
-remain proposed. No production CSS, shared component implementation or canonical
-visual authority has changed in this proposal. The next decision is whether to
-adopt the recommended soft-depth treatment as the candidate to implement and
-review in the guide, or use a stronger bevel instead.
+The owner approved the recommended soft-depth direction for guide implementation.
+Exact material values remain candidates for visual refinement. Default production
+appearances remain flat; adoption on production pages follows review of the guide.
+The implementation adds bounded shared treatment options and a narrow DESIGN.md
+amendment rather than globally retinting existing screens.

@@ -7,7 +7,7 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     {:ok, view, _html} = live(conn, "/dev/design-system")
 
     for section <-
-          ~w(palette typography spacing buttons cards layout relationships surfaces fluid shape) do
+          ~w(palette typography spacing buttons cards layout relationships surfaces lighting fluid shape) do
       assert has_element?(view, "section##{section}")
       assert has_element?(view, "nav a[href='##{section}']")
     end
@@ -63,6 +63,10 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     assert has_element?(view, "#buttons button[data-variant=primary]")
     assert has_element?(view, "#buttons button[data-variant=secondary]")
     assert has_element?(view, "#card-grid article[data-variant=flat]")
+    assert has_element?(view, "#lighting button[data-treatment=lit][data-variant=primary]")
+    assert has_element?(view, "#lighting button[data-treatment=lit][data-variant=secondary]")
+    assert has_element?(view, "#lighting article[data-variant=raised]")
+    assert has_element?(view, "#lighting button[data-treatment=lit][disabled]")
     assert has_element?(view, "button[disabled]", "Unavailable")
     assert has_element?(view, "button[disabled] .hero-lock-closed[aria-hidden='true']")
     assert has_element?(view, "#token-status[role='status']")

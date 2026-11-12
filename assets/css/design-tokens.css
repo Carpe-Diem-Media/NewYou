@@ -118,6 +118,45 @@
   --design-preview-scale: 1;
   --design-border-width: 1px;
 
+  /* Overhead lighting candidates. Solid fallbacks preserve usable controls. */
+  --surface-canvas: var(--canvas);
+  --surface-panel: var(--surface);
+  --surface-raised: var(--surface);
+  --surface-canvas-shade: 4%;
+  --surface-panel-mix: 50%;
+  --edge-highlight: var(--surface);
+  --edge-side: var(--hairline);
+  --edge-shade: var(--hairline);
+  --edge-highlight-strength: 70%;
+  --edge-side-strength: 10%;
+  --edge-shade-strength: 18%;
+  --shadow-flat: none;
+  --shadow-ink: transparent;
+  --shadow-strength: 8%;
+  --shadow-control: 0 1px 2px var(--shadow-ink);
+  --shadow-raised: 0 3px 8px var(--shadow-ink);
+  --action-light-strength: 4%;
+  --action-shade-strength: 6%;
+  --action-edge-light-strength: 22%;
+  --action-edge-dark-strength: 18%;
+  --action-primary-top: var(--primary);
+  --action-primary-bottom: var(--primary);
+  --action-primary-edge-light: var(--primary);
+  --action-primary-edge-dark: var(--primary-hover);
+  --action-primary-hover-top: var(--primary-hover);
+  --action-primary-hover-bottom: var(--primary-hover);
+  --action-primary-hover-edge-light: var(--primary-hover);
+  --action-primary-hover-edge-dark: var(--primary-hover);
+  --action-primary-gradient: none;
+  --action-primary-hover-gradient: none;
+  --action-primary-shadow: inset 0 1px 0 var(--action-primary-edge-light), var(--shadow-control);
+  --action-primary-hover-shadow: inset 0 1px 0 var(--action-primary-hover-edge-light), var(--shadow-control);
+  --action-primary-pressed-shadow: inset 0 1px 2px var(--action-primary-hover-edge-dark), inset 0 -1px 0 var(--action-primary-hover-edge-light);
+  --edge-inset-shadow: inset 0 1px 2px var(--edge-shade), inset 0 -1px 0 var(--edge-highlight);
+  --system-button-face: ButtonFace;
+  --system-button-text: ButtonText;
+  --system-disabled-text: GrayText;
+
   /* Candidate surfaces, used only by labelled development specimens. */
   --design-tint-strength: 12%;
   --design-shade-strength: 12%;
@@ -178,6 +217,22 @@
 
 @supports (color: color-mix(in oklab, red, white)) {
   :root {
+    --surface-canvas: color-mix(in oklab, var(--secondary) var(--surface-canvas-shade), var(--canvas));
+    --surface-panel: color-mix(in oklab, var(--canvas) var(--surface-panel-mix), var(--surface));
+    --edge-highlight: color-mix(in oklab, var(--surface) var(--edge-highlight-strength), transparent);
+    --edge-side: color-mix(in oklab, var(--secondary) var(--edge-side-strength), transparent);
+    --edge-shade: color-mix(in oklab, var(--secondary) var(--edge-shade-strength), transparent);
+    --shadow-ink: color-mix(in oklab, var(--secondary) var(--shadow-strength), transparent);
+    --action-primary-top: color-mix(in oklab, var(--surface) var(--action-light-strength), var(--primary));
+    --action-primary-bottom: color-mix(in oklab, var(--secondary) var(--action-shade-strength), var(--primary));
+    --action-primary-edge-light: color-mix(in oklab, var(--surface) var(--action-edge-light-strength), var(--primary));
+    --action-primary-edge-dark: color-mix(in oklab, var(--secondary) var(--action-edge-dark-strength), var(--primary));
+    --action-primary-hover-top: color-mix(in oklab, var(--surface) var(--action-light-strength), var(--primary-hover));
+    --action-primary-hover-bottom: color-mix(in oklab, var(--secondary) var(--action-shade-strength), var(--primary-hover));
+    --action-primary-hover-edge-light: color-mix(in oklab, var(--surface) var(--action-edge-light-strength), var(--primary-hover));
+    --action-primary-hover-edge-dark: color-mix(in oklab, var(--secondary) var(--action-edge-dark-strength), var(--primary-hover));
+    --action-primary-gradient: linear-gradient(180deg, var(--action-primary-top), var(--action-primary-bottom));
+    --action-primary-hover-gradient: linear-gradient(180deg, var(--action-primary-hover-top), var(--action-primary-hover-bottom));
     --design-surface-tint: color-mix(in oklab, var(--primary) var(--design-tint-strength), var(--surface));
     --design-surface-shade: color-mix(in oklab, var(--secondary) var(--design-shade-strength), var(--canvas));
     --design-overlay: color-mix(in oklab, var(--secondary) var(--design-overlay-strength), transparent);

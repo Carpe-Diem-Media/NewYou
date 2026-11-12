@@ -7,6 +7,45 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
   alias NewYouWeb.Components.Design.Button
   alias NewYouWeb.Components.Design.Card
 
+  test "lit treatments and raised cards are bounded opt-ins with native semantics" do
+    for component <- [&Button.primary_button/1, &Button.secondary_button/1] do
+      html =
+        render_component(component, %{
+          treatment: "lit",
+          disabled: true,
+          inner_block: [%{inner_block: fn _, _ -> "Continue" end}]
+        })
+
+      button = html |> LazyHTML.from_fragment() |> LazyHTML.query("button[data-treatment=lit]")
+      assert LazyHTML.attribute(button, "disabled") != []
+
+      assert_raise ArgumentError, ~r/unsupported design button treatment/, fn ->
+        render_component(component, %{
+          treatment: "glossy",
+          inner_block: [%{inner_block: fn _, _ -> "Continue" end}]
+        })
+      end
+
+      for key <- [:"data-treatment", "data-treatment"] do
+        assert_raise ArgumentError, ~r/does not accept caller-provided data-treatment/, fn ->
+          render_component(component, %{
+            rest: %{key => "lit"},
+            inner_block: [%{inner_block: fn _, _ -> "Continue" end}]
+          })
+        end
+      end
+    end
+
+    html =
+      render_component(&Card.design_card/1, %{
+        title: "Raised",
+        variant: "raised",
+        inner_block: [%{inner_block: fn _, _ -> "Content" end}]
+      })
+
+    assert html =~ ~s|data-variant="raised"|
+  end
+
   test "semantic components own bounded variants while preserving native state and metadata" do
     for {component, variant, extra} <- [
           {&Button.primary_button/1, "primary", %{}},
