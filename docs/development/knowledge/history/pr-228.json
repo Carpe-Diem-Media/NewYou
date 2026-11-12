@@ -19,25 +19,25 @@
       "status": "modified"
     },
     {
-      "blob": "1ecdf1aa72a1907eca6ab073fb4c7721947e7595",
+      "blob": "ad7d4b08a1ad80134cee85e143b67f4c040281a4",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "c60efbc3c4c5156119106c049c5e18dcb91d4eeb39920395d85b14baf96fbb7e",
+      "sha256": "d9098ed60dcb13ea63a42a8a6d25664b023a13a2904ea8d27b510936aedb7b50",
       "status": "added"
     },
     {
-      "blob": "ba48d93cbef130e9f9799c6be55b1ab7b245ac9a",
+      "blob": "d41d7a13fd5d3846488b08f822b0b33735880e0d",
       "mode": "100644",
       "old_blob": "c37459ff83eb86d731faccda9274506a34a80aa4",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.registration.json",
       "old_sha256": "7231c0f433b1f8d10442b1cff0318eda50f56d208ba22f5c0b29204e79d52093",
       "path": "docs/development/knowledge/identity.registration.json",
-      "sha256": "de4143e29ca108a369e71c32dc11012649e5c43a9b45b15430bd8e0916630c10",
+      "sha256": "cc44df19e3858e4b9cc3439c8904bd23a55d60370753ea50e28112d60d95edf4",
       "status": "modified"
     },
     {
@@ -129,36 +129,36 @@
       "status": "modified"
     },
     {
-      "blob": "ceae91c8050dddc0ebe38f0c1bdd97134fc3a4ba",
+      "blob": "5a95ad43b4d038eaf0ab6c15662b6ffb0c6b51bb",
       "mode": "100644",
       "old_blob": "8637acb48097e559f60ba7819767fd734ff301d0",
       "old_mode": "100644",
       "old_path": "lib/new_you/communications.ex",
       "old_sha256": "671064bf165f44f34405180b6db96f4e2735e2b96505438b732352d85724899d",
       "path": "lib/new_you/communications.ex",
-      "sha256": "a27e492b590f8216eae666e122ab5867f6227ae1694f60b7a95c2e974d1daeb6",
+      "sha256": "949b0cb038deea63c176dc584e896328a452ea6972bf525170ca702c2661b4a8",
       "status": "modified"
     },
     {
-      "blob": "13d1ce1c43d4407a475f876b11a7e44eddfe1b52",
+      "blob": "911f1488d355df30a86c1e8fa16a17f2959b17e9",
       "mode": "100644",
       "old_blob": "72ca3e2666893a4c74e90f867b930d933cf2ec34",
       "old_mode": "100644",
       "old_path": "lib/new_you/communications/executor.ex",
       "old_sha256": "5b57e6213926028e438ab73ddeae210d0a826396fc0ea894de8b6634575f1da4",
       "path": "lib/new_you/communications/executor.ex",
-      "sha256": "f930298ecf9fc88b9a24de2302e1ff43695b16e08cadc9f3d56ed31f6cd444a0",
+      "sha256": "7599ff8bf9e9895718a14a85534b40a8fae54e34f7709db26bd20a23d805a402",
       "status": "modified"
     },
     {
-      "blob": "e102a0015da0a084868ec418e6eb068ed82fc4ff",
+      "blob": "1056a94ab64cbcd3b42d31db050ab18c4edf663e",
       "mode": "100644",
       "old_blob": "cc8198897a54809643e0959629c713147f3220f4",
       "old_mode": "100644",
       "old_path": "lib/new_you/communications/message_intent.ex",
       "old_sha256": "751a15aae07e4bd4db0bbc7d455c1cf32a4992d809bb6454518ab89b8e32bad5",
       "path": "lib/new_you/communications/message_intent.ex",
-      "sha256": "bf9a33cc1766fadd04d3170245419c677cdbb21458b94343033fd19f0181e9b9",
+      "sha256": "ce47f9aa3c891f107589be72a9aa62d0f0738d67d6f04a5706fab16e2c2606ec",
       "status": "modified"
     },
     {
@@ -701,14 +701,14 @@
       "status": "added"
     },
     {
-      "blob": "1ea4f70c34b1992b8e423eae86323931d1db79f6",
+      "blob": "079671f8270e71edd13d82aa086ca5f11f32e18c",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/communications/recovery_delivery_test.exs",
-      "sha256": "48f88e0ce25b0ab473a7c72b45b22926954b4838c9bbbc1fb325c723e0355341",
+      "sha256": "e0205b1341e0e4545326e7637623aea7ee017fba382f3aa22ca1ccb98d213d19",
       "status": "added"
     },
     {
@@ -1164,8 +1164,21 @@
       "name": null,
       "old_sha256": "d974745cdd6ea34643ec66eecddcb828f37c371f34a3352cfebedb2dce756a1b",
       "path": "lib/new_you/communications.ex",
-      "sha256": "85f3764ce32ad1b358c1b55842495e700b565604b74748df059e135f271c3b9d",
+      "sha256": "62108cd37f6764372c971b4f273825fa2ce4fcd05650971023f81a5c2fc19e27",
       "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Communications",
+      "name": "bind_recovery_content",
+      "old_sha256": null,
+      "path": "lib/new_you/communications.ex",
+      "sha256": "44fb54ed47ae2c4d407121cc83ecdf51d4cd051d1fe93435eb0bba844e2fc14a",
+      "status": "parsed",
+      "visibility": "public"
     },
     {
       "arity": 3,
@@ -1276,7 +1289,7 @@
       "name": null,
       "old_sha256": "258bdc19fd8a78cfe96897ab57afeb9845319954ce0a0a9e3841d04d497525d0",
       "path": "lib/new_you/communications/executor.ex",
-      "sha256": "cb839ae30edcde1b34165956d6e4fc246859d7e877dedc55fb4f340bbd8ac936",
+      "sha256": "da6ec63d94fef2e4cad39940db0b27b2740723c4d8a108f589cb7af357672538",
       "status": "parsed"
     },
     {
@@ -1289,6 +1302,19 @@
       "old_sha256": "9f8493c0c460d9ba6d679be8a1884ed34cb14a1a69d64e7abc1363372fa24064",
       "path": "lib/new_you/communications/executor.ex",
       "sha256": "0f3ac1201a637314212dcbf8c44b6fce58ef94fd9f6d58ee94d19b04a1d52152",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications.Executor",
+      "name": "prepare",
+      "old_sha256": "102e2925ae799c7bbe155f4a26e5e1e65e2e3927f4a98dfb04077b10dd0cb5d4",
+      "path": "lib/new_you/communications/executor.ex",
+      "sha256": "fe4ca8794a92975cd611d20026de905126c8c7fe4100be5943986fbd1f498380",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1362,7 +1388,7 @@
       "name": null,
       "old_sha256": "4fc6249c3aabd71447381f63aed77d53a0a065de71ee7eb36031093d5f5a638d",
       "path": "lib/new_you/communications/message_intent.ex",
-      "sha256": "a978f8a71ba70c969d8569617ebd69b58329938587132bf1dc662a3d4b801734",
+      "sha256": "ffeb3f2bf5e99564c9dd0149f887843eb84f8f359cab5f3666b93b4ef14ba7e8",
       "status": "parsed"
     },
     {
@@ -4028,7 +4054,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/communications/recovery_delivery_test.exs",
-      "sha256": "96b971aa80ac799af9fb85b6b34451691b8c5ce874f151cb0a788febc5275bb8",
+      "sha256": "386dad88e2bb3e4ccbd4fcbbefe01676423ede5e10f6af4462e8c3fe8c38968a",
       "status": "parsed"
     },
     {
