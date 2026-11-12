@@ -10,7 +10,7 @@
     "WELL-96"
   ],
   "implementation_revision": {
-    "git_sha": "6697bdf4a0f73b5624bd9683d87243ca1358a51f",
+    "git_sha": "825906913d80ddbc82c03bb5161506b7aca5f559",
     "semantics": "Registration semantics rechecked during WELL-16 continuation and unchanged. Whole-file source hashes also include new recovery interfaces and Token/Account fields; the recovery capability is documented separately. This is not an independent merge certification."
   },
   "authoritative_domain": "NewYou.Identity",
