@@ -1,6 +1,27 @@
 [
   {
     "date": "2026-11-12",
+    "entry": "WELL-112 controlled component attributes",
+    "implementation_sha": "4ee2ecfa4d8a5cbc2b275f8a62d2c0ba423e54b2",
+    "scope": "existing button/card presentation refactor; established design preserved",
+    "verification": {
+      "command": "HALLMARK_PUPPETEER=/tmp/newyou-refinement-tools CHROME_PATH=/usr/bin/google-chrome node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-system.css lib/new_you_web/components/design/button.ex lib/new_you_web/components/design/card.ex --scope app --genre modern-minimal --url http://127.0.0.1:4237/dev/design-system --json",
+      "supported_source_files": 2,
+      "rendered_route": "/dev/design-system",
+      "fails": 0,
+      "open_reflex": 0,
+      "warns": 0,
+      "waived": 1,
+      "rejected": 0,
+      "waiver": "Existing gate 37 reports numeric 400/500/700 weights as font families; source uses the single approved Inter family.",
+      "limitation": "The linter reads the two CSS files; Phoenix .ex files are not supported static targets. The guide runtime renders the changed components. No full Hallmark redesign/audit was initiated."
+    },
+    "runtime": "Updated Chrome/Puppeteer guide proof passes: explicit desktop hover media, approved button geometry/hover, native disabled state, flat cards, eight widths, grid centering, live token propagation, focus, reduced motion and no browser errors. Separate typography proof passes.",
+    "source_review": "Bounded read-only independent review against b80e391 found no actionable findings. It did not rerun tests and is not Master Gate certification.",
+    "delivery": "Full mix check exited 2 after 371.4 seconds: 635/636 passed, with an unchanged PasswordSessionTest global token-count failure recorded on WELL-114. Isolated retry passed 1 test with 16 excluded; cause remains unproven. Prior registration/Tidewave gate 26a and WELL-114 independent post-merge certification remain unresolved; no blanket whole-site Hallmark or merge claim."
+  },
+  {
+    "date": "2026-11-12",
     "entry": "WELL-112 owner-approved site-wide font centralization",
     "implementation_sha": "36034f67f21b887b94687cf203737b32fe764215",
     "scope": "existing UI typography extension; no redesign",

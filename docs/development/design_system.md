@@ -114,6 +114,40 @@ styling on its compatibility lane. This internal presentation change introduces
 no material capability, lifecycle, schema or Domain interface, so a new capability
 JSON map is exempt. The automatically generated PR history still applies.
 
+The owner-approved implementation is recorded at source commit
+`4ee2ecfa4d8a5cbc2b275f8a62d2c0ba423e54b2`. Repeatable verification uses:
+
+```sh
+ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix test test/new_you_web/design_system_infrastructure_test.exs test/new_you_web/live/design_system_live_test.exs
+ERL_FLAGS='+S 4:4' mise exec -- devcore-project run dev -- mix assets.build
+ERL_FLAGS='+S 4:4' mise exec -- devcore-project run dev -- mix design.check
+ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check
+ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check.deep
+BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4237 CHROME_PATH=/usr/bin/google-chrome node test/assets/design_system_browser.mjs
+```
+
+Observed results for this batch: 32 focused tests pass; assets, design enforcement
+and the deep gate pass. The guide browser proof verifies compiled variants,
+48px button heights, approved hover, native disabled behavior, responsive grids,
+token propagation, keyboard focus and reduced motion. It explicitly configures
+a desktop pointer and checks hover-media support. The separate typography browser
+proof, four Node contrast tests and 54 routing/smoke tests also pass.
+The supported Hallmark render reports zero FAIL/open REFLEX/WARN with the existing
+numeric-weight waiver. Its static reader accepts CSS, so the two component `.ex`
+arguments do not count as inspected source files; the rendered guide exercises
+the actual changed components. The bounded independent source review reports no
+actionable findings and does not constitute Master Gate certification.
+
+The canonical fast gate exits 2 after 371.4 seconds, with 635/636 tests passing.
+The unchanged password-session rollback test at
+`test/new_you/identity/password_session_test.exs:324` fails its global token-count
+assertion at line 344. An isolated retry passes 1 test with 16 excluded. Its
+full-suite failure cause is unproven and recorded under WELL-114. No fixture repair
+or database cleanup was performed. Existing registration/Tidewave Hallmark gate
+26a and WELL-114 independent resulting-main certification remain open. Hosted CI
+and exact-head independent review are separate gates; this batch does not certify
+the whole site or delivery complete.
+
 ## DaisyUI migration status
 
 DaisyUI can coexist with the canonical layer while existing components remain grandfathered. Its component classes carry visual styling, so globally retheming it to project colors would change existing pages. The least disruptive path is progressive replacement of DaisyUI visual components in deliberately migrated scopes. Retaining DaisyUI as behavior-only infrastructure would require separating its visual rules and verifying each migrated component; WELL-80 does not perform that work.

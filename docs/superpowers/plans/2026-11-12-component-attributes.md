@@ -41,3 +41,17 @@ No merge or delivery-completion claim is authorised. Independent resulting-main
 certification for WELL-114 remains open. Current main was inspected at
 `c7f538251c1c703feb957eabc51bc56fe5f4872d`; its new recovery-message work does not
 change this component seam. The continuation starts from `b80e391` on draft PR #227.
+
+## Observed result
+
+Implementation source: `4ee2ecfa4d8a5cbc2b275f8a62d2c0ba423e54b2`.
+Focused ExUnit 32/32, assets build, design enforcement, deep gate, four Node
+contrast tests, 54 routing/smoke tests, guide browser and typography browser pass.
+Guide Hallmark reports 0 FAIL/open REFLEX/WARN and the existing numeric-weight
+waiver. Bounded independent source review reports no actionable findings.
+Canonical fast gate exits 2 after 371.4 seconds, with 635/636 tests passing.
+The unchanged password-session rollback test fails a global token-count assertion;
+its isolated retry passes 1 test with 16 excluded. The full-suite cause remains
+unproven and recorded under WELL-114. Hosted CI and independent resulting-main
+certification remain separate gates. The final verification step records an
+attempt and evidence, not a successful delivery certification.
