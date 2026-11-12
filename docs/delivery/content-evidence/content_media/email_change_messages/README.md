@@ -1,7 +1,5 @@
-# Primary email change message candidates
+# Primary email change message evidence
 
-Status: candidate, ineligible for delivery or development binding.
+The owner approved the two Afrikaans bodies, both English bodies, all four subjects and the proposed development-only classifications. The four complete V1 files preserve that wording. Plane WELL-122 comment `a2214bde-85ea-4799-80d0-61b864afc41d` transcribes the owner decision; it is not a set of separate direct human posts. The earlier Afrikaans body approval is recorded in comment `b9a4839e-def6-4856-aa1a-2d602743c101`.
 
-The owner explicitly approved the two Afrikaans bodies in the working conversation; the WELL-122 Plane comment records that clarification. These files preserve those bodies for review. They do not establish approval of subjects, full message bytes, content identities, token contracts, English versions, or Product and Content & Media role decisions.
-
-WELL-122 remains in Planning. The Product classification extension, exact-bound decisions, deterministic eligibility evidence and independent review remain outstanding. This draft does not authorize production, real-participant delivery, a provider or Phase 9.
+The content remains ineligible for use until the Product successor and exact-bound role evidence are current and verified. The support contact remains unbound. No delivery, provider, production, publication, real-participant or Phase 9 authority is granted.

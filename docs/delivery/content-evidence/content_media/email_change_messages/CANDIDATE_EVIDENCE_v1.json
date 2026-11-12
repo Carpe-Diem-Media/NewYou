@@ -1,0 +1,148 @@
+{
+  "status": "CANDIDATE_NOT_ELIGIBLE",
+  "scope": [
+    "local development",
+    "automated tests",
+    "development environments",
+    "bounded P8-16 Phase-8 proof"
+  ],
+  "source_attribution": "Plane comment a2214bde-85ea-4799-80d0-61b864afc41d transcribes the owner decision; this packet does not represent additional independent human approval events.",
+  "required_roles": [
+    "Product owner",
+    "Content & Media owner",
+    "English Language Reviewer",
+    "Afrikaans Language Reviewer"
+  ],
+  "format": "subject-body-utf8-lf-v1",
+  "support_contact_bound": false,
+  "delivery_authorized": false,
+  "runtime_release": false,
+  "latest_alias": false,
+  "silent_locale_fallback": false,
+  "messages": [
+    {
+      "type": "primary_email_change_confirmation_message",
+      "locale": "en",
+      "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL",
+      "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-V1",
+      "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-EN-V1",
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/confirmation-en-v1.txt",
+      "bytes": 454,
+      "sha256": "225434e7cbdb52d7ea9a092927acbc8b9acde9a07b89f2572b633b3eb8b63ae5",
+      "tokens": [
+        {
+          "literal": "{{platform_name}}",
+          "type": "platform_display_name",
+          "fields": [
+            "subject",
+            "body"
+          ]
+        },
+        {
+          "literal": "{{email_change_confirmation_link}}",
+          "type": "identity_primary_email_change_confirmation_url",
+          "fields": [
+            "body"
+          ]
+        }
+      ],
+      "token_contract_sha256": "3be65c1a412f8af2bae8a7df87c4efc29ab5bd6b9cab1ee5309ec8d29edec694",
+      "state": "candidate",
+      "decision_source": "a2214bde-85ea-4799-80d0-61b864afc41d",
+      "af_body_source": null
+    },
+    {
+      "type": "primary_email_change_confirmation_message",
+      "locale": "af",
+      "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL",
+      "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-V1",
+      "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-AF-V1",
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/confirmation-af-v1.txt",
+      "bytes": 498,
+      "sha256": "be8a5049931e2a942c88fa4159715e0c0c460b55879a3d6b7a780d4f7f26e204",
+      "tokens": [
+        {
+          "literal": "{{platform_name}}",
+          "type": "platform_display_name",
+          "fields": [
+            "subject",
+            "body"
+          ]
+        },
+        {
+          "literal": "{{email_change_confirmation_link}}",
+          "type": "identity_primary_email_change_confirmation_url",
+          "fields": [
+            "body"
+          ]
+        }
+      ],
+      "token_contract_sha256": "3be65c1a412f8af2bae8a7df87c4efc29ab5bd6b9cab1ee5309ec8d29edec694",
+      "state": "candidate",
+      "decision_source": "a2214bde-85ea-4799-80d0-61b864afc41d",
+      "af_body_source": "b9a4839e-def6-4856-aa1a-2d602743c101"
+    },
+    {
+      "type": "primary_email_change_old_address_notice",
+      "locale": "en",
+      "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL",
+      "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-V1",
+      "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-EN-V1",
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/notice-en-v1.txt",
+      "bytes": 327,
+      "sha256": "937b7aa3fb0018f12157946c7ace16d30503ddba8ab52f2a446cff98a1505abc",
+      "tokens": [
+        {
+          "literal": "{{platform_name}}",
+          "type": "platform_display_name",
+          "fields": [
+            "subject",
+            "body"
+          ]
+        },
+        {
+          "literal": "{{support_contact}}",
+          "type": "approved_non_secret_support_contact",
+          "fields": [
+            "body"
+          ]
+        }
+      ],
+      "token_contract_sha256": "c4a77901d978a2709feff2d17eb8886dc82d3b5df62e1ab41a1a6a115ba1acf6",
+      "state": "candidate",
+      "decision_source": "a2214bde-85ea-4799-80d0-61b864afc41d",
+      "af_body_source": null
+    },
+    {
+      "type": "primary_email_change_old_address_notice",
+      "locale": "af",
+      "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL",
+      "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-V1",
+      "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-AF-V1",
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/notice-af-v1.txt",
+      "bytes": 369,
+      "sha256": "6effc50c65c2e592ac237984b236f3d4aa1723f92378268d424fc05810571f3e",
+      "tokens": [
+        {
+          "literal": "{{platform_name}}",
+          "type": "platform_display_name",
+          "fields": [
+            "subject",
+            "body"
+          ]
+        },
+        {
+          "literal": "{{support_contact}}",
+          "type": "approved_non_secret_support_contact",
+          "fields": [
+            "body"
+          ]
+        }
+      ],
+      "token_contract_sha256": "c4a77901d978a2709feff2d17eb8886dc82d3b5df62e1ab41a1a6a115ba1acf6",
+      "state": "candidate",
+      "decision_source": "a2214bde-85ea-4799-80d0-61b864afc41d",
+      "af_body_source": "b9a4839e-def6-4856-aa1a-2d602743c101"
+    }
+  ]
+}
