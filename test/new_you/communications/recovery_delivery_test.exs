@@ -13,6 +13,14 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
         {request, recovery, intent} = pending(unquote(locale))
         assert intent.content_item_id != nil
         assert intent.translation_version_id =~ String.upcase(unquote(locale)) <> "-V1"
+
+        assert {:error, _} =
+                 Ash.update(intent, %{platform_name: "replacement"},
+                   action: :bind_recovery_content,
+                   authorize?: false
+                 )
+
+        assert Ash.get!(MessageIntent, intent.id, authorize?: false) == intent
         deliver(intent)
         bearer = Process.delete({__MODULE__, :bearer})
         assert is_binary(bearer)
@@ -106,6 +114,65 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
     Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
   end
 
+  test "restored content binds a held proof once without changing Identity authority" do
+    P805.with_fixture(fn ->
+      Process.put({NewYou.Content.RecoveryMessage, :evidence_root}, "/missing-recovery-content")
+      {_request, recovery, intent} = pending("af")
+      assert intent.content_item_id == nil
+      Process.put(:p810_provider, fn _, _ -> flunk("unbound proof cannot send") end)
+      assert {:ok, :held} = Communications.execute(intent.id)
+      assert attempts(intent) == []
+      Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
+      Process.put(:p810_provider, fn _, _ -> :delivered end)
+      assert {:ok, :processed} = Communications.execute(intent.id)
+      bound = Ash.get!(MessageIntent, intent.id, authorize?: false)
+      assert bound.content_item_id != nil
+      assert bound.translation_version_id =~ "AF-V1"
+      assert bound.source_reference == intent.source_reference
+      assert bound.source_operation_id == intent.source_operation_id
+      assert Ash.get!(RecoveryCase, recovery.id, authorize?: false) == recovery
+      assert Ash.get!(Token, recovery.proof_jti, authorize?: false).purpose == "recovery"
+      assert length(attempts(intent)) == 1
+      assert {:ok, :closed} = Communications.execute(intent.id)
+
+      assert {:error, _} =
+               Ash.update(bound, %{platform_name: "replacement"},
+                 action: :bind_recovery_content,
+                 authorize?: false
+               )
+
+      assert Ash.get!(MessageIntent, intent.id, authorize?: false) == bound
+    end)
+  after
+    Process.delete(:p810_provider)
+    Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
+  end
+
+  test "late content cannot revive revoked proof or bypass private binding policies" do
+    P805.with_fixture(fn ->
+      Process.put({NewYou.Content.RecoveryMessage, :evidence_root}, "/missing-recovery-content")
+      {_request, recovery, intent} = pending("en")
+
+      assert {:error, %Ash.Error.Forbidden{}} =
+               Ash.update(intent, %{platform_name: "unauthorized"},
+                 action: :bind_recovery_content
+               )
+
+      proof = Ash.get!(Token, recovery.proof_jti, authorize?: false)
+      Ash.update!(proof, %{}, action: :revoke_recovery, authorize?: false)
+      Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
+      Process.put(:p810_provider, fn _, _ -> flunk("revoked proof cannot send") end)
+      assert {:ok, :source_invalid} = Communications.execute(intent.id)
+      assert attempts(intent) == []
+      assert Ash.get!(MessageIntent, intent.id, authorize?: false).dispatch_disposition == :closed
+      assert Ash.get!(RecoveryCase, recovery.id, authorize?: false) == recovery
+      assert {:ok, :closed} = Communications.execute(intent.id)
+    end)
+  after
+    Process.delete(:p810_provider)
+    Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
+  end
+
   test "unavailable content preserves the committed security notice obligation" do
     P805.with_fixture(fn ->
       {_request, _recovery, proof_intent} = pending("en")
@@ -132,6 +199,22 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
       Process.put(:p810_provider, fn _, _ -> flunk("unbound notice cannot send") end)
       assert {:ok, :held} = Communications.execute(notice.id)
       assert attempts(notice) == []
+
+      # Restoring current eligibility must recover the durable obligation,
+      # without re-executing Identity completion or requiring a new source event.
+      Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
+
+      Process.put(:p810_provider, fn _, payload ->
+        assert String.contains?(payload.body, "jc@carpediem.co.za")
+        refute String.contains?(payload.body, "proof=")
+        :delivered
+      end)
+
+      assert {:ok, :processed} = Communications.execute(notice.id)
+      assert length(attempts(notice)) == 1
+      assert Ash.get!(MessageIntent, notice.id, authorize?: false).content_item_id != nil
+      assert {:ok, :closed} = Communications.execute(notice.id)
+      assert length(attempts(notice)) == 1
     end)
   after
     Process.delete(:p810_provider)
@@ -201,9 +284,12 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
     end
   end
 
-  test "competing PostgreSQL executors fence one recovery provider invocation" do
+  test "competing PostgreSQL executors bind restored content once and fence one invocation" do
     P805.with_fixture(fn ->
+      Process.put({NewYou.Content.RecoveryMessage, :evidence_root}, "/missing-recovery-content")
       {_request, recovery, intent} = pending("en")
+      assert intent.content_item_id == nil
+      Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
       parent = self()
       reference = make_ref()
 
@@ -229,6 +315,7 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
       assert {:ok, :waiting} = Communications.execute(intent.id)
       send(provider, {reference, :continue})
       assert {:ok, :processed} = Task.await(task, 10_000)
+      assert Ash.get!(MessageIntent, intent.id, authorize?: false).content_item_id != nil
       assert length(attempts(intent)) == 1
       assert Ash.get!(RecoveryCase, recovery.id, authorize?: false) == recovery
       assert {:ok, :closed} = Communications.execute(intent.id)

@@ -103,6 +103,32 @@ defmodule NewYou.Communications.MessageIntent do
       run NewYou.Communications.Actions.ExecuteDelivery
     end
 
+    update :bind_recovery_content do
+      description "Bind currently eligible exact content once to an unbound held recovery obligation."
+      public? false
+
+      accept [
+        :content_item_id,
+        :content_version_id,
+        :translation_version_id,
+        :content_sha256,
+        :platform_name,
+        :support_contact,
+        :render_digest,
+        :terminal_reason
+      ]
+
+      change filter(
+               expr(
+                 role in [:account_recovery, :recovery_security_notice] and
+                   dispatch_disposition == :held and is_nil(content_item_id) and
+                   is_nil(content_version_id) and is_nil(translation_version_id) and
+                   is_nil(content_sha256) and is_nil(platform_name) and
+                   is_nil(support_contact) and is_nil(render_digest)
+               )
+             )
+    end
+
     update :hold do
       accept [:terminal_reason]
       public? false
@@ -229,6 +255,7 @@ defmodule NewYou.Communications.MessageIntent do
              :establish,
              :establish_recovery,
              :establish_recovery_notice,
+             :bind_recovery_content,
              :hold,
              :resume,
              :require_reconciliation,

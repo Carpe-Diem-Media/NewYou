@@ -280,6 +280,44 @@ defmodule NewYou.Communications do
     end
   end
 
+  @doc false
+  @spec bind_recovery_content(MessageIntent.t()) :: {:ok, MessageIntent.t()} | {:error, term()}
+  def bind_recovery_content(
+        %MessageIntent{
+          role: role,
+          dispatch_disposition: :held,
+          content_item_id: nil
+        } = intent
+      )
+      when role in [:account_recovery, :recovery_security_notice] do
+    # The executor holds the intent row lock. Initial binding can recover a held
+    # obligation; it never replaces a previously selected immutable version.
+    content = recovery_content(intent, intent.locale)
+
+    if NewYou.Repo.in_transaction?() and content.content_item_id != nil do
+      Ash.update(
+        intent,
+        Map.take(content, [
+          :content_item_id,
+          :content_version_id,
+          :translation_version_id,
+          :content_sha256,
+          :platform_name,
+          :support_contact,
+          :render_digest,
+          :terminal_reason
+        ]),
+        action: :bind_recovery_content,
+        domain: __MODULE__,
+        authorize?: false
+      )
+    else
+      {:ok, intent}
+    end
+  end
+
+  def bind_recovery_content(%MessageIntent{} = intent), do: {:ok, intent}
+
   defp recovery_content(role_binding, locale) do
     with {:ok, content} <- NewYou.Content.RecoveryMessage.binding(role_binding.role, locale),
          {:ok, support} <- recovery_support_contact(role_binding.role) do

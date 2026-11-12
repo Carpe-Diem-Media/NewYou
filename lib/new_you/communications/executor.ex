@@ -61,7 +61,9 @@ defmodule NewYou.Communications.Executor do
       if intent.dispatch_disposition == :closed do
         {:ok, :closed}
       else
-        prepare_current(intent, attempts)
+        with {:ok, bound} <- NewYou.Communications.bind_recovery_content(intent) do
+          prepare_current(bound, attempts)
+        end
       end
     else
       _ -> {:error, :delivery_unavailable}
