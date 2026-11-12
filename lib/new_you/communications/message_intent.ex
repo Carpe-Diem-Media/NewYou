@@ -24,17 +24,24 @@ defmodule NewYou.Communications.MessageIntent do
         message: "is unsupported"
 
       check_constraint :role, "message_intents_role",
-        check: "role IN ('account_verification', 'magic_login', 'password_reset')",
+        check:
+          "role IN ('account_verification', 'magic_login', 'password_reset', 'account_recovery', 'recovery_security_notice')",
         message: "is unsupported"
 
       check_constraint :source_purpose, "message_intents_role_purpose_schema",
         check:
-          "(role = 'account_verification' AND source_purpose = 'email_verification' AND render_schema = 'verification-v1') OR (role = 'magic_login' AND source_purpose = 'magic_login' AND render_schema = 'magic-login-v1') OR (role = 'password_reset' AND source_purpose = 'password_reset' AND render_schema = 'password-reset-v1')",
+          "(role = 'account_verification' AND source_purpose = 'email_verification' AND render_schema = 'verification-v1') OR (role = 'magic_login' AND source_purpose = 'magic_login' AND render_schema = 'magic-login-v1') OR (role = 'password_reset' AND source_purpose = 'password_reset' AND render_schema = 'password-reset-v1') OR (role = 'account_recovery' AND source_purpose = 'recovery' AND render_schema = 'recovery-v1') OR (role = 'recovery_security_notice' AND source_purpose = 'recovery_completed' AND render_schema = 'recovery-notice-v1')",
         message: "does not match the message role"
 
       check_constraint :source_reference, "message_intents_source_reference",
         check: "source_reference ~ '^[0-9a-v]{24}$'",
         message: "is invalid"
+
+      check_constraint :content_item_id, "message_intents_content_binding",
+        check:
+          "((role IN ('account_recovery', 'recovery_security_notice') AND content_item_id IS NULL AND content_version_id IS NULL AND translation_version_id IS NULL AND content_sha256 IS NULL AND platform_name IS NULL AND support_contact IS NULL AND render_digest IS NULL) OR (content_item_id IS NOT NULL AND content_version_id IS NOT NULL AND translation_version_id IS NOT NULL AND content_sha256 IS NOT NULL AND platform_name IS NOT NULL AND render_digest IS NOT NULL AND ((role = 'recovery_security_notice' AND support_contact IS NOT NULL) OR (role <> 'recovery_security_notice' AND support_contact IS NULL))))",
+        message:
+          "must bind all exact content and render inputs or retain an unbound recovery obligation"
     end
   end
 
@@ -94,6 +101,32 @@ defmodule NewYou.Communications.MessageIntent do
       public? false
       transaction? false
       run NewYou.Communications.Actions.ExecuteDelivery
+    end
+
+    update :bind_recovery_content do
+      description "Bind currently eligible exact content once to an unbound held recovery obligation."
+      public? false
+
+      accept [
+        :content_item_id,
+        :content_version_id,
+        :translation_version_id,
+        :content_sha256,
+        :platform_name,
+        :support_contact,
+        :render_digest,
+        :terminal_reason
+      ]
+
+      change filter(
+               expr(
+                 role in [:account_recovery, :recovery_security_notice] and
+                   dispatch_disposition == :held and is_nil(content_item_id) and
+                   is_nil(content_version_id) and is_nil(translation_version_id) and
+                   is_nil(content_sha256) and is_nil(platform_name) and
+                   is_nil(support_contact) and is_nil(render_digest)
+               )
+             )
     end
 
     update :hold do
@@ -159,6 +192,58 @@ defmodule NewYou.Communications.MessageIntent do
         :render_schema
       ]
     end
+
+    create :establish_recovery do
+      public? false
+
+      accept [
+        :source_operation_id,
+        :source_reference,
+        :destination,
+        :destination_provenance,
+        :destination_authorized_at,
+        :locale,
+        :content_item_id,
+        :content_version_id,
+        :translation_version_id,
+        :content_sha256,
+        :platform_name,
+        :support_contact,
+        :render_digest,
+        :terminal_reason
+      ]
+
+      change set_attribute(:role, :account_recovery)
+      change set_attribute(:source_purpose, "recovery")
+      change set_attribute(:render_schema, "recovery-v1")
+      change set_attribute(:dispatch_disposition, :held)
+    end
+
+    create :establish_recovery_notice do
+      public? false
+
+      accept [
+        :source_operation_id,
+        :source_reference,
+        :destination,
+        :destination_provenance,
+        :destination_authorized_at,
+        :locale,
+        :content_item_id,
+        :content_version_id,
+        :translation_version_id,
+        :content_sha256,
+        :platform_name,
+        :support_contact,
+        :render_digest,
+        :terminal_reason
+      ]
+
+      change set_attribute(:role, :recovery_security_notice)
+      change set_attribute(:source_purpose, "recovery_completed")
+      change set_attribute(:render_schema, "recovery-notice-v1")
+      change set_attribute(:dispatch_disposition, :held)
+    end
   end
 
   policies do
@@ -168,6 +253,9 @@ defmodule NewYou.Communications.MessageIntent do
 
     policy action([
              :establish,
+             :establish_recovery,
+             :establish_recovery_notice,
+             :bind_recovery_content,
              :hold,
              :resume,
              :require_reconciliation,
@@ -192,7 +280,15 @@ defmodule NewYou.Communications.MessageIntent do
     attribute :role, :atom,
       allow_nil?: false,
       default: :account_verification,
-      constraints: [one_of: [:account_verification, :magic_login, :password_reset]],
+      constraints: [
+        one_of: [
+          :account_verification,
+          :magic_login,
+          :password_reset,
+          :account_recovery,
+          :recovery_security_notice
+        ]
+      ],
       public?: false
 
     attribute :source_purpose, :string,
@@ -212,11 +308,12 @@ defmodule NewYou.Communications.MessageIntent do
       public?: false
 
     attribute :locale, :string, allow_nil?: false, public?: false
-    attribute :content_item_id, :string, allow_nil?: false, public?: false
-    attribute :content_version_id, :string, allow_nil?: false, public?: false
-    attribute :translation_version_id, :string, allow_nil?: false, public?: false
-    attribute :content_sha256, :string, allow_nil?: false, public?: false
-    attribute :platform_name, :string, allow_nil?: false, public?: false
+    attribute :content_item_id, :string, allow_nil?: true, public?: false
+    attribute :content_version_id, :string, allow_nil?: true, public?: false
+    attribute :translation_version_id, :string, allow_nil?: true, public?: false
+    attribute :content_sha256, :string, allow_nil?: true, public?: false
+    attribute :platform_name, :string, allow_nil?: true, public?: false
+    attribute :support_contact, :string, allow_nil?: true, public?: false
 
     attribute :render_schema, :string,
       allow_nil?: false,
@@ -228,7 +325,7 @@ defmodule NewYou.Communications.MessageIntent do
       default: "application_platform_name",
       public?: false
 
-    attribute :render_digest, :string, allow_nil?: false, public?: false
+    attribute :render_digest, :string, allow_nil?: true, public?: false
 
     attribute :dispatch_disposition, :atom,
       allow_nil?: false,

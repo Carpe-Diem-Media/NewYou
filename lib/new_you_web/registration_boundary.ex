@@ -35,6 +35,24 @@ defmodule NewYouWeb.RegistrationBoundary do
     dispatch_browser_request(conn, :confirm, EmailVerificationController)
   end
 
+  def call(%Plug.Conn{method: "GET", request_path: "/recovery"} = conn, _opts),
+    do: dispatch_browser_request(conn, :new, NewYouWeb.RecoveryController)
+
+  def call(%Plug.Conn{method: "GET", request_path: "/recovery/confirm"} = conn, _opts),
+    do: dispatch_browser_request(conn, :show, NewYouWeb.RecoveryController)
+
+  def call(%Plug.Conn{method: "POST", request_path: "/recovery"} = conn, _opts),
+    do: dispatch_browser_request(conn, :request, NewYouWeb.RecoveryController)
+
+  def call(%Plug.Conn{method: "POST", request_path: "/recovery/confirm"} = conn, _opts),
+    do: dispatch_browser_request(conn, :confirm, NewYouWeb.RecoveryController)
+
+  def call(%Plug.Conn{method: "POST", request_path: "/recovery/complete"} = conn, _opts),
+    do: dispatch_browser_request(conn, :complete, NewYouWeb.RecoveryController)
+
+  def call(%Plug.Conn{method: "POST", request_path: "/recovery/cancel"} = conn, _opts),
+    do: dispatch_browser_request(conn, :cancel, NewYouWeb.RecoveryController)
+
   def call(%Plug.Conn{method: "GET", request_path: "/password/reset"} = conn, _opts),
     do: dispatch_browser_request(conn, :new, NewYouWeb.PasswordResetController)
 
@@ -115,8 +133,11 @@ defmodule NewYouWeb.RegistrationBoundary do
   end
 
   defp sensitive_browser_path?(path) do
-    Enum.any?(["/register", "/verification", "/login", "/session", "/password"], fn root ->
-      path == root or String.starts_with?(path, root <> "/")
-    end)
+    Enum.any?(
+      ["/register", "/verification", "/login", "/session", "/password", "/recovery"],
+      fn root ->
+        path == root or String.starts_with?(path, root <> "/")
+      end
+    )
   end
 end

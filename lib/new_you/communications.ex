@@ -191,6 +191,171 @@ defmodule NewYou.Communications do
 
   def establish_password_reset(_), do: {:error, :password_reset_unavailable}
 
+  @recovery_fields [
+    :source_operation_id,
+    :source_reference,
+    :destination,
+    :destination_provenance,
+    :destination_authorized_at,
+    :locale,
+    :role,
+    :source_purpose,
+    :render_schema,
+    :content_item_id,
+    :content_version_id,
+    :translation_version_id,
+    :content_sha256,
+    :platform_name,
+    :support_contact,
+    :render_digest
+  ]
+
+  @doc "Establish a durable recovery obligation, binding exact development content when eligible."
+  @spec establish_recovery(map()) ::
+          {:ok, MessageIntent.t()} | {:error, :recovery_obligation_unavailable}
+  def establish_recovery(attrs), do: establish_recovery_intent(attrs, :establish_recovery)
+
+  @doc "Establish the distinct durable notice after recovery; missing content preserves a held obligation."
+  @spec establish_recovery_notice(map()) ::
+          {:ok, MessageIntent.t()} | {:error, :recovery_obligation_unavailable}
+  def establish_recovery_notice(attrs),
+    do: establish_recovery_intent(attrs, :establish_recovery_notice)
+
+  defp establish_recovery_intent(attrs, action) when is_map(attrs) do
+    role_binding =
+      case action do
+        :establish_recovery ->
+          %{role: :account_recovery, source_purpose: "recovery", render_schema: "recovery-v1"}
+
+        :establish_recovery_notice ->
+          %{
+            role: :recovery_security_notice,
+            source_purpose: "recovery_completed",
+            render_schema: "recovery-notice-v1"
+          }
+      end
+
+    source_params =
+      attrs
+      |> Map.take([
+        :source_operation_id,
+        :source_reference,
+        :destination,
+        :destination_provenance,
+        :destination_authorized_at,
+        :locale
+      ])
+
+    case Ash.transact([MessageIntent], fn ->
+           create_recovery_intent(source_params, role_binding, action)
+         end) do
+      {:ok, {:ok, %MessageIntent{} = intent}} -> {:ok, intent}
+      _ -> {:error, :recovery_obligation_unavailable}
+    end
+  rescue
+    _ -> {:error, :recovery_obligation_unavailable}
+  end
+
+  defp establish_recovery_intent(_, _), do: {:error, :recovery_obligation_unavailable}
+
+  defp create_recovery_intent(source_params, role_binding, action) do
+    expected =
+      Map.merge(source_params, role_binding)
+      |> Map.merge(recovery_content(role_binding, source_params.locale))
+
+    with {:ok, intent} <-
+           Ash.create(MessageIntent, Map.drop(expected, [:role, :source_purpose, :render_schema]),
+             action: action,
+             domain: __MODULE__,
+             authorize?: false,
+             upsert?: true,
+             upsert_identity: :causal_obligation,
+             upsert_fields: [],
+             touch_update_defaults?: false
+           ),
+         true <- Enum.all?(@recovery_fields, &(Map.get(intent, &1) == Map.get(expected, &1))) do
+      {:ok, intent}
+    else
+      _ -> {:error, :recovery_obligation_unavailable}
+    end
+  end
+
+  @doc false
+  @spec bind_recovery_content(MessageIntent.t()) :: {:ok, MessageIntent.t()} | {:error, term()}
+  def bind_recovery_content(
+        %MessageIntent{
+          role: role,
+          dispatch_disposition: :held,
+          content_item_id: nil
+        } = intent
+      )
+      when role in [:account_recovery, :recovery_security_notice] do
+    # The executor holds the intent row lock. Initial binding can recover a held
+    # obligation; it never replaces a previously selected immutable version.
+    content = recovery_content(intent, intent.locale)
+
+    if NewYou.Repo.in_transaction?() and content.content_item_id != nil do
+      Ash.update(
+        intent,
+        Map.take(content, [
+          :content_item_id,
+          :content_version_id,
+          :translation_version_id,
+          :content_sha256,
+          :platform_name,
+          :support_contact,
+          :render_digest,
+          :terminal_reason
+        ]),
+        action: :bind_recovery_content,
+        domain: __MODULE__,
+        authorize?: false
+      )
+    else
+      {:ok, intent}
+    end
+  end
+
+  def bind_recovery_content(%MessageIntent{} = intent), do: {:ok, intent}
+
+  defp recovery_content(role_binding, locale) do
+    with {:ok, content} <- NewYou.Content.RecoveryMessage.binding(role_binding.role, locale),
+         {:ok, support} <- recovery_support_contact(role_binding.role) do
+      platform = NewYou.platform_name()
+
+      Map.merge(content, %{
+        platform_name: platform,
+        support_contact: support,
+        render_digest: recovery_render_digest(role_binding.render_schema, platform, support),
+        terminal_reason: nil
+      })
+    else
+      _ ->
+        %{
+          content_item_id: nil,
+          content_version_id: nil,
+          translation_version_id: nil,
+          content_sha256: nil,
+          platform_name: nil,
+          support_contact: nil,
+          render_digest: nil,
+          terminal_reason: "content_ineligible"
+        }
+    end
+  end
+
+  defp recovery_support_contact(:recovery_security_notice),
+    do: NewYou.Content.RecoveryMessage.support_contact()
+
+  defp recovery_support_contact(:account_recovery), do: {:ok, nil}
+
+  @doc false
+  @spec recovery_render_digest(String.t(), String.t(), String.t() | nil) :: String.t()
+  def recovery_render_digest(schema, platform, support) do
+    :crypto.hash(:sha256, :erlang.term_to_binary({schema, platform, support}, [:deterministic]))
+    |> Base.encode16(case: :lower)
+  end
+
   defp transact_password_reset(params) do
     case Ash.transact([MessageIntent], fn -> establish_password_reset_intent(params) end) do
       {:ok, {:ok, %MessageIntent{} = intent}} -> {:ok, intent}

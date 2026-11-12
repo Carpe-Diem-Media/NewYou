@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang={@locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>{NewYouWeb.RecoveryCopy.text!("#{@stage}.title", @locale)}</title>
+    <link rel="stylesheet" href={~p"/assets/css/app.css"} />
+  </head>
+  <body>
+    <main id="main" class="min-h-svh bg-design-canvas text-design-ink font-design-sans">
+      <header class="mx-auto w-full max-w-7xl border-b border-design-hairline px-design-base py-design-lg design-tablet:px-design-lg design-desktop:px-design-2xl">
+        <p class="font-design-bold text-design-body-sm">{NewYou.platform_name()}</p>
+      </header>
+      <section
+        aria-labelledby="recovery-heading"
+        class="mx-auto grid w-full max-w-7xl content-start gap-design-lg px-design-base py-design-2xl design-tablet:px-design-lg design-desktop:px-design-2xl"
+      >
+        <h1
+          id="recovery-heading"
+          class="max-w-3xl text-balance font-design-bold text-design-display-sm leading-design-display-sm tracking-design-display-sm design-tablet:text-design-display-md design-tablet:leading-design-display-md design-tablet:tracking-design-display-md"
+        >
+          {NewYouWeb.RecoveryCopy.text!("#{@stage}.title", @locale)}
+        </h1>
+        <p role="status" class="max-w-prose text-design-body-sm leading-design-body-sm">
+          {NewYouWeb.RecoveryCopy.text!("#{@stage}.body", @locale)}
+        </p>
+        <.form
+          :if={@stage in [:request, :confirmation, :credential]}
+          for={%{}}
+          action={
+            %{
+              request: "/recovery",
+              confirmation: "/recovery/confirm",
+              credential: "/recovery/complete"
+            }[@stage]
+          }
+          method="post"
+          id="recovery-form"
+          class="grid w-full max-w-prose gap-design-base justify-items-start"
+        >
+          <input type="hidden" name="locale" value={@locale} />
+          <input type="hidden" name="operation_id" value={@operation_id} />
+          <input :if={@stage != :request} type="hidden" name="proof" value={@proof} />
+          <label
+            :if={@stage == :request}
+            class="text-design-body-sm font-design-bold text-design-ink"
+            for="email"
+          >
+            {NewYouWeb.CopyRegistry.text!("identity.registration.email.label", @locale)}
+          </label>
+          <input
+            :if={@stage == :request}
+            class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base pt-design-lg pb-design-sm text-design-body-xs leading-design-body-xs text-design-on-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+            id="email"
+            name="email"
+            type="email"
+            required
+            autocomplete="email"
+          />
+          <label
+            :if={@stage == :credential}
+            class="text-design-body-sm font-design-bold text-design-ink"
+            for="password"
+          >
+            {NewYouWeb.CopyRegistry.text!("identity.registration.password.label", @locale)}
+          </label>
+          <input
+            :if={@stage == :credential}
+            class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base pt-design-lg pb-design-sm text-design-body-xs leading-design-body-xs text-design-on-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+            id="password"
+            name="password"
+            type="password"
+            required
+            autocomplete="new-password"
+            maxlength="1024"
+          />
+          <.primary_button type="submit">{NewYouWeb.RecoveryCopy.text!(
+            "#{@stage}.action",
+            @locale
+          )}</.primary_button>
+        </.form>
+        <a
+          :if={@stage == :unavailable}
+          href={"/recovery?locale=" <> @locale}
+          class="text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+        >
+          {NewYouWeb.RecoveryCopy.text!("request.action", @locale)}
+        </a>
+        <a
+          :if={@stage == :completed}
+          href={"/login?locale=" <> @locale}
+          class="text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+        >
+          {NewYouWeb.CopyRegistry.text!("shared.navigation.login", @locale)}
+        </a>
+      </section>
+    </main>
+  </body>
+</html>

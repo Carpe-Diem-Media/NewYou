@@ -92,6 +92,16 @@ defmodule NewYou.Identity.Account do
   end
 
   actions do
+    update :hold_for_recovery do
+      public? false
+      accept []
+      change filter(expr(security_posture == :normal))
+      change set_attribute(:security_posture, :held)
+      change set_attribute(:hold_review, nil)
+      change increment(:hold_version)
+      change increment(:security_version)
+    end
+
     action :reset_password, :atom do
       description "Explicit proof-bound password replacement with atomic Account-wide security consequences. Never signs in."
       public? false

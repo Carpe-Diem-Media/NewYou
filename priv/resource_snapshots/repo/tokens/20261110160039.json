@@ -1,0 +1,401 @@
+{
+  "attributes": [
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "tokens_recovery_case_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "recovery_cases"
+      },
+      "scale": null,
+      "size": null,
+      "source": "recovery_case_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "recovery_claims",
+      "type": "map"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reset_request_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reset_claims",
+      "type": "map"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reset_account_binding",
+      "type": "binary"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reset_locale",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reset_consumption_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "magic_request_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "magic_claims",
+      "type": "map"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "magic_account_binding",
+      "type": "binary"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "magic_locale",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": true,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "jti",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "subject",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "expires_at",
+      "type": "utc_datetime"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "purpose",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "extra_data",
+      "type": "map"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "created_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "updated_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "tokens_account_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "accounts"
+      },
+      "scale": null,
+      "size": null,
+      "source": "account_id",
+      "type": "uuid"
+    }
+  ],
+  "base_filter": null,
+  "check_constraints": [
+    {
+      "attribute": [
+        "recovery_case_id"
+      ],
+      "base_filter": null,
+      "check": "(recovery_case_id IS NULL AND recovery_claims IS NULL AND purpose NOT IN ('recovery','recovery_consumed','recovery_revoked')) OR (recovery_case_id IS NOT NULL AND recovery_claims IS NOT NULL AND purpose IN ('recovery','recovery_consumed','recovery_revoked','revocation') AND COALESCE(recovery_claims->>'purpose' = 'recovery' AND recovery_claims->>'jti' = jti AND recovery_claims->>'sub' = subject AND recovery_claims->>'case_id' = recovery_case_id::text, false))",
+      "name": "tokens_recovery_metadata"
+    },
+    {
+      "attribute": [
+        "reset_request_id"
+      ],
+      "base_filter": null,
+      "check": "(purpose NOT IN ('password_reset', 'password_reset_superseded', 'password_reset_consumed') AND reset_request_id IS NULL AND reset_claims IS NULL AND reset_account_binding IS NULL AND reset_locale IS NULL AND reset_consumption_id IS NULL) OR (reset_request_id IS NOT NULL AND reset_claims IS NOT NULL AND reset_locale IS NOT NULL AND reset_locale IN ('en', 'af') AND ((purpose = 'password_reset_consumed' AND reset_consumption_id IS NOT NULL AND reset_account_binding IS NULL) OR (purpose <> 'password_reset_consumed' AND reset_consumption_id IS NULL AND reset_account_binding IS NOT NULL)))",
+      "name": "tokens_password_reset_metadata"
+    },
+    {
+      "attribute": [
+        "magic_request_id"
+      ],
+      "base_filter": null,
+      "check": "(purpose NOT IN ('magic_login', 'magic_login_superseded', 'magic_login_consumed') AND magic_request_id IS NULL AND magic_claims IS NULL AND magic_account_binding IS NULL AND magic_locale IS NULL) OR (magic_request_id IS NOT NULL AND magic_claims IS NOT NULL AND magic_account_binding IS NOT NULL AND magic_locale IS NOT NULL AND magic_locale IN ('en', 'af'))",
+      "name": "tokens_magic_login_metadata"
+    }
+  ],
+  "create_table_options": null,
+  "custom_indexes": [],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "0D60A8563119985C2F170940871EC67C040CFF4E9F0EE0FD3EE706041819B337",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "tokens_magic_login_request_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "magic_request_id"
+        }
+      ],
+      "name": "magic_login_request",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "tokens_one_current_magic_login_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "account_id"
+        }
+      ],
+      "name": "one_current_magic_login",
+      "nils_distinct?": true,
+      "where": "purpose = 'magic_login'"
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "tokens_one_current_password_reset_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "account_id"
+        }
+      ],
+      "name": "one_current_password_reset",
+      "nils_distinct?": true,
+      "where": "purpose = 'password_reset'"
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "tokens_password_reset_consumption_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "reset_consumption_id"
+        }
+      ],
+      "name": "password_reset_consumption",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "tokens_password_reset_request_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "reset_request_id"
+        }
+      ],
+      "name": "password_reset_request",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "tokens_recovery_case_proof_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "recovery_case_id"
+        }
+      ],
+      "name": "recovery_case_proof",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
+  "multitenancy": {
+    "attribute": null,
+    "global": null,
+    "strategy": null
+  },
+  "repo": "Elixir.NewYou.Repo",
+  "schema": null,
+  "table": "tokens",
+  "temporal": null
+}
