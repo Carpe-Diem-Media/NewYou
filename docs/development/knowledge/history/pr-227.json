@@ -118,15 +118,37 @@
       "status": "added"
     },
     {
-      "blob": "889b06c7aaa29c5e9729c7b8ad10ced817aa6a02",
+      "blob": "15db41b7e4457dff96c9abf204d99a4b96b3fae6",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "32c6c461577f0e0f108538d1e9fe9c5ddb46ea5c2839c28f095282d475a5471a",
+      "sha256": "7b5f0638eb355b08bc8fb1b874eaa190ea0a3194ec3b63a4c7ce3170ded65f42",
       "status": "modified"
+    },
+    {
+      "blob": "92d9eb3bcd4f7e3a9d7cd90ce2df637855b3c809",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/automatic-css-4.0.3-math.md",
+      "sha256": "daf42dd8e93779ed648e6cbe20742f1ec075dfb118e03b76b822cb5f4f822a2e",
+      "status": "added"
+    },
+    {
+      "blob": "503e2715785a1d41db400decdfc53d5b194cd327",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/design_math_reference.py",
+      "sha256": "cbd1d4b9a57e59ca520a3ea23fe7118078f300dfeb9bf2d5bc0e19c1a63258e8",
+      "status": "added"
     },
     {
       "blob": "8b614a28cff896daf07c0898e725467d28c4b9c5",
@@ -515,7 +537,7 @@
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-12T19:50:15.094767Z",
+    "checked_at": "2026-11-12T20:07:43.154539Z",
     "items": [
       {
         "description_sha256": "37e40677ccfc39b60b5e720efb6483fcc3575d647c09ff296a9e8faedd4a3e32",
