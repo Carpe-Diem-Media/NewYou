@@ -57,15 +57,12 @@ defmodule NewYou.Communications.Executor do
 
   defp prepare(id) do
     with {:ok, %MessageIntent{} = intent} <- lock_intent(id),
-         {:ok, attempts} <- attempts(id) do
-      if intent.dispatch_disposition == :closed do
-        {:ok, :closed}
-      else
-        with {:ok, bound} <- NewYou.Communications.bind_recovery_content(intent) do
-          prepare_current(bound, attempts)
-        end
-      end
+         {:ok, attempts} <- attempts(id),
+         false <- intent.dispatch_disposition == :closed,
+         {:ok, bound} <- NewYou.Communications.bind_recovery_content(intent) do
+      prepare_current(bound, attempts)
     else
+      true -> {:ok, :closed}
       _ -> {:error, :delivery_unavailable}
     end
   end
