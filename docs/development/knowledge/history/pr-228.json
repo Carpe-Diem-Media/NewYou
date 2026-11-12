@@ -875,6 +875,17 @@
       "path": "test/support/proof/recovery_seam.ex",
       "sha256": "a45cf3e4fb8d5c63aa2dadb3b496945a3044945fed33d6331557a9708e0e867d",
       "status": "added"
+    },
+    {
+      "blob": "da0fbfc4ecf5fa3c7501e8a8243520b55259c859",
+      "mode": "100644",
+      "old_blob": "696466d68e7ee3ec406706b657ee132fce59ca67",
+      "old_mode": "100644",
+      "old_path": "tests/test_foundation_smoke.py",
+      "old_sha256": "b2588b88fdbe7af2e52366e9f67237f049202b8193970dbc6b21ddec771b6ffd",
+      "path": "tests/test_foundation_smoke.py",
+      "sha256": "dc6d7556c9771a6ca76f19f4a6e94b2638b90f0816b69a25cd594d81be6db5f8",
+      "status": "modified"
     }
   ],
   "intent": {
@@ -5232,7 +5243,8 @@
     "test/proof/p8_15_restart.exs",
     "test/support/proof/p8_05.ex",
     "test/support/proof/p8_15.ex",
-    "test/support/proof/recovery_seam.ex"
+    "test/support/proof/recovery_seam.ex",
+    "tests/test_foundation_smoke.py"
   ],
   "tickets": [
     "WELL-16"
