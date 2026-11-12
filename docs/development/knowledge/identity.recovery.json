@@ -6,14 +6,14 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "a51d77e1fb0f87334e8f27ed697a582481242220",
+    "git_sha": "6697bdf4a0f73b5624bd9683d87243ca1358a51f",
     "semantics": "Source snapshot for PR #228. File hashes bind inspected implementation bytes; observed run evidence is recorded separately in Plane and GitHub."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
     {
       "domain": "NewYou.Communications",
-      "interface": "establish_recovery/1, establish_recovery_notice/1, execute/1",
+      "interface": "establish_recovery/1, establish_recovery_notice/1, bind_recovery_content/1 (internal), execute/1",
       "ownership": "Immutable source-bound MessageIntent and exact render snapshot, DeliveryAttempt/provider reconciliation; no recovery authority.",
       "source_ids": [
         "communications",
@@ -87,6 +87,7 @@
       "actions": [
         "establish_recovery",
         "establish_recovery_notice",
+        "bind_recovery_content",
         "execute_delivery"
       ],
       "caller_boundary": "Owning Communications interface. Content/source/provider guards remain independent of persisted intent.",
@@ -805,7 +806,7 @@
       ]
     },
     {
-      "summary": "Communications causal identity and immutable content/source snapshot reject conflicting retries. Provider evidence is independently authenticated and replay controlled.",
+      "summary": "Communications causal identity rejects conflicting source retries. An unbound held recovery obligation can select current eligible exact content once under the intent lock; a previously bound snapshot cannot be replaced. Provider evidence is independently authenticated and replay controlled.",
       "source_ids": [
         "communications",
         "intent",
@@ -844,8 +845,10 @@
       ]
     },
     {
-      "summary": "Content absence preserves held obligations. Current reader, source, rendering or provider failure prevents admission; crash after invocation remains ambiguous until authenticated evidence.",
+      "summary": "Content absence preserves held obligations. Restored eligibility permits a one-time initial content binding through the private Communications action without replaying Identity completion. Current source, content, rendering and provider guards still run before admission and invocation. Revoked proof closes without submission; crash after invocation remains ambiguous until authenticated evidence.",
       "source_ids": [
+        "communications",
+        "intent",
         "content",
         "executor"
       ]
@@ -888,7 +891,8 @@
     {
       "path": "test/new_you/communications/recovery_delivery_test.exs",
       "cases": [
-        "Exact EN/AF proof and notice, provider acceptance/unknown/rejection, withdrawal at invocation fence, three crash cuts and competing executors."
+        "Exact EN/AF proof and notice, provider acceptance/unknown/rejection, withdrawal at invocation fence, three crash cuts and competing executors.",
+        "Missing-content completion notice and proof recover after current eligibility restoration; one-time binding, private policies and revoked-source denial."
       ],
       "proves": "Actual Communications executor, DeliveryAttempt fencing and deterministic P8-04 provider non-authority.",
       "limits": "No external email, mailbox reachability, production or provider permission.",
@@ -1078,19 +1082,19 @@
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def establish_recovery",
-      "sha256": "a27e492b590f8216eae666e122ab5867f6227ae1694f60b7a95c2e974d1daeb6"
+      "sha256": "949b0cb038deea63c176dc584e896328a452ea6972bf525170ca702c2661b4a8"
     },
     {
       "id": "intent",
       "path": "lib/new_you/communications/message_intent.ex",
       "symbol": ":establish_recovery_notice",
-      "sha256": "bf9a33cc1766fadd04d3170245419c677cdbb21458b94343033fd19f0181e9b9"
+      "sha256": "ce47f9aa3c891f107589be72a9aa62d0f0738d67d6f04a5706fab16e2c2606ec"
     },
     {
       "id": "executor",
       "path": "lib/new_you/communications/executor.ex",
       "symbol": "defp recovery_payload",
-      "sha256": "f930298ecf9fc88b9a24de2302e1ff43695b16e08cadc9f3d56ed31f6cd444a0"
+      "sha256": "7599ff8bf9e9895718a14a85534b40a8fae54e34f7709db26bd20a23d805a402"
     },
     {
       "id": "provider",
@@ -1168,7 +1172,7 @@
       "id": "delivery_test",
       "path": "test/new_you/communications/recovery_delivery_test.exs",
       "symbol": "defmodule ",
-      "sha256": "48f88e0ce25b0ab473a7c72b45b22926954b4838c9bbbc1fb325c723e0355341"
+      "sha256": "e0205b1341e0e4545326e7637623aea7ee017fba382f3aa22ca1ccb98d213d19"
     },
     {
       "id": "source_test",

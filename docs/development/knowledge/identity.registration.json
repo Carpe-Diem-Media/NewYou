@@ -10,7 +10,7 @@
     "WELL-96"
   ],
   "implementation_revision": {
-    "git_sha": "a51d77e1fb0f87334e8f27ed697a582481242220",
+    "git_sha": "6697bdf4a0f73b5624bd9683d87243ca1358a51f",
     "semantics": "Registration semantics rechecked during WELL-16 continuation and unchanged. Whole-file source hashes also include new recovery interfaces and Token/Account fields; the recovery capability is documented separately. This is not an independent merge certification."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -433,7 +433,7 @@
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def establish_verification",
-      "sha256": "a27e492b590f8216eae666e122ab5867f6227ae1694f60b7a95c2e974d1daeb6"
+      "sha256": "949b0cb038deea63c176dc584e896328a452ea6972bf525170ca702c2661b4a8"
     },
     {
       "id": "audit",
