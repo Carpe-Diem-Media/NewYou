@@ -8,113 +8,58 @@
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/228/commits",
   "files": [
     {
-      "blob": "e83ca0e83edd138983c57391af3e030d282c61d8",
+      "blob": "46b928201b117af655577ba3d6ccdc3945599eaa",
       "mode": "100644",
       "old_blob": "0538df15c710533eb7fce534b8b5d3358024d708",
       "old_mode": "100644",
       "old_path": "docs/README.md",
       "old_sha256": "4b77c8086fe918fde01206102ea47224d9db530927b74fd298c4762f15241448",
       "path": "docs/README.md",
-      "sha256": "f9a7fd032a1ef88bb005f00284b7eaa1450f61693e8e26ffce45f5fb9c9b72cb",
+      "sha256": "aa5787786f4993a7607b27362d75161bded22bdc07d814dac817060692b1e45b",
       "status": "modified"
     },
     {
-      "blob": "c6e1eda1a5ff9fec9e787cb66ba38147091dbc22",
+      "blob": "1ecdf1aa72a1907eca6ab073fb4c7721947e7595",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
-      "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-AF-V1.txt",
-      "sha256": "2d55e469b1717a28af4b4ee3467fba2ecc5eca1df9083b23f233de60c158a337",
+      "path": "docs/development/knowledge/identity.recovery.json",
+      "sha256": "c60efbc3c4c5156119106c049c5e18dcb91d4eeb39920395d85b14baf96fbb7e",
       "status": "added"
     },
     {
-      "blob": "3aa5a9f01d71e520e14921b13388dea01ef35dc4",
+      "blob": "ba48d93cbef130e9f9799c6be55b1ab7b245ac9a",
       "mode": "100644",
-      "old_blob": null,
-      "old_mode": null,
-      "old_path": null,
-      "old_sha256": null,
-      "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-EN-V1.txt",
-      "sha256": "7f57114273ec162a9a4dad9a5c260985ba9148f98d58917ac5e7fa95d95a2042",
-      "status": "added"
+      "old_blob": "c37459ff83eb86d731faccda9274506a34a80aa4",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/identity.registration.json",
+      "old_sha256": "7231c0f433b1f8d10442b1cff0318eda50f56d208ba22f5c0b29204e79d52093",
+      "path": "docs/development/knowledge/identity.registration.json",
+      "sha256": "de4143e29ca108a369e71c32dc11012649e5c43a9b45b15430bd8e0916630c10",
+      "status": "modified"
     },
     {
-      "blob": "a8c21d421b75c7856ffa24b8229fcfb3e7986ad6",
-      "mode": "100644",
-      "old_blob": null,
-      "old_mode": null,
-      "old_path": null,
-      "old_sha256": null,
-      "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-AF-V1.txt",
-      "sha256": "ae9b51d967c2be015b8f948bb05360027647767c1189e3df284afbb296295d90",
-      "status": "added"
-    },
-    {
-      "blob": "9103d2c27a98f80dea0240428ccbfac268d82be4",
-      "mode": "100644",
-      "old_blob": null,
-      "old_mode": null,
-      "old_path": null,
-      "old_sha256": null,
-      "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-EN-V1.txt",
-      "sha256": "c1d761d829e7eb3e400b94d6c2be734ac33a0087a742c2b77818ff06a21d3cb7",
-      "status": "added"
-    },
-    {
-      "blob": "43fb6bd97e4393b297e0402269ca8457720ffea9",
-      "mode": "100644",
-      "old_blob": null,
-      "old_mode": null,
-      "old_path": null,
-      "old_sha256": null,
-      "path": "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
-      "sha256": "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64",
-      "status": "added"
-    },
-    {
-      "blob": "3f4621510e31c6890d9dcf911fcb537beab4d88c",
-      "mode": "100644",
-      "old_blob": null,
-      "old_mode": null,
-      "old_path": null,
-      "old_sha256": null,
-      "path": "docs/delivery/content-evidence/content_media/recovery_messages/README.md",
-      "sha256": "c3bb2c4e618465fc601336910dec4034cfaafbf28f8afea7767ea34cb7e25ec3",
-      "status": "added"
-    },
-    {
-      "blob": "de9d1d083fe7d7c318ab104770d0f29e0341b776",
-      "mode": "100644",
-      "old_blob": null,
-      "old_mode": null,
-      "old_path": null,
-      "old_sha256": null,
-      "path": "docs/delivery/content-evidence/content_media/recovery_messages/RECOVERY_MESSAGE_CANDIDATE_EVIDENCE_PACKET_v0.1.0.json",
-      "sha256": "be05db014e6a3beb947ef0394fd2e846d557d3367322e3308184eb099c327544",
-      "status": "added"
-    },
-    {
-      "blob": "83f17dd2bde6648910cc302e0da23e35a0b68c74",
+      "blob": "1b4cb2e855e9c81c08cab30c32abbd9297043f78",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/p8-15-graduated-recovery-handoff.md",
-      "sha256": "4db7501ce5b0704daf44a3c8210bb052ec139dc76fe75c74952416fa5e0804a5",
+      "sha256": "a791bd5f69589b56516784db7f0b0095c25eb9b4331cbbecfa3c6b525b9c3cf4",
       "status": "added"
     },
     {
-      "blob": "6e96235d62a32216c7f381c559e33e40e9847af4",
+      "blob": "ea0d042967bf9e12077d8c1ed3cb0c52c7fcd657",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/p8-15-owner-approval-provenance.md",
-      "sha256": "17c3ab90c95ccc1ac763ad095b1c4d853328622717789de4e254e4a72b482664",
+      "sha256": "2df3b16dbd4322ef587a69c8bfa330ae3e0d09cbde2f5aa230900fbbc89f95ac",
       "status": "added"
     },
     {
@@ -184,37 +129,48 @@
       "status": "modified"
     },
     {
-      "blob": "07e6b125b2bd8a4dfe95318e04189f6105fe462c",
+      "blob": "ceae91c8050dddc0ebe38f0c1bdd97134fc3a4ba",
       "mode": "100644",
       "old_blob": "8637acb48097e559f60ba7819767fd734ff301d0",
       "old_mode": "100644",
       "old_path": "lib/new_you/communications.ex",
       "old_sha256": "671064bf165f44f34405180b6db96f4e2735e2b96505438b732352d85724899d",
       "path": "lib/new_you/communications.ex",
-      "sha256": "a188ea35a1e25e0fcc1f6f942748953ca49db4ebb8faaada57bc961cb89afff1",
+      "sha256": "a27e492b590f8216eae666e122ab5867f6227ae1694f60b7a95c2e974d1daeb6",
       "status": "modified"
     },
     {
-      "blob": "59def6a75aec97360916b1cf1bc78eacf877e090",
+      "blob": "13d1ce1c43d4407a475f876b11a7e44eddfe1b52",
       "mode": "100644",
       "old_blob": "72ca3e2666893a4c74e90f867b930d933cf2ec34",
       "old_mode": "100644",
       "old_path": "lib/new_you/communications/executor.ex",
       "old_sha256": "5b57e6213926028e438ab73ddeae210d0a826396fc0ea894de8b6634575f1da4",
       "path": "lib/new_you/communications/executor.ex",
-      "sha256": "264332de697aa1dc7ce20c2c1bd6f628b73504eea88fafac14e32a05342d799d",
+      "sha256": "f930298ecf9fc88b9a24de2302e1ff43695b16e08cadc9f3d56ed31f6cd444a0",
       "status": "modified"
     },
     {
-      "blob": "a5986b47b02b11dc30d73560b9189bca538c14f4",
+      "blob": "e102a0015da0a084868ec418e6eb068ed82fc4ff",
       "mode": "100644",
       "old_blob": "cc8198897a54809643e0959629c713147f3220f4",
       "old_mode": "100644",
       "old_path": "lib/new_you/communications/message_intent.ex",
       "old_sha256": "751a15aae07e4bd4db0bbc7d455c1cf32a4992d809bb6454518ab89b8e32bad5",
       "path": "lib/new_you/communications/message_intent.ex",
-      "sha256": "c33a851b9ac99cf0daa5fda0fe6f8f0e19c7f0cefe537a3566d1a462b76c4f53",
+      "sha256": "bf9a33cc1766fadd04d3170245419c677cdbb21458b94343033fd19f0181e9b9",
       "status": "modified"
+    },
+    {
+      "blob": "5b1ae9b13789df0d69e1ae9ea1260b42238c7928",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "28e11dd119e421c42d21e8bdaa826021149c3fee428fe3bd3fe6505c50560b7c",
+      "status": "added"
     },
     {
       "blob": "2f2c28d7e82e3cffd7c12979b9d6c86629ce054f",
@@ -305,14 +261,14 @@
       "status": "added"
     },
     {
-      "blob": "528782fae24567a149edfb9ddc4f4f2f7ed99ea7",
+      "blob": "a0d97946c34643c16468032bcbdb2755f8876342",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you/identity/recovery_case.ex",
-      "sha256": "af6abbabf3c1833842eb585f213a29f34ea4663b75916d015fe8b531e93b6efc",
+      "sha256": "ed53e361d8e05d6df22e50f28b2f134742a27681487b9b182e2ce39eadfdfb66",
       "status": "added"
     },
     {
@@ -338,14 +294,36 @@
       "status": "modified"
     },
     {
-      "blob": "f9230f5d4a77c207f62a6d994fa05efb8717025f",
+      "blob": "e026964b3048a7a788ac83af76095eff7198d0f5",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
-      "sha256": "495c39f9f4b9126b4ed4af332f798a4801b1920c68b416b95fc9fd6347bad7c3",
+      "sha256": "d201f991d3837aecd2248751bddbc6b8fe1c324eeb5aec4e3276e63d61042c78",
+      "status": "added"
+    },
+    {
+      "blob": "80f36214ca492853302e6381140717f6201277f3",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/controllers/recovery_html.ex",
+      "sha256": "5adce4b7f49ebb9f620e52388e6b7a40afd02eda3fce0a205e850e905e8660b5",
+      "status": "added"
+    },
+    {
+      "blob": "cbdb4929210d425674168025ef9308d377c8a0c7",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/controllers/recovery_html/journey.html.heex",
+      "sha256": "131b3844c5f202d1093117e981fb73256137137e9242ecf46b6de0515e1873ee",
       "status": "added"
     },
     {
@@ -360,25 +338,36 @@
       "status": "modified"
     },
     {
-      "blob": "47c28fee1e4d5cc987d2501e78197fdf22230359",
+      "blob": "1fc6ac2db7f37d47452f1456d87a9f78243637c4",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/recovery_copy.ex",
+      "sha256": "2c72568dbe7dbc36e2e26683d79595a26994a5b0891a488b68ebc6cd8e9a2cca",
+      "status": "added"
+    },
+    {
+      "blob": "e10a1e3d017fc985f7b57151686796a74c2d2ad0",
       "mode": "100644",
       "old_blob": "faf36e5fa3a071bccd1caf046cdd343fd483615e",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/registration_boundary.ex",
       "old_sha256": "5e7fed67772d74c7f5f4aebd4e0ce8391a1a0a8491786b6b2310b71623d42c44",
       "path": "lib/new_you_web/registration_boundary.ex",
-      "sha256": "85b2b2832cf119fc78d1fa7ea92275696df4280ec902aa7ca985ebf8981caaf4",
+      "sha256": "eb77df82f63dbbe9570e17aee0ac2391e3568411c464aeffb2702cb93d17764d",
       "status": "modified"
     },
     {
-      "blob": "beb8971b8abc5f706e7968455f369447e5ac4afd",
+      "blob": "1092165fd579b5b45c03e08fb480fdb3b59f4ab6",
       "mode": "100644",
       "old_blob": "edcf9037a69506eb8d6e100e1b0df16d7c1d5669",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/router.ex",
       "old_sha256": "bb93b57ae3b8c6ecc41c5a3e21d70f551b6ae3c4bdd09e7c54bac79566cc2af1",
       "path": "lib/new_you_web/router.ex",
-      "sha256": "d87d70a0e57592d96af12412d0250681b44d9e0e02ff3e4c988edec8704fbbe8",
+      "sha256": "401205849f7fbf7ec560bf25de1c0e312641bfdf2e1a0fcabe8c8ab06c141665",
       "status": "modified"
     },
     {
@@ -492,6 +481,28 @@
       "status": "added"
     },
     {
+      "blob": "b1d0b8af77114a5f0139b86cd6ec649328600875",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261112181942_recovery_content_binding.exs",
+      "sha256": "5c8a8d279e2715c9b871dee2827282e795c017f069b633276cedda9a274eee57",
+      "status": "added"
+    },
+    {
+      "blob": "b85938864fe8bf9b4c892b92c70a16e8f43f7123",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261112182053_recovery_terminal_metadata.exs",
+      "sha256": "0684338ebe45a9aa6373db319a6a61ab753d01fbe6186ce9f1620e7c2595d42c",
+      "status": "added"
+    },
+    {
       "blob": "46f97ed1aaa0f629593033e793e7fcf1a3ec37d3",
       "mode": "100644",
       "old_blob": null,
@@ -580,6 +591,17 @@
       "status": "added"
     },
     {
+      "blob": "48e7182638e8aab124c2fcc468cd63f58563c21a",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "priv/resource_snapshots/repo/message_intents/20261112181943.json",
+      "sha256": "1dc2e8fd81151c780b39c34d4d73fb4fc0f7b9254209e4fe8bc4bac7107a83cf",
+      "status": "added"
+    },
+    {
       "blob": "14a3e2e3ade5c48256fe0aa3603eb56ddbeed656",
       "mode": "100644",
       "old_blob": null,
@@ -610,6 +632,17 @@
       "old_sha256": null,
       "path": "priv/resource_snapshots/repo/recovery_cases/20261110160038.json",
       "sha256": "48c6a2e1189d086e2dbd2770d1d17ddcf42dc1fd26108df88c53d0802d160387",
+      "status": "added"
+    },
+    {
+      "blob": "8e5b888d44cfdfef9f2a3d8869d47ad7c5e6d259",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "priv/resource_snapshots/repo/recovery_cases/20261112182054.json",
+      "sha256": "fbc30ec637739dc44573bd243f1b51639b4cda115795381c3e5a2ce223432ba9",
       "status": "added"
     },
     {
@@ -657,25 +690,47 @@
       "status": "added"
     },
     {
-      "blob": "c2e8598694496d96644ca45524b0e987cba86bc0",
+      "blob": "711e0943f0dd50326ae2097f48d7249b63af7302",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/communications/recovery_delivery_preparation_test.exs",
-      "sha256": "b17b2ff3db48937c73a43fc1121a213e354ec3e6c297fde7b2af14ca0b2b8d44",
+      "sha256": "e00d6e2a92781bba4374126ec6c82aadf5b6237e7f48d1ac029855427b7b0059",
       "status": "added"
     },
     {
-      "blob": "9119949a5e876f4453fd8fab70c1b4acd4d3a171",
+      "blob": "1ea4f70c34b1992b8e423eae86323931d1db79f6",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/new_you/communications/recovery_delivery_test.exs",
+      "sha256": "48f88e0ce25b0ab473a7c72b45b22926954b4838c9bbbc1fb325c723e0355341",
+      "status": "added"
+    },
+    {
+      "blob": "70d2fc0c67ecd890f7f1c86dc3ab44372808c7e9",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/communications/recovery_obligation_test.exs",
-      "sha256": "b4806a7163e1de0c6ba85557dab65b98ec0c3f196a2453495b76d6de99a0fbe3",
+      "sha256": "bcf7361bd3686c77d45d9d31acfc688d0edad504a6cd2fa583f3b065ad3525a8",
+      "status": "added"
+    },
+    {
+      "blob": "d02177b47221562eecb6a69714fa1ee0aafb8196",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/new_you/content/recovery_message_test.exs",
+      "sha256": "e77e3eae26a18de29ad8b11302041234f95d6bd33f4c6b1c34e983c8a47ab9ee",
       "status": "added"
     },
     {
@@ -712,14 +767,14 @@
       "status": "added"
     },
     {
-      "blob": "46b6c46a3770fc65edb10ffb012637b9822b4772",
+      "blob": "11333ef4765c4767f0a26a1a489f6fa8092ddcf6",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/identity/recovery_test.exs",
-      "sha256": "91dd7839fefd031a593e7a6f8269788b0a86f55c0ec0367c2077da1f8d9dcf50",
+      "sha256": "4d7a85fc5f8d9347f39e2ee9270667705dfb560ca07a1d9839509dd6105bb65d",
       "status": "added"
     },
     {
@@ -745,14 +800,14 @@
       "status": "modified"
     },
     {
-      "blob": "ef07837e1aeb9b1cb51416362079a33b07e6a56e",
+      "blob": "2bba58633a188b1b24c24fb4d4add1044befe61e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/controllers/recovery_controller_test.exs",
-      "sha256": "1d88ca9c641ee56785391813015430021d486a46942611321d0123f317185e61",
+      "sha256": "88e9e3d2b93cfc8573372c4a04fdcf22725c46e0e3f5bfffad904fbe55afd16a",
       "status": "added"
     },
     {
@@ -767,14 +822,14 @@
       "status": "modified"
     },
     {
-      "blob": "09d87322797a0619354d172d6c7527351c8e846c",
+      "blob": "f4095b55402a2ab232b4c4b071960d3183e3f4b6",
       "mode": "100644",
       "old_blob": "75d93e1d0e9cf7a405121fcd629a4319f648a4b6",
       "old_mode": "100644",
       "old_path": "test/new_you_web/security/authentication_reachability_test.exs",
       "old_sha256": "04816b578e60ebfe2c80dd23dd10d534af0b511277fe47d3274428bc22c96828",
       "path": "test/new_you_web/security/authentication_reachability_test.exs",
-      "sha256": "34a1cfbc83e4ecec143615045d4a4f5d34096b0340ca17c2184131cd5a59dad6",
+      "sha256": "00fd49c71636d9d35b226787d35a4ac92138fb47373da7892bb11958e5132aff",
       "status": "modified"
     },
     {
@@ -828,8 +883,8 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "Recreate the existing WELL-16 graduated recovery pull request under JC-Agents, retaining every original implementation commit and source change. This replaces [PR #217](https://github.com/Carpe-Diem-Media/NewYou/pull/217), originally authored by JCSchoeman96. It changes PR ownership only; it grants no recovery, delivery, review or merge approval.",
-    "title": "WELL-16: add durable graduated recovery lifecycle",
+    "summary": "Implements WELL-16's bounded Phase-8 graduated recovery through the existing Identity, Communications, Content and Audit owners. Verified-email recovery uses an expiring single-use proof, explicit confirmation and guarded password replacement. Stronger proof-backed recovery retains current scoped step-up, independent second-person approval, E1 and independent Account hold release.\n\nThe implementation is continued from PR #217 without rewriting its 23 implementation commits. Unsupported zero-factor completion remains denied under the approved bounded Phase-8 acceptance. No production, public release, real-participant delivery or Phase-9 permission is included.",
+    "title": "WELL-16: complete bounded graduated recovery and delivery",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/228"
   },
   "migrations": [
@@ -841,10 +896,12 @@
     "priv/repo/migrations/20261110162802_recovery_approval_admission.exs",
     "priv/repo/migrations/20261110163533_recovery_hold_evidence.exs",
     "priv/repo/migrations/20261110163700_recovery_hold_causation.exs",
-    "priv/repo/migrations/20261110172234_scope_recovery_assurance.exs"
+    "priv/repo/migrations/20261110172234_scope_recovery_assurance.exs",
+    "priv/repo/migrations/20261112181942_recovery_content_binding.exs",
+    "priv/repo/migrations/20261112182053_recovery_terminal_metadata.exs"
   ],
   "plane": {
-    "checked_at": "2026-11-12T16:07:00.022Z",
+    "checked_at": "2026-11-12T18:40:14.993758Z",
     "items": [
       {
         "description_sha256": "b4f8ed88a9c790e3729e9fd58d908731154519ea3ececd06e5e1a571f12a1123",
@@ -853,7 +910,7 @@
         "name": "FP-001 P8 15 \u2014 Recovery: durable graduated recovery through real Domain boundaries",
         "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
         "sequence_id": 16,
-        "state": "Blocked"
+        "state": "In Progress"
       }
     ],
     "source": "connected-plane",
@@ -861,7 +918,7 @@
   },
   "pr": 228,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/228",
-  "range_base_sha": "a3d7e2e2ac11c3b7ecdd6610e40e1328c226b216",
+  "range_base_sha": "c7f538251c1c703feb957eabc51bc56fe5f4872d",
   "schema_version": 1,
   "symbols": [
     {
@@ -1096,7 +1153,7 @@
       "name": null,
       "old_sha256": "d974745cdd6ea34643ec66eecddcb828f37c371f34a3352cfebedb2dce756a1b",
       "path": "lib/new_you/communications.ex",
-      "sha256": "07d4389096b855600769c294c4b5c04a868c19c0aee977c111d95b92e958cc3e",
+      "sha256": "85f3764ce32ad1b358c1b55842495e700b565604b74748df059e135f271c3b9d",
       "status": "parsed"
     },
     {
@@ -1108,7 +1165,7 @@
       "name": "create_recovery_intent",
       "old_sha256": null,
       "path": "lib/new_you/communications.ex",
-      "sha256": "7a36de948b824343feabdf6e36320db43805acc98a7266a862911e4ff9e7ee5f",
+      "sha256": "17cdb41d9b5b601d3624bb3f608b831462f4bb07a9c6de899432c046aa04a9ca",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1152,6 +1209,45 @@
       "visibility": "public"
     },
     {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications",
+      "name": "recovery_content",
+      "old_sha256": null,
+      "path": "lib/new_you/communications.ex",
+      "sha256": "970610cdbc34de59771696973ac10762260c04ac97e110c49aaec61cfb979af1",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Communications",
+      "name": "recovery_render_digest",
+      "old_sha256": null,
+      "path": "lib/new_you/communications.ex",
+      "sha256": "65972b6b9be7605536a3747a1c3523ad7d955d9df7e040c775b19b53ae6d6e15",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications",
+      "name": "recovery_support_contact",
+      "old_sha256": null,
+      "path": "lib/new_you/communications.ex",
+      "sha256": "ec00a4d2430f2523ebdc6f0b09bbf3f776dcc469c228c0fabc8a9f8072801fb4",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
       "arity": null,
       "change": "unknown",
       "kind": "unknown",
@@ -1169,8 +1265,47 @@
       "name": null,
       "old_sha256": "258bdc19fd8a78cfe96897ab57afeb9845319954ce0a0a9e3841d04d497525d0",
       "path": "lib/new_you/communications/executor.ex",
-      "sha256": "94bf89b6945364951addf901be7a9c4e27d4fededbdf52245f0dbad832651e73",
+      "sha256": "cb839ae30edcde1b34165956d6e4fc246859d7e877dedc55fb4f340bbd8ac936",
       "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications.Executor",
+      "name": "delivery_payload",
+      "old_sha256": "9f8493c0c460d9ba6d679be8a1884ed34cb14a1a69d64e7abc1363372fa24064",
+      "path": "lib/new_you/communications/executor.ex",
+      "sha256": "0f3ac1201a637314212dcbf8c44b6fce58ef94fd9f6d58ee94d19b04a1d52152",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications.Executor",
+      "name": "recovery_payload",
+      "old_sha256": null,
+      "path": "lib/new_you/communications/executor.ex",
+      "sha256": "44d7974df14d29a8260fbb8a6e91f99c84f188f1a5ff5f05377102aa2597cc29",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications.Executor",
+      "name": "recovery_replacement",
+      "old_sha256": null,
+      "path": "lib/new_you/communications/executor.ex",
+      "sha256": "572b23923a0ef5b8fca5189c9a66214300eaa2d0379f7cb578216988a66076b6",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": 1,
@@ -1181,7 +1316,20 @@
       "name": "source_eligibility",
       "old_sha256": "2b35166433b8ee65ea057a709c763c1cf5c5e3a89830d536aa06000fb463dbf9",
       "path": "lib/new_you/communications/executor.ex",
-      "sha256": "82e0b470b0ec6e5f8fe10c8599dc27102269f9484a1509185915cd42ae326255",
+      "sha256": "18f2caf253e82bb6a03eddfba6395ad6f0d987de9364bdde419579e027e6eaa0",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications.Executor",
+      "name": "valid_recovery_render?",
+      "old_sha256": null,
+      "path": "lib/new_you/communications/executor.ex",
+      "sha256": "7728c9c8c65e2f26da966a129032fd16a28fd4d460ae4c6e5873fab0293d69f1",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1203,7 +1351,7 @@
       "name": null,
       "old_sha256": "4fc6249c3aabd71447381f63aed77d53a0a065de71ee7eb36031093d5f5a638d",
       "path": "lib/new_you/communications/message_intent.ex",
-      "sha256": "3ce1f8b1fd09512a8b18d1f8b2720e4176b836cb8d506c741fd9f090c69e4b41",
+      "sha256": "a978f8a71ba70c969d8569617ebd69b58329938587132bf1dc662a3d4b801734",
       "status": "parsed"
     },
     {
@@ -1213,6 +1361,248 @@
       "module": null,
       "name": null,
       "path": "lib/new_you/communications/message_intent.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": null,
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "0d04826c50fe0f31542e30c44965e1282646b52e99bf49ed894e79cd34826f79",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "binding",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "4c3d1b58b72298ba5ee04fb6d046c8f1e5ec440ac01f3800232bfb69a393f272",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "current_authority?",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "8390ffebc0ed09ea05d09d7ee62c88f543eed40f0dd3fa8742e71708d8661278",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "dependencies_match?",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "76ab4b4155edaaabe832698fe003f7e4dce3427d4d897b28dda8b279e6fa833e",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "digest",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "22a31e44ebf072e1bc0910960a8089f2cc20d7d72e50acdcb63856f5c4cff032",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "eligible",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "abc74f0a3de4c1b964c8fa940bb7b77f7208ba0bf2f105ab7cd57c6b74447ad3",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "evidence",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "e32da467fc5791821b1d3051f0da29f1e93e5c8bca661154ad36e9984d4f0837",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "evidence_root",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "40884cc05f8e60fd3936abac84ea56ec7dfbbdbc1539f6ad5719651cd92e3b62",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "fields",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "651f6d0e5ab5e376e01891fd92a163b99192bea0cf929e3dd972a623bae29277",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "file_matches?",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "b30ed1899bbb653170488a58c1cf4c12da4504093b869527ba3ea5c951b399d7",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "ineligible",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "8449264d7ca5e26f4d2026a388991a88176a242aec37963f32bd08fe496bdbd3",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "message",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "bbac2fbe001c3d40fc6117a02f29f9b1d9f6e9f1d3169595704c1477de7048b6",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "read_file",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "1fd825efed618c6bb4f58fa1e54ece5e7c0a0358d0457db0171dadaefb21e749",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "read_json",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "e63805249923f4dd4cee5d05f72e8153bb2a400da3891ce09258b22b05abb56c",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "regular_segments?",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "b3ac76bb008b45ea548024f134e984999bee15378ea7983a604fcc39a14ad637",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "routed_packet?",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "4fe9e57289c6a0b810b834200187ae88f4513a39c36b739b6882ccf6b7fdcf3a",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "support_contact",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "d684249e39e8285f398affdbe2739d54799af3ec7f87a3be108e75d9065115ea",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "versions",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "fc645f21b05121c91a30f74012ed4d2ebe2b90581a17596a2299c0fde00f1fc2",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/content/recovery_message.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -2520,7 +2910,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you/identity/recovery_case.ex",
-      "sha256": "e09fdec6ade1ab100e8fedabc6c0090a6c9ba099c4d8a6f660dba652980eef2d",
+      "sha256": "f1304c268c2e596831104ea10c7fb7612253ec7cee01f8bfc781fbaa7a0e6e45",
       "status": "parsed"
     },
     {
@@ -2583,7 +2973,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
-      "sha256": "097553eaa80ea6a10f2a1a4ffdbcd142993f50ad25927aa85df66d6a37be15df",
+      "sha256": "32966c9e411814d6e5e02373df4fe76e5ace4a784ed8534833766540adbd1e3a",
       "status": "parsed"
     },
     {
@@ -2608,7 +2998,7 @@
       "name": "complete",
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
-      "sha256": "526e643d829259cb36b12c1442b6c3078a748c6ec546d3ef8619118fbde4a8e8",
+      "sha256": "a7ad7de74ad77610c87795b35539ab54b2eea81ef312f3af9cc726f4fa0ead75",
       "status": "parsed",
       "visibility": "public"
     },
@@ -2621,7 +3011,7 @@
       "name": "confirm",
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
-      "sha256": "61c0c6934a20378b3c49819561a2aaf6e7a2f21aa3ff90b2b83aff4c168160e9",
+      "sha256": "20721ff2e74c951e5ba75d006aff91da5e460003ba4ce6b8edb61bd98b53d91e",
       "status": "parsed",
       "visibility": "public"
     },
@@ -2634,7 +3024,7 @@
       "name": "headers",
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
-      "sha256": "8b41feebe52254c61c68772f3b0c6e1eb58e93c4962fddedb7ba0e2ac8c77152",
+      "sha256": "08aa09c7fb73b51787e127aa314ae7853afcd942bff9ad4d37674d5cd7d07262",
       "status": "parsed",
       "visibility": "private"
     },
@@ -2657,10 +3047,49 @@
       "declaration": "def",
       "kind": "function",
       "module": "NewYouWeb.RecoveryController",
+      "name": "new",
+      "old_sha256": null,
+      "path": "lib/new_you_web/controllers/recovery_controller.ex",
+      "sha256": "8be02e820c73abb3fcb2864afd80db2d72a9b0ebbd28e3ffe9a6cc5644dad1f9",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.RecoveryController",
+      "name": "page",
+      "old_sha256": null,
+      "path": "lib/new_you_web/controllers/recovery_controller.ex",
+      "sha256": "c612e911d3dace074b3e507b03165e59785116ae9231d0205c0f17779746704d",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 4,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.RecoveryController",
+      "name": "page",
+      "old_sha256": null,
+      "path": "lib/new_you_web/controllers/recovery_controller.ex",
+      "sha256": "c612e911d3dace074b3e507b03165e59785116ae9231d0205c0f17779746704d",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.RecoveryController",
       "name": "request",
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
-      "sha256": "e43c9382c6bf5c9c7a55dea044d8b9b8d8898ec916e79db0c3717d8473bdf09a",
+      "sha256": "064e362ccc4b8d9af95581752693ff884ab2e3308af2b83ae1c24c39f9fcfefe",
       "status": "parsed",
       "visibility": "public"
     },
@@ -2678,6 +3107,32 @@
       "visibility": "private"
     },
     {
+      "arity": 4,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.RecoveryController",
+      "name": "result",
+      "old_sha256": null,
+      "path": "lib/new_you_web/controllers/recovery_controller.ex",
+      "sha256": "569f9b44347a6d8b6eb2395434e5081e7283a599f3977188834fe25048b8851a",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.RecoveryController",
+      "name": "safe_proof",
+      "old_sha256": null,
+      "path": "lib/new_you_web/controllers/recovery_controller.ex",
+      "sha256": "2d8a30e314d51474ea5abfe2b4d12754ba0cd9830a5cb84ef516d144ac8d3c18",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
       "arity": 2,
       "change": "added",
       "declaration": "def",
@@ -2686,7 +3141,7 @@
       "name": "show",
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
-      "sha256": "4ba0db4d0e1174c00c1cd743f3ededa2094689952462498122db0f4003ea8f82",
+      "sha256": "fd079e9c926c68d6c80959a6828510cea55b2c6b4724ad7266840890665ced62",
       "status": "parsed",
       "visibility": "public"
     },
@@ -2697,6 +3152,27 @@
       "module": null,
       "name": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYouWeb.RecoveryHTML",
+      "name": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/controllers/recovery_html.ex",
+      "sha256": "4bb6ec0939111d8f4f01ed55d84b5045b9a5125fd4e16b79c80ba81aa2c9b85c",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/controllers/recovery_html.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -2723,13 +3199,47 @@
     },
     {
       "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYouWeb.RecoveryCopy",
+      "name": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/recovery_copy.ex",
+      "sha256": "13f1290ea7329e8357adddf8b11b1be7bfe543c18c727b66284eea4e2ddc5dab",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.RecoveryCopy",
+      "name": "text!",
+      "old_sha256": null,
+      "path": "lib/new_you_web/recovery_copy.ex",
+      "sha256": "c3d054991e3057dd4c4316c33117e1b5d055579f6f859750626b53391fc8313d",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/recovery_copy.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
       "change": "changed",
       "kind": "module",
       "module": "NewYouWeb.RegistrationBoundary",
       "name": null,
       "old_sha256": "69c173c47a7ad7b616cb9e6a429d299aaedb8ef5df9be14b1b9689d773ddb3e8",
       "path": "lib/new_you_web/registration_boundary.ex",
-      "sha256": "cd90b027721f0bd2200b0793bb357229756706e62e4883e0f92b006aab45f4a1",
+      "sha256": "54ec248fe86894ef87268aab89e0167224063bafa441e71f9c2f1c8073e195c1",
       "status": "parsed"
     },
     {
@@ -2741,7 +3251,7 @@
       "name": "call",
       "old_sha256": "eac294d2cb3286a4478b7a2da8dacd31604ae89c47533ce403072540cfb3ae67",
       "path": "lib/new_you_web/registration_boundary.ex",
-      "sha256": "4422c3eefe3d342ce49fc55c3f27f2477bd45b9a9eb1442d278fe149223c791d",
+      "sha256": "5f3b69aa3fa8b90c18aea45837382f9201b120c8fc6a2ce2ad06e79e9c484695",
       "status": "parsed",
       "visibility": "public"
     },
@@ -2776,7 +3286,7 @@
       "name": null,
       "old_sha256": "37b239bbd06418a987f709f2676a9daeec0ef17d38850126aed786cad8cc1de2",
       "path": "lib/new_you_web/router.ex",
-      "sha256": "6d55c6521e422a34560a4f7a241e71f0acab34a8edaf8d46c6bf92d3bdcaa830",
+      "sha256": "0ee1d2eb85c8a104ed638e0d50bd8e4f4a36c68fa50ff0df72812953514cdb53",
       "status": "parsed"
     },
     {
@@ -3250,6 +3760,100 @@
       "arity": null,
       "change": "added",
       "kind": "module",
+      "module": "NewYou.Repo.Migrations.RecoveryContentBinding",
+      "name": null,
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261112181942_recovery_content_binding.exs",
+      "sha256": "c964f69c4c6ed5748d5a9d13270efea89284c985a178542a4cdf61b73450c656",
+      "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Repo.Migrations.RecoveryContentBinding",
+      "name": "down",
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261112181942_recovery_content_binding.exs",
+      "sha256": "e4b5949771b39d592710b87b3e82aa23a9fd39a56ad4e04e1e631183ccd093a3",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Repo.Migrations.RecoveryContentBinding",
+      "name": "up",
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261112181942_recovery_content_binding.exs",
+      "sha256": "94dc3e1b86e954d1a261d4d72a4ce6b751b07a29e731baafeeabea2eeece12eb",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "priv/repo/migrations/20261112181942_recovery_content_binding.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYou.Repo.Migrations.RecoveryTerminalMetadata",
+      "name": null,
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261112182053_recovery_terminal_metadata.exs",
+      "sha256": "804b3b4ea3d251692ab97178cc3be6ed2815e127f8fc69c655c0cdc95dab67cb",
+      "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Repo.Migrations.RecoveryTerminalMetadata",
+      "name": "down",
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261112182053_recovery_terminal_metadata.exs",
+      "sha256": "9d0530d36b6a15fc27d2dea98b926eecd707ae9b5d77b7ac5e6932a9ca927ccd",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Repo.Migrations.RecoveryTerminalMetadata",
+      "name": "up",
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261112182053_recovery_terminal_metadata.exs",
+      "sha256": "982cce9ba222e19ed8a8b8f8895448e2f1678cf52077407816960a5f00af42dc",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "priv/repo/migrations/20261112182053_recovery_terminal_metadata.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
       "module": "NewYou.Audit.RecoveryEvidenceTest",
       "name": null,
       "old_sha256": null,
@@ -3288,7 +3892,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/communications/recovery_delivery_preparation_test.exs",
-      "sha256": "b82f1b33f809660adb94f27b957c9f8f94182760f1c8287a49669e2b1510089e",
+      "sha256": "4c42430f10c5e35807cca56ebd8a4e40ab7182feac2bd6c65755743794400a37",
       "status": "parsed"
     },
     {
@@ -3300,7 +3904,7 @@
       "name": "assert_held",
       "old_sha256": null,
       "path": "test/new_you/communications/recovery_delivery_preparation_test.exs",
-      "sha256": "e297f37c4bdcc64c1c0d30b3be57e9eb0d423d791415a61f9aa891727805dcd7",
+      "sha256": "3193dce4a167f976644363f299c0c1dfdcf18e403f9c9e3222be0ed8185c6707",
       "status": "parsed",
       "visibility": "private"
     },
@@ -3409,11 +4013,97 @@
       "arity": null,
       "change": "added",
       "kind": "module",
+      "module": "NewYou.Communications.RecoveryDeliveryTest",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/new_you/communications/recovery_delivery_test.exs",
+      "sha256": "96b971aa80ac799af9fb85b6b34451691b8c5ce874f151cb0a788febc5275bb8",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications.RecoveryDeliveryTest",
+      "name": "attempts",
+      "old_sha256": null,
+      "path": "test/new_you/communications/recovery_delivery_test.exs",
+      "sha256": "185b3b7034ec3be180e3bba0e22810b7152e5502b0cf169270de33153d049c97",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications.RecoveryDeliveryTest",
+      "name": "deliver",
+      "old_sha256": null,
+      "path": "test/new_you/communications/recovery_delivery_test.exs",
+      "sha256": "a737b17b0a54d1b535e65ec5b3c6f59bff4d26eae70ec33903f370d88f7b80ce",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications.RecoveryDeliveryTest",
+      "name": "intent",
+      "old_sha256": null,
+      "path": "test/new_you/communications/recovery_delivery_test.exs",
+      "sha256": "61fe4286804e9a1f9519f88f8959dff30763f85654cb00bf4b78b0f51ae22036",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications.RecoveryDeliveryTest",
+      "name": "operation",
+      "old_sha256": null,
+      "path": "test/new_you/communications/recovery_delivery_test.exs",
+      "sha256": "96ff7232b6641cfb64bd611cfd8b71fecb405163bdb8556ad9d8a6257c084310",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Communications.RecoveryDeliveryTest",
+      "name": "pending",
+      "old_sha256": null,
+      "path": "test/new_you/communications/recovery_delivery_test.exs",
+      "sha256": "84a926252c1a0bed0bd6372024b2b5ad38928c187b6b7b396b3fab7aef1d61ee",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/communications/recovery_delivery_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
       "module": "NewYou.Communications.RecoveryObligationTest",
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/communications/recovery_obligation_test.exs",
-      "sha256": "41a1d002d97770df1ecbc6d9b1f6fbff885879dabdb3e50bb35e818adab28fad",
+      "sha256": "0c7be5562e6155d7197821f484d7df9759828cd50ed572f4c0bff1fc6db7bfe6",
       "status": "parsed"
     },
     {
@@ -3436,6 +4126,27 @@
       "module": null,
       "name": null,
       "path": "test/new_you/communications/recovery_obligation_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYou.Content.RecoveryMessageTest",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/new_you/content/recovery_message_test.exs",
+      "sha256": "cf1e2264f0e69b564e2802a3709b1d6530c8538c8648074628e00a4ab7877973",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/content/recovery_message_test.exs",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -3601,7 +4312,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/identity/recovery_test.exs",
-      "sha256": "75b6f9d890fbb14ecbf562e5ae43e4ce06a7c888a06f0e780571ff2b1be177d8",
+      "sha256": "e5140b724e1adb33744a479c6c6d70315d6263e6b200dfd41bd08f1eb6424784",
       "status": "parsed"
     },
     {
@@ -3755,7 +4466,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/controllers/recovery_controller_test.exs",
-      "sha256": "8f1eccd3070051afafd420211dc8f706cbde7862b9ed3ebddda39c16d94cf37a",
+      "sha256": "9afed5d6cd8c825036a9ca4460d0aac14a3ead0a48f614d00767fccefda3efc8",
       "status": "parsed"
     },
     {
@@ -3768,6 +4479,19 @@
       "old_sha256": null,
       "path": "test/new_you_web/controllers/recovery_controller_test.exs",
       "sha256": "c19674e03c95f33a013686d93192e91abcf11b149eea88ff69711cf281535317",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.RecoveryControllerTest",
+      "name": "field",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/recovery_controller_test.exs",
+      "sha256": "50eff20f0827deb84e9a9e057525e8d4053187ff2c61f437f6005649024e5559",
       "status": "parsed",
       "visibility": "private"
     },
@@ -3862,7 +4586,7 @@
       "name": null,
       "old_sha256": "b097988c7283f41604f16d86d81008cb1f0e7f9cd82784c2f1097e28af948b3a",
       "path": "test/new_you_web/security/authentication_reachability_test.exs",
-      "sha256": "563881c8d88953b70610021bfcf78edacffd166f1fad3c2fc96bd4b68df7b9cf",
+      "sha256": "3decf15cd11e04ba6ee65275b5c0c9af887ca557762f7e2659e64f6228ee4d51",
       "status": "parsed"
     },
     {
@@ -4493,7 +5217,9 @@
   "tests": [
     "test/new_you/audit/recovery_evidence_test.exs",
     "test/new_you/communications/recovery_delivery_preparation_test.exs",
+    "test/new_you/communications/recovery_delivery_test.exs",
     "test/new_you/communications/recovery_obligation_test.exs",
+    "test/new_you/content/recovery_message_test.exs",
     "test/new_you/identity/magic_login_lifecycle_test.exs",
     "test/new_you/identity/manual_recovery_test.exs",
     "test/new_you/identity/recovery_concurrency_test.exs",
