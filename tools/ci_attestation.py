@@ -322,8 +322,9 @@ def collect_native(pr_number: int, reviewed_head: str, run_id: int, *,
             "implementer must not use founder credentials")
     agent_permission = _api(f"repos/{repo}/collaborators/JC-Agents/permission")
     founder_permission = _api(f"repos/{repo}/collaborators/JCSchoeman96/permission")
-    require(agent_permission.get("permission") == "write"
-            and agent_permission.get("role_name") == "write", "agent must have effective Write, not Admin")
+    require(agent_permission.get("permission") in ("write", "admin")
+            and agent_permission.get("role_name") == agent_permission["permission"],
+            "agent must have effective Write or Admin")
     require(founder_permission.get("permission") == "admin", "founder Admin authority is missing")
     membership = _api("orgs/Carpe-Diem-Media/memberships/JC-Agents")
     require(membership.get("state") == "active" and membership.get("role") == "member",

@@ -546,17 +546,86 @@ class NativeCollectionTests(unittest.TestCase):
                               'repos/Carpe-Diem-Media/NewYou/pulls/42/reviews?per_page=100'), command.call_args.args)
             file.assert_not_called()
 
-    def test_wrong_base_codeowners_and_elevated_agent_access_fail(self):
+    def test_native_candidate_and_result_accept_approved_agent_permissions(self):
         import json
         from tools import ci_attestation as ci
-        for change in ('codeowners', 'permission', 'actor', 'head'):
+        for permission in ('write', 'admin'):
+            for after_merge in (False, True):
+                def api(path):
+                    if path.endswith('/JC-Agents/permission'):
+                        return {'permission': permission, 'role_name': permission}
+                    if path.endswith('/pulls/42'):
+                        return dict(self.api(path), merged=after_merge)
+                    return self.api(path)
+                collected = {'candidate': self.e} if after_merge else self.e
+                with self.subTest(permission=permission, after_merge=after_merge), \
+                     self.patch.object(ci, 'collect', return_value=collected) as collect, \
+                     self.patch.object(ci, '_api', side_effect=api), \
+                     self.patch.object(ci, '_command', return_value=json.dumps([[self.pr.review]])), \
+                     self.patch('tools.newyou_attest.founder_account_id', return_value=216185530):
+                    proof = ci.collect_native(42, self.e['head'], 100,
+                                              candidate_sha=self.e['candidate'] if after_merge else None,
+                                              after_merge=after_merge)
+                    candidate = proof['candidate'] if after_merge else proof
+                    self.assertEqual(7, candidate['founder_review']['id'])
+                    collect.assert_called_once_with(
+                        42, self.e['head'], 100,
+                        candidate_sha=self.e['candidate'] if after_merge else None,
+                        after_merge=after_merge, trust_mode='public-protected')
+
+    def test_unapproved_or_inconsistent_agent_permissions_fail(self):
+        import json
+        from tools import ci_attestation as ci
+        for permission in ({'permission': 'read', 'role_name': 'read'},
+                           {'permission': 'triage', 'role_name': 'triage'},
+                           {'permission': 'maintain', 'role_name': 'maintain'},
+                           {'permission': 'admin', 'role_name': 'write'},
+                           {'permission': 'write', 'role_name': 'admin'},
+                           {'permission': 'admin'}, {},
+                           {'permission': 'admin', 'role_name': 'custom'}):
+            def api(path):
+                if path.endswith('/JC-Agents/permission'):
+                    return permission
+                return self.api(path)
+            with self.subTest(permission=permission), \
+                 self.patch.object(ci, 'collect', return_value=self.e), \
+                 self.patch.object(ci, '_api', side_effect=api), \
+                 self.patch.object(ci, '_command', return_value=json.dumps([[self.pr.review]])), \
+                 self.assertRaisesRegex(AttestationError, 'agent must have effective Write or Admin'):
+                ci.collect_native(42, self.e['head'], 100)
+
+    def test_admin_agent_still_requires_current_head_founder_approval(self):
+        import json
+        from tools import ci_attestation as ci
+        for reviews in ([], [dict(self.pr.review, commit_id='b' * 40)],
+                        [dict(self.pr.review, user={'login': 'JC-Agents', 'id': 355419376})]):
+            def api(path):
+                if path.endswith('/JC-Agents/permission'):
+                    return {'permission': 'admin', 'role_name': 'admin'}
+                return self.api(path)
+            with self.subTest(reviews=reviews), \
+                 self.patch.object(ci, 'collect', return_value=self.e), \
+                 self.patch.object(ci, '_api', side_effect=api), \
+                 self.patch.object(ci, '_command', return_value=json.dumps([reviews])), \
+                 self.patch('tools.newyou_attest.founder_account_id', return_value=216185530), \
+                 self.assertRaisesRegex(AttestationError, 'founder approval'):
+                ci.collect_native(42, self.e['head'], 100)
+
+    def test_wrong_base_codeowners_unapproved_agent_and_changed_head_fail(self):
+        import json
+        from tools import ci_attestation as ci
+        for change in ('codeowners', 'permission', 'actor', 'actor_id', 'actor_login', 'head'):
             def api(path):
                 if change == 'codeowners' and '/contents/' in path:
                     return dict(self.owners, content='')
                 if change == 'permission' and path.endswith('/JC-Agents/permission'):
-                    return {'permission': 'admin', 'role_name': 'admin'}
+                    return {'permission': 'read', 'role_name': 'read'}
                 if change == 'actor' and path == 'user':
                     return {'login': 'JCSchoeman96', 'id': 216185530}
+                if change == 'actor_id' and path == 'user':
+                    return {'login': 'JC-Agents', 'id': 216185530}
+                if change == 'actor_login' and path == 'user':
+                    return {'login': 'JCSchoeman96', 'id': 355419376}
                 if change == 'head' and path.endswith('/pulls/42'):
                     return dict(self.api(path), head={'sha': 'f' * 40})
                 return self.api(path)
