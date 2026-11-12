@@ -1,0 +1,7 @@
+subject: Sekuriteitskennisgewing: Versoek om e-posadres te verander
+
+'n Versoek is ontvang om die primêre e-posadres van jou {{platform_name}}-rekening te verander.
+
+Hierdie is 'n sekuriteitskennisgewing en beteken nie dat jou rekening se e-posadres reeds verander is nie.
+
+As jy nie hierdie verandering aangevra het nie, kontak ons asseblief via {{support_contact}}.
