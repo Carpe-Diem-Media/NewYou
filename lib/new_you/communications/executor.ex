@@ -114,9 +114,28 @@ defmodule NewYou.Communications.Executor do
     end
   end
 
-  defp source_eligibility(%{role: role})
+  defp source_eligibility(%{role: role, content_item_id: nil})
        when role in [:account_recovery, :recovery_security_notice],
        do: {:error, :capability_unavailable}
+
+  defp source_eligibility(%{role: :account_recovery, source_purpose: "recovery"} = intent),
+    do:
+      NewYou.Identity.DeliveryEligibility.recovery(
+        intent.source_reference,
+        intent.destination,
+        intent.locale,
+        intent.source_operation_id
+      )
+
+  defp source_eligibility(
+         %{role: :recovery_security_notice, source_purpose: "recovery_completed"} = intent
+       ),
+       do:
+         NewYou.Identity.DeliveryEligibility.recovery_notice(
+           intent.source_reference,
+           intent.locale,
+           intent.source_operation_id
+         )
 
   defp source_eligibility(_), do: {:error, :source_invalid}
 
@@ -165,8 +184,65 @@ defmodule NewYou.Communications.Executor do
       {:account_verification, "email_verification"} -> verification_payload(intent)
       {:magic_login, "magic_login"} -> magic_login_payload(intent)
       {:password_reset, "password_reset"} -> password_reset_payload(intent)
+      {:account_recovery, "recovery"} -> recovery_payload(intent)
+      {:recovery_security_notice, "recovery_completed"} -> recovery_payload(intent)
       _ -> {:error, :source_invalid}
     end
+  end
+
+  defp recovery_payload(intent) do
+    with :ok <- source_eligibility(intent),
+         {:ok, bytes} <- NewYou.Content.RecoveryMessage.eligible(intent),
+         true <- valid_recovery_render?(intent),
+         {:ok, replacement} <- recovery_replacement(intent),
+         true <- DeliveryProvider.available?() do
+      token =
+        if intent.role == :account_recovery,
+          do: "{{account_recovery_link}}",
+          else: "{{support_contact}}"
+
+      body =
+        bytes
+        |> String.replace("{{platform_name}}", intent.platform_name)
+        |> String.replace(token, replacement)
+
+      {:ok, %NewYou.Communications.DeliveryPayload{destination: intent.destination, body: body}}
+    else
+      {:error, :source_invalid} -> {:error, :source_invalid}
+      _ -> {:error, :delivery_prerequisite_unavailable}
+    end
+  end
+
+  defp recovery_replacement(%{role: :account_recovery} = intent) do
+    with {:ok, bearer} <-
+           NewYou.Identity.recovery_delivery(
+             intent.source_reference,
+             intent.destination,
+             intent.locale
+           ) do
+      {:ok,
+       "https://proof.invalid/recovery/confirm?locale=" <>
+         intent.locale <> "&proof=" <> URI.encode_www_form(bearer)}
+    end
+  end
+
+  defp recovery_replacement(%{role: :recovery_security_notice} = intent) do
+    with {:ok, contact} <- NewYou.Content.RecoveryMessage.support_contact(),
+         true <- contact == intent.support_contact do
+      {:ok, contact}
+    else
+      _ -> {:error, :delivery_prerequisite_unavailable}
+    end
+  end
+
+  defp valid_recovery_render?(intent) do
+    intent.render_provenance == "application_platform_name" and
+      intent.render_digest ==
+        Communications.recovery_render_digest(
+          intent.render_schema,
+          intent.platform_name,
+          intent.support_contact
+        )
   end
 
   defp verification_payload(intent) do

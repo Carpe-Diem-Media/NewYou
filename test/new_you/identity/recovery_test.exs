@@ -5,6 +5,32 @@ defmodule NewYou.Identity.RecoveryTest do
   alias NewYou.Identity.{Account, Token}
   alias NewYou.Proof.P805
 
+  test "non-completed terminal cases cannot retain partial completion metadata" do
+    P805.with_fixture(fn ->
+      {request, registered} = account()
+      :ok = Identity.request_recovery(request.email, "af", operation())
+      {:ok, [recovery]} = cases(registered.account_id)
+
+      for partial <- [%{completed_at: DateTime.utc_now()}, %{completion_id: Ecto.UUID.generate()}] do
+        attrs =
+          Map.merge(partial, %{
+            terminated_at: DateTime.utc_now(),
+            history:
+              recovery.history ++ [%{"state" => "failed", "version" => recovery.version + 1}]
+          })
+
+        assert {:error, error} = Ash.update(recovery, attrs, action: :fail, authorize?: false)
+
+        assert Enum.any?(
+                 error.errors,
+                 &match?(%Ash.Error.Changes.InvalidAttribute{field: :state}, &1)
+               )
+
+        assert Ash.get!(NewYou.Identity.RecoveryCase, recovery.id, authorize?: false) == recovery
+      end
+    end)
+  end
+
   test "a verified-channel request creates durable case authority without consuming proof" do
     P805.with_fixture(fn ->
       {request, registered} = account()

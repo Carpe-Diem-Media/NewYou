@@ -206,17 +206,16 @@ defmodule NewYou.Communications do
     :translation_version_id,
     :content_sha256,
     :platform_name,
-    :render_digest,
-    :dispatch_disposition,
-    :terminal_reason
+    :support_contact,
+    :render_digest
   ]
 
-  @doc "Establish an immutable held obligation for an account recovery delivery."
+  @doc "Establish a durable recovery obligation, binding exact development content when eligible."
   @spec establish_recovery(map()) ::
           {:ok, MessageIntent.t()} | {:error, :recovery_obligation_unavailable}
   def establish_recovery(attrs), do: establish_recovery_intent(attrs, :establish_recovery)
 
-  @doc "Establish an immutable held security notice after account recovery."
+  @doc "Establish the distinct durable notice after recovery; missing content preserves a held obligation."
   @spec establish_recovery_notice(map()) ::
           {:ok, MessageIntent.t()} | {:error, :recovery_obligation_unavailable}
   def establish_recovery_notice(attrs),
@@ -262,19 +261,10 @@ defmodule NewYou.Communications do
   defp create_recovery_intent(source_params, role_binding, action) do
     expected =
       Map.merge(source_params, role_binding)
-      |> Map.merge(%{
-        content_item_id: nil,
-        content_version_id: nil,
-        translation_version_id: nil,
-        content_sha256: nil,
-        platform_name: nil,
-        render_digest: nil,
-        dispatch_disposition: :held,
-        terminal_reason: "content_ineligible"
-      })
+      |> Map.merge(recovery_content(role_binding, source_params.locale))
 
     with {:ok, intent} <-
-           Ash.create(MessageIntent, source_params,
+           Ash.create(MessageIntent, Map.drop(expected, [:role, :source_purpose, :render_schema]),
              action: action,
              domain: __MODULE__,
              authorize?: false,
@@ -288,6 +278,44 @@ defmodule NewYou.Communications do
     else
       _ -> {:error, :recovery_obligation_unavailable}
     end
+  end
+
+  defp recovery_content(role_binding, locale) do
+    with {:ok, content} <- NewYou.Content.RecoveryMessage.binding(role_binding.role, locale),
+         {:ok, support} <- recovery_support_contact(role_binding.role) do
+      platform = NewYou.platform_name()
+
+      Map.merge(content, %{
+        platform_name: platform,
+        support_contact: support,
+        render_digest: recovery_render_digest(role_binding.render_schema, platform, support),
+        terminal_reason: nil
+      })
+    else
+      _ ->
+        %{
+          content_item_id: nil,
+          content_version_id: nil,
+          translation_version_id: nil,
+          content_sha256: nil,
+          platform_name: nil,
+          support_contact: nil,
+          render_digest: nil,
+          terminal_reason: "content_ineligible"
+        }
+    end
+  end
+
+  defp recovery_support_contact(:recovery_security_notice),
+    do: NewYou.Content.RecoveryMessage.support_contact()
+
+  defp recovery_support_contact(:account_recovery), do: {:ok, nil}
+
+  @doc false
+  @spec recovery_render_digest(String.t(), String.t(), String.t() | nil) :: String.t()
+  def recovery_render_digest(schema, platform, support) do
+    :crypto.hash(:sha256, :erlang.term_to_binary({schema, platform, support}, [:deterministic]))
+    |> Base.encode16(case: :lower)
   end
 
   defp transact_password_reset(params) do

@@ -7,6 +7,11 @@ defmodule NewYou.Communications.RecoveryObligationTest do
 
   require Ash.Query
 
+  setup do
+    Process.put({NewYou.Content.RecoveryMessage, :evidence_root}, "/missing-recovery-content")
+    :ok
+  end
+
   test "recovery obligations are immutable, held and never sent without eligible content" do
     P805.with_fixture(fn ->
       request = P805.request(%{preferred_language: :en})

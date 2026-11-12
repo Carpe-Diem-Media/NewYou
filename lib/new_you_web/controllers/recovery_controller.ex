@@ -1,8 +1,9 @@
 defmodule NewYouWeb.RecoveryController do
   @moduledoc """
   Bounded development recovery transport. Responses contain no case, Account or
-  proof-validity information. Passive retrieval is an empty non-consuming response.
-  This adds no participant wording or delivery/content approval.
+  Account-existence information. Passive retrieval renders an explicit form and
+  never reads or consumes Identity authority. Content approval does not enable
+  an external sender or production routes.
   """
   use NewYouWeb, :controller
   alias NewYou.Identity
@@ -11,25 +12,35 @@ defmodule NewYouWeb.RecoveryController do
              Application.compile_env(:new_you, :verification_development_fixtures, false)
   plug :require_proof_environment
 
+  def new(conn, %{"locale" => locale}) when locale in ["en", "af"],
+    do: page(conn, :request, locale)
+
+  def new(conn, _params), do: neutral(conn)
+
+  def show(conn, %{"locale" => locale} = params) when locale in ["en", "af"],
+    do: page(conn, :confirmation, locale, proof: safe_proof(params["proof"]))
+
   def show(conn, _params), do: neutral(conn)
 
   def request(conn, params) do
     Identity.request_recovery(params["email"], params["locale"], params["operation_id"])
-    neutral(conn)
+    result(conn, params, :requested)
   end
 
   def confirm(conn, params) do
-    Identity.submit_recovery_proof(params["proof"], params["operation_id"])
-    neutral(conn)
+    case Identity.submit_recovery_proof(params["proof"], params["operation_id"]) do
+      {:ok, :accepted} -> result(conn, params, :credential, proof: safe_proof(params["proof"]))
+      _ -> result(conn, params, :unavailable)
+    end
   end
 
   def complete(conn, params) do
     case Identity.complete_recovery(params["proof"], params["password"], params["operation_id"]) do
       {:ok, outcome} when outcome in [:completed, :already_completed] ->
-        conn |> configure_session(renew: true) |> clear_session() |> neutral()
+        conn |> configure_session(renew: true) |> clear_session() |> result(params, :completed)
 
       _ ->
-        neutral(conn)
+        result(conn, params, :unavailable)
     end
   end
 
@@ -49,10 +60,37 @@ defmodule NewYouWeb.RecoveryController do
 
   defp neutral(conn), do: conn |> headers() |> send_resp(204, "")
 
+  defp result(conn, params, stage, assigns \\ [])
+
+  defp result(conn, %{"locale" => locale}, stage, assigns) when locale in ["en", "af"],
+    do: page(conn, stage, locale, assigns)
+
+  defp result(conn, _, _, _), do: neutral(conn)
+
+  defp page(conn, stage, locale, assigns \\ []) do
+    conn
+    |> headers()
+    |> put_root_layout(false)
+    |> put_view(html: NewYouWeb.RecoveryHTML)
+    |> render(
+      :journey,
+      Map.merge(
+        %{stage: stage, locale: locale, proof: "", operation_id: Ecto.UUID.generate()},
+        Map.new(assigns)
+      )
+    )
+  end
+
+  defp safe_proof(proof) when is_binary(proof) and byte_size(proof) <= 8192, do: proof
+  defp safe_proof(_), do: ""
+
   defp headers(conn) do
     conn
     |> put_resp_header("cache-control", "no-store")
     |> put_resp_header("referrer-policy", "no-referrer")
-    |> put_resp_header("content-security-policy", "default-src 'none'; frame-ancestors 'none'")
+    |> put_resp_header(
+      "content-security-policy",
+      "default-src 'none'; style-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+    )
   end
 end

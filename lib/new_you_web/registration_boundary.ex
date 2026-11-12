@@ -35,6 +35,9 @@ defmodule NewYouWeb.RegistrationBoundary do
     dispatch_browser_request(conn, :confirm, EmailVerificationController)
   end
 
+  def call(%Plug.Conn{method: "GET", request_path: "/recovery"} = conn, _opts),
+    do: dispatch_browser_request(conn, :new, NewYouWeb.RecoveryController)
+
   def call(%Plug.Conn{method: "GET", request_path: "/recovery/confirm"} = conn, _opts),
     do: dispatch_browser_request(conn, :show, NewYouWeb.RecoveryController)
 

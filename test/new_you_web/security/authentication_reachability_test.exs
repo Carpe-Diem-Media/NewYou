@@ -91,6 +91,7 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
                {:post, "/verification/resend", NewYouWeb.RegistrationController, :resend},
                {:get, "/verification/confirm", NewYouWeb.EmailVerificationController, :show},
                {:post, "/verification/confirm", NewYouWeb.EmailVerificationController, :confirm},
+               {:get, "/recovery", NewYouWeb.RecoveryController, :new},
                {:get, "/recovery/confirm", NewYouWeb.RecoveryController, :show},
                {:post, "/recovery", NewYouWeb.RecoveryController, :request},
                {:post, "/recovery/confirm", NewYouWeb.RecoveryController, :confirm},

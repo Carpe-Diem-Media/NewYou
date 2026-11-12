@@ -190,9 +190,8 @@ defmodule NewYou.Communications.RecoveryDeliveryPreparationTest do
     }
 
   defp assert_held(intent) do
-    Process.put(:p810_provider, fn _, _ ->
-      flunk("source eligibility cannot grant provider admission")
-    end)
+    # Source eligibility and Content approval do not configure a provider.
+    Process.delete(:p810_provider)
 
     assert {:ok, :held} = Communications.execute(intent.id)
 

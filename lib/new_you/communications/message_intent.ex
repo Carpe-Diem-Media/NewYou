@@ -39,8 +39,9 @@ defmodule NewYou.Communications.MessageIntent do
 
       check_constraint :content_item_id, "message_intents_content_binding",
         check:
-          "((role IN ('account_recovery', 'recovery_security_notice') AND content_item_id IS NULL AND content_version_id IS NULL AND translation_version_id IS NULL AND content_sha256 IS NULL AND platform_name IS NULL AND render_digest IS NULL) OR (role NOT IN ('account_recovery', 'recovery_security_notice') AND content_item_id IS NOT NULL AND content_version_id IS NOT NULL AND translation_version_id IS NOT NULL AND content_sha256 IS NOT NULL AND platform_name IS NOT NULL AND render_digest IS NOT NULL))",
-        message: "must be fully bound or recovery content must remain unbound"
+          "((role IN ('account_recovery', 'recovery_security_notice') AND content_item_id IS NULL AND content_version_id IS NULL AND translation_version_id IS NULL AND content_sha256 IS NULL AND platform_name IS NULL AND support_contact IS NULL AND render_digest IS NULL) OR (content_item_id IS NOT NULL AND content_version_id IS NOT NULL AND translation_version_id IS NOT NULL AND content_sha256 IS NOT NULL AND platform_name IS NOT NULL AND render_digest IS NOT NULL AND ((role = 'recovery_security_notice' AND support_contact IS NOT NULL) OR (role <> 'recovery_security_notice' AND support_contact IS NULL))))",
+        message:
+          "must bind all exact content and render inputs or retain an unbound recovery obligation"
     end
   end
 
@@ -175,14 +176,21 @@ defmodule NewYou.Communications.MessageIntent do
         :destination,
         :destination_provenance,
         :destination_authorized_at,
-        :locale
+        :locale,
+        :content_item_id,
+        :content_version_id,
+        :translation_version_id,
+        :content_sha256,
+        :platform_name,
+        :support_contact,
+        :render_digest,
+        :terminal_reason
       ]
 
       change set_attribute(:role, :account_recovery)
       change set_attribute(:source_purpose, "recovery")
       change set_attribute(:render_schema, "recovery-v1")
       change set_attribute(:dispatch_disposition, :held)
-      change set_attribute(:terminal_reason, "content_ineligible")
     end
 
     create :establish_recovery_notice do
@@ -194,14 +202,21 @@ defmodule NewYou.Communications.MessageIntent do
         :destination,
         :destination_provenance,
         :destination_authorized_at,
-        :locale
+        :locale,
+        :content_item_id,
+        :content_version_id,
+        :translation_version_id,
+        :content_sha256,
+        :platform_name,
+        :support_contact,
+        :render_digest,
+        :terminal_reason
       ]
 
       change set_attribute(:role, :recovery_security_notice)
       change set_attribute(:source_purpose, "recovery_completed")
       change set_attribute(:render_schema, "recovery-notice-v1")
       change set_attribute(:dispatch_disposition, :held)
-      change set_attribute(:terminal_reason, "content_ineligible")
     end
   end
 
@@ -271,6 +286,7 @@ defmodule NewYou.Communications.MessageIntent do
     attribute :translation_version_id, :string, allow_nil?: true, public?: false
     attribute :content_sha256, :string, allow_nil?: true, public?: false
     attribute :platform_name, :string, allow_nil?: true, public?: false
+    attribute :support_contact, :string, allow_nil?: true, public?: false
 
     attribute :render_schema, :string,
       allow_nil?: false,

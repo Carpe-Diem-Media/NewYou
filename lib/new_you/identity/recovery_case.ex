@@ -44,7 +44,7 @@ defmodule NewYou.Identity.RecoveryCase do
 
       check_constraint :state, "recovery_cases_terminal",
         check:
-          "(state IN ('completed','failed','expired','cancelled')) = (terminated_at IS NOT NULL) AND (state = 'completed') = (completed_at IS NOT NULL AND completion_id IS NOT NULL)"
+          "(state IN ('completed','failed','expired','cancelled')) = (terminated_at IS NOT NULL) AND ((state = 'completed' AND completed_at IS NOT NULL AND completion_id IS NOT NULL) OR (state <> 'completed' AND completed_at IS NULL AND completion_id IS NULL))"
 
       check_constraint :state, "recovery_cases_completion",
         check: "state <> 'completed' OR satisfied_assurance >= required_assurance"
