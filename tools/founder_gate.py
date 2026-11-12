@@ -25,7 +25,14 @@ PROTECTED = {'AGENTS.md', 'tools/founder_gate.py', 'tools/ci_attestation.py',
              'docs/development/foundation-integrity-merge-gate.md',
              'docs/development/github-branch-governance.md',
              'docs/development/chatgpt-project-master-gate-instructions.md',
-             'docs/development/solo-founder-merge-handoff.md'}
+             'docs/development/solo-founder-merge-handoff.md',
+             # Audit implementations, CI entrypoints and shared import-time code.
+             'tools/hex_security_audit.py', 'tools/run_foundation_full_tests.py',
+             'tools/check_magic_login_evidence.py',
+             'tools/check_password_reset_message_evidence.py',
+             'tools/__init__.py', 'mix.exs', 'lib/mix/tasks/design.check.ex'}
+PROTECTED_PREFIXES = ('.github/', '.agents/', 'docs/governance/',
+                      'tools/foundation_integrity_', 'tools/ci/', 'tools/architecture/')
 
 
 def encode(value):
@@ -41,7 +48,7 @@ def select_review(reviews, pr, paths):
     """
     require(pr.get('user', {}).get('id') == AGENT_ID
             and pr['user'].get('login') == 'JC-Agents', 'PR author must be JC-Agents')
-    require(not any(p in PROTECTED or p.startswith(('.github/', '.agents/', 'docs/governance/', 'tools/foundation_integrity_'))
+    require(not any(p in PROTECTED or p.startswith(PROTECTED_PREFIXES)
                     for p in paths), 'higher-risk authority change requires strict review')
     opinions = {}
     for r in sorted(reviews, key=lambda r: r['id']):

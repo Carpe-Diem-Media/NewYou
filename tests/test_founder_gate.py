@@ -3,6 +3,7 @@ import copy
 import json
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 from tools import founder_gate as gate
 from tools.ci_attestation import AttestationError
@@ -50,6 +51,34 @@ class FounderApprovalTests(unittest.TestCase):
                      'tools/foundation_integrity_audit.py']:
             with self.subTest(path=path), self.assertRaises(AttestationError): self.select(paths=[path])
         with self.assertRaises(AttestationError): self.select([dict(review(),body='Approved')])
+
+    def test_security_ci_implementations_cannot_use_routine_review(self):
+        # Real control implementations and their entrypoints, not all tools.
+        root = Path(__file__).resolve().parents[1]
+        paths = (
+            'tools/hex_security_audit.py',
+            'tools/ci/cache_manifest.py',
+            'tools/ci/prepare_cached_dependencies.sh',
+            'tools/architecture/check_ash_writes.exs',
+            'tools/architecture/ash_write_boundary.ex',
+            'tools/run_foundation_full_tests.py',
+            'tools/check_magic_login_evidence.py',
+            'tools/check_password_reset_message_evidence.py',
+            'tools/__init__.py',
+            'mix.exs',
+            'lib/mix/tasks/design.check.ex',
+        )
+        for path in paths:
+            with self.subTest(path=path):
+                self.assertTrue((root / path).is_file(), 'test must cover a real control')
+                with self.assertRaisesRegex(AttestationError, 'requires strict review'):
+                    self.select(paths=[path])
+
+    def test_ordinary_tool_changes_remain_eligible(self):
+        for path in ('tools/capability_knowledge.py',
+                     'docs/development/knowledge/identity.registration.json'):
+            with self.subTest(path=path):
+                self.assertEqual(7, self.select(paths=[path])['id'])
 
     def test_approval_rule_missing_stale_protection_or_approval_refuses(self):
         rules=[dict(type='pull_request',parameters=dict(required_approving_review_count=1,
