@@ -74,6 +74,21 @@ end
         self.assertTrue(any(s['change'] == 'removed' and s['name'] == 'gone'
                             for s in deleted_record['symbols']))
 
+    def test_capture_uses_merge_base_range_when_base_advances(self):
+        (self.repo / 'lib/a.ex').write_text('defmodule A do\n def value, do: :base\nend\n')
+        common = self.commit('common')
+        base_branch = self.git('branch', '--show-current')
+        self.git('checkout', '-qb', 'feature')
+        (self.repo / 'lib/a.ex').write_text('defmodule A do\n def value, do: :feature\nend\n')
+        feature = self.commit('feature change')
+        self.git('checkout', '-q', base_branch)
+        (self.repo / 'docs.md').write_text('main-only update\n')
+        base = self.commit('base advances')
+        record = capture.extract(self.repo, base, feature, 224, [])
+        self.assertEqual(base, record['base_sha'])
+        self.assertEqual(common, record['range_base_sha'])
+        self.assertEqual(['lib/a.ex'], [entry['path'] for entry in record['files']])
+
     def test_unparseable_source_is_unknown_with_reason(self):
         (self.repo / 'lib/bad.ex').write_text('defmodule Bad do\n def x( do: 1\n')
         base = self.commit('base')
@@ -225,6 +240,22 @@ end
         self.commit('history')
         self.assertTrue(capture.query_index(self.repo, 'test/old_test.exs')['results'])
 
+    def test_elixir_extension_renames_parse_only_elixir_side_and_symlinks_are_unknown(self):
+        (self.repo / 'lib/source.ex').write_text('defmodule Source do\n def removed, do: :ok\nend\n')
+        base = self.commit('Elixir source')
+        self.git('mv', 'lib/source.ex', 'lib/source.txt')
+        renamed = self.commit('rename out of Elixir')
+        record = capture.extract(self.repo, base, renamed, 224, [])
+        removed = [symbol for symbol in record['symbols'] if symbol.get('name') == 'removed']
+        self.assertEqual([('removed', 'lib/source.ex')], [(symbol['change'], symbol['path']) for symbol in removed])
+        self.assertEqual('public', removed[0]['visibility'])
+
+        (self.repo / 'lib/link.ex').symlink_to('source.txt')
+        symlink_head = self.commit('Elixir symlink')
+        symlink_record = capture.extract(self.repo, renamed, symlink_head, 224, [])
+        self.assertTrue(any(symbol.get('status') == 'unknown' and 'symlink' in symbol.get('reason', '')
+                            for symbol in symlink_record['symbols']))
+
     def test_history_query_finds_python_file_by_ticket(self):
         (self.repo / 'lib/a.py').write_text('value = 1\n')
         base = self.commit('base')
@@ -238,6 +269,95 @@ end
         result = capture.query_index(self.repo, 'WELL-121')
         self.assertTrue(any(row['path'] == 'lib/a.py' and row['historical'] for row in result['results']))
 
+    def test_current_index_reconciles_historical_symbols_and_reports_visibility(self):
+        source = '''defmodule Demo do
+  def visible, do: :ok
+  defp hidden, do: :private
+end
+'''
+        (self.repo / 'lib/demo.ex').write_text(source)
+        base = self.commit('base')
+        (self.repo / 'lib/demo.ex').write_text(source.replace('  defp hidden, do: :private\n', ''))
+        head = self.commit('remove private function')
+        record = capture.extract(self.repo, base, head, 224, ['WELL-121'])
+        self.assertTrue(any(symbol.get('name') == 'hidden' and symbol.get('visibility') == 'private'
+                            and symbol.get('change') == 'removed' for symbol in record['symbols']))
+        history = capture.record_path(self.repo, 224)
+        history.parent.mkdir(parents=True)
+        history.write_text(json.dumps(record))
+        self.commit('capture')
+        results = capture.query_index(self.repo, 'hidden')['results']
+        current = [row for row in results if not row['historical']]
+        historical = [row for row in results if row['historical']]
+        self.assertFalse(current)
+        self.assertTrue(historical)
+        parsed = capture._elixir_result(b'', source.encode())['new']
+        visibility = {(row['name'], row.get('visibility')) for row in parsed['functions']}
+        self.assertEqual({('visible', 'public'), ('hidden', 'private')}, visibility)
+
+    def test_capture_requires_and_validates_plane_context(self):
+        (self.repo / 'lib/a.py').write_text('value = 1\n')
+        base = self.commit('base')
+        (self.repo / 'lib/a.py').write_text('value = 2\n')
+        head = self.commit('head')
+        metadata = dict(number=224, base={'sha': base}, head={'sha': head}, title='WELL-121 capture', body='',
+                        html_url='https://github.com/Carpe-Diem-Media/NewYou/pull/224')
+        receipt = {'status': 'agent_verified', 'source': 'connected-plane', 'checked_at': '2026-11-12T10:00:00Z',
+                   'items': [{'identifier': 'WELL-121', 'id': '11111111-1111-4111-8111-111111111111',
+                              'project_id': '846031af-971b-4f08-92c3-7f008522a5ac', 'sequence_id': 121,
+                              'name': 'Capture evidence', 'state': 'In Review',
+                              'description_sha256': 'a' * 64}]}
+        self.assertEqual('unverified', capture.extract(self.repo, base, head, 224, ['WELL-121'],
+                                                        metadata=metadata)['plane']['status'])
+        record = capture.extract(self.repo, base, head, 224, ['WELL-121'], metadata=metadata,
+                                 plane_context=receipt)
+        self.assertEqual('agent_verified', record['plane']['status'])
+        with self.assertRaises(ValueError):
+            capture.extract(self.repo, base, head, 224, ['WELL-121'], metadata=metadata,
+                            plane_context=dict(receipt, items=[]))
+        with self.assertRaisesRegex(ValueError, 'Plane context is required'):
+            capture.generate(self.repo, base, head, 224, ['WELL-121'], metadata=metadata)
+        capture.generate(self.repo, base, head, 224, ['WELL-121'], metadata=metadata,
+                         plane_context=receipt)
+        history = capture.record_path(self.repo, 224)
+        self.git('add', str(history.relative_to(self.repo)))
+        self.git('commit', '-qm', 'record')
+        recorded_head = self.git('rev-parse', 'HEAD')
+        metadata['head']['sha'] = recorded_head
+        self.assertEqual('PASS', capture.generate(self.repo, base, recorded_head, 224, ['WELL-121'],
+                                                  metadata=metadata, check=True)['status'])
+        # Missing live evidence must retain the explicit unavailability reason.
+        unverified = json.loads(history.read_text())
+        unverified['plane'] = {'status': 'unverified'}
+        history.write_text(json.dumps(unverified))
+        changed_head = self.commit('drop unavailability reason')
+        metadata['head']['sha'] = changed_head
+        with self.assertRaisesRegex(ValueError, 'Plane unavailability reason'):
+            capture.generate(self.repo, base, changed_head, 224, ['WELL-121'], metadata=metadata, check=True)
+
+    def test_intent_ignores_changing_ci_footer_and_parser_gate_uses_changed_paths(self):
+        (self.repo / 'lib/a.py').write_text('value = 1\n')
+        base = self.commit('base')
+        (self.repo / 'lib/a.py').write_text('value = 2\n')
+        head = self.commit('head')
+        pr = dict(number=224, base={'sha': base}, head={'sha': head}, title='WELL-121 capture',
+                  body='## Purpose\nKeep capture stable.\n\n## CI Results\nrun 1 failed',
+                  html_url='https://github.com/Carpe-Diem-Media/NewYou/pull/224',
+                  user={'login': 'member', 'id': 42})
+        first = capture._metadata(pr, 224, base, head, [])['intent']
+        pr['body'] = '## Purpose\nKeep capture stable.\n\n## CI Results\nrun 2 passed'
+        second = capture._metadata(pr, 224, base, head, [])['intent']
+        self.assertEqual(first, second)
+        self.assertEqual({'login': 'member', 'id': 42}, first['author'])
+        event = {'pull_request': {'base': {'sha': base}, 'head': {'sha': head}}}
+        (self.repo / 'lib/a.ex').write_text('defmodule A do\nend\n')
+        source_head = self.commit('elixir file')
+        event['pull_request']['head']['sha'] = source_head
+        self.assertTrue(capture.parser_needed(self.repo, event))
+        docs_event = {'pull_request': {'base': {'sha': source_head}, 'head': {'sha': source_head}},
+                      'changed_files': ['docs/readme.md']}
+        self.assertFalse(capture.parser_needed(self.repo, docs_event))
+
     def test_history_directory_symlink_cannot_escape_repository(self):
         (self.repo / 'docs/development/knowledge').mkdir(parents=True)
         outside = Path('/tmp')
@@ -245,6 +365,18 @@ end
         history.symlink_to(outside, target_is_directory=True)
         with self.assertRaises(ValueError):
             capture.record_path(self.repo, 224)
+
+    def test_attribute_only_change_records_module_syntax_without_inventing_functions(self):
+        path = self.repo / 'lib/attributes.ex'
+        path.write_text('defmodule Attributes do\n @value 1\n def value, do: @value\nend\n')
+        base = self.commit('base')
+        path.write_text('defmodule Attributes do\n @value 2\n def value, do: @value\nend\n')
+        head = self.commit('attribute only')
+        record = capture.extract(self.repo, base, head, 224, ['WELL-121'])
+        modules = [symbol for symbol in record['symbols'] if symbol.get('kind') == 'module']
+        self.assertEqual([('Attributes', 'changed')], [(s['module'], s['change']) for s in modules])
+        self.assertNotEqual(modules[0]['old_sha256'], modules[0]['sha256'])
+        self.assertFalse(any(s.get('kind') == 'function' for s in record['symbols']))
 
 
 if __name__ == '__main__':

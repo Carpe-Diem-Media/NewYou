@@ -436,3 +436,144 @@ class PublicProtectedCollectionTest(unittest.TestCase):
                              after_merge=True, trust_mode="public-protected")
         self.assertEqual(result["candidate"]["effective_rules"], self.effective_rules)
         self.assertEqual(result["result"]["main"], merge_sha)
+
+
+class NativeReviewTests(unittest.TestCase):
+    def setUp(self):
+        self.pr = {"number": 42, "head": {"sha": "a" * 40},
+                   "user": {"id": 355419376, "login": "JC-Agents"}}
+        self.review = {"id": 7, "state": "APPROVED", "commit_id": "a" * 40,
+                       "user": {"id": 216185530, "login": "JCSchoeman96"},
+                       "submitted_at": "2026-11-12T00:00:00Z",
+                       "html_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/42#pullrequestreview-7"}
+
+    def test_one_current_head_founder_review_is_sufficient_without_special_body(self):
+        from tools.ci_attestation import verify_native_review
+        self.assertEqual(self.review, verify_native_review(self.pr, [self.review]))
+        comment = dict(self.review, id=8, state="COMMENTED")
+        self.assertEqual(self.review, verify_native_review(self.pr, [self.review, comment]))
+
+    def test_missing_stale_forged_dismissed_or_withdrawn_approval_is_rejected(self):
+        from tools.ci_attestation import verify_native_review
+        for reviews in ([], [dict(self.review, commit_id="b" * 40)],
+                        [dict(self.review, user={"id": 355419376, "login": "JCSchoeman96"})],
+                        [dict(self.review, state="DISMISSED")],
+                        [dict(self.review, html_url="https://example.test/review")],
+                        [self.review, dict(self.review, id=8, state="CHANGES_REQUESTED")]):
+            with self.subTest(reviews=reviews), self.assertRaises(AttestationError):
+                verify_native_review(self.pr, reviews)
+
+    def test_implementer_cannot_use_founder_identity(self):
+        from tools.ci_attestation import verify_native_review
+        with self.assertRaises(AttestationError):
+            verify_native_review(dict(self.pr, user=self.review["user"]), [self.review])
+
+
+class NativeProtectionTests(unittest.TestCase):
+    def parameters(self):
+        return {"required_approving_review_count": 1, "require_code_owner_review": True,
+                "dismiss_stale_reviews_on_push": True, "require_last_push_approval": True,
+                "required_review_thread_resolution": True, "allowed_merge_methods": ["merge"]}
+
+    def test_each_native_review_requirement_is_checked_in_configured_and_effective_rules(self):
+        from tools.ci_attestation import verify_native_review_rules
+        rules = [{"type": "pull_request", "parameters": self.parameters()}]
+        verify_native_review_rules(rules)
+        for key, value in [("required_approving_review_count", 0), ("require_code_owner_review", False),
+                           ("dismiss_stale_reviews_on_push", False), ("require_last_push_approval", False),
+                           ("required_review_thread_resolution", False),
+                           ("allowed_merge_methods", ["merge", "squash"])]:
+            with self.subTest(key=key), self.assertRaises(AttestationError):
+                verify_native_review_rules([{"type": "pull_request", "parameters": dict(self.parameters(), **{key: value})}])
+
+    def test_native_cli_uses_live_collection_without_manual_records(self):
+        from unittest.mock import patch
+        from tools import ci_attestation as ci
+        import sys
+        for phase in ("native-candidate", "native-result"):
+            args = ["ci_attestation", phase, "--pr", "42", "--reviewed-head", "a" * 40, "--run", "100"]
+            if phase == "native-result":
+                args += ["--candidate", "c" * 40]
+            with self.subTest(phase=phase), patch.object(sys, "argv", args), \
+                 patch.object(ci, "collect_native", return_value={"verified": True}) as collect, \
+                 patch("builtins.print"):
+                self.assertEqual(0, ci.main())
+                self.assertEqual(phase == "native-result", collect.call_args.kwargs["after_merge"])
+
+
+class NativeCollectionTests(unittest.TestCase):
+    def setUp(self):
+        import base64
+        from unittest.mock import patch
+        self.patch = patch
+        self.e = evidence()
+        params = NativeProtectionTests().parameters()
+        self.e['ruleset'] = {'rules': [{'type': 'pull_request', 'parameters': params}]}
+        self.e['effective_rules'] = [{'type': 'pull_request', 'parameters': params, 'ruleset_id': 24191860}]
+        self.pr = NativeReviewTests()
+        self.pr.setUp()
+        self.owners = {'encoding': 'base64', 'content': base64.b64encode(b'* @JCSchoeman96\n').decode()}
+
+    def api(self, path):
+        if path == 'user':
+            return {'login': 'JC-Agents', 'id': 355419376}
+        if path.endswith('/JC-Agents/permission'):
+            return {'permission': 'write', 'role_name': 'write'}
+        if path.endswith('/JCSchoeman96/permission'):
+            return {'permission': 'admin'}
+        if path.endswith('memberships/JC-Agents'):
+            return {'state': 'active', 'role': 'member'}
+        if '/contents/' in path:
+            self.assertTrue(path.endswith('?ref=' + self.e['base']))
+            return self.owners
+        if path.endswith('/pulls/42'):
+            return dict(self.pr.pr, base={'sha': self.e['base']}, merged=False)
+        if path == 'repos/Carpe-Diem-Media/NewYou':
+            return {}
+        raise AssertionError(path)
+
+    def test_live_native_collection_has_no_custom_approval_body_or_private_files(self):
+        import json
+        from tools import ci_attestation as ci
+        with self.patch.object(ci, 'collect', return_value=self.e), \
+             self.patch.object(ci, '_api', side_effect=self.api), \
+             self.patch.object(ci, '_command', return_value=json.dumps([[self.pr.review]])) as command, \
+             self.patch('tools.newyou_attest.founder_account_id', return_value=216185530), \
+             self.patch('builtins.open') as file:
+            proof = ci.collect_native(42, self.e['head'], 100)
+            self.assertEqual(7, proof['founder_review']['id'])
+            self.assertEqual(('gh', 'api', '--paginate', '--slurp',
+                              'repos/Carpe-Diem-Media/NewYou/pulls/42/reviews?per_page=100'), command.call_args.args)
+            file.assert_not_called()
+
+    def test_wrong_base_codeowners_and_elevated_agent_access_fail(self):
+        import json
+        from tools import ci_attestation as ci
+        for change in ('codeowners', 'permission', 'actor', 'head'):
+            def api(path):
+                if change == 'codeowners' and '/contents/' in path:
+                    return dict(self.owners, content='')
+                if change == 'permission' and path.endswith('/JC-Agents/permission'):
+                    return {'permission': 'admin', 'role_name': 'admin'}
+                if change == 'actor' and path == 'user':
+                    return {'login': 'JCSchoeman96', 'id': 216185530}
+                if change == 'head' and path.endswith('/pulls/42'):
+                    return dict(self.api(path), head={'sha': 'f' * 40})
+                return self.api(path)
+            with self.subTest(change=change), \
+                 self.patch.object(ci, 'collect', return_value=self.e), \
+                 self.patch.object(ci, '_api', side_effect=api), \
+                 self.patch.object(ci, '_command', return_value=json.dumps([[self.pr.review]])), \
+                 self.patch('tools.newyou_attest.founder_account_id', return_value=216185530), \
+                 self.assertRaises(AttestationError):
+                ci.collect_native(42, self.e['head'], 100)
+
+    def test_uncertain_network_result_fails_once_without_any_merge_or_retry(self):
+        from tools import ci_attestation as ci
+        with self.patch.object(ci, 'collect', side_effect=AttestationError('uncertain API response')) as collect, \
+             self.patch.object(ci, '_command') as command, self.assertRaises(AttestationError):
+            try:
+                ci.collect_native(42, self.e['head'], 100)
+            finally:
+                collect.assert_called_once()
+                command.assert_not_called()

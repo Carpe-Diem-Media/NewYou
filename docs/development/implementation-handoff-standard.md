@@ -4,7 +4,7 @@
 
 ## One record for each purpose
 
-Every implementation PR includes an automatically generated historical change record under `docs/development/knowledge/history/`. The extractor collects files, renames, deletions, source hashes, parseable Elixir symbols, changed tests and migration paths. GitHub supplies current review, CI and merged status. A committed record never claims a future CI result or contains its own final commit SHA.
+Every implementation PR includes one automatically generated historical change record under `docs/development/knowledge/history/`, named `pr-<number>.json`. The extractor collects files, renames, deletions, source hashes, parseable Elixir symbols, changed tests and migration paths. The record uses live PR metadata and a small receipt exported by the agent from the Plane connector. If Plane is unavailable, record the concrete reason with `--plane-unavailable`; do not ask the founder to prepare a JSON file. GitHub supplies current review, CI and merged status. A committed record never claims a future CI result or contains its own final commit SHA.
 
 A substantial capability or material Domain/interface/lifecycle/schema change also creates or maintains one canonical `<capability_id>.json` under [knowledge/](knowledge/README.md), using [the existing schema](knowledge/capability.schema.json). The agent supplies source-verified semantics that extraction cannot establish. Do not duplicate this map in an eight-section Markdown handoff. Existing Markdown handoffs remain historical references. Migrate an existing handoff only when material work on that capability warrants it.
 
@@ -25,7 +25,7 @@ Explain non-applicable dimensions. Do not invent Resources, functions or lifecyc
 
 ## Agent workflow and independent review
 
-Follow the generation/check commands in [the knowledge guide](knowledge/README.md) before declaring a PR review-ready. Commit source changes first, generate against the exact PR range, commit the history record, then push. Regenerate after a source/base change. All generation precedes final approval. Foundation Integrity independently regenerates and compares the record without pushing commits. No founder CLI step, post-approval commit, post-merge main write or separate documentation task is required.
+Follow the agent commands in [the knowledge guide](knowledge/README.md) before declaring a PR review-ready. Generate the PR record with metadata and Plane context, then commit it before final review. Regenerate after a source or base change. CI checks only the GitHub event metadata and needs no Plane token. It independently regenerates and compares the record without pushing commits. All generated changes precede final approval. No post-approval commit, post-merge main write or separate documentation task is required.
 
 Independent Master Gate compares the complete diff, capability semantics and linked source/tests at the exact reviewed head. Missing or materially inaccurate required knowledge means `CHANGES REQUIRED`. Schema, hashes and locator validation establish mechanical consistency; they do not prove semantic claims. A changed head invalidates previous review and CI evidence. Resulting-main verification remains mandatory before Plane Done.
 

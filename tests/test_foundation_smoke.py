@@ -331,3 +331,21 @@ class FoundationSmokeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SmokeJobConditionTests(unittest.TestCase):
+    _fixture = FoundationSmokeTests._fixture
+
+    def test_parser_step_may_be_conditional_but_smoke_job_must_always_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._fixture(directory)
+            workflow = root / '.github/workflows/foundation-integrity.yml'
+            original = workflow.read_text()
+            self.assertIn("        if: steps.knowledge_parser.outputs.parser_required == 'true'", original)
+            report = run_smoke_audit(root)
+            topology = next(check for check in report['checks'] if check['name'] == 'smoke_merge_gate_topology')
+            self.assertEqual('PASS', topology['status'])
+            workflow.write_text(original.replace('  foundation-smoke:\n', '  foundation-smoke:\n    if: false\n'))
+            report = run_smoke_audit(root)
+            topology = next(check for check in report['checks'] if check['name'] == 'smoke_merge_gate_topology')
+            self.assertEqual('FAIL', topology['status'])

@@ -142,8 +142,8 @@ class MixedAndUnknownRoutingTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     _route([path])
 
-    def test_founder_gate_paths_select_engineering_checks(self):
-        for path in ("tools/founder_gate.py", "tools/capability_knowledge.py", "tests/test_capability_knowledge.py", "tests/test_founder_gate.py",
+    def test_knowledge_and_codeowners_paths_select_engineering_checks(self):
+        for path in ("tools/capability_knowledge.py", "tests/test_capability_knowledge.py",
                      "tools/knowledge_capture.py", "tools/knowledge_symbols.exs", ".github/CODEOWNERS"):
             with self.subTest(path=path):
                 self.assertEqual({"application_changes": True}, _route([path]))

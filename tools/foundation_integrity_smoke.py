@@ -621,7 +621,7 @@ def run_smoke_audit(
     ]
     topology_ok = (
         smoke_match is not None
-        and "if:" not in smoke_match.group(1)
+        and re.search(r"(?m)^    if:", smoke_match.group(1)) is None
         and "foundation-full.yml" not in workflow
         and "foundation_full" not in workflow
         and "hex-security-audit:" in workflow

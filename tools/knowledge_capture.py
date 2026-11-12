@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import shutil
@@ -56,6 +57,10 @@ def _diff(repo, base, head):
     return result
 
 
+def _merge_base(repo, base, head):
+    return _run(repo, 'merge-base', base, head).decode().strip()
+
+
 def _blob(repo, revision, path):
     return _run(repo, 'show', revision + ':' + path)
 
@@ -82,34 +87,71 @@ def _elixir_result(old, new):
     return json.loads(output.stdout)
 
 
+def _elixir_current(sources):
+    if not sources:
+        return {}
+    executable = shutil.which('elixir')
+    if not executable:
+        mise = shutil.which('mise')
+        if not mise:
+            raise ValueError('Elixir is required to parse current .ex/.exs sources')
+        command = [mise, 'exec', '--', 'elixir', str(HELPER)]
+    else:
+        command = [executable, str(HELPER)]
+    with tempfile.TemporaryDirectory(prefix='knowledge-index-') as directory:
+        root = Path(directory)
+        paths = []
+        names = []
+        for index, (name, source) in enumerate(sorted(sources.items())):
+            path = root / f'{index}.ex'
+            path.write_bytes(source)
+            paths.append(str(path))
+            names.append(name)
+        manifest = root / 'manifest.json'
+        manifest.write_text(json.dumps(paths))
+        try:
+            output = subprocess.run(command + ['--current', str(manifest)], cwd=ROOT,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        except (OSError, subprocess.CalledProcessError) as exc:
+            detail = getattr(exc, 'stderr', b'') or b''
+            raise ValueError('Elixir symbol helper failed: ' + detail.decode(errors='replace')) from exc
+        parsed = json.loads(output.stdout)
+        return {name: parsed[path] for name, path in zip(names, paths)}
+
+
 def _symbols(repo, old_revision, new_revision, old_path, new_path):
-    old = _blob(repo, old_revision, old_path) if old_path else b''
-    new = _blob(repo, new_revision, new_path) if new_path and new_path in _tree(repo, new_revision) else b''
+    old = _blob(repo, old_revision, old_path) if old_path and old_path.endswith(('.ex', '.exs')) else b''
+    new = _blob(repo, new_revision, new_path) if new_path and new_path.endswith(('.ex', '.exs')) else b''
     parsed = _elixir_result(old, new)
     old_parse, new_parse = parsed['old'], parsed['new']
     if old_parse['status'] != 'parsed' or new_parse['status'] != 'parsed':
         reasons = old_parse['unknown'] + new_parse['unknown']
         return [{'status': 'unknown', 'change': 'unknown', 'module': None, 'name': None,
                  'arity': None, 'reason': '; '.join(sorted({r['reason'] for r in reasons}))}]
-    before = {(s['module'], s['name'], s['arity']): s['sha256'] for s in old_parse['functions']}
-    after = {(s['module'], s['name'], s['arity']): s['sha256'] for s in new_parse['functions']}
+    before = {(s['module'], s['name'], s['arity'], s['visibility'], s['declaration']): s['sha256'] for s in old_parse['functions']}
+    after = {(s['module'], s['name'], s['arity'], s['visibility'], s['declaration']): s['sha256'] for s in new_parse['functions']}
     records = []
     old_modules, new_modules = set(old_parse['modules']), set(new_parse['modules'])
     for module in sorted(old_modules | new_modules):
-        if module not in old_modules or module not in new_modules:
+        old_hash = old_parse.get('module_hashes', {}).get(module)
+        new_hash = new_parse.get('module_hashes', {}).get(module)
+        if module not in old_modules or module not in new_modules or old_hash != new_hash:
             records.append({'status': 'parsed', 'kind': 'module',
-                            'change': 'added' if module not in old_modules else 'removed',
-                            'module': module, 'name': None, 'arity': None})
+                            'change': 'added' if module not in old_modules else
+                                      ('removed' if module not in new_modules else 'changed'),
+                            'module': module, 'name': None, 'arity': None,
+                            'old_sha256': old_hash, 'sha256': new_hash})
     for key in sorted(before.keys() | after.keys()):
         if before.get(key) == after.get(key):
             if key in before:
                 continue
         records.append({'status': 'parsed', 'kind': 'function', 'change': 'added' if key not in before else
                         ('removed' if key not in after else 'changed'), 'module': key[0], 'name': key[1],
-                        'arity': key[2], 'old_sha256': before.get(key), 'sha256': after.get(key)})
-    for unknown in old_parse['unknown'] + new_parse['unknown']:
+                        'arity': key[2], 'visibility': key[3], 'declaration': key[4],
+                        'old_sha256': before.get(key), 'sha256': after.get(key)})
+    for reason in sorted({unknown['reason'] for unknown in old_parse['unknown'] + new_parse['unknown']}):
         records.append({'status': 'unknown', 'kind': 'unknown', 'change': 'unknown', 'module': None, 'name': None,
-                        'arity': None, 'reason': unknown['reason']})
+                        'arity': None, 'reason': reason})
     return records
 
 
@@ -123,6 +165,7 @@ def _metadata(metadata, pr, base, head, tickets):
         head_oid = (obj.get('head') or {}).get('sha')
         url = obj.get('html_url')
         title_body = ((obj.get('title') or '') + '\n' + (obj.get('body') or ''))
+        author = obj.get('user') or {}
         repository = (metadata.get('repository') or {}).get('full_name') or (obj.get('base') or {}).get('repo', {}).get('full_name')
     else:
         obj = metadata
@@ -132,6 +175,7 @@ def _metadata(metadata, pr, base, head, tickets):
         head_oid = obj.get('headRefOid') or (head_part.get('sha') or head_part.get('refOid') if isinstance(head_part, dict) else None)
         url = obj.get('html_url') or obj.get('url')
         title_body = (obj.get('title') or '') + '\n' + (obj.get('body') or '')
+        author = obj.get('author') or obj.get('user') or {}
         repository = (obj.get('repository') or {}).get('full_name') or (base_part.get('repo') or {}).get('full_name') if isinstance(base_part, dict) else None
         if isinstance(head_part, str):
             head_oid = head_oid or head_part
@@ -148,26 +192,115 @@ def _metadata(metadata, pr, base, head, tickets):
     expected_url = f'https://github.com/Carpe-Diem-Media/NewYou/pull/{pr}'
     if not url or url.rstrip('/') != expected_url:
         raise ValueError('metadata PR URL does not match canonical repository and number')
-    discovered = sorted(set(re.findall(r'\bWELL-[1-9][0-9]*\b', title_body)))
+    summary = _intent_summary(obj.get('body') or '')
+    stable_intent = (obj.get('title') or '') + '\n' + summary
+    discovered = sorted(set(re.findall(r'\bWELL-[1-9][0-9]*\b', stable_intent)))
     if metadata and not discovered:
         raise ValueError('PR metadata has no WELL ticket reference')
     if tickets and sorted(set(tickets)) != discovered:
         raise ValueError('ticket IDs do not match PR title/body metadata')
     return {'url': url or (expected_url if repository else None), 'source': 'github', 'number': pr,
             'metadata_base': base_oid, 'metadata_head': head_oid,
-            'ticket_ids': discovered or sorted(set(tickets))}
+            'ticket_ids': discovered or sorted(set(tickets)),
+            'intent': {'kind': 'attributed_intent', 'title': obj.get('title') or '',
+                       'summary': summary,
+                       'author': {'login': author.get('login'), 'id': author.get('id')},
+                       'url': expected_url}}
 
 
-def extract(repo=ROOT, base='HEAD^', head='HEAD', pr=0, tickets=(), metadata=None):
+def _intent_summary(body):
+    lines = body.splitlines()
+    for index, line in enumerate(lines):
+        if re.match(r'^#{1,6}\s*(purpose|summary)\s*#*\s*$', line.strip(), re.IGNORECASE):
+            content = []
+            for next_line in lines[index + 1:]:
+                if re.match(r'^#{1,6}\s+', next_line.strip()):
+                    break
+                content.append(next_line)
+            return '\n'.join(content).strip()
+    paragraphs = re.split(r'\n\s*\n', body.strip(), maxsplit=1)
+    return paragraphs[0].strip() if paragraphs and paragraphs[0] else ''
+
+
+PROJECT_ID = '846031af-971b-4f08-92c3-7f008522a5ac'
+
+
+def _plane_context(context, unavailable, tickets):
+    if unavailable:
+        reason = unavailable.strip()
+        if not reason:
+            raise ValueError('Plane unavailable reason must not be blank')
+        return {'status': 'unverified', 'reason': reason}
+    if context is None:
+        raise ValueError('Plane context is required; use --plane-context or --plane-unavailable')
+    if set(context) != {'status', 'source', 'checked_at', 'items'}:
+        raise ValueError('invalid Plane receipt fields')
+    if context['status'] != 'agent_verified' or context['source'] != 'connected-plane':
+        raise ValueError('invalid Plane receipt status or source')
+    if not isinstance(context['checked_at'], str) or not re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z', context['checked_at']):
+        raise ValueError('invalid Plane checked_at timestamp')
+    if not isinstance(context['items'], list):
+        raise ValueError('invalid Plane receipt items')
+    normalized = []
+    expected = sorted(set(tickets))
+    for item in context['items']:
+        if set(item) != {'identifier', 'id', 'project_id', 'sequence_id', 'name', 'state', 'description_sha256'}:
+            raise ValueError('invalid Plane item fields')
+        identifier = item['identifier']
+        match = re.fullmatch(r'WELL-([1-9][0-9]*)', identifier or '')
+        if not match or item['project_id'] != PROJECT_ID or item['sequence_id'] != int(match.group(1)):
+            raise ValueError('invalid Plane ticket identity or project')
+        if not re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}', item['id'] or '', re.I):
+            raise ValueError('invalid Plane UUID')
+        states = {'Backlog', 'Planning', 'Ready', 'In Progress', 'In Review', 'Changes Requested',
+                  'Ready to Merge', 'Merging', 'Done', 'Blocked'}
+        if (not isinstance(item['name'], str) or not item['name'].strip()
+                or item['state'] not in states):
+            raise ValueError('invalid Plane ticket title or state')
+        if not re.fullmatch(r'[0-9a-f]{64}', item['description_sha256'] or ''):
+            raise ValueError('invalid Plane description digest')
+        normalized.append(item)
+    if sorted(item['identifier'] for item in normalized) != expected:
+        raise ValueError('Plane receipt tickets do not match PR tickets')
+    return {'status': context['status'], 'source': context['source'], 'checked_at': context['checked_at'],
+            'items': sorted(normalized, key=lambda item: item['identifier'])}
+
+
+def parser_needed(repo, metadata):
+    changed = metadata.get('changed_files', metadata.get('files', []))
+    if not isinstance(changed, list):
+        changed = []
+    if not changed:
+        pr_event = metadata.get('pull_request') or metadata
+        base_sha = (pr_event.get('base') or {}).get('sha')
+        head_sha = (pr_event.get('head') or {}).get('sha')
+        if base_sha and head_sha:
+            try:
+                merge_base = _merge_base(repo, base_sha, head_sha)
+                changed = [path for _, old, new in _diff(repo, merge_base, head_sha) for path in (old, new) if path]
+            except ValueError:
+                return True
+    paths = [entry if isinstance(entry, str) else entry.get('filename', '') for entry in changed]
+    return any(path.endswith(('.ex', '.exs')) for path in paths) or any(
+        path in ('tools/knowledge_capture.py', 'tools/knowledge_symbols.exs',
+                 'tests/test_knowledge_capture.py', '.tool-versions') for path in paths)
+
+
+def extract(repo=ROOT, base='HEAD^', head='HEAD', pr=0, tickets=(), metadata=None,
+            plane_context=None, plane_unavailable=None):
     repo = Path(repo).resolve()
     base_sha, head_sha = _resolve(repo, base), _resolve(repo, head)
+    range_base_sha = _merge_base(repo, base_sha, head_sha)
     link = _metadata(metadata, pr, base_sha, head_sha, tickets)
-    old_tree, new_tree = _tree(repo, base_sha), _tree(repo, head_sha)
+    linked_tickets = link.get('ticket_ids', sorted(set(tickets)))
+    plane = (_plane_context(plane_context, plane_unavailable, linked_tickets)
+             if plane_context is not None or plane_unavailable else {'status': 'unverified'})
+    old_tree, new_tree = _tree(repo, range_base_sha), _tree(repo, head_sha)
     changes = []
     symbol_records = []
     test_paths, migration_paths = set(), set()
     excluded = f'{HISTORY}/pr-{pr}.json' if pr else None
-    for status, old_path, new_path in _diff(repo, base_sha, head_sha):
+    for status, old_path, new_path in _diff(repo, range_base_sha, head_sha):
         path = new_path or old_path
         if excluded and status not in ('renamed', 'copied') and path == excluded:
             continue
@@ -180,7 +313,7 @@ def extract(repo=ROOT, base='HEAD^', head='HEAD', pr=0, tickets=(), metadata=Non
         change = {'status': status, 'path': path, 'old_path': old_path,
                   'old_mode': before['mode'] if before else None, 'old_blob': before['blob'] if before else None,
                   'mode': after['mode'] if after else None, 'blob': after['blob'] if after else None,
-                  'old_sha256': hashlib.sha256(_blob(repo, base_sha, old_path)).hexdigest() if before else None,
+                  'old_sha256': hashlib.sha256(_blob(repo, range_base_sha, old_path)).hexdigest() if before else None,
                   'sha256': hashlib.sha256(new_bytes).hexdigest() if after else None}
         changes.append(change)
         for changed_path in {old_path, new_path} - {None}:
@@ -188,11 +321,28 @@ def extract(repo=ROOT, base='HEAD^', head='HEAD', pr=0, tickets=(), metadata=Non
                 test_paths.add(changed_path)
             if re.search(r'(^|/)migrations?/', changed_path):
                 migration_paths.add(changed_path)
-        if path.endswith(('.ex', '.exs')):
-            symbol_records.extend([dict(item, path=path) for item in
-                                   _symbols(repo, base_sha, head_sha, old_path, new_path)])
-    return {'schema_version': 1, 'pr': pr, 'pr_url': link.get('url'), 'tickets': link.get('ticket_ids', sorted(set(tickets))),
-            'base_sha': base_sha, 'files': changes,
+        elixir_side = any(changed_path and changed_path.endswith(('.ex', '.exs'))
+                          for changed_path in (old_path, new_path))
+        if elixir_side:
+            old_entry, new_entry = old_tree.get(old_path), new_tree.get(new_path)
+            if any(entry and entry['mode'] == '120000'
+                   for entry, changed_path in ((old_entry, old_path), (new_entry, new_path))
+                   if changed_path and changed_path.endswith(('.ex', '.exs'))):
+                symbol_records.append({'status': 'unknown', 'kind': 'unknown', 'change': 'unknown',
+                                       'module': None, 'name': None, 'arity': None,
+                                       'path': new_path if new_path and new_path.endswith(('.ex', '.exs')) else old_path,
+                                       'reason': 'Elixir symlink source is not parsed'})
+            else:
+                symbol_path = (new_path if new_path and new_path.endswith(('.ex', '.exs'))
+                               else old_path)
+                symbol_records.extend([dict(item, path=symbol_path) for item in
+                                       _symbols(repo, range_base_sha, head_sha, old_path, new_path)])
+    return {'schema_version': 1, 'pr': pr, 'pr_url': link.get('url'), 'tickets': linked_tickets,
+            'intent': link.get('intent'), 'plane': plane,
+            'base_sha': base_sha, 'range_base_sha': range_base_sha,
+            'commits_url': f'https://github.com/Carpe-Diem-Media/NewYou/pull/{pr}/commits' if pr else None,
+            'checks_url': f'https://github.com/Carpe-Diem-Media/NewYou/pull/{pr}/checks' if pr else None,
+            'files': changes,
             'tests': sorted(test_paths), 'migrations': sorted(migration_paths), 'symbols': symbol_records,
             'ci': {'source': 'external GitHub checks', 'status': 'unknown'}}
 
@@ -239,15 +389,32 @@ def check_record(repo, record, expected=None):
     return True
 
 
-def generate(repo, base, head, pr, tickets, metadata=None, check=False):
-    expected = extract(repo, base, head, pr, tickets, metadata)
+def generate(repo, base, head, pr, tickets, metadata=None, check=False,
+             plane_context=None, plane_unavailable=None):
     path = record_path(repo, pr)
     if check:
-        head_tree = _tree(repo, _resolve(repo, head))
         relative = path.relative_to(Path(repo).resolve()).as_posix()
+        head_commit = _resolve(repo, head)
+        head_tree = _tree(repo, head_commit)
         if relative not in head_tree:
             raise ValueError('missing PR history record: ' + str(path))
-        check_record(repo, _loads(_blob(repo, _resolve(repo, head), relative).decode()), expected)
+        existing = _loads(_blob(repo, head_commit, relative).decode())
+        committed_plane = existing.get('plane')
+        if not isinstance(committed_plane, dict):
+            raise ValueError('committed record has no Plane context')
+        if committed_plane.get('status') == 'unverified':
+            plane_unavailable = committed_plane.get('reason')
+            if not isinstance(plane_unavailable, str) or not plane_unavailable.strip():
+                raise ValueError('Plane unavailability reason is required')
+        else:
+            plane_context = {'status': committed_plane.get('status'), 'source': committed_plane.get('source'),
+                             'checked_at': committed_plane.get('checked_at'), 'items': committed_plane.get('items')}
+    elif plane_context is None and not plane_unavailable:
+        raise ValueError('Plane context is required; use --plane-context or --plane-unavailable')
+    expected = extract(repo, base, head, pr, tickets, metadata,
+                       plane_context=plane_context, plane_unavailable=plane_unavailable)
+    if check:
+        check_record(repo, existing, expected)
         return {'status': 'PASS', 'path': str(path), 'base_sha': expected['base_sha'], 'head_sha': _resolve(repo, head)}
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.resolve() != Path(repo).resolve() / Path(HISTORY) / f'pr-{pr}.json':
@@ -262,6 +429,75 @@ def query_index(repo, query, revision='HEAD'):
     needles = query.lower()
     tree = _tree(repo, revision)
     rows = []
+    capability_maps = []
+    for map_path in sorted(tree):
+        if (map_path.startswith('docs/development/knowledge/') and map_path.endswith('.json')
+                and '/history/' not in map_path and not map_path.endswith('capability.schema.json')):
+            capability_maps.append((map_path, _loads(_blob(repo, revision, map_path).decode())))
+    elixir_sources = {path: _blob(repo, revision, path) for path in tree
+                      if path.endswith(('.ex', '.exs')) and tree[path]['mode'] != '120000'}
+    parsed_sources = _elixir_current(elixir_sources)
+    current_symbols = set()
+    uncertain_modules = {module for parsed in parsed_sources.values() if parsed.get('status') != 'parsed'
+                         for module in parsed.get('modules', [])}
+    uncertain_without_module = any(parsed.get('status') != 'parsed' and not parsed.get('modules')
+                                   for parsed in parsed_sources.values())
+    def references_for(source_path, module=None, function=None):
+        references = []
+        for map_path, document in capability_maps:
+            source_ids = {source.get('id') for source in document.get('sources', [])
+                          if source.get('path') == source_path}
+            interface_matches = [interface for interface in document.get('interfaces', [])
+                                 if interface.get('module') == module
+                                 and (function is None or interface.get('function') == function)]
+            if not source_ids and not interface_matches:
+                continue
+            referenced_ids = source_ids | {source_id for interface in interface_matches
+                                           for source_id in interface.get('source_ids', [])}
+            references.append({
+                'map': map_path,
+                'capability_id': document.get('capability_id'),
+                'authoritative_domain': document.get('authoritative_domain'),
+                'source_ids': sorted(source_ids),
+                'interfaces': interface_matches,
+                'safe_extensions': document.get('safe_extensions', []),
+                'reuse': document.get('reuse', []),
+                'prohibited_shortcuts': document.get('prohibited_shortcuts', []),
+                'tests': document.get('tests', []),
+                'persistence': document.get('persistence', []),
+                'semantic_map_refs': sorted(referenced_ids),
+            })
+        return references
+
+    for source_path, parsed in parsed_sources.items():
+        if parsed.get('status') != 'parsed':
+            for unknown in parsed.get('unknown', []):
+                if needles in (source_path + ' ' + unknown.get('reason', '')).lower():
+                    rows.append({'path': source_path, 'symbol': None, 'status': 'unknown',
+                                 'reason': unknown.get('reason'),
+                                 'source_sha256': hashlib.sha256(elixir_sources[source_path]).hexdigest(),
+                                 'revision': revision, 'historical': False, 'exists_at_revision': None})
+        for symbol in parsed.get('functions', []):
+            key = (symbol['module'], symbol['name'], symbol['arity'])
+            current_symbols.add(key)
+            haystack = ' '.join((source_path, *map(str, key), symbol['visibility'], symbol['declaration'])).lower()
+            if needles in haystack:
+                references = references_for(source_path, symbol['module'], symbol['name'])
+                rows.append({'path': source_path, 'module': symbol['module'], 'symbol': symbol['name'],
+                             'arity': symbol['arity'], 'visibility': symbol['visibility'],
+                             'declaration': symbol['declaration'], 'symbol_sha256': symbol['sha256'],
+                             'source_sha256': hashlib.sha256(elixir_sources[source_path]).hexdigest(),
+                             'capability_refs': references,
+                             'revision': revision, 'historical': False, 'exists_at_revision': True})
+        for module in parsed.get('modules', []):
+            haystack = f'{source_path} {module}'.lower()
+            if needles in haystack:
+                references = references_for(source_path, module)
+                rows.append({'path': source_path, 'module': module, 'symbol': module, 'kind': 'module',
+                             'module_sha256': parsed.get('module_hashes', {}).get(module),
+                             'source_sha256': hashlib.sha256(elixir_sources[source_path]).hexdigest(),
+                             'capability_refs': references,
+                             'revision': revision, 'historical': False, 'exists_at_revision': True})
     map_count = history_count = 0
     for path in sorted(tree):
         if path.startswith('docs/development/knowledge/') and path.endswith('.json') and '/history/' not in path and not path.endswith('capability.schema.json'):
@@ -276,11 +512,24 @@ def query_index(repo, query, revision='HEAD'):
                 digest = hashlib.sha256(_blob(repo, revision, source_path)).hexdigest()
                 if source.get('sha256') != digest:
                     raise ValueError(f'capability map source drift at {revision}: {source_path}')
+                interfaces = [interface for interface in doc.get('interfaces', []) if isinstance(interface, dict)]
+                interface_terms = [str(interface.get(key, '')) for interface in interfaces for key in ('module', 'function')]
                 haystack = ' '.join((path, source_path, source.get('symbol', ''), doc.get('capability_id', ''),
+                                    doc.get('authoritative_domain', ''), *interface_terms,
                                     *doc.get('implementing_tickets', []))).lower()
                 if needles in haystack:
                     rows.append({'map': path, 'path': source_path, 'symbol': source.get('symbol'),
                                  'capability_id': doc.get('capability_id'), 'source_sha256': digest,
+                                 'authoritative_domain': doc.get('authoritative_domain'),
+                                 'interfaces': [(interface.get('module') or '') + '.' + (interface.get('function') or '')
+                                                for interface in interfaces],
+                                 'ash': doc.get('ash', []),
+                                 'safe_extensions': doc.get('safe_extensions', []),
+                                 'reuse': doc.get('reuse', []),
+                                 'prohibited_shortcuts': doc.get('prohibited_shortcuts', []),
+                                 'tests': doc.get('tests', []),
+                                 'persistence': doc.get('persistence', []),
+                                 'semantic_map_refs': [source.get('id') for source in doc.get('sources', [])],
                                  'revision': revision, 'historical': False})
         elif path.startswith(HISTORY + '/') and path.endswith('.json'):
             history_count += 1
@@ -292,7 +541,7 @@ def query_index(repo, query, revision='HEAD'):
                 current_digest = hashlib.sha256(_blob(repo, revision, source_path)).hexdigest() if present else None
                 terms = ' '.join((source_path, entry.get('old_path') or '', doc.get('pr_url') or '')).lower()
                 if ticket_match or needles in terms:
-                    rows.append({'path': source_path, 'status': entry['status'],
+                    rows.append({'path': source_path, 'old_path': entry.get('old_path'), 'status': entry['status'],
                                  'ticket_ids': doc.get('tickets', []), 'pr': doc.get('pr'),
                                  'revision': revision, 'historical': True, 'exists_at_revision': present,
                                  'blob': entry.get('blob'), 'sha256': entry.get('sha256'),
@@ -303,13 +552,26 @@ def query_index(repo, query, revision='HEAD'):
                 present = source_path in tree
                 digest = hashlib.sha256(_blob(repo, revision, source_path)).hexdigest() if present else None
                 source_matches = bool(digest and digest == file_record.get('sha256'))
+                key = (symbol.get('module'), symbol.get('name'), symbol.get('arity'))
+                if symbol.get('kind') == 'function':
+                    symbol_exists = (True if key in current_symbols else
+                                     None if symbol.get('module') in uncertain_modules or uncertain_without_module else False)
+                elif symbol.get('kind') == 'module':
+                    current_modules = {module for source in parsed_sources.values() for module in source.get('modules', [])}
+                    symbol_exists = (True if symbol.get('module') in current_modules else
+                                     None if symbol.get('module') in uncertain_modules or uncertain_without_module else False)
+                else:
+                    symbol_exists = False
                 terms = ' '.join(str(symbol.get(key, '')) for key in ('module', 'name', 'path', 'reason')).lower()
                 if not ticket_match and needles not in terms:
                     continue
                 rows.append({'path': source_path, 'symbol': symbol.get('name') or symbol.get('module'),
-                             'module': symbol.get('module'), 'change': symbol.get('change'),
+                             'module': symbol.get('module'), 'arity': symbol.get('arity'),
+                             'visibility': symbol.get('visibility'), 'declaration': symbol.get('declaration'),
+                             'old_sha256': symbol.get('old_sha256'), 'sha256': symbol.get('sha256'),
+                             'change': symbol.get('change'),
                              'ticket_ids': doc.get('tickets', []), 'pr': doc.get('pr'),
-                             'revision': revision, 'historical': True, 'exists_at_revision': present,
+                             'revision': revision, 'historical': True, 'exists_at_revision': symbol_exists,
                              'source_matches_snapshot': source_matches})
     return {'revision': revision, 'maps': map_count, 'history_records': history_count, 'results': rows}
 
@@ -325,6 +587,11 @@ def main():
         cmd.add_argument('--pr', type=int)
         cmd.add_argument('--ticket', action='append', default=[])
         cmd.add_argument('--metadata-json')
+        cmd.add_argument('--plane-context')
+        cmd.add_argument('--plane-unavailable')
+    needs = sub.add_parser('needs-parser')
+    needs.add_argument('--metadata-json', required=True)
+    needs.add_argument('--github-output')
     index = sub.add_parser('index')
     index.add_argument('--revision', default='HEAD')
     query = sub.add_parser('query')
@@ -333,6 +600,7 @@ def main():
     args = parser.parse_args()
     if args.command in ('generate', 'check'):
         metadata = _loads(Path(args.metadata_json).read_text()) if args.metadata_json else None
+        plane_context = _loads(Path(args.plane_context).read_text()) if args.plane_context else None
         pr = args.pr or (metadata.get('number') if metadata else None)
         if metadata and 'pull_request' in metadata:
             pr = pr or metadata['pull_request'].get('number')
@@ -348,7 +616,19 @@ def main():
         if not head and metadata:
             head_part = metadata.get('head') or {}
             head = metadata.get('headRefOid') or ((head_part.get('sha') or head_part.get('refOid')) if isinstance(head_part, dict) else None)
-        result = generate(args.repo, base, head or 'HEAD', pr, args.ticket, metadata, args.command == 'check')
+        result = generate(args.repo, base, head or 'HEAD', pr, args.ticket, metadata, args.command == 'check',
+                          plane_context, args.plane_unavailable)
+    elif args.command == 'needs-parser':
+        metadata = _loads(Path(args.metadata_json).read_text())
+        parser_required = parser_needed(args.repo, metadata)
+        line = f'parser_required={str(parser_required).lower()}\n'
+        github_output = args.github_output or os.environ.get('GITHUB_OUTPUT')
+        if github_output:
+            with open(github_output, 'a') as output:
+                output.write(line)
+        else:
+            print(line, end='')
+        return
     elif args.command == 'index':
         result = query_index(args.repo, '', args.revision)
         result = {'status': 'PASS', 'revision': result['revision'], 'maps': result['maps'],

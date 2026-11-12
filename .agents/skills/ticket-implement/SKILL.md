@@ -165,9 +165,9 @@ Do not mutate Product/Architecture/Domain/Roadmap or semantic contracts merely t
 
 ## 8. Automatic knowledge capture before review
 
-After implementation and semantic-map updates, commit source changes and generate the PR history record automatically as part of this workflow. Use `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` to save live PR metadata to a temporary file, then run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/PR-metadata.json`. See `docs/development/knowledge/README.md` for first-push and local-head handling. Validate the referenced WELL tickets against live Plane; CI verifies metadata consistency without Plane write credentials.
+After implementation and semantic-map updates, generate the PR history record as part of this workflow. Export live PR metadata with `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` and obtain a small Plane receipt from the live Plane connector. Save each as temporary JSON. Run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/pr.json --plane-context /tmp/plane-receipt.json`. If Plane is unavailable, use `--plane-unavailable "REASON"` and record the specific limitation. Do not ask the founder to create or supply a Plane JSON file. CI checks PR metadata using `mise exec -- python3 -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"`; it needs no Plane token.
 
-Commit the generated `docs/development/knowledge/history/pr-NUMBER.json` before final review. Regenerate if source or base changes. The agent does this automatically; the founder performs no CLI step. Foundation Integrity independently checks mechanical fields without mutating the PR branch. A final approval must never be followed by a generated commit. Do not manually enumerate changed files, functions, tests, migrations or SHAs in a second handoff.
+Commit the generated `docs/development/knowledge/history/pr-NUMBER.json` before final review. Regenerate if source or base changes. Foundation Integrity independently checks mechanical fields without mutating the PR branch. A final approval must never be followed by a generated commit. Do not manually enumerate changed files, functions, tests, migrations or SHAs in a second handoff.
 
 ## 9. Verify before handoff
 
@@ -198,7 +198,7 @@ When the implementation and required local verification are review-ready:
 3. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
 4. record material JIT choices and discovered work in Plane/PR evidence where useful;
 5. hand off for independent Master Gate review, including the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
-6. follow the eligible founder-development or strict route in the merge-gate procedure. Request one authenticated founder APPROVED technical review for ordinary eligible work, with exact reviewed head/base and live required CI. Do not request routine manual attestation JSON or duplicate founder comments. Retain stronger approval requirements and the establishing PR bootstrap boundary.
+6. follow the eligible founder-development route in the merge-gate procedure. ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the final head. That review is both technical approval and standing merge authorization. Do not add a second comment or a base-SHA line. Keep any stronger approval that an actual governing or external obligation requires.
 
 Report:
 
@@ -212,9 +212,9 @@ Report:
 - discovered/deferred Plane work;
 - remaining review risks or known non-PR failures.
 
-Do not self-certify merge authority. For future eligible work after the new rules are integrated and GitHub enforcement is verified, the authenticated current-head founder APPROVED review supplies the documented standing merge authorization. Run the integrated-main gate's check, merge and resulting-main reconciliation without asking for another founder comment or CLI action. Move Plane to Done and take the next dependency-cleared Ready ticket only after resulting-main verification succeeds. Stronger governing approvals remain mandatory.
+Do not self-certify merge authority. For eligible work, use the read-only native-candidate check, normal exact-head merge, and read-only native-result check documented in the merge-gate procedure. Verify current branch protection and CI before merging. If the merge response is uncertain, inspect the PR and `main` before any further action. Move Plane to Done and take the next dependency-cleared Ready ticket only after resulting-main verification succeeds. Stronger governing approvals remain mandatory where required.
 
-PR #224 is the establishing PR and does not have that standing authorization. Its separately authorized current-main transition and final integration decision remain required.
+PR #224 remains under current-main requirements. It needs explicit owner authorization for the exact merge transition after fresh complete review and CI. Collection-only comment 6821263762 is not authorization. Do not self-approve or self-merge it. CODEOWNERS read from the base cannot enforce review on this PR.
 
 Any head change after review begins invalidates prior exact-head certification.
 

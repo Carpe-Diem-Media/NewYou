@@ -1,10 +1,10 @@
 # Foundation Integrity merge gate
 
-This is the current operational CI and merge contract. The workflows define the executable lanes; this document explains their boundaries and the independent review procedure.
+This is the current operational CI and merge contract. The workflows define the executable lanes; this document explains their boundaries, review authorization and resulting-main proof.
 
 ## Required gate
 
-The public repository protects `main` with active ruleset `24191860`, which requires a pull request and a successful **Foundation Integrity** status check. Eligible development uses the solo-founder gate below. Strict work uses the independent review and resulting-main procedure. Foundation Integrity comes from hosted pull request CI. Every pull request runs Foundation Smoke. Application CI and the Hex security audit run when changed paths select them. Foundation Full runs only in the scheduled nightly hardening workflow and is not part of PR checks or the required aggregate. The application cache warmer is separate. It may save dependency caches from trusted `main` pushes; PR runs may restore those caches but do not save them. Cache entries contain no test results or build output.
+The public repository protects `main` with active ruleset `24191860`, which requires a pull request and a successful **Foundation Integrity** status check. Eligible development follows the review and merge procedure below. Apply stronger approval only when a governing or external obligation requires it. Foundation Integrity comes from hosted pull request CI. Every pull request runs Foundation Smoke. Application CI and the Hex security audit run when changed paths select them. Foundation Full runs only in the scheduled nightly hardening workflow and is not part of PR checks or the required aggregate. The application cache warmer is separate. It may save dependency caches from trusted `main` pushes; PR runs may restore those caches but do not save them. Cache entries contain no test results or build output.
 
 The aggregate requires successful routing and Smoke, plus successful Application CI and Hex security audit when selected. It does not wait for Foundation Full.
 
@@ -54,85 +54,47 @@ The historical pre-migration suite and audit use temporary compatibility views i
 
 See [Foundation Integrity CI](foundation-integrity-ci.md) for certification history and command details.
 
-## Solo-founder development merge
+## Eligible development merge
 
-For eligible non-production founder-development changes, JC-Agents implements and opens the PR. ChatGPT independently reviews the complete exact-head diff, source, tests, current authority, live Plane and CI. The JCSchoeman96 GitHub connector publishes a genuine APPROVED review. That review supplies standing owner merge delegation for this scope, without another founder comment or manual attestation files. It authenticates the founder account, not a separate physical person. Implementers must never use founder credentials to approve their own work.
+For eligible development work, ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the exact final head. That review is both technical approval and standing merge authorization. That is the only approval comment required for this route. Do not add a second founder comment or a base-SHA line. The implementing agent must not use founder credentials. Re-review any changed head.
 
-The review includes one plain-text line, `Founder-development base: <40-character base SHA>`, after the reviewer establishes that no stronger approval applies. GitHub already binds the review to its head commit. The line binds eligible scope and the reviewed base; it is part of the technical review, not another approval ceremony. Changed head or base requires a fresh review. Regulated, clinical, legal, production-security, privileged and release changes retain their actual higher-risk independent-approval rules. Changes to approval tooling, agent instructions, CI workflows and governing authority always use the strict route. Ambiguity refuses the routine route.
+Apply stronger approval only when a governing or external obligation requires it. Assess the actual consequence and obligations of the change. Paths or edits to CI, agent instructions, approval tooling or governance do not by themselves require a stricter route. If the governing approval requirement is unclear, stop the affected merge and resolve that specific requirement.
 
-Run `python3 -m tools.founder_gate check --pr NUMBER` from a clean, trusted checkout of integrated main using JC-Agents credentials. The guard reads live GitHub account/membership, PR, reviews, resolved threads, effective protected-main rules and the latest Foundation Integrity run. It reuses existing exact candidate/job-checkout verification. It verifies integrated CODEOWNERS names JCSchoeman96 for every path and requires native code-owner approval, at least one approval, stale-review dismissal, last-push approval, resolved threads, strict required CI, regular merge only and no bypass. No App, new workflow, external approval service or candidate-controlled approval file is required. A PR cannot certify the guard that it changes.
-
-After all checks pass, `python3 -m tools.founder_gate merge --pr NUMBER` recollects live facts, saves one automatic intent using the existing private locked custody helper, then calls the regular merge API bound to the exact head. It never uses bypass or auto-merge. Immediately afterward it verifies resulting main SHA, ordered parents and tree against the tested candidate. The automatic intent is recovery data, not an approval dossier. The command emits concise machine-readable status; no manually assembled manual attestation files is required for this route.
-
-Lifecycle: AWAITING_REVIEW or AWAITING_CI remains non-authorizing. Valid live guards yield READY_TO_MERGE. Durable intent enters MERGING before the network request. Exact resulting-main proof yields VERIFIED; only then may satisfied Plane work move to Done. Any changed fact blocks before merge. An interrupted request or failed reconciliation retains its intent and refuses a second merge. `python3 -m tools.founder_gate reconcile --pr NUMBER` retries read-only reconciliation using the originally trusted base checkout. If GitHub still reports unmerged or main has drifted, preserve the record and obtain a narrow recovery decision; do not reset it or repeat the merge automatically.
-
-GitHub settings and implementation-account permissions require separate owner approval before mutation. The routine guard remains fail-closed until enforcement is live-verified. Use the committed one-line `.github/CODEOWNERS` with native required code-owner review. No additional approval comment or status producer is required. The agent needs Write/Member access rather than administrative bypass. See the owner-only settings proposal for exact differences from current rules.
-
-PR #224 establishes these rules and cannot use them to approve or merge itself. Current main governance governs its final combined head. Fresh ChatGPT Master Gate review, fresh CI and an expressly authorized current-law transition remain required. Earlier PR #223 or #224 approvals do not carry to a changed head.
-
-## Strict independent review and resulting-main reconciliation
-
-The independent reviewer examines the complete diff at the exact PR head,
-confirms the current base and checks the hosted Foundation Integrity run,
-including the exact merge candidate checked out by each required job. Capture
-evidence while the PR is open and after all required checks succeed. The
-collector reads GitHub's PR, repository, ruleset, run, check-run, job,
-checkout-log and Git commit APIs. It binds the reviewer's exact head and
-attributable review record to hosted CI evidence. The collector does not
-perform the review or calculate the independent full-diff digest.
-
-Use a trusted checkout containing the reviewed attestation tool and a `gh`
-session authorized to read the repository and Actions logs. The trusted
-operator materializes `review.json` from the independent review:
-
-```json
-{"reviewed_head":"<40-character head SHA>","reviewer":"<independent reviewer>","review_reference":"<durable review reference>","diff_sha256":"<64-character SHA-256>"}
-```
-
-Independently verify the review reference, reviewer, complete diff and digest.
-Keep the record in trusted custody with collector output, process exit status,
-stderr and SHA-256 digests. Do not commit these artifacts or use a file from an
-untrusted PR checkout. The PR Actions API `head_sha` identifies the PR head,
-not the merge candidate. The collector must verify the exact candidate from
-checkout logs for every executed required job, including its parents and tree,
-and confirm the successful `Foundation Integrity` check identity. Foundation
-Full is non-blocking; investigate a relevant failure in its scheduled lane.
-
-Before merge, run from the trusted checkout:
+Before merge, verify the PR still targets the expected base, the exact final head has the authenticated APPROVED review, the current required CI is successful, and live branch protection still has the expected rules. From trusted integrated `main`, run the existing read-only candidate check:
 
 ```bash
-python3 -m tools.ci_attestation before --trust-mode public-protected --review-record review.json --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID > before.json
+python3 -m tools.ci_attestation native-candidate --pr NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID
 ```
 
-Any changed head, base, candidate, run attempt, checkout or review invalidates
-the corresponding evidence. Recapture CI evidence and repeat review as needed.
-Immediately before a regular merge, recheck the PR, active ruleset and current
-`main`. Do not use a bypass or merge when a required check is missing or
-unsuccessful. Separate owner authorization is required before executing
-`gh pr merge PR_NUMBER --merge --match-head-commit REVIEWED_HEAD_SHA`. Do not use auto-merge.
-
-After merge, immediately reconcile resulting `main` using the trusted evidence:
+The check verifies the current PR, base/head, review, required run, exact tested candidate, and live protected-main settings. It writes no evidence files and stores no merge intent. If it passes, perform the ordinary merge bound to the reviewed head:
 
 ```bash
-python3 -m tools.ci_attestation after --trust-mode public-protected --review-record review.json --pr PR_NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID --before before.json > after.json
+gh pr merge --repo Carpe-Diem-Media/NewYou --merge --match-head-commit REVIEWED_HEAD_SHA NUMBER
 ```
 
-Preserve both outputs, exit statuses, stderr and digests in trusted custody.
-Do not commit them.
+Do not use an administrative bypass. If the merge request times out or its result is unclear, read the PR and current `main` before doing anything else. Never repeat the merge based only on a timeout or client error.
 
-The collector re-reads GitHub evidence and verifies that resulting `main` is
-the merge commit, has the reviewed base and head as parents, and has the tree
-tested by hosted PR CI. It rejects squash and rebase merges, unknown methods,
-concurrent `main` changes, missing logs and mismatches. This post-merge step is
-read-only. It does not repeat tests or create a check run on `main`. If
-reconciliation fails, stop completion and dependent work. Resolve the evidence
-or merge discrepancy through an authorized process, then obtain fresh
-independent review and hosted CI for any new candidate. Passing tests alone
-does not repair a merge that lacked required review or checks.
+After merge, run the existing read-only result check from trusted integrated `main`:
 
-The saved evidence is not itself a signature or review approval. The
-independent reviewer must preserve and verify its provenance. Foundation Full
-remains in the scheduled nightly lane; it is not a post-merge duplicate test.
+```bash
+python3 -m tools.ci_attestation native-result --pr NUMBER --reviewed-head REVIEWED_HEAD_SHA --run RUN_ID --candidate TESTED_CANDIDATE_SHA
+```
+
+The result must show that `main` points to the merge commit, whose ordered parents are the reviewed base then head, and whose tree equals the tested candidate. This check writes no files and creates no status check. If GitHub shows no merge or the result check cannot establish those facts, stop completion and resolve the discrepancy before moving Plane to Done or opening dependent work.
+
+### PR #224 establishing transition
+
+PR #224 remains under the current `main` requirements and cannot use the proposed future settings to approve itself. It requires fresh complete review and successful current CI, followed by explicit owner authorization for the exact merge transition. Collection-only comment 6821263762 is not merge authorization. Do not self-approve or self-merge PR #224. Since `.github/CODEOWNERS` is read from the base branch, its proposed contents cannot enforce review on this establishing PR.
+
+### One-time GitHub settings after PR #224
+
+After PR #224 integrates with explicit authorization, a separate authorization is required before changing GitHub settings or account access. The proposed configuration retains ruleset 24191860's required Foundation Integrity check, PR-only integration, no bypass, force-push and deletion protections, and merge-only method. It adds one approval, code-owner approval using the exact `.github/CODEOWNERS` entry `* @JCSchoeman96`, stale-review dismissal, approval of the latest push, and resolved review threads. Change rules before granting JC-Agents repository Write and organization Member access. Preserve JCSchoeman96's existing organization-owner/repository-admin access; do not grant those privileges to JC-Agents. Independently inspect the live ruleset, branch protections, CODEOWNERS errors, and access after the change. Do not describe the new enforcement as active until that verification passes.
+
+The proposal in [founder-merge-admin-proposal.md](founder-merge-admin-proposal.md) is not authorization and does not change current settings.
+
+### Legacy strict attestation lifecycle
+
+The `ci_attestation before` and `ci_attestation after` file-based lifecycle is legacy. Do not use it for routine development merges. Use it only when a specific governing or external obligation explicitly requires that lifecycle. Existing archived attestations remain historical records and are not evidence for a new candidate. No new private custody files, JSON review records, before/after files, or custom merge wrapper are part of the routine route.
 
 ## Hex security audit
 

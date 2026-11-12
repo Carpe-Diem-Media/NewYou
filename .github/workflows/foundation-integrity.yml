@@ -61,7 +61,11 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      - name: Detect whether knowledge extraction needs Elixir
+        id: knowledge_parser
+        run: python -m tools.knowledge_capture needs-parser --metadata-json "$GITHUB_EVENT_PATH"
       - name: Set up Elixir parser from .tool-versions
+        if: steps.knowledge_parser.outputs.parser_required == 'true'
         uses: erlef/setup-beam@v1
         with:
           version-file: .tool-versions
@@ -76,13 +80,14 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_foundation_smoke.py' -v
       - name: Run CI attestation regression tests
         run: python -m unittest discover -s tests -p 'test_ci_attestation.py' -v
-      - name: Run founder attestation regression tests
+      - name: Run repository-transfer identity regression tests
         run: python -m unittest discover -s tests -p 'test_newyou_attest.py' -v
-      - name: Run standing founder gate regression tests
-        run: python -m unittest tests.test_founder_gate tests.test_capability_knowledge -v
+      - name: Run capability knowledge regression tests
+        run: python -m unittest tests.test_capability_knowledge -v
       - name: Validate capability knowledge maps
         run: python -m tools.capability_knowledge
       - name: Run knowledge capture regression tests
+        if: steps.knowledge_parser.outputs.parser_required == 'true'
         run: python -m unittest tests.test_knowledge_capture -v
       - name: Regenerate and compare committed PR knowledge
         run: python -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"

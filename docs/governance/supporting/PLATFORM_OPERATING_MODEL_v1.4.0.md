@@ -4,7 +4,7 @@
 - **Document version:** v1.4.0
 - **Predecessor:** `docs/governance/supporting/PLATFORM_OPERATING_MODEL_v1.3.0.md`
 - **Earlier frozen baseline:** `docs/history/platform/archive/PLATFORM_OPERATING_MODEL_v1.0.1.md`
-- **SemVer transition:** `v1.3.0 → v1.4.0` — solo-founder merge workflow.
+- **SemVer transition:** `v1.3.0 → v1.4.0` — eligible development merge authorization and resulting-main proof.
 - **Date:** 2026-11-12
 - **Derived experience provenance:** `docs/delivery/feature-contracts/experience/EXPERIENCE_DECISIONS_WORKING_v0.7.0.md` (working, non-authoritative)
 - **Authority basis at this model's freeze:** `docs/history/platform/archive/PROJECT_NORTH_STAR_AND_MVP_v1.2.1.md`, `docs/history/platform/archive/00_PLATFORM_v1.2.1.md`, `docs/history/platform/archive/01_DECISIONS_v1.2.2.md`, `docs/history/platform/archive/02_OPEN_WORK_v1.2.28.md`, `docs/history/platform/archive/03_ARCHITECTURE_v1.0.0.md`, `docs/history/platform/archive/04_DOMAIN_MAP_v1.0.0.md`, `docs/history/platform/archive/05_ROADMAP_v1.0.0.md`
@@ -643,8 +643,10 @@ This Platform Operating Model was admitted to freeze review after confirming:
 
 ## v1.4.0 amendment scope
 
-Eligible non-production founder-development uses one full ChatGPT technical Master Gate review published as JCSchoeman96 GitHub APPROVED for the exact head and declared base. That authenticated account approval supplies standing owner delegation after current required CI and the trusted integrated-main live merge guard pass. It does not prove another physical human. No duplicate founder comment, extra routine external reviewer or manual attestation files are required. The implementing account cannot approve its own work using founder credentials.
+For eligible development, ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 GitHub APPROVED review for the exact final head. That review is both technical approval and standing merge authorization. No second founder comment or base-SHA line is required. The implementing agent must not use founder credentials.
 
-The guard validates repository/organization identity, current head/base, review, protected-main/no bypass, successful exact tested candidate and regular merge. It saves one automatic durable intent before mutation, verifies resulting main SHA/ordered parents/tree/no drift, and blocks Plane Done on uncertainty. Reconciliation is read-only and retryable; uncertain merges cannot be repeated automatically. Follow `docs/development/foundation-integrity-merge-gate.md` for the lifecycle, commands and exact refusal/recovery contract. No new App, workflow or approval platform is required.
+Before merge, verify the current required CI and live branch protection. Run the read-only `tools.ci_attestation native-candidate` check from trusted integrated `main`, perform the normal GitHub merge bound to the reviewed head, then run `tools.ci_attestation native-result` with the tested candidate. These checks create no persisted evidence files or merge intent. If the merge result is uncertain, inspect the PR and `main` before taking further action. Move Plane to Done only after the resulting commit, ordered parents and tested tree match.
 
-Stronger regulated, clinical, legal, production-security, privileged and release rules remain. Approval/CI/governance changes use strict review; ambiguous consequence cannot select routine delegation. Native GitHub approval and stale-review enforcement need separate owner authorization and live verification. PR #224 cannot apply these proposed rules to itself: fresh independent review, CI and expressly authorized current-main bootstrap remain necessary. This successor changes no Product, Architecture, Domain or production authority.
+Require stronger approval only when a governing or external obligation requires it. Paths and edits to CI, agent instructions, approval tooling or governance do not by themselves require a stricter route. PR #224 remains under current-main requirements and needs fresh complete review, successful CI and explicit owner authorization for its exact merge transition. Collection-only comment 6821263762 is not authorization; do not self-approve or self-merge. Any settings change after its authorized integration needs separate authorization and independent live verification.
+
+This amendment changes no Product, Architecture, Domain or participant-facing authority. Foundation Full remains scheduled historical/provenance evidence, not a PR gate.

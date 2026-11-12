@@ -5,12 +5,22 @@ defmodule KnowledgeSymbols do
     IO.write(:json.encode(%{"old" => old, "new" => new}))
   end
 
+  def run_current(paths) do
+    result =
+      Map.new(paths, fn path ->
+        {path, parse(File.read!(path))}
+      end)
+
+    IO.write(:json.encode(result))
+  end
+
   defp parse(source) do
     case Code.string_to_quoted(source, columns: true, token_metadata: false) do
       {:ok, ast} ->
         state = %{
           modules: %{},
           module_names: MapSet.new(),
+          module_hashes: %{},
           unknown: [],
           namespace_unknown: false,
           unresolved_module: false
@@ -20,22 +30,30 @@ defmodule KnowledgeSymbols do
 
         functions =
           result.modules
-          |> Enum.flat_map(fn {{module, name, arity}, clauses} ->
+          |> Enum.flat_map(fn {{module, name, arity, visibility, declaration}, clauses} ->
             [
               %{
                 "module" => module,
                 "name" => name,
                 "arity" => arity,
+                "visibility" => visibility,
+                "declaration" => declaration,
                 "sha256" => digest(Enum.reverse(clauses))
               }
             ]
           end)
-          |> Enum.sort_by(&{&1["module"], &1["name"], &1["arity"]})
+          |> Enum.sort_by(
+            &{&1["module"], &1["name"], &1["arity"], &1["visibility"], &1["declaration"]}
+          )
 
         %{
           "status" => if(result.unresolved_module, do: "unknown", else: "parsed"),
           "modules" => Enum.sort(result.module_names),
           "functions" => functions,
+          "module_hashes" =>
+            Map.new(result.module_hashes, fn {name, nodes} ->
+              {name, digest(Enum.reverse(nodes))}
+            end),
           "unknown" => result.unknown
         }
 
@@ -52,7 +70,7 @@ defmodule KnowledgeSymbols do
   defp walk({:__block__, _, expressions}, module, state),
     do: Enum.reduce(expressions, state, &walk(&1, module, &2))
 
-  defp walk({:defmodule, _, [name_ast, body]}, module, state) do
+  defp walk({:defmodule, _, [name_ast, body]} = node, module, state) do
     absolute = is_atom(name_ast) or match?({:__aliases__, _, [:"Elixir" | _]}, name_ast)
 
     name =
@@ -62,6 +80,9 @@ defmodule KnowledgeSymbols do
 
     case name do
       {:ok, nested} ->
+        state =
+          update_in(state.module_hashes[nested], fn nodes -> [normalize(node) | nodes || []] end)
+
         result =
           walk(keyword_body(body), nested, %{
             state
@@ -84,7 +105,7 @@ defmodule KnowledgeSymbols do
     case {module, function_head(head)} do
       {nil, _} -> add_unknown(state, "function declared outside a literal module")
       {_, :error} -> add_unknown(state, "dynamic or ambiguous function head")
-      {name, {function, args}} -> add_function(state, name, function, args, node)
+      {name, {function, args}} -> add_function(state, name, function, args, node, kind)
     end
   end
 
@@ -149,20 +170,15 @@ defmodule KnowledgeSymbols do
   defp function_head({name, _, nil}) when is_atom(name), do: {Atom.to_string(name), []}
   defp function_head(_), do: :error
 
-  defp add_function(state, module, name, args, node) do
+  defp add_function(state, module, name, args, node, declaration) do
     arity = length(args)
     defaults = Enum.count(args, &match?({:\\, _, _}, &1))
 
-    normalized =
-      node
-      |> Macro.prewalk(fn
-        {form, metadata, children} when is_list(metadata) -> {form, [], children}
-        other -> other
-      end)
-      |> Macro.to_string()
+    normalized = normalize(node)
 
     Enum.reduce((arity - defaults)..arity, state, fn effective_arity, acc ->
-      key = {module, name, effective_arity}
+      visibility = if declaration in [:def, :defmacro], do: "public", else: "private"
+      key = {module, name, effective_arity, visibility, Atom.to_string(declaration)}
       update_in(acc.modules[key], fn clauses -> [normalized | clauses || []] end)
     end)
   end
@@ -170,8 +186,24 @@ defmodule KnowledgeSymbols do
   defp add_unknown(state, reason),
     do: %{state | unknown: state.unknown ++ [%{"reason" => reason}]}
 
+  defp normalize(node) do
+    node
+    |> Macro.prewalk(fn
+      {form, metadata, children} when is_list(metadata) -> {form, [], children}
+      other -> other
+    end)
+    |> Macro.to_string()
+  end
+
   defp digest(values),
     do: :crypto.hash(:sha256, Enum.join(values, "\n")) |> Base.encode16(case: :lower)
 end
 
-KnowledgeSymbols.run(hd(System.argv()), Enum.at(System.argv(), 1))
+case System.argv() do
+  ["--current", manifest] ->
+    paths = File.read!(manifest) |> :json.decode() |> Enum.map(fn path -> path end)
+    KnowledgeSymbols.run_current(paths)
+
+  [old_path, new_path] ->
+    KnowledgeSymbols.run(old_path, new_path)
+end
