@@ -19,25 +19,25 @@
       "status": "modified"
     },
     {
-      "blob": "f4f289bbf06f4b475e9adcc378bb2ea085bc02c2",
+      "blob": "6d02e0a56c7c56b9fcf13d5922fe2e752ac12352",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "6726c56dbfc8f00216a1820513571bf32d1eace4708d87d996bb8a24d323fc01",
+      "sha256": "c3c50e59e2fffb2e5cf505f08f8cc5523d04e6aec87cb8af1bbb38b631542620",
       "status": "added"
     },
     {
-      "blob": "d05b8d834468579e5e31d185c3a9ece7f3ef0696",
+      "blob": "08bb1db834e02e2dcd51f14ff44e110878f2d4d5",
       "mode": "100644",
       "old_blob": "c37459ff83eb86d731faccda9274506a34a80aa4",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.registration.json",
       "old_sha256": "7231c0f433b1f8d10442b1cff0318eda50f56d208ba22f5c0b29204e79d52093",
       "path": "docs/development/knowledge/identity.registration.json",
-      "sha256": "8cfd5672ded817310a84713ae0a93551472e8817128a653c46fbd18f374fad25",
+      "sha256": "698177056dfe60f429b4ab270ced79c1a13acd44cb1a8ade53b2c08a5f2f4602",
       "status": "modified"
     },
     {
@@ -294,14 +294,14 @@
       "status": "modified"
     },
     {
-      "blob": "e026964b3048a7a788ac83af76095eff7198d0f5",
+      "blob": "bcd99c3dd58ff809bcb24bdc364c4da6c3d32a35",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
-      "sha256": "d201f991d3837aecd2248751bddbc6b8fe1c324eeb5aec4e3276e63d61042c78",
+      "sha256": "165241ac5895da37866f60cfa88185d2fecc5f3c21b658cad4d9789a98332d59",
       "status": "added"
     },
     {
@@ -800,14 +800,14 @@
       "status": "modified"
     },
     {
-      "blob": "2bba58633a188b1b24c24fb4d4add1044befe61e",
+      "blob": "ebe59c6b9b5c5c3a040843f035a29098b14616db",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/controllers/recovery_controller_test.exs",
-      "sha256": "88e9e3d2b93cfc8573372c4a04fdcf22725c46e0e3f5bfffad904fbe55afd16a",
+      "sha256": "a30013f9fa642df59de67a35f08d97fc8dcb6ad5bd7f457db637b19f3ea36a23",
       "status": "added"
     },
     {
@@ -3010,7 +3010,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
-      "sha256": "32966c9e411814d6e5e02373df4fe76e5ace4a784ed8534833766540adbd1e3a",
+      "sha256": "04864357f4fc7ffa40c1819d4ef3ba5bc78a524b2a3fcb30f15988e0919a0d57",
       "status": "parsed"
     },
     {
@@ -3051,6 +3051,19 @@
       "sha256": "20721ff2e74c951e5ba75d006aff91da5e460003ba4ce6b8edb61bd98b53d91e",
       "status": "parsed",
       "visibility": "public"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.RecoveryController",
+      "name": "confirmation_operation_id",
+      "old_sha256": null,
+      "path": "lib/new_you_web/controllers/recovery_controller.ex",
+      "sha256": "23b3f9234efffe83dd5bf48281739cea44ff9a0f3fe384aad9da16b6829910d1",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": 1,
@@ -3178,7 +3191,7 @@
       "name": "show",
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/recovery_controller.ex",
-      "sha256": "fd079e9c926c68d6c80959a6828510cea55b2c6b4724ad7266840890665ced62",
+      "sha256": "cb4a921b6583c4b1739efbb305812be4214796f56b5b0e831dec509fd3fcca3f",
       "status": "parsed",
       "visibility": "public"
     },
@@ -4503,7 +4516,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/controllers/recovery_controller_test.exs",
-      "sha256": "9afed5d6cd8c825036a9ca4460d0aac14a3ead0a48f614d00767fccefda3efc8",
+      "sha256": "b06b3270224ff1c5edea057e790411777a444d387072795640d42324ba60eaa5",
       "status": "parsed"
     },
     {
