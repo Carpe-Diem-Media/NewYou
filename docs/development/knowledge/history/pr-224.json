@@ -1,0 +1,510 @@
+{
+  "base_sha": "19bbd49dd532212fe05b6c144333b9b15895ad4c",
+  "ci": {
+    "source": "external GitHub checks",
+    "status": "unknown"
+  },
+  "files": [
+    {
+      "blob": "dfd097a2e567cc21cae5d4e6c45ffe00707ed91a",
+      "mode": "100644",
+      "old_blob": "1cd34141d15eb75a007703abebe89d1a5ac0f66f",
+      "old_mode": "100644",
+      "old_path": ".agents/skills/code-change-verification/SKILL.md",
+      "old_sha256": "434194d00a21d479e39dd7265d86f0c276d4777a038d3243cdebcbcf9463a0bf",
+      "path": ".agents/skills/code-change-verification/SKILL.md",
+      "sha256": "8b9d2beca3c1edb946717d4b300fbb8afb958e1e46f4f9b730405e9dbfb226d6",
+      "status": "modified"
+    },
+    {
+      "blob": "35b2eb88e80c665ec038d1c16c08e6a96fb77049",
+      "mode": "100644",
+      "old_blob": "01ce0c84a292473b6213fb318bcd1991256a2823",
+      "old_mode": "100644",
+      "old_path": ".agents/skills/ticket-implement/SKILL.md",
+      "old_sha256": "01a28ebedd9987177fed93fb8cd046cf6e3da97aff05202cf4bf1ebf1e2dae5a",
+      "path": ".agents/skills/ticket-implement/SKILL.md",
+      "sha256": "402eff304661622d040469259a7595bebd1e781dd0be4d6f6fceff1bd94f74cc",
+      "status": "modified"
+    },
+    {
+      "blob": "1cbc0dc4e3fde88a99c031eefef537f86d6de56e",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".github/CODEOWNERS",
+      "sha256": "2d2ef7cabbc66375721ab0fe51c2341030497ee4b22ec3092de0915a71722239",
+      "status": "added"
+    },
+    {
+      "blob": "09e3ea3258785c562e13d65727362d3fa754f641",
+      "mode": "100644",
+      "old_blob": "1d3e4f4bf326ae0ffa274cb80de923ef2bff0db0",
+      "old_mode": "100644",
+      "old_path": ".github/workflows/foundation-integrity.yml",
+      "old_sha256": "acd2e811586a348ed246365476fdd562e6909e4cbc55561e1dcf23c93bf8be03",
+      "path": ".github/workflows/foundation-integrity.yml",
+      "sha256": "3a82af85ab9dc366b8ad2220f9509b0fa845b37c6e076f3eb6ef460f1d1d3426",
+      "status": "modified"
+    },
+    {
+      "blob": "aff0c80716cfe58500200c8ca96d02cbf6b5c065",
+      "mode": "100644",
+      "old_blob": "07a46ae5ba885226222fe106ad04aaf72ce58dfb",
+      "old_mode": "100644",
+      "old_path": "AGENTS.md",
+      "old_sha256": "d19d3c3e746cf3ed2417f7b57e4e07b4d37e10ec8fe100e38a71068eada5be73",
+      "path": "AGENTS.md",
+      "sha256": "7ad2e8ed1d3d5244afaaf86447c0c1db58afd7317c1e9d82ed52c5c6d600395e",
+      "status": "modified"
+    },
+    {
+      "blob": "c76af2baedeb5e6de9918b7c649d792b2bf668ca",
+      "mode": "100644",
+      "old_blob": "f0b8afc5af9fb6b2bc230cddccfa76223a70ab51",
+      "old_mode": "100644",
+      "old_path": "docs/README.md",
+      "old_sha256": "7866dab391730ccd9b0315733dbb3f3f1dfa474da0baa3fff592ac94ec106718",
+      "path": "docs/README.md",
+      "sha256": "bc0be6ab99eb937249a05758170013262b97ea0db7032aae92694300f274282b",
+      "status": "modified"
+    },
+    {
+      "blob": "f50b7c46fdbe302d2f9c5fa26e38e7b17c5fdafb",
+      "mode": "100644",
+      "old_blob": "45d3140ddb0538e1be0ded60ca021bc24aaf1315",
+      "old_mode": "100644",
+      "old_path": "docs/development/chatgpt-project-master-gate-instructions.md",
+      "old_sha256": "0f9018233d769f272d2ac8e582e2a04de91205129da094da990bd2d789e14fc3",
+      "path": "docs/development/chatgpt-project-master-gate-instructions.md",
+      "sha256": "8cc56ecef036df210587ca4847d07860d383e54c1533356877c6f2ca9f0bc8db",
+      "status": "modified"
+    },
+    {
+      "blob": "14c61bbf66f3fee5f7531c7da7cd8a7857123e99",
+      "mode": "100644",
+      "old_blob": "da12f68ec516ac45564b5ebe2710ecb4428eeecf",
+      "old_mode": "100644",
+      "old_path": "docs/development/foundation-integrity-merge-gate.md",
+      "old_sha256": "5b36d87a46582d43808454fade10ffc9af68ca7ea40a159e36940443ef212157",
+      "path": "docs/development/foundation-integrity-merge-gate.md",
+      "sha256": "a93fe76e2fbed43b34ab6760e1cc3910cddd848b32bbb5d84fcdb3baa7fbcbda",
+      "status": "modified"
+    },
+    {
+      "blob": "8ec49fc681cacf5b5a19e248b01752a047be6ac6",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/founder-merge-admin-proposal.md",
+      "sha256": "dab57c8ff6ca69305aab545fe4ae885270daa56dde338cd5108de34f0ff3a4f1",
+      "status": "added"
+    },
+    {
+      "blob": "fecc1e58de8640752c550bc84f3195c21425b293",
+      "mode": "100644",
+      "old_blob": "14a0ffcbca5c316d86c833061e873578c5ede802",
+      "old_mode": "100644",
+      "old_path": "docs/development/github-branch-governance.md",
+      "old_sha256": "8f15ff6984255414527ecffd55e46ce0f275ccfc0b480400835da439eeac0b72",
+      "path": "docs/development/github-branch-governance.md",
+      "sha256": "e118b35ad11015ddac0a05c76670d20fc0bb4ea77c6666cf4a34b3af3269f829",
+      "status": "modified"
+    },
+    {
+      "blob": "649716be5dd3899c54cf139c22ceed0a4632c793",
+      "mode": "100644",
+      "old_blob": "b9b11877afb924942363c2808d033ab4be980c09",
+      "old_mode": "100644",
+      "old_path": "docs/development/implementation-handoff-standard.md",
+      "old_sha256": "966d3b5f37a39823ee6b32ec4dbbbde40dc6e20958ebf25ba21f1e0b8789e449",
+      "path": "docs/development/implementation-handoff-standard.md",
+      "sha256": "e3a268e918e34e7f2ff4bac50d7bd37cf1eecd4ee25084b24adad288e48674a8",
+      "status": "modified"
+    },
+    {
+      "blob": "351f7a34e6869ea41a8e04103e8fe14691310ec5",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/knowledge/README.md",
+      "sha256": "9b5435cb43c49860f22b0b7e2e4c2009d587b979023e2104b5496ccfc177e8b2",
+      "status": "added"
+    },
+    {
+      "blob": "8dd2fd08c2f1c4cc45a8dc278cc261f3074375e5",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/knowledge/capability.schema.json",
+      "sha256": "7f2ef25f931d1106849c1808325eddc05e865c711363c621d7e046c60e37a607",
+      "status": "added"
+    },
+    {
+      "blob": "c37459ff83eb86d731faccda9274506a34a80aa4",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/knowledge/identity.registration.json",
+      "sha256": "7231c0f433b1f8d10442b1cff0318eda50f56d208ba22f5c0b29204e79d52093",
+      "status": "added"
+    },
+    {
+      "blob": "b3523c56dd578e331150417d76c2c34351f9f908",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/solo-founder-merge-handoff.md",
+      "sha256": "44d1779db058169419848b043926a91712754962f89f165f71b10f549a39bec5",
+      "status": "added"
+    },
+    {
+      "blob": "cc83e591788efb408cdcc89ab748826d3a0a2642",
+      "mode": "100644",
+      "old_blob": "fb22f0f964ca9f476b4655ca6dec3ca056242099",
+      "old_mode": "100644",
+      "old_path": "docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+      "old_sha256": "2b6328da327df1a373b020f11a66d702b54efa615820a42324b40c8340a0b210",
+      "path": "docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+      "sha256": "7c83aaa2afd63f73255b32664d75f7426687627586b83f541763f92ff473df79",
+      "status": "modified"
+    },
+    {
+      "blob": "6f190c65dccabde07a8f0149c21b3324a5a144e0",
+      "mode": "100644",
+      "old_blob": "d12221dc5efd893afd4e472bb798c8b59cfc5629",
+      "old_mode": "100644",
+      "old_path": "docs/governance/README.md",
+      "old_sha256": "b302012f7090cb7c102d98388d8778480057ba9c7e972d92fe26393bdde872a9",
+      "path": "docs/governance/README.md",
+      "sha256": "e05c139ea3342a1ea2fcc1497e0ec0966149e2aec9fd0ebb7879842a35101023",
+      "status": "modified"
+    },
+    {
+      "blob": "9ffc9db1fe0b68862e0f027ebabba50adb6e6bdb",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.4.0.md",
+      "sha256": "71eb99c963a456d2e8885b00c9d2849870b6c4819a49c9f731cf9a4eaf1a07ae",
+      "status": "added"
+    },
+    {
+      "blob": "5080d8368936e42851e22a5ee22e0278b8b0cd13",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md",
+      "sha256": "7b687c4448ffc27c8431cede03fda9c5b9f30d07b510cf12c235531260322e6c",
+      "status": "added"
+    },
+    {
+      "blob": "f4fcbf5c21d3d2e02f023432d83ee339a31c22e9",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/supporting/PLATFORM_OPERATING_MODEL_v1.4.0.md",
+      "sha256": "d4a295c6cd0edb513e8ec32fee748db2309a062f1d56ae75d1d896acf327f5e8",
+      "status": "added"
+    },
+    {
+      "blob": "f1b1da5f69d1d86e2841eb8bc521af725a65fb95",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tests/test_capability_knowledge.py",
+      "sha256": "22b828b4fcfb2fc2782e75e6f0494bad2c48e7b31a0147a5e1e05c7ae8d48840",
+      "status": "added"
+    },
+    {
+      "blob": "21556c98bfbc46ece39388c86c98199c565cd814",
+      "mode": "100644",
+      "old_blob": "2de971a62de3640fd869bbff4c6e34b614c86039",
+      "old_mode": "100644",
+      "old_path": "tests/test_ci_attestation.py",
+      "old_sha256": "88229b4a38898354cea70846fd0ad630152e4ebf0f4b1faf78eb83935f36b81e",
+      "path": "tests/test_ci_attestation.py",
+      "sha256": "93deb7bd42525f4f98c7dc724a94571654029921d7a0b1967570b405dad74e8c",
+      "status": "modified"
+    },
+    {
+      "blob": "44383de529845113592265a2f10d55ac242bc122",
+      "mode": "100644",
+      "old_blob": "3b47217753fd8542677e8c5905367408dca195e4",
+      "old_mode": "100644",
+      "old_path": "tests/test_foundation_lane_routing.py",
+      "old_sha256": "fa885d670f97368fc948ea27e2c3616e5498f620906d901db2c5ac894f01d8b3",
+      "path": "tests/test_foundation_lane_routing.py",
+      "sha256": "df9061c69b090d01a7d8c63962cd7372a416a147d35713a629551ba8d41a74d9",
+      "status": "modified"
+    },
+    {
+      "blob": "71263e2a50a3c913722b4d0d496803d3b993aad3",
+      "mode": "100644",
+      "old_blob": "c21c609cd07e73f4a98bbbfbc8c308fed9b1c2f7",
+      "old_mode": "100644",
+      "old_path": "tests/test_foundation_smoke.py",
+      "old_sha256": "b612788c0b9535db8f2a1fa2ef6c345825988a86ce51df157f9321fc2860064a",
+      "path": "tests/test_foundation_smoke.py",
+      "sha256": "2ab4e139f442b1d45ffd4297a98a0981b6fb0c621e12b8ab4fd2319b9a0a626f",
+      "status": "modified"
+    },
+    {
+      "blob": "367a49fa8cd9c577801894142ebf7856aab9829c",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tests/test_founder_gate.py",
+      "sha256": "ea00562630d9a50fa492c7b2917106b93e745817ad32cc3209858e52871b03b5",
+      "status": "added"
+    },
+    {
+      "blob": "2ff39bbe6fec7db3cf9a17a744626a1bae52975e",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tests/test_knowledge_capture.py",
+      "sha256": "e1c81e79e9f99285d19019cd6addfd0d5f003e78223124afb83aa573ab8f931a",
+      "status": "added"
+    },
+    {
+      "blob": "93840b97581fbff57d65cef3bbeca2870ba61462",
+      "mode": "100644",
+      "old_blob": "f2b0f41c0d6e19c41c9dffbe2497e22871d79fe4",
+      "old_mode": "100644",
+      "old_path": "tests/test_newyou_attest.py",
+      "old_sha256": "a41d217ab29972b63b612006e44ffb2e92320e9f8d2cb533eafc2844e44fe947",
+      "path": "tests/test_newyou_attest.py",
+      "sha256": "768ec8d43cec0d1633793ee9f88b799bc8ba66538ddd672fd06c0c66ec2245e7",
+      "status": "modified"
+    },
+    {
+      "blob": "789bcec58407ffe9c8f835d361ee3ed34cc13c7d",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tools/capability_knowledge.py",
+      "sha256": "d3f86ec94400544b475db2e6d36fc48410e12a14bd150b8bd0612bc9c2cc0dd3",
+      "status": "added"
+    },
+    {
+      "blob": "4f24612cbc3117b0dc3fcffd7d3302cc4fe865c3",
+      "mode": "100644",
+      "old_blob": "ba941bd10fc3b2d522de7c3788accefffeba8066",
+      "old_mode": "100644",
+      "old_path": "tools/ci_attestation.py",
+      "old_sha256": "a4c49ee42a82b4b4e807d9b3c40aeca04ee7762ac880698c1ddbe6a0b67e9678",
+      "path": "tools/ci_attestation.py",
+      "sha256": "30ce2813b23c80364f0572de6f6de2dac88972c7682296d2ee4844628f078054",
+      "status": "modified"
+    },
+    {
+      "blob": "4f481309295229415d0fa36214d8682dd3f9047d",
+      "mode": "100644",
+      "old_blob": "0283bf6c97d4e0fc148b1008491a8cd622984b75",
+      "old_mode": "100644",
+      "old_path": "tools/foundation_integrity_routing.py",
+      "old_sha256": "687d881a4eaca9cc6126663ae826b4d8d5fec2ddf433b45d44f63081efaf656a",
+      "path": "tools/foundation_integrity_routing.py",
+      "sha256": "ed53c45ebe04e491dc12f09c57f52878ffe159f6b27bf5d3c3693e52586e1bd4",
+      "status": "modified"
+    },
+    {
+      "blob": "0b7373bb555da6a2d8de93df0c3aa566b5399b45",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tools/founder_gate.py",
+      "sha256": "4e0590275fa566a02e525ce8a20cd37ff9ba6656f6f722485ef940ed2b632f84",
+      "status": "added"
+    },
+    {
+      "blob": "93a25d4fd67592f8eb55839e1c3f010315b69008",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tools/knowledge_capture.py",
+      "sha256": "2eed3d7f8bdf36394aadc01edf591a23e8511b99ac1d01fb9af4bebff15bb833",
+      "status": "added"
+    },
+    {
+      "blob": "fdf7636acc5106cee8cbd0fe124b892f085c49bd",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "8736939248f19a3ba97248fbfe44ed030678c5c165213cfbf3563e5f1ed84e02",
+      "status": "added"
+    },
+    {
+      "blob": "97a0b68be7f38bb8483ab23e023fa00adbd40664",
+      "mode": "100644",
+      "old_blob": "65c3a000d9b2fc5d5d66476ffad212f6b2b2cbba",
+      "old_mode": "100644",
+      "old_path": "tools/newyou_attest.py",
+      "old_sha256": "1ee50476793e5db50c086ba1c286f6040de9061dd1166d90e8f9e70f100d8dee",
+      "path": "tools/newyou_attest.py",
+      "sha256": "ef55eeac9e1dfd7ac59ffd8f1d961e144121a457f0e48d368a96c2a4979b0008",
+      "status": "modified"
+    }
+  ],
+  "migrations": [],
+  "pr": 224,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/224",
+  "schema_version": 1,
+  "symbols": [
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "KnowledgeSymbols",
+      "name": null,
+      "path": "tools/knowledge_symbols.exs",
+      "status": "parsed"
+    },
+    {
+      "arity": 5,
+      "change": "added",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "add_function",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "503cbcde588791856deba2b62a5e15eb68372a3d949eab5ced03605548b3adb6",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "add_unknown",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "5294c07eb7d5d3a08947a345f165605a572551613129837d9eba9c7bcd440e26",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "digest",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "15d48ba1445eae4b4aebd884e768feccbf23ea4cf3b07117c8ba7f3eeb08b436",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "function_head",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "885062744bdef4c22b9210238662715a28a024aca458d9f9d6fe9cd3c4ad8e51",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "keyword_body",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "77e94c9cf3d4244078e1ef5409f5dea19a4a12c190635b6bc375570775478830",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "module_name",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "0cb328df581fe9363fd39ec37da0e25ff86d78707bdb988fda736f125ddfd3fc",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "parse",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "0e8ebcc690cad8f9b7c81edd8720ad467634201f5ff030190503cf33d562f81d",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "run",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "e2899a1cb1c5c03ad20e444fefbd7b4a57882a45b1b2525ec8bd66ed22f383c3",
+      "status": "parsed"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "walk",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "ca01300b667b7a0e3b6ebbbbd897acd763fa7e562626e2f6ef5d2f395bbdcc48",
+      "status": "parsed"
+    }
+  ],
+  "tests": [
+    "tests/test_capability_knowledge.py",
+    "tests/test_ci_attestation.py",
+    "tests/test_foundation_lane_routing.py",
+    "tests/test_foundation_smoke.py",
+    "tests/test_founder_gate.py",
+    "tests/test_knowledge_capture.py",
+    "tests/test_newyou_attest.py"
+  ],
+  "tickets": [
+    "WELL-120",
+    "WELL-121"
+  ]
+}
