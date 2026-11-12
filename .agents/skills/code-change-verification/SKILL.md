@@ -26,8 +26,16 @@ Independent Master Gate verifies required documentation against the exact review
 
 Handoffs remain descriptive implementation maps beneath routed authority. They do not replace source inspection, exact-head checks, resulting-main reconciliation or Plane's live execution state.
 
-## Independent review and attestation handoff
+## Review and merge handoff
 
-After independent Master Gate approval, require the reviewer to supply `reviewed_head`, `reviewer`, `review_reference` and independently verified full-diff `diff_sha256` in machine-copyable form. Verify the authentic review reference, reviewer, exact head, full diff and digest independently before a trusted operator materializes `review.json`. Never substitute an author's self-certification or untrusted PR content.
+Follow `docs/development/foundation-integrity-merge-gate.md`. For eligible development work, ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the exact final head. That review is both technical approval and standing merge authorization. Do not add a second founder comment or a base-SHA line. The implementing agent must not use founder credentials.
 
-Identify the trusted operator and follow the before/after collector and private evidence custody procedure in `docs/development/foundation-integrity-merge-gate.md` and `AGENTS.md`. Record collector output, exit status, stderr and digests. Separate merge authorization remains required. Resulting-main certification must pass before Plane Done or dependent implementation; use the documented fail-closed fallback when proof is unavailable.
+Verify current required CI and live branch protection before merge. From trusted integrated `main`, run `python3 -m tools.ci_attestation native-candidate --pr NUMBER --reviewed-head HEAD_SHA --run RUN_ID`. When it passes, use `gh pr merge --repo Carpe-Diem-Media/NewYou --merge --match-head-commit HEAD_SHA NUMBER` without bypass. Then run `python3 -m tools.ci_attestation native-result --pr NUMBER --reviewed-head HEAD_SHA --run RUN_ID --candidate TESTED_CANDIDATE_SHA`. If GitHub returns an uncertain merge result, inspect the PR and `main` before taking further action. Never blindly repeat the merge.
+
+Apply stronger approval only when a governing or external obligation requires it. File paths, CI changes, agent instructions and governance edits do not by themselves mandate a strict route. Settings mutations still require separate owner authorization. PR #224 needs explicit owner authorization for its exact current-main transition after fresh complete review and CI; comment 6821263762 is collection-only, and the PR cannot self-approve or self-merge.
+
+Run `python3 -m tools.capability_knowledge` and its focused tests when maps/schema change. Independently compare the canonical map with source, resources/actions, constraints, lifecycle and tests. Hashes and shape alone are insufficient semantic proof. Maintain the same map for material capability changes.
+
+After merge, verify resulting main SHA, ordered parents and tested tree before Plane Done. The native-result check is read-only and stores no intent or evidence file. If its result is uncertain, inspect GitHub state and resolve the discrepancy before updating Plane.
+
+Regenerate and compare PR history using `mise exec -- python3 -m tools.knowledge_capture check --metadata-json /tmp/PR-metadata.json` before handoff. Foundation Integrity repeats this against its exact event head/base. Verify generated history, semantic maps and current-tree index serve distinct purposes; no generated commit may follow final approval.

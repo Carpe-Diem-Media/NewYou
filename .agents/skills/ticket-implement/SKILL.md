@@ -69,9 +69,9 @@ Before coding, state a concise working plan containing:
 - material JIT decisions that must be made;
 - the test strategy, including failure/concurrency/idempotency cases where applicable;
 - the likely files/resources/migrations to touch;
-- documentation impact under `docs/development/implementation-handoff-standard.md`: full handoff, material update, proof section/addendum, or justified exemption.
+- documentation impact under `docs/development/implementation-handoff-standard.md`: canonical capability map update, proof update/addendum, or justified semantic-map exemption.
 
-Create the required handoff or update in the same implementation PR. Record the implementation SHA, link real source symbols and tests, and distinguish observed evidence from future obligations. Material follow-up changes maintain the existing map. Apply prospectively after WELL-96 integration; do not retroactively block completed work or already-active WELL-7. These maps are descriptive, never governing or live execution authority.
+Create or maintain the required canonical capability JSON in the same implementation PR. Do not author a duplicate Markdown handoff. Record the implementation SHA, link real source symbols and tests, and distinguish observed evidence from future obligations. Material follow-up changes maintain the existing map. Apply prospectively after WELL-96 integration; do not retroactively block completed work or already-active WELL-7. These maps are descriptive, never governing or live execution authority.
 
 Do not wait for human approval of ordinary compliant implementation choices. Continue unless an unresolved choice meets the escalation threshold in `AGENTS.md`.
 
@@ -163,7 +163,13 @@ If you discover adjacent work that is material but not required to complete this
 
 Do not mutate Product/Architecture/Domain/Roadmap or semantic contracts merely to memorialise JIT learning. Governance remains read-only unless a deliberate semantic change or proven upstream contradiction requires amendment.
 
-## 8. Verify before handoff
+## 8. Automatic knowledge capture before review
+
+After implementation and semantic-map updates, generate the PR history record as part of this workflow. Export live PR metadata with `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` and obtain a small Plane receipt from the live Plane connector. Save each as temporary JSON. Run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/pr.json --plane-context /tmp/plane-receipt.json`. If Plane is unavailable, use `--plane-unavailable "REASON"` and record the specific limitation. Do not ask the founder to create or supply a Plane JSON file. CI checks PR metadata using `mise exec -- python3 -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"`; it needs no Plane token.
+
+Commit the generated `docs/development/knowledge/history/pr-NUMBER.json` before final review. Regenerate if source or base changes. Foundation Integrity independently checks mechanical fields without mutating the PR branch. A final approval must never be followed by a generated commit. Do not manually enumerate changed files, functions, tests, migrations or SHAs in a second handoff.
+
+## 9. Verify before handoff
 
 **REQUIRED SUB-SKILL:** use `code-change-verification` before claiming the ticket is ready for review.
 
@@ -183,7 +189,7 @@ For DB-dependent commands, use the DevCore workflow in `AGENTS.md` when configur
 
 Do not claim a check passed unless you observed it pass. Separate unrelated pre-existing failures from PR-caused failures with evidence; do not hide either.
 
-## 9. Open the PR and hand off exact evidence
+## 10. Open the PR and hand off exact evidence
 
 When the implementation and required local verification are review-ready:
 
@@ -192,7 +198,7 @@ When the implementation and required local verification are review-ready:
 3. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
 4. record material JIT choices and discovered work in Plane/PR evidence where useful;
 5. hand off for independent Master Gate review, including the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
-6. identify the trusted repository operator responsible for materializing and preserving the independently verified review record and running the pre-merge and post-merge collectors. Include these steps, separate merge authorization, and resulting-main certification in the PR handoff. Request the four machine-copyable review fields from Master Gate; do not create independent review evidence yourself.
+6. follow the eligible founder-development route in the merge-gate procedure. ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the final head. That review is both technical approval and standing merge authorization. Do not add a second comment or a base-SHA line. Keep any stronger approval that an actual governing or external obligation requires.
 
 Report:
 
@@ -206,7 +212,9 @@ Report:
 - discovered/deferred Plane work;
 - remaining review risks or known non-PR failures.
 
-Do not self-certify merge authority and do not merge unless explicitly authorised.
+Do not self-certify merge authority. For eligible work, use the read-only native-candidate check, normal exact-head merge, and read-only native-result check documented in the merge-gate procedure. Verify current branch protection and CI before merging. If the merge response is uncertain, inspect the PR and `main` before any further action. Move Plane to Done and take the next dependency-cleared Ready ticket only after resulting-main verification succeeds. Stronger governing approvals remain mandatory where required.
+
+PR #224 remains under current-main requirements. It needs explicit owner authorization for the exact merge transition after fresh complete review and CI. Collection-only comment 6821263762 is not authorization. Do not self-approve or self-merge it. CODEOWNERS read from the base cannot enforce review on this PR.
 
 Any head change after review begins invalidates prior exact-head certification.
 

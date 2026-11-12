@@ -136,11 +136,17 @@ class MixedAndUnknownRoutingTests(unittest.TestCase):
         self.assertEqual({"application_changes": True}, decision)
 
     def test_unknown_paths_fail_closed_without_selecting_full(self):
-        for path in ["new-surface/authority.md", ".github/CODEOWNERS", "tools/unclassified.py", "vendor/blob.bin"]:
+        for path in ["new-surface/authority.md", "tools/unclassified.py", "vendor/blob.bin"]:
             with self.subTest(path=path):
                 self.assertEqual("unknown", classify_path(path))
                 with self.assertRaises(ValueError):
                     _route([path])
+
+    def test_knowledge_and_codeowners_paths_select_engineering_checks(self):
+        for path in ("tools/capability_knowledge.py", "tests/test_capability_knowledge.py",
+                     "tools/knowledge_capture.py", "tools/knowledge_symbols.exs", ".github/CODEOWNERS"):
+            with self.subTest(path=path):
+                self.assertEqual({"application_changes": True}, _route([path]))
 
     def test_unclassified_document_paths_fail_closed_without_selecting_full(self):
         for path in ["docs/unclassified-area/example.md", "docs/something-new/foo.md"]:

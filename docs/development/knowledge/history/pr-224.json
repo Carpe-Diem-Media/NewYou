@@ -1,0 +1,603 @@
+{
+  "base_sha": "19bbd49dd532212fe05b6c144333b9b15895ad4c",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/224/checks",
+  "ci": {
+    "source": "external GitHub checks",
+    "status": "unknown"
+  },
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/224/commits",
+  "files": [
+    {
+      "blob": "e333933f4e8dd6d6eb62349fc9fa08bfba0bc336",
+      "mode": "100644",
+      "old_blob": "1cd34141d15eb75a007703abebe89d1a5ac0f66f",
+      "old_mode": "100644",
+      "old_path": ".agents/skills/code-change-verification/SKILL.md",
+      "old_sha256": "434194d00a21d479e39dd7265d86f0c276d4777a038d3243cdebcbcf9463a0bf",
+      "path": ".agents/skills/code-change-verification/SKILL.md",
+      "sha256": "8b8c6f801b981823421dbdc8d6aea36cbd0e04c3ca8229ae920993f9786a5fe7",
+      "status": "modified"
+    },
+    {
+      "blob": "3c6cd28965c4e407a8a587bbcfab20a5067e3ab5",
+      "mode": "100644",
+      "old_blob": "01ce0c84a292473b6213fb318bcd1991256a2823",
+      "old_mode": "100644",
+      "old_path": ".agents/skills/ticket-implement/SKILL.md",
+      "old_sha256": "01a28ebedd9987177fed93fb8cd046cf6e3da97aff05202cf4bf1ebf1e2dae5a",
+      "path": ".agents/skills/ticket-implement/SKILL.md",
+      "sha256": "54120c6b7275bb4d04768f1def5cb75a225812859a80fcd9ab3e9bed34ad3290",
+      "status": "modified"
+    },
+    {
+      "blob": "1cbc0dc4e3fde88a99c031eefef537f86d6de56e",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".github/CODEOWNERS",
+      "sha256": "2d2ef7cabbc66375721ab0fe51c2341030497ee4b22ec3092de0915a71722239",
+      "status": "added"
+    },
+    {
+      "blob": "d7212e3ee2b36a1fc24308fe779f707e139d202f",
+      "mode": "100644",
+      "old_blob": "1d3e4f4bf326ae0ffa274cb80de923ef2bff0db0",
+      "old_mode": "100644",
+      "old_path": ".github/workflows/foundation-integrity.yml",
+      "old_sha256": "acd2e811586a348ed246365476fdd562e6909e4cbc55561e1dcf23c93bf8be03",
+      "path": ".github/workflows/foundation-integrity.yml",
+      "sha256": "4232dc79b953e8d625d096b821b9d3a8846e7f5d603f2bc6a0f734864e5acd5f",
+      "status": "modified"
+    },
+    {
+      "blob": "2441dbcac5f26003fecda0a49dd992e356de91de",
+      "mode": "100644",
+      "old_blob": "07a46ae5ba885226222fe106ad04aaf72ce58dfb",
+      "old_mode": "100644",
+      "old_path": "AGENTS.md",
+      "old_sha256": "d19d3c3e746cf3ed2417f7b57e4e07b4d37e10ec8fe100e38a71068eada5be73",
+      "path": "AGENTS.md",
+      "sha256": "cb3ee47b56552b51933caaf4dd4fb0a00900c2709507b73c34c7f20080aae871",
+      "status": "modified"
+    },
+    {
+      "blob": "0538df15c710533eb7fce534b8b5d3358024d708",
+      "mode": "100644",
+      "old_blob": "f0b8afc5af9fb6b2bc230cddccfa76223a70ab51",
+      "old_mode": "100644",
+      "old_path": "docs/README.md",
+      "old_sha256": "7866dab391730ccd9b0315733dbb3f3f1dfa474da0baa3fff592ac94ec106718",
+      "path": "docs/README.md",
+      "sha256": "4b77c8086fe918fde01206102ea47224d9db530927b74fd298c4762f15241448",
+      "status": "modified"
+    },
+    {
+      "blob": "3b19e07d06ab5cb443190a46c1af096c30ef4bc6",
+      "mode": "100644",
+      "old_blob": "45d3140ddb0538e1be0ded60ca021bc24aaf1315",
+      "old_mode": "100644",
+      "old_path": "docs/development/chatgpt-project-master-gate-instructions.md",
+      "old_sha256": "0f9018233d769f272d2ac8e582e2a04de91205129da094da990bd2d789e14fc3",
+      "path": "docs/development/chatgpt-project-master-gate-instructions.md",
+      "sha256": "6197ff459fa69163f7eca2ede93d2cc26d18f5eb34f769d43b358e2e05043844",
+      "status": "modified"
+    },
+    {
+      "blob": "a398e881f2050c884245401f7ba7f98901870982",
+      "mode": "100644",
+      "old_blob": "da12f68ec516ac45564b5ebe2710ecb4428eeecf",
+      "old_mode": "100644",
+      "old_path": "docs/development/foundation-integrity-merge-gate.md",
+      "old_sha256": "5b36d87a46582d43808454fade10ffc9af68ca7ea40a159e36940443ef212157",
+      "path": "docs/development/foundation-integrity-merge-gate.md",
+      "sha256": "cd608840ab8f23674cbd4b2fe513e1aad5fa1bcc7174bfd0438f98923120c125",
+      "status": "modified"
+    },
+    {
+      "blob": "4591342a1926cf3bbc0743d71b4f31bf147a1f3f",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/founder-merge-admin-proposal.md",
+      "sha256": "7a4042312d52338b0b42313798fe532b76db19ba98d67980b334d15a8b91d478",
+      "status": "added"
+    },
+    {
+      "blob": "9574cc91805276006319c6ae43ad0b91698aad79",
+      "mode": "100644",
+      "old_blob": "14a0ffcbca5c316d86c833061e873578c5ede802",
+      "old_mode": "100644",
+      "old_path": "docs/development/github-branch-governance.md",
+      "old_sha256": "8f15ff6984255414527ecffd55e46ce0f275ccfc0b480400835da439eeac0b72",
+      "path": "docs/development/github-branch-governance.md",
+      "sha256": "e7257801d713bd405f340212c9d9b3ee9dbf9711d717dff98b622ec1bfca2602",
+      "status": "modified"
+    },
+    {
+      "blob": "77729cba1644a23225e54ddfaa05d32b7a8431a5",
+      "mode": "100644",
+      "old_blob": "b9b11877afb924942363c2808d033ab4be980c09",
+      "old_mode": "100644",
+      "old_path": "docs/development/implementation-handoff-standard.md",
+      "old_sha256": "966d3b5f37a39823ee6b32ec4dbbbde40dc6e20958ebf25ba21f1e0b8789e449",
+      "path": "docs/development/implementation-handoff-standard.md",
+      "sha256": "288da55f9c25d810cdec6173bfa7b73ed7ec3bca671f910b55bc6bae4766622b",
+      "status": "modified"
+    },
+    {
+      "blob": "7006fc51f200da01f9f3124473f5c5c34d4157d0",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/knowledge/README.md",
+      "sha256": "2ec92e74b656e4faee81168e8316104430e5feea0c9abbbfea48ab6f7346e3fb",
+      "status": "added"
+    },
+    {
+      "blob": "8dd2fd08c2f1c4cc45a8dc278cc261f3074375e5",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/knowledge/capability.schema.json",
+      "sha256": "7f2ef25f931d1106849c1808325eddc05e865c711363c621d7e046c60e37a607",
+      "status": "added"
+    },
+    {
+      "blob": "c37459ff83eb86d731faccda9274506a34a80aa4",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/knowledge/identity.registration.json",
+      "sha256": "7231c0f433b1f8d10442b1cff0318eda50f56d208ba22f5c0b29204e79d52093",
+      "status": "added"
+    },
+    {
+      "blob": "eda5c6cccac0b9c3d0fbfdca8076ad1bcab34dee",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/solo-founder-merge-handoff.md",
+      "sha256": "70aeb216dd83fe01ee44af93ea25e91f9835bf25ba7a0a13c7dd487fa77a7113",
+      "status": "added"
+    },
+    {
+      "blob": "95e0e9225c902479b5309a54ef2b03b6b84390a7",
+      "mode": "100644",
+      "old_blob": "fb22f0f964ca9f476b4655ca6dec3ca056242099",
+      "old_mode": "100644",
+      "old_path": "docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+      "old_sha256": "2b6328da327df1a373b020f11a66d702b54efa615820a42324b40c8340a0b210",
+      "path": "docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+      "sha256": "899d579dd343f406939892ffb49ad2d1be2690dd71dee2710a446eab22ecf78f",
+      "status": "modified"
+    },
+    {
+      "blob": "6f190c65dccabde07a8f0149c21b3324a5a144e0",
+      "mode": "100644",
+      "old_blob": "d12221dc5efd893afd4e472bb798c8b59cfc5629",
+      "old_mode": "100644",
+      "old_path": "docs/governance/README.md",
+      "old_sha256": "b302012f7090cb7c102d98388d8778480057ba9c7e972d92fe26393bdde872a9",
+      "path": "docs/governance/README.md",
+      "sha256": "e05c139ea3342a1ea2fcc1497e0ec0966149e2aec9fd0ebb7879842a35101023",
+      "status": "modified"
+    },
+    {
+      "blob": "4e5f6bbb5e800eed7608c50cd6bb051effc69e78",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.4.0.md",
+      "sha256": "69ff7220240572b387685f99e9bb2250aa3aed1d324a0eaac450c3c412b3d94f",
+      "status": "added"
+    },
+    {
+      "blob": "4ab9d517895e6752e7d4f8d29fc9128852bfe507",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md",
+      "sha256": "80c32d13b9eab59cc6d9e9d516e6a88ffa47e2f9d000d247dc5bec98e52f6fff",
+      "status": "added"
+    },
+    {
+      "blob": "8cd7db6641f876fd4b7eec2d0162cadc094c3bf7",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/supporting/PLATFORM_OPERATING_MODEL_v1.4.0.md",
+      "sha256": "3eaba59202e20d800d57a67743de899986f2fe7aaf78de49ba7a6266d9c2d6fc",
+      "status": "added"
+    },
+    {
+      "blob": "f1b1da5f69d1d86e2841eb8bc521af725a65fb95",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tests/test_capability_knowledge.py",
+      "sha256": "22b828b4fcfb2fc2782e75e6f0494bad2c48e7b31a0147a5e1e05c7ae8d48840",
+      "status": "added"
+    },
+    {
+      "blob": "e6e30b302708d399028120aecdbe423ec0446f64",
+      "mode": "100644",
+      "old_blob": "2de971a62de3640fd869bbff4c6e34b614c86039",
+      "old_mode": "100644",
+      "old_path": "tests/test_ci_attestation.py",
+      "old_sha256": "88229b4a38898354cea70846fd0ad630152e4ebf0f4b1faf78eb83935f36b81e",
+      "path": "tests/test_ci_attestation.py",
+      "sha256": "d5c60932946b1be578c31b9cc44bc5d1f2e7cacfb875a7de85f4af4c7f8888b6",
+      "status": "modified"
+    },
+    {
+      "blob": "fe95acb6ee085025294b0c7d9d164787c7a79ec3",
+      "mode": "100644",
+      "old_blob": "3b47217753fd8542677e8c5905367408dca195e4",
+      "old_mode": "100644",
+      "old_path": "tests/test_foundation_lane_routing.py",
+      "old_sha256": "fa885d670f97368fc948ea27e2c3616e5498f620906d901db2c5ac894f01d8b3",
+      "path": "tests/test_foundation_lane_routing.py",
+      "sha256": "7ca0c6cab28a6074d5e1feac12602fcc6c14703d7f25f7829c60654df07bb018",
+      "status": "modified"
+    },
+    {
+      "blob": "696466d68e7ee3ec406706b657ee132fce59ca67",
+      "mode": "100644",
+      "old_blob": "c21c609cd07e73f4a98bbbfbc8c308fed9b1c2f7",
+      "old_mode": "100644",
+      "old_path": "tests/test_foundation_smoke.py",
+      "old_sha256": "b612788c0b9535db8f2a1fa2ef6c345825988a86ce51df157f9321fc2860064a",
+      "path": "tests/test_foundation_smoke.py",
+      "sha256": "b2588b88fdbe7af2e52366e9f67237f049202b8193970dbc6b21ddec771b6ffd",
+      "status": "modified"
+    },
+    {
+      "blob": "8ef88fe4a77f7e356daf76846ff76e0fd608547c",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tests/test_knowledge_capture.py",
+      "sha256": "1ff630fa1433ca22541193a632d3160059a8b4c060a46206343280759d44cc15",
+      "status": "added"
+    },
+    {
+      "blob": "a9b9c43caea89788b89ad0de0f3395080c90bf7a",
+      "mode": "100644",
+      "old_blob": "f2b0f41c0d6e19c41c9dffbe2497e22871d79fe4",
+      "old_mode": "100644",
+      "old_path": "tests/test_newyou_attest.py",
+      "old_sha256": "a41d217ab29972b63b612006e44ffb2e92320e9f8d2cb533eafc2844e44fe947",
+      "path": "tests/test_newyou_attest.py",
+      "sha256": "f10b7a6685d2a5eca012e8d12864a685a942b67729d7eeb135481823071af292",
+      "status": "modified"
+    },
+    {
+      "blob": "789bcec58407ffe9c8f835d361ee3ed34cc13c7d",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tools/capability_knowledge.py",
+      "sha256": "d3f86ec94400544b475db2e6d36fc48410e12a14bd150b8bd0612bc9c2cc0dd3",
+      "status": "added"
+    },
+    {
+      "blob": "bf08b2f18535a38ca426c7830e207ae67eb41fed",
+      "mode": "100644",
+      "old_blob": "ba941bd10fc3b2d522de7c3788accefffeba8066",
+      "old_mode": "100644",
+      "old_path": "tools/ci_attestation.py",
+      "old_sha256": "a4c49ee42a82b4b4e807d9b3c40aeca04ee7762ac880698c1ddbe6a0b67e9678",
+      "path": "tools/ci_attestation.py",
+      "sha256": "0b98adfe09b97e7e9a3beb1218ebbdfa0f9d434447f811b3948536f80f066c1f",
+      "status": "modified"
+    },
+    {
+      "blob": "8d468282dc9dbbc1fe0038bcb85435b270075272",
+      "mode": "100644",
+      "old_blob": "0283bf6c97d4e0fc148b1008491a8cd622984b75",
+      "old_mode": "100644",
+      "old_path": "tools/foundation_integrity_routing.py",
+      "old_sha256": "687d881a4eaca9cc6126663ae826b4d8d5fec2ddf433b45d44f63081efaf656a",
+      "path": "tools/foundation_integrity_routing.py",
+      "sha256": "7c142d6976c62bdb436882d62ff5966fa311e995a08dbc3d0452cfe5a64d4cf8",
+      "status": "modified"
+    },
+    {
+      "blob": "cd73f97dd8525504a9a52c9e6883fc3f61e7bebd",
+      "mode": "100644",
+      "old_blob": "d8a25f8154e5c518cb0d113a10a35871d56f8a46",
+      "old_mode": "100644",
+      "old_path": "tools/foundation_integrity_smoke.py",
+      "old_sha256": "e8329a0ed070790d3a1a0aa887b83149d0bc62741e27ded4fe56fd405fb7f142",
+      "path": "tools/foundation_integrity_smoke.py",
+      "sha256": "c3c7abedae7eb568d3abde43d0b43e4e5fcce8ce9cde143e561313936806601c",
+      "status": "modified"
+    },
+    {
+      "blob": "feb99aac30081906e4934eae324938ba13a33941",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tools/knowledge_capture.py",
+      "sha256": "7abf14cf7820b2ac3602a01233d9274cf0d9e6e19cda4bfd53975864d0862d82",
+      "status": "added"
+    },
+    {
+      "blob": "de272d298a00cc2395f6cac79f5d46db101aef30",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "3ab8b60ad4141719f3cb9575676bdb580885a1da6d1bb95450acf9b2ce5faa53",
+      "status": "added"
+    },
+    {
+      "blob": "ac533a528e5f19f6b8c6d2669198f634a15ec5d4",
+      "mode": "100755",
+      "old_blob": "1f0d798d772a5a76117aeca046167d6d019f3a18",
+      "old_mode": "100755",
+      "old_path": "tools/newyou-attest",
+      "old_sha256": "31567d87a152d95196c35a347bc785879cdd54ff4fb0a72d2981dbdf1124cfc3",
+      "path": "tools/newyou-attest",
+      "sha256": "ec523e6ac913f2cca31f6acd029ceb5fbd8d69d1569c474b4e48a7ff2f550130",
+      "status": "modified"
+    },
+    {
+      "blob": "f79b6b16f3728d248ea6137ace3b5aab19b7c538",
+      "mode": "100644",
+      "old_blob": "65c3a000d9b2fc5d5d66476ffad212f6b2b2cbba",
+      "old_mode": "100644",
+      "old_path": "tools/newyou_attest.py",
+      "old_sha256": "1ee50476793e5db50c086ba1c286f6040de9061dd1166d90e8f9e70f100d8dee",
+      "path": "tools/newyou_attest.py",
+      "sha256": "afc5adbb1943df4e8896023f2f942b2689cf1407d0ae1af9aeb115d801e494bf",
+      "status": "modified"
+    }
+  ],
+  "intent": {
+    "author": {
+      "id": 355419376,
+      "login": "JC-Agents"
+    },
+    "kind": "attributed_intent",
+    "summary": "Preserve WELL-120's repository-transfer identity repair and implement WELL-121's permanent workflow: automatic implementation knowledge in the PR, one final-head founder GitHub approval for eligible development, ordinary agent merge, resulting-main verification and Plane reconciliation.",
+    "title": "WELL-120/WELL-121: Automate implementation knowledge before review",
+    "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/224"
+  },
+  "migrations": [],
+  "plane": {
+    "checked_at": "2026-11-12T12:53:46Z",
+    "items": [
+      {
+        "description_sha256": "070d9f9d4b95097400f7d4d0767b7f7dea23bb45cf1f3f1cfb4ec9331906ab49",
+        "id": "f64ac790-66df-4b30-a233-c46c3d999bb8",
+        "identifier": "WELL-120",
+        "name": "Restore attestation after NewYou repository ownership transfer",
+        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+        "sequence_id": 120,
+        "state": "In Review"
+      },
+      {
+        "description_sha256": "7dd7d54440d283d9001953456d17bd45c348aad337535134576b994d564feb51",
+        "id": "fa6ffcb5-f6a8-41f5-a763-e634eb510aec",
+        "identifier": "WELL-121",
+        "name": "Permanent solo-founder Master Gate approval and automated merge/reconciliation",
+        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+        "sequence_id": 121,
+        "state": "In Review"
+      }
+    ],
+    "source": "connected-plane",
+    "status": "agent_verified"
+  },
+  "pr": 224,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/224",
+  "range_base_sha": "19bbd49dd532212fe05b6c144333b9b15895ad4c",
+  "schema_version": 1,
+  "symbols": [
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "KnowledgeSymbols",
+      "name": null,
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "41a262fdfcd605d73f94ef8691c3744204e885079e2cdcdf4124b71889ac1ea6",
+      "status": "parsed"
+    },
+    {
+      "arity": 6,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "add_function",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "ed5b5ffef8d0db73d53a072cba373e525b8e8a25738cbaec29d19d897a2e2aad",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "add_unknown",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "5294c07eb7d5d3a08947a345f165605a572551613129837d9eba9c7bcd440e26",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "digest",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "15d48ba1445eae4b4aebd884e768feccbf23ea4cf3b07117c8ba7f3eeb08b436",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "function_head",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "885062744bdef4c22b9210238662715a28a024aca458d9f9d6fe9cd3c4ad8e51",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "keyword_body",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "77e94c9cf3d4244078e1ef5409f5dea19a4a12c190635b6bc375570775478830",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "module_name",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "0cb328df581fe9363fd39ec37da0e25ff86d78707bdb988fda736f125ddfd3fc",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "normalize",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "b1ba31aacc23b40972324ad3b8657c13629fa9f1e352efef204c21f2b195b444",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "parse",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "a5c6343b8d7520433676a14d1fc7cba5b18fdb1f9c1806df13c650541732ed5b",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "run",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "e2899a1cb1c5c03ad20e444fefbd7b4a57882a45b1b2525ec8bd66ed22f383c3",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "run_current",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "06fe621b8b9f8edd75eec5b0dbb50154d85a93a10ccd64dedbb076220dc80226",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "KnowledgeSymbols",
+      "name": "walk",
+      "old_sha256": null,
+      "path": "tools/knowledge_symbols.exs",
+      "sha256": "d2b28e222054f5074ebb180febaea7bd0c0fd69018e3a2a05f44997ede42c2fb",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "tools/knowledge_symbols.exs",
+      "reason": "top-level expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    }
+  ],
+  "tests": [
+    "tests/test_capability_knowledge.py",
+    "tests/test_ci_attestation.py",
+    "tests/test_foundation_lane_routing.py",
+    "tests/test_foundation_smoke.py",
+    "tests/test_knowledge_capture.py",
+    "tests/test_newyou_attest.py"
+  ],
+  "tickets": [
+    "WELL-120",
+    "WELL-121"
+  ]
+}

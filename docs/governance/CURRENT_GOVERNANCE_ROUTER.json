@@ -80,10 +80,10 @@
   "supporting_documents": [
     {
       "document_id": "PLATFORM_OPERATING_MODEL",
-      "canonical_filename": "PLATFORM_OPERATING_MODEL_v1.3.0.md",
-      "repository_path": "docs/governance/supporting/PLATFORM_OPERATING_MODEL_v1.3.0.md",
-      "sha256": "437938bf0cdbb823b393304fba8099742c4273ef53914d24f7cde2042859c775",
-      "semver": "1.3.0"
+      "canonical_filename": "PLATFORM_OPERATING_MODEL_v1.4.0.md",
+      "repository_path": "docs/governance/supporting/PLATFORM_OPERATING_MODEL_v1.4.0.md",
+      "sha256": "3eaba59202e20d800d57a67743de899986f2fe7aaf78de49ba7a6266d9c2d6fc",
+      "semver": "1.4.0"
     },
     {
       "document_id": "FRONTEND_EXPERIENCE_SYSTEM",
@@ -94,17 +94,17 @@
     },
     {
       "document_id": "ENGINEERING_STANDARDS",
-      "canonical_filename": "ENGINEERING_STANDARDS_v1.0.1.md",
-      "repository_path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.0.1.md",
-      "sha256": "5fcca7b53613d0f0116dbd17dc488c2a047201094bc7327b9c3663e87321ebed",
-      "semver": "1.0.1"
+      "canonical_filename": "ENGINEERING_STANDARDS_v1.1.0.md",
+      "repository_path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md",
+      "sha256": "80c32d13b9eab59cc6d9e9d516e6a88ffa47e2f9d000d247dc5bec98e52f6fff",
+      "semver": "1.1.0"
     },
     {
       "document_id": "DELIVERY_GOVERNANCE_STANDARD",
-      "canonical_filename": "DELIVERY_GOVERNANCE_STANDARD_v1.3.0.md",
-      "repository_path": "docs/governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.3.0.md",
-      "sha256": "3f510c2fdcbab4ef873c0ec17d2a554203d642bdba7a7716b7fe8b67c43340d5",
-      "semver": "1.3.0"
+      "canonical_filename": "DELIVERY_GOVERNANCE_STANDARD_v1.4.0.md",
+      "repository_path": "docs/governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.4.0.md",
+      "sha256": "69ff7220240572b387685f99e9bb2250aa3aed1d324a0eaac450c3c412b3d94f",
+      "semver": "1.4.0"
     }
   ],
   "proposed_successors": [
