@@ -151,6 +151,17 @@
       "status": "added"
     },
     {
+      "blob": "e18f306e6e276e3c5c03a2f8d5d721ee182eddda",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/superpowers/specs/2026-11-12-overhead-lighting-design.md",
+      "sha256": "8766803767a0967493f53946a63cfd136e5018657d0a00ab7fedacaeed9df78e",
+      "status": "added"
+    },
+    {
       "blob": "fd87b8b5e666f660223d042eac496ed9adeeb8d4",
       "mode": "100644",
       "old_blob": "84ce6cb62d31cbc85db5f4434ce6cc41d3956f33",
@@ -465,13 +476,13 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "NewYou needs one live reference for its shared design tokens and responsive components. This adds development-only LiveView routes at `/dev/design-system` and `/dev/design-system/preview`, with palette, typography, spacing, buttons/links, cards/icons, centred incomplete grid rows, real iframe viewport previews, contrast measurements and radius/shadow specimens. CSS values feed the existing namespaced Tailwind utilities and semantic Phoenix components.",
+    "summary": "Adds a development-only LiveView design guide that renders NewYou's shared token-driven components. Editing the canonical CSS values updates the guide and their application consumers together.",
     "title": "WELL-112: Add live design guide and centralize site fonts",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-12T19:15:21.914768Z",
+    "checked_at": "2026-11-12T19:24:50.283672Z",
     "items": [
       {
         "description_sha256": "37e40677ccfc39b60b5e720efb6483fcc3575d647c09ff296a9e8faedd4a3e32",
