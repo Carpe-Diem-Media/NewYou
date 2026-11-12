@@ -1,0 +1,390 @@
+{
+  "base_sha": "a3d7e2e2ac11c3b7ecdd6610e40e1328c226b216",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/226/checks",
+  "ci": {
+    "source": "external GitHub checks",
+    "status": "unknown"
+  },
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/226/commits",
+  "files": [
+    {
+      "blob": "ab7335df6331aba282b77fe5a2a2e2be927688e7",
+      "mode": "100644",
+      "old_blob": "4412b2ae17d31c229723defd5a9d69f001f6317b",
+      "old_mode": "100644",
+      "old_path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "old_sha256": "111b6fbe905509577e80d9a457bb6fd09fec33f26df48b4d59201aa4493f0e64",
+      "path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "sha256": "3c05e3e18f2004d4623b5800602d845ba0bb38f20fe598450e54364b0cb49cb7",
+      "status": "modified"
+    },
+    {
+      "blob": "c6e1eda1a5ff9fec9e787cb66ba38147091dbc22",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-AF-V1.txt",
+      "sha256": "2d55e469b1717a28af4b4ee3467fba2ecc5eca1df9083b23f233de60c158a337",
+      "status": "added"
+    },
+    {
+      "blob": "3aa5a9f01d71e520e14921b13388dea01ef35dc4",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-EN-V1.txt",
+      "sha256": "7f57114273ec162a9a4dad9a5c260985ba9148f98d58917ac5e7fa95d95a2042",
+      "status": "added"
+    },
+    {
+      "blob": "a8c21d421b75c7856ffa24b8229fcfb3e7986ad6",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-AF-V1.txt",
+      "sha256": "ae9b51d967c2be015b8f948bb05360027647767c1189e3df284afbb296295d90",
+      "status": "added"
+    },
+    {
+      "blob": "9103d2c27a98f80dea0240428ccbfac268d82be4",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-EN-V1.txt",
+      "sha256": "c1d761d829e7eb3e400b94d6c2be734ac33a0087a742c2b77818ff06a21d3cb7",
+      "status": "added"
+    },
+    {
+      "blob": "b1e880bd6506f7e4e5c78a8e6c12e3e2e95dd53f",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+      "sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+      "status": "added"
+    },
+    {
+      "blob": "43fb6bd97e4393b297e0402269ca8457720ffea9",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
+      "sha256": "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64",
+      "status": "added"
+    },
+    {
+      "blob": "37cd6f716c7a399ce508b0f21c3fbeb7fc4d9dab",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/recovery_messages/README.md",
+      "sha256": "c1d0a8bf263d4c0d527447afb6bf4baabd18cb0fa00a993cf94959bd192c7016",
+      "status": "added"
+    },
+    {
+      "blob": "de9d1d083fe7d7c318ab104770d0f29e0341b776",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/recovery_messages/RECOVERY_MESSAGE_CANDIDATE_EVIDENCE_PACKET_v0.1.0.json",
+      "sha256": "be05db014e6a3beb947ef0394fd2e846d557d3367322e3308184eb099c327544",
+      "status": "added"
+    },
+    {
+      "blob": "dc2b485d87205f15a5e1d6a0d9efa17b6f208873",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/recovery_messages/RECOVERY_MESSAGE_DEVELOPMENT_EVIDENCE_PACKET_v0.2.0.json",
+      "sha256": "83a44a10763181f46bbab2d6de99cf67854a18623a174746095628ae55bbeea7",
+      "status": "added"
+    },
+    {
+      "blob": "101d1fd60668510a6a494886457024a2f9eedcf7",
+      "mode": "100644",
+      "old_blob": "4e96a3174e7a7b3e331a0dadaf80ad66391c27e8",
+      "old_mode": "100644",
+      "old_path": "docs/development/p8-09-magic-login-handoff.md",
+      "old_sha256": "996ff6f3f4679b3a56b12eaa4228d177ea30811b2892420c00813b504a3e1950",
+      "path": "docs/development/p8-09-magic-login-handoff.md",
+      "sha256": "d0cebb4af9c3a2bc689cf0584ac75a1288aee0ffc56bf554943130113a7e4a0f",
+      "status": "modified"
+    },
+    {
+      "blob": "a3f763e1fac414e1906b5c40f951b741c5fc1324",
+      "mode": "100644",
+      "old_blob": "be9bb9bb8df39bb5fbe8e65893cb882b91bd0d30",
+      "old_mode": "100644",
+      "old_path": "docs/development/p8-12-password-reset-handoff.md",
+      "old_sha256": "fc0f3a48e5138c3fd2e6a2159a5e65c2df1ce7edd5fb886d14632116662599b7",
+      "path": "docs/development/p8-12-password-reset-handoff.md",
+      "sha256": "dbaa25c58de5a1a6eb84efc9a9cfa18623e00285336df01fa43dfa16592eb11f",
+      "status": "modified"
+    },
+    {
+      "blob": "bd417c919cdf286ba0075483fa01cead618d88b4",
+      "mode": "100644",
+      "old_blob": "95e0e9225c902479b5309a54ef2b03b6b84390a7",
+      "old_mode": "100644",
+      "old_path": "docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+      "old_sha256": "899d579dd343f406939892ffb49ad2d1be2690dd71dee2710a446eab22ecf78f",
+      "path": "docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+      "sha256": "0532b93edb4249cea4670e97ae204b132f8a617ccef08c0ae75cdd7a9fb9200f",
+      "status": "modified"
+    },
+    {
+      "blob": "9c3bf18f83a3858909ce3e1e3c1e55dccaf3193e",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/product/00_PLATFORM_v1.16.0.md",
+      "sha256": "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174",
+      "status": "added"
+    },
+    {
+      "blob": "145fbb973945c4610de04e218fe0d49732f77304",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/product/01_DECISIONS_v1.16.0.md",
+      "sha256": "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8",
+      "status": "added"
+    },
+    {
+      "blob": "eb46573fa9f7e2d813905c695953b800ba6bf3de",
+      "mode": "100644",
+      "old_blob": "5073760d7ad79bb9bf496e6ed652017de957b489",
+      "old_mode": "100644",
+      "old_path": "lib/new_you/content/magic_login_message.ex",
+      "old_sha256": "0d5e7f47e2ee913e5c653e46d0bc9d66455630ab3a358da509dab4850367d6f6",
+      "path": "lib/new_you/content/magic_login_message.ex",
+      "sha256": "9dbfa435533c06fd56a42ebfc6fc4ea0e22d585deee5320dcd1b4e180eeef4c9",
+      "status": "modified"
+    },
+    {
+      "blob": "0efb5395e13d96e4133f3fceedd76f8aa8d63773",
+      "mode": "100644",
+      "old_blob": "e57f2a7ce6eb6963830db8a381f921fb989fe742",
+      "old_mode": "100644",
+      "old_path": "lib/new_you/content/password_reset_message.ex",
+      "old_sha256": "af7ce22b05160941213944a160ae417655be8749db24b92a02f873c54279ce28",
+      "path": "lib/new_you/content/password_reset_message.ex",
+      "sha256": "22ca982480d48c0b67182db0d68d25534d49c63ef91f79b38ee18f45b38db681",
+      "status": "modified"
+    },
+    {
+      "blob": "f43a69f5bcadd9fadbfcd23623cb110b53aa7ecd",
+      "mode": "100644",
+      "old_blob": "8c54526efdf8c7a37b60537c29e1fd5b1b0acb5f",
+      "old_mode": "100644",
+      "old_path": "test/new_you/content/magic_login_message_test.exs",
+      "old_sha256": "5629397787ddece3eb45fb0aaea4cefe3bb4fb4a7cecd30b5bd3eff4e811a557",
+      "path": "test/new_you/content/magic_login_message_test.exs",
+      "sha256": "6e51b1d6b02cf24d1eb50903765875f8d038d04350ca4042ef5d009dbeda420d",
+      "status": "modified"
+    },
+    {
+      "blob": "2ddb8bf968f6fa993a7859392f0324776aa6695d",
+      "mode": "100644",
+      "old_blob": "fc0ba4d3b4cb853f0a9b1f465ef475695c463999",
+      "old_mode": "100644",
+      "old_path": "test/new_you/content/password_reset_message_test.exs",
+      "old_sha256": "f72c73597781550c7998e2224c4467599c57a927b29b7ac2937749148069952b",
+      "path": "test/new_you/content/password_reset_message_test.exs",
+      "sha256": "263e062d3a4f70cda290355b21d769668b4a1745b38ab9407457a19c467380b4",
+      "status": "modified"
+    },
+    {
+      "blob": "e8938fa36820ee3977759ae6894d47f085fad711",
+      "mode": "100644",
+      "old_blob": "4f13661cb5e450a5d826a7ec62dfc72ee839f165",
+      "old_mode": "100644",
+      "old_path": "tests/test_password_reset_message_activation.py",
+      "old_sha256": "84b6c01a64758e36937069eccc527ecea434f39de67ba56a47007e9097168887",
+      "path": "tests/test_password_reset_message_activation.py",
+      "sha256": "065e984235609fcc158027f6bd2c07207d72d7b54b570a2ac1f5c488caaf4d29",
+      "status": "modified"
+    },
+    {
+      "blob": "620a3b6c9da9331d5d613b49a340213fa2ab0107",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tests/test_well110_recovery_evidence.py",
+      "sha256": "41bf18db69aad6ec548f3bc45f651552d0a507c19a0f45bbec8307f7699a8164",
+      "status": "added"
+    },
+    {
+      "blob": "a1bfa653f978711bd2e51e3053ac4162aa6f527a",
+      "mode": "100644",
+      "old_blob": "cf09716d35f8171942e513b79fdb9d6395829b18",
+      "old_mode": "100644",
+      "old_path": "tools/check_magic_login_evidence.py",
+      "old_sha256": "42afc61176226d5a38bbab1d85bf55f3de5d2bede717ecf41c581bc9cbfceb75",
+      "path": "tools/check_magic_login_evidence.py",
+      "sha256": "0b2f1926b3126d98aaa1549bbb073faf6cf7f2185b007d8ffb27fac297ec20c8",
+      "status": "modified"
+    },
+    {
+      "blob": "9ce0bc08ec37bf44931e89eac0e49368a6b71135",
+      "mode": "100644",
+      "old_blob": "4ae5391f2f3b9ddde0b9ae3c5b6e52b2e8ed0b9e",
+      "old_mode": "100644",
+      "old_path": "tools/check_password_reset_message_evidence.py",
+      "old_sha256": "49282e526ce683724030884838c4408ee5ca3ba610f09534231309fc1fd3746f",
+      "path": "tools/check_password_reset_message_evidence.py",
+      "sha256": "f5f2557ae827d1c46d4a4e15fcaaeeb8da233f268eeaec9ab590ed19211adf7e",
+      "status": "modified"
+    }
+  ],
+  "intent": {
+    "author": {
+      "id": 355419376,
+      "login": "JC-Agents"
+    },
+    "kind": "attributed_intent",
+    "summary": "## WELL-110 continuation",
+    "title": "WELL-110: Promote bounded recovery messages",
+    "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/226"
+  },
+  "migrations": [],
+  "plane": {
+    "checked_at": "2026-11-12T15:46:11Z",
+    "items": [
+      {
+        "description_sha256": "b88804a863efaff6776a01c766f5ea96e4c891d5230c24180c21c89686defb38",
+        "id": "9b4f49af-dba4-46f8-aa8e-6ea74c4d05cd",
+        "identifier": "WELL-110",
+        "name": "WELL-16 upstream \u2014 approve recovery-message Product classification and exact EN/AF development eligibility",
+        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+        "sequence_id": 110,
+        "state": "In Progress"
+      }
+    ],
+    "source": "connected-plane",
+    "status": "agent_verified"
+  },
+  "pr": 226,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/226",
+  "range_base_sha": "a3d7e2e2ac11c3b7ecdd6610e40e1328c226b216",
+  "schema_version": 1,
+  "symbols": [
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.MagicLoginMessage",
+      "name": null,
+      "old_sha256": "bf9ef35f38442dcaf835252da9deed7b09f0e4b10add4037411c8f2405e29bf4",
+      "path": "lib/new_you/content/magic_login_message.ex",
+      "sha256": "9ee0542c092ef5d0197b77960939eef36e9179fb58a59cbf2c42b0a43ce85b82",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/content/magic_login_message.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.PasswordResetMessage",
+      "name": null,
+      "old_sha256": "18c75138142af44defe72c6f0b0ebfebcd32e708eea2fdffa2cc5d01efcb92f3",
+      "path": "lib/new_you/content/password_reset_message.ex",
+      "sha256": "68ed1a09dc88971d444205f415b8b4737bef7076688960cdc3b85ab6f6cf7e1f",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/content/password_reset_message.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.MagicLoginMessageTest",
+      "name": null,
+      "old_sha256": "1137f3e6b6807216bf619449e5be3d214ad2e913b36ff182a491e2bbd903220c",
+      "path": "test/new_you/content/magic_login_message_test.exs",
+      "sha256": "af16db344a37145eeae672347d63847d03f9e450c1317df62addb59aeeb3be45",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/content/magic_login_message_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.PasswordResetMessageTest",
+      "name": null,
+      "old_sha256": "2f8e8cb75cec3ea48bb7e7f5811056e5889cdc65aa87b61fdcec5805d7131541",
+      "path": "test/new_you/content/password_reset_message_test.exs",
+      "sha256": "b8bff5454b2a140d2a8338bad640db55447a7807f392dbd9e54fc40ef2f7cbb4",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/content/password_reset_message_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    }
+  ],
+  "tests": [
+    "test/new_you/content/magic_login_message_test.exs",
+    "test/new_you/content/password_reset_message_test.exs",
+    "tests/test_password_reset_message_activation.py",
+    "tests/test_well110_recovery_evidence.py"
+  ],
+  "tickets": [
+    "WELL-110"
+  ]
+}

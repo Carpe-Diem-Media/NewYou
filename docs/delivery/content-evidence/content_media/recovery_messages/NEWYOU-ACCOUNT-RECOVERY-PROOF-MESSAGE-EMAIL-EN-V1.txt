@@ -1,0 +1,13 @@
+subject: Continue your {{platform_name}} account recovery
+
+We received a request to recover access to your {{platform_name}} account.
+
+If you made this request, use the link below to continue with the next step:
+
+{{account_recovery_link}}
+
+Opening the link does not confirm the step or complete recovery. You must explicitly confirm the next step. The link is time-limited and can be used to confirm the step only once. Further verification may be required before recovery can be completed.
+
+Do not share or forward this link. If you did not make this request, do not use the link. The request alone does not change your password or place a new restriction on your account.
+
+{{platform_name}}

@@ -38,15 +38,15 @@ defmodule NewYou.Content.MagicLoginMessageTest do
     end
   end
 
-  test "preserves the approved magic-login content under the exact Product v1.15 successor", %{
+  test "preserves the approved magic-login content under the exact Product v1.16 successor", %{
     root: root
   } do
     governance_router_path = Path.join(root, "docs/governance/CURRENT_GOVERNANCE_ROUTER.json")
     router = governance_router_path |> File.read!() |> Jason.decode!()
 
     successor_routes = %{
-      "PLATFORM_PRODUCT_LAW" => "docs/governance/product/00_PLATFORM_v1.15.0.md",
-      "PRODUCT_DECISIONS" => "docs/governance/product/01_DECISIONS_v1.15.0.md"
+      "PLATFORM_PRODUCT_LAW" => "docs/governance/product/00_PLATFORM_v1.16.0.md",
+      "PRODUCT_DECISIONS" => "docs/governance/product/01_DECISIONS_v1.16.0.md"
     }
 
     governing_documents =
@@ -59,7 +59,7 @@ defmodule NewYou.Content.MagicLoginMessageTest do
             |> Map.put("canonical_filename", Path.basename(path))
             |> Map.put("repository_path", path)
             |> Map.put("sha256", :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower))
-            |> Map.put("semver", "1.15.0")
+            |> Map.put("semver", "1.16.0")
 
           :error ->
             document
@@ -130,14 +130,14 @@ defmodule NewYou.Content.MagicLoginMessageTest do
 
   test "rejects a successor whose bytes change its Product predecessor lineage", %{root: root} do
     path =
-      Path.join(root, "docs/governance/product/00_PLATFORM_v1.15.0.md")
+      Path.join(root, "docs/governance/product/00_PLATFORM_v1.16.0.md")
 
     bytes = File.read!(path)
 
     changed =
       String.replace(
         bytes,
-        "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.14.0.md`",
+        "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.15.0.md`",
         "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.13.0.md`"
       )
 
@@ -175,6 +175,20 @@ defmodule NewYou.Content.MagicLoginMessageTest do
     File.write!(path, File.read!(path) <> "\n")
 
     assert {:error, :content_ineligible} = MagicLoginMessage.binding("af")
+  end
+
+  test "rejects corrupted recovery approval proposal and previous successor", %{root: root} do
+    for path <- [
+          "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
+          "docs/governance/product/00_PLATFORM_v1.15.0.md",
+          "docs/governance/product/proposals/well-98/01_DECISIONS_v1.15.0_PROPOSED.md"
+        ] do
+      full_path = Path.join(root, path)
+      original = File.read!(full_path)
+      File.write!(full_path, original <> "\n")
+      assert {:error, :content_ineligible} = MagicLoginMessage.binding("af")
+      File.write!(full_path, original)
+    end
   end
 
   test "rejects unsupported locales without fallback" do

@@ -223,8 +223,24 @@ def validate_development(root: Path, packet: dict) -> list[str]:
             load_artifact(document)
             check(document["predecessor"] == approved["predecessor"] and document["predecessor_sha256"] == approved["predecessor_sha256"], "law predecessor drift")
             check(document["approved_amendment_path"] == approved["path"] and document["approved_amendment_sha256"] == approved["sha256"], "law approval subject drift")
-            route = next(x for x in governance["governing_documents"] if x["document_id"] == document["document_id"])
-            expected_current = current_authority[document["document_id"]]
+            matches = [x for x in governance["governing_documents"] if x["document_id"] == document["document_id"]]
+            check(len(matches) == 1, "missing or duplicate current authority route")
+            route = matches[0] if len(matches) == 1 else {}
+            prior_authority = current_authority[document["document_id"]]
+            load_artifact({"path": prior_authority["repository_path"], "sha256": prior_authority["sha256"]})
+            load_artifact({"path": prior_authority["predecessor"], "sha256": prior_authority["predecessor_sha256"]})
+            load_artifact({"path": prior_authority["approved_amendment_path"], "sha256": prior_authority["approved_amendment_sha256"]})
+            current_sha = {
+                "PLATFORM_PRODUCT_LAW": "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174",
+                "PRODUCT_DECISIONS": "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8",
+            }
+            expected_current = {
+                "repository_path": prior_authority["repository_path"].replace("v1.15.0", "v1.16.0"),
+                "sha256": current_sha[document["document_id"]], "semver": "1.16.0",
+                "predecessor": prior_authority["repository_path"], "predecessor_sha256": prior_authority["sha256"],
+                "approved_amendment_path": "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
+                "approved_amendment_sha256": "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64",
+            }
             check(
                 route.get("repository_path") == expected_current["repository_path"]
                 and route.get("canonical_filename") == Path(expected_current["repository_path"]).name
@@ -240,7 +256,7 @@ def validate_development(root: Path, packet: dict) -> list[str]:
             )
             check(
                 f"**Predecessor:** `{expected_current['predecessor']}`" in successor_bytes.decode("utf-8")
-                and "**SemVer transition:** `v1.14.0 → v1.15.0`" in successor_bytes.decode("utf-8"),
+                and "**SemVer transition:** `v1.15.0 → v1.16.0`" in successor_bytes.decode("utf-8"),
                 "current authority successor lineage mismatch",
             )
             load_artifact(
