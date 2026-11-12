@@ -422,6 +422,18 @@ def _check_active_document_references(root: Path, report: dict[str, Any]) -> Non
                 except json.JSONDecodeError:
                     missing.add(f"{source.relative_to(root)} (invalid JSON)")
                     continue
+                # PR change records preserve locators at their historical base/head.
+                # Deleted/renamed source is valid snapshot evidence, not a live
+                # documentation link. CI regenerates the exact mechanical record.
+                # Keep checking any other reference fields and every current map.
+                if (source.relative_to(root).parent == Path("docs/development/knowledge/history")
+                        and isinstance(payload, dict)
+                        and type(payload.get("schema_version")) is int
+                        and payload["schema_version"] == 1
+                        and type(payload.get("pr")) is int and payload["pr"] > 0
+                        and source.stem == f"pr-{payload['pr']}"):
+                    payload = {key: value for key, value in payload.items()
+                               if key not in ("files", "symbols")}
                 references = _json_document_references(payload)
             else:
                 navigable_text = _without_fenced_code_blocks(text)

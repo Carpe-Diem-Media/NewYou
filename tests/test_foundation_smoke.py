@@ -82,6 +82,30 @@ class FoundationSmokeTests(unittest.TestCase):
                 any(item["check"] == "smoke_active_document_references" for item in report["findings"])
             )
 
+    def test_pr_history_snapshots_do_not_become_current_source_references(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._fixture(directory)
+            path = root / "docs/development/knowledge/history/pr-9999.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            snapshot = {"schema_version": 1, "pr": 9999,
+                        "files": [{"path": "lib/deleted.ex", "old_path": "lib/renamed.ex"}],
+                        "symbols": [{"path": "lib/deleted.ex"}]}
+            path.write_text(json.dumps(snapshot))
+            report = run_smoke_audit(root)
+            self.assertEqual("PASS", report["status"], report["findings"])
+            snapshot["repository_path"] = "docs/delivery/missing-current-contract.md"
+            path.write_text(json.dumps(snapshot))
+            report = run_smoke_audit(root)
+            self.assertEqual("FAIL", report["status"])
+            self.assertTrue(any("missing-current-contract.md" in item["message"]
+                                for item in report["findings"]))
+
+            path.unlink()
+            current = root / "docs/development/knowledge/current.json"
+            current.write_text(json.dumps({"sources": [{"path": "lib/deleted.ex"}]}))
+            report = run_smoke_audit(root)
+            self.assertEqual("FAIL", report["status"])
+
     def test_smoke_rejects_prefixed_repository_document_reference(self):
         with tempfile.TemporaryDirectory() as directory:
             root = self._fixture(directory)
