@@ -35,16 +35,17 @@ The intended ruleset values are:
     "other_existing_rules_and_parameters": true
   },
   "agent_access_after": {
-    "repository_role": "Write",
+    "accepted_repository_roles": ["Admin", "Write"],
+    "retained_roles": ["All-repository Admin", "CI/CD Admin", "Security manager"],
     "organization_role": "Member",
-    "admin_or_bypass": false
+    "bypass": false
   }
 }
 ```
 
 This is the target for the ruleset's pull-request parameters, not a complete replacement payload. Read the live ruleset, preserve every existing required rule and unknown parameter, and apply only the authorized changes. Preserve the existing Foundation Integrity check binding as returned by GitHub. The current ruleset API response does not expose an `integration_id` for that check, so do not claim or write an integration binding based on a presumed value.
 
-Change and verify the rules before setting JC-Agents to repository Write and organization Member, with no admin or bypass access. Preserve JCSchoeman96's existing organization-owner/repository-admin access. Keep the change limited to the stated settings and access; preserve other applicable protections.
+The founder has approved retaining JC-Agents' All-repository Admin, CI/CD Admin and Security manager roles. This supersedes the earlier demotion proposal. Do not attempt further permission changes. Native verification accepts only the exact authenticated JC-Agents account with effective repository Admin or Write and active organization Member access. Admin access grants no bypass or founder-review authority. Preserve JCSchoeman96's existing organization-owner/repository-admin access and all required protections.
 
 After an authorized change, independently inspect the effective ruleset and branch protection, CODEOWNERS parsing/errors, founder and JC-Agents access, and bypass status. A proposal or configured value alone does not prove active enforcement. Do not claim the route is active until live verification confirms each setting.
 

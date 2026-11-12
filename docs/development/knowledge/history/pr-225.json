@@ -1,0 +1,104 @@
+{
+  "base_sha": "621a94b6c40ed3840a790f517f82a5e4fb6c99af",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/225/checks",
+  "ci": {
+    "source": "external GitHub checks",
+    "status": "unknown"
+  },
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/225/commits",
+  "files": [
+    {
+      "blob": "4e7ddb63cfeede648c853fbe87371180d5d1f173",
+      "mode": "100644",
+      "old_blob": "2441dbcac5f26003fecda0a49dd992e356de91de",
+      "old_mode": "100644",
+      "old_path": "AGENTS.md",
+      "old_sha256": "cb3ee47b56552b51933caaf4dd4fb0a00900c2709507b73c34c7f20080aae871",
+      "path": "AGENTS.md",
+      "sha256": "2e02859ecfe8ed55cbc2cf745d41e0ee62c67a3175afbef6a79fae8270a42d95",
+      "status": "modified"
+    },
+    {
+      "blob": "9b7447ee529ddcc17c4ebfb0f4230a73130c901a",
+      "mode": "100644",
+      "old_blob": "a398e881f2050c884245401f7ba7f98901870982",
+      "old_mode": "100644",
+      "old_path": "docs/development/foundation-integrity-merge-gate.md",
+      "old_sha256": "cd608840ab8f23674cbd4b2fe513e1aad5fa1bcc7174bfd0438f98923120c125",
+      "path": "docs/development/foundation-integrity-merge-gate.md",
+      "sha256": "6f349816be8bac93e980b873a9d0c7de16ce921a87c19b618012379f5904a952",
+      "status": "modified"
+    },
+    {
+      "blob": "e217dee8b904b4d49f533e77a2cc36a3cd41659f",
+      "mode": "100644",
+      "old_blob": "4591342a1926cf3bbc0743d71b4f31bf147a1f3f",
+      "old_mode": "100644",
+      "old_path": "docs/development/founder-merge-admin-proposal.md",
+      "old_sha256": "7a4042312d52338b0b42313798fe532b76db19ba98d67980b334d15a8b91d478",
+      "path": "docs/development/founder-merge-admin-proposal.md",
+      "sha256": "8c131563ec9277c49c56e58b7dabe9040f03c83ab21fbe7a2ff7a6be0f36a7fe",
+      "status": "modified"
+    },
+    {
+      "blob": "77f011e2d98b03322ce09ea397b1927603e3a6cc",
+      "mode": "100644",
+      "old_blob": "e6e30b302708d399028120aecdbe423ec0446f64",
+      "old_mode": "100644",
+      "old_path": "tests/test_ci_attestation.py",
+      "old_sha256": "d5c60932946b1be578c31b9cc44bc5d1f2e7cacfb875a7de85f4af4c7f8888b6",
+      "path": "tests/test_ci_attestation.py",
+      "sha256": "83058a998ba4f8c34b4a9fff6556103be6b6c3c3cbabe74597c02b5957c56778",
+      "status": "modified"
+    },
+    {
+      "blob": "8ef430ea16a258c6ff27f9f3c696ac258a1f1bee",
+      "mode": "100644",
+      "old_blob": "bf08b2f18535a38ca426c7830e207ae67eb41fed",
+      "old_mode": "100644",
+      "old_path": "tools/ci_attestation.py",
+      "old_sha256": "0b98adfe09b97e7e9a3beb1218ebbdfa0f9d434447f811b3948536f80f066c1f",
+      "path": "tools/ci_attestation.py",
+      "sha256": "b30096f441dec6c9712985ad141f1c7adef049c7e6d797b42423a5670227cfce",
+      "status": "modified"
+    }
+  ],
+  "intent": {
+    "author": {
+      "id": 355419376,
+      "login": "JC-Agents"
+    },
+    "kind": "attributed_intent",
+    "summary": "Accept the authenticated JC-Agents account with effective repository Admin or Write in the native merge verifier, following the founder-approved retention of All-repository Admin, CI/CD Admin and Security manager roles. This removes the final permission compatibility blocker in WELL-121.",
+    "title": "fix(WELL-121): accept approved agent Admin access in native verifier",
+    "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/225"
+  },
+  "migrations": [],
+  "plane": {
+    "checked_at": "2026-11-12T14:20:33Z",
+    "items": [
+      {
+        "description_sha256": "7dd7d54440d283d9001953456d17bd45c348aad337535134576b994d564feb51",
+        "id": "fa6ffcb5-f6a8-41f5-a763-e634eb510aec",
+        "identifier": "WELL-121",
+        "name": "Permanent solo-founder Master Gate approval and automated merge/reconciliation",
+        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
+        "sequence_id": 121,
+        "state": "In Progress"
+      }
+    ],
+    "source": "connected-plane",
+    "status": "agent_verified"
+  },
+  "pr": 225,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/225",
+  "range_base_sha": "621a94b6c40ed3840a790f517f82a5e4fb6c99af",
+  "schema_version": 1,
+  "symbols": [],
+  "tests": [
+    "tests/test_ci_attestation.py"
+  ],
+  "tickets": [
+    "WELL-121"
+  ]
+}
