@@ -8,25 +8,58 @@
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229/commits",
   "files": [
     {
-      "blob": "93caa130271eba7de977fa677c35c5632cce8eb2",
+      "blob": "4778bb274bc5cc908a3b432523e547227a2e5d83",
+      "mode": "100644",
+      "old_blob": "ab7335df6331aba282b77fe5a2a2e2be927688e7",
+      "old_mode": "100644",
+      "old_path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "old_sha256": "3c05e3e18f2004d4623b5800602d845ba0bb38f20fe598450e54364b0cb49cb7",
+      "path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "sha256": "09531fe5875f39e82e450b18e65daa5e7d5bba2e5cc9cb27cc0d27f6829ecec1",
+      "status": "modified"
+    },
+    {
+      "blob": "2748cfa484d6f30da9a6baca749ee27472aef13a",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/delivery/content-evidence/content_media/email_change_messages/CANDIDATE_EVIDENCE_v1.json",
-      "sha256": "c5100354efb12ffc68e68f7d6f5a528c121c8396dd82e2a182173de3837201a2",
+      "sha256": "3db7668d20090ec5b53c7ba2213865ab64818e52f87d4da99b2e986ed19355df",
       "status": "added"
     },
     {
-      "blob": "6322cecaf8fa2d898f1119927b811f53b87e37dc",
+      "blob": "8f9444197ffd4d5db41fa23eafb6fb47f7c47bfe",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/OWNER_DECISION_ATTRIBUTION_v1.json",
+      "sha256": "cdc51ab89518febfe53a0dab5ca8a0beb969c2098c8ee602504baf33b91e5159",
+      "status": "added"
+    },
+    {
+      "blob": "d6aedf6cfc2098506d3c3128c4ff6a53936e9fab",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/PRODUCT_CLASSIFICATION_PROPOSAL_v1.md",
+      "sha256": "5859094922ada891cdca887cf140d457991fa0fe5fcc76ea34ff4dd32ad8a8b1",
+      "status": "added"
+    },
+    {
+      "blob": "48b0c81778c54a3493de6df8032bdf9aea1a4c01",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/delivery/content-evidence/content_media/email_change_messages/README.md",
-      "sha256": "ec95242beb159d247b246ac0cd394cc73191d3ffb5e9004078ed6b917fb26222",
+      "sha256": "b5a22ba38f18b2fcf6b658776ec353c2c969118d65c0909e37efe8260466bb4d",
       "status": "added"
     },
     {
@@ -94,6 +127,127 @@
       "path": "docs/delivery/content-evidence/content_media/email_change_messages/notice-en-v1.txt",
       "sha256": "937b7aa3fb0018f12157946c7ace16d30503ddba8ab52f2a446cff98a1505abc",
       "status": "added"
+    },
+    {
+      "blob": "feb53ba7788d91fd1b00adf1fcf4e119646cf1ad",
+      "mode": "100644",
+      "old_blob": "bd417c919cdf286ba0075483fa01cead618d88b4",
+      "old_mode": "100644",
+      "old_path": "docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+      "old_sha256": "0532b93edb4249cea4670e97ae204b132f8a617ccef08c0ae75cdd7a9fb9200f",
+      "path": "docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+      "sha256": "b01bc5f2464fc5a6b8ce0a0631eb6cc7b81a4491f70794abdcf24d118cf9717f",
+      "status": "modified"
+    },
+    {
+      "blob": "b46fe1ad7b1a8fb5122660d4460901626b55c3d4",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/product/00_PLATFORM_v1.17.0.md",
+      "sha256": "ad38c25c49ba9d1de40e90d74b494705156605af724bc0e1d5a66d38b81cc39f",
+      "status": "added"
+    },
+    {
+      "blob": "9604c244a030648660a6cac621cff0e6578b91a1",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/product/01_DECISIONS_v1.17.0.md",
+      "sha256": "1d2c3cf6ec3ea4cd318ceccda8fa0a9b2c9797eec8f934a399e8d59f93090d8b",
+      "status": "added"
+    },
+    {
+      "blob": "272b980511e31b6a1ba2f31192eb0d7ce76e9680",
+      "mode": "100644",
+      "old_blob": "eb46573fa9f7e2d813905c695953b800ba6bf3de",
+      "old_mode": "100644",
+      "old_path": "lib/new_you/content/magic_login_message.ex",
+      "old_sha256": "9dbfa435533c06fd56a42ebfc6fc4ea0e22d585deee5320dcd1b4e180eeef4c9",
+      "path": "lib/new_you/content/magic_login_message.ex",
+      "sha256": "4e3e92be14cad75a0c3a3b239ce0108b5afb890da32e217e4b99e776e701167b",
+      "status": "modified"
+    },
+    {
+      "blob": "a8b1eab6deed55d0d91609b7dbdb2b1b52f3f741",
+      "mode": "100644",
+      "old_blob": "0efb5395e13d96e4133f3fceedd76f8aa8d63773",
+      "old_mode": "100644",
+      "old_path": "lib/new_you/content/password_reset_message.ex",
+      "old_sha256": "22ca982480d48c0b67182db0d68d25534d49c63ef91f79b38ee18f45b38db681",
+      "path": "lib/new_you/content/password_reset_message.ex",
+      "sha256": "326bab96ce92a34bbe89824e1472f5e5403f54e7480048a81dae43d9beabeee5",
+      "status": "modified"
+    },
+    {
+      "blob": "102d1bf2a6db5dd8c06ee68a74c81144f3e920c4",
+      "mode": "100644",
+      "old_blob": "5b1ae9b13789df0d69e1ae9ea1260b42238c7928",
+      "old_mode": "100644",
+      "old_path": "lib/new_you/content/recovery_message.ex",
+      "old_sha256": "28e11dd119e421c42d21e8bdaa826021149c3fee428fe3bd3fe6505c50560b7c",
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "8c8a4046d305467fbfeafb7b42f06f53e4ffc1b8238b21b6b4bd72ba5bf96d0a",
+      "status": "modified"
+    },
+    {
+      "blob": "711412a0034583ca5204c8c0357f1dbeb9c96494",
+      "mode": "100644",
+      "old_blob": "f43a69f5bcadd9fadbfcd23623cb110b53aa7ecd",
+      "old_mode": "100644",
+      "old_path": "test/new_you/content/magic_login_message_test.exs",
+      "old_sha256": "6e51b1d6b02cf24d1eb50903765875f8d038d04350ca4042ef5d009dbeda420d",
+      "path": "test/new_you/content/magic_login_message_test.exs",
+      "sha256": "ef8a89ad85b34d33e4cf252ad028a1fbdf726de94a398a942a9f0a56b46ded56",
+      "status": "modified"
+    },
+    {
+      "blob": "8c8d1b656d06ad2d39ed4ef6394d37a823f2b8fc",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tests/test_well122_email_change_evidence.py",
+      "sha256": "7fe1c05154b4a8717eddf3901de7e7383c6ec727d18aa29146c665acf8438658",
+      "status": "added"
+    },
+    {
+      "blob": "fbad4f9d1016645cf006501f8d5fc8308c79cafa",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tools/check_email_change_message_evidence.py",
+      "sha256": "ee1ba75c9c94390d2b69196cbd620945cdeb90a193736eca14f5665ab65ee543",
+      "status": "added"
+    },
+    {
+      "blob": "b95946f947214fa544586cfa5b596582b0767441",
+      "mode": "100644",
+      "old_blob": "a1bfa653f978711bd2e51e3053ac4162aa6f527a",
+      "old_mode": "100644",
+      "old_path": "tools/check_magic_login_evidence.py",
+      "old_sha256": "0b2f1926b3126d98aaa1549bbb073faf6cf7f2185b007d8ffb27fac297ec20c8",
+      "path": "tools/check_magic_login_evidence.py",
+      "sha256": "7acc0197a135255328e7aedb3e799fb7b5016138b4beee13f7d41e62a48c71af",
+      "status": "modified"
+    },
+    {
+      "blob": "74a1005266df15343c172e848175ed2d7c1ce3fc",
+      "mode": "100644",
+      "old_blob": "9ce0bc08ec37bf44931e89eac0e49368a6b71135",
+      "old_mode": "100644",
+      "old_path": "tools/check_password_reset_message_evidence.py",
+      "old_sha256": "f5f2557ae827d1c46d4a4e15fcaaeeb8da233f268eeaec9ab590ed19211adf7e",
+      "path": "tools/check_password_reset_message_evidence.py",
+      "sha256": "72ccf8eb85605d97bc45af709b7c9f467f8f26eb6f1e2195f0713596496b00e0",
+      "status": "modified"
     }
   ],
   "intent": {
@@ -102,16 +256,16 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "Preserves the owner-approved English and Afrikaans primary-email-change messages for WELL-122. The two narrow Product classifications and development-only scope were also approved; Plane records the source decision.",
-    "title": "WELL-122: review Afrikaans email-change message candidates",
+    "summary": "Completes WELL-122's approved development-only content eligibility for the two primary-email-change messages. Product v1.17 / DEC-324 adds only the two narrow Class A `identity_security` classifications and bounded P8-16 development lifecycle; the Account-owned lifecycle remains under DEC-251 and Product \u00a721J.8.\n\nThe four exact EN/AF versions bind immutable identities, byte digests, typed tokens, role capacities and the approved development scope. Evidence records Product, Content & Media, English and Afrikaans capacities separately against the owner\u2019s actual approval sources, without claiming separate human approvals or events. Original approved message bytes remain unchanged.\n\nThe deterministic validator fails closed on changed bytes, identities, tokens, role bindings, scope, withdrawn/superseded status, or delivery flags. `{{support_contact}}` remains unbound. Runtime, release, publication, production, real-participant, provider/sender and Phase-9 delivery remain disabled.",
+    "title": "WELL-122: add approved primary-email-change content evidence",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-12T20:22:24Z",
+    "checked_at": "2026-11-12T21:30:59Z",
     "items": [
       {
-        "description_sha256": "abcb7e7d45311f90940da4c31a2287090e00dab51a1555df4fbfe8807ef59e73",
+        "description_sha256": "25beff4441f53d827119f53b16b52cd8551e1ec07c051d2bb916d04daf81debd",
         "id": "330aabfe-f4e5-48f4-9191-36be3d453e75",
         "identifier": "WELL-122",
         "name": "WELL-17 upstream \u2014 approve primary-email-change EN/AF confirmation and old-address notice development content",
@@ -127,8 +281,135 @@
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229",
   "range_base_sha": "cd88e4dea92edef40777d02bb788d40b87d79eca",
   "schema_version": 1,
-  "symbols": [],
-  "tests": [],
+  "symbols": [
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.MagicLoginMessage",
+      "name": null,
+      "old_sha256": "9ee0542c092ef5d0197b77960939eef36e9179fb58a59cbf2c42b0a43ce85b82",
+      "path": "lib/new_you/content/magic_login_message.ex",
+      "sha256": "7180b2e2d263ba848ff2a44dbe3b9f2bd3de94e20455e4735ac3a3b06602601c",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/content/magic_login_message.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.PasswordResetMessage",
+      "name": null,
+      "old_sha256": "68ed1a09dc88971d444205f415b8b4737bef7076688960cdc3b85ab6f6cf7e1f",
+      "path": "lib/new_you/content/password_reset_message.ex",
+      "sha256": "cb794d97b194b34424cb947678f008825c1565609ada4c466ad353f029f01cf1",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/content/password_reset_message.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": null,
+      "old_sha256": "0d04826c50fe0f31542e30c44965e1282646b52e99bf49ed894e79cd34826f79",
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "35e5e39cb7581e8e560d2634c6a049cdfd07f53721b61a2607405dcd59bba80c",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "current_authority?",
+      "old_sha256": "8390ffebc0ed09ea05d09d7ee62c88f543eed40f0dd3fa8742e71708d8661278",
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "6a6b71e360bc411fc3b71a76f17941422b14d215f7387430c88a85c60d1408dc",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "predecessor_of_v1_16?",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "703c4fb6e98b4b832abbe9af9d8fbe332146a59d2d9ff43c4b117c634a01e7da",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "successor_lineage?",
+      "old_sha256": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "aaf19d1ee2ed16995d653bb96e3e5fe995fe8608dedaa1cc637cfcd20ad72f7e",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.MagicLoginMessageTest",
+      "name": null,
+      "old_sha256": "af16db344a37145eeae672347d63847d03f9e450c1317df62addb59aeeb3be45",
+      "path": "test/new_you/content/magic_login_message_test.exs",
+      "sha256": "4bcf8e7e776a28ed0a04ba8b8339a5794b05a3c30f061f10928e00a6364a4606",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/content/magic_login_message_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    }
+  ],
+  "tests": [
+    "test/new_you/content/magic_login_message_test.exs",
+    "tests/test_well122_email_change_evidence.py"
+  ],
   "tickets": [
     "WELL-122"
   ]
