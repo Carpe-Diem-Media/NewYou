@@ -259,14 +259,14 @@
       "status": "modified"
     },
     {
-      "blob": "71263e2a50a3c913722b4d0d496803d3b993aad3",
+      "blob": "e0ef3feac6520ff29034d6193063a0596e5bf5d8",
       "mode": "100644",
       "old_blob": "c21c609cd07e73f4a98bbbfbc8c308fed9b1c2f7",
       "old_mode": "100644",
       "old_path": "tests/test_foundation_smoke.py",
       "old_sha256": "b612788c0b9535db8f2a1fa2ef6c345825988a86ce51df157f9321fc2860064a",
       "path": "tests/test_foundation_smoke.py",
-      "sha256": "2ab4e139f442b1d45ffd4297a98a0981b6fb0c621e12b8ab4fd2319b9a0a626f",
+      "sha256": "81587f52f61469f843da1b2a69356a60adfc9ee62faf53e2ede7f0d0c9af5dcf",
       "status": "modified"
     },
     {
@@ -333,6 +333,17 @@
       "old_sha256": "687d881a4eaca9cc6126663ae826b4d8d5fec2ddf433b45d44f63081efaf656a",
       "path": "tools/foundation_integrity_routing.py",
       "sha256": "ed53c45ebe04e491dc12f09c57f52878ffe159f6b27bf5d3c3693e52586e1bd4",
+      "status": "modified"
+    },
+    {
+      "blob": "8a1facee44015e4ea1279d05a911ba4ff93d35f3",
+      "mode": "100644",
+      "old_blob": "d8a25f8154e5c518cb0d113a10a35871d56f8a46",
+      "old_mode": "100644",
+      "old_path": "tools/foundation_integrity_smoke.py",
+      "old_sha256": "e8329a0ed070790d3a1a0aa887b83149d0bc62741e27ded4fe56fd405fb7f142",
+      "path": "tools/foundation_integrity_smoke.py",
+      "sha256": "7eb9e7e1e60081ce4a5d5d32a85cee4d07214472fd5e78b65e0c370f58837c5a",
       "status": "modified"
     },
     {
