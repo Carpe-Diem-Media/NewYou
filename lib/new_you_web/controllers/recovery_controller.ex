@@ -17,8 +17,14 @@ defmodule NewYouWeb.RecoveryController do
 
   def new(conn, _params), do: neutral(conn)
 
-  def show(conn, %{"locale" => locale} = params) when locale in ["en", "af"],
-    do: page(conn, :confirmation, locale, proof: safe_proof(params["proof"]))
+  def show(conn, %{"locale" => locale} = params) when locale in ["en", "af"] do
+    proof = safe_proof(params["proof"])
+
+    page(conn, :confirmation, locale,
+      proof: proof,
+      operation_id: confirmation_operation_id(proof)
+    )
+  end
 
   def show(conn, _params), do: neutral(conn)
 
@@ -79,6 +85,18 @@ defmodule NewYouWeb.RecoveryController do
         Map.new(assigns)
       )
     )
+  end
+
+  # This untrusted identifier is only a stable form retry key, never assurance.
+  # GET performs no Identity lookup or signature admission. The explicit POST
+  # verifies the signed proof and current durable case through Identity.
+  defp confirmation_operation_id(proof) do
+    with {:ok, %{"purpose" => "recovery", "case_id" => case_id}} <- Joken.peek_claims(proof),
+         {:ok, id} <- Ecto.UUID.cast(case_id) do
+      id
+    else
+      _ -> Ecto.UUID.generate()
+    end
   end
 
   defp safe_proof(proof) when is_binary(proof) and byte_size(proof) <= 8192, do: proof

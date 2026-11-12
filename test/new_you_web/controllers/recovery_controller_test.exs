@@ -64,6 +64,25 @@ defmodule NewYouWeb.RecoveryControllerTest do
       confirmation = field(page, "operation_id")
       P805.track_operation(confirmation)
 
+      [header, payload, _signature] = String.split(proof, ".")
+      forged = Enum.join([header, payload, "invalid-signature"], ".")
+      forged_page = get(build_conn(), "/recovery/confirm?locale=en&proof=" <> forged)
+      assert field(forged_page, "operation_id") == confirmation
+
+      denied =
+        forged_page
+        |> recycle()
+        |> put_private(:plug_skip_csrf_protection, false)
+        |> post("/recovery/confirm", %{
+          proof: forged,
+          locale: "en",
+          operation_id: confirmation,
+          _csrf_token: field(forged_page, "_csrf_token")
+        })
+
+      refute denied.resp_body =~ "name=\"password\""
+      assert Ash.get!(Token, intent.source_reference, authorize?: false).purpose == "recovery"
+
       confirmed =
         page
         |> recycle()
@@ -80,6 +99,36 @@ defmodule NewYouWeb.RecoveryControllerTest do
 
       assert Ash.get!(Token, intent.source_reference, authorize?: false).purpose ==
                "recovery_consumed"
+
+      # A fresh browser can reopen the delivered link and explicitly recover the
+      # same receipt. The previous page and process are not recovery authority.
+      accepted_case =
+        Ash.get!(
+          NewYou.Identity.RecoveryCase,
+          Ash.get!(Token, intent.source_reference, authorize?: false).recovery_case_id,
+          authorize?: false
+        )
+
+      reopened =
+        get(build_conn(), "/recovery/confirm?locale=en&proof=" <> URI.encode_www_form(proof))
+
+      assert field(reopened, "operation_id") == confirmation
+
+      confirmed =
+        reopened
+        |> recycle()
+        |> put_private(:plug_skip_csrf_protection, false)
+        |> post("/recovery/confirm", %{
+          proof: proof,
+          locale: "en",
+          operation_id: field(reopened, "operation_id"),
+          _csrf_token: field(reopened, "_csrf_token")
+        })
+
+      assert confirmed.resp_body =~ "name=\"password\""
+
+      assert Ash.get!(NewYou.Identity.RecoveryCase, accepted_case.id, authorize?: false) ==
+               accepted_case
 
       completion = field(confirmed, "operation_id")
       P805.track_operation(completion)
