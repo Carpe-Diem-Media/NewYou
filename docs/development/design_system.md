@@ -1,5 +1,11 @@
 # Design-system development
 
+Source-linked mathematical research and proposed implementation rules are in
+[Automatic.css 4.0.3 mathematics](research/automatic-css-4.0.3-math.md). This is
+engineering research; existing approved values and candidate status remain in
+force. It includes an independent arithmetic reference check and the unresolved
+direct-source licensing limitation.
+
 ## Authority chain
 
 DESIGN.md
