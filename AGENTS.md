@@ -229,7 +229,7 @@ Use Tidewave/runtime evidence where it answers development questions better than
 
 Implementation handoffs
 
-For substantial new vertical slices and meaningful end-to-end Domain/cross-Domain capabilities, author a source-linked implementation handoff in the same implementation PR using "docs/development/implementation-handoff-standard.md". Record a brief documentation-impact determination in every implementation PR. Later material changes maintain the existing handoff; proof-only work updates its proof section or a focused addendum. Trivial helpers, cosmetic and editorial changes may be exempt with rationale.
+For substantial capabilities and material Domain/interface/lifecycle/schema changes, maintain one canonical source-linked capability JSON map in the same implementation PR using "docs/development/implementation-handoff-standard.md". Record a brief documentation-impact determination in every implementation PR. Generate the PR history record automatically before review through the ticket workflow. Do not duplicate the canonical JSON in a Markdown handoff. Later material changes maintain the existing handoff; proof-only work updates its proof section or a focused addendum. Trivial helpers, cosmetic and editorial changes may be exempt with rationale.
 
 Independent Master Gate verifies required handoff accuracy against the exact reviewed head. Missing or materially inaccurate required documentation means "CHANGES REQUIRED" for that PR. No routine after-merge documentation ticket or unrelated blocker is required. Apply prospectively after WELL-96 integration, without retroactively blocking completed work or already-active WELL-7.
 

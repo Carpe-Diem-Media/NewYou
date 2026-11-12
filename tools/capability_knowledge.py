@@ -6,9 +6,12 @@ validator for that declared schema, not a general JSON Schema implementation.
 Shape and locators cannot prove semantic truth; independent source review does.
 """
 import hashlib
+import argparse
+import copy
 import json
 from pathlib import Path, PurePosixPath
 import re
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = ROOT / 'docs/development/knowledge/capability.schema.json'
@@ -107,7 +110,46 @@ def validate_map(record, root=ROOT):
             raise ValueError('unknown lifecycle state')
 
 
+def refresh_sources(record, root=ROOT):
+    """Refresh mechanical evidence only; the agent must review semantic claims.
+
+    Require committed source bytes so the recorded revision contains every
+    locator. Build and validate a copy before writing any map to disk.
+    """
+    schema = loads(SCHEMA.read_text())
+    validate(record, schema, schema)
+    updated = copy.deepcopy(record)
+    revision = subprocess.check_output(['git', 'rev-parse', '--verify', 'HEAD'], cwd=root).decode().strip()
+    for source in updated['sources']:
+        relative = PurePosixPath(source['path'])
+        if relative.is_absolute() or str(relative) != source['path'] or '..' in relative.parts or '\\' in source['path']:
+            raise ValueError('unsafe or aliased source path')
+        path = root / source['path']
+        if not path.is_file() or path.resolve() != root.resolve().joinpath(relative):
+            raise ValueError('missing source or symlink substitution')
+        data = path.read_bytes()
+        committed = subprocess.check_output(['git', 'show', revision + ':' + source['path']], cwd=root,
+                                            stderr=subprocess.DEVNULL)
+        if data != committed:
+            raise ValueError('source must be committed before refreshing its evidence')
+        source['sha256'] = hashlib.sha256(data).hexdigest()
+    updated['implementation_revision']['git_sha'] = revision
+    validate_map(updated, root)
+    return updated
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--refresh', metavar='CAPABILITY_ID', help='refresh committed source hashes after semantic review')
+    args = parser.parse_args()
+    if args.refresh:
+        if not re.fullmatch(r'[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+', args.refresh):
+            raise ValueError('invalid capability ID')
+        path = ROOT / 'docs/development/knowledge' / (args.refresh + '.json')
+        if path.is_symlink():
+            raise ValueError('symlink capability map')
+        refreshed = refresh_sources(loads(path.read_text()))
+        path.write_text(json.dumps(refreshed, indent=2) + '\n')
     paths = sorted((ROOT / 'docs/development/knowledge').glob('*.json'))
     records = [p for p in paths if p.name != SCHEMA.name]
     if not records:
@@ -125,5 +167,5 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except (ValueError, KeyError, OSError) as exc:
+    except (ValueError, KeyError, OSError, subprocess.CalledProcessError) as exc:
         raise SystemExit(str(exc))

@@ -5,6 +5,7 @@ Higher-risk work keeps the strict review route. This module never reads approval
 assertions from PR files and never executes the candidate's code.
 """
 from __future__ import annotations
+import base64
 import json
 import os
 from pathlib import Path
@@ -72,7 +73,7 @@ def approval_rules(rules):
     p = next((r.get('parameters', {}) for r in rules if r.get('type') == 'pull_request'), {})
     require(type(p.get('required_approving_review_count')) is int
             and p['required_approving_review_count'] >= 1
-            and all(p.get(k) is True for k in ('dismiss_stale_reviews_on_push',
+            and all(p.get(k) is True for k in ('require_code_owner_review', 'dismiss_stale_reviews_on_push',
                       'require_last_push_approval', 'required_review_thread_resolution'))
             and p.get('allowed_merge_methods') == ['merge'],
             'native approval/stale-review/regular-merge protection is not configured')
@@ -81,6 +82,16 @@ def approval_rules(rules):
 def current_pr(pr):
     require(type(pr) is int and pr > 0, 'invalid PR number')
     return ci._api(f'repos/{REPO}/pulls/{pr}')
+
+
+def verify_codeowners(base):
+    """GitHub reads ownership from the base branch, not the candidate's file."""
+    data = ci._api(f'repos/{REPO}/contents/.github/CODEOWNERS?ref={base}')
+    require(data.get('type') == 'file' and data.get('encoding') == 'base64',
+            'integrated CODEOWNERS is missing')
+    content = base64.b64decode(data['content']).decode('utf-8')
+    require(content.strip() == '* @JCSchoeman96',
+            'integrated CODEOWNERS must require founder review for every path')
 
 def canonical_diff(base, head):
     """Fetch canonical immutable objects into a new bare store; never run PR code."""
@@ -161,6 +172,7 @@ def snapshot(pr_number):
     pr = current_pr(pr_number)
     require(pr.get('state') == 'open' and pr.get('merged') is False and pr.get('draft') is False
             and pr.get('base', {}).get('ref') == 'main', 'PR is not ready against main')
+    verify_codeowners(pr['base']['sha'])
     diff, paths = canonical_diff(pr['base']['sha'], pr['head']['sha'])
     selected = select_review(legacy._github_list(f'repos/{REPO}/pulls/{pr_number}/reviews?per_page=100'), pr, paths)
     threads_resolved(pr_number)

@@ -55,11 +55,17 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 1
+          fetch-depth: 0
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      - name: Set up Elixir parser from .tool-versions
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
       - name: Run Foundation path-routing regression tests
         run: python -m unittest discover -s tests -p 'test_foundation_lane_routing.py' -v
       - name: Run dependency cache recovery tests
@@ -76,6 +82,10 @@ jobs:
         run: python -m unittest tests.test_founder_gate tests.test_capability_knowledge -v
       - name: Validate capability knowledge maps
         run: python -m tools.capability_knowledge
+      - name: Run knowledge capture regression tests
+        run: python -m unittest tests.test_knowledge_capture -v
+      - name: Regenerate and compare committed PR knowledge
+        run: python -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"
       - name: Verify merge-gate topology
         run: python -m unittest discover -s tests -p 'test_foundation_merge_gate.py' -v
       - name: Run current authority smoke audit

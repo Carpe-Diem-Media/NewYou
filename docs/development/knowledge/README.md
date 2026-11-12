@@ -1,9 +1,61 @@
-# Capability knowledge
+# Capability knowledge and automatic change capture
 
-Start with [identity.registration.json](identity.registration.json), the canonical registration map. Follow its `sources` entries to files/symbols, then inspect current code, migrations, tests, routed authority and live Plane before reuse. Its Git revision identifies the inspected snapshot; per-file SHA-256 values bind exact bytes. This is descriptive knowledge, not governing authority or delivery status.
+Start with [identity.registration.json](identity.registration.json), the canonical registration map. Follow its source locators, then inspect current code, tests, governing authority and live Plane before reuse. The implementation revision identifies inspected source; per-file SHA-256 values bind bytes. This is descriptive knowledge, not governing authority or delivery status.
 
-Create or update one `<capability_id>.json` for a meaningful capability or material interface/lifecycle/schema change. Use [capability.schema.json](capability.schema.json). Capture real owner interfaces, Ash actions, persistence, flow, lifecycle, security, retry/recovery, tests, extension points and prohibited shortcuts. Explain non-applicable dimensions instead of inventing resources. Never include secrets, participant data or private proof payloads.
+## Three kinds of evidence
 
-Run `python3 -m tools.capability_knowledge` and `python3 -m unittest tests.test_capability_knowledge -v`. The dependency-free validator implements the schema's documented keyword subset, rejects duplicate keys/unknown fields, and checks source bytes/symbols and reference closure. Material source changes require map review/update. Independent Master Gate verifies semantic claims; shape and locators alone cannot prove them.
+- The JSON records under `history/`, named by PR number, record the exact PR change range, file status/modes/blob IDs/hashes, parseable Elixir declarations, changed tests and migrations. It describes historical changes, including removed source. GitHub supplies actual review, CI and merge status.
+- `<capability_id>.json` describes source-verified ownership, public Ash interfaces, flow, lifecycle, invariants, failure/recovery, proof limits and extension points. Maintain one map per meaningful capability. Use [capability.schema.json](capability.schema.json). The agent contributes semantic facts with source locators, without manually enumerating every changed file or function.
+- The `index` and `query` commands compute a lookup view from the requested Git tree. They do not create a database or commit another index. Historical references do not certify that a past symbol still exists.
 
-The registration snapshot was inspected at `09812d6bb245fe9360af813f7590c9313ff5a851`. WELL-121 changes no application source. For future maps, record an implementation commit containing the source bytes; it may precede the documentation commit. Never invent the documentation's future self-referential SHA. See [the handoff standard](../implementation-handoff-standard.md).
+## Agent capture before final review
+
+The [ticket workflow](../../../.agents/skills/ticket-implement/SKILL.md) invokes these steps as normal agent work. The founder runs no commands.
+
+1. Implement and test the ticket. Commit source changes. For a first PR, create it as a draft with its implementing WELL ticket in the title or description. Push the source checkpoint before fetching metadata, so GitHub's head matches the source revision.
+2. Inspect the live Plane ticket and dependencies. Ticket strings in PR metadata establish a reference, not proof that Plane verified its state or acceptance criteria. Capture requires no Plane credentials in CI.
+3. Save the live PR metadata and generate its record. Replace `NUMBER` with the actual PR number.
+
+```sh
+gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER > /tmp/newyou-PR-metadata.json
+mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/newyou-PR-metadata.json
+```
+
+4. Commit `pr-NUMBER.json` under `history/` and push the final head before requesting review. Only that exact record is excluded from its own mechanical payload. Other history and capability changes remain visible. The committed record contains its base and source hashes, never its own final head SHA or an invented successful CI result.
+5. Foundation Smoke independently regenerates against the event's exact PR base/head and compares the committed record. It runs the installed Elixir parser without evaluating source, and never commits changes or receives Plane write credentials. Changed source/base, tampering, invalid linkage or a missing record requires regeneration and fresh review/CI. No generated commit follows final approval.
+
+After pushing the final history commit, refresh the metadata and run the same check locally:
+
+```sh
+gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER > /tmp/newyou-PR-metadata.json
+mise exec -- python3 -m tools.knowledge_capture check --metadata-json /tmp/newyou-PR-metadata.json
+```
+
+GitHub's merge record binds the final PR head and merge SHA. Post-merge reconciliation checks the resulting main; it does not push another generated commit to main.
+
+## Semantic maps and mechanical refresh
+
+Create or maintain one map for meaningful capability or material Domain/interface/lifecycle/schema changes. Reuse existing interfaces and semantic copy identities. Explain non-applicable dimensions. An ordinary internal/cosmetic change needs its PR description and automatic history record, with a brief reason that no semantic map changed. Do not duplicate a JSON map in a long Markdown handoff.
+
+After reviewing the semantic claims and committing the referenced source, generate hashes and the implementation revision automatically:
+
+```sh
+python3 -m tools.capability_knowledge --refresh identity.registration
+python3 -m tools.capability_knowledge
+```
+
+The refresh refuses uncommitted source, unsafe paths and missing symbols. It changes mechanical evidence only, so agents must maintain any semantic explanation of the snapshot. The validator rejects duplicate keys, unknown fields, broken references, changed bytes and invalid lifecycle references. Independent Master Gate verifies behavioural claims against real source/tests; neither parsing nor hashes prove semantics.
+
+## Retrieval and extraction limits
+
+Use `index` to list capability/source/history relationships and `query --query TEXT` to filter by ticket, file, module or capability. Resolve current main first, then pass `--revision origin/main` for the integrated view. Omit that option to inspect HEAD while developing. No stale worktree file can substitute for committed source at the reported revision.
+
+```sh
+python3 -m tools.knowledge_capture index --revision origin/main
+python3 -m tools.knowledge_capture query --revision HEAD --query NewYou.Identity
+python3 -m tools.knowledge_capture query --revision HEAD --query WELL-121
+```
+
+Elixir extraction uses `Code.string_to_quoted/2`, compares normalized declarations across revisions, and preserves function-clause order. It does not execute macros or infer Ash-generated functions, authorization, transactions or dependency effects. Unsupported/dynamic declarations and syntax ambiguity are explicitly unknown. A missing required parser fails capture. Source bytes and historical paths remain available even when symbols cannot be extracted.
+
+Run `mise exec -- python3 -m unittest tests.test_knowledge_capture tests.test_capability_knowledge -v`. The registration example retains the previously inspected application snapshot at `09812d6bb245fe9360af813f7590c9313ff5a851`; this engineering change adds no application Resource, database or participant flow. Never include secrets, participant data or private proof payloads in records.

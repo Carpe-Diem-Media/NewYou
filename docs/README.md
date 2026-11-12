@@ -15,7 +15,7 @@ The repository engineering contract is [AGENTS.md](../AGENTS.md). Foundation Smo
 
 Implementation maps and their review requirements live in development documentation:
 
-- [Vertical-slice handoff standard and reusable template](development/implementation-handoff-standard.md)
+- [Implementation knowledge standard](development/implementation-handoff-standard.md)
 - [P8-05 registration implementation handoff](development/p8-05-registration-handoff.md)
 - [P8-10 Communications implementation handoff](development/p8-10-communications-handoff.md)
 - [P8-11 Audit E2 recovery addendum](development/p8-11-audit-recovery-addendum.md)

@@ -2,6 +2,7 @@ import copy
 import json
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 
 class CapabilityKnowledgeTests(unittest.TestCase):
@@ -39,5 +40,31 @@ class CapabilityKnowledgeTests(unittest.TestCase):
 
     def test_duplicate_json_keys_refuse(self):
         with self.assertRaises(ValueError):self.knowledge.loads('{"schema_version":1,"schema_version":2}')
+
+    def test_refresh_generates_source_hashes_and_revision_from_committed_source(self):
+        refresher = getattr(self.knowledge, 'refresh_sources', None)
+        self.assertTrue(callable(refresher), 'source hash refresh is missing')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sample = copy.deepcopy(self.sample)
+            for source in sample['sources']:
+                target = root / source['path']
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes((self.root / source['path']).read_bytes())
+                source['sha256'] = '0' * 64
+            def git(*args):
+                return subprocess.check_output(['git', *args], cwd=root).decode().strip()
+            git('init', '-q')
+            git('add', '.')
+            git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'source')
+            refreshed = refresher(sample, root)
+            self.knowledge.validate_map(refreshed, root)
+            self.assertEqual(git('rev-parse', 'HEAD'), refreshed['implementation_revision']['git_sha'])
+            self.assertEqual(self.sample['sources'], refreshed['sources'])
+            self.assertEqual('0' * 64, sample['sources'][0]['sha256'])
+            target = root / sample['sources'][0]['path']
+            target.write_text(target.read_text() + '\n# uncommitted source\n')
+            with self.assertRaisesRegex(ValueError, 'committed'):
+                refresher(sample, root)
 
 if __name__=='__main__':unittest.main()

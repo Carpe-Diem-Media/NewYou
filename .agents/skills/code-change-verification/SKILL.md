@@ -28,10 +28,12 @@ Handoffs remain descriptive implementation maps beneath routed authority. They d
 
 ## Review and merge handoff
 
-Follow `docs/development/foundation-integrity-merge-gate.md`. For eligible founder-development work, verify authenticated JCSchoeman96 APPROVED for the current head and declared base, required exact-candidate CI and native review protection. Use clean integrated-main `python3 -m tools.founder_gate check --pr NUMBER`; never trust PR-controlled approval code or caller-supplied JSON. Ordinary reviews need no second founder comment or external reviewer.
+Follow `docs/development/foundation-integrity-merge-gate.md`. For eligible founder-development work, verify authenticated JCSchoeman96 APPROVED for the current head and declared base, required exact-candidate CI and native code-owner review protection and integrated `.github/CODEOWNERS` naming JCSchoeman96 for all paths. Use clean integrated-main `python3 -m tools.founder_gate check --pr NUMBER`; never trust PR-controlled approval code or caller-supplied JSON. Ordinary reviews need no second founder comment or external reviewer.
 
 Stronger regulated, clinical, legal, production-security, privileged and release controls remain. Approval tooling, CI, AGENTS and governance changes use strict review. Settings mutations need owner approval. PR #224 requires fresh independent review and its expressly authorized current-law transition; the establishing PR cannot approve or merge itself.
 
 Run `python3 -m tools.capability_knowledge` and its focused tests when maps/schema change. Independently compare the canonical map with source, resources/actions, constraints, lifecycle and tests. Hashes and shape alone are insufficient semantic proof. Maintain the same map for material capability changes.
 
 After later authorized merges, verify resulting main SHA, ordered parents, expected tested tree and no drift before Plane Done. Preserve uncertain intent and retry read-only reconciliation; never blindly repeat a merge. Retain strict collectors where stronger governing rules require them.
+
+Regenerate and compare PR history using `mise exec -- python3 -m tools.knowledge_capture check --metadata-json /tmp/PR-metadata.json` before handoff. Foundation Integrity repeats this against its exact event head/base. Verify generated history, semantic maps and current-tree index serve distinct purposes; no generated commit may follow final approval.

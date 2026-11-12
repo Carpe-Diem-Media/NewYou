@@ -69,9 +69,9 @@ Before coding, state a concise working plan containing:
 - material JIT decisions that must be made;
 - the test strategy, including failure/concurrency/idempotency cases where applicable;
 - the likely files/resources/migrations to touch;
-- documentation impact under `docs/development/implementation-handoff-standard.md`: full handoff, material update, proof section/addendum, or justified exemption.
+- documentation impact under `docs/development/implementation-handoff-standard.md`: canonical capability map update, proof update/addendum, or justified semantic-map exemption.
 
-Create the required handoff or update in the same implementation PR. Record the implementation SHA, link real source symbols and tests, and distinguish observed evidence from future obligations. Material follow-up changes maintain the existing map. Apply prospectively after WELL-96 integration; do not retroactively block completed work or already-active WELL-7. These maps are descriptive, never governing or live execution authority.
+Create or maintain the required canonical capability JSON in the same implementation PR. Do not author a duplicate Markdown handoff. Record the implementation SHA, link real source symbols and tests, and distinguish observed evidence from future obligations. Material follow-up changes maintain the existing map. Apply prospectively after WELL-96 integration; do not retroactively block completed work or already-active WELL-7. These maps are descriptive, never governing or live execution authority.
 
 Do not wait for human approval of ordinary compliant implementation choices. Continue unless an unresolved choice meets the escalation threshold in `AGENTS.md`.
 
@@ -163,7 +163,13 @@ If you discover adjacent work that is material but not required to complete this
 
 Do not mutate Product/Architecture/Domain/Roadmap or semantic contracts merely to memorialise JIT learning. Governance remains read-only unless a deliberate semantic change or proven upstream contradiction requires amendment.
 
-## 8. Verify before handoff
+## 8. Automatic knowledge capture before review
+
+After implementation and semantic-map updates, commit source changes and generate the PR history record automatically as part of this workflow. Use `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` to save live PR metadata to a temporary file, then run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/PR-metadata.json`. See `docs/development/knowledge/README.md` for first-push and local-head handling. Validate the referenced WELL tickets against live Plane; CI verifies metadata consistency without Plane write credentials.
+
+Commit the generated `docs/development/knowledge/history/pr-NUMBER.json` before final review. Regenerate if source or base changes. The agent does this automatically; the founder performs no CLI step. Foundation Integrity independently checks mechanical fields without mutating the PR branch. A final approval must never be followed by a generated commit. Do not manually enumerate changed files, functions, tests, migrations or SHAs in a second handoff.
+
+## 9. Verify before handoff
 
 **REQUIRED SUB-SKILL:** use `code-change-verification` before claiming the ticket is ready for review.
 
@@ -183,7 +189,7 @@ For DB-dependent commands, use the DevCore workflow in `AGENTS.md` when configur
 
 Do not claim a check passed unless you observed it pass. Separate unrelated pre-existing failures from PR-caused failures with evidence; do not hide either.
 
-## 9. Open the PR and hand off exact evidence
+## 10. Open the PR and hand off exact evidence
 
 When the implementation and required local verification are review-ready:
 
@@ -206,7 +212,9 @@ Report:
 - discovered/deferred Plane work;
 - remaining review risks or known non-PR failures.
 
-Do not self-certify merge authority and do not merge unless explicitly authorised.
+Do not self-certify merge authority. For future eligible work after the new rules are integrated and GitHub enforcement is verified, the authenticated current-head founder APPROVED review supplies the documented standing merge authorization. Run the integrated-main gate's check, merge and resulting-main reconciliation without asking for another founder comment or CLI action. Move Plane to Done and take the next dependency-cleared Ready ticket only after resulting-main verification succeeds. Stronger governing approvals remain mandatory.
+
+PR #224 is the establishing PR and does not have that standing authorization. Its separately authorized current-main transition and final integration decision remain required.
 
 Any head change after review begins invalidates prior exact-head certification.
 

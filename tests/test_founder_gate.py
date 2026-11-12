@@ -1,5 +1,6 @@
 """Live founder approval guards. Fixtures replace GitHub, never approve real PRs."""
 import copy
+import base64
 import json
 import tempfile
 import unittest
@@ -82,10 +83,12 @@ class FounderApprovalTests(unittest.TestCase):
 
     def test_approval_rule_missing_stale_protection_or_approval_refuses(self):
         rules=[dict(type='pull_request',parameters=dict(required_approving_review_count=1,
+            require_code_owner_review=True,
             dismiss_stale_reviews_on_push=True,require_last_push_approval=True,
             required_review_thread_resolution=True,allowed_merge_methods=['merge']))]
         gate.approval_rules(rules)
         for key,value in [('required_approving_review_count',0),('dismiss_stale_reviews_on_push',False),
+                          ('require_code_owner_review',False),
                           ('require_last_push_approval',False),('allowed_merge_methods',['squash'])]:
             changed=copy.deepcopy(rules);changed[0]['parameters'][key]=value
             with self.subTest(key=key),self.assertRaises(AttestationError): gate.approval_rules(changed)
@@ -155,6 +158,19 @@ class AutomaticMergeLifecycleTests(unittest.TestCase):
         mutation.assert_not_called()
 
 class TrustedCheckoutTests(unittest.TestCase):
+    def test_integrated_codeowners_must_name_only_founder_for_all_paths(self):
+        valid = dict(type='file', encoding='base64',
+                     content=base64.b64encode(b'* @JCSchoeman96\n').decode())
+        verifier = gate.verify_codeowners
+        with patch.object(gate.ci, '_api', return_value=valid) as api:
+            verifier(BASE)
+        api.assert_called_once_with(f'repos/{gate.REPO}/contents/.github/CODEOWNERS?ref={BASE}')
+        for text in ('* @JC-Agents\n', '* @JCSchoeman96\nlib/ @JC-Agents\n', ''):
+            changed = dict(valid, content=base64.b64encode(text.encode()).decode())
+            with self.subTest(text=text), patch.object(gate.ci, '_api', return_value=changed):
+                with self.assertRaises(AttestationError):
+                    verifier(BASE)
+
     def test_dirty_stale_or_wrong_root_checkout_refuses(self):
         for sha,status,root in [('e'*40,b'',str(gate.ROOT)),(BASE,b' M tools/founder_gate.py',str(gate.ROOT)),
                                 (BASE,b'','/other/checkout')]:
@@ -179,6 +195,7 @@ class SnapshotCollectionTests(unittest.TestCase):
         self.pr=dict(pull(),state='open',merged=False,draft=False,merge_commit_sha='c'*40)
         self.proof=evidence()
         rule=dict(type='pull_request',parameters=dict(required_approving_review_count=1,
+            require_code_owner_review=True,
             dismiss_stale_reviews_on_push=True,require_last_push_approval=True,
             required_review_thread_resolution=True,allowed_merge_methods=['merge']))
         self.proof.update(ruleset={'rules':[rule]},effective_rules=[dict(rule,ruleset_id=24191860)])
@@ -187,6 +204,7 @@ class SnapshotCollectionTests(unittest.TestCase):
         self.stack.enter_context(patch.object(gate.legacy,'founder_account_id'))
         self.stack.enter_context(patch.object(gate,'implementation_permissions'))
         self.stack.enter_context(patch.object(gate,'threads_resolved'))
+        self.stack.enter_context(patch.object(gate,'verify_codeowners'))
         self.stack.enter_context(patch.object(gate,'current_pr',return_value=self.pr))
         self.stack.enter_context(patch.object(gate,'canonical_diff',return_value=('e'*64,['test/example_test.exs'])))
         self.reviews=self.stack.enter_context(patch.object(gate.legacy,'_github_list',return_value=[review()]))
