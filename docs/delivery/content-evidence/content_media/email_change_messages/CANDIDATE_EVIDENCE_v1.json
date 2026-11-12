@@ -1,5 +1,5 @@
 {
-  "status": "CANDIDATE_NOT_ELIGIBLE",
+  "status": "DEVELOPMENT_ONLY_APPROVED",
   "scope": [
     "local development",
     "automated tests",
@@ -47,9 +47,97 @@
         }
       ],
       "token_contract_sha256": "3be65c1a412f8af2bae8a7df87c4efc29ab5bd6b9cab1ee5309ec8d29edec694",
-      "state": "candidate",
+      "state": "development_approved",
       "decision_source": "a2214bde-85ea-4799-80d0-61b864afc41d",
-      "af_body_source": null
+      "af_body_source": null,
+      "role_evidence": {
+        "product_owner": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_confirmation_message",
+            "locale": "en",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-EN-V1",
+            "sha256": "225434e7cbdb52d7ea9a092927acbc8b9acde9a07b89f2572b633b3eb8b63ae5",
+            "bytes": 454,
+            "token_contract_sha256": "3be65c1a412f8af2bae8a7df87c4efc29ab5bd6b9cab1ee5309ec8d29edec694",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d"
+          ],
+          "separate_owner_event_claimed": false
+        },
+        "content_media_owner": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_confirmation_message",
+            "locale": "en",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-EN-V1",
+            "sha256": "225434e7cbdb52d7ea9a092927acbc8b9acde9a07b89f2572b633b3eb8b63ae5",
+            "bytes": 454,
+            "token_contract_sha256": "3be65c1a412f8af2bae8a7df87c4efc29ab5bd6b9cab1ee5309ec8d29edec694",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d"
+          ],
+          "separate_owner_event_claimed": false
+        },
+        "en_language_reviewer": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_confirmation_message",
+            "locale": "en",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-EN-V1",
+            "sha256": "225434e7cbdb52d7ea9a092927acbc8b9acde9a07b89f2572b633b3eb8b63ae5",
+            "bytes": 454,
+            "token_contract_sha256": "3be65c1a412f8af2bae8a7df87c4efc29ab5bd6b9cab1ee5309ec8d29edec694",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d"
+          ],
+          "separate_owner_event_claimed": false
+        }
+      },
+      "copy_class": "A",
+      "content_risk": "identity_security",
+      "wording_risk": "editorial_low_risk",
+      "identity_security_risk": "HIGH",
+      "communications_role": "email_change_confirmation"
     },
     {
       "type": "primary_email_change_confirmation_message",
@@ -78,9 +166,99 @@
         }
       ],
       "token_contract_sha256": "3be65c1a412f8af2bae8a7df87c4efc29ab5bd6b9cab1ee5309ec8d29edec694",
-      "state": "candidate",
+      "state": "development_approved",
       "decision_source": "a2214bde-85ea-4799-80d0-61b864afc41d",
-      "af_body_source": "b9a4839e-def6-4856-aa1a-2d602743c101"
+      "af_body_source": "b9a4839e-def6-4856-aa1a-2d602743c101",
+      "role_evidence": {
+        "product_owner": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_confirmation_message",
+            "locale": "af",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-AF-V1",
+            "sha256": "be8a5049931e2a942c88fa4159715e0c0c460b55879a3d6b7a780d4f7f26e204",
+            "bytes": 498,
+            "token_contract_sha256": "3be65c1a412f8af2bae8a7df87c4efc29ab5bd6b9cab1ee5309ec8d29edec694",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d"
+          ],
+          "separate_owner_event_claimed": false
+        },
+        "content_media_owner": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_confirmation_message",
+            "locale": "af",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-AF-V1",
+            "sha256": "be8a5049931e2a942c88fa4159715e0c0c460b55879a3d6b7a780d4f7f26e204",
+            "bytes": 498,
+            "token_contract_sha256": "3be65c1a412f8af2bae8a7df87c4efc29ab5bd6b9cab1ee5309ec8d29edec694",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d",
+            "b9a4839e-def6-4856-aa1a-2d602743c101"
+          ],
+          "separate_owner_event_claimed": false
+        },
+        "af_language_reviewer": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_confirmation_message",
+            "locale": "af",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-CONFIRMATION-MESSAGE-EMAIL-AF-V1",
+            "sha256": "be8a5049931e2a942c88fa4159715e0c0c460b55879a3d6b7a780d4f7f26e204",
+            "bytes": 498,
+            "token_contract_sha256": "3be65c1a412f8af2bae8a7df87c4efc29ab5bd6b9cab1ee5309ec8d29edec694",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d",
+            "b9a4839e-def6-4856-aa1a-2d602743c101"
+          ],
+          "separate_owner_event_claimed": false
+        }
+      },
+      "copy_class": "A",
+      "content_risk": "identity_security",
+      "wording_risk": "editorial_low_risk",
+      "identity_security_risk": "HIGH",
+      "communications_role": "email_change_confirmation"
     },
     {
       "type": "primary_email_change_old_address_notice",
@@ -109,9 +287,97 @@
         }
       ],
       "token_contract_sha256": "c4a77901d978a2709feff2d17eb8886dc82d3b5df62e1ab41a1a6a115ba1acf6",
-      "state": "candidate",
+      "state": "development_approved",
       "decision_source": "a2214bde-85ea-4799-80d0-61b864afc41d",
-      "af_body_source": null
+      "af_body_source": null,
+      "role_evidence": {
+        "product_owner": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_old_address_notice",
+            "locale": "en",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-EN-V1",
+            "sha256": "937b7aa3fb0018f12157946c7ace16d30503ddba8ab52f2a446cff98a1505abc",
+            "bytes": 327,
+            "token_contract_sha256": "c4a77901d978a2709feff2d17eb8886dc82d3b5df62e1ab41a1a6a115ba1acf6",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d"
+          ],
+          "separate_owner_event_claimed": false
+        },
+        "content_media_owner": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_old_address_notice",
+            "locale": "en",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-EN-V1",
+            "sha256": "937b7aa3fb0018f12157946c7ace16d30503ddba8ab52f2a446cff98a1505abc",
+            "bytes": 327,
+            "token_contract_sha256": "c4a77901d978a2709feff2d17eb8886dc82d3b5df62e1ab41a1a6a115ba1acf6",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d"
+          ],
+          "separate_owner_event_claimed": false
+        },
+        "en_language_reviewer": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_old_address_notice",
+            "locale": "en",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-EN-V1",
+            "sha256": "937b7aa3fb0018f12157946c7ace16d30503ddba8ab52f2a446cff98a1505abc",
+            "bytes": 327,
+            "token_contract_sha256": "c4a77901d978a2709feff2d17eb8886dc82d3b5df62e1ab41a1a6a115ba1acf6",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d"
+          ],
+          "separate_owner_event_claimed": false
+        }
+      },
+      "copy_class": "A",
+      "content_risk": "identity_security",
+      "wording_risk": "editorial_low_risk",
+      "identity_security_risk": "HIGH",
+      "communications_role": "email_change_old_address_notice"
     },
     {
       "type": "primary_email_change_old_address_notice",
@@ -140,9 +406,142 @@
         }
       ],
       "token_contract_sha256": "c4a77901d978a2709feff2d17eb8886dc82d3b5df62e1ab41a1a6a115ba1acf6",
-      "state": "candidate",
+      "state": "development_approved",
       "decision_source": "a2214bde-85ea-4799-80d0-61b864afc41d",
-      "af_body_source": "b9a4839e-def6-4856-aa1a-2d602743c101"
+      "af_body_source": "b9a4839e-def6-4856-aa1a-2d602743c101",
+      "role_evidence": {
+        "product_owner": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_old_address_notice",
+            "locale": "af",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-AF-V1",
+            "sha256": "6effc50c65c2e592ac237984b236f3d4aa1723f92378268d424fc05810571f3e",
+            "bytes": 369,
+            "token_contract_sha256": "c4a77901d978a2709feff2d17eb8886dc82d3b5df62e1ab41a1a6a115ba1acf6",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d"
+          ],
+          "separate_owner_event_claimed": false
+        },
+        "content_media_owner": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_old_address_notice",
+            "locale": "af",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-AF-V1",
+            "sha256": "6effc50c65c2e592ac237984b236f3d4aa1723f92378268d424fc05810571f3e",
+            "bytes": 369,
+            "token_contract_sha256": "c4a77901d978a2709feff2d17eb8886dc82d3b5df62e1ab41a1a6a115ba1acf6",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d",
+            "b9a4839e-def6-4856-aa1a-2d602743c101"
+          ],
+          "separate_owner_event_claimed": false
+        },
+        "af_language_reviewer": {
+          "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+          "decision": "approve",
+          "capacity_record": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+          "binding": {
+            "type": "primary_email_change_old_address_notice",
+            "locale": "af",
+            "content_item_id": "NEWYOU-CONTENTITEM-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL",
+            "content_version_id": "NEWYOU-CONTENTVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-V1",
+            "translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-PRIMARY-EMAIL-CHANGE-OLD-ADDRESS-NOTICE-EMAIL-AF-V1",
+            "sha256": "6effc50c65c2e592ac237984b236f3d4aa1723f92378268d424fc05810571f3e",
+            "bytes": 369,
+            "token_contract_sha256": "c4a77901d978a2709feff2d17eb8886dc82d3b5df62e1ab41a1a6a115ba1acf6",
+            "scope": [
+              "local development",
+              "automated tests",
+              "development environments",
+              "bounded P8-16 Phase-8 proof"
+            ]
+          },
+          "capacity_source_path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+          "capacity_source_sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+          "recording_comment_ids": [
+            "a2214bde-85ea-4799-80d0-61b864afc41d",
+            "b9a4839e-def6-4856-aa1a-2d602743c101"
+          ],
+          "separate_owner_event_claimed": false
+        }
+      },
+      "copy_class": "A",
+      "content_risk": "identity_security",
+      "wording_risk": "editorial_low_risk",
+      "identity_security_risk": "HIGH",
+      "communications_role": "email_change_old_address_notice"
     }
-  ]
+  ],
+  "eligibility": {
+    "development": true,
+    "automated_tests": true,
+    "development_environments": true,
+    "bounded_p8_16_proof": true,
+    "runtime_release": false,
+    "publication": false,
+    "production": false,
+    "public_release": false,
+    "paid_pilot": false,
+    "real_participant_delivery": false,
+    "phase_9": false
+  },
+  "product_authority": {
+    "product_document": "docs/governance/product/00_PLATFORM_v1.17.0.md",
+    "decision_document": "docs/governance/product/01_DECISIONS_v1.17.0.md",
+    "product_decision": "DEC-324",
+    "source_comment_id": "a2214bde-85ea-4799-80d0-61b864afc41d",
+    "proposal_path": "docs/delivery/content-evidence/content_media/email_change_messages/PRODUCT_CLASSIFICATION_PROPOSAL_v1.md",
+    "proposal_sha256": "5859094922ada891cdca887cf140d457991fa0fe5fcc76ea34ff4dd32ad8a8b1"
+  },
+  "approval_attribution_path": "docs/delivery/content-evidence/content_media/email_change_messages/OWNER_DECISION_ATTRIBUTION_v1.json",
+  "approval_attribution_sha256": "cdc51ab89518febfe53a0dab5ca8a0beb969c2098c8ee602504baf33b91e5159",
+  "lifecycle": {
+    "transitions": [
+      "candidate -> development_approved",
+      "development_approved -> superseded | withdrawn"
+    ],
+    "history": "append-only; preserve exact prior bytes and decision source records",
+    "idempotency": "repeating the same exact source, role, version, digest, token contract and scope is idempotent",
+    "conflict": "conflicting or mismatched evidence fails closed pending explicit reconciliation",
+    "terminal_for_new_use": [
+      "superseded",
+      "withdrawn"
+    ],
+    "revalidate_before_new_use": true
+  },
+  "role_capacity_source": {
+    "path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+    "sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+    "attestation_id": "677c7f35-cd92-4723-afcf-ee71ffb7e446"
+  },
+  "runtime_release_eligible": false
 }

@@ -38,38 +38,20 @@ defmodule NewYou.Content.MagicLoginMessageTest do
     end
   end
 
-  test "preserves the approved magic-login content under the exact Product v1.16 successor", %{
+  test "preserves prior authority lineage under the current Product v1.17 successor", %{
     root: root
   } do
-    governance_router_path = Path.join(root, "docs/governance/CURRENT_GOVERNANCE_ROUTER.json")
-    router = governance_router_path |> File.read!() |> Jason.decode!()
-
-    successor_routes = %{
-      "PLATFORM_PRODUCT_LAW" => "docs/governance/product/00_PLATFORM_v1.16.0.md",
-      "PRODUCT_DECISIONS" => "docs/governance/product/01_DECISIONS_v1.16.0.md"
+    predecessor_digests = %{
+      "docs/governance/product/00_PLATFORM_v1.16.0.md" =>
+        "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174",
+      "docs/governance/product/01_DECISIONS_v1.16.0.md" =>
+        "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8"
     }
 
-    governing_documents =
-      Enum.map(router["governing_documents"], fn document ->
-        case Map.fetch(successor_routes, document["document_id"]) do
-          {:ok, path} ->
-            bytes = File.read!(Path.join(root, path))
-
-            document
-            |> Map.put("canonical_filename", Path.basename(path))
-            |> Map.put("repository_path", path)
-            |> Map.put("sha256", :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower))
-            |> Map.put("semver", "1.16.0")
-
-          :error ->
-            document
-        end
-      end)
-
-    File.write!(
-      governance_router_path,
-      Jason.encode!(%{router | "governing_documents" => governing_documents})
-    )
+    Enum.each(predecessor_digests, fn {path, expected_sha} ->
+      bytes = File.read!(Path.join(root, path))
+      assert :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower) == expected_sha
+    end)
 
     for locale <- ["en", "af"] do
       assert {:ok, binding} = MagicLoginMessage.binding(locale)
@@ -130,14 +112,14 @@ defmodule NewYou.Content.MagicLoginMessageTest do
 
   test "rejects a successor whose bytes change its Product predecessor lineage", %{root: root} do
     path =
-      Path.join(root, "docs/governance/product/00_PLATFORM_v1.16.0.md")
+      Path.join(root, "docs/governance/product/00_PLATFORM_v1.17.0.md")
 
     bytes = File.read!(path)
 
     changed =
       String.replace(
         bytes,
-        "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.15.0.md`",
+        "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.16.0.md`",
         "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.13.0.md`"
       )
 

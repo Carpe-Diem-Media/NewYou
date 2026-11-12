@@ -61,14 +61,26 @@ defmodule NewYou.Content.PasswordResetMessage do
 
     @current_authority %{
       "PLATFORM_PRODUCT_LAW" =>
-        {"docs/governance/product/00_PLATFORM_v1.16.0.md",
-         "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174"},
+        {"docs/governance/product/00_PLATFORM_v1.17.0.md",
+         "ad38c25c49ba9d1de40e90d74b494705156605af724bc0e1d5a66d38b81cc39f"},
       "PRODUCT_DECISIONS" =>
-        {"docs/governance/product/01_DECISIONS_v1.16.0.md",
-         "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8"}
+        {"docs/governance/product/01_DECISIONS_v1.17.0.md",
+         "1d2c3cf6ec3ea4cd318ceccda8fa0a9b2c9797eec8f934a399e8d59f93090d8b"}
     }
     @recovery_proposal "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md"
     @recovery_proposal_sha "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64"
+    @email_change_proposal "docs/delivery/content-evidence/content_media/email_change_messages/PRODUCT_CLASSIFICATION_PROPOSAL_v1.md"
+    @email_change_proposal_sha "5859094922ada891cdca887cf140d457991fa0fe5fcc76ea34ff4dd32ad8a8b1"
+    @v1_16_authority %{
+      "PLATFORM_PRODUCT_LAW" => {
+        "docs/governance/product/00_PLATFORM_v1.16.0.md",
+        "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174"
+      },
+      "PRODUCT_DECISIONS" => {
+        "docs/governance/product/01_DECISIONS_v1.16.0.md",
+        "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8"
+      }
+    }
 
     @spec binding(String.t()) :: {:ok, map()} | {:error, :content_ineligible}
     def binding(locale) when is_binary(locale) do
@@ -288,26 +300,42 @@ defmodule NewYou.Content.PasswordResetMessage do
       case entries do
         [entry] ->
           entry["repository_path"] == path and entry["canonical_filename"] == Path.basename(path) and
-            entry["sha256"] == sha and entry["semver"] == "1.16.0" and
-            file_digest(root, path) == sha and
-            file_digest(root, @recovery_proposal) == @recovery_proposal_sha and
-            successor_lineage?(root, path, authority["path"])
+            entry["sha256"] == sha and entry["semver"] == "1.17.0" and
+            current_authority_files_match?(root, path, sha, authority["path"])
 
         _ ->
           false
       end
+    end
+
+    defp current_authority_files_match?(root, path, sha, predecessor) do
+      file_digest(root, path) == sha and
+        file_digest(root, @recovery_proposal) == @recovery_proposal_sha and
+        file_digest(root, @email_change_proposal) == @email_change_proposal_sha and
+        successor_lineage?(root, path, predecessor)
     end
 
     defp successor_lineage?(root, path, predecessor) do
-      case read_file(root, path) do
-        {:ok, bytes} ->
-          String.contains?(bytes, "**Predecessor:** `#{predecessor}`") and
-            String.contains?(bytes, "**SemVer transition:** `v1.15.0 → v1.16.0`")
+      {v1_16_path, v1_16_sha} = Map.fetch!(@v1_16_authority, product_document_id(path))
 
-        _ ->
-          false
+      with {:ok, bytes} <- read_file(root, path),
+           {:ok, v1_16_bytes} <- read_file(root, v1_16_path),
+           true <- String.contains?(bytes, "**Predecessor:** `#{v1_16_path}`"),
+           true <- String.contains?(bytes, "**SemVer transition:** `v1.16.0 → v1.17.0`"),
+           true <- digest(v1_16_bytes) == v1_16_sha,
+           true <- String.contains?(v1_16_bytes, "**Predecessor:** `#{predecessor}`"),
+           true <- String.contains?(v1_16_bytes, "**SemVer transition:** `v1.15.0 → v1.16.0`") do
+        true
+      else
+        _ -> false
       end
     end
+
+    defp product_document_id("docs/governance/product/00_PLATFORM_v1.17.0.md"),
+      do: "PLATFORM_PRODUCT_LAW"
+
+    defp product_document_id("docs/governance/product/01_DECISIONS_v1.17.0.md"),
+      do: "PRODUCT_DECISIONS"
 
     defp read_versions(root, packet) do
       versions = packet["locale_versions"]
@@ -347,7 +375,12 @@ defmodule NewYou.Content.PasswordResetMessage do
                 @approvals_path,
                 @delivery_router_path,
                 @governance_router_path,
-                @recovery_proposal
+                @recovery_proposal,
+                @email_change_proposal,
+                "docs/governance/product/00_PLATFORM_v1.16.0.md",
+                "docs/governance/product/01_DECISIONS_v1.16.0.md",
+                "docs/governance/product/00_PLATFORM_v1.17.0.md",
+                "docs/governance/product/01_DECISIONS_v1.17.0.md"
               ] do
       read_regular_file(root, path)
     end

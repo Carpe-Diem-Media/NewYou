@@ -20,17 +20,17 @@
     },
     {
       "document_id": "PLATFORM_PRODUCT_LAW",
-      "canonical_filename": "00_PLATFORM_v1.16.0.md",
-      "repository_path": "docs/governance/product/00_PLATFORM_v1.16.0.md",
-      "sha256": "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174",
-      "semver": "1.16.0"
+      "canonical_filename": "00_PLATFORM_v1.17.0.md",
+      "repository_path": "docs/governance/product/00_PLATFORM_v1.17.0.md",
+      "sha256": "ad38c25c49ba9d1de40e90d74b494705156605af724bc0e1d5a66d38b81cc39f",
+      "semver": "1.17.0"
     },
     {
       "document_id": "PRODUCT_DECISIONS",
-      "canonical_filename": "01_DECISIONS_v1.16.0.md",
-      "repository_path": "docs/governance/product/01_DECISIONS_v1.16.0.md",
-      "sha256": "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8",
-      "semver": "1.16.0"
+      "canonical_filename": "01_DECISIONS_v1.17.0.md",
+      "repository_path": "docs/governance/product/01_DECISIONS_v1.17.0.md",
+      "sha256": "1d2c3cf6ec3ea4cd318ceccda8fa0a9b2c9797eec8f934a399e8d59f93090d8b",
+      "semver": "1.17.0"
     },
     {
       "document_id": "ARCHITECTURE_LAW",

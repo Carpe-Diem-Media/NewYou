@@ -16,6 +16,14 @@ defmodule NewYou.Content.RecoveryMessage do
   @roles [:account_recovery, :recovery_security_notice]
   @authority %{
     "PLATFORM_PRODUCT_LAW" =>
+      {"docs/governance/product/00_PLATFORM_v1.17.0.md",
+       "ad38c25c49ba9d1de40e90d74b494705156605af724bc0e1d5a66d38b81cc39f"},
+    "PRODUCT_DECISIONS" =>
+      {"docs/governance/product/01_DECISIONS_v1.17.0.md",
+       "1d2c3cf6ec3ea4cd318ceccda8fa0a9b2c9797eec8f934a399e8d59f93090d8b"}
+  }
+  @predecessor_authority %{
+    "PLATFORM_PRODUCT_LAW" =>
       {"docs/governance/product/00_PLATFORM_v1.16.0.md",
        "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174"},
     "PRODUCT_DECISIONS" =>
@@ -124,13 +132,42 @@ defmodule NewYou.Content.RecoveryMessage do
       case Enum.filter(router["governing_documents"], &(&1["document_id"] == id)) do
         [entry] ->
           entry["repository_path"] == path and entry["canonical_filename"] == Path.basename(path) and
-            entry["semver"] == "1.16.0" and entry["sha256"] == sha and
-            file_matches?(root, path, sha)
+            entry["semver"] == "1.17.0" and entry["sha256"] == sha and
+            file_matches?(root, path, sha) and successor_lineage?(root, id, path)
 
         _ ->
           false
       end
     end)
+  end
+
+  defp successor_lineage?(root, id, current_path) do
+    {predecessor_path, predecessor_sha} = Map.fetch!(@predecessor_authority, id)
+
+    with {:ok, current_bytes} <- read_file(root, current_path),
+         {:ok, predecessor_bytes} <- read_file(root, predecessor_path),
+         true <- digest(predecessor_bytes) == predecessor_sha,
+         true <- String.contains?(current_bytes, "**Predecessor:** `#{predecessor_path}`"),
+         true <- String.contains?(current_bytes, "**SemVer transition:** `v1.16.0 → v1.17.0`"),
+         true <- predecessor_of_v1_16?(predecessor_bytes, id) do
+      true
+    else
+      _ -> false
+    end
+  end
+
+  defp predecessor_of_v1_16?(bytes, "PLATFORM_PRODUCT_LAW") do
+    String.contains?(
+      bytes,
+      "**Predecessor:** `docs/governance/product/00_PLATFORM_v1.15.0.md`"
+    ) and String.contains?(bytes, "**SemVer transition:** `v1.15.0 → v1.16.0`")
+  end
+
+  defp predecessor_of_v1_16?(bytes, "PRODUCT_DECISIONS") do
+    String.contains?(
+      bytes,
+      "**Predecessor:** `docs/governance/product/01_DECISIONS_v1.15.0.md`"
+    ) and String.contains?(bytes, "**SemVer transition:** `v1.15.0 → v1.16.0`")
   end
 
   # The packet digest binds all nine individual approvals, exact typed token
