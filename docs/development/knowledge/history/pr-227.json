@@ -129,25 +129,36 @@
       "status": "modified"
     },
     {
-      "blob": "b0b6d68b052ccaaa4e314d828f8ef77249b4dfc3",
+      "blob": "ff62275ee0e2f1a06a88eb4a5abe5fc3259e5d04",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/automatic-css-4.0.3-math.md",
-      "sha256": "0dc9a7b207b4f86e63a193f05799632ab4f3df27b043e7e9a7af1160eb77d541",
+      "sha256": "4c11877eaf2fbaee4598911101e0defe7758ef273d957ede3e199dca4d24ef79",
       "status": "added"
     },
     {
-      "blob": "503e2715785a1d41db400decdfc53d5b194cd327",
+      "blob": "d9624363e37360c7955d93458809de67dbd4ead8",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/design_math_browser.mjs",
+      "sha256": "f9dac05cd890eca2e5f7835548d0ad9bede256d5992b44b0c7a94cac3db200c5",
+      "status": "added"
+    },
+    {
+      "blob": "5273c81335caefc7867b7cfec89294660aed7973",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/design_math_reference.py",
-      "sha256": "cbd1d4b9a57e59ca520a3ea23fe7118078f300dfeb9bf2d5bc0e19c1a63258e8",
+      "sha256": "25f84ac647ca9c727c1eb1cf8807a6dd760c157ccaa0169b9390aa1a9f9bf707",
       "status": "added"
     },
     {
@@ -537,7 +548,7 @@
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-12T20:07:43.154539Z",
+    "checked_at": "2026-11-12T20:32:36.248210Z",
     "items": [
       {
         "description_sha256": "37e40677ccfc39b60b5e720efb6483fcc3575d647c09ff296a9e8faedd4a3e32",
