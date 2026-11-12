@@ -196,6 +196,22 @@
       "sha256": "93330874efbfed68587107a5d33bbce7d3f07461fb90842c72bc1e1dc95c35ec",
       "contract_type": "content_evidence",
       "status": "DEVELOPMENT_ONLY_APPROVED; RUNTIME_RELEASE_PROHIBITED"
+    },
+    {
+      "document_id": "RECOVERY_MESSAGE_CANDIDATE_EVIDENCE",
+      "canonical_filename": "RECOVERY_MESSAGE_CANDIDATE_EVIDENCE_PACKET_v0.1.0.json",
+      "repository_path": "docs/delivery/content-evidence/content_media/recovery_messages/RECOVERY_MESSAGE_CANDIDATE_EVIDENCE_PACKET_v0.1.0.json",
+      "sha256": "be05db014e6a3beb947ef0394fd2e846d557d3367322e3308184eb099c327544",
+      "contract_type": "content_evidence",
+      "status": "CANDIDATE_NOT_APPROVED"
+    },
+    {
+      "document_id": "RECOVERY_MESSAGE_DEVELOPMENT_EVIDENCE",
+      "canonical_filename": "RECOVERY_MESSAGE_DEVELOPMENT_EVIDENCE_PACKET_v0.2.0.json",
+      "repository_path": "docs/delivery/content-evidence/content_media/recovery_messages/RECOVERY_MESSAGE_DEVELOPMENT_EVIDENCE_PACKET_v0.2.0.json",
+      "sha256": "83a44a10763181f46bbab2d6de99cf67854a18623a174746095628ae55bbeea7",
+      "contract_type": "content_evidence",
+      "status": "DEVELOPMENT_ONLY_APPROVED; RUNTIME_RELEASE_PROHIBITED"
     }
   ]
 }

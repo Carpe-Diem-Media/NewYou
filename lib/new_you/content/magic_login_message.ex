@@ -70,7 +70,7 @@ defmodule NewYou.Content.MagicLoginMessage do
         "version" => "1.14.0"
       }
     ]
-    @current_successor_authority [
+    @prior_successor_authority [
       %{
         "document_id" => "PLATFORM_PRODUCT_LAW",
         "canonical_filename" => "00_PLATFORM_v1.15.0.md",
@@ -98,6 +98,37 @@ defmodule NewYou.Content.MagicLoginMessage do
           "docs/governance/product/proposals/well-98/01_DECISIONS_v1.15.0_PROPOSED.md",
         "approved_amendment_sha256" =>
           "b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017"
+      }
+    ]
+
+    @current_successor_authority [
+      %{
+        "document_id" => "PLATFORM_PRODUCT_LAW",
+        "canonical_filename" => "00_PLATFORM_v1.16.0.md",
+        "repository_path" => "docs/governance/product/00_PLATFORM_v1.16.0.md",
+        "sha256" => "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174",
+        "semver" => "1.16.0",
+        "predecessor_path" => "docs/governance/product/00_PLATFORM_v1.15.0.md",
+        "predecessor_sha256" =>
+          "c7f5510817028d28edd4eb29e71b9150e13d0354cccf1af23666e067e0eed0b8",
+        "approved_amendment_path" =>
+          "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
+        "approved_amendment_sha256" =>
+          "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64"
+      },
+      %{
+        "document_id" => "PRODUCT_DECISIONS",
+        "canonical_filename" => "01_DECISIONS_v1.16.0.md",
+        "repository_path" => "docs/governance/product/01_DECISIONS_v1.16.0.md",
+        "sha256" => "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8",
+        "semver" => "1.16.0",
+        "predecessor_path" => "docs/governance/product/01_DECISIONS_v1.15.0.md",
+        "predecessor_sha256" =>
+          "db57b0b73ed9faf8f3ade458c01d0d4798e4c2401172a35b9a1ad129ce8ae8d4",
+        "approved_amendment_path" =>
+          "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
+        "approved_amendment_sha256" =>
+          "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64"
       }
     ]
 
@@ -276,9 +307,8 @@ defmodule NewYou.Content.MagicLoginMessage do
     end
 
     defp current_successor_authority_matches?(root, router) do
-      Enum.all?(@current_successor_authority, fn authority ->
-        promoted_authority_matches?(root, router, authority)
-      end)
+      Enum.all?(@prior_successor_authority, &successor_lineage_matches?(root, &1)) and
+        Enum.all?(@current_successor_authority, &promoted_authority_matches?(root, router, &1))
     end
 
     defp promoted_authority_matches?(root, router, authority) do
@@ -326,7 +356,14 @@ defmodule NewYou.Content.MagicLoginMessage do
                authority["approved_amendment_sha256"],
            true <-
              String.contains?(bytes, "**Predecessor:** `#{predecessor_path}`"),
-           true <- String.contains?(bytes, "**SemVer transition:** `v1.14.0 → v1.15.0`") do
+           true <-
+             String.contains?(
+               bytes,
+               if(authority["semver"] == "1.15.0",
+                 do: "**SemVer transition:** `v1.14.0 → v1.15.0`",
+                 else: "**SemVer transition:** `v1.15.0 → v1.16.0`"
+               )
+             ) do
         true
       else
         _ -> false
@@ -370,6 +407,9 @@ defmodule NewYou.Content.MagicLoginMessage do
                 @approvals_path,
                 @delivery_router_path,
                 @governance_router_path,
+                "docs/governance/product/00_PLATFORM_v1.16.0.md",
+                "docs/governance/product/01_DECISIONS_v1.16.0.md",
+                "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
                 "docs/delivery/content-evidence/content_media/magic_login_messages/WELL-12-candidate-comment.json",
                 "docs/governance/product/00_PLATFORM_v1.14.0.md",
                 "docs/governance/product/01_DECISIONS_v1.14.0.md",
