@@ -19,25 +19,25 @@
       "status": "modified"
     },
     {
-      "blob": "ad7d4b08a1ad80134cee85e143b67f4c040281a4",
+      "blob": "f4f289bbf06f4b475e9adcc378bb2ea085bc02c2",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "d9098ed60dcb13ea63a42a8a6d25664b023a13a2904ea8d27b510936aedb7b50",
+      "sha256": "6726c56dbfc8f00216a1820513571bf32d1eace4708d87d996bb8a24d323fc01",
       "status": "added"
     },
     {
-      "blob": "d41d7a13fd5d3846488b08f822b0b33735880e0d",
+      "blob": "d05b8d834468579e5e31d185c3a9ece7f3ef0696",
       "mode": "100644",
       "old_blob": "c37459ff83eb86d731faccda9274506a34a80aa4",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.registration.json",
       "old_sha256": "7231c0f433b1f8d10442b1cff0318eda50f56d208ba22f5c0b29204e79d52093",
       "path": "docs/development/knowledge/identity.registration.json",
-      "sha256": "cc44df19e3858e4b9cc3439c8904bd23a55d60370753ea50e28112d60d95edf4",
+      "sha256": "8cfd5672ded817310a84713ae0a93551472e8817128a653c46fbd18f374fad25",
       "status": "modified"
     },
     {
@@ -140,14 +140,14 @@
       "status": "modified"
     },
     {
-      "blob": "911f1488d355df30a86c1e8fa16a17f2959b17e9",
+      "blob": "083eb7b3d0cc9bd288aae67f440d19620336a8ee",
       "mode": "100644",
       "old_blob": "72ca3e2666893a4c74e90f867b930d933cf2ec34",
       "old_mode": "100644",
       "old_path": "lib/new_you/communications/executor.ex",
       "old_sha256": "5b57e6213926028e438ab73ddeae210d0a826396fc0ea894de8b6634575f1da4",
       "path": "lib/new_you/communications/executor.ex",
-      "sha256": "7599ff8bf9e9895718a14a85534b40a8fae54e34f7709db26bd20a23d805a402",
+      "sha256": "454b6aea59ad55a5b2baa6aaebd6a4a7bdc0c6d84db875cd784209cafe288564",
       "status": "modified"
     },
     {
@@ -1289,7 +1289,7 @@
       "name": null,
       "old_sha256": "258bdc19fd8a78cfe96897ab57afeb9845319954ce0a0a9e3841d04d497525d0",
       "path": "lib/new_you/communications/executor.ex",
-      "sha256": "da6ec63d94fef2e4cad39940db0b27b2740723c4d8a108f589cb7af357672538",
+      "sha256": "4cb6af3871fecd58f780bc4491c83e07d79edb35b6e4eb1a65ca094d9ca1c542",
       "status": "parsed"
     },
     {
@@ -1314,7 +1314,7 @@
       "name": "prepare",
       "old_sha256": "102e2925ae799c7bbe155f4a26e5e1e65e2e3927f4a98dfb04077b10dd0cb5d4",
       "path": "lib/new_you/communications/executor.ex",
-      "sha256": "fe4ca8794a92975cd611d20026de905126c8c7fe4100be5943986fbd1f498380",
+      "sha256": "1d84c5fd8d117370d375fc9a00a9bb83be4000832e5fbc3342d8e7cb54183307",
       "status": "parsed",
       "visibility": "private"
     },
