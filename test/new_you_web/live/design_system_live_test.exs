@@ -60,6 +60,9 @@ defmodule NewYouWeb.DesignSystemLiveTest do
              )
     end
 
+    assert has_element?(view, "#buttons button[data-variant=primary]")
+    assert has_element?(view, "#buttons button[data-variant=secondary]")
+    assert has_element?(view, "#card-grid article[data-variant=flat]")
     assert has_element?(view, "button[disabled]", "Unavailable")
     assert has_element?(view, "button[disabled] .hero-lock-closed[aria-hidden='true']")
     assert has_element?(view, "#token-status[role='status']")
@@ -102,7 +105,7 @@ defmodule NewYouWeb.DesignSystemLiveTest do
 
     {:ok, preview, _html} = live(conn, "/dev/design-system/preview")
     assert has_element?(preview, "#preview-content")
-    assert has_element?(preview, "button.bg-design-primary")
+    assert has_element?(preview, "button.ds-design-button[data-variant=primary]")
     refute has_element?(preview, "nav[aria-label='Design system sections']")
     refute has_element?(preview, "iframe")
   end

@@ -62,6 +62,58 @@ The scanner reads each source file as one buffer and reports the line from each 
 - The primary button preserves its native disabled attribute. DESIGN.md does not define a disabled appearance, so a new disabled visual treatment requires an authority decision first.
 - Inter is self-hosted under the owner's 2026-11-12 decision. Register font assets only in design-tokens.css and retain their licenses. Other brand fonts and illustrations still require explicit approval.
 
+## Classes, data attributes and native state
+
+Use native CSS and Tailwind v4. CSS versus SCSS is a build-tool choice; either
+language can select classes and attributes. This project keeps its CSS-first
+pipeline and does not add Sass. `assets/css/design-tokens.css` remains the single
+editable source for font families and shared visual values.
+
+Classes identify components and express layout. Data attributes select bounded,
+approved component options. Native HTML and ARIA describe interaction state.
+For example, `primary_button/1` renders a native button with
+`class="ds-design-button ..."` and `data-variant="primary"`. Its component-owned
+`data-[variant=primary]:bg-design-primary` utility consumes the same root colour
+token as the guide. `secondary_button/1` emits `data-variant="secondary"` and
+`design_card/1` accepts only `variant="flat"`, emitting `data-variant="flat"`.
+These describe existing appearances; they do not approve new visual variants.
+
+Phoenix components own the emitted variant and all styling utilities. Callers use
+the semantic component functions and supported options. They cannot forward
+`class` or `data-variant` to replace controlled styling, including through atom or
+string keys in `rest`. Other metadata such as `data-tracking-id`, native HTML,
+ARIA and `phx-*` attributes still pass through. Data attributes are presentation
+and metadata only, never authorization or business-state authority.
+
+Use `:hover`, `:focus-visible`, `:disabled` and other native states where they
+apply. Use meaningful `aria-expanded`, `aria-selected` or `aria-busy` when the
+actual interaction requires them. Do not duplicate those as `data-hover` or
+`data-disabled`. `aria-busy="true"` communicates busy status; it does not disable
+a control. Pass the native boolean `disabled` when behavior requires it.
+`data-state` is reserved for a bounded presentation state with no suitable native
+equivalent, and needs an actual component contract before use. A presence
+selector such as `[data-loading]` also matches `data-loading="false"`; use exact
+value selectors or omit a false attribute.
+
+Keep variant styling in one place. These components use Tailwind attribute
+variants within their modules, so there is no parallel CSS rule defining their
+fills. If custom component CSS is needed later, scope selectors to the component
+class and put them in the components cascade layer. Avoid escalating specificity
+or adding `!important` to resolve competing definitions. Preserve token enforcement
+for attribute-selected utilities as well as ordinary utilities.
+
+Responsive behavior remains CSS-owned. Use intrinsic sizing and wrapping first,
+container queries for available component space, and approved viewport
+breakpoints for page composition. Do not create JavaScript-driven `data-mobile`
+or `data-desktop` state. The guide's existing `data-alignment="start|center"`
+selects an intentional grid option; media queries determine its layout at each
+width. Variant attributes do not replace layout utilities or responsiveness.
+
+Adopt this convention as each production scope migrates. Keep existing legacy
+styling on its compatibility lane. This internal presentation change introduces
+no material capability, lifecycle, schema or Domain interface, so a new capability
+JSON map is exempt. The automatically generated PR history still applies.
+
 ## DaisyUI migration status
 
 DaisyUI can coexist with the canonical layer while existing components remain grandfathered. Its component classes carry visual styling, so globally retheming it to project colors would change existing pages. The least disruptive path is progressive replacement of DaisyUI visual components in deliberately migrated scopes. Retaining DaisyUI as behavior-only infrastructure would require separating its visual rules and verifying each migrated component; WELL-80 does not perform that work.

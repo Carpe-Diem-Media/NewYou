@@ -5,6 +5,88 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
 
   alias Mix.Tasks.Design.Check
   alias NewYouWeb.Components.Design.Button
+  alias NewYouWeb.Components.Design.Card
+
+  test "semantic components own bounded variants while preserving native state and metadata" do
+    for {component, variant, extra} <- [
+          {&Button.primary_button/1, "primary", %{}},
+          {&Button.secondary_button/1, "secondary", %{}}
+        ],
+        disabled <- [false, true] do
+      html =
+        render_component(
+          component,
+          Map.merge(extra, %{
+            :"aria-busy" => "true",
+            :"phx-click" => "save",
+            :"data-tracking-id" => "action",
+            disabled: disabled,
+            type: "submit",
+            inner_block: [%{inner_block: fn _, _ -> "Save" end}]
+          })
+        )
+
+      button = html |> LazyHTML.from_fragment() |> LazyHTML.query("button.ds-design-button")
+      assert LazyHTML.attribute(button, "data-variant") == [variant]
+      assert LazyHTML.attribute(button, "aria-busy") == ["true"]
+      assert LazyHTML.attribute(button, "phx-click") == ["save"]
+      assert LazyHTML.attribute(button, "data-tracking-id") == ["action"]
+      assert LazyHTML.attribute(button, "disabled") != [] == disabled
+      assert LazyHTML.attribute(button, "data-disabled") == []
+    end
+
+    html =
+      render_component(&Card.design_card/1, %{
+        :"aria-label" => "Reference",
+        :"data-tracking-id" => "card",
+        title: "A card",
+        inner_block: [%{inner_block: fn _, _ -> "Content" end}]
+      })
+
+    card = html |> LazyHTML.from_fragment() |> LazyHTML.query("article.ds-design-card")
+    assert LazyHTML.attribute(card, "data-variant") == ["flat"]
+    assert LazyHTML.attribute(card, "aria-label") == ["Reference"]
+    assert LazyHTML.attribute(card, "data-tracking-id") == ["card"]
+    assert LazyHTML.attribute(card, "role") == []
+    assert LazyHTML.attribute(card, "tabindex") == []
+  end
+
+  test "callers cannot override controlled variant attributes or classes in forwarded maps" do
+    for component <- [&Button.primary_button/1, &Button.secondary_button/1, &Card.design_card/1],
+        key <- [:"data-variant", "data-variant", :class, "class"] do
+      assert_raise ArgumentError, ~r/does not accept caller-provided/, fn ->
+        render_component(component, %{
+          title: "A card",
+          rest: %{key => "unapproved"},
+          inner_block: [%{inner_block: fn _, _ -> "Content" end}]
+        })
+      end
+    end
+  end
+
+  test "the card rejects unsupported variants" do
+    assert_raise ArgumentError, ~r/unsupported design card variant/, fn ->
+      render_component(&Card.design_card/1, %{
+        title: "A card",
+        variant: "promotional",
+        inner_block: [%{inner_block: fn _, _ -> "Content" end}]
+      })
+    end
+  end
+
+  test "attribute-selected utilities retain token and reserved-context enforcement" do
+    source =
+      ~s|<button class="data-[variant=primary]:bg-design-primary data-[variant=primary]:hover:bg-design-primary-deep"></button>|
+
+    assert [] = Check.violations("lib/new_you_web/components/design/button.ex", source)
+    assert [_ | _] = Check.violations("lib/new_you_web/pages/new_page.html.heex", source)
+
+    assert [_ | _] =
+             Check.violations(
+               "lib/new_you_web/components/design/button.ex",
+               ~s|<button class="data-[variant=primary]:bg-red-500"></button>|
+             )
+  end
 
   test "identity OKLCH conversion preserves palette authority without accepting color transforms" do
     design = ~s|colors:\n  primary: "#0061ef"\n|

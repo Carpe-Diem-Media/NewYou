@@ -2,8 +2,9 @@ defmodule NewYouWeb.Components.Design.Button do
   @moduledoc """
   Canonical Phoenix button primitives mapped to the root `DESIGN.md` tokens.
 
-  Visual classes are owned here; callers may provide normal HTML, ARIA, and
-  LiveView attributes. The secondary button uses the approved neutral outline.
+  Visual classes and `data-variant` are owned here. Callers may provide normal
+  HTML, ARIA, LiveView and unrelated data attributes. Native `disabled` controls
+  availability. The secondary button uses the approved neutral outline.
   """
 
   use Phoenix.Component
@@ -16,15 +17,14 @@ defmodule NewYouWeb.Components.Design.Button do
 
   @doc "Renders the approved primary CTA while preserving caller HTML and LiveView attributes."
   def primary_button(%{variant: "primary", rest: rest} = assigns) do
-    if Map.has_key?(rest, :class) do
-      raise ArgumentError, "design primary_button does not accept caller-provided classes"
-    end
+    validate_rest!(rest, "design primary_button")
 
     ~H"""
     <button
       type={@type}
       disabled={@disabled}
-      class="inline-flex items-center justify-center h-design-button-height px-design-button-inline py-design-button-block rounded-design-xl bg-design-primary text-design-on-primary font-design-sans font-design-bold text-design-button-md leading-design-button-md tracking-design-button-md hover:bg-design-primary-deep active:bg-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      class="ds-design-button inline-flex items-center justify-center h-design-button-height px-design-button-inline py-design-button-block rounded-design-xl data-[variant=primary]:bg-design-primary data-[variant=primary]:text-design-on-primary font-design-sans font-design-bold text-design-button-md leading-design-button-md tracking-design-button-md data-[variant=primary]:hover:bg-design-primary-deep data-[variant=primary]:active:bg-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      data-variant="primary"
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -43,19 +43,28 @@ defmodule NewYouWeb.Components.Design.Button do
 
   @doc "Renders the approved neutral outline button with native button semantics."
   def secondary_button(assigns) do
-    if Map.has_key?(assigns.rest, :class) do
-      raise ArgumentError, "design secondary_button does not accept caller-provided classes"
-    end
+    validate_rest!(assigns.rest, "design secondary_button")
 
     ~H"""
     <button
       type={@type}
       disabled={@disabled}
-      class="inline-flex items-center justify-center h-design-button-height px-design-button-inline py-design-md rounded-design-full border border-design-ink bg-design-surface text-design-ink font-design-sans font-design-bold text-design-button-md leading-design-button-md tracking-design-button-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary hover:underline active:underline disabled:cursor-not-allowed"
+      class="ds-design-button inline-flex items-center justify-center h-design-button-height px-design-button-inline py-design-md rounded-design-full border data-[variant=secondary]:border-design-ink data-[variant=secondary]:bg-design-surface data-[variant=secondary]:text-design-ink font-design-sans font-design-bold text-design-button-md leading-design-button-md tracking-design-button-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary hover:underline active:underline disabled:cursor-not-allowed"
+      data-variant="secondary"
       {@rest}
     >
       {render_slot(@inner_block)}
     </button>
     """
+  end
+
+  defp validate_rest!(rest, component) do
+    if Map.has_key?(rest, :class) or Map.has_key?(rest, "class") do
+      raise ArgumentError, "#{component} does not accept caller-provided classes"
+    end
+
+    if Map.has_key?(rest, :"data-variant") or Map.has_key?(rest, "data-variant") do
+      raise ArgumentError, "#{component} does not accept caller-provided data-variant"
+    end
   end
 end

@@ -6,7 +6,12 @@ import {resolve} from "node:path"
 const require = createRequire(resolve(process.env.BROWSER_TOOLS_ROOT || ".", "package.json"))
 const puppeteer = require("puppeteer-core")
 const base = process.env.DESIGN_SYSTEM_URL || "http://127.0.0.1:4237"
-const browser = await puppeteer.launch({executablePath: process.env.CHROME_PATH || "/usr/bin/google-chrome", headless: true})
+const browser = await puppeteer.launch({
+  executablePath: process.env.CHROME_PATH || "/usr/bin/google-chrome",
+  headless: true,
+  // Exercise Tailwind's hover media query with an explicit desktop pointer.
+  args: ["--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4"]
+})
 const page = await browser.newPage()
 const errors = []
 page.on("pageerror", error => errors.push(error.message))
@@ -15,6 +20,42 @@ try {
   await page.setViewport({width: 1440, height: 900})
   await page.goto(`${base}/dev/design-system`, {waitUntil: "networkidle0"})
   await page.waitForFunction(() => window.liveSocket?.isConnected() && document.querySelector("[data-token='--primary']")?.textContent.trim() !== "CSS value")
+  assert.equal(await page.evaluate(() => matchMedia("(hover: hover)").matches), true)
+
+  const primarySelector = "#buttons button[data-variant='primary']:not(:disabled)"
+  const primary = await page.$(primarySelector)
+  const secondary = await page.$("#buttons button[data-variant='secondary']")
+  assert.ok(primary, "shared primary variant is present")
+  assert.ok(secondary, "shared secondary variant is present")
+  const primaryBefore = await primary.evaluate(button => {
+    const style = getComputedStyle(button)
+    return {background: style.backgroundColor, height: style.height, radius: style.borderRadius}
+  })
+  assert.equal(primaryBefore.height, "48px")
+  assert.equal(primaryBefore.radius, "32px")
+  await primary.hover()
+  const primaryHovered = await primary.evaluate(button => getComputedStyle(button).backgroundColor)
+  assert.notEqual(primaryHovered, primaryBefore.background, "approved hover colour applies")
+  await page.mouse.move(0, 0)
+  assert.equal(await primary.evaluate(button => getComputedStyle(button).backgroundColor), primaryBefore.background)
+  const secondaryStyle = await secondary.evaluate(button => {
+    const style = getComputedStyle(button)
+    return {height: style.height, background: style.backgroundColor, border: style.borderTopStyle}
+  })
+  assert.equal(secondaryStyle.height, "48px")
+  assert.equal(secondaryStyle.border, "solid")
+  assert.notEqual(secondaryStyle.background, primaryBefore.background)
+  const nativeStates = await page.evaluate(() => {
+    const disabled = document.querySelector("#buttons button[disabled]")
+    disabled.focus()
+    return {disabled: disabled.disabled, focused: document.activeElement === disabled,
+      duplicate: disabled.hasAttribute("data-disabled"),
+      cards: [...document.querySelectorAll("#card-grid > article")].every(card => card.dataset.variant === "flat")}
+  })
+  assert.equal(nativeStates.disabled, true)
+  assert.equal(nativeStates.focused, false)
+  assert.equal(nativeStates.duplicate, false)
+  assert.equal(nativeStates.cards, true)
 
   for (const width of [320, 390, 743, 744, 1127, 1128, 1440, 1920]) {
     await page.setViewport({width, height: 900})
@@ -67,7 +108,7 @@ try {
     root.style.setProperty("--radius", "24px")
     root.style.setProperty("--box-shadow", "0px 2px 8px rgba(0, 0, 0, 0.12)")
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
-    const button = getComputedStyle(document.querySelector("#buttons button.bg-design-primary"))
+    const button = getComputedStyle(document.querySelector("#buttons button[data-variant='primary']"))
     const swatch = getComputedStyle(document.querySelector("[data-swatch='primary']"))
     const card = getComputedStyle(document.querySelector("#card-grid > article"))
     const result = {
@@ -93,7 +134,7 @@ try {
     const root = document.documentElement
     const sourceToken = "--palette-primary-srgb"
     const oldSource = root.style.getPropertyValue(sourceToken)
-    const button = document.querySelector("#buttons button.bg-design-primary")
+    const button = document.querySelector("#buttons button[data-variant='primary']")
     const swatch = document.querySelector("[data-swatch='primary']")
     const before = getComputedStyle(swatch).backgroundColor
     root.style.setProperty(sourceToken, "#004fbf")
