@@ -72,6 +72,10 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_ci_attestation.py' -v
       - name: Run founder attestation regression tests
         run: python -m unittest discover -s tests -p 'test_newyou_attest.py' -v
+      - name: Run standing founder gate regression tests
+        run: python -m unittest tests.test_founder_gate tests.test_capability_knowledge -v
+      - name: Validate capability knowledge maps
+        run: python -m tools.capability_knowledge
       - name: Verify merge-gate topology
         run: python -m unittest discover -s tests -p 'test_foundation_merge_gate.py' -v
       - name: Run current authority smoke audit

@@ -27,5 +27,8 @@ Implementation maps and their review requirements live in development documentat
 - [P8-13 privileged-support implementation handoff](development/p8-13-privileged-support-handoff.md)
 - [P8-14 Identity reconciliation implementation handoff](development/p8-14-reconciliation-handoff.md)
 - [WELL-103 ExUnit performance profile](development/well-103-exunit-performance.md)
+- [Solo-founder merge gate handoff](development/solo-founder-merge-handoff.md)
 
 These maps describe source at a recorded revision. Verify current code before reuse; they are not semantic authority routes or live status ledgers.
+
+[Capability knowledge maps](development/knowledge/README.md): machine-readable source-linked contracts and safe extension guidance.

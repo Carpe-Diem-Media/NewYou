@@ -1,0 +1,493 @@
+{
+  "schema_version": 1,
+  "capability_id": "identity.registration",
+  "purpose": "Accept registration transactionally and return a neutral verification-pending result without authenticating a browser session.",
+  "implementing_tickets": [
+    "WELL-6",
+    "WELL-48",
+    "WELL-49",
+    "WELL-50",
+    "WELL-96"
+  ],
+  "implementation_revision": {
+    "git_sha": "09812d6bb245fe9360af813f7590c9313ff5a851",
+    "semantics": "Source snapshot inspected for WELL-121. Source SHA-256 values bind the listed bytes; this is not the documentation commit or a claim of newly executed application proof."
+  },
+  "authoritative_domain": "NewYou.Identity",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Communications",
+      "interface": "establish_verification/2",
+      "ownership": "MessageIntent, protected envelope and nonce reservation; registration establishes intent, not delivery.",
+      "source_ids": [
+        "communications",
+        "accept"
+      ]
+    },
+    {
+      "domain": "NewYou.Audit",
+      "interface": "establish_registration_obligation/2 (generated Ash interface)",
+      "ownership": "Registration evidence obligation and initial materialization schedule.",
+      "source_ids": [
+        "audit",
+        "accept"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.RegistrationOperation",
+      "actions": [
+        "accept_registration",
+        "bind",
+        "read",
+        "tombstone"
+      ],
+      "caller_boundary": "Internal transactional action. Application callers use Identity.register/1.",
+      "source_ids": [
+        "operation",
+        "identity"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.Account",
+      "actions": [
+        "register"
+      ],
+      "caller_boundary": "Private Account creation from the acceptance action; not a browser API.",
+      "source_ids": [
+        "account",
+        "accept"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.Token",
+      "actions": [
+        "store_token",
+        "get_token",
+        "revoke_token"
+      ],
+      "caller_boundary": "AshAuthentication token resource; JWT issuance remains inside owner acceptance.",
+      "source_ids": [
+        "token",
+        "accept"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Identity",
+      "function": "register",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Atom-keyed map: operation_id UUIDv4, first_name, surname, email, password, preferred_language (en/af atom or string), confirmed_age_18? true, terms_version_id, privacy_version_id.",
+        "Nonblank names, nonempty password, accepted canonical mailbox and exact configured development legal versions are required."
+      ],
+      "returns": [
+        "{:ok, %RegistrationResult{status: :verification_pending, account_id: UUID | nil, verification_proof: token | nil}}",
+        "Ordinary failure paths include {:error, :invalid_registration} and {:error, :registration_unavailable}; unexpected exceptions are not universally caught."
+      ],
+      "side_effects": [
+        "New acceptance commits Account/credential/PMR/verification Token/operation plus Communications intent/envelope and Audit obligation/schedule in one Ash transaction.",
+        "Exact replay repeats no acceptance writes and returns no proof. Duplicate canonical email creates only a neutral operation binding.",
+        "No provider I/O or authenticated browser session."
+      ],
+      "caller_constraints": [
+        "Never log or expose the transient verification_proof to browser callers.",
+        "Purpose-bound internal authorize?: false calls do not grant a general authorization bypass."
+      ],
+      "source_ids": [
+        "identity",
+        "accept",
+        "operation",
+        "controller"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261028184736_identity_registration_primitives.exs",
+      "tables": [
+        "accounts",
+        "registration_operations",
+        "tokens"
+      ],
+      "constraints": [
+        "accounts_canonical_email_index",
+        "accounts_permanent_pmr_index",
+        "registration_operations_opaque_operation_id_index",
+        "registration_operations_state",
+        "registration_operations_outcome",
+        "registration_operations_binding_complete",
+        "registration_operations_tombstone_cleared",
+        "registration_operations_created_account_id_fkey"
+      ],
+      "source_ids": [
+        "migration"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261029050403_well48_permanent_pmr_reservations.exs",
+      "tables": [
+        "identity_pmr_reservations"
+      ],
+      "constraints": [
+        "identity_pmr_reservations_pmr_format",
+        "accounts_reserve_pmr",
+        "identity_pmr_reservations_no_update_or_delete",
+        "identity_pmr_reservations_no_truncate"
+      ],
+      "source_ids": [
+        "pmr_migration"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "RegistrationController.create/2 validates browser input, then calls Identity.register/1; response is neutral and creates no session.",
+      "source_ids": [
+        "controller",
+        "identity"
+      ]
+    },
+    {
+      "summary": "Identity checks operation replay, validates admission and allocates PMR; internal accept_registration action owns the source transaction.",
+      "source_ids": [
+        "identity",
+        "operation"
+      ]
+    },
+    {
+      "summary": "AcceptRegistration.run/3 creates Account, verification challenge, Communications intent, Audit obligation/schedule, then binds operation.",
+      "source_ids": [
+        "accept",
+        "communications",
+        "audit"
+      ]
+    },
+    {
+      "summary": "Commit returns verification_pending; email delivery and verification consumption are separate capabilities.",
+      "source_ids": [
+        "accept",
+        "controller"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "unrecorded (request phase, not a persisted enum)",
+      "bound",
+      "tombstoned"
+    ],
+    "transitions": [
+      {
+        "from_state": "unrecorded (request phase, not a persisted enum)",
+        "to_state": "bound",
+        "guards": [
+          "Validated immutable request, UUIDv4, legal/content/key eligibility and successful transaction.",
+          "Uniqueness arbitrates email, PMR and operation ID."
+        ],
+        "side_effects": [
+          "Commit acceptance write set, or neutral duplicate-email binding."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "identity",
+          "accept",
+          "operation",
+          "migration"
+        ]
+      },
+      {
+        "from_state": "bound",
+        "to_state": "bound",
+        "guards": [
+          "Before 24-hour expiry; same HMAC-bound input and matching password verifier; required old keys/provider supported."
+        ],
+        "side_effects": [
+          "Return previous result with nil verification_proof; do not repeat acceptance."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "identity",
+          "binding"
+        ]
+      },
+      {
+        "from_state": "bound",
+        "to_state": "tombstoned",
+        "guards": [
+          "Operation expiry; replay independently rejects expired operations even before sweep."
+        ],
+        "side_effects": [
+          "Clear replay/binding/result material, preserve operation UUID reservation; background expiry works in bounded batches."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "identity",
+          "operation",
+          "expiry"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Identity owns Account, credential, PMR, verification challenge and registration operation; cross-Domain consequences use owning interfaces.",
+      "source_ids": [
+        "accept",
+        "identity",
+        "communications",
+        "audit"
+      ]
+    },
+    {
+      "summary": "Neutral duplicate-email result must not reveal whether an Account exists; password and transient token are sensitive.",
+      "source_ids": [
+        "identity",
+        "controller"
+      ]
+    },
+    {
+      "summary": "Development legal/browser fixtures are not production legal or release approval.",
+      "source_ids": [
+        "controller",
+        "identity"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "PostgreSQL unique identities arbitrate concurrent email/PMR/operation acceptance; process-local memory is not authority.",
+      "source_ids": [
+        "migration",
+        "pmr_migration",
+        "identity"
+      ]
+    },
+    {
+      "summary": "PMR collision retries allocation up to five attempts; email collision binds neutral result; operation collision rereads/replays.",
+      "source_ids": [
+        "identity"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Exact immutable replay requires request fingerprint and slow password verifier; changed payload, key loss, expiry or tombstone refuses.",
+      "source_ids": [
+        "identity",
+        "binding"
+      ]
+    },
+    {
+      "summary": "Do not retry by inventing new operation IDs to bypass expired or contradictory binding.",
+      "source_ids": [
+        "identity",
+        "operation"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Returned failure inside transactional accept_registration rolls back source and owner consequences; scheduled job is not acceptance authority.",
+      "source_ids": [
+        "operation",
+        "accept"
+      ]
+    },
+    {
+      "summary": "Lost response is reconciled via the same operation ID and immutable payload. Replay returns no bearer.",
+      "source_ids": [
+        "identity"
+      ]
+    },
+    {
+      "summary": "Tombstones preserve non-reuse, while unavailable old fingerprint keys/verifiers fail closed.",
+      "source_ids": [
+        "binding",
+        "identity",
+        "operation"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/identity/registration_primitives_test.exs",
+      "cases": [
+        "Registration validation, exact replay, changed payload/password and tombstone/expiry refusal."
+      ],
+      "proves": "Executable focused primitive/replay coverage in repository.",
+      "limits": "Source inspected here; do not transfer historical run results to this map revision.",
+      "source_ids": [
+        "primitives_test"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/registration_orchestration_test.exs",
+      "cases": [
+        "Owner write set, rollback, concurrent acceptance and duplicate-email neutrality."
+      ],
+      "proves": "Actual Ash/PostgreSQL orchestration tests with independent connection race helpers.",
+      "limits": "No claim that JSON validation executes these tests or proves production delivery.",
+      "source_ids": [
+        "orchestration_test"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Extend registration through Identity.register/1 and the existing acceptance action; maintain rollback and replay tests when changing write set.",
+      "source_ids": [
+        "identity",
+        "accept",
+        "operation"
+      ]
+    },
+    {
+      "summary": "Use Communications and Audit owner interfaces for new consequences; inspect their current capability handoffs before extending.",
+      "source_ids": [
+        "communications",
+        "audit"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Reuse Identity.register/1 as caller interface and RegistrationBinding for immutable replay verification.",
+      "source_ids": [
+        "identity",
+        "binding"
+      ]
+    },
+    {
+      "summary": "Reuse the existing database uniqueness and PMR reservation mechanisms; do not duplicate arbitration.",
+      "source_ids": [
+        "migration",
+        "pmr_migration"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Do not call accept_new_registration or Account :register directly from delivery code to bypass owner validation/replay.",
+      "source_ids": [
+        "identity",
+        "accept",
+        "controller"
+      ]
+    },
+    {
+      "summary": "Do not introduce direct Repo/raw SQL/Ecto.Multi business writes, a second Account authority, or process-local uniqueness.",
+      "source_ids": [
+        "identity",
+        "operation",
+        "migration"
+      ]
+    },
+    {
+      "summary": "Do not equate MessageIntent, queued Audit work or verification_pending with email delivery, verified email or authenticated session.",
+      "source_ids": [
+        "accept",
+        "communications",
+        "controller"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "Descriptive source snapshot, subordinate to current governance and live Plane.",
+    "Schema/path/hash checks cannot establish the semantic truth of prose or declarations. Independent Master Gate must review claims against exact source/tests.",
+    "The historical P8-05 Markdown describes an older implementation snapshot; downstream Communications execution now has its own p8-10 handoff. This record covers registration acceptance only."
+  ],
+  "follow_up_tickets": [],
+  "sources": [
+    {
+      "id": "identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def register(request)",
+      "sha256": "16b18e519f4c982065b00526e600965b035d9506abfd5ef17e0e7530ba9dc93f"
+    },
+    {
+      "id": "accept",
+      "path": "lib/new_you/identity/actions/accept_registration.ex",
+      "symbol": "def run(input, _opts, _context)",
+      "sha256": "e2d4297709d3aa6701c47bac392bb4161cdb46a6b16f881fb3c25ae078095ef6"
+    },
+    {
+      "id": "operation",
+      "path": "lib/new_you/identity/registration_operation.ex",
+      "symbol": ":accept_registration",
+      "sha256": "9ccb0553febf1a6c2ce027f6480b29f60c0bd88f7d59a52f738eb5bf5663a191"
+    },
+    {
+      "id": "binding",
+      "path": "lib/new_you/identity/registration_binding.ex",
+      "symbol": "defmodule NewYou.Identity.RegistrationBinding",
+      "sha256": "67d245c89fc15e3e046ac577e7b5ca3c41a186d90f9945a96c594dc1988c275f"
+    },
+    {
+      "id": "communications",
+      "path": "lib/new_you/communications.ex",
+      "symbol": "def establish_verification",
+      "sha256": "671064bf165f44f34405180b6db96f4e2735e2b96505438b732352d85724899d"
+    },
+    {
+      "id": "audit",
+      "path": "lib/new_you/audit.ex",
+      "symbol": ":establish_registration_obligation",
+      "sha256": "1fea7db1febf9296e1a0b3247e4f752f986296c3b7750371553575ff0685bfc3"
+    },
+    {
+      "id": "expiry",
+      "path": "lib/new_you/identity/registration_operation_expiry.ex",
+      "symbol": "defmodule",
+      "sha256": "cf06eeab7d8f5abb22e46c6cd2d0890b3525e08688a5663dfc1a0a12c32daa08"
+    },
+    {
+      "id": "migration",
+      "path": "priv/repo/migrations/20261028184736_identity_registration_primitives.exs",
+      "symbol": "accounts_canonical_email_index",
+      "sha256": "40664d5d6d5022daae01033ad4aaad0f6b0e500b199f40833243ff522782692f"
+    },
+    {
+      "id": "pmr_migration",
+      "path": "priv/repo/migrations/20261029050403_well48_permanent_pmr_reservations.exs",
+      "symbol": "defmodule",
+      "sha256": "6a2fef53e424846f96224d27ab7087b74d100043e869c7f2a6de6ef8ac82717c"
+    },
+    {
+      "id": "primitives_test",
+      "path": "test/new_you/identity/registration_primitives_test.exs",
+      "symbol": "defmodule",
+      "sha256": "0ba62370de2b0261864f1615040929b51cd3202c20c075e15d0b085277ddcbfb"
+    },
+    {
+      "id": "orchestration_test",
+      "path": "test/new_you/identity/registration_orchestration_test.exs",
+      "symbol": "defmodule",
+      "sha256": "6fe863fd7906b768268852f9488fd6bfb07829b49dd465d52a9764942470210c"
+    },
+    {
+      "id": "controller",
+      "path": "lib/new_you_web/controllers/registration_controller.ex",
+      "symbol": "def create(",
+      "sha256": "c540f81db7a41ed299a22bb404fb6af2e37813f3813390981e517480bddb1e66"
+    },
+    {
+      "id": "account",
+      "path": "lib/new_you/identity/account.ex",
+      "symbol": "create :register",
+      "sha256": "0f2575fd103b046e9c59a025228678b9bdd79c92e9f20cfc124efb2c4456c8da"
+    },
+    {
+      "id": "token",
+      "path": "lib/new_you/identity/token.ex",
+      "symbol": "defmodule NewYou.Identity.Token",
+      "sha256": "53dbe16b2e2a22edb17279436c4c61e1a01066dcfa036165b07c42f9f3fd1ad3"
+    }
+  ]
+}

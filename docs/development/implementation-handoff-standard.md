@@ -68,3 +68,7 @@ A new registration capability requires the full [P8-05 map](p8-05-registration-h
 A future proof-only PR extending registration contention evidence updates section 7 of that map or adds a linked proof addendum. It records the new test identifiers, exact reviewed SHA, commands/results and remaining obligations. It does not restate the entire registration flow. WELL-7 is an illustrative proof scope, not retroactively subject to this adoption gate.
 
 A private formatting helper that changes neither an owner interface nor behaviour can record: "Handoff exempt: local formatting helper only; no flow, lifecycle, persistence or recovery contract changes." A material change to replay expiry instead updates the existing lifecycle and proof sections, even if its code diff is small.
+
+## Machine-readable capability knowledge
+
+Substantial capabilities and material Domain/interface/lifecycle/schema changes create or update one canonical JSON map under [knowledge/](knowledge/README.md) in the same PR. It complements the handoff; do not duplicate the full JSON in Markdown. Internal/cosmetic changes may state a concrete exemption. The [registration example](knowledge/identity.registration.json) records source bytes/revision, owner interfaces, constraints, failure/recovery and reuse. Run `python3 -m tools.capability_knowledge` and its focused tests. Master Gate compares claims against actual source/tests. Maps remain descriptive snapshots beneath governing authority and live Plane.

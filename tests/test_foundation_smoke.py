@@ -25,6 +25,12 @@ class FoundationSmokeTests(unittest.TestCase):
         (root / "docs").mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / "docs/README.md", root / "docs/README.md")
         shutil.copytree(ROOT / "docs/development", root / "docs/development")
+        # Capability JSON is active documentation with exact source references.
+        knowledge = json.loads((ROOT / "docs/development/knowledge/identity.registration.json").read_text())
+        for source in knowledge["sources"]:
+            target = root / source["path"]
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / source["path"], target)
         shutil.copytree(ROOT / "tools/hex_audit", root / "tools/hex_audit")
         shutil.copytree(ROOT / "priv/resource_snapshots", root / "priv/resource_snapshots")
         shutil.copytree(ROOT / ".agents/skills", root / ".agents/skills")
@@ -259,7 +265,9 @@ class FoundationSmokeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             root = self._fixture(directory)
-            standard = root / "docs/governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.3.0.md"
+            router = json.loads((root / GOVERNANCE_ROUTER).read_text(encoding="utf-8"))
+            standard = root / next(item["repository_path"] for item in router["supporting_documents"]
+                                   if item["document_id"] == "DELIVERY_GOVERNANCE_STANDARD")
             standard.write_text(
                 standard.read_text(encoding="utf-8").replace(
                     "docs/delivery/CURRENT_DELIVERY_ROUTER.json", "docs/governance/CURRENT_GOVERNANCE_ROUTER.json"

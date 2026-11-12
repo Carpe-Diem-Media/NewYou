@@ -144,11 +144,19 @@ Foundation Full verifies governance, frozen history/provenance and the historica
 
 Do not wait for Foundation Full during PR verification. Investigate material regressions reported by a nightly run against `main` and bind triage to its recorded SHA.
 
+## Solo-founder approval
+
+For eligible non-production founder-development, publish the full technical review as an authenticated JCSchoeman96 APPROVED GitHub review at the exact head. Include `Founder-development base: <base SHA>` after verifying the scope has no stronger approval requirement. This single review supplies standing owner delegation; no extra founder comment, external human reviewer or manual attestation JSON is needed. It authenticates the account, not a separate physical person. The implementing agent cannot publish this approval using founder credentials.
+
+Follow [the live merge procedure](foundation-integrity-merge-gate.md) for trusted-main checks, native GitHub approval/stale-review protection, exact CI candidate and resulting-main reconciliation. No new check-publishing App or workflow is required. Review meaningful capability maps against actual source, migrations, tests and live Plane; JSON validation alone does not establish semantic accuracy.
+
+Higher-risk regulated, clinical, legal, production-security, privileged and release controls remain. Approval, agent-instruction, CI and governance changes use strict review. Ambiguity refuses routine delegation. PR #224 remains governed by current main until fresh independent review, CI and its expressly authorized establishing transition. Do not approve or merge it using proposed rules, and never mark Plane Done before resulting-main verification.
+
 ## Merge and post-merge gate
 
 Recommend merge only for the exact reviewed head. Any head change invalidates certification.
 
-After merge, independently verify resulting-main SHA/tree, reviewed-candidate integration/no drift, required resulting-main CI/proof and any condition that could invalidate the gate. Only then reconcile Plane to Done and open dependent work.
+After merge, verify resulting-main identity, semantic parents and tree against the reviewed candidate, plus required resulting-main proof. Only then reconcile both WELL-120 and WELL-121 to Done and open dependent work. A merge alone does not complete either ticket.
 
 Merge alone never satisfies a separately required resulting-main gate.
 

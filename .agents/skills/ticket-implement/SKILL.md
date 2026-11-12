@@ -192,7 +192,7 @@ When the implementation and required local verification are review-ready:
 3. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
 4. record material JIT choices and discovered work in Plane/PR evidence where useful;
 5. hand off for independent Master Gate review, including the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
-6. identify the trusted repository operator responsible for materializing and preserving the independently verified review record and running the pre-merge and post-merge collectors. Include these steps, separate merge authorization, and resulting-main certification in the PR handoff. Request the four machine-copyable review fields from Master Gate; do not create independent review evidence yourself.
+6. follow the eligible founder-development or strict route in the merge-gate procedure. Request one authenticated founder APPROVED technical review for ordinary eligible work, with exact reviewed head/base and live required CI. Do not request routine manual attestation JSON or duplicate founder comments. Retain stronger approval requirements and the establishing PR bootstrap boundary.
 
 Report:
 
