@@ -291,6 +291,8 @@ end
         historical = [row for row in results if row['historical']]
         self.assertFalse(current)
         self.assertTrue(historical)
+        qualified = capture.query_index(self.repo, 'Demo.visible/0')['results']
+        self.assertTrue(any(row.get('symbol') == 'visible' and not row['historical'] for row in qualified))
         parsed = capture._elixir_result(b'', source.encode())['new']
         visibility = {(row['name'], row.get('visibility')) for row in parsed['functions']}
         self.assertEqual({('visible', 'public'), ('hidden', 'private')}, visibility)

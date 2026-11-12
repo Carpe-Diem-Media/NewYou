@@ -480,7 +480,8 @@ def query_index(repo, query, revision='HEAD'):
         for symbol in parsed.get('functions', []):
             key = (symbol['module'], symbol['name'], symbol['arity'])
             current_symbols.add(key)
-            haystack = ' '.join((source_path, *map(str, key), symbol['visibility'], symbol['declaration'])).lower()
+            qualified = f"{symbol['module']}.{symbol['name']}/{symbol['arity']}"
+            haystack = ' '.join((source_path, *map(str, key), qualified, symbol['visibility'], symbol['declaration'])).lower()
             if needles in haystack:
                 references = references_for(source_path, symbol['module'], symbol['name'])
                 rows.append({'path': source_path, 'module': symbol['module'], 'symbol': symbol['name'],
@@ -562,7 +563,9 @@ def query_index(repo, query, revision='HEAD'):
                                      None if symbol.get('module') in uncertain_modules or uncertain_without_module else False)
                 else:
                     symbol_exists = False
-                terms = ' '.join(str(symbol.get(key, '')) for key in ('module', 'name', 'path', 'reason')).lower()
+                qualified = f"{symbol.get('module')}.{symbol.get('name')}/{symbol.get('arity')}"
+                terms = (' '.join(str(symbol.get(key, '')) for key in ('module', 'name', 'path', 'reason'))
+                         + ' ' + qualified).lower()
                 if not ticket_match and needles not in terms:
                     continue
                 rows.append({'path': source_path, 'symbol': symbol.get('name') or symbol.get('module'),
