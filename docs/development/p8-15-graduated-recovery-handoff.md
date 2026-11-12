@@ -1,5 +1,13 @@
 # P8-15 graduated recovery implementation handoff
 
+Historical PR #217 record. The current canonical implementation map is
+[identity.recovery.json](knowledge/identity.recovery.json), maintained in PR #228.
+Pending-content and empty-browser statements below describe their recorded old
+revisions. Current main includes WELL-110's approved development content, and the
+continuation adds exact binding, deterministic delivery proof and explicit browser
+forms. Historical failures and proof claims remain intact. Use live Plane and
+GitHub for current execution, CI and review state.
+
 ## 1. Purpose, scope and version
 
 WELL-16 adds the bounded Identity-owned graduated-recovery lifecycle. This revision describes implementation commit `3af688ababcd87a1675080129038b49b50798260`, based on main `98fbeb8766ff1d20efe4f4f10baa6fc3abcc62f6`. The documentation head is separate. Implementation and handoff are in [draft PR #217](https://github.com/JCSchoeman96/NewYou/pull/217). Verify current source, routers and [live WELL-16](https://app.plane.so/symphony-development/browse/WELL-16) before reuse. This is a full handoff under the [implementation-handoff standard](implementation-handoff-standard.md), not semantic or execution authority.

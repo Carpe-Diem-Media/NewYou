@@ -26,7 +26,7 @@ Implementation maps and their review requirements live in development documentat
 - [AshAuthentication v5 compatibility addendum (WELL-100)](development/ash-authentication-v5-well-100.md)
 - [P8-13 privileged-support implementation handoff](development/p8-13-privileged-support-handoff.md)
 - [P8-14 Identity reconciliation implementation handoff](development/p8-14-reconciliation-handoff.md)
-- [P8-15 graduated recovery implementation handoff](development/p8-15-graduated-recovery-handoff.md)
+- [P8-15 recovery capability map](development/knowledge/identity.recovery.json), with the [historical PR #217 handoff](development/p8-15-graduated-recovery-handoff.md)
 - [WELL-103 ExUnit performance profile](development/well-103-exunit-performance.md)
 - [Founder-development merge handoff](development/solo-founder-merge-handoff.md)
 

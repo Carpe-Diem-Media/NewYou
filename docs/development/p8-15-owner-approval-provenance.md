@@ -1,3 +1,12 @@
+# Historical approval provenance
+
+This records the PR #217-era observations below. Current authority is routed
+Product/Decisions v1.16.0 and the WELL-110 development evidence packet promoted by
+PR #226. WELL-111's bounded reconciliation is complete. See the current
+[recovery capability map](knowledge/identity.recovery.json) and live Plane for
+implementation scope and remaining operational limits. No historical approval
+event or exact message bytes are rewritten here.
+
 # WELL-16 recorded owner decisions and promotion boundary
 
 This implementation addendum records independently retrieved Plane events. It is not a Product amendment, Content approval packet, runtime eligibility source or acceptance waiver. Reconnaissance used implementation head `cd70611e6d1d80474c6ca26db6fdee48e9d407e4` and main `98fbeb8766ff1d20efe4f4f10baa6fc3abcc62f6`. Both current routers still resolve Product and Decisions v1.15.0. No eligible recovery packet is routed.

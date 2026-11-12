@@ -10,8 +10,8 @@
     "WELL-96"
   ],
   "implementation_revision": {
-    "git_sha": "09812d6bb245fe9360af813f7590c9313ff5a851",
-    "semantics": "Source snapshot inspected for WELL-121. Source SHA-256 values bind the listed bytes; this is not the documentation commit or a claim of newly executed application proof."
+    "git_sha": "a51d77e1fb0f87334e8f27ed697a582481242220",
+    "semantics": "Registration semantics rechecked during WELL-16 continuation and unchanged. Whole-file source hashes also include new recovery interfaces and Token/Account fields; the recovery capability is documented separately. This is not an independent merge certification."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -409,7 +409,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def register(request)",
-      "sha256": "16b18e519f4c982065b00526e600965b035d9506abfd5ef17e0e7530ba9dc93f"
+      "sha256": "aa0ba5b43d5a2938aad68eb8ec9d05ad8bf7cf445916dccbb441ab36c92884bf"
     },
     {
       "id": "accept",
@@ -433,13 +433,13 @@
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def establish_verification",
-      "sha256": "671064bf165f44f34405180b6db96f4e2735e2b96505438b732352d85724899d"
+      "sha256": "a27e492b590f8216eae666e122ab5867f6227ae1694f60b7a95c2e974d1daeb6"
     },
     {
       "id": "audit",
       "path": "lib/new_you/audit.ex",
       "symbol": ":establish_registration_obligation",
-      "sha256": "1fea7db1febf9296e1a0b3247e4f752f986296c3b7750371553575ff0685bfc3"
+      "sha256": "4c526021acbd6c1eddbe723815c2a35a7a6f0beec6ca06c2892f829386d2f0e7"
     },
     {
       "id": "expiry",
@@ -463,7 +463,7 @@
       "id": "primitives_test",
       "path": "test/new_you/identity/registration_primitives_test.exs",
       "symbol": "defmodule",
-      "sha256": "0ba62370de2b0261864f1615040929b51cd3202c20c075e15d0b085277ddcbfb"
+      "sha256": "ec51dc49050c6ae50c3664d85e6c02ee55394d6144d703a1806d7ddba417ba70"
     },
     {
       "id": "orchestration_test",
@@ -481,13 +481,13 @@
       "id": "account",
       "path": "lib/new_you/identity/account.ex",
       "symbol": "create :register",
-      "sha256": "0f2575fd103b046e9c59a025228678b9bdd79c92e9f20cfc124efb2c4456c8da"
+      "sha256": "d08924f72c8de406e65998afa316f79db011e457e02464ffd258c3d5b1117bdd"
     },
     {
       "id": "token",
       "path": "lib/new_you/identity/token.ex",
       "symbol": "defmodule NewYou.Identity.Token",
-      "sha256": "53dbe16b2e2a22edb17279436c4c61e1a01066dcfa036165b07c42f9f3fd1ad3"
+      "sha256": "40d872b5801a0be32011baa87216411342b22b34a3bf42997f8f19337e647121"
     }
   ]
 }
