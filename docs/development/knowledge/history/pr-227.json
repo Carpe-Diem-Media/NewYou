@@ -129,14 +129,14 @@
       "status": "modified"
     },
     {
-      "blob": "92d9eb3bcd4f7e3a9d7cd90ce2df637855b3c809",
+      "blob": "b0b6d68b052ccaaa4e314d828f8ef77249b4dfc3",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/automatic-css-4.0.3-math.md",
-      "sha256": "daf42dd8e93779ed648e6cbe20742f1ec075dfb118e03b76b822cb5f4f822a2e",
+      "sha256": "0dc9a7b207b4f86e63a193f05799632ab4f3df27b043e7e9a7af1160eb77d541",
       "status": "added"
     },
     {
