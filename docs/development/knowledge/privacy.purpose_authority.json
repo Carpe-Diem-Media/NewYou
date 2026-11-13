@@ -6,7 +6,7 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "135c043824448d383e87aece77a154e7267ecd3b",
+    "git_sha": "d1dffd405ff335cc4389020dc8920d227b25a64c",
     "semantics": "WELL-18 introduces a proof-only Privacy state, immutable transition history and a transaction-locked current-authority read at Identity's protected mutation boundary. The map is refreshed against the committed source checkpoint and is not governing authority."
   },
   "authoritative_domain": "NewYou.Privacy",
@@ -173,6 +173,19 @@
       ],
       "source_ids": [
         "privacy_migration"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261113192700_well_18_privacy_purpose_event_completeness.exs",
+      "tables": [
+        "privacy_purpose_authorities",
+        "privacy_purpose_events"
+      ],
+      "constraints": [
+        "privacy_purpose_authorities_require_event"
+      ],
+      "source_ids": [
+        "privacy_event_migration"
       ]
     }
   ],
@@ -349,14 +362,17 @@
         "Registration acceptance leaves authority missing.",
         "Privacy creates allowed state and versioned grant history.",
         "Withdrawal is terminal, appends matching immutable history, and cannot be regranted or deleted.",
-        "A current locked read rejects withdrawn authority and a fresh process reads durable withdrawal."
+        "A current locked read rejects withdrawn authority and a fresh process reads durable withdrawal.",
+        "PostgreSQL rejects both an authority grant and withdrawal that lack their version-matched event at transaction commit."
       ],
       "proves": "The Privacy owner actions and PostgreSQL constraints preserve operation-bound current truth and transition history.",
       "limits": "Owner operations are synthetic development/test proof fixtures; this does not implement participant consent UX or legal-purpose policy.",
       "source_ids": [
         "owner_test",
         "privacy_domain",
-        "privacy_migration"
+        "privacy_migration",
+        "privacy_event_migration",
+        "event_completeness_test"
       ]
     },
     {
@@ -497,10 +513,22 @@
       "sha256": "9908d3da4f586b53b686b30e18d18821f9acc8086248a9522000792b7cd153eb"
     },
     {
+      "id": "privacy_event_migration",
+      "path": "priv/repo/migrations/20261113192700_well_18_privacy_purpose_event_completeness.exs",
+      "symbol": "privacy_purpose_authorities_require_event",
+      "sha256": "ce27f698889fa5d5e5c4e578fe5e7d2b0d85cc9997927a282fe42d08c2075995"
+    },
+    {
+      "id": "event_completeness_test",
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "symbol": "PostgreSQL rejects an authority transition without its matching event",
+      "sha256": "afbabc31a1b9e5ab5aa2556ea70b350d3cb15f9468ebaa14aac90f54da106b7e"
+    },
+    {
       "id": "owner_test",
       "path": "test/new_you/privacy/purpose_authority_test.exs",
       "symbol": "defmodule NewYou.Privacy.PurposeAuthorityTest",
-      "sha256": "69298f60af089eb678b6e52ed03169888cd8ee5fae076eaabdab2419ebfc9c68"
+      "sha256": "afbabc31a1b9e5ab5aa2556ea70b350d3cb15f9468ebaa14aac90f54da106b7e"
     },
     {
       "id": "source_test",
@@ -536,7 +564,7 @@
       "id": "registration_test",
       "path": "test/new_you/privacy/purpose_authority_test.exs",
       "symbol": "proof-only purpose records positive authority, terminal withdrawal and immutable history",
-      "sha256": "69298f60af089eb678b6e52ed03169888cd8ee5fae076eaabdab2419ebfc9c68"
+      "sha256": "afbabc31a1b9e5ab5aa2556ea70b350d3cb15f9468ebaa14aac90f54da106b7e"
     },
     {
       "id": "phase7b",

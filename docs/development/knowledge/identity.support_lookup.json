@@ -6,7 +6,7 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "135c043824448d383e87aece77a154e7267ecd3b",
+    "git_sha": "d1dffd405ff335cc4389020dc8920d227b25a64c",
     "semantics": "WELL-18 adds an Identity-owned lookup scope and a read-only current-authority path. The map is refreshed against the committed source checkpoint; it is descriptive, not authorization or merge evidence."
   },
   "authoritative_domain": "NewYou.Identity",
