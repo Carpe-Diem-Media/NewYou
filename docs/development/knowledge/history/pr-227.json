@@ -30,14 +30,14 @@
       "status": "modified"
     },
     {
-      "blob": "fc63eb64c2b9cabb01fcdbea222708c3c10e07af",
+      "blob": "71ebf9ba2bf8c5706cc7dccc992cc03c8aac0241",
       "mode": "100644",
       "old_blob": "b8f66ed5e28fd682bf40de67fcf7b0748cdc3d12",
       "old_mode": "100644",
       "old_path": "DESIGN.md",
       "old_sha256": "ffb88c9e8997e997dc75f47783f8a70a919c39a6f0b62b4e656e6e84777b1aed",
       "path": "DESIGN.md",
-      "sha256": "17e2ffd53e98d35ff3726fb9be058cfa1d02d94389c2c8253496c95a60bad242",
+      "sha256": "ff6136cd44a257b035abc9ea85bfc3990b58d901d7d9a8e14eb8cd3872eb61f0",
       "status": "modified"
     },
     {
@@ -74,14 +74,14 @@
       "status": "added"
     },
     {
-      "blob": "d2df25c555916947cd8de802119df55a44836ed4",
+      "blob": "adffc10cc4c396b2c8919ab10d20d4d380ae4806",
       "mode": "100644",
       "old_blob": "53acbf1c16b0dbfda02da449aae8b22155ec4ed4",
       "old_mode": "100644",
       "old_path": "assets/css/design-tokens.css",
       "old_sha256": "1ff08b553dee7f8427f22387a78aeba909c4be0165baa1b96d909b5ca42b8729",
       "path": "assets/css/design-tokens.css",
-      "sha256": "945f5e38777fb8cd1303a5f4d7ba6128eec7c2053bae8be7995c29536dcca1c0",
+      "sha256": "63b8e9a74e09341bc796c38f5a9f0e3f9f7316633e04380cf494056c598bf533",
       "status": "modified"
     },
     {
@@ -118,25 +118,25 @@
       "status": "added"
     },
     {
-      "blob": "15db41b7e4457dff96c9abf204d99a4b96b3fae6",
+      "blob": "baa993b36db08909eec1c4d074f60e812a1f6967",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "7b5f0638eb355b08bc8fb1b874eaa190ea0a3194ec3b63a4c7ce3170ded65f42",
+      "sha256": "259a48496ca9dde8ffacedaf3beee128ffd7428859d6df11f0877efaf3104ce2",
       "status": "modified"
     },
     {
-      "blob": "ff62275ee0e2f1a06a88eb4a5abe5fc3259e5d04",
+      "blob": "608b09fc008d6d789cc9ecbf9a5247ad8567c1cb",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/automatic-css-4.0.3-math.md",
-      "sha256": "4c11877eaf2fbaee4598911101e0defe7758ef273d957ede3e199dca4d24ef79",
+      "sha256": "e7692f567654672744dd30f268f9eb8b2f814e59d70ff5a7b25e283376dc4f66",
       "status": "added"
     },
     {
@@ -206,6 +206,17 @@
       "status": "added"
     },
     {
+      "blob": "db591351222063dcd6778537eea61d7032a91cae",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/superpowers/plans/2026-11-13-token-hardening.md",
+      "sha256": "a74b5e22325ee88168c58db5c31c4fb7a341030f1712a0f7f0e8666672b92e09",
+      "status": "added"
+    },
+    {
       "blob": "3cdb0c79318be8415ec340392a14739300b236ae",
       "mode": "100644",
       "old_blob": null,
@@ -217,14 +228,14 @@
       "status": "added"
     },
     {
-      "blob": "fd87b8b5e666f660223d042eac496ed9adeeb8d4",
+      "blob": "a373ec6e82a19a2b3becef375c23f9ce94a95121",
       "mode": "100644",
       "old_blob": "84ce6cb62d31cbc85db5f4434ce6cc41d3956f33",
       "old_mode": "100644",
       "old_path": "lib/mix/tasks/design.check.ex",
       "old_sha256": "c658dde58e9bb6b21dbdaaa89615732e074e630678993f947f7ae77e75ab8d16",
       "path": "lib/mix/tasks/design.check.ex",
-      "sha256": "b69e333a6c0e1c0d1e2534a32fd07d89ad809f03553a6bc25ff094e5b39276c1",
+      "sha256": "4706d1d43e29e8c3bd596e82bb981aca2310e6d83460d25e840ec6fb99622941",
       "status": "modified"
     },
     {
@@ -382,14 +393,14 @@
       "status": "added"
     },
     {
-      "blob": "0c02801844d25ab62b6bd88f2553b9c6434c35c6",
+      "blob": "dfefb49cb0477179cb172583d1fe82edc584996c",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_lighting_browser.mjs",
-      "sha256": "e61035c5b832de445d0e7cc459bac56971d2da739699b5b793fdcc13a91e1e29",
+      "sha256": "90bff827968a0c82b0e40496df4a0dacb4b840439b7418c0e23c115a441330ca",
       "status": "added"
     },
     {
@@ -412,6 +423,17 @@
       "old_sha256": null,
       "path": "test/assets/design_system_test.mjs",
       "sha256": "9a529a7fa6a06175fe4732301db79a45fa0316a99ef14abf40ff4954caa24b7c",
+      "status": "added"
+    },
+    {
+      "blob": "ac664cc46e9604b87e3c7afab71398cd6eaf4e26",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_token_scope_browser.mjs",
+      "sha256": "14cc4cedc269da124f17573ae8c1881fa8baff50b81782cd0ae88c1dd4794b00",
       "status": "added"
     },
     {
@@ -470,14 +492,14 @@
       "status": "modified"
     },
     {
-      "blob": "5b7f83d71a863ff89629aca00f8d5cbedb9a50d4",
+      "blob": "5c68437308e5a982630207c942e942c969c439d3",
       "mode": "100644",
       "old_blob": "38ece4da8846283f11e0913c9cf1062781929d11",
       "old_mode": "100644",
       "old_path": "test/new_you_web/design_system_infrastructure_test.exs",
       "old_sha256": "43a05589792cd2f8f2da727e985e76c6e41c1d10014b9bc765c52beddc73762a",
       "path": "test/new_you_web/design_system_infrastructure_test.exs",
-      "sha256": "324c7acab9cfc08fdfa7e523c87e98b85b5c0dc521f5b92be3197447c1f895eb",
+      "sha256": "3cc94fc3d3fb4b55a5f41ca87703612ef3cccbca5af8323d0670a08c00974794",
       "status": "modified"
     },
     {
@@ -538,17 +560,17 @@
   ],
   "intent": {
     "author": {
-      "id": 355419376,
+      "id": "U_kgDOFS9E8A",
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "Adds a development-only LiveView design guide that renders NewYou's shared token-driven components. Editing canonical CSS values updates the guide and their application consumers together.",
+    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The guide exposes those options for refinement. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.",
     "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-12T20:32:36.248210Z",
+    "checked_at": "2026-11-13T05:17:24.576020Z",
     "items": [
       {
         "description_sha256": "37e40677ccfc39b60b5e720efb6483fcc3575d647c09ff296a9e8faedd4a3e32",
@@ -576,7 +598,7 @@
       "name": null,
       "old_sha256": "3dc22bc3783c08852502fe50a063e745507e5b8c899360fd14fd9f79dbffc4be",
       "path": "lib/mix/tasks/design.check.ex",
-      "sha256": "795634776d95cde95bad3cc9facb1da222a65246ebbb05ffc6d7b02be72e6dd9",
+      "sha256": "106b251f159e1fa948e4f8a22152a042bc08ff5c41f4ebba018b510ccb9e94b5",
       "status": "parsed"
     },
     {
@@ -589,6 +611,45 @@
       "old_sha256": "677ecafca40e6cecb38676f2c2ebc1b3f4e22249b192683e344f353054232ae8",
       "path": "lib/mix/tasks/design.check.ex",
       "sha256": "36b3a9a2c44d3cfc409e4dd64f23adfe4ecf94ea6f16f6ca8f97a242645bd2ba",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "Mix.Tasks.Design.Check",
+      "name": "numeric_in_range?",
+      "old_sha256": null,
+      "path": "lib/mix/tasks/design.check.ex",
+      "sha256": "4e7abadd4d532c7d6dda6ae6d50821ce6e2e111a8bf1195dbb2eedebb844c42b",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "Mix.Tasks.Design.Check",
+      "name": "numeric_input",
+      "old_sha256": null,
+      "path": "lib/mix/tasks/design.check.ex",
+      "sha256": "1ded979d12ee0fa328286c05494274525167a8b0806545a3b691a8b2caec4839",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "Mix.Tasks.Design.Check",
+      "name": "numeric_input_errors",
+      "old_sha256": null,
+      "path": "lib/mix/tasks/design.check.ex",
+      "sha256": "deee755e61410ba999c5c6d374f2ed1ac13d3bb4a707a3473646c4e8b662202b",
       "status": "parsed",
       "visibility": "private"
     },
@@ -619,6 +680,19 @@
       "visibility": "private"
     },
     {
+      "arity": 1,
+      "change": "changed",
+      "declaration": "def",
+      "kind": "function",
+      "module": "Mix.Tasks.Design.Check",
+      "name": "run",
+      "old_sha256": "7c2bb51dcac7cb7904323a2bada5906c93284e16ce9b1661b001a18ade5d498b",
+      "path": "lib/mix/tasks/design.check.ex",
+      "sha256": "305ba183ed2e8b6e297354ea2aa56a1e879698f31f12a4b58cfa7d40e2ba9e61",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
       "arity": 2,
       "change": "changed",
       "declaration": "def",
@@ -628,6 +702,19 @@
       "old_sha256": "5cf2f6f9b6cfdf5031290fec8a3ed3e3a0c850081b4182fc37b3470902fe2857",
       "path": "lib/mix/tasks/design.check.ex",
       "sha256": "3ef1360a7ca25634ba59a16da23fe70b0f2ea5d0b98731ba20eb8fcc5fd1453b",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "Mix.Tasks.Design.Check",
+      "name": "token_numeric_violations",
+      "old_sha256": null,
+      "path": "lib/mix/tasks/design.check.ex",
+      "sha256": "ca2fd10772e3ccb5f9f39d4f7745c96a6e9768484c100c91be2e319f7e0ccd04",
       "status": "parsed",
       "visibility": "public"
     },
@@ -1242,7 +1329,7 @@
       "name": null,
       "old_sha256": "f0e3f4de169e7b2a774860f89801eeefecb935aa7fbee659748927b432a5eece",
       "path": "test/new_you_web/design_system_infrastructure_test.exs",
-      "sha256": "404284fd727acec72388bba05ca5b7e63e33c348ada4dbde2e70b9706c8dbd7e",
+      "sha256": "21a3db2fa5edbfab41a45c6c8a9bfc1028dd79c9684093ee035db6aaac0c5134",
       "status": "parsed"
     },
     {
@@ -1315,6 +1402,7 @@
     "test/assets/design_lighting_browser.mjs",
     "test/assets/design_system_browser.mjs",
     "test/assets/design_system_test.mjs",
+    "test/assets/design_token_scope_browser.mjs",
     "test/assets/design_typography_browser.mjs",
     "test/new_you_web/controllers/email_verification_controller_test.exs",
     "test/new_you_web/controllers/magic_login_controller_test.exs",
