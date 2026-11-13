@@ -285,7 +285,7 @@ Derived state, caches, Analytics, search indexes, provider state, PubSub and UI 
 
 Business writes use owning Ash interfaces. Controllers, LiveViews and workers call the owning Domain/application interface.
 
-Do not introduce parallel ordinary "NewYou.Repo", raw SQL or "Ecto.Multi" business-write APIs. "mix check.architecture" enforces these boundaries.
+Do not introduce parallel ordinary "NewYou.Repo", raw SQL or "Ecto.Multi" business-write APIs. `mise exec -- devcore-project run test -- mix check.architecture` enforces these boundaries.
 
 Do not introduce Redis, extra services, extra Repos, ETS/process authority, replicas, Rust/Rustler, microservices or speculative infrastructure without demonstrated need and authority.
 
@@ -354,11 +354,26 @@ Prefer evidence in this order:
 
 Verify current stable package/API facts and distinguish stable releases from prerelease or main-branch documentation.
 
+Local Elixir toolchain execution
+
+NewYou pins Elixir and Erlang/OTP in `.tool-versions`.
+
+All local commands that invoke Elixir or Mix MUST start with `mise exec --`. This applies in the primary checkout and every isolated worktree, including `elixir`, `iex`, Mix tasks and targeted tests.
+
+For commands that need NewYou's DEV or TEST environment, put DevCore inside Mise so Mise selects the pinned runtime and DevCore supplies the requested environment:
+
+- `mise exec -- devcore-project run dev -- mix <task>`
+- `mise exec -- devcore-project run test -- mix <task>`
+
+Do not run local Mix commands through an unwrapped `devcore-project run ...` command or rely on the calling shell's active Elixir version. This rule does not apply to `devcore-project plan`, `doctor` or `activate`, which do not invoke Elixir or Mix. GitHub Actions uses its configured runner toolchain.
+
+Before reporting local verification success, record the exact command, the resolved Elixir and Erlang/OTP versions from `mise current`, and the observed outcome. Confirm the active Elixir runtime with `mise exec -- elixir --version`.
+
 Verification, review and merge
 
-"mix check" is the canonical fast engineering gate.
+`mise exec -- devcore-project run test -- mix check` is the canonical fast engineering gate.
 
-"mix check.deep" is the slower engineering gate.
+`mise exec -- devcore-project run test -- mix check.deep` is the slower engineering gate.
 
 Foundation Smoke runs on every PR and validates current routing and merge-gate topology.
 
@@ -417,9 +432,9 @@ If ".devcore/project.conf" exists:
 
 1. run "devcore-project doctor";
 2. if state is missing or stale, run "devcore-project activate";
-3. run DB-dependent commands with:
-   - "devcore-project run dev -- <command>"
-   - "devcore-project run test -- <command>"
+3. run local Elixir/Mix commands requiring a project environment with:
+   - "mise exec -- devcore-project run dev -- <command>"
+   - "mise exec -- devcore-project run test -- <command>"
 
 Never request or print password values.
 
