@@ -28,6 +28,16 @@ defmodule NewYou.Repo.Migrations.Well18SupportLookupAndPrivacyHistory do
   end
 
   def down do
+    execute """
+    DO $$
+    BEGIN
+      IF EXISTS (SELECT 1 FROM identity_grants WHERE scope = 'identity_lookup') THEN
+        RAISE EXCEPTION 'cannot roll back identity_lookup while Identity grants still use that scope';
+      END IF;
+    END;
+    $$;
+    """
+
     drop constraint(:privacy_purpose_events, "privacy_purpose_events_authority_id_fkey")
 
     alter table(:privacy_purpose_events) do

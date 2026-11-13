@@ -157,7 +157,8 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
           get_resp_header(conn, "cache-control"),
           get_resp_header(conn, "referrer-policy"),
           get_resp_header(conn, "content-security-policy"),
-          cookies
+          cookies,
+          get_session(conn) |> Map.drop(["_csrf_token"])
         }
       end
 

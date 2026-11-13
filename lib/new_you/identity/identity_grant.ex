@@ -167,9 +167,16 @@ defmodule NewYou.Identity.IdentityGrant do
     security_hold_review: [:review_security_hold],
     security_hold_release: [:release_security_hold],
     identity_reconciliation: [:review_reconciliation, :apply_reconciliation],
-    identity_recovery: [:approve_manual_recovery, :complete_manual_recovery],
-    identity_lookup: [:lookup_identity]
+    identity_recovery: [:approve_manual_recovery, :complete_manual_recovery]
   }
+
+  def permits?(
+        %{role: :support, scope: :identity_lookup, reason_code: :security_review},
+        :lookup_identity
+      ),
+      do: true
+
+  def permits?(%{role: :support, scope: :identity_lookup}, _capability), do: false
 
   @doc "Derive protected capabilities from the bounded Support role/scope catalogue. Current grant validity is checked by the owning action."
   @spec permits?(map(), atom()) :: boolean()

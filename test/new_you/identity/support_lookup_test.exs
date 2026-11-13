@@ -116,6 +116,63 @@ defmodule NewYou.Identity.SupportLookupTest do
     end)
   end
 
+  test "lookup rejects malformed grant, target and email inputs" do
+    P813HoldFixture.with_fixture(fn fixture ->
+      grant =
+        P813HoldFixture.grant(
+          fixture.actor,
+          fixture.target,
+          fixture.approver,
+          :identity_lookup
+        )
+
+      {:ok, :ok} = P813HoldFixture.step_up(fixture.actor, :lookup_identity)
+      target = Ash.get!(Account, fixture.target.id, authorize?: false)
+
+      assert {:error, :support_lookup_unavailable} =
+               Identity.lookup_support_identity(
+                 fixture.actor.credentials,
+                 "not-a-uuid",
+                 target.id,
+                 target.email
+               )
+
+      assert {:error, :support_lookup_unavailable} =
+               Identity.lookup_support_identity(
+                 fixture.actor.credentials,
+                 grant.id,
+                 "not-a-uuid",
+                 target.email
+               )
+
+      assert {:error, :support_lookup_unavailable} =
+               Identity.lookup_support_identity(
+                 fixture.actor.credentials,
+                 grant.id,
+                 target.id,
+                 "not-an-email"
+               )
+    end)
+  end
+
+  test "lookup requires a Security Review grant reason" do
+    P813HoldFixture.with_fixture(fn fixture ->
+      recovery_grant =
+        provision_grant(fixture, :identity_lookup, reason_code: :recovery_assistance)
+
+      {:ok, :ok} = P813HoldFixture.step_up(fixture.actor, :lookup_identity)
+      target = Ash.get!(Account, fixture.target.id, authorize?: false)
+
+      assert {:error, :support_lookup_unavailable} =
+               Identity.lookup_support_identity(
+                 fixture.actor.credentials,
+                 recovery_grant.id,
+                 target.id,
+                 target.email
+               )
+    end)
+  end
+
   test "lookup denies expired and revoked grants" do
     P813HoldFixture.with_fixture(fn fixture ->
       now = DateTime.utc_now()
