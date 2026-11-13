@@ -10,8 +10,8 @@
     "WELL-96"
   ],
   "implementation_revision": {
-    "git_sha": "10e8863582eefdf5cce4e2eeb8310b72951d0f24",
-    "semantics": "Registration semantics rechecked during WELL-16 continuation and unchanged. Whole-file source hashes also include new recovery interfaces and Token/Account fields; the recovery capability is documented separately. This is not an independent merge certification."
+    "git_sha": "d6c24f52dde49f96d3a3318cc44a6e9be44b75ea",
+    "semantics": "Registration semantics remain unchanged. Shared Identity, Account, Token and Communications source hashes now bind the WELL-17 additions; the primary-email-change and recovery capabilities are documented separately. This is not an independent merge certification."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -409,7 +409,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def register(request)",
-      "sha256": "aa0ba5b43d5a2938aad68eb8ec9d05ad8bf7cf445916dccbb441ab36c92884bf"
+      "sha256": "6bafa47a2289ce98a032754a598afc0caff6bddc1a0a25b34b2a2716864aaac9"
     },
     {
       "id": "accept",
@@ -433,7 +433,7 @@
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def establish_verification",
-      "sha256": "949b0cb038deea63c176dc584e896328a452ea6972bf525170ca702c2661b4a8"
+      "sha256": "f67d7daa27c991b86d2cb98f92b2823689e86fcb35fe7e0e59c7ce0cd8bf3d90"
     },
     {
       "id": "audit",
@@ -481,13 +481,13 @@
       "id": "account",
       "path": "lib/new_you/identity/account.ex",
       "symbol": "create :register",
-      "sha256": "d08924f72c8de406e65998afa316f79db011e457e02464ffd258c3d5b1117bdd"
+      "sha256": "40bd00dca5f78a698a4f105e3e4468599827be2a982f06d99acf97e6e2003fe0"
     },
     {
       "id": "token",
       "path": "lib/new_you/identity/token.ex",
       "symbol": "defmodule NewYou.Identity.Token",
-      "sha256": "40d872b5801a0be32011baa87216411342b22b34a3bf42997f8f19337e647121"
+      "sha256": "248faddf863dc1d2c1ddeadb16152d215aef6ecc5d8236a4cac0bdf5c69434f1"
     }
   ]
 }
