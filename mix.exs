@@ -14,7 +14,7 @@ defmodule NewYou.MixProject do
         end
       ],
       test_ignore_filters: [
-        ~r"^test/proof/(self_test|run|postgresql_probe|p8_09_restart|p8_09_magic_restart|p8_10_restart|p8_11_restart|p8_12_restart|p8_13_restart|p8_14_restart|p8_15_restart|fixtures/provider_fixtures)\.exs$"
+        ~r"^test/proof/(self_test|run|postgresql_probe|p8_09_restart|p8_09_magic_restart|p8_10_restart|p8_11_restart|p8_12_restart|p8_13_restart|p8_14_restart|p8_15_restart|p8_16_restart|fixtures/provider_fixtures)\.exs$"
       ],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),

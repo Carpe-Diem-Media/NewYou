@@ -167,6 +167,7 @@ defmodule NewYou.Identity.Session do
                     :release_security_hold,
                     :review_reconciliation,
                     :apply_reconciliation,
+                    :change_primary_email,
                     :approve_manual_recovery,
                     :complete_manual_recovery
                   ]

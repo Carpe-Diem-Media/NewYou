@@ -99,6 +99,131 @@ defmodule NewYou.Communications do
 
   def establish_magic_login(_), do: {:error, :magic_login_unavailable}
 
+  @doc "Establish a held, development-only primary-email-change confirmation obligation."
+  @spec establish_primary_email_change_confirmation(map()) ::
+          {:ok, MessageIntent.t()} | {:error, :email_change_obligation_unavailable}
+  def establish_primary_email_change_confirmation(attrs) when is_map(attrs) do
+    with true <- attrs[:destination_provenance] == "identity_primary_email_change_issuance",
+         true <- attrs[:role] == :email_change_confirmation,
+         true <- attrs[:source_purpose] == "email_change_confirmation",
+         true <- attrs[:render_schema] == "email-change-confirmation-v1",
+         true <- attrs[:locale] in ["en", "af"],
+         {:ok, content} <-
+           NewYou.Content.PrimaryEmailChangeMessage.binding(
+             :email_change_confirmation,
+             attrs.locale
+           ) do
+      platform_name = NewYou.platform_name()
+      render_schema = "email-change-confirmation-v1"
+
+      render_digest =
+        :crypto.hash(
+          :sha256,
+          :erlang.term_to_binary({render_schema, platform_name}, [:deterministic])
+        )
+        |> Base.encode16(case: :lower)
+
+      params =
+        attrs
+        |> Map.take([
+          :source_operation_id,
+          :source_reference,
+          :destination,
+          :destination_provenance,
+          :destination_authorized_at,
+          :locale
+        ])
+        |> Map.merge(content)
+        |> Map.merge(%{
+          role: :email_change_confirmation,
+          source_purpose: "email_change_confirmation",
+          render_schema: render_schema,
+          platform_name: platform_name,
+          render_digest: render_digest
+        })
+
+      transact_email_change_intent(params, :establish_email_change_confirmation)
+    else
+      _ -> {:error, :email_change_obligation_unavailable}
+    end
+  rescue
+    _ -> {:error, :email_change_obligation_unavailable}
+  end
+
+  def establish_primary_email_change_confirmation(_),
+    do: {:error, :email_change_obligation_unavailable}
+
+  @doc "Establish an unbound held security notice. The approved support token remains unresolved."
+  @spec establish_primary_email_change_notice(map()) ::
+          {:ok, MessageIntent.t()} | {:error, :email_change_obligation_unavailable}
+  def establish_primary_email_change_notice(attrs) when is_map(attrs) do
+    with true <- attrs[:destination_provenance] == "identity_primary_email_change_old_address",
+         true <- attrs[:role] == :email_change_old_address_notice,
+         true <- attrs[:locale] in ["en", "af"],
+         {:ok, content} <-
+           NewYou.Content.PrimaryEmailChangeMessage.binding(
+             :email_change_old_address_notice,
+             attrs.locale
+           ) do
+      platform_name = NewYou.platform_name()
+      render_schema = "email-change-old-address-notice-v1"
+
+      render_digest =
+        :crypto.hash(
+          :sha256,
+          :erlang.term_to_binary({render_schema, platform_name}, [:deterministic])
+        )
+        |> Base.encode16(case: :lower)
+
+      params =
+        attrs
+        |> Map.take([
+          :source_operation_id,
+          :source_reference,
+          :destination,
+          :destination_provenance,
+          :destination_authorized_at,
+          :locale
+        ])
+        |> Map.merge(content)
+        |> Map.merge(%{platform_name: platform_name, render_digest: render_digest})
+
+      transact_email_change_intent(params, :establish_email_change_notice)
+    else
+      _ -> {:error, :email_change_obligation_unavailable}
+    end
+  rescue
+    _ -> {:error, :email_change_obligation_unavailable}
+  end
+
+  def establish_primary_email_change_notice(_),
+    do: {:error, :email_change_obligation_unavailable}
+
+  defp transact_email_change_intent(params, action) do
+    expected =
+      Map.merge(params, %{
+        source_owner: "identity",
+        dispatch_disposition: :held,
+        support_contact: nil
+      })
+
+    with {:ok, %MessageIntent{} = intent} <-
+           Ash.create(MessageIntent, Map.drop(params, [:role, :source_purpose, :render_schema]),
+             action: action,
+             domain: __MODULE__,
+             authorize?: false,
+             upsert?: true,
+             upsert_identity: :causal_obligation,
+             upsert_fields: [],
+             touch_update_defaults?: false
+           ),
+         true <- Enum.all?(Map.keys(expected), &(Map.get(intent, &1) == Map.get(expected, &1))) do
+      {:ok, intent}
+    else
+      _ -> {:error, :email_change_obligation_unavailable}
+    end
+  end
+
   defp transact_magic_login(params) do
     case Ash.transact([MessageIntent], fn -> establish_magic_login_intent(params) end) do
       {:ok, {:ok, %MessageIntent{} = intent}} -> {:ok, intent}

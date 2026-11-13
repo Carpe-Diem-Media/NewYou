@@ -25,12 +25,12 @@ defmodule NewYou.Communications.MessageIntent do
 
       check_constraint :role, "message_intents_role",
         check:
-          "role IN ('account_verification', 'magic_login', 'password_reset', 'account_recovery', 'recovery_security_notice')",
+          "role IN ('account_verification', 'magic_login', 'password_reset', 'account_recovery', 'recovery_security_notice', 'email_change_confirmation', 'email_change_old_address_notice')",
         message: "is unsupported"
 
       check_constraint :source_purpose, "message_intents_role_purpose_schema",
         check:
-          "(role = 'account_verification' AND source_purpose = 'email_verification' AND render_schema = 'verification-v1') OR (role = 'magic_login' AND source_purpose = 'magic_login' AND render_schema = 'magic-login-v1') OR (role = 'password_reset' AND source_purpose = 'password_reset' AND render_schema = 'password-reset-v1') OR (role = 'account_recovery' AND source_purpose = 'recovery' AND render_schema = 'recovery-v1') OR (role = 'recovery_security_notice' AND source_purpose = 'recovery_completed' AND render_schema = 'recovery-notice-v1')",
+          "(role = 'account_verification' AND source_purpose = 'email_verification' AND render_schema = 'verification-v1') OR (role = 'magic_login' AND source_purpose = 'magic_login' AND render_schema = 'magic-login-v1') OR (role = 'password_reset' AND source_purpose = 'password_reset' AND render_schema = 'password-reset-v1') OR (role = 'account_recovery' AND source_purpose = 'recovery' AND render_schema = 'recovery-v1') OR (role = 'recovery_security_notice' AND source_purpose = 'recovery_completed' AND render_schema = 'recovery-notice-v1') OR (role = 'email_change_confirmation' AND source_purpose = 'email_change_confirmation' AND render_schema = 'email-change-confirmation-v1') OR (role = 'email_change_old_address_notice' AND source_purpose = 'email_change_old_address_notice' AND render_schema = 'email-change-old-address-notice-v1')",
         message: "does not match the message role"
 
       check_constraint :source_reference, "message_intents_source_reference",
@@ -244,6 +244,56 @@ defmodule NewYou.Communications.MessageIntent do
       change set_attribute(:render_schema, "recovery-notice-v1")
       change set_attribute(:dispatch_disposition, :held)
     end
+
+    create :establish_email_change_confirmation do
+      public? false
+
+      accept [
+        :source_operation_id,
+        :source_reference,
+        :destination,
+        :destination_provenance,
+        :destination_authorized_at,
+        :locale,
+        :content_item_id,
+        :content_version_id,
+        :translation_version_id,
+        :content_sha256,
+        :platform_name,
+        :render_digest,
+        :terminal_reason
+      ]
+
+      change set_attribute(:role, :email_change_confirmation)
+      change set_attribute(:source_purpose, "email_change_confirmation")
+      change set_attribute(:render_schema, "email-change-confirmation-v1")
+      change set_attribute(:dispatch_disposition, :held)
+    end
+
+    create :establish_email_change_notice do
+      public? false
+
+      accept [
+        :source_operation_id,
+        :source_reference,
+        :destination,
+        :destination_provenance,
+        :destination_authorized_at,
+        :locale,
+        :content_item_id,
+        :content_version_id,
+        :translation_version_id,
+        :content_sha256,
+        :platform_name,
+        :render_digest,
+        :terminal_reason
+      ]
+
+      change set_attribute(:role, :email_change_old_address_notice)
+      change set_attribute(:source_purpose, "email_change_old_address_notice")
+      change set_attribute(:render_schema, "email-change-old-address-notice-v1")
+      change set_attribute(:dispatch_disposition, :held)
+    end
   end
 
   policies do
@@ -255,6 +305,8 @@ defmodule NewYou.Communications.MessageIntent do
              :establish,
              :establish_recovery,
              :establish_recovery_notice,
+             :establish_email_change_confirmation,
+             :establish_email_change_notice,
              :bind_recovery_content,
              :hold,
              :resume,
@@ -286,7 +338,9 @@ defmodule NewYou.Communications.MessageIntent do
           :magic_login,
           :password_reset,
           :account_recovery,
-          :recovery_security_notice
+          :recovery_security_notice,
+          :email_change_confirmation,
+          :email_change_old_address_notice
         ]
       ],
       public?: false

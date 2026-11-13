@@ -8,7 +8,8 @@ defmodule NewYouWeb.PrivacyTelemetry do
     "/login",
     "/session",
     "/password",
-    "/recovery"
+    "/recovery",
+    "/primary-email-change"
   ]
 
   @impl Plug

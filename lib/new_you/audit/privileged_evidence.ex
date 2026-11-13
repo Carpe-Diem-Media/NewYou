@@ -7,7 +7,7 @@ defmodule NewYou.Audit.PrivilegedEvidence do
   @uuid_fields ~w(attempt_id actor_id target_id grant_id session_id)a
   @reasons ~w(suspected_compromise security_review verified_recovery mistaken_hold)a
   @outcome_fields ~w(source_operation_id source_occurred_at evidence_type actor_id target_id grant_id session_id reason_code admission_id outcome case_id)a
-  @security_types ~w(security_hold_placement security_hold_review security_hold_release_result identity_mfa_confirmed identity_grant_revoked identity_reconciliation_result identity_reconciliation_review identity_password_reset identity_recovery_completed identity_recovery_review)a
+  @security_types ~w(security_hold_placement security_hold_review security_hold_release_result identity_mfa_confirmed identity_grant_revoked identity_reconciliation_result identity_reconciliation_review identity_password_reset identity_recovery_completed identity_recovery_review identity_primary_email_change_requested identity_primary_email_change_confirmed identity_primary_email_change_applied identity_primary_email_change_cancelled identity_primary_email_change_expired identity_primary_email_change_rejected identity_primary_email_change_superseded identity_primary_email_change_held identity_primary_email_change_reviewed)a
   @recovery_types ~w(identity_recovery_completed identity_recovery_review)a
 
   defmacrop checkpoint(point) do
@@ -114,7 +114,7 @@ defmodule NewYou.Audit.PrivilegedEvidence do
          true <- envelope[:outcome] in [:succeeded, :denied, :failed],
          true <- Enum.all?([:source_operation_id, :target_id], &valid_uuid?(envelope[&1])),
          true <- valid_outcome_actor?(envelope),
-         {:ok, existing} <- read_outcome(envelope.source_operation_id) do
+         {:ok, existing} <- read_outcome(envelope.source_operation_id, envelope.evidence_type) do
       create_or_replay_outcome(existing, envelope)
     else
       _ -> {:error, :evidence_outcome_unavailable}
@@ -136,9 +136,9 @@ defmodule NewYou.Audit.PrivilegedEvidence do
       else: {:error, :evidence_outcome_unavailable}
   end
 
-  defp read_outcome(operation_id) do
+  defp read_outcome(operation_id, evidence_type) do
     EvidenceObligation
-    |> Ash.Query.filter(source_operation_id == ^operation_id)
+    |> Ash.Query.filter(source_operation_id == ^operation_id and evidence_type == ^evidence_type)
     |> Ash.read_one(authorize?: false)
   end
 

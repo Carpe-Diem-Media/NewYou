@@ -1,0 +1,1427 @@
+{
+  "schema_version": 1,
+  "capability_id": "identity.primary_email_change",
+  "purpose": "Change an Account's canonical primary email only after explicit confirmation of the new mailbox and a guarded, durable Identity apply transaction.",
+  "implementing_tickets": [
+    "WELL-17"
+  ],
+  "implementation_revision": {
+    "git_sha": "6bdf31bcfdac50db923a4b9dad363d2fde5a50b9",
+    "semantics": "Source checkpoint with current purpose-bound Session assurance enforced for all Accounts, including MFA-disabled Accounts, and fresh-password assurance renewal for due operations; the capability map and generated PR history record follow in documentation-only commits."
+  },
+  "authoritative_domain": "NewYou.Identity",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Communications",
+      "interface": "establish_primary_email_change_confirmation/1 and establish_primary_email_change_notice/1",
+      "ownership": "Owns the durable delivery intent and protected delivery capability. Intent/provider state cannot confirm or apply the Account change; new-address confirmation and old-address notice roles remain held in development.",
+      "source_ids": [
+        "communications",
+        "message_intent",
+        "executor"
+      ]
+    },
+    {
+      "domain": "NewYou.Audit",
+      "interface": "establish_identity_security_obligation/1",
+      "ownership": "Owns durable minimal evidence obligations for Account lifecycle outcomes. Audit evidence does not mutate canonical email.",
+      "source_ids": [
+        "audit"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.Account",
+      "actions": [
+        "request_primary_email_change",
+        "supersede_primary_email_change",
+        "reauthenticate_primary_email_change",
+        "refresh_primary_email_change_assurance",
+        "issue_primary_email_change_confirmation",
+        "confirm_primary_email_change",
+        "delay_primary_email_change",
+        "review_primary_email_change",
+        "apply_primary_email_change",
+        "cancel_primary_email_change",
+        "expire_primary_email_change",
+        "reject_primary_email_change",
+        "hold_primary_email_change"
+      ],
+      "caller_boundary": "Private Ash actions. Application callers use NewYou.Identity; Account remains the sole owner of canonical email and the current operation.",
+      "source_ids": [
+        "account",
+        "identity_api"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.Token",
+      "actions": [
+        "store_email_change_confirmation",
+        "consume_email_change_confirmation",
+        "revoke_email_change_confirmation"
+      ],
+      "caller_boundary": "Purpose-bound proof metadata is private. Bearer values are transient and are not retained as ordinary state.",
+      "source_ids": [
+        "token",
+        "lifecycle"
+      ]
+    },
+    {
+      "domain": "NewYou.Communications",
+      "resource": "NewYou.Communications.MessageIntent",
+      "actions": [
+        "establish_email_change_confirmation",
+        "establish_email_change_old_address_notice"
+      ],
+      "caller_boundary": "Identity establishes an intent inside its transaction; delivery and provider results are not Identity authority.",
+      "source_ids": [
+        "message_intent",
+        "communications"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Identity",
+      "function": "request_primary_email_change",
+      "arity": 4,
+      "visibility": "supported",
+      "arguments": [
+        "Current authenticated session credentials, requested target email, en/af locale, and caller operation UUID."
+      ],
+      "returns": [
+        "{:ok, :requested} or {:error, :primary_email_change_unavailable}."
+      ],
+      "side_effects": [
+        "Locks the Account, validates current session and Account posture, supersedes a prior active operation and its proof, persists the new operation and request evidence."
+      ],
+      "caller_constraints": [
+        "Must be called for the currently authenticated Account; an email equal to the canonical email is unavailable."
+      ],
+      "source_ids": [
+        "identity_api",
+        "lifecycle"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "reauthenticate_primary_email_change",
+      "arity": 3,
+      "visibility": "supported",
+      "arguments": [
+        "Current session credentials, fresh password and current operation UUID."
+      ],
+      "returns": [
+        "{:ok, :proof_pending | :assurance_refreshed} or {:error, :primary_email_change_unavailable}."
+      ],
+      "side_effects": [
+        "For a requested operation, checks current credential/security versions and purpose-bound step-up, issues a new-address confirmation proof, and records its protected Communications intent and evidence obligation. For a due confirmed operation, requires fresh password and current purpose-bound assurance, then rebinds the existing operation to the current Session without reissuing proof or changing confirmation, delay or review state."
+      ],
+      "caller_constraints": [
+        "Every apply requires a current :change_primary_email Session step-up with unexpired time and matching MFA/security version bindings. Active MFA enrollment requires fresh TOTP step-up; when MFA is disabled, fresh password verification during reauthentication establishes or renews Session step-up. A new Session can be rebound only after authentication against the still-canonical old email and the same operation identity."
+      ],
+      "source_ids": [
+        "identity_api",
+        "lifecycle",
+        "communications",
+        "audit"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "confirm_primary_email_change",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Transient signed confirmation bearer submitted by an explicit participant POST."
+      ],
+      "returns": [
+        "{:ok, :confirmed} or {:error, :primary_email_change_unavailable}."
+      ],
+      "side_effects": [
+        "Consumes the single-use proof and records confirmation plus the applicable apply delay/review guard; it does not update Account.email."
+      ],
+      "caller_constraints": [
+        "The browser POST is CSRF protected. Passive GET/HEAD only renders a form and cannot call this interface."
+      ],
+      "source_ids": [
+        "identity_api",
+        "controller",
+        "lifecycle"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "apply_primary_email_change",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Persisted operation UUID."
+      ],
+      "returns": [
+        "Applied/already-applied, terminal held/rejected outcomes, or a uniform unavailable error."
+      ],
+      "side_effects": [
+        "Under the Account lock, reloads and locks the operation-bound Session and related Tokens, then rechecks operation/version identity, current Session and Token validity, purpose-bound Session step-up with MFA/security version bindings, consumed proof, delay/review, Account posture and target uniqueness. Active MFA retains its TOTP step-up; disabled MFA uses password-established Session step-up. Atomically applies canonical email, invalidates Sessions and Devices, establishes old-address notice intent and Audit evidence."
+      ],
+      "caller_constraints": [
+        "Retries are idempotent. The apply operation and existing recovery completion serialize on the authoritative Account transaction."
+      ],
+      "source_ids": [
+        "identity_api",
+        "lifecycle",
+        "account",
+        "recovery",
+        "test"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "cancel_primary_email_change",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Current session credentials and current operation UUID."
+      ],
+      "returns": [
+        "{:ok, :cancelled | :already_cancelled} or a uniform unavailable error."
+      ],
+      "side_effects": [
+        "Transitions the current operation to cancelled, revokes pending proof and records minimal Audit evidence."
+      ],
+      "caller_constraints": [
+        "Must be performed by the Account's current authenticated Session."
+      ],
+      "source_ids": [
+        "identity_api",
+        "lifecycle"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261113082342_primary_email_change.exs",
+      "tables": [
+        "accounts",
+        "tokens",
+        "evidence_obligations",
+        "message_intents"
+      ],
+      "constraints": [
+        "accounts_primary_email_change_shape",
+        "accounts_primary_email_change_version",
+        "accounts_primary_email_change_terminal",
+        "accounts_primary_email_change_operation_index",
+        "accounts_one_pending_primary_email_change_target_index",
+        "accounts_primary_email_change_expiry_index",
+        "tokens_email_change_operation_proof_index",
+        "tokens_one_current_email_change_confirmation_index",
+        "tokens_email_change_metadata",
+        "evidence_obligations_source_operation_event_index",
+        "message_intents_role_purpose_schema"
+      ],
+      "source_ids": [
+        "migration",
+        "account",
+        "token"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261113083831_primary_email_change_review_policy.exs",
+      "tables": [
+        "accounts"
+      ],
+      "constraints": [
+        "primary_email_change_requires_review?"
+      ],
+      "source_ids": [
+        "review_policy_migration",
+        "account"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261113090317_primary_email_change_review_guard.exs",
+      "tables": [
+        "accounts"
+      ],
+      "constraints": [
+        "accounts_primary_email_change_terminal"
+      ],
+      "source_ids": [
+        "review_guard_migration",
+        "account"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261113090416_primary_email_change_reviewed_history.exs",
+      "tables": [
+        "accounts"
+      ],
+      "constraints": [
+        "accounts_primary_email_change_terminal"
+      ],
+      "source_ids": [
+        "reviewed_history_migration",
+        "account"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "Authenticated request enters Identity; Account is locked, the target is canonicalized and checked, current-operation concurrency is serialized, and a newer accepted request supersedes prior active state and proof.",
+      "source_ids": [
+        "identity_api",
+        "lifecycle",
+        "account",
+        "migration"
+      ]
+    },
+    {
+      "summary": "Fresh password and current Session assurance are checked; every Account receives purpose-bound step-up, with active MFA requiring TOTP and disabled MFA using fresh password verification. Identity persists fixed signed claims and a Token proof while the bearer exists only for protected delivery.",
+      "source_ids": [
+        "lifecycle",
+        "token",
+        "message_intent"
+      ]
+    },
+    {
+      "summary": "Communications resolves the exact approved EN/AF development message identity. Delivery/provider execution remains held and disabled; the signed proof is exposed only through the protected transient capability.",
+      "source_ids": [
+        "content",
+        "communications",
+        "message_intent",
+        "executor"
+      ]
+    },
+    {
+      "summary": "GET/HEAD returns a no-store confirmation form without consuming proof. A CSRF-protected explicit POST consumes it once and records confirmation, leaving canonical email unchanged until apply commits.",
+      "source_ids": [
+        "controller",
+        "html",
+        "route",
+        "lifecycle"
+      ]
+    },
+    {
+      "summary": "Apply locks and rechecks current Account state and guards in a single Ash transaction. Success changes canonical email and commits Session/Device invalidation, old-address notice intent and Audit evidence; retry returns the terminal receipt.",
+      "source_ids": [
+        "lifecycle",
+        "account",
+        "recovery",
+        "communications",
+        "audit"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "none",
+      "requested",
+      "reauthenticated",
+      "new_address_pending",
+      "confirmed",
+      "delayed",
+      "reviewed",
+      "applied",
+      "cancelled",
+      "expired",
+      "rejected",
+      "superseded",
+      "held"
+    ],
+    "transitions": [
+      {
+        "from_state": "none",
+        "to_state": "requested",
+        "guards": [
+          "Authenticated Account Session, valid operation UUID, supported locale, eligible Account, canonical target differs from current email and is available."
+        ],
+        "side_effects": [
+          "Persist one current Account operation, increment its version and record request evidence."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "identity_api",
+          "lifecycle",
+          "migration"
+        ]
+      },
+      {
+        "from_state": "applied",
+        "to_state": "requested",
+        "guards": [
+          "Authenticated Account Session, valid operation UUID, supported locale, eligible Account, canonical target differs from current email and is available."
+        ],
+        "side_effects": [
+          "Persist one current Account operation, increment its version and record request evidence."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "identity_api",
+          "lifecycle",
+          "migration"
+        ]
+      },
+      {
+        "from_state": "cancelled",
+        "to_state": "requested",
+        "guards": [
+          "Authenticated Account Session, valid operation UUID, supported locale, eligible Account, canonical target differs from current email and is available."
+        ],
+        "side_effects": [
+          "Persist one current Account operation, increment its version and record request evidence."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "identity_api",
+          "lifecycle",
+          "migration"
+        ]
+      },
+      {
+        "from_state": "expired",
+        "to_state": "requested",
+        "guards": [
+          "Authenticated Account Session, valid operation UUID, supported locale, eligible Account, canonical target differs from current email and is available."
+        ],
+        "side_effects": [
+          "Persist one current Account operation, increment its version and record request evidence."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "identity_api",
+          "lifecycle",
+          "migration"
+        ]
+      },
+      {
+        "from_state": "rejected",
+        "to_state": "requested",
+        "guards": [
+          "Authenticated Account Session, valid operation UUID, supported locale, eligible Account, canonical target differs from current email and is available."
+        ],
+        "side_effects": [
+          "Persist one current Account operation, increment its version and record request evidence."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "identity_api",
+          "lifecycle",
+          "migration"
+        ]
+      },
+      {
+        "from_state": "superseded",
+        "to_state": "requested",
+        "guards": [
+          "Authenticated Account Session, valid operation UUID, supported locale, eligible Account, canonical target differs from current email and is available."
+        ],
+        "side_effects": [
+          "Persist one current Account operation, increment its version and record request evidence."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "identity_api",
+          "lifecycle",
+          "migration"
+        ]
+      },
+      {
+        "from_state": "held",
+        "to_state": "requested",
+        "guards": [
+          "Authenticated Account Session, valid operation UUID, supported locale, eligible Account, canonical target differs from current email and is available."
+        ],
+        "side_effects": [
+          "Persist one current Account operation, increment its version and record request evidence."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "identity_api",
+          "lifecycle",
+          "migration"
+        ]
+      },
+      {
+        "from_state": "requested",
+        "to_state": "superseded",
+        "guards": [
+          "A newer accepted request owns the Account lock and replaces the current operation."
+        ],
+        "side_effects": [
+          "Revoke the old proof and record supersession evidence before retaining the new operation."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reauthenticated",
+        "to_state": "superseded",
+        "guards": [
+          "A newer accepted request owns the Account lock and replaces the current operation."
+        ],
+        "side_effects": [
+          "Revoke the old proof and record supersession evidence before retaining the new operation."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "new_address_pending",
+        "to_state": "superseded",
+        "guards": [
+          "A newer accepted request owns the Account lock and replaces the current operation."
+        ],
+        "side_effects": [
+          "Revoke the old proof and record supersession evidence before retaining the new operation."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "confirmed",
+        "to_state": "superseded",
+        "guards": [
+          "A newer accepted request owns the Account lock and replaces the current operation."
+        ],
+        "side_effects": [
+          "Revoke the old proof and record supersession evidence before retaining the new operation."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "delayed",
+        "to_state": "superseded",
+        "guards": [
+          "A newer accepted request owns the Account lock and replaces the current operation."
+        ],
+        "side_effects": [
+          "Revoke the old proof and record supersession evidence before retaining the new operation."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reviewed",
+        "to_state": "superseded",
+        "guards": [
+          "A newer accepted request owns the Account lock and replaces the current operation."
+        ],
+        "side_effects": [
+          "Revoke the old proof and record supersession evidence before retaining the new operation."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "requested",
+        "to_state": "reauthenticated",
+        "guards": [
+          "Same current operation before expiry; Account security and credential versions are unchanged; fresh password and required purpose-bound step-up succeed."
+        ],
+        "side_effects": [
+          "Bind the fresh assurance Session and current security/credential versions."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "account"
+        ]
+      },
+      {
+        "from_state": "reauthenticated",
+        "to_state": "new_address_pending",
+        "guards": [
+          "Current reauthenticated Session and target remain available; exact development content identity is eligible."
+        ],
+        "side_effects": [
+          "Persist one purpose-bound Token proof and protected Communications intent."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "communications",
+          "content"
+        ]
+      },
+      {
+        "from_state": "new_address_pending",
+        "to_state": "confirmed",
+        "guards": [
+          "Explicit participant POST; signed bearer, JTI, operation, Account binding, locale, versions, expiry, posture and target match."
+        ],
+        "side_effects": [
+          "Consume proof once; record confirmation, delay/review guards and minimal evidence. Canonical email remains unchanged."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "controller",
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "confirmed",
+        "to_state": "delayed",
+        "guards": [
+          "Confirmation is current and applicable delay/review policy is persisted."
+        ],
+        "side_effects": [
+          "Persist apply-after time and whether risk review is required."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "account"
+        ]
+      },
+      {
+        "from_state": "delayed",
+        "to_state": "reviewed",
+        "guards": [
+          "Risk review is required; reviewer provides fresh password and current applicable purpose-bound step-up."
+        ],
+        "side_effects": [
+          "Persist review timestamp and evidence."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "delayed",
+        "to_state": "applied",
+        "guards": [
+          "Persisted delay elapsed; required review is complete; locked Account, operation, consumed proof, versions, posture and target uniqueness all pass."
+        ],
+        "side_effects": [
+          "Atomically change canonical email, advance versions, invalidate Sessions/Devices, establish old-address notice intent and Audit evidence."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "account",
+          "recovery",
+          "communications",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reviewed",
+        "to_state": "applied",
+        "guards": [
+          "Persisted delay elapsed; required review is complete; locked Account, operation, consumed proof, versions, posture and target uniqueness all pass."
+        ],
+        "side_effects": [
+          "Atomically change canonical email, advance versions, invalidate Sessions/Devices, establish old-address notice intent and Audit evidence."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "account",
+          "recovery",
+          "communications",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "requested",
+        "to_state": "cancelled",
+        "guards": [
+          "Current Account Session requests cancellation of its current operation."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reauthenticated",
+        "to_state": "cancelled",
+        "guards": [
+          "Current Account Session requests cancellation of its current operation."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "new_address_pending",
+        "to_state": "cancelled",
+        "guards": [
+          "Current Account Session requests cancellation of its current operation."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "confirmed",
+        "to_state": "cancelled",
+        "guards": [
+          "Current Account Session requests cancellation of its current operation."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "delayed",
+        "to_state": "cancelled",
+        "guards": [
+          "Current Account Session requests cancellation of its current operation."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reviewed",
+        "to_state": "cancelled",
+        "guards": [
+          "Current Account Session requests cancellation of its current operation."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "requested",
+        "to_state": "expired",
+        "guards": [
+          "Persisted operation deadline is due."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reauthenticated",
+        "to_state": "expired",
+        "guards": [
+          "Persisted operation deadline is due."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "new_address_pending",
+        "to_state": "expired",
+        "guards": [
+          "Persisted operation deadline is due."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "confirmed",
+        "to_state": "expired",
+        "guards": [
+          "Persisted operation deadline is due."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "delayed",
+        "to_state": "expired",
+        "guards": [
+          "Persisted operation deadline is due."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reviewed",
+        "to_state": "expired",
+        "guards": [
+          "Persisted operation deadline is due."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "requested",
+        "to_state": "rejected",
+        "guards": [
+          "Target is no longer available at guarded apply time."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reauthenticated",
+        "to_state": "rejected",
+        "guards": [
+          "Target is no longer available at guarded apply time."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "new_address_pending",
+        "to_state": "rejected",
+        "guards": [
+          "Target is no longer available at guarded apply time."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "confirmed",
+        "to_state": "rejected",
+        "guards": [
+          "Target is no longer available at guarded apply time."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "delayed",
+        "to_state": "rejected",
+        "guards": [
+          "Target is no longer available at guarded apply time."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reviewed",
+        "to_state": "rejected",
+        "guards": [
+          "Target is no longer available at guarded apply time."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "requested",
+        "to_state": "held",
+        "guards": [
+          "Current Account security posture blocks application."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reauthenticated",
+        "to_state": "held",
+        "guards": [
+          "Current Account security posture blocks application."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "new_address_pending",
+        "to_state": "held",
+        "guards": [
+          "Current Account security posture blocks application."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "confirmed",
+        "to_state": "held",
+        "guards": [
+          "Current Account security posture blocks application."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "delayed",
+        "to_state": "held",
+        "guards": [
+          "Current Account security posture blocks application."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "reviewed",
+        "to_state": "held",
+        "guards": [
+          "Current Account security posture blocks application."
+        ],
+        "side_effects": [
+          "Revoke any pending proof, persist terminal time and minimal evidence; leave canonical email unchanged."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "token",
+          "audit"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Account is the only canonical-email and current-operation owner. No canonical write occurs during request, proof issuance or confirmation.",
+      "source_ids": [
+        "account",
+        "lifecycle",
+        "test"
+      ]
+    },
+    {
+      "summary": "Passive GET/HEAD, scanners and prefetch cannot consume proof; explicit CSRF-protected participant POST is single use and separate from apply.",
+      "source_ids": [
+        "controller",
+        "route",
+        "test"
+      ]
+    },
+    {
+      "summary": "Raw protected bearer is transient and excluded from ordinary persistence, logs, endpoint telemetry, jobs and Audit evidence; responses and rendered pages do not echo it after confirmation.",
+      "source_ids": [
+        "lifecycle",
+        "controller",
+        "token",
+        "test"
+      ]
+    },
+    {
+      "summary": "Final apply revalidates the persisted operation-bound Session and linked authentication Token under lock, including active state, absolute and idle deadlines, token purpose and expiry, and current :change_primary_email step-up timestamp, expiry, MFA version and security version bindings for both MFA-enabled and MFA-disabled Accounts. Logout, revocation, expiry or stale assurance denies apply without success evidence or security consequences.",
+      "source_ids": [
+        "lifecycle",
+        "account",
+        "token",
+        "test"
+      ]
+    },
+    {
+      "summary": "Only development/test builds with the exact digest-pinned PR #229 evidence may bind the approved EN/AF messages. Production/runtime release and provider delivery remain disabled; support_contact is unbound.",
+      "source_ids": [
+        "content",
+        "message_intent",
+        "executor"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Account row lock serializes operations; partial unique PostgreSQL indexes enforce one active target across Accounts and unique current operation identity at persistence boundary.",
+      "source_ids": [
+        "lifecycle",
+        "account",
+        "migration",
+        "test"
+      ]
+    },
+    {
+      "summary": "Apply and existing recovery completion operate through Identity owner interfaces in genuine competing PostgreSQL transactions. Tests prove both commit orderings and that the later stale operation cannot overwrite the winner.",
+      "source_ids": [
+        "lifecycle",
+        "recovery",
+        "test"
+      ]
+    },
+    {
+      "summary": "Account security mutations lock Account first, related Token rows in JTI order second, then current Session rows. Primary-email apply, recovery and password reset follow this order. Tests prove logout-first denies stale apply and apply-first revokes the Session before logout can commit.",
+      "source_ids": [
+        "lifecycle",
+        "recovery",
+        "password_reset",
+        "test"
+      ]
+    },
+    {
+      "summary": "Target uniqueness and Account operation serialization are tested with real competing database transactions, including post-precheck races.",
+      "source_ids": [
+        "migration",
+        "test"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Operation ID and persisted Account version bind request and transitions; repeated request, confirmation, apply, cancellation or expiry does not repeat completed consequences and returns stable terminal receipts where supported.",
+      "source_ids": [
+        "lifecycle",
+        "account",
+        "test"
+      ]
+    },
+    {
+      "summary": "Account, proof revocation, Communications intents and Audit obligations are composed within the owner Ash transaction so a failed write rolls back the authoritative change and can be retried.",
+      "source_ids": [
+        "lifecycle",
+        "communications",
+        "audit"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Expiry is derived from persisted deadlines and bounded batch reconciliation; it can resume after restart and revokes any pending proof.",
+      "source_ids": [
+        "identity_api",
+        "lifecycle",
+        "test"
+      ]
+    },
+    {
+      "summary": "A fresh BEAM process resumes a persisted confirmed operation and applies it through the normal guarded interface; restart proof retains only test-controlled transient proof input.",
+      "source_ids": [
+        "test",
+        "restart_proof",
+        "lifecycle"
+      ]
+    },
+    {
+      "summary": "A due, confirmed operation can regain fresh assurance after a five-minute step-up expires: reauthenticate a current Session with the unchanged canonical email and fresh password, complete fresh purpose-bound TOTP step-up when MFA is active, then use the existing reauthentication interface. When MFA is disabled, that interface writes a new :change_primary_email Session step-up bound to current Account MFA/security versions after fresh password verification. The same operation, consumed proof, confirmation history, delay and review state remain in place; no duplicate proof is issued, and apply remains blocked until all original guards pass.",
+      "source_ids": [
+        "identity_api",
+        "lifecycle",
+        "account",
+        "test"
+      ]
+    },
+    {
+      "summary": "When the old address is inaccessible, participant enters existing governed recovery interfaces. Recovery completion invalidates primary-email-change authority and serializes with apply; no support-note or Communications state changes canonical email.",
+      "source_ids": [
+        "recovery",
+        "identity_api",
+        "test"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "cases": [
+        "request, fresh password reauthentication, same-address denial and one-current-operation invariant",
+        "active MFA purpose-bound step-up and development-only held Communications intents",
+        "scanner-safe GET, explicit CSRF POST single-use proof consumption and canonical email unchanged before apply",
+        "proof absence from logs, endpoint telemetry, ordinary rows, Oban jobs and selected E2 evidence",
+        "final-apply denial after logout, revocation, Session or Token expiry, cleared/wrong-purpose step-up, and stale MFA/security bindings for active-MFA and disabled-MFA Accounts with no apply consequences",
+        "delayed assurance refresh and valid Session rebinding preserve operation and confirmation; disabled-MFA fresh-password renewal and active-MFA TOTP renewal both apply after delay; review remains independent",
+        "guarded apply, idempotent security consequences, restart/reconnect, stale target rejection and terminal states",
+        "real PostgreSQL apply-versus-recovery competing transactions in both commit orderings",
+        "real PostgreSQL Session logout-versus-apply lock contention in both transaction orderings",
+        "cancellation, supersession, target uniqueness race, same-Account competition, expiry, hold and risk review"
+      ],
+      "proves": "WELL-17 focused lifecycle and security regression behavior against the current PostgreSQL test database.",
+      "limits": "Development/test behavior only; does not enable provider delivery or make production policy decisions.",
+      "source_ids": [
+        "test",
+        "restart_proof",
+        "recovery"
+      ]
+    },
+    {
+      "path": "test/new_you/communications/disposition_test.exs",
+      "cases": [
+        "email-change intents remain held and cannot reach provider"
+      ],
+      "proves": "Existing Communications disposition boundary keeps email-change messages held and prevents provider delivery.",
+      "limits": "Provider delivery remains disabled and no production participant is contacted.",
+      "source_ids": [
+        "disposition_test"
+      ]
+    },
+    {
+      "path": "test/new_you_web/security/authentication_reachability_test.exs",
+      "cases": [
+        "confirmation route is reachable only through the intended explicit participant boundary"
+      ],
+      "proves": "Existing web security boundary allows the new confirmation route without exposing private Account actions.",
+      "limits": "Route coverage does not enable production or live participant delivery.",
+      "source_ids": [
+        "reachability_test"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Future production eligibility requires new explicit durable authority and verified content/provider approval; current development eligibility must remain off by default.",
+      "source_ids": [
+        "content",
+        "lifecycle"
+      ]
+    },
+    {
+      "summary": "An approved policy may supply delay and review requirements through the existing Identity guard seam without moving canonical authority out of Account.",
+      "source_ids": [
+        "lifecycle",
+        "account"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Reuse the existing Account, Session, DeviceAssurance, Token proof, Communications protected delivery and disposition, Audit E2 evidence, and governed recovery interfaces.",
+      "source_ids": [
+        "account",
+        "token",
+        "recovery",
+        "communications",
+        "audit"
+      ]
+    },
+    {
+      "summary": "Reuse exact approved EN/AF message identities and the PR #229 development evidence packet; do not alter content or bind support_contact.",
+      "source_ids": [
+        "content"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Do not make browser GET/HEAD, scanner/prefetch, Communications provider success, Audit evidence, cached/browser state or support notes consume proof or mutate canonical email.",
+      "source_ids": [
+        "controller",
+        "communications",
+        "audit",
+        "test"
+      ]
+    },
+    {
+      "summary": "Do not create another canonical email owner or call Account resource actions directly from controllers/workers; application writes use Identity interfaces.",
+      "source_ids": [
+        "identity_api",
+        "account",
+        "controller"
+      ]
+    },
+    {
+      "summary": "Do not persist/log raw proof or enable provider, production, runtime release or real-participant delivery under this development-only capability.",
+      "source_ids": [
+        "lifecycle",
+        "content",
+        "message_intent",
+        "executor"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "The full local mix check and focused tests are author-side evidence; exact-head CI and independent Master Gate review are still required.",
+    "Restart recovery is proven with the existing test harness and a fresh BEAM process against the isolated test database; it is not a production deployment test.",
+    "Session/logout and recovery/apply contention proof uses independent PostgreSQL transactions in the local test database; it does not model cross-region or production database failure modes.",
+    "Delay and risk-review policy exercised by development tests does not select production thresholds or authorize live participant delivery.",
+    "Selected E2 records carry minimal event facts only; they do not contain bearer proof or full private diagnostics."
+  ],
+  "follow_up_tickets": [],
+  "sources": [
+    {
+      "id": "identity_api",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def request_primary_email_change",
+      "sha256": "90ba9e7d0ef990538c38482b922d5f8d409f1a2b9a7c557df4fc896038680c81"
+    },
+    {
+      "id": "account",
+      "path": "lib/new_you/identity/account.ex",
+      "symbol": "state_machine do",
+      "sha256": "515114144a2ba38bd4858e2a5be297ef3d33bd9da50666a4859638f3125bc3ce"
+    },
+    {
+      "id": "lifecycle",
+      "path": "lib/new_you/identity/primary_email_change.ex",
+      "symbol": "defmodule NewYou.Identity.PrimaryEmailChange",
+      "sha256": "8e0936acbdc49f0b55676f71b21c008a769948775008696eda0f3b0a28dbb925"
+    },
+    {
+      "id": "token",
+      "path": "lib/new_you/identity/token.ex",
+      "symbol": "defmodule NewYou.Identity.Token",
+      "sha256": "248faddf863dc1d2c1ddeadb16152d215aef6ecc5d8236a4cac0bdf5c69434f1"
+    },
+    {
+      "id": "recovery",
+      "path": "lib/new_you/identity/recovery.ex",
+      "symbol": "def finish(",
+      "sha256": "15b4c7283c65d701e1016001b34e5c80a0bc97f121803f43d255582c53f83752"
+    },
+    {
+      "id": "password_reset",
+      "path": "lib/new_you/identity/password_reset.ex",
+      "symbol": "defp revoke_sessions",
+      "sha256": "464342751261e0c0e6ee37e265eb4ce50b6b1265982dfaa82599d9e1ded2b473"
+    },
+    {
+      "id": "communications",
+      "path": "lib/new_you/communications.ex",
+      "symbol": "def establish_primary_email_change_confirmation",
+      "sha256": "f67d7daa27c991b86d2cb98f92b2823689e86fcb35fe7e0e59c7ce0cd8bf3d90"
+    },
+    {
+      "id": "message_intent",
+      "path": "lib/new_you/communications/message_intent.ex",
+      "symbol": "email_change_confirmation",
+      "sha256": "c0c5d3743c9d833a887a8ccc9a3d1a21adceedf865590566cedc8675866cb42a"
+    },
+    {
+      "id": "executor",
+      "path": "lib/new_you/communications/executor.ex",
+      "symbol": "source_eligibility",
+      "sha256": "f5f3c35b6cae76a397f6d1b138e803a2215f8a99a167c1ca96f79c0c198b6b1a"
+    },
+    {
+      "id": "content",
+      "path": "lib/new_you/content/primary_email_change_message.ex",
+      "symbol": "defmodule NewYou.Content.PrimaryEmailChangeMessage",
+      "sha256": "aebd1b655de078356e1623af125cc8c3cd3d5505752820d8d9a53105139ec51a"
+    },
+    {
+      "id": "controller",
+      "path": "lib/new_you_web/controllers/primary_email_change_controller.ex",
+      "symbol": "defmodule NewYouWeb.PrimaryEmailChangeController",
+      "sha256": "bb9e34bc18890c343703c3ce752d2cea270c296bc3a5425f57c8628ad58e2bef"
+    },
+    {
+      "id": "html",
+      "path": "lib/new_you_web/controllers/primary_email_change_html.ex",
+      "symbol": "defmodule NewYouWeb.PrimaryEmailChangeHTML",
+      "sha256": "da7d997f91d207e6961e80da8e82455f12eeb3d3cae161a8457bd90f72edc732"
+    },
+    {
+      "id": "route",
+      "path": "lib/new_you_web/router.ex",
+      "symbol": "primary-email-change/confirm",
+      "sha256": "173c99fbee4fd33db7894b5df76975e512e2902ea3f88e79c9d3f9dea3e2bf49"
+    },
+    {
+      "id": "audit",
+      "path": "lib/new_you/audit/privileged_evidence.ex",
+      "symbol": "identity_primary_email_change_requested",
+      "sha256": "da1aed8fba3fa54d096f2dcaff62048eff2eda5142db3c1e873e0db33c48cd81"
+    },
+    {
+      "id": "migration",
+      "path": "priv/repo/migrations/20261113082342_primary_email_change.exs",
+      "symbol": "accounts_one_pending_primary_email_change_target_index",
+      "sha256": "76758c509c703eef3bc7582e7127e9e75d64a01dc0570c9013a3fdab45b653b9"
+    },
+    {
+      "id": "review_policy_migration",
+      "path": "priv/repo/migrations/20261113083831_primary_email_change_review_policy.exs",
+      "symbol": "defmodule",
+      "sha256": "ecd4f1e051a276dd6d3dffb0104a2dfd874593cc645d821bb2e9ce1a03fc7827"
+    },
+    {
+      "id": "review_guard_migration",
+      "path": "priv/repo/migrations/20261113090317_primary_email_change_review_guard.exs",
+      "symbol": "accounts_primary_email_change_terminal",
+      "sha256": "3ae35b30c8f50e17be93e13112bddf6a765289c9f3fc47c0d115ddfa006c2fec"
+    },
+    {
+      "id": "reviewed_history_migration",
+      "path": "priv/repo/migrations/20261113090416_primary_email_change_reviewed_history.exs",
+      "symbol": "accounts_primary_email_change_terminal",
+      "sha256": "d9c687529f7ff4f424d34c769c1dd7ea3cb45dddffebe2bf22578bde01d14f79"
+    },
+    {
+      "id": "test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "defmodule NewYou.Identity.PrimaryEmailChangeTest",
+      "sha256": "dd4baa3a0e730ef7dfc426b71fd1e148569c82017db118e40a94cae2d0dc0642"
+    },
+    {
+      "id": "restart_proof",
+      "path": "test/proof/p8_16_restart.exs",
+      "symbol": "defmodule NewYou.Proof.P816Restart",
+      "sha256": "822321506bf52d7ac853ece2b660125b1d66a797144fc4479ac57b8279f914dc"
+    },
+    {
+      "id": "disposition_test",
+      "path": "test/new_you/communications/disposition_test.exs",
+      "symbol": "primary_email_change_state",
+      "sha256": "908460ccf2ce68b34d6801997cc40ab9a0d9be22c3e4f6b507db4b32ad0a5434"
+    },
+    {
+      "id": "reachability_test",
+      "path": "test/new_you_web/security/authentication_reachability_test.exs",
+      "symbol": "request_primary_email_change",
+      "sha256": "d7b5227112c068437e58f8226ff02e40df1a2b0914608f9a57e1e4c17b175172"
+    }
+  ]
+}
