@@ -626,21 +626,25 @@ defmodule NewYouWeb.RegistrationControllerTest do
 
     test "a duplicate canonical email receives the same neutral pending outcome", %{conn: conn} do
       first = valid_registration("en")
-      first_html = conn |> post("/register", %{"registration" => first}) |> html_response(200)
+      first_conn = post(conn, "/register", %{"registration" => first})
+      assert first_conn.status == 200
 
       duplicate_email = String.replace_suffix(first["email"], "@example.test", "@EXAMPLE.TEST ")
       duplicate = valid_registration("en") |> Map.put("email", duplicate_email)
 
-      duplicate_html =
+      duplicate_conn =
         build_conn()
         |> post("/register", %{"registration" => duplicate})
-        |> html_response(200)
 
       neutral = expected_copy("identity.registration.accepted_neutral", "en")
-      assert first_html =~ neutral
-      assert duplicate_html =~ neutral
+      assert first_conn.resp_body =~ neutral
+      assert duplicate_conn.resp_body =~ neutral
+
+      assert registration_public_result(first_conn, first["email"]) ==
+               registration_public_result(duplicate_conn, duplicate_email)
+
       assert length(accounts_for(first["email"])) == 1
-      refute duplicate_html =~ "account_id"
+      refute duplicate_conn.resp_body =~ "account_id"
     end
 
     test "an unknown email receives the same neutral resend outcome", %{conn: conn} do
@@ -830,6 +834,47 @@ defmodule NewYouWeb.RegistrationControllerTest do
       [value] -> value
       _ -> flunk("expected a hidden form value matching #{inspect(pattern)}")
     end
+  end
+
+  defp registration_public_result(conn, submitted_email) do
+    body = String.replace(conn.resp_body, submitted_email, "[submitted-email]")
+
+    body =
+      Regex.replace(
+        ~r/(name="_csrf_token"[^>]*value=")[^"]+/,
+        body,
+        "\\1[session-token]"
+      )
+
+    body =
+      Regex.replace(
+        ~r/(<meta name="csrf-token" content=")[^"]+/,
+        body,
+        "\\1[session-token]"
+      )
+
+    body =
+      Regex.replace(
+        ~r/(name="resend\[operation_id\]"[^>]*value=")[^"]+/,
+        body,
+        "\\1[operation-id]"
+      )
+
+    cookies =
+      conn
+      |> Plug.Conn.get_resp_header("set-cookie")
+      |> Enum.map(&Regex.replace(~r/(^[^=;]+=)[^;]*/, &1, "\\1[cookie]"))
+
+    {
+      conn.status,
+      body,
+      Plug.Conn.get_resp_header(conn, "location"),
+      Plug.Conn.get_resp_header(conn, "cache-control"),
+      Plug.Conn.get_resp_header(conn, "referrer-policy"),
+      Plug.Conn.get_resp_header(conn, "content-security-policy"),
+      cookies,
+      Plug.Conn.get_session(conn) |> Map.drop(["_csrf_token"])
+    }
   end
 
   defp link_target(html, label) do

@@ -12,7 +12,7 @@ defmodule NewYou.Proof.P805 do
 
   @terms "NEWYOU-TERMS-EN-DEV-2026-10-27-001"
   @privacy "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
-  @tables ~w(accounts tokens registration_operations resend_operations message_intents communications_protected_envelopes communications_envelope_nonces evidence_obligations oban_jobs identity_pmr_reservations)
+  @tables ~w(accounts tokens registration_operations resend_operations message_intents communications_protected_envelopes communications_envelope_nonces evidence_obligations oban_jobs identity_pmr_reservations privacy_purpose_authorities privacy_purpose_events)
   @environment ~w(identity_registration_binding_keys identity_token_signing_secret identity_mfa_keyring communications_keyring p8_05_browser_development_fixtures identity_pmr_generator)a
 
   def run(case_id), do: with_fixture(fn -> execute(case_id) end)
@@ -921,7 +921,9 @@ defmodule NewYou.Proof.P805 do
         {"args->'primary_key'->>'id' IN (SELECT id::text FROM evidence_obligations WHERE source_operation_id = ANY($2::uuid[]) OR actor_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))) OR args->'primary_key'->>'id' IN (SELECT id::text FROM message_intents WHERE source_operation_id = ANY($2::uuid[]))",
          [emails, operations]},
       "identity_pmr_reservations" =>
-        {"pmr IN (SELECT pmr FROM accounts WHERE email = ANY($1::text[]))", [emails]}
+        {"pmr IN (SELECT pmr FROM accounts WHERE email = ANY($1::text[]))", [emails]},
+      "privacy_purpose_authorities" => {"source_operation_id = ANY($1::uuid[])", [operations]},
+      "privacy_purpose_events" => {"source_operation_id = ANY($1::uuid[])", [operations]}
     }
 
     Enum.all?(@tables, fn table ->
@@ -1137,6 +1139,53 @@ defmodule NewYou.Proof.P805 do
       "DELETE FROM identity_grants WHERE subject_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR target_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[])) OR approver_account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
       [emails]
     )
+
+    {:ok, :ok} =
+      Repo.transaction(fn ->
+        Repo.query!(
+          "ALTER TABLE privacy_purpose_events DISABLE TRIGGER privacy_purpose_events_immutable"
+        )
+
+        Repo.query!(
+          "ALTER TABLE privacy_purpose_events DISABLE TRIGGER privacy_purpose_events_no_truncate"
+        )
+
+        Repo.query!(
+          "ALTER TABLE privacy_purpose_authorities DISABLE TRIGGER privacy_purpose_authorities_lifecycle"
+        )
+
+        Repo.query!(
+          "ALTER TABLE privacy_purpose_authorities DISABLE TRIGGER privacy_purpose_authorities_no_truncate"
+        )
+
+        Repo.query!(
+          "DELETE FROM privacy_purpose_events WHERE source_operation_id = ANY($1::uuid[])",
+          [operations]
+        )
+
+        Repo.query!(
+          "DELETE FROM privacy_purpose_authorities WHERE source_operation_id = ANY($1::uuid[])",
+          [operations]
+        )
+
+        Repo.query!(
+          "ALTER TABLE privacy_purpose_events ENABLE TRIGGER privacy_purpose_events_immutable"
+        )
+
+        Repo.query!(
+          "ALTER TABLE privacy_purpose_events ENABLE TRIGGER privacy_purpose_events_no_truncate"
+        )
+
+        Repo.query!(
+          "ALTER TABLE privacy_purpose_authorities ENABLE TRIGGER privacy_purpose_authorities_lifecycle"
+        )
+
+        Repo.query!(
+          "ALTER TABLE privacy_purpose_authorities ENABLE TRIGGER privacy_purpose_authorities_no_truncate"
+        )
+
+        :ok
+      end)
 
     Repo.query!(
       "DELETE FROM device_assurances WHERE account_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",

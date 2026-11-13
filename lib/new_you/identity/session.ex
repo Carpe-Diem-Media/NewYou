@@ -169,7 +169,8 @@ defmodule NewYou.Identity.Session do
                     :apply_reconciliation,
                     :change_primary_email,
                     :approve_manual_recovery,
-                    :complete_manual_recovery
+                    :complete_manual_recovery,
+                    :lookup_identity
                   ]
 
       public? false

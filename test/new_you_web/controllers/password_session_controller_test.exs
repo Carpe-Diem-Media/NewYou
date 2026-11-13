@@ -104,6 +104,57 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
     end)
   end
 
+  test "known wrong-password and unknown-account login failures have the same public response" do
+    P805.with_fixture(fn ->
+      request = P805.request()
+      {:ok, registration} = Identity.register(request)
+      {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+
+      page = get(build_conn(), "/login?locale=en")
+      assert page.status == 200
+      [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
+
+      submit = fn email ->
+        page
+        |> recycle()
+        |> put_private(:plug_skip_csrf_protection, false)
+        |> post("/login", %{
+          email: email,
+          password: "same invalid password for both requests",
+          locale: "en",
+          _csrf_token: csrf
+        })
+      end
+
+      known = submit.(request.email)
+      unknown = submit.("unknown-#{Ecto.UUID.generate()}@example.test")
+
+      public_result = fn conn ->
+        body =
+          Regex.replace(
+            ~r/(name="_csrf_token"[^>]*value=")[^"]+/,
+            conn.resp_body,
+            "\\1[session-token]"
+          )
+
+        {
+          conn.status,
+          body,
+          get_resp_header(conn, "location"),
+          get_resp_header(conn, "cache-control"),
+          get_resp_header(conn, "referrer-policy"),
+          get_resp_header(conn, "content-security-policy"),
+          get_resp_header(conn, "set-cookie")
+        }
+      end
+
+      assert public_result.(known) == public_result.(unknown)
+      assert known.status == 200
+      refute get_session(known, :identity_session_id)
+      refute get_session(unknown, :identity_session_id)
+    end)
+  end
+
   test "Chromium submits the bilingual form and reconstructs protected access" do
     for locale <- ["en", "af"] do
       P805.with_fixture(fn ->

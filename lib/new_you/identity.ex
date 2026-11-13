@@ -203,6 +203,18 @@ defmodule NewYou.Identity do
   def step_up_privileged(credentials, password, code, purpose),
     do: NewYou.Identity.PrivilegedAccess.step_up(credentials, password, code, purpose)
 
+  @doc "Look up one grant-bound Account by its canonical email and return only minimum Identity context."
+  @spec lookup_support_identity(term(), term(), term(), term()) ::
+          {:ok, map() | :not_found} | {:error, :support_lookup_unavailable}
+  def lookup_support_identity(credentials, grant_id, target_account_id, email),
+    do:
+      NewYou.Identity.SupportLookup.lookup(
+        credentials,
+        grant_id,
+        target_account_id,
+        email
+      )
+
   @doc "Place a version-bound security hold under current scoped Support authority and revoke the target's active Sessions."
   @spec place_security_hold(map()) :: {:ok, map()} | {:error, :security_hold_unavailable}
   def place_security_hold(request),

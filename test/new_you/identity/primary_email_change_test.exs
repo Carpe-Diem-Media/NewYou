@@ -1108,6 +1108,242 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
     assert apply_recovery_race(:email_change_first) == :ok
   end
 
+  @tag :p817_privacy_red
+  test "proof-only protected mutation denies when current Privacy authority is missing" do
+    with_test_privacy_proof(fn ->
+      with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+        assert {:ok, :missing} =
+                 NewYou.Privacy.current_p817_proof_purpose(
+                   fixture.registration.account_id,
+                   fixture.operation_id
+                 )
+
+        assert_apply_denied(fixture)
+      end)
+    end)
+  end
+
+  test "committed Privacy withdrawal wins before Identity's current mutation check" do
+    with_test_privacy_proof(fn ->
+      with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+        assert {:ok, :allowed} =
+                 NewYou.Privacy.grant_p817_proof_purpose(
+                   fixture.registration.account_id,
+                   fixture.operation_id
+                 )
+
+        assert {:ok, :allowed} =
+                 NewYou.Privacy.current_p817_proof_purpose(
+                   fixture.registration.account_id,
+                   fixture.operation_id
+                 )
+
+        parent = self()
+        reference = make_ref()
+        scenario = Scenario.start()
+
+        try do
+          {worker, worker_monitor} =
+            Scenario.spawn(scenario, :privacy_withdrawal_before_apply, fn ->
+              :ok = Sandbox.checkout(Repo, sandbox: false)
+
+              Process.put(
+                NewYou.Proof.P817PrivacySeam,
+                {:pause, parent, reference, :before_current_read}
+              )
+
+              try do
+                result = Identity.apply_primary_email_change(fixture.operation_id)
+                send(parent, {reference, :p817_apply_result, result})
+              after
+                :ok = Sandbox.checkin(Repo)
+              end
+            end)
+
+          {apply_backend, apply_transaction} =
+            await_p817_privacy_checkpoint(reference, :before_current_read)
+
+          withdrawal_backend =
+            Repo.query!("SELECT pg_backend_pid()") |> Map.fetch!(:rows) |> hd() |> hd()
+
+          assert apply_backend != withdrawal_backend
+
+          assert {:ok, :withdrawn} =
+                   NewYou.Privacy.withdraw_p817_proof_purpose(
+                     fixture.registration.account_id,
+                     fixture.operation_id
+                   )
+
+          assert {:ok, :withdrawn} =
+                   NewYou.Privacy.current_p817_proof_purpose(
+                     fixture.registration.account_id,
+                     fixture.operation_id
+                   )
+
+          send(worker, {reference, :release})
+
+          assert await_result(reference, :p817_apply_result) ==
+                   {:error, :primary_email_change_unavailable}
+
+          await_normal(worker_monitor)
+
+          assert_no_apply_consequences(fixture)
+
+          assert {:error, :primary_email_change_unavailable} =
+                   Identity.apply_primary_email_change(fixture.operation_id)
+
+          assert {:ok, :withdrawn} =
+                   NewYou.Privacy.current_p817_proof_purpose(
+                     fixture.registration.account_id,
+                     fixture.operation_id
+                   )
+
+          assert apply_transaction != ""
+        after
+          :ok = Scenario.stop(scenario)
+        end
+      end)
+    end)
+  end
+
+  test "Identity mutation committed first serializes before Privacy withdrawal" do
+    with_test_privacy_proof(fn ->
+      with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+        assert {:ok, :allowed} =
+                 NewYou.Privacy.grant_p817_proof_purpose(
+                   fixture.registration.account_id,
+                   fixture.operation_id
+                 )
+
+        parent = self()
+        reference = make_ref()
+        scenario = Scenario.start()
+
+        try do
+          {apply_worker, apply_monitor} =
+            Scenario.spawn(scenario, :identity_mutation_first, fn ->
+              :ok = Sandbox.checkout(Repo, sandbox: false)
+
+              Process.put(
+                NewYou.Proof.P817PrivacySeam,
+                {:pause, parent, reference, :after_current_read}
+              )
+
+              try do
+                result = Identity.apply_primary_email_change(fixture.operation_id)
+                send(parent, {reference, :p817_apply_first_result, result})
+              after
+                :ok = Sandbox.checkin(Repo)
+              end
+            end)
+
+          {apply_backend, _apply_transaction} =
+            await_p817_privacy_checkpoint(reference, :after_current_read)
+
+          {_withdraw_worker, withdraw_monitor} =
+            Scenario.spawn(scenario, :privacy_withdrawal_second, fn ->
+              :ok = Sandbox.checkout(Repo, sandbox: false)
+
+              try do
+                backend = Repo.query!("SELECT pg_backend_pid()").rows |> hd() |> hd()
+                send(parent, {reference, :p817_withdraw_backend, backend})
+
+                result =
+                  NewYou.Privacy.withdraw_p817_proof_purpose(
+                    fixture.registration.account_id,
+                    fixture.operation_id
+                  )
+
+                send(parent, {reference, :p817_withdraw_result, result})
+              after
+                :ok = Sandbox.checkin(Repo)
+              end
+            end)
+
+          withdraw_backend = receive_backend(reference, :p817_withdraw_backend)
+          assert_contention(withdraw_backend, apply_backend)
+
+          send(apply_worker, {reference, :release})
+          assert await_result(reference, :p817_apply_first_result) == {:ok, :applied}
+          assert await_result(reference, :p817_withdraw_result) == {:ok, :withdrawn}
+          await_normal(apply_monitor)
+          await_normal(withdraw_monitor)
+
+          account = current_account(fixture.registration.account_id)
+          assert account.email == fixture.target_request.email
+          assert account.primary_email_change_state == :applied
+
+          assert {:ok, :withdrawn} ==
+                   NewYou.Privacy.current_p817_proof_purpose(
+                     fixture.registration.account_id,
+                     fixture.operation_id
+                   )
+
+          assert Identity.apply_primary_email_change(fixture.operation_id) ==
+                   {:ok, :already_applied}
+        after
+          :ok = Scenario.stop(scenario)
+        end
+      end)
+    end)
+  end
+
+  test "withdrawn Privacy authority remains denied after a fresh BEAM restart" do
+    with_test_privacy_proof(fn ->
+      with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+        assert {:ok, :allowed} =
+                 NewYou.Privacy.grant_p817_proof_purpose(
+                   fixture.registration.account_id,
+                   fixture.operation_id
+                 )
+
+        assert {:ok, :withdrawn} =
+                 NewYou.Privacy.withdraw_p817_proof_purpose(
+                   fixture.registration.account_id,
+                   fixture.operation_id
+                 )
+
+        signing_secret =
+          Application.fetch_env!(:new_you, :identity_token_signing_secret)
+          |> Base.encode64()
+
+        assert :denied ==
+                 restart_p817_privacy_retry(%{
+                   operation_id: fixture.operation_id,
+                   signing_secret: signing_secret
+                 })
+
+        assert_no_apply_consequences(fixture)
+
+        assert {:ok, :withdrawn} =
+                 NewYou.Privacy.current_p817_proof_purpose(
+                   fixture.registration.account_id,
+                   fixture.operation_id
+                 )
+      end)
+    end)
+  end
+
+  test "Identity fails closed when its current Privacy read is unavailable" do
+    with_test_privacy_proof(fn ->
+      with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+        assert {:ok, :allowed} =
+                 NewYou.Privacy.grant_p817_proof_purpose(
+                   fixture.registration.account_id,
+                   fixture.operation_id
+                 )
+
+        Process.put(NewYou.Proof.P817PrivacySeam, {:fail, :owner_read})
+
+        try do
+          assert_apply_denied(fixture)
+        after
+          Process.delete(NewYou.Proof.P817PrivacySeam)
+        end
+      end)
+    end)
+  end
+
   test "cancellation revokes the proof and leaves the canonical address unchanged" do
     P805.with_fixture(fn ->
       registration_request = P805.request()
@@ -1832,6 +2068,19 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
     end
   end
 
+  defp with_test_privacy_proof(fun) do
+    previous = Application.get_env(:new_you, :p8_17_test_proof_purpose?)
+    Application.put_env(:new_you, :p8_17_test_proof_purpose?, true)
+
+    try do
+      fun.()
+    after
+      if is_nil(previous),
+        do: Application.delete_env(:new_you, :p8_17_test_proof_purpose?),
+        else: Application.put_env(:new_you, :p8_17_test_proof_purpose?, previous)
+    end
+  end
+
   defp apply_recovery_race(order) do
     with_apply_policy(%{delay_seconds: 0, requires_review?: false}, fn ->
       P805.with_fixture(fn -> execute_recovery_race(order) end)
@@ -2202,6 +2451,49 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
     read_restart_result(port, "", System.monotonic_time(:millisecond) + 30_000)
   end
 
+  defp restart_p817_privacy_retry(fields) do
+    payload = Jason.encode!(fields)
+    executable = System.find_executable("mise") || raise "mise unavailable"
+
+    port =
+      Port.open({:spawn_executable, executable}, [
+        :binary,
+        :exit_status,
+        args: [
+          "exec",
+          "--",
+          "devcore-project",
+          "run",
+          "test",
+          "--",
+          "mix",
+          "run",
+          "test/proof/p8_17_privacy_restart.exs"
+        ],
+        env: [{~c"ERL_FLAGS", ~c"+S 2:2"}]
+      ])
+
+    true = Port.command(port, payload <> "\n")
+    read_p817_restart_result(port, "", System.monotonic_time(:millisecond) + 30_000)
+  end
+
+  defp read_p817_restart_result(port, output, deadline) do
+    receive do
+      {^port, {:data, bytes}} when byte_size(output) + byte_size(bytes) < 8_192 ->
+        read_p817_restart_result(port, output <> bytes, deadline)
+
+      {^port, {:exit_status, 0}} ->
+        if String.contains?(output, "P817_RESTART_DENIED"), do: :denied, else: :error
+
+      {^port, {:exit_status, _}} ->
+        :error
+    after
+      max(deadline - System.monotonic_time(:millisecond), 0) ->
+        Port.close(port)
+        :error
+    end
+  end
+
   defp read_restart_result(port, output, deadline) do
     receive do
       {^port, {:data, bytes}} when byte_size(output) + byte_size(bytes) < 8_192 ->
@@ -2286,6 +2578,15 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
       {^reference, ^name, result} -> result
     after
       15_000 -> raise "primary-email/recovery worker result deadline"
+    end
+  end
+
+  defp await_p817_privacy_checkpoint(reference, point) do
+    receive do
+      {^reference, :p817_privacy_checkpoint, _worker, backend, transaction, ^point} ->
+        {backend, transaction}
+    after
+      15_000 -> raise "P8-17 Privacy current-read checkpoint deadline"
     end
   end
 
