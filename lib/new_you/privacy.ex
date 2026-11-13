@@ -34,16 +34,16 @@ defmodule NewYou.Privacy do
 
         case transaction_result do
           {:ok, {:ok, :withdrawn}} -> {:error, :withdrawn}
-          {:ok, result} -> result
-          _ -> {:error, :privacy_authority_unavailable}
+          {:ok, {:ok, result}} -> {:ok, result}
+          _ -> resolve_grant_failure(subject_id, operation_id)
         end
       else
         _ -> {:error, :privacy_authority_unavailable}
       end
     rescue
-      _ -> {:error, :privacy_authority_unavailable}
+      _ -> resolve_grant_failure(subject_id, operation_id)
     catch
-      _, _ -> {:error, :privacy_authority_unavailable}
+      _, _ -> resolve_grant_failure(subject_id, operation_id)
     end
 
     @doc "Withdraw one operation-bound P8-17 proof purpose. Withdrawal is terminal for this operation."
@@ -122,7 +122,8 @@ defmodule NewYou.Privacy do
   defp grant_locked(subject_id, operation_id) do
     case current_record(subject_id, operation_id, lock?: true) do
       {:ok, nil} ->
-        with {:ok, authority} <-
+        with :ok <- grant_missing_checkpoint(),
+             {:ok, authority} <-
                Ash.create(
                  PurposeAuthority,
                  %{
@@ -149,6 +150,18 @@ defmodule NewYou.Privacy do
       _ ->
         {:error, :privacy_authority_unavailable}
     end
+  end
+
+  defp resolve_grant_failure(subject_id, operation_id) do
+    case current_record(subject_id, operation_id) do
+      {:ok, %{state: :allowed}} -> {:ok, :already_allowed}
+      {:ok, %{state: :withdrawn}} -> {:error, :withdrawn}
+      _ -> {:error, :privacy_authority_unavailable}
+    end
+  rescue
+    _ -> {:error, :privacy_authority_unavailable}
+  catch
+    _, _ -> {:error, :privacy_authority_unavailable}
   end
 
   defp withdraw_locked(subject_id, operation_id) do
@@ -211,7 +224,11 @@ defmodule NewYou.Privacy do
 
   if Mix.env() == :test do
     defp owner_read_checkpoint, do: NewYou.Proof.P817PrivacySeam.checkpoint(:owner_read)
+
+    defp grant_missing_checkpoint,
+      do: NewYou.Proof.P817PrivacySeam.checkpoint(:grant_after_missing)
   else
     defp owner_read_checkpoint, do: :ok
+    defp grant_missing_checkpoint, do: :ok
   end
 end

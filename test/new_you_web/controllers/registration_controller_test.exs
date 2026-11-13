@@ -837,7 +837,14 @@ defmodule NewYouWeb.RegistrationControllerTest do
   end
 
   defp registration_public_result(conn, submitted_email) do
-    body = String.replace(conn.resp_body, submitted_email, "[submitted-email]")
+    {:ok, canonical_email} = Identity.Email.canonicalize(submitted_email)
+
+    body =
+      [submitted_email, canonical_email]
+      |> Enum.uniq()
+      |> Enum.reduce(conn.resp_body, fn email, body ->
+        String.replace(body, email, "[submitted-email]")
+      end)
 
     body =
       Regex.replace(

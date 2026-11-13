@@ -1,5 +1,5 @@
 defmodule NewYou.Proof.P817PrivacySeam do
-  @moduledoc "TEST-only cut-points around Identity's current Privacy re-read."
+  @moduledoc "TEST-only cut-points around P8-17 Privacy authority operations."
 
   def checkpoint(point) do
     case Process.get(__MODULE__) do
