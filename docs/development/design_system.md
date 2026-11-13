@@ -375,8 +375,8 @@ appearances remain unchanged. Button components own `data-treatment` and reject
 caller collisions, including forwarded atom/string keys. Cards retain their
 controlled `data-variant`. No browser-side value becomes business state.
 
-The root token block owns surface mix strengths, directional edge alpha, shadow
-geometry/strength and action gradient/rim colours. Gradients derive from the
+The canonical token stylesheet owns surface mix strengths, directional edge
+alpha, shadow geometry/strength and action gradient/rim colours. Gradients derive from the
 existing primary source; hover derives from the existing separately authored
 primary-hover source. Colour-mix enhancement adds the material treatment over
 solid/no-cast-shadow fallbacks. Pressed controls use inset edges and no cast
@@ -458,3 +458,54 @@ existing design-system handoff remains canonical; a new capability map is
 exempt for this CSS-consumption and engineering-validation batch. WELL-114's
 independent resulting-main certification gap remains open under the owner's
 recorded continuation exception. This batch does not certify merge readiness.
+
+Observed hardening verification for implementation source
+`abf7d4fdd1130835a6360d17c471b662ed7ef3be`:
+
+- `ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check`
+  exited 0: 639 tests passed in 344.8 seconds. It includes design enforcement,
+  architecture, Credo and security checks. Expected failure-path logs did not
+  produce an ExUnit failure.
+- The same TEST prefix with `mix check.deep` exited 0 with zero errors/skips.
+  `mix test test/new_you_web/design_system_infrastructure_test.exs
+  test/new_you_web/live/design_system_live_test.exs` passed 35/35.
+- The DEV prefix with `mix assets.build` passed. `mix design.check` passed,
+  and `mix format --check-formatted` passed for the changed Elixir files.
+- With `BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools` and
+  `CHROME_PATH=/usr/bin/google-chrome`, run `node` on
+  `test/assets/design_token_scope_browser.mjs`,
+  `test/assets/design_system_browser.mjs`,
+  `test/assets/design_lighting_browser.mjs` and
+  `docs/development/research/design_math_browser.mjs`. All passed; the last
+  reports 212 assertions in Chrome 155. Lighting label contrast minima remain
+  5.08:1 at rest and 8.65:1 on hover/press.
+- `python3 docs/development/research/design_math_reference.py` passed 126
+  arithmetic assertions. `node --test test/assets/design_system_test.mjs`
+  passed 4/4. `mise exec -- python3 -m unittest
+  tests.test_foundation_lane_routing tests.test_foundation_smoke` passed 54/54.
+- The documented Hallmark command, using all three targets
+  `assets/css/design-tokens.css assets/css/design-components.css
+  assets/css/design-system.css`, rendered five screenshots and reported zero
+  FAIL/open REFLEX/WARN/rejected waivers and one existing gate 37 waiver.
+  Numeric font-weight tokens are not additional font families. The guide
+  renders were inspected; no redesign or audit workflow was invoked.
+- Bounded independent specification and quality reviewers found no actionable
+  source defects. The quality review's stale-plan-checkbox nit was corrected.
+  A comparison against `ea25cd3` confirms all literal token defaults unchanged.
+
+These commands exercised the implementation committed at the source SHA above;
+subsequent handoff/history changes contain no application-code changes. Hosted
+CI must still bind the final PR head independently. Chromium fallback selection
+does not establish Firefox/WebKit support or unsupported-engine behavior.
+
+Batch criteria: local propagation, numeric input enforcement and documented
+regression proof pass. Overall delivery remains BLOCKED by the inherited
+WELL-114 certification gap, with the owner's continuation exception preserved.
+Author self-assessment for this implementation batch: requirements 4/4,
+observed verification 2/3, correctness/architecture 2/2, handoff 1/1, raw 9/10,
+capped at 5/10 for the open delivery blocker. Confidence is 90%, based on the
+observed tests and bounded reviews; hosted checks and other browser engines
+remain uncertainty. To reach 8+/10 delivery evidence, the responsible independent
+reviewer must certify WELL-114/resulting-main proof and the final PR head with
+required hosted checks; the earlier DEV-toolbar Hallmark finding also remains
+recorded. No score grants merge authority.
