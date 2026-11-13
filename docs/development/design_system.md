@@ -509,3 +509,29 @@ remain uncertainty. To reach 8+/10 delivery evidence, the responsible independen
 reviewer must certify WELL-114/resulting-main proof and the final PR head with
 required hosted checks; the earlier DEV-toolbar Hallmark finding also remains
 recorded. No score grants merge authority.
+
+## Main guide button presentation correction, 2026-11-13
+
+The owner reported that the premium button treatment appeared reverted. The
+lighting CSS remained intact, but the main Buttons & links section and
+responsive preview still selected the flat component default. Both now
+explicitly use the existing `treatment="lit"` option. The main disabled example
+uses that treatment too. The labelled flat comparison remains in Lighting &
+depth. Shared component defaults and token values are unchanged.
+
+Implementation source: `f4418d3e2e6ba8cb0c47b696a1a022cee6339e59`.
+The LiveView regression first failed because the main primary example lacked
+`data-treatment="lit"`; the browser regression first failed because its computed
+background image was `none`. The final regression asserts the main example's
+actual gradient, distinct top/bottom borders and shadow, as well as the
+preview's lit primary and secondary components. This protects the presentation
+that previously passed generic component-presence checks.
+
+The existing focused command passed 35/35. Assets build, the Chrome guide and
+lighting proofs, deep engineering check and Python routing/smoke 54/54 passed.
+The supported three-target Hallmark render reported zero FAIL/open REFLEX/WARN
+and the existing numeric-weight waiver. The main button section render was
+inspected. A bounded independent source review found no actionable defect;
+it did not certify merge readiness. Full-suite and final-head history evidence
+is recorded below and in Plane. The existing handoff-map exemption and open
+WELL-114/resulting-main, DEV-toolbar and hosted-review gaps remain applicable.
