@@ -228,25 +228,25 @@
       "status": "modified"
     },
     {
-      "blob": "8c8d1b656d06ad2d39ed4ef6394d37a823f2b8fc",
+      "blob": "539ef6a07d1ee31093596a312693dba1dbb61f20",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "tests/test_well122_email_change_evidence.py",
-      "sha256": "7fe1c05154b4a8717eddf3901de7e7383c6ec727d18aa29146c665acf8438658",
+      "sha256": "be947c71d8ec903b6e33bf2216236498e222233c6ea8f4d3d7f35cae5e342645",
       "status": "added"
     },
     {
-      "blob": "fbad4f9d1016645cf006501f8d5fc8308c79cafa",
+      "blob": "fcc06274fe43281f101702a78deea080f7bb4422",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "tools/check_email_change_message_evidence.py",
-      "sha256": "ee1ba75c9c94390d2b69196cbd620945cdeb90a193736eca14f5665ab65ee543",
+      "sha256": "ea79a2aa880146707e499682518cd92a4887634e2f9a55b39024fef392c8d564",
       "status": "added"
     },
     {
