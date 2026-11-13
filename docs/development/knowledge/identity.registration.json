@@ -11,7 +11,7 @@
     "WELL-96"
   ],
   "implementation_revision": {
-    "git_sha": "d1dffd405ff335cc4389020dc8920d227b25a64c",
+    "git_sha": "f151b2916bddc0a080f0b1d911dac64a88e664af",
     "semantics": "Registration behavior remains unchanged. WELL-18 strengthens real HTTP evidence that a new Account and canonical duplicate render the same neutral public result class; no Account-existence result is added."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -508,7 +508,7 @@
       "id": "public_response_test",
       "path": "test/new_you_web/controllers/registration_controller_test.exs",
       "symbol": "duplicate canonical email receives the same neutral pending outcome",
-      "sha256": "456cffbbc34a08d374c1c7d97918ca328bbf3e1907d74f45fa4e52a5b5126618"
+      "sha256": "6b760b947197d6e34b2fd88853c66a9421854b49d292884da85d08f6423a317c"
     }
   ]
 }
