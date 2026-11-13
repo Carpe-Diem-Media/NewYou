@@ -6,8 +6,8 @@
     "WELL-17"
   ],
   "implementation_revision": {
-    "git_sha": "87bf56abc217342157e915be1238763677b37164",
-    "semantics": "Source checkpoint with final Session/Token assurance guards and due-operation assurance refresh; the capability map and generated PR history record follow in documentation-only commits."
+    "git_sha": "6bdf31bcfdac50db923a4b9dad363d2fde5a50b9",
+    "semantics": "Source checkpoint with current purpose-bound Session assurance enforced for all Accounts, including MFA-disabled Accounts, and fresh-password assurance renewal for due operations; the capability map and generated PR history record follow in documentation-only commits."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -121,7 +121,7 @@
         "For a requested operation, checks current credential/security versions and purpose-bound step-up, issues a new-address confirmation proof, and records its protected Communications intent and evidence obligation. For a due confirmed operation, requires fresh password and current purpose-bound assurance, then rebinds the existing operation to the current Session without reissuing proof or changing confirmation, delay or review state."
       ],
       "caller_constraints": [
-        "Active MFA enrollment requires a current TOTP step-up bound to the primary-email-change purpose. A new active Session can be rebound only after authentication against the still-canonical old email and the same operation identity."
+        "Every apply requires a current :change_primary_email Session step-up with unexpired time and matching MFA/security version bindings. Active MFA enrollment requires fresh TOTP step-up; when MFA is disabled, fresh password verification during reauthentication establishes or renews Session step-up. A new Session can be rebound only after authentication against the still-canonical old email and the same operation identity."
       ],
       "source_ids": [
         "identity_api",
@@ -165,7 +165,7 @@
         "Applied/already-applied, terminal held/rejected outcomes, or a uniform unavailable error."
       ],
       "side_effects": [
-        "Under the Account lock, reloads and locks the operation-bound Session and related Tokens, then rechecks operation/version identity, current Session and Token validity, purpose-bound MFA step-up, consumed proof, delay/review, Account posture and target uniqueness. Atomically applies canonical email, invalidates Sessions and Devices, establishes old-address notice intent and Audit evidence."
+        "Under the Account lock, reloads and locks the operation-bound Session and related Tokens, then rechecks operation/version identity, current Session and Token validity, purpose-bound Session step-up with MFA/security version bindings, consumed proof, delay/review, Account posture and target uniqueness. Active MFA retains its TOTP step-up; disabled MFA uses password-established Session step-up. Atomically applies canonical email, invalidates Sessions and Devices, establishes old-address notice intent and Audit evidence."
       ],
       "caller_constraints": [
         "Retries are idempotent. The apply operation and existing recovery completion serialize on the authoritative Account transaction."
@@ -280,7 +280,7 @@
       ]
     },
     {
-      "summary": "Fresh password and current session assurance are checked; active MFA requires purpose-bound step-up. Identity persists fixed signed claims and a Token proof while the bearer exists only for protected delivery.",
+      "summary": "Fresh password and current Session assurance are checked; every Account receives purpose-bound step-up, with active MFA requiring TOTP and disabled MFA using fresh password verification. Identity persists fixed signed claims and a Token proof while the bearer exists only for protected delivery.",
       "source_ids": [
         "lifecycle",
         "token",
@@ -1069,7 +1069,7 @@
       ]
     },
     {
-      "summary": "Final apply revalidates the persisted operation-bound Session and linked authentication Token under lock, including active state, absolute and idle deadlines, token purpose and expiry, and current purpose-bound MFA timestamp and version bindings. Logout, revocation, expiry or stale assurance denies apply without success evidence or security consequences.",
+      "summary": "Final apply revalidates the persisted operation-bound Session and linked authentication Token under lock, including active state, absolute and idle deadlines, token purpose and expiry, and current :change_primary_email step-up timestamp, expiry, MFA version and security version bindings for both MFA-enabled and MFA-disabled Accounts. Logout, revocation, expiry or stale assurance denies apply without success evidence or security consequences.",
       "source_ids": [
         "lifecycle",
         "account",
@@ -1157,7 +1157,7 @@
       ]
     },
     {
-      "summary": "A due, confirmed operation can regain fresh assurance after a five-minute step-up expires: authenticate to a current Session using the unchanged canonical email, complete fresh purpose-bound step-up when MFA is active, and call the existing reauthentication interface. The same operation, consumed proof, confirmation history, delay and review state remain in place; apply remains blocked until all original guards pass.",
+      "summary": "A due, confirmed operation can regain fresh assurance after a five-minute step-up expires: reauthenticate a current Session with the unchanged canonical email and fresh password, complete fresh purpose-bound TOTP step-up when MFA is active, then use the existing reauthentication interface. When MFA is disabled, that interface writes a new :change_primary_email Session step-up bound to current Account MFA/security versions after fresh password verification. The same operation, consumed proof, confirmation history, delay and review state remain in place; no duplicate proof is issued, and apply remains blocked until all original guards pass.",
       "source_ids": [
         "identity_api",
         "lifecycle",
@@ -1182,8 +1182,8 @@
         "active MFA purpose-bound step-up and development-only held Communications intents",
         "scanner-safe GET, explicit CSRF POST single-use proof consumption and canonical email unchanged before apply",
         "proof absence from logs, endpoint telemetry, ordinary rows, Oban jobs and selected E2 evidence",
-        "final-apply denial after logout, revocation, Session or Token expiry, cleared/wrong-purpose step-up, and stale MFA/security bindings with no apply consequences",
-        "delayed assurance refresh and valid Session rebinding preserve operation and confirmation; review remains independent",
+        "final-apply denial after logout, revocation, Session or Token expiry, cleared/wrong-purpose step-up, and stale MFA/security bindings for active-MFA and disabled-MFA Accounts with no apply consequences",
+        "delayed assurance refresh and valid Session rebinding preserve operation and confirmation; disabled-MFA fresh-password renewal and active-MFA TOTP renewal both apply after delay; review remains independent",
         "guarded apply, idempotent security consequences, restart/reconnect, stale target rejection and terminal states",
         "real PostgreSQL apply-versus-recovery competing transactions in both commit orderings",
         "real PostgreSQL Session logout-versus-apply lock contention in both transaction orderings",
@@ -1307,7 +1307,7 @@
       "id": "lifecycle",
       "path": "lib/new_you/identity/primary_email_change.ex",
       "symbol": "defmodule NewYou.Identity.PrimaryEmailChange",
-      "sha256": "3c724399df0142dd35f4662e9df8d14db9950ff220574e0222b3862b91637e29"
+      "sha256": "8e0936acbdc49f0b55676f71b21c008a769948775008696eda0f3b0a28dbb925"
     },
     {
       "id": "token",
@@ -1403,7 +1403,7 @@
       "id": "test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "defmodule NewYou.Identity.PrimaryEmailChangeTest",
-      "sha256": "0a510932485741623dd04620610f5857cd1eadebcc6228829b3f82bfe00b96d9"
+      "sha256": "dd4baa3a0e730ef7dfc426b71fd1e148569c82017db118e40a94cae2d0dc0642"
     },
     {
       "id": "restart_proof",

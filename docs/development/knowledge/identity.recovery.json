@@ -6,7 +6,7 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "87bf56abc217342157e915be1238763677b37164",
+    "git_sha": "6bdf31bcfdac50db923a4b9dad363d2fde5a50b9",
     "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1190,7 +1190,7 @@
       "id": "primary_email_change_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "primary-email apply and recovery completion serialize",
-      "sha256": "0a510932485741623dd04620610f5857cd1eadebcc6228829b3f82bfe00b96d9"
+      "sha256": "dd4baa3a0e730ef7dfc426b71fd1e148569c82017db118e40a94cae2d0dc0642"
     },
     {
       "id": "manual_test",
