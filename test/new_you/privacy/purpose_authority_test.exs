@@ -163,6 +163,38 @@ defmodule NewYou.Privacy.PurposeAuthorityTest do
     end)
   end
 
+  test "PostgreSQL rejects an initial withdrawn authority even with matching history" do
+    P805.with_fixture(fn ->
+      subject_id = Ecto.UUID.generate()
+      operation_id = Ecto.UUID.generate()
+      authority_id = Ecto.UUID.generate()
+
+      assert_raise Postgrex.Error, ~r/privacy_purpose_authorities_initial_state/, fn ->
+        Repo.transaction(fn ->
+          Repo.query!(
+            """
+            INSERT INTO privacy_purpose_authorities
+              (id, subject_id, source_operation_id, purpose, state, origin, version)
+            VALUES ($1, $2, $3, 'p8_17_protected_mutation', 'withdrawn',
+                    'p8_17_test_fixture', 2)
+            """,
+            Enum.map([authority_id, subject_id, operation_id], &Ecto.UUID.dump!/1)
+          )
+
+          Repo.query!(
+            """
+            INSERT INTO privacy_purpose_events
+              (authority_id, subject_id, source_operation_id, purpose, transition, origin, version)
+            VALUES ($1, $2, $3, 'p8_17_protected_mutation', 'withdrawn',
+                    'p8_17_test_fixture', 2)
+            """,
+            Enum.map([authority_id, subject_id, operation_id], &Ecto.UUID.dump!/1)
+          )
+        end)
+      end
+    end)
+  end
+
   test "concurrent first grants resolve to one current authority and one event" do
     P805.with_fixture(fn ->
       request = P805.request()
