@@ -1,6 +1,6 @@
 ---
 name: code-change-verification
-description: Use before handoff or any merge recommendation for a NewYou change. Covers exact diff review, exact head SHA, Mise-pinned mix check and mix check.deep, architecture invariants, no accidental governance edits, Plane reconciliation, required CI state and a clean worktree.
+description: Use before handoff or any merge recommendation for a NewYou change. Covers exact diff/head, Mise-pinned local checks, pre-handoff independent OCR evidence for material engineering changes, architecture invariants, Plane reconciliation, exact-head CI and a clean worktree.
 ---
 
 # NewYou Change Verification
@@ -16,8 +16,25 @@ Do not claim success without evidence from this exact head.
 7. **Confirm architecture and lifecycle invariants:** `mise exec -- devcore-project run test -- mix check.architecture` passes; no new Repo, raw-SQL or Multi business writes; no Redis, extra Repo or speculative infrastructure; Tidewave remains DEV-only.
 8. **Confirm the CI-sensitive scope.** Foundation Full runs only through nightly hardening and is not selected by PR paths. Every PR runs Foundation Smoke; classified application/engineering changes also run their routed Application CI and Hex audit lanes. Unknown or unreadable ranges fail routing. Explain any routing-sensitive changes against the ticket.
 9. **Reconcile Plane.** Confirm the issue state, blockers, dependency relations and follow-ups. Nothing delivery-affecting may remain only in chat, PR comments or TODOs.
-10. **Confirm required CI state** on the PR head SHA: required `Foundation Integrity` and any routed Application CI lanes are green for this SHA. Follow `docs/development/foundation-integrity-merge-gate.md`. Foundation Full is deferred to nightly hardening and is not part of PR certification.
-11. **Confirm a clean worktree** with `git status --short` empty, then report the exact head SHA, every exact command and observed result, resolved Elixir/Erlang/OTP versions, Plane state and remaining risks.
+10. **Run and record the independent OCR checkpoint before review handoff.** After applicable local gates pass, run `ocr review --from origin/main --to HEAD` for material engineering changes and capture all findings, exclusions, the scanned implementation SHA and tool outcome using the procedure below. For trivial/cosmetic or documentation-only changes, record a justified exemption.
+11. **Confirm required CI state** on the final PR head SHA: required `Foundation Integrity` and any routed Application CI lanes are green for this SHA. Follow `docs/development/foundation-integrity-merge-gate.md`. Foundation Full is deferred to nightly hardening and is not part of PR certification.
+12. **Confirm a clean worktree** with `git status --short` empty, then report the exact head SHA, every exact command and observed result, resolved Elixir/Erlang/OTP versions, Plane state, OCR disposition/evidence and remaining risks.
+
+## Independent OCR checkpoint (material engineering PRs)
+
+Run this **after applicable targeted, fast, deep and architecture checks pass** and before declaring the implementation ready for Master Gate. The PR may subsequently gain the required generated PR-history commit; record both the OCR-scanned implementation SHA and final PR head. Refresh `origin/main` and verify the intended comparison base before running:
+
+```bash
+git rev-parse HEAD
+git merge-base origin/main HEAD
+ocr review --from origin/main --to HEAD
+```
+
+Preserve an **OCR Review Findings** section in the PR description with: exact command and observed result; scanned implementation SHA and comparison base; file counts and every excluded/unreadable path or unsupported extension (for example `.heex`); all findings with reported severity, path/line and a concise accurate summary; the agent's preliminary assessment (not a ruling); and tool errors, blind spots, or the explicit exemption rationale. A zero-finding result must still state coverage/exclusions. Redact secrets and sensitive material; do not paste credentials or raw sensitive logs.
+
+**Do not silently fix, suppress or disregard OCR findings.** Do not automatically implement OCR suggestions. Credible urgent security, privacy or data-integrity exposure must be reported immediately, with the PR left Draft/Blocked for independent review; necessary immediate containment is allowed. If OCR cannot run for a material change, report the exact blocker rather than claiming the scan passed or an exemption. Material excluded paths remain subject to normal manual diff review.
+
+Master Gate, not the author agent or OCR, independently evaluates each finding against code, execution context, durable authority and tests and records one disposition: `CONFIRMED BLOCKER`, `NON-BLOCKING`, `FALSE POSITIVE` or `NEEDS EVIDENCE`, with a reason. Only confirmed blockers are automatic merge blockers; unresolved material evidence can prevent certification until resolved. Author agents correct confirmed blockers or explicitly directed non-blocking items only. If implementation/source files change, rerun applicable local checks and OCR; any head change requires fresh exact-head CI and independent certification. Do not make OCR a CI failure based on advisory finding count.
 
 ## Implementation handoff review
 

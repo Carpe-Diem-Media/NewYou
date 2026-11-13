@@ -391,6 +391,14 @@ Ordinary JIT implementation choices do not justify governance amendments merely 
 
 Investigate material Foundation Full regressions reported by a nightly run against `main`, and use the recorded run SHA to identify affected changes.
 
+### Independent OCR review checkpoint
+
+For material engineering changes (application code, dependencies, migrations, authentication/authorization, security/privacy, lifecycles or cross-Domain behaviour), pass applicable local engineering checks first. Then run `ocr review --from origin/main --to HEAD` against the implementation SHA before independent Master Gate handoff. The command must use the current intended `origin/main` baseline. Follow `.agents/skills/code-change-verification/SKILL.md` for coverage, exclusions and evidence.
+
+OCR findings are **advisory review evidence**, not instructions to auto-fix code and not merge authority. The implementing agent records every finding, severity, source location, scan omissions/errors, the scanned implementation SHA and a brief preliminary assessment in the PR; do not silently discard, auto-dismiss or automatically implement proposed fixes. If findings contain secrets, report them in redacted form and use the existing security reporting boundary. Credible urgent security/privacy/data-integrity exposure must be escalated promptly; keep the PR Draft/Blocked pending review and perform only necessary immediate containment.
+
+ChatGPT Master Gate independently evaluates the full exact-head diff and CI plus the OCR findings against actual code, governing authority and execution context. Classify findings as `CONFIRMED BLOCKER`, `NON-BLOCKING`, `FALSE POSITIVE` or `NEEDS EVIDENCE`, with a rationale; only confirmed blockers prevent merge. A new implementation commit requires refreshed applicable local checks, OCR and exact-head CI/review. Trivial/cosmetic or documentation-only changes may record an explicit OCR exemption with a reason. OCR never replaces the required full-diff security review.
+
 Before handoff:
 
 - verify the complete diff;

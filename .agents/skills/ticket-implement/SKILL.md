@@ -183,7 +183,8 @@ At minimum:
 - inspect the complete final diff;
 - verify required handoff source links and material claims, including a cold-start walkthrough for a new substantial slice, against the exact head;
 - resolve the exact base and head SHAs;
-- verify no secrets/sensitive payloads leaked into code, logs, fixtures, jobs, or evidence.
+- verify no secrets/sensitive payloads leaked into code, logs, fixtures, jobs, or evidence;
+- **after applicable local checks pass**, complete the independent OCR checkpoint in `code-change-verification` for material engineering changes, preserving findings and coverage exclusions without automatically editing code. Document a reasoned exemption for trivial/cosmetic or documentation-only changes.
 
 For DB-dependent commands, use the DevCore workflow in `AGENTS.md` when configured.
 
@@ -195,10 +196,11 @@ When the implementation and required local verification are review-ready:
 
 1. create or update the PR;
 2. confirm the PR contains only authorised ticket scope;
-3. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
-4. record material JIT choices and discovered work in Plane/PR evidence where useful;
-5. hand off for independent Master Gate review, including the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
-6. follow the eligible founder-development route in the merge-gate procedure. ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the final head. That review is both technical approval and standing merge authorization. Do not add a second comment or a base-SHA line. Keep any stronger approval that an actual governing or external obligation requires.
+3. include an `OCR Review Findings` section containing the scanned implementation SHA, all advisory findings/exclusions and preliminary assessments (or an explicit exemption), as required by `code-change-verification`; do not auto-fix OCR findings;
+4. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
+5. record material JIT choices and discovered work in Plane/PR evidence where useful;
+6. hand off for independent Master Gate review, including OCR adjudication, the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
+7. follow the eligible founder-development route in the merge-gate procedure. ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the final head. That review is both technical approval and standing merge authorization. Do not add a second comment or a base-SHA line. Keep any stronger approval that an actual governing or external obligation requires.
 
 Report:
 
@@ -209,6 +211,7 @@ Report:
 - material JIT decisions and why they are compliant;
 - migrations/constraints/lifecycle implications where relevant;
 - tests/checks actually run and observed results;
+- OCR command, scanned implementation SHA, findings/coverage and Master Gate handoff (or documented exemption);
 - discovered/deferred Plane work;
 - remaining review risks or known non-PR failures.
 
