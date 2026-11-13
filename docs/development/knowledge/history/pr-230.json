@@ -1,0 +1,118 @@
+{
+  "base_sha": "cd88e4dea92edef40777d02bb788d40b87d79eca",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/230/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/230/commits",
+  "files": [
+    {
+      "blob": "e7380e5258594584ce587ccd1c7dd7f8ddfe9545",
+      "mode": "100644",
+      "old_blob": "e333933f4e8dd6d6eb62349fc9fa08bfba0bc336",
+      "old_mode": "100644",
+      "old_path": ".agents/skills/code-change-verification/SKILL.md",
+      "old_sha256": "8b8c6f801b981823421dbdc8d6aea36cbd0e04c3ca8229ae920993f9786a5fe7",
+      "path": ".agents/skills/code-change-verification/SKILL.md",
+      "sha256": "8980b7b9b1fa4c27a51b8b772e4aad93a4fe96fecd72974cc30e06dd80be7112",
+      "status": "modified"
+    },
+    {
+      "blob": "c82f633480673afb5342f9c3dd87a6b769450fcd",
+      "mode": "100644",
+      "old_blob": "3c6cd28965c4e407a8a587bbcfab20a5067e3ab5",
+      "old_mode": "100644",
+      "old_path": ".agents/skills/ticket-implement/SKILL.md",
+      "old_sha256": "54120c6b7275bb4d04768f1def5cb75a225812859a80fcd9ab3e9bed34ad3290",
+      "path": ".agents/skills/ticket-implement/SKILL.md",
+      "sha256": "010291cb9526991edd41c7b5559ae8cc6039612c023c09c7c5b2185049d05963",
+      "status": "modified"
+    },
+    {
+      "blob": "5fdfc307b572b75d04a4dc07aea62f94c00e2b4e",
+      "mode": "100644",
+      "old_blob": "4e7ddb63cfeede648c853fbe87371180d5d1f173",
+      "old_mode": "100644",
+      "old_path": "AGENTS.md",
+      "old_sha256": "2e02859ecfe8ed55cbc2cf745d41e0ee62c67a3175afbef6a79fae8270a42d95",
+      "path": "AGENTS.md",
+      "sha256": "e30155da94314cc8402fdaa30b23c16f104a57926f6b8ea941ee26922f4e74e5",
+      "status": "modified"
+    },
+    {
+      "blob": "61e43d5eefa86e0dd936f7f20f5946fe48d0c0fb",
+      "mode": "100644",
+      "old_blob": "3b19e07d06ab5cb443190a46c1af096c30ef4bc6",
+      "old_mode": "100644",
+      "old_path": "docs/development/chatgpt-project-master-gate-instructions.md",
+      "old_sha256": "6197ff459fa69163f7eca2ede93d2cc26d18f5eb34f769d43b358e2e05043844",
+      "path": "docs/development/chatgpt-project-master-gate-instructions.md",
+      "sha256": "698bceba6c4ce591b13f01b8d1e29035428abb3d317b88e7584d0826742b482d",
+      "status": "modified"
+    },
+    {
+      "blob": "14ffa7825df734f21e1aef1c8ea8081f50fd07de",
+      "mode": "100644",
+      "old_blob": "77729cba1644a23225e54ddfaa05d32b7a8431a5",
+      "old_mode": "100644",
+      "old_path": "docs/development/implementation-handoff-standard.md",
+      "old_sha256": "288da55f9c25d810cdec6173bfa7b73ed7ec3bca671f910b55bc6bae4766622b",
+      "path": "docs/development/implementation-handoff-standard.md",
+      "sha256": "2fc0e014d36895f8089c1ec977f423c66bdc836ea45f74d047c796e0fc3e048d",
+      "status": "modified"
+    },
+    {
+      "blob": "a3006f7f077218519e66fa17ad3da39ec677e96c",
+      "mode": "100644",
+      "old_blob": "7006fc51f200da01f9f3124473f5c5c34d4157d0",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/README.md",
+      "old_sha256": "2ec92e74b656e4faee81168e8316104430e5feea0c9abbbfea48ab6f7346e3fb",
+      "path": "docs/development/knowledge/README.md",
+      "sha256": "3a35347271f4fc91d91528dc360ec0bdc11361780edae0eca6a457a25f106566",
+      "status": "modified"
+    },
+    {
+      "blob": "1f41388baad0bc784aa7a647b6054712c2529734",
+      "mode": "100644",
+      "old_blob": "eda5c6cccac0b9c3d0fbfdca8076ad1bcab34dee",
+      "old_mode": "100644",
+      "old_path": "docs/development/solo-founder-merge-handoff.md",
+      "old_sha256": "70aeb216dd83fe01ee44af93ea25e91f9835bf25ba7a0a13c7dd487fa77a7113",
+      "path": "docs/development/solo-founder-merge-handoff.md",
+      "sha256": "5f3992279bb3c17337782d69595c66df1d96eb6556d1d4bf212139de154d4413",
+      "status": "modified"
+    },
+    {
+      "blob": "394aac27229868ab482fb045bcc53c6cc23172fd",
+      "mode": "100644",
+      "old_blob": "8ef88fe4a77f7e356daf76846ff76e0fd608547c",
+      "old_mode": "100644",
+      "old_path": "tests/test_knowledge_capture.py",
+      "old_sha256": "1ff630fa1433ca22541193a632d3160059a8b4c060a46206343280759d44cc15",
+      "path": "tests/test_knowledge_capture.py",
+      "sha256": "9c067c1147c3aef3f1aeddc9902b9725411d5411159c98c9f1bc94ddc3f683d2",
+      "status": "modified"
+    },
+    {
+      "blob": "213245e19b755374400591fa31d2935429d2f428",
+      "mode": "100644",
+      "old_blob": "feb99aac30081906e4934eae324938ba13a33941",
+      "old_mode": "100644",
+      "old_path": "tools/knowledge_capture.py",
+      "old_sha256": "7abf14cf7820b2ac3602a01233d9274cf0d9e6e19cda4bfd53975864d0862d82",
+      "path": "tools/knowledge_capture.py",
+      "sha256": "d9b1aecf8a80062b06658a97e080a72fb7d1b466384e30ea5ca797d9da66ae2b",
+      "status": "modified"
+    }
+  ],
+  "migrations": [],
+  "pr": 230,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/230",
+  "range_base_sha": "cd88e4dea92edef40777d02bb788d40b87d79eca",
+  "schema_version": 1,
+  "symbols": [],
+  "tests": [
+    "tests/test_knowledge_capture.py"
+  ],
+  "tickets": [
+    "WELL-123"
+  ]
+}
