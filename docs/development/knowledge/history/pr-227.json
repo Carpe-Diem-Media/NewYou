@@ -118,14 +118,14 @@
       "status": "added"
     },
     {
-      "blob": "baa993b36db08909eec1c4d074f60e812a1f6967",
+      "blob": "dfeef441ffe2bf2afef1d95562033f419c031ea3",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "259a48496ca9dde8ffacedaf3beee128ffd7428859d6df11f0877efaf3104ce2",
+      "sha256": "970b4d073186a7bba8f4c2a1883421bd5aeeb688b5fec492cbf5fdefaabc253a",
       "status": "modified"
     },
     {
@@ -338,14 +338,14 @@
       "status": "added"
     },
     {
-      "blob": "12eed88936c70c6532f7f4ecf8f7d031da4f998f",
+      "blob": "de2ff9f4a1dc22283ce0b1d5317c973212a631c7",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.html.heex",
-      "sha256": "a2b072c464f2a0dade2ef6b311743302321484357e9a2d561d61aeb8ebbacf91",
+      "sha256": "1165acfadb3466414df9abd7b88d9725a5b90d0eedc7155471023a053caad3f8",
       "status": "added"
     },
     {
@@ -404,14 +404,14 @@
       "status": "added"
     },
     {
-      "blob": "2ab27daad78b77bfecd594bb67fbffde8de654ab",
+      "blob": "99bc167ed2acca6c3d85b3dc88333d4ae3235b34",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_system_browser.mjs",
-      "sha256": "1aac4f42646646eee3c808696de04f96996023293a1f64eba9fee0a72f021ff9",
+      "sha256": "0a1c1a7c3bd74532dad6a213c0bc67e983b52d17c5dc3c9c88bd481d941c1b55",
       "status": "added"
     },
     {
@@ -503,14 +503,14 @@
       "status": "modified"
     },
     {
-      "blob": "4e31c77f8c6123b2bb6f488917bdd10bcd5047ec",
+      "blob": "5e936f2f50cb0d3f89f59df46cb1ce7ac0e7c97c",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "b507cb50bd362de47e2f0b75759f429bcaf9bea0e954422db4d61f299170c80d",
+      "sha256": "876b05ea6c4e1f816a38fb9abba90b2c06c81640e4a4ef7cc355b07fdb3dabc0",
       "status": "added"
     },
     {
@@ -564,13 +564,13 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The guide exposes those options for refinement. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.",
+    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.",
     "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-13T05:17:24.576020Z",
+    "checked_at": "2026-11-13T06:28:26.966590Z",
     "items": [
       {
         "description_sha256": "37e40677ccfc39b60b5e720efb6483fcc3575d647c09ff296a9e8faedd4a3e32",
@@ -1350,7 +1350,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "e1b1797944822b0fbc3ad34f723b54a4e71e8ebd8aa08ad2c330374f6afdde70",
+      "sha256": "fd3b71438dac6e4c7316aab2851f9e093fc4b1921be3dea9b2c8baa25a02c949",
       "status": "parsed"
     },
     {
