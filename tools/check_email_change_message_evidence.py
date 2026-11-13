@@ -46,6 +46,7 @@ PRODUCT_DOCUMENTS = {
 
 MESSAGE_VERSIONS = {
     ("primary_email_change_confirmation_message", "en"): {
+        "communications_role": "email_change_confirmation",
         "path": EVIDENCE_DIR / "confirmation-en-v1.txt",
         "bytes": 454,
         "sha256": "225434e7cbdb52d7ea9a092927acbc8b9acde9a07b89f2572b633b3eb8b63ae5",
@@ -58,6 +59,7 @@ MESSAGE_VERSIONS = {
         ],
     },
     ("primary_email_change_confirmation_message", "af"): {
+        "communications_role": "email_change_confirmation",
         "path": EVIDENCE_DIR / "confirmation-af-v1.txt",
         "bytes": 498,
         "sha256": "be8a5049931e2a942c88fa4159715e0c0c460b55879a3d6b7a780d4f7f26e204",
@@ -70,6 +72,7 @@ MESSAGE_VERSIONS = {
         ],
     },
     ("primary_email_change_old_address_notice", "en"): {
+        "communications_role": "email_change_old_address_notice",
         "path": EVIDENCE_DIR / "notice-en-v1.txt",
         "bytes": 327,
         "sha256": "937b7aa3fb0018f12157946c7ace16d30503ddba8ab52f2a446cff98a1505abc",
@@ -82,6 +85,7 @@ MESSAGE_VERSIONS = {
         ],
     },
     ("primary_email_change_old_address_notice", "af"): {
+        "communications_role": "email_change_old_address_notice",
         "path": EVIDENCE_DIR / "notice-af-v1.txt",
         "bytes": 369,
         "sha256": "6effc50c65c2e592ac237984b236f3d4aa1723f92378268d424fc05810571f3e",
@@ -93,6 +97,20 @@ MESSAGE_VERSIONS = {
             {"literal": "{{support_contact}}", "type": "approved_non_secret_support_contact", "fields": ["body"]},
         ],
     },
+}
+
+EXPECTED_ELIGIBILITY = {
+    "development": True,
+    "automated_tests": True,
+    "development_environments": True,
+    "bounded_p8_16_proof": True,
+    "runtime_release": False,
+    "publication": False,
+    "production": False,
+    "public_release": False,
+    "paid_pilot": False,
+    "real_participant_delivery": False,
+    "phase_9": False,
 }
 
 APPROVAL_ROLES = {
@@ -200,8 +218,9 @@ def check_delivery_route(root: Path, packet: dict[str, Any], errors: list[str]) 
         errors.append("delivery must remain disabled")
     if packet.get("support_contact_bound") is not False:
         errors.append("support contact must remain unbound")
-    if packet.get("runtime_release_eligible") is not False:
-        errors.append("runtime and release eligibility must remain disabled")
+    for field in ("runtime_release", "runtime_release_eligible"):
+        if packet.get(field) is not False:
+            errors.append(f"{field} must remain disabled")
 
 
 def check_attribution(root: Path, packet: dict[str, Any], errors: list[str]) -> None:
@@ -269,7 +288,7 @@ def check_message(root: Path, packet: dict[str, Any], message: dict[str, Any], e
         errors.append("unknown message type or locale")
         return
 
-    for field in ("path", "bytes", "sha256", "content_item_id", "content_version_id", "translation_version_id"):
+    for field in ("path", "bytes", "sha256", "content_item_id", "content_version_id", "translation_version_id", "communications_role"):
         value = expected[field]
         if field == "path":
             value = value.as_posix()
@@ -369,6 +388,15 @@ def validate_packet(root: Path, packet: dict[str, Any]) -> list[str]:
     except OSError:
         errors.append("Product classification proposal is missing")
 
+    eligibility = packet.get("eligibility")
+    # Identity checks reject JSON numbers such as 0/1 as well as missing,
+    # extra or contradictory grants. This map is an authority allowlist.
+    if (
+        not isinstance(eligibility, dict)
+        or set(eligibility) != set(EXPECTED_ELIGIBILITY)
+        or any(eligibility[key] is not allowed for key, allowed in EXPECTED_ELIGIBILITY.items())
+    ):
+        errors.append("development-only eligibility map mismatch")
     if packet.get("scope") != expected_scope:
         errors.append("development-only applicability mismatch")
     if packet.get("latest_alias") is not False or packet.get("silent_locale_fallback") is not False:

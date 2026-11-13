@@ -13,6 +13,55 @@ class EmailChangeEvidenceTest(unittest.TestCase):
     def test_owner_approved_versions_validate_as_development_eligible(self):
         self.assertEqual([], evidence.validate(ROOT))
 
+    def test_eligibility_requires_exact_keys_and_boolean_values(self):
+        packet = json.loads((ROOT / evidence.PACKET_PATH).read_text())
+        for field, allowed in packet['eligibility'].items():
+            for invalid in (not allowed, None, int(allowed), str(allowed).lower()):
+                with self.subTest(field=field, invalid=invalid):
+                    changed = copy.deepcopy(packet)
+                    changed['eligibility'][field] = invalid
+                    self.assertIn('development-only eligibility map mismatch', evidence.validate_packet(ROOT, changed))
+            with self.subTest(missing=field):
+                changed = copy.deepcopy(packet)
+                del changed['eligibility'][field]
+                self.assertIn('development-only eligibility map mismatch', evidence.validate_packet(ROOT, changed))
+        for invalid in (None, [], {}, dict(packet['eligibility'], invented_authority=False)):
+            with self.subTest(eligibility=invalid):
+                changed = copy.deepcopy(packet)
+                changed['eligibility'] = invalid
+                self.assertIn('development-only eligibility map mismatch', evidence.validate_packet(ROOT, changed))
+        del packet['eligibility']
+        self.assertIn('development-only eligibility map mismatch', evidence.validate_packet(ROOT, packet))
+
+    def test_runtime_release_flags_are_separately_required_false(self):
+        packet = json.loads((ROOT / evidence.PACKET_PATH).read_text())
+        for field in ('runtime_release', 'runtime_release_eligible'):
+            for invalid in (True, None, 0, 'false'):
+                with self.subTest(field=field, invalid=invalid):
+                    changed = copy.deepcopy(packet)
+                    changed[field] = invalid
+                    self.assertIn(f'{field} must remain disabled', evidence.validate_packet(ROOT, changed))
+            changed = copy.deepcopy(packet)
+            del changed[field]
+            self.assertIn(f'{field} must remain disabled', evidence.validate_packet(ROOT, changed))
+
+    def test_each_version_requires_its_exact_communications_role(self):
+        packet = json.loads((ROOT / evidence.PACKET_PATH).read_text())
+        for index, message in enumerate(packet['messages']):
+            swapped_role = (
+                'email_change_old_address_notice'
+                if message['communications_role'] == 'email_change_confirmation'
+                else 'email_change_confirmation'
+            )
+            for invalid in (swapped_role, 'invented_role', None):
+                with self.subTest(type=message['type'], locale=message['locale'], role=invalid):
+                    changed = copy.deepcopy(packet)
+                    changed['messages'][index]['communications_role'] = invalid
+                    self.assertIn('immutable message identity mismatch: communications_role', evidence.validate_packet(ROOT, changed))
+            changed = copy.deepcopy(packet)
+            del changed['messages'][index]['communications_role']
+            self.assertIn('immutable message identity mismatch: communications_role', evidence.validate_packet(ROOT, changed))
+
     def test_any_byte_change_fails_closed(self):
         packet = json.loads((ROOT / evidence.PACKET_PATH).read_text())
         changed = copy.deepcopy(packet)
