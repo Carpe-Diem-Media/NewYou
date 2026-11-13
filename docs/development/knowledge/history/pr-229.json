@@ -295,16 +295,16 @@
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-12T21:36:00Z",
+    "checked_at": "2026-11-13T04:43:56Z",
     "items": [
       {
-        "description_sha256": "25beff4441f53d827119f53b16b52cd8551e1ec07c051d2bb916d04daf81debd",
+        "description_sha256": "abcb7e7d45311f90940da4c31a2287090e00dab51a1555df4fbfe8807ef59e73",
         "id": "330aabfe-f4e5-48f4-9191-36be3d453e75",
         "identifier": "WELL-122",
         "name": "WELL-17 upstream \u2014 approve primary-email-change EN/AF confirmation and old-address notice development content",
         "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
         "sequence_id": 122,
-        "state": "Planning"
+        "state": "Changes Requested"
       }
     ],
     "source": "connected-plane",
