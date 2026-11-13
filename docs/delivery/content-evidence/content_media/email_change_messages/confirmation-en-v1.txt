@@ -1,0 +1,11 @@
+subject: Confirm your new email address
+
+A request was received to change the email address of a {{platform_name}} account to this address.
+
+To confirm that you have access to this email address, click the link below and follow the instructions:
+
+{{email_change_confirmation_link}}
+
+Confirming this email address does not mean the account's primary email address will change immediately.
+
+If you did not request this change, you can ignore this message.

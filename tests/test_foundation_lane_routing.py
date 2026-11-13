@@ -88,6 +88,7 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
         for path in [
             "tools/check_magic_login_evidence.py",
             "tools/check_password_reset_message_evidence.py",
+            "tools/check_email_change_message_evidence.py",
         ]:
             with self.subTest(path=path):
                 self.assertEqual("application", classify_path(path))

@@ -212,6 +212,14 @@
       "sha256": "83a44a10763181f46bbab2d6de99cf67854a18623a174746095628ae55bbeea7",
       "contract_type": "content_evidence",
       "status": "DEVELOPMENT_ONLY_APPROVED; RUNTIME_RELEASE_PROHIBITED"
+    },
+    {
+      "document_id": "PRIMARY_EMAIL_CHANGE_MESSAGE_DEVELOPMENT_EVIDENCE",
+      "canonical_filename": "CANDIDATE_EVIDENCE_v1.json",
+      "repository_path": "docs/delivery/content-evidence/content_media/email_change_messages/CANDIDATE_EVIDENCE_v1.json",
+      "sha256": "3db7668d20090ec5b53c7ba2213865ab64818e52f87d4da99b2e986ed19355df",
+      "contract_type": "content_evidence",
+      "status": "DEVELOPMENT_ONLY_APPROVED; DELIVERY_DISABLED"
     }
   ]
 }

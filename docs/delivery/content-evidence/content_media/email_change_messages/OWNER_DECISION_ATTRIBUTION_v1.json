@@ -1,0 +1,82 @@
+{
+  "record_id": "WELL-122-OWNER-DECISION-ATTRIBUTION-V1",
+  "attribution": "One direct owner decision covers several capacities; each capacity is mapped separately to exact artifacts. No separate human actors or separate per-role owner approval events are claimed.",
+  "source_comments": [
+    {
+      "id": "a2214bde-85ea-4799-80d0-61b864afc41d",
+      "plane_work_item": "WELL-122",
+      "record_type": "agent_authored_trace_of_direct_owner_message",
+      "scope": "Records the direct owner approval of Product classifications, development-only bounds, English bodies, four subject lines and deferred support_contact binding."
+    },
+    {
+      "id": "b9a4839e-def6-4856-aa1a-2d602743c101",
+      "plane_work_item": "WELL-122",
+      "record_type": "agent_authored_trace_of_direct_owner_message",
+      "scope": "Records the direct owner approval of the two refined Afrikaans message bodies."
+    }
+  ],
+  "actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+  "capacity_basis": {
+    "content_media_owner": "WELL-110-OWNER-APPROVALS-V1:677c7f35-cd92-4723-afcf-ee71ffb7e446",
+    "english_language_reviewer": "WELL-110-OWNER-APPROVALS-V1:677c7f35-cd92-4723-afcf-ee71ffb7e446",
+    "afrikaans_language_reviewer": "WELL-110-OWNER-APPROVALS-V1:677c7f35-cd92-4723-afcf-ee71ffb7e446"
+  },
+  "role_decisions": [
+    {
+      "role": "Product owner",
+      "decision": "approve",
+      "scope": "Both approved Product classifications and development-only lifecycle.",
+      "source_comments": [
+        "a2214bde-85ea-4799-80d0-61b864afc41d"
+      ],
+      "owner_decision_actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "separate_owner_event_claimed": false
+    },
+    {
+      "role": "Content & Media owner",
+      "decision": "approve",
+      "scope": "All four exact immutable locale artifacts and approved typed-token scope.",
+      "source_comments": [
+        "a2214bde-85ea-4799-80d0-61b864afc41d"
+      ],
+      "owner_decision_actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "separate_owner_event_claimed": false
+    },
+    {
+      "role": "English Language Reviewer",
+      "source_comment": "a2214bde-85ea-4799-80d0-61b864afc41d",
+      "decision": "approve",
+      "scope": "Both exact EN message versions and their EN subject lines.",
+      "source_comments": [
+        "a2214bde-85ea-4799-80d0-61b864afc41d"
+      ],
+      "owner_decision_actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "separate_owner_event_claimed": false
+    },
+    {
+      "role": "Afrikaans Language Reviewer",
+      "source_comment": "a2214bde-85ea-4799-80d0-61b864afc41d",
+      "decision": "approve",
+      "scope": "Both exact AF message versions and their AF subject lines; the AF bodies have prior direct owner approval.",
+      "source_comments": [
+        "a2214bde-85ea-4799-80d0-61b864afc41d",
+        "b9a4839e-def6-4856-aa1a-2d602743c101"
+      ],
+      "owner_decision_actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "separate_owner_event_claimed": false
+    }
+  ],
+  "independent_human_approvals_claimed": false,
+  "support_contact": {
+    "state": "deferred_unbound",
+    "delivery_enabled": false
+  },
+  "runtime_release": false,
+  "decision_source": {
+    "kind": "direct_owner_messages_in_this_conversation",
+    "owner_actor_id": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+    "product_content_and_subjects": "The owner message “Approved as proposed” approved the proposed two classifications, development-only risk bounds, English bodies, all four subject lines, and deferred support_contact binding.",
+    "afrikaans_bodies": "The owner separately stated “I approve the text I sent” and explicitly approved the two refined Afrikaans bodies.",
+    "trace_recording_note": "Plane comments a2214bde-85ea-4799-80d0-61b864afc41d and b9a4839e-def6-4856-aa1a-2d602743c101 were written by the agent to record those direct user messages. They are provenance pointers, not direct owner-authored Plane comments or additional owner approval events."
+  }
+}

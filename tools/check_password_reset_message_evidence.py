@@ -115,12 +115,22 @@ EXPECTED_PROMOTED_GOVERNANCE = {
 }
 EXPECTED_CURRENT_GOVERNANCE = {
     "PLATFORM_PRODUCT_LAW": {
+        "repository_path": "docs/governance/product/00_PLATFORM_v1.17.0.md",
+        "sha256": "ad38c25c49ba9d1de40e90d74b494705156605af724bc0e1d5a66d38b81cc39f", "semver": "1.17.0",
+    },
+    "PRODUCT_DECISIONS": {
+        "repository_path": "docs/governance/product/01_DECISIONS_v1.17.0.md",
+        "sha256": "1d2c3cf6ec3ea4cd318ceccda8fa0a9b2c9797eec8f934a399e8d59f93090d8b", "semver": "1.17.0",
+    },
+}
+EXPECTED_CURRENT_GOVERNANCE_PREDECESSORS = {
+    "PLATFORM_PRODUCT_LAW": {
         "repository_path": "docs/governance/product/00_PLATFORM_v1.16.0.md",
-        "sha256": "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174", "semver": "1.16.0",
+        "sha256": "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174",
     },
     "PRODUCT_DECISIONS": {
         "repository_path": "docs/governance/product/01_DECISIONS_v1.16.0.md",
-        "sha256": "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8", "semver": "1.16.0",
+        "sha256": "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8",
     },
 }
 RECOVERY_PROPOSAL_PATH = "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md"
@@ -1217,13 +1227,26 @@ def validate_development(root: Path) -> dict[str, Any]:
         record(sha256(proposal_path.read_bytes()) == RECOVERY_PROPOSAL_SHA, "recovery proposal digest mismatch", findings)
     for document_id, prior in EXPECTED_PROMOTED_GOVERNANCE.items():
         current = EXPECTED_CURRENT_GOVERNANCE[document_id]
+        current_predecessor = EXPECTED_CURRENT_GOVERNANCE_PREDECESSORS[document_id]
         previous = safe_source_path(root, prior["repository_path"], findings)
         successor = safe_source_path(root, current["repository_path"], findings)
+        immediate_predecessor = safe_source_path(root, current_predecessor["repository_path"], findings)
         if previous:
             record(sha256(previous.read_bytes()) == prior["sha256"], "prior Product authority digest mismatch", findings)
+        if immediate_predecessor:
+            record(
+                sha256(immediate_predecessor.read_bytes()) == current_predecessor["sha256"],
+                "current Product authority predecessor digest mismatch",
+                findings,
+            )
         if successor:
             text = successor.read_text(encoding="utf-8")
-            record(f"**Predecessor:** `{prior['repository_path']}`" in text and "**SemVer transition:** `v1.15.0 → v1.16.0`" in text, "current Product authority lineage mismatch", findings)
+            record(
+                f"**Predecessor:** `{current_predecessor['repository_path']}`" in text
+                and "**SemVer transition:** `v1.16.0 → v1.17.0`" in text,
+                "current Product authority lineage mismatch",
+                findings,
+            )
     product_path = root / EXPECTED_PROMOTED_GOVERNANCE["PLATFORM_PRODUCT_LAW"]["repository_path"]
     decisions_path = root / EXPECTED_PROMOTED_GOVERNANCE["PRODUCT_DECISIONS"]["repository_path"]
     product_source = safe_source_path(root, product_path.relative_to(root).as_posix(), findings)

@@ -98,10 +98,7 @@ defmodule NewYou.Content.MagicLoginMessage do
           "docs/governance/product/proposals/well-98/01_DECISIONS_v1.15.0_PROPOSED.md",
         "approved_amendment_sha256" =>
           "b4374a82d605320fba01733176cc8a57346a97da1a0d03095d79b818926f2017"
-      }
-    ]
-
-    @current_successor_authority [
+      },
       %{
         "document_id" => "PLATFORM_PRODUCT_LAW",
         "canonical_filename" => "00_PLATFORM_v1.16.0.md",
@@ -129,6 +126,37 @@ defmodule NewYou.Content.MagicLoginMessage do
           "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
         "approved_amendment_sha256" =>
           "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64"
+      }
+    ]
+
+    @current_successor_authority [
+      %{
+        "document_id" => "PLATFORM_PRODUCT_LAW",
+        "canonical_filename" => "00_PLATFORM_v1.17.0.md",
+        "repository_path" => "docs/governance/product/00_PLATFORM_v1.17.0.md",
+        "sha256" => "ad38c25c49ba9d1de40e90d74b494705156605af724bc0e1d5a66d38b81cc39f",
+        "semver" => "1.17.0",
+        "predecessor_path" => "docs/governance/product/00_PLATFORM_v1.16.0.md",
+        "predecessor_sha256" =>
+          "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174",
+        "approved_amendment_path" =>
+          "docs/delivery/content-evidence/content_media/email_change_messages/PRODUCT_CLASSIFICATION_PROPOSAL_v1.md",
+        "approved_amendment_sha256" =>
+          "5859094922ada891cdca887cf140d457991fa0fe5fcc76ea34ff4dd32ad8a8b1"
+      },
+      %{
+        "document_id" => "PRODUCT_DECISIONS",
+        "canonical_filename" => "01_DECISIONS_v1.17.0.md",
+        "repository_path" => "docs/governance/product/01_DECISIONS_v1.17.0.md",
+        "sha256" => "1d2c3cf6ec3ea4cd318ceccda8fa0a9b2c9797eec8f934a399e8d59f93090d8b",
+        "semver" => "1.17.0",
+        "predecessor_path" => "docs/governance/product/01_DECISIONS_v1.16.0.md",
+        "predecessor_sha256" =>
+          "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8",
+        "approved_amendment_path" =>
+          "docs/delivery/content-evidence/content_media/email_change_messages/PRODUCT_CLASSIFICATION_PROPOSAL_v1.md",
+        "approved_amendment_sha256" =>
+          "5859094922ada891cdca887cf140d457991fa0fe5fcc76ea34ff4dd32ad8a8b1"
       }
     ]
 
@@ -359,9 +387,13 @@ defmodule NewYou.Content.MagicLoginMessage do
            true <-
              String.contains?(
                bytes,
-               if(authority["semver"] == "1.15.0",
-                 do: "**SemVer transition:** `v1.14.0 → v1.15.0`",
-                 else: "**SemVer transition:** `v1.15.0 → v1.16.0`"
+               Map.fetch!(
+                 %{
+                   "1.15.0" => "**SemVer transition:** `v1.14.0 → v1.15.0`",
+                   "1.16.0" => "**SemVer transition:** `v1.15.0 → v1.16.0`",
+                   "1.17.0" => "**SemVer transition:** `v1.16.0 → v1.17.0`"
+                 },
+                 authority["semver"]
                )
              ) do
         true
@@ -409,6 +441,9 @@ defmodule NewYou.Content.MagicLoginMessage do
                 @governance_router_path,
                 "docs/governance/product/00_PLATFORM_v1.16.0.md",
                 "docs/governance/product/01_DECISIONS_v1.16.0.md",
+                "docs/governance/product/00_PLATFORM_v1.17.0.md",
+                "docs/governance/product/01_DECISIONS_v1.17.0.md",
+                "docs/delivery/content-evidence/content_media/email_change_messages/PRODUCT_CLASSIFICATION_PROPOSAL_v1.md",
                 "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
                 "docs/delivery/content-evidence/content_media/magic_login_messages/WELL-12-candidate-comment.json",
                 "docs/governance/product/00_PLATFORM_v1.14.0.md",

@@ -231,15 +231,16 @@ def validate_development(root: Path, packet: dict) -> list[str]:
             load_artifact({"path": prior_authority["predecessor"], "sha256": prior_authority["predecessor_sha256"]})
             load_artifact({"path": prior_authority["approved_amendment_path"], "sha256": prior_authority["approved_amendment_sha256"]})
             current_sha = {
-                "PLATFORM_PRODUCT_LAW": "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174",
-                "PRODUCT_DECISIONS": "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8",
+                "PLATFORM_PRODUCT_LAW": "ad38c25c49ba9d1de40e90d74b494705156605af724bc0e1d5a66d38b81cc39f",
+                "PRODUCT_DECISIONS": "1d2c3cf6ec3ea4cd318ceccda8fa0a9b2c9797eec8f934a399e8d59f93090d8b",
             }
             expected_current = {
-                "repository_path": prior_authority["repository_path"].replace("v1.15.0", "v1.16.0"),
-                "sha256": current_sha[document["document_id"]], "semver": "1.16.0",
-                "predecessor": prior_authority["repository_path"], "predecessor_sha256": prior_authority["sha256"],
-                "approved_amendment_path": "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
-                "approved_amendment_sha256": "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64",
+                "repository_path": prior_authority["repository_path"].replace("v1.15.0", "v1.17.0"),
+                "sha256": current_sha[document["document_id"]], "semver": "1.17.0",
+                "predecessor": prior_authority["repository_path"].replace("v1.15.0", "v1.16.0"),
+                "predecessor_sha256": {"PLATFORM_PRODUCT_LAW": "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174", "PRODUCT_DECISIONS": "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8"}[document["document_id"]],
+                "approved_amendment_path": "docs/delivery/content-evidence/content_media/email_change_messages/PRODUCT_CLASSIFICATION_PROPOSAL_v1.md",
+                "approved_amendment_sha256": "5859094922ada891cdca887cf140d457991fa0fe5fcc76ea34ff4dd32ad8a8b1",
             }
             check(
                 route.get("repository_path") == expected_current["repository_path"]
@@ -256,9 +257,11 @@ def validate_development(root: Path, packet: dict) -> list[str]:
             )
             check(
                 f"**Predecessor:** `{expected_current['predecessor']}`" in successor_bytes.decode("utf-8")
-                and "**SemVer transition:** `v1.15.0 → v1.16.0`" in successor_bytes.decode("utf-8"),
+                and "**SemVer transition:** `v1.16.0 → v1.17.0`" in successor_bytes.decode("utf-8"),
                 "current authority successor lineage mismatch",
             )
+            load_artifact({"path": prior_authority["repository_path"].replace("v1.15.0", "v1.16.0"), "sha256": expected_current["predecessor_sha256"]})
+            load_artifact({"path": "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md", "sha256": "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64"})
             load_artifact(
                 {
                     "path": expected_current["predecessor"],

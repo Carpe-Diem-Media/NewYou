@@ -1,0 +1,7 @@
+subject: Security notice: Email address change requested
+
+A request was received to change the primary email address of your {{platform_name}} account.
+
+This is a security notice and does not mean your account's email address has already changed.
+
+If you did not request this change, please contact us via {{support_contact}}.
