@@ -124,6 +124,40 @@ Follow evidence only as far as the task requires. Do not load the entire histori
 
 Do not re-grill, re-spec or re-ticket settled decisions without new evidence, changed scope or a proven contradiction.
 
+## Mandatory Hallmark frontend workflow
+
+Hallmark is mandatory for substantive frontend, UI and participant-facing visual work.
+
+The current Frontend Experience System and any repository `DESIGN.md` / `design.md` remain project authority. Hallmark is the required implementation and review workflow beneath that authority; it does not override the existing design system.
+
+For every applicable frontend task:
+
+1. Load and follow the installed `$hallmark` skill before implementation.
+2. Read `DESIGN.md` / `design.md` if present and inspect the applicable Frontend Experience System authority.
+3. Inspect the existing frontend architecture, tokens, components and styles.
+4. Preserve the existing design system unless redesign is explicitly required by the ticket.
+5. Implement the requested change using Hallmark's Floor and applicable design gates.
+6. Before completion, run:
+
+   `node ~/.agents/skills/hallmark/scripts/sloplint.mjs <affected-target> --render`
+
+7. Fix every Hallmark `FAIL`.
+8. Fix every `REFLEX` finding unless there is a concrete project-specific reason to waive it; record that reason in the PR/handoff evidence.
+9. Re-run sloplint until the applicable checks pass.
+10. For substantial UI changes, perform a Hallmark audit as an additional design review.
+
+Do not automatically invoke Hallmark `redesign` after an audit or lint failure.
+
+Use:
+
+`$hallmark redesign <target>`
+
+only when the ticket explicitly requires a redesign or deliberate replacement of the existing visual structure.
+
+For ordinary frontend fixes, preserve the current design system and correct the specific findings.
+
+Do not use undocumented Hallmark commands or assume that installation via `npx skills add` provides an `npx hallmark` CLI.
+
 JIT implementation decision model
 
 NewYou deliberately uses just-in-time implementation design.
