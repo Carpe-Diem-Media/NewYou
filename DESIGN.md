@@ -322,6 +322,19 @@ The guide's card specimen uses the approved white surface, charcoal text, hairli
 
 Editing a token updates all canonical consumers through CSS. Changes to locked visual values still require the corresponding intentional update to this file; the guide is a refinement tool and does not approve a replacement design by itself. Existing legacy screens remain on the temporary compatibility lane until deliberately migrated.
 
+The owner's continuation on 2026-11-13 authorises hardening the editing mechanism
+identified in the second-pass research. Semantic visual utilities read their
+inputs at the consuming element; shared button/card lighting relationships are
+re-evaluated at that component scope. This preserves all approved default values
+and does not approve a new local theme, palette or global fluid-size migration.
+The build-time design check validates the known literal fluid bounds/endpoints,
+mix percentages and noise opacity. Viewport bounds must be positive, ordered rem
+lengths; size endpoints are non-negative rem lengths and may deliberately
+decrease. Percentages stay within 0..100 and noise opacity within 0..1. Each
+numeric source input has one declaration. New supported expression forms require
+an intentional extension to the validator, not bypassing the check. Arbitrary
+runtime CSS overrides still require rendered verification.
+
 ### Color representation and refinement candidates
 
 The owner approved extending the development reference with modern CSS color relationships, surface-treatment comparisons and fluid sizing. This intentionally extends the guide contract without replacing the flat application design or approving a new global surface role.

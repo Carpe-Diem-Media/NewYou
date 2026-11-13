@@ -119,40 +119,20 @@
   --design-border-width: 1px;
 
   /* Overhead lighting candidates. Solid fallbacks preserve usable controls. */
-  --surface-canvas: var(--canvas);
-  --surface-panel: var(--surface);
-  --surface-raised: var(--surface);
   --surface-canvas-shade: 4%;
   --surface-panel-mix: 50%;
-  --edge-highlight: var(--surface);
-  --edge-side: var(--hairline);
-  --edge-shade: var(--hairline);
   --edge-highlight-strength: 70%;
   --edge-side-strength: 10%;
   --edge-shade-strength: 18%;
   --shadow-flat: none;
   --shadow-ink: transparent;
   --shadow-strength: 8%;
-  --shadow-control: 0 1px 2px var(--shadow-ink);
-  --shadow-raised: 0 3px 8px var(--shadow-ink);
   --action-light-strength: 4%;
   --action-shade-strength: 6%;
   --action-edge-light-strength: 22%;
   --action-edge-dark-strength: 18%;
-  --action-primary-top: var(--primary);
-  --action-primary-bottom: var(--primary);
-  --action-primary-edge-light: var(--primary);
-  --action-primary-edge-dark: var(--primary-hover);
-  --action-primary-hover-top: var(--primary-hover);
-  --action-primary-hover-bottom: var(--primary-hover);
-  --action-primary-hover-edge-light: var(--primary-hover);
-  --action-primary-hover-edge-dark: var(--primary-hover);
   --action-primary-gradient: none;
   --action-primary-hover-gradient: none;
-  --action-primary-shadow: inset 0 1px 0 var(--action-primary-edge-light), var(--shadow-control);
-  --action-primary-hover-shadow: inset 0 1px 0 var(--action-primary-hover-edge-light), var(--shadow-control);
-  --action-primary-pressed-shadow: inset 0 1px 2px var(--action-primary-hover-edge-dark), inset 0 -1px 0 var(--action-primary-hover-edge-light);
-  --edge-inset-shadow: inset 0 1px 2px var(--edge-shade), inset 0 -1px 0 var(--edge-highlight);
   --system-button-face: ButtonFace;
   --system-button-text: ButtonText;
   --system-disabled-text: GrayText;
@@ -191,6 +171,32 @@
 
 }
 
+/* Shared lighting relationships resolve against each root or component's inputs. */
+:root,
+:where(.ds-design-button),
+:where(.ds-design-card) {
+  --surface-canvas: var(--canvas);
+  --surface-panel: var(--surface);
+  --surface-raised: var(--surface);
+  --edge-highlight: var(--surface);
+  --edge-side: var(--hairline);
+  --edge-shade: var(--hairline);
+  --action-primary-top: var(--primary);
+  --action-primary-bottom: var(--primary);
+  --action-primary-edge-light: var(--primary);
+  --action-primary-edge-dark: var(--primary-hover);
+  --action-primary-hover-top: var(--primary-hover);
+  --action-primary-hover-bottom: var(--primary-hover);
+  --action-primary-hover-edge-light: var(--primary-hover);
+  --action-primary-hover-edge-dark: var(--primary-hover);
+  --shadow-control: 0 1px 2px var(--shadow-ink);
+  --shadow-raised: 0 3px 8px var(--shadow-ink);
+  --edge-inset-shadow: inset 0 1px 2px var(--edge-shade), inset 0 -1px 0 var(--edge-highlight);
+  --action-primary-shadow: inset 0 1px 0 var(--action-primary-edge-light), var(--shadow-control);
+  --action-primary-hover-shadow: inset 0 1px 0 var(--action-primary-hover-edge-light), var(--shadow-control);
+  --action-primary-pressed-shadow: inset 0 1px 2px var(--action-primary-hover-edge-dark), inset 0 -1px 0 var(--action-primary-hover-edge-light);
+}
+
 /* Identity conversion preserves exact brand colors without rounded OKLCH constants. */
 @supports (color: oklch(from red l c h)) {
   :root {
@@ -216,7 +222,9 @@
 }
 
 @supports (color: color-mix(in oklab, red, white)) {
-  :root {
+  :root,
+  :where(.ds-design-button),
+  :where(.ds-design-card) {
     --surface-canvas: color-mix(in oklab, var(--secondary) var(--surface-canvas-shade), var(--canvas));
     --surface-panel: color-mix(in oklab, var(--canvas) var(--surface-panel-mix), var(--surface));
     --edge-highlight: color-mix(in oklab, var(--surface) var(--edge-highlight-strength), transparent);
@@ -260,7 +268,7 @@
   }
 }
 
-@theme static {
+@theme static inline {
   --background-image-design-wash: var(--design-gradient-soft);
   --color-design-primary: var(--primary);
   --color-design-primary-deep: var(--primary-hover);
@@ -344,17 +352,16 @@
 
   --shadow-design: var(--box-shadow);
 
-  --breakpoint-design-tablet: 744px;
-  --breakpoint-design-desktop: 1128px;
-  --breakpoint-design-wide: 1441px;
-}
-
-/* Inline mappings keep utilities bound to the role at their point of use. */
-@theme inline {
   --font-sans: var(--font-body);
   --font-serif: var(--font-display);
   --font-design-sans: var(--font-body);
   --font-design-display: var(--font-display);
+}
+
+@theme static {
+  --breakpoint-design-tablet: 744px;
+  --breakpoint-design-desktop: 1128px;
+  --breakpoint-design-wide: 1441px;
 }
 
 /* Register the asset once. UI family selection belongs to the tokens above. */

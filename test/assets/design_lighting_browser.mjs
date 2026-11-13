@@ -155,7 +155,25 @@ try {
   assert.equal((await state()).shadow, "none")
   await page.mouse.up()
   await page.emulateMediaFeatures([{name: "forced-colors", value: "none"}, {name: "prefers-reduced-motion", value: "reduce"}])
-  await page.addStyleTag({content: ":root { --action-primary-gradient: none; --action-primary-hover-gradient: none; --shadow-ink: transparent; }"})
+  const removedMixing = await page.evaluate(() => {
+    const remove = container => {
+      let count = 0
+      for (let index = container.cssRules.length - 1; index >= 0; index--) {
+        const rule = container.cssRules[index]
+        if (rule.type === CSSRule.SUPPORTS_RULE && rule.conditionText.includes("color-mix(")) {
+          container.deleteRule(index)
+          count++
+        } else if (rule.cssRules) {
+          count += remove(rule)
+        }
+      }
+      return count
+    }
+    return [...document.styleSheets].reduce((count, sheet) => {
+      try { return count + remove(sheet) } catch { return count }
+    }, 0)
+  })
+  assert.ok(removedMixing > 0, "remove mixing enhancement rules to exercise fallback declarations")
   assert.equal((await state()).gradient, "none", "solid fallback remains usable")
   assert.deepEqual(errors, [])
   console.log("PASS: lighting hierarchy, native states, screenshot gradient contrast, 320px/200% text reflow, keyboard focus, token propagation and forced-colour/solid fallbacks", JSON.stringify(minimumContrast))

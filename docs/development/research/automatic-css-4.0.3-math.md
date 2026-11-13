@@ -590,3 +590,21 @@ does not close the earlier registration/Tidewave finding or WELL-114.
 Documentation impact: research only; no Domain, persistence, lifecycle or public
 application interface changes. No new capability map is required. WELL-114,
 existing delivery gaps and exact-head review requirements remain open.
+
+## 12. Follow-up implementation, 2026-11-13
+
+The local-scope limitation recorded above describes the reviewed `40a6d77`
+baseline. The follow-up changes visual Tailwind mappings to `static inline` and
+re-evaluates shared button/card lighting at the consuming component. Local
+semantic primary/hover/radius inputs now propagate, including solid fallback
+edges. The regression covers unmodified siblings and root edits separately.
+Local source-palette aliases and local fluid engine inputs remain outside the
+supported contract. Default values and candidate status are unchanged.
+
+The build gate now rejects invalid literal fluid boundaries/endpoints, mix
+percentages and noise opacity, including duplicate declarations, overflow and
+comment-split numeric literals. Descending size endpoints remain valid. This
+implements the reviewed input constraints without importing Automatic.css code
+or adding a Sass dependency. See the current handoff's local-token section for
+supported inputs and proof limits. The historical second-pass results above
+remain evidence for their recorded baseline.

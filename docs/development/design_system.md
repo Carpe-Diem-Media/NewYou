@@ -421,3 +421,40 @@ colour-mix support. Prior registration/Tidewave gate 26a and WELL-114 independen
 resulting-main certification remain open. The earlier global-count failures did
 not recur in this run; their cause is not thereby proved fixed. Hosted CI and
 independent review of the final PR head remain required before integration.
+
+## Local token consumption and numeric input checks, 2026-11-13
+
+Visual Tailwind mappings now use `@theme static inline`. Utilities consume the
+semantic role at the element, so a local `--primary`, `--primary-hover`,
+`--radius` or `--radius-xl` override reaches the shared controls. Breakpoints
+remain in a separate static theme block because Tailwind compiles media queries.
+Changing a breakpoint requires rebuilding the stylesheet.
+
+Lighting relationships are declared once for the root and shared button/card
+selectors. Their solid fallbacks, gradients, edges and shadows resolve against
+that component's semantic inputs. Edit the source inputs in
+`assets/css/design-tokens.css`; editing only a derived root output does not
+replace a component's own calculation. Approved numeric and palette defaults
+have not changed. Local palette-source aliases and local fluid-bound overrides
+are not part of this contract. Fluid sizing remains a guide candidate.
+
+`mix design.check` now validates the known literal numeric source inputs. Fluid
+viewport boundaries must be positive rem values with the minimum below the
+maximum. Size endpoints must be non-negative rem values; decreasing sizes are
+allowed. Mix strengths must be percentages within 0..100 and noise opacity must
+be unitless within 0..1. Missing, duplicate, non-finite and expression-valued
+inputs fail the gate. This deliberately small check does not parse all CSS,
+validate arbitrary runtime overrides or certify contrast.
+
+The added `test/assets/design_token_scope_browser.mjs` checks local flat/lit
+buttons, flat/raised cards, sibling isolation and a root edit. It also removes
+the colour-mix enhancement rules through CSSOM and checks the real solid
+fallback declarations. `design_lighting_browser.mjs` uses the same fallback
+selection instead of injecting derived root outputs. These are Chrome feature
+selection checks, not evidence from an older browser without colour-mix.
+
+Documentation impact: no Domain capability or durable interface changes. The
+existing design-system handoff remains canonical; a new capability map is
+exempt for this CSS-consumption and engineering-validation batch. WELL-114's
+independent resulting-main certification gap remains open under the owner's
+recorded continuation exception. This batch does not certify merge readiness.

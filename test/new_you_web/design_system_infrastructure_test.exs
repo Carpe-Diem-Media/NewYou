@@ -7,6 +7,83 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
   alias NewYouWeb.Components.Design.Button
   alias NewYouWeb.Components.Design.Card
 
+  test "numeric token inputs preserve bounds and accept deliberate descending size endpoints" do
+    css = File.read!("assets/css/design-tokens.css")
+    assert [] = Check.token_numeric_violations(css)
+
+    descending =
+      css
+      |> String.replace("--fluid-display-min: 2.5rem", "--fluid-display-min: 4rem")
+      |> String.replace("--fluid-display-max: 4rem", "--fluid-display-max: 2.5rem")
+
+    assert [] = Check.token_numeric_violations(descending)
+
+    for value <- ["0%", "100%"] do
+      assert [] =
+               Check.token_numeric_violations(
+                 String.replace(css, "--shadow-strength: 8%", "--shadow-strength: #{value}")
+               )
+    end
+
+    assert [] = Check.token_numeric_violations(css <> "\n/* --fluid-vmin: 1rem; */")
+
+    for value <- [".5", "+.5", "5e-1"] do
+      assert [] =
+               Check.token_numeric_violations(
+                 String.replace(
+                   css,
+                   "--design-noise-opacity: 0.06",
+                   "--design-noise-opacity: #{value}"
+                 )
+               )
+    end
+  end
+
+  test "numeric token gate rejects invalid or ambiguous editable inputs" do
+    css = File.read!("assets/css/design-tokens.css")
+
+    for {original, invalid, token} <- [
+          {"--fluid-vmin: 30rem", "--fluid-vmin: 75rem", "--fluid-vmin"},
+          {"--fluid-vmin: 30rem", "--fluid-vmin: 80rem", "--fluid-vmin"},
+          {"--fluid-vmin: 30rem", "--fluid-vmin: 0rem", "--fluid-vmin"},
+          {"--fluid-vmin: 30rem", "--fluid-vmin: 480px", "--fluid-vmin"},
+          {"--fluid-display-min: 2.5rem", "--fluid-display-min: -1rem", "--fluid-display-min"},
+          {"--fluid-body-max: 1.125rem", "--fluid-body-max: NaN", "--fluid-body-max"},
+          {"--fluid-space-max: 3rem", "--fluid-space-max: var(--unknown)", "--fluid-space-max"},
+          {"--shadow-strength: 8%", "--shadow-strength: 101%", "--shadow-strength"},
+          {"--shadow-strength: 8%", "--shadow-strength: -1%", "--shadow-strength"},
+          {"--shadow-strength: 8%", "--shadow-strength: 8px", "--shadow-strength"},
+          {"--shadow-strength: 8%", "--shadow-strength: 1/* split */0%", "--shadow-strength"},
+          {"--design-noise-opacity: 0.06", "--design-noise-opacity: 1.01",
+           "--design-noise-opacity"},
+          {"--design-noise-opacity: 0.06", "--design-noise-opacity: -0.1",
+           "--design-noise-opacity"},
+          {"--design-noise-opacity: 0.06", "--design-noise-opacity: 6%", "--design-noise-opacity"}
+        ] do
+      assert Enum.any?(
+               Check.token_numeric_violations(String.replace(css, original, invalid)),
+               &String.contains?(&1, token)
+             ),
+             "expected rejection for #{invalid}"
+    end
+
+    for invalid <- [
+          String.replace(css, "--fluid-vmin: 30rem;", ""),
+          String.replace(css, "--fluid-vmin: 30rem", "--fluid-vmin: 1e9999rem"),
+          String.replace(
+            css,
+            "--fluid-vmin: 30rem",
+            "--fluid-vmin: #{String.duplicate("9", 400)}rem"
+          ),
+          css <> "\n:root { --fluid-vmin: 35rem; }"
+        ] do
+      assert Enum.any?(
+               Check.token_numeric_violations(invalid),
+               &String.contains?(&1, "--fluid-vmin")
+             )
+    end
+  end
+
   test "lit treatments and raised cards are bounded opt-ins with native semantics" do
     for component <- [&Button.primary_button/1, &Button.secondary_button/1] do
       html =
