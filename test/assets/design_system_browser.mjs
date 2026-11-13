@@ -29,8 +29,12 @@ try {
   assert.ok(secondary, "shared secondary variant is present")
   const primaryBefore = await primary.evaluate(button => {
     const style = getComputedStyle(button)
-    return {background: style.backgroundColor, height: style.height, radius: style.borderRadius}
+    return {background: style.backgroundColor, height: style.height, radius: style.borderRadius,
+      gradient: style.backgroundImage, top: style.borderTopColor, bottom: style.borderBottomColor, shadow: style.boxShadow}
   })
+  assert.match(primaryBefore.gradient, /^linear-gradient\(/, "main primary example shows the agreed gradient")
+  assert.notEqual(primaryBefore.top, primaryBefore.bottom, "main primary example has directional borders")
+  assert.notEqual(primaryBefore.shadow, "none", "main primary example shows its restrained shadow")
   assert.equal(primaryBefore.height, "48px")
   assert.equal(primaryBefore.radius, "32px")
   await primary.hover()

@@ -3,8 +3,8 @@
     <h1 class="ds-responsive-heading">A little room to grow.</h1>
     <p class="ds-lead">The same tokens, at every width.</p>
     <div class="ds-preview-actions">
-      <.primary_button data-demo-action="primary">Primary action</.primary_button>
-      <.secondary_button data-demo-action="secondary">Secondary action</.secondary_button>
+      <.primary_button treatment="lit" data-demo-action="primary">Primary action</.primary_button>
+      <.secondary_button treatment="lit" data-demo-action="secondary">Secondary action</.secondary_button>
     </div>
     <div class="ds-card-grid" data-alignment="center">
       <.design_card :for={n <- 1..5} title={"Card #{n}"}>
@@ -90,17 +90,17 @@
           <div class="ds-button-examples">
             <div class="ds-button-example">
               <span>Primary</span>
-              <.primary_button data-demo-action="primary">Primary action</.primary_button>
+              <.primary_button treatment="lit" data-demo-action="primary">Primary action</.primary_button>
               <code>--primary</code>
             </div>
             <div class="ds-button-example">
               <span>Secondary</span>
-              <.secondary_button data-demo-action="secondary">Secondary action</.secondary_button>
+              <.secondary_button treatment="lit" data-demo-action="secondary">Secondary action</.secondary_button>
               <code>--secondary</code>
             </div>
             <div class="ds-button-example">
               <span>Disabled</span>
-              <.primary_button disabled>
+              <.primary_button treatment="lit" disabled>
                 <span class="hero-lock-closed size-4 mr-design-sm" aria-hidden="true"></span>
                 Unavailable
               </.primary_button>
@@ -113,7 +113,7 @@
             </div>
           </div>
           <p class="ds-note">
-            Disabled appearance remains the approved default. No new loading, error or success palette is implied.
+            These examples use the lit treatment. Compare the flat version in Lighting & depth. No loading, error or success palette is implied.
           </p>
         </section>
 

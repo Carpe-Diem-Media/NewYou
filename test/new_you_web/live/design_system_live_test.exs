@@ -60,14 +60,14 @@ defmodule NewYouWeb.DesignSystemLiveTest do
              )
     end
 
-    assert has_element?(view, "#buttons button[data-variant=primary]")
-    assert has_element?(view, "#buttons button[data-variant=secondary]")
+    assert has_element?(view, "#buttons button[data-variant=primary][data-treatment=lit]")
+    assert has_element?(view, "#buttons button[data-variant=secondary][data-treatment=lit]")
     assert has_element?(view, "#card-grid article[data-variant=flat]")
     assert has_element?(view, "#lighting button[data-treatment=lit][data-variant=primary]")
     assert has_element?(view, "#lighting button[data-treatment=lit][data-variant=secondary]")
     assert has_element?(view, "#lighting article[data-variant=raised]")
     assert has_element?(view, "#lighting button[data-treatment=lit][disabled]")
-    assert has_element?(view, "button[disabled]", "Unavailable")
+    assert has_element?(view, "#buttons button[data-treatment=lit][disabled]", "Unavailable")
     assert has_element?(view, "button[disabled] .hero-lock-closed[aria-hidden='true']")
     assert has_element?(view, "#token-status[role='status']")
     assert has_element?(view, "#design-system[phx-hook='DesignSystem']")
@@ -109,7 +109,17 @@ defmodule NewYouWeb.DesignSystemLiveTest do
 
     {:ok, preview, _html} = live(conn, "/dev/design-system/preview")
     assert has_element?(preview, "#preview-content")
-    assert has_element?(preview, "button.ds-design-button[data-variant=primary]")
+
+    assert has_element?(
+             preview,
+             "button.ds-design-button[data-variant=primary][data-treatment=lit]"
+           )
+
+    assert has_element?(
+             preview,
+             "button.ds-design-button[data-variant=secondary][data-treatment=lit]"
+           )
+
     refute has_element?(preview, "nav[aria-label='Design system sections']")
     refute has_element?(preview, "iframe")
   end
