@@ -664,8 +664,8 @@ defmodule NewYou.Identity.RecoveryTest do
       {:ok, [recovery]} = cases(registered.account_id)
       {:ok, bearer} = delivery(recovery, request.email)
       replacement_email = "changed-" <> Ecto.UUID.generate() <> "@example.test"
-      # Fixture-only representation of the P8-16 owner commit. This ticket adds
-      # no email-change action or verification grant. The snapshot must go stale.
+      # This fixture advances canonical email after the recovery snapshot. The
+      # dedicated P8-16 race test exercises the real owning apply interface.
       NewYou.Repo.query!("UPDATE accounts SET email=$1 WHERE id=$2", [
         replacement_email,
         Ecto.UUID.dump!(registered.account_id)
@@ -680,9 +680,13 @@ defmodule NewYou.Identity.RecoveryTest do
       assert Ash.get!(NewYou.Identity.RecoveryCase, recovery.id, authorize?: false).state ==
                :failed
 
-      refute Enum.any?(Ash.Resource.Info.actions(Account), fn action ->
-               action.type == :update and :email in Map.get(action, :accept, [])
-             end)
+      email_write_actions =
+        Enum.filter(Ash.Resource.Info.actions(Account), fn action ->
+          action.type == :update and :email in Map.get(action, :accept, [])
+        end)
+
+      assert Enum.map(email_write_actions, & &1.name) == [:apply_primary_email_change]
+      refute hd(email_write_actions).public?
     end)
   end
 

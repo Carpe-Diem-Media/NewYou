@@ -247,6 +247,65 @@ defmodule NewYou.Identity do
   @spec expire_due_sessions() :: {:ok, non_neg_integer()} | {:error, :authentication_unavailable}
   def expire_due_sessions, do: NewYou.Identity.PasswordSession.expire_due()
 
+  @doc "Request an Account-owned primary-email change under the current authenticated Session."
+  @spec request_primary_email_change(term(), term(), term(), term()) ::
+          {:ok, :requested} | {:error, :primary_email_change_unavailable}
+  def request_primary_email_change(credentials, target, locale, operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.request(credentials, target, locale, operation_id)
+
+  @doc "Require fresh password and current Session assurance before issuing new-address proof."
+  @spec reauthenticate_primary_email_change(term(), term(), term()) ::
+          {:ok, :proof_pending} | {:error, :primary_email_change_unavailable}
+  def reauthenticate_primary_email_change(credentials, password, operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.reauthenticate(credentials, password, operation_id)
+
+  @doc "Explicitly consume the current new-address proof. Confirmation does not apply the email."
+  @spec confirm_primary_email_change(term()) ::
+          {:ok, :confirmed} | {:error, :primary_email_change_unavailable}
+  def confirm_primary_email_change(proof),
+    do: NewYou.Identity.PrimaryEmailChange.confirm(proof)
+
+  @doc "Apply a current, confirmed primary-email change after its Identity-owned guards pass."
+  @spec apply_primary_email_change(term()) ::
+          {:ok,
+           :applied | :already_applied | :held | :already_held | :rejected | :already_rejected}
+          | {:error, :primary_email_change_unavailable}
+  def apply_primary_email_change(operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.apply(operation_id)
+
+  @doc "Cancel the current primary-email-change operation from its authenticated Account Session."
+  @spec cancel_primary_email_change(term(), term()) ::
+          {:ok, :cancelled | :already_cancelled}
+          | {:error, :primary_email_change_unavailable}
+  def cancel_primary_email_change(credentials, operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.cancel(credentials, operation_id)
+
+  @doc "Expire one current primary-email-change operation after its persisted deadline."
+  @spec expire_primary_email_change(term()) ::
+          {:ok, :expired | :already_expired | :not_expired}
+          | {:error, :primary_email_change_unavailable}
+  def expire_primary_email_change(operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.expire(operation_id)
+
+  @doc "Reconcile due primary-email-change operations from durable Account state."
+  @spec expire_due_primary_email_changes(pos_integer()) ::
+          {:ok, non_neg_integer()} | {:error, :primary_email_change_unavailable}
+  def expire_due_primary_email_changes(limit \\ 100),
+    do: NewYou.Identity.PrimaryEmailChange.expire_due(limit)
+
+  @doc "Review a risk-required operation after fresh password and current applicable MFA step-up."
+  @spec review_primary_email_change(term(), term(), term()) ::
+          {:ok, :reviewed | :already_reviewed}
+          | {:error, :primary_email_change_unavailable}
+  def review_primary_email_change(credentials, password, operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.review(credentials, password, operation_id)
+
+  @doc false
+  @spec primary_email_change_delivery(String.t(), String.t(), String.t()) ::
+          {:ok, String.t()} | {:error, :source_invalid | :capability_unavailable}
+  def primary_email_change_delivery(reference, destination, locale),
+    do: NewYou.Identity.PrimaryEmailChange.delivery(reference, destination, locale)
+
   @doc """
   Consumes an email-verification capability and verifies its Account atomically.
 

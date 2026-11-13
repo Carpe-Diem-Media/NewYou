@@ -18,7 +18,7 @@ defmodule NewYou.Audit.EvidenceObligation do
     check_constraints do
       check_constraint :evidence_type, "evidence_obligations_evidence_type",
         check:
-          "evidence_type IN ('account_registration_pmr_assignment', 'security_hold_placement', 'security_hold_review', 'security_hold_release_result', 'identity_mfa_confirmed', 'identity_grant_revoked', 'identity_reconciliation_result', 'identity_reconciliation_review', 'identity_password_reset', 'identity_recovery_completed', 'identity_recovery_review')",
+          "evidence_type IN ('account_registration_pmr_assignment', 'security_hold_placement', 'security_hold_review', 'security_hold_release_result', 'identity_mfa_confirmed', 'identity_grant_revoked', 'identity_reconciliation_result', 'identity_reconciliation_review', 'identity_password_reset', 'identity_recovery_completed', 'identity_recovery_review', 'identity_primary_email_change_requested', 'identity_primary_email_change_confirmed', 'identity_primary_email_change_applied', 'identity_primary_email_change_cancelled', 'identity_primary_email_change_expired', 'identity_primary_email_change_rejected', 'identity_primary_email_change_superseded', 'identity_primary_email_change_held', 'identity_primary_email_change_reviewed')",
         message: "must be a selected evidence type"
 
       check_constraint :evidence_type, "evidence_obligations_security_shape",
@@ -131,7 +131,16 @@ defmodule NewYou.Audit.EvidenceObligation do
                     :identity_reconciliation_review,
                     :identity_password_reset,
                     :identity_recovery_completed,
-                    :identity_recovery_review
+                    :identity_recovery_review,
+                    :identity_primary_email_change_requested,
+                    :identity_primary_email_change_confirmed,
+                    :identity_primary_email_change_applied,
+                    :identity_primary_email_change_cancelled,
+                    :identity_primary_email_change_expired,
+                    :identity_primary_email_change_rejected,
+                    :identity_primary_email_change_superseded,
+                    :identity_primary_email_change_held,
+                    :identity_primary_email_change_reviewed
                   ]
 
       public? false
@@ -188,7 +197,6 @@ defmodule NewYou.Audit.EvidenceObligation do
   end
 
   identities do
-    identity :registration_source_operation, [:source_operation_id],
-      message: "already has a registration evidence obligation"
+    identity :source_operation_event, [:source_operation_id, :evidence_type]
   end
 end

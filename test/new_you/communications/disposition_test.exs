@@ -18,9 +18,14 @@ defmodule NewYou.Communications.DispositionTest do
 
     assert Ash.Resource.Info.action(MessageIntent, :disposition) == nil
 
-    for resource <- [Communications.DeliveryAttempt, Identity.Account] do
+    for resource <- [Communications.DeliveryAttempt] do
       refute AshStateMachine in Spark.extensions(resource)
     end
+
+    assert AshStateMachine in Spark.extensions(Identity.Account)
+
+    assert AshStateMachine.Info.state_machine_state_attribute!(Identity.Account) ==
+             :primary_email_change_state
   end
 
   test "explicit actions govern open hold reconciliation and terminal closure" do

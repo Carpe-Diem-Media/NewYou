@@ -136,6 +136,10 @@ defmodule NewYou.Communications.Executor do
            intent.source_operation_id
          )
 
+  defp source_eligibility(%{role: role})
+       when role in [:email_change_confirmation, :email_change_old_address_notice],
+       do: {:error, :capability_unavailable}
+
   defp source_eligibility(_), do: {:error, :source_invalid}
 
   defp prepare_eligible(intent, attempts) do

@@ -4,7 +4,7 @@ defmodule NewYou.Identity.Account do
     domain: NewYou.Identity,
     data_layer: AshPostgres.DataLayer,
     authorizers: [Ash.Policy.Authorizer],
-    extensions: [AshAuthentication, AshCloak]
+    extensions: [AshAuthentication, AshCloak, AshStateMachine]
 
   authentication do
     strategies do
@@ -36,6 +36,9 @@ defmodule NewYou.Identity.Account do
     unique_index_names [
       {[:pmr], "identity_pmr_reservations_pkey", "is already allocated"}
     ]
+
+    identity_wheres_to_sql one_pending_primary_email_change_target:
+                             "primary_email_change_state IN ('requested','reauthenticated','new_address_pending','confirmed','delayed','reviewed')"
 
     check_constraints do
       check_constraint :pmr_status, "accounts_reconciliation_shape",
@@ -82,6 +85,25 @@ defmodule NewYou.Identity.Account do
 
       check_constraint :hold_operations, "accounts_hold_operations",
         check: "jsonb_typeof(hold_operations) = 'object'"
+
+      check_constraint :primary_email_change_state, "accounts_primary_email_change_shape",
+        check:
+          "(primary_email_change_state = 'none' AND primary_email_change_operation_id IS NULL AND primary_email_change_target IS NULL AND primary_email_change_locale IS NULL AND primary_email_change_requested_at IS NULL AND primary_email_change_expires_at IS NULL) OR (primary_email_change_state <> 'none' AND primary_email_change_operation_id IS NOT NULL AND primary_email_change_target IS NOT NULL AND primary_email_change_locale IS NOT NULL AND primary_email_change_locale IN ('en', 'af') AND primary_email_change_requested_at IS NOT NULL AND primary_email_change_expires_at IS NOT NULL)",
+        message: "must retain one complete current operation or no operation"
+
+      check_constraint :primary_email_change_version, "accounts_primary_email_change_version",
+        check: "primary_email_change_version >= 0"
+
+      check_constraint :primary_email_change_state, "accounts_primary_email_change_terminal",
+        check:
+          "(primary_email_change_state IN ('applied', 'cancelled', 'expired', 'rejected', 'superseded', 'held')) = (primary_email_change_terminated_at IS NOT NULL) AND (primary_email_change_state = 'applied') = (primary_email_change_applied_at IS NOT NULL) AND (primary_email_change_state <> 'reviewed' OR primary_email_change_reviewed_at IS NOT NULL) AND (primary_email_change_state <> 'reviewed' OR \"primary_email_change_requires_review?\" IS TRUE)"
+    end
+
+    custom_indexes do
+      index [:primary_email_change_state, :primary_email_change_expires_at],
+        name: "accounts_primary_email_change_expiry_index",
+        where:
+          "primary_email_change_state IN ('requested','reauthenticated','new_address_pending','confirmed','delayed','reviewed')"
     end
   end
 
@@ -91,7 +113,200 @@ defmodule NewYou.Identity.Account do
     decrypt_by_default([])
   end
 
+  state_machine do
+    initial_states [:none]
+    default_initial_state :none
+    state_attribute :primary_email_change_state
+
+    transitions do
+      transition :request_primary_email_change,
+        from: [:none, :applied, :cancelled, :expired, :rejected, :superseded, :held],
+        to: :requested
+
+      transition :supersede_primary_email_change,
+        from: [
+          :requested,
+          :reauthenticated,
+          :new_address_pending,
+          :confirmed,
+          :delayed,
+          :reviewed
+        ],
+        to: :superseded
+
+      transition :reauthenticate_primary_email_change, from: :requested, to: :reauthenticated
+
+      transition :issue_primary_email_change_confirmation,
+        from: :reauthenticated,
+        to: :new_address_pending
+
+      transition :confirm_primary_email_change, from: :new_address_pending, to: :confirmed
+      transition :delay_primary_email_change, from: :confirmed, to: :delayed
+      transition :review_primary_email_change, from: :delayed, to: :reviewed
+
+      transition :apply_primary_email_change,
+        from: [:delayed, :reviewed],
+        to: :applied
+
+      transition :cancel_primary_email_change,
+        from: [
+          :requested,
+          :reauthenticated,
+          :new_address_pending,
+          :confirmed,
+          :delayed,
+          :reviewed
+        ],
+        to: :cancelled
+
+      transition :expire_primary_email_change,
+        from: [
+          :requested,
+          :reauthenticated,
+          :new_address_pending,
+          :confirmed,
+          :delayed,
+          :reviewed
+        ],
+        to: :expired
+
+      transition :reject_primary_email_change,
+        from: [
+          :requested,
+          :reauthenticated,
+          :new_address_pending,
+          :confirmed,
+          :delayed,
+          :reviewed
+        ],
+        to: :rejected
+
+      transition :hold_primary_email_change,
+        from: [
+          :requested,
+          :reauthenticated,
+          :new_address_pending,
+          :confirmed,
+          :delayed,
+          :reviewed
+        ],
+        to: :held
+    end
+  end
+
   actions do
+    update :request_primary_email_change do
+      public? false
+
+      accept [
+        :primary_email_change_operation_id,
+        :primary_email_change_target,
+        :primary_email_change_locale,
+        :primary_email_change_requested_at,
+        :primary_email_change_expires_at,
+        :primary_email_change_security_version,
+        :primary_email_change_credential_version,
+        :primary_email_change_reauth_session_id,
+        :primary_email_change_reauthenticated_at,
+        :primary_email_change_token_jti,
+        :primary_email_change_token_expires_at,
+        :primary_email_change_confirmed_at,
+        :primary_email_change_confirmation_id,
+        :primary_email_change_apply_after,
+        :primary_email_change_requires_review?,
+        :primary_email_change_reviewed_at,
+        :primary_email_change_applied_at,
+        :primary_email_change_terminated_at
+      ]
+
+      change increment(:primary_email_change_version)
+      change transition_state(:requested)
+    end
+
+    update :supersede_primary_email_change do
+      public? false
+      accept [:primary_email_change_terminated_at]
+      change increment(:primary_email_change_version)
+      change transition_state(:superseded)
+    end
+
+    update :reauthenticate_primary_email_change do
+      public? false
+
+      accept [
+        :primary_email_change_reauthenticated_at,
+        :primary_email_change_reauth_session_id,
+        :primary_email_change_security_version,
+        :primary_email_change_credential_version
+      ]
+
+      change increment(:primary_email_change_version)
+      change transition_state(:reauthenticated)
+    end
+
+    update :issue_primary_email_change_confirmation do
+      public? false
+      accept [:primary_email_change_token_jti, :primary_email_change_token_expires_at]
+      change increment(:primary_email_change_version)
+      change transition_state(:new_address_pending)
+    end
+
+    update :confirm_primary_email_change do
+      public? false
+
+      accept [
+        :primary_email_change_confirmed_at,
+        :primary_email_change_confirmation_id,
+        :primary_email_change_apply_after
+      ]
+
+      change increment(:primary_email_change_version)
+      change transition_state(:confirmed)
+    end
+
+    update :delay_primary_email_change do
+      public? false
+      accept [:primary_email_change_apply_after, :primary_email_change_requires_review?]
+      change increment(:primary_email_change_version)
+      change transition_state(:delayed)
+    end
+
+    update :review_primary_email_change do
+      public? false
+      accept [:primary_email_change_reviewed_at]
+      change increment(:primary_email_change_version)
+      change transition_state(:reviewed)
+    end
+
+    update :apply_primary_email_change do
+      public? false
+
+      accept [
+        :email,
+        :email_verified?,
+        :primary_email_change_applied_at,
+        :primary_email_change_terminated_at
+      ]
+
+      change increment(:security_version)
+      change increment(:primary_email_change_version)
+      change transition_state(:applied)
+    end
+
+    for {action, destination} <- [
+          cancel_primary_email_change: :cancelled,
+          expire_primary_email_change: :expired,
+          reject_primary_email_change: :rejected,
+          hold_primary_email_change: :held
+        ] do
+      update action do
+        public? false
+        accept [:primary_email_change_terminated_at]
+        change increment(:primary_email_change_version)
+        change transition_state(destination)
+      end
+    end
+
     update :hold_for_recovery do
       public? false
       accept []
@@ -336,6 +551,62 @@ defmodule NewYou.Identity.Account do
       public? true
     end
 
+    attribute :primary_email_change_state, :atom do
+      allow_nil? false
+      default :none
+
+      constraints one_of: [
+                    :none,
+                    :requested,
+                    :reauthenticated,
+                    :new_address_pending,
+                    :confirmed,
+                    :delayed,
+                    :reviewed,
+                    :applied,
+                    :cancelled,
+                    :expired,
+                    :rejected,
+                    :superseded,
+                    :held
+                  ]
+
+      public? false
+    end
+
+    attribute :primary_email_change_operation_id, :uuid, sensitive?: true, public?: false
+    attribute :primary_email_change_target, :string, sensitive?: true, public?: false
+
+    attribute :primary_email_change_locale, :string,
+      constraints: [match: ~r/\A(en|af)\z/],
+      public?: false
+
+    attribute :primary_email_change_version, :integer,
+      allow_nil?: false,
+      default: 0,
+      public?: false
+
+    attribute :primary_email_change_security_version, :integer, public?: false
+    attribute :primary_email_change_credential_version, :integer, public?: false
+    attribute :primary_email_change_reauth_session_id, :uuid, sensitive?: true, public?: false
+    attribute :primary_email_change_token_jti, :string, sensitive?: true, public?: false
+    attribute :primary_email_change_confirmation_id, :uuid, sensitive?: true, public?: false
+    attribute :primary_email_change_requested_at, :utc_datetime_usec, public?: false
+    attribute :primary_email_change_reauthenticated_at, :utc_datetime_usec, public?: false
+    attribute :primary_email_change_confirmed_at, :utc_datetime_usec, public?: false
+    attribute :primary_email_change_apply_after, :utc_datetime_usec, public?: false
+
+    attribute :primary_email_change_requires_review?, :boolean,
+      allow_nil?: false,
+      default: false,
+      public?: false
+
+    attribute :primary_email_change_reviewed_at, :utc_datetime_usec, public?: false
+    attribute :primary_email_change_applied_at, :utc_datetime_usec, public?: false
+    attribute :primary_email_change_terminated_at, :utc_datetime_usec, public?: false
+    attribute :primary_email_change_expires_at, :utc_datetime_usec, public?: false
+    attribute :primary_email_change_token_expires_at, :utc_datetime_usec, public?: false
+
     attribute :preferred_language, :atom do
       allow_nil? false
       constraints one_of: [:af, :en]
@@ -441,5 +712,19 @@ defmodule NewYou.Identity.Account do
   identities do
     identity :canonical_email, [:email], message: "is unavailable"
     identity :permanent_pmr, [:pmr], message: "is already allocated"
+    identity :primary_email_change_operation, [:primary_email_change_operation_id]
+
+    identity :one_pending_primary_email_change_target, [:primary_email_change_target],
+      where:
+        expr(
+          primary_email_change_state in [
+            :requested,
+            :reauthenticated,
+            :new_address_pending,
+            :confirmed,
+            :delayed,
+            :reviewed
+          ]
+        )
   end
 end

@@ -27,7 +27,9 @@ defmodule NewYou.Identity.Token do
     repo NewYou.Repo
 
     identity_wheres_to_sql one_current_magic_login: "purpose = 'magic_login'",
-                           one_current_password_reset: "purpose = 'password_reset'"
+                           one_current_password_reset: "purpose = 'password_reset'",
+                           one_current_email_change_confirmation:
+                             "purpose = 'email_change_confirmation'"
 
     check_constraints do
       check_constraint :recovery_case_id, "tokens_recovery_metadata",
@@ -41,10 +43,66 @@ defmodule NewYou.Identity.Token do
       check_constraint :magic_request_id, "tokens_magic_login_metadata",
         check:
           "(purpose NOT IN ('magic_login', 'magic_login_superseded', 'magic_login_consumed') AND magic_request_id IS NULL AND magic_claims IS NULL AND magic_account_binding IS NULL AND magic_locale IS NULL) OR (magic_request_id IS NOT NULL AND magic_claims IS NOT NULL AND magic_account_binding IS NOT NULL AND magic_locale IS NOT NULL AND magic_locale IN ('en', 'af'))"
+
+      check_constraint :email_change_operation_id, "tokens_email_change_metadata",
+        check:
+          "(purpose NOT IN ('email_change_confirmation', 'email_change_confirmation_consumed', 'email_change_confirmation_superseded', 'email_change_confirmation_revoked') AND email_change_operation_id IS NULL AND email_change_claims IS NULL AND email_change_account_binding IS NULL AND email_change_locale IS NULL) OR (email_change_operation_id IS NOT NULL AND email_change_claims IS NOT NULL AND email_change_account_binding IS NOT NULL AND email_change_locale IS NOT NULL AND email_change_locale IN ('en', 'af') AND COALESCE(email_change_claims->>'purpose' = 'email_change_confirmation' AND email_change_claims->>'jti' = jti AND email_change_claims->>'operation_id' = email_change_operation_id::text, false))"
     end
   end
 
   actions do
+    create :issue_email_change_confirmation do
+      description "Store fixed purpose-bound claims for one current Account-owned email-change proof; never store the signed bearer."
+      public? false
+
+      accept [
+        :email_change_operation_id,
+        :email_change_claims,
+        :email_change_account_binding,
+        :email_change_locale
+      ]
+
+      argument :token, :string, allow_nil?: false, sensitive?: true
+
+      validate present([
+                 :email_change_operation_id,
+                 :email_change_claims,
+                 :email_change_account_binding,
+                 :email_change_locale
+               ])
+
+      change set_attribute(:purpose, "email_change_confirmation")
+      change AshAuthentication.TokenResource.StoreTokenChange
+      change NewYou.Identity.Changes.SetTokenAccount
+    end
+
+    update :consume_email_change_confirmation do
+      public? false
+      accept []
+      change filter(expr(purpose == "email_change_confirmation" and expires_at > now()))
+      change set_attribute(:purpose, "email_change_confirmation_consumed")
+    end
+
+    update :supersede_email_change_confirmation do
+      public? false
+      accept []
+      change filter(expr(purpose == "email_change_confirmation"))
+      change set_attribute(:purpose, "email_change_confirmation_superseded")
+    end
+
+    update :revoke_email_change_confirmation do
+      public? false
+      accept []
+
+      change filter(
+               expr(
+                 purpose in ["email_change_confirmation", "email_change_confirmation_consumed"]
+               )
+             )
+
+      change set_attribute(:purpose, "email_change_confirmation_revoked")
+    end
+
     create :issue_recovery do
       public? false
       accept [:recovery_case_id, :recovery_claims]
@@ -213,6 +271,11 @@ defmodule NewYou.Identity.Token do
   end
 
   attributes do
+    attribute :email_change_operation_id, :uuid, sensitive?: true, public?: false
+    attribute :email_change_claims, :map, sensitive?: true, public?: false
+    attribute :email_change_account_binding, :binary, sensitive?: true, public?: false
+    attribute :email_change_locale, :string, constraints: [match: ~r/\A(en|af)\z/], public?: false
+
     attribute :recovery_case_id, :uuid, sensitive?: true, public?: false
     attribute :recovery_claims, :map, sensitive?: true, public?: false
     attribute :reset_request_id, :uuid, sensitive?: true, public?: false
@@ -277,6 +340,11 @@ defmodule NewYou.Identity.Token do
     identity :one_current_password_reset, [:account_id], where: expr(purpose == "password_reset")
     identity :password_reset_request, [:reset_request_id]
     identity :password_reset_consumption, [:reset_consumption_id]
+    identity :email_change_operation_proof, [:email_change_operation_id]
+
+    identity :one_current_email_change_confirmation, [:account_id],
+      where: expr(purpose == "email_change_confirmation")
+
     identity :one_current_magic_login, [:account_id], where: expr(purpose == "magic_login")
     identity :magic_login_request, [:magic_request_id]
   end
