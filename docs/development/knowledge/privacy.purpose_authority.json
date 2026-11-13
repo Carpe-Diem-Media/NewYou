@@ -6,7 +6,7 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "f151b2916bddc0a080f0b1d911dac64a88e664af",
+    "git_sha": "9a57e29e0b972fe69e6c6ab9e615b109b5d1ffb5",
     "semantics": "WELL-18 introduces a proof-only Privacy state, immutable transition history and a transaction-locked current-authority read at Identity's protected mutation boundary. The map is refreshed against the committed source checkpoint and is not governing authority."
   },
   "authoritative_domain": "NewYou.Privacy",
@@ -96,7 +96,7 @@
         "Identity Account UUID and operation UUID for the existing proof-only authority."
       ],
       "returns": [
-        "{:ok, :withdrawn | :already_withdrawn} or a closed Privacy error."
+        "{:ok, :withdrawn | :already_withdrawn}, {:error, :missing} when no current row exists, or a closed Privacy error."
       ],
       "side_effects": [
         "Locks and transitions the Privacy row to withdrawn, increments its version and appends the matching immutable event atomically."
@@ -363,6 +363,7 @@
         "Registration acceptance leaves authority missing.",
         "Privacy creates allowed state and versioned grant history.",
         "Withdrawal is terminal, appends matching immutable history, and cannot be regranted or deleted.",
+        "Withdrawing a missing operation returns missing and does not create negative authority.",
         "A current locked read rejects withdrawn authority and a fresh process reads durable withdrawal.",
         "PostgreSQL rejects both an authority grant and withdrawal that lack their version-matched event at transaction commit.",
         "Concurrent first-time grants serialize through the unique operation key and resolve against one committed allowed row and one event."
@@ -471,7 +472,7 @@
       "id": "privacy_domain",
       "path": "lib/new_you/privacy.ex",
       "symbol": "defmodule NewYou.Privacy",
-      "sha256": "c51e03ae564efb1a1e96bd8178a765def6796a4f0a6d39b6875db226a4fe7d3f"
+      "sha256": "214f70d35fbb363b136dba1bc4d1fa345ef630fb03170fc981a8590c6e4a2104"
     },
     {
       "id": "authority",
@@ -525,19 +526,19 @@
       "id": "event_completeness_test",
       "path": "test/new_you/privacy/purpose_authority_test.exs",
       "symbol": "PostgreSQL rejects an authority transition without its matching event",
-      "sha256": "8f42585ec69f46690cab2ba1fb542083c0eb3b701e5f31c8187e40041e5bc9e2"
+      "sha256": "428a075030d69316eb7c96c599434903561675c3f02648346a5a973c9f328fae"
     },
     {
       "id": "owner_test",
       "path": "test/new_you/privacy/purpose_authority_test.exs",
       "symbol": "defmodule NewYou.Privacy.PurposeAuthorityTest",
-      "sha256": "8f42585ec69f46690cab2ba1fb542083c0eb3b701e5f31c8187e40041e5bc9e2"
+      "sha256": "428a075030d69316eb7c96c599434903561675c3f02648346a5a973c9f328fae"
     },
     {
       "id": "grant_race_test",
       "path": "test/new_you/privacy/purpose_authority_test.exs",
       "symbol": "concurrent first grants resolve to one current authority and one event",
-      "sha256": "8f42585ec69f46690cab2ba1fb542083c0eb3b701e5f31c8187e40041e5bc9e2"
+      "sha256": "428a075030d69316eb7c96c599434903561675c3f02648346a5a973c9f328fae"
     },
     {
       "id": "source_test",
@@ -573,7 +574,7 @@
       "id": "registration_test",
       "path": "test/new_you/privacy/purpose_authority_test.exs",
       "symbol": "proof-only purpose records positive authority, terminal withdrawal and immutable history",
-      "sha256": "8f42585ec69f46690cab2ba1fb542083c0eb3b701e5f31c8187e40041e5bc9e2"
+      "sha256": "428a075030d69316eb7c96c599434903561675c3f02648346a5a973c9f328fae"
     },
     {
       "id": "phase7b",
