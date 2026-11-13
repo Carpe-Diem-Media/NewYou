@@ -1,10 +1,6 @@
 {
-  "base_sha": "cd88e4dea92edef40777d02bb788d40b87d79eca",
+  "base_sha": "dd08e3c7d7b03284082bbfc3a2ca7011b51e10d4",
   "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229/checks",
-  "ci": {
-    "source": "external GitHub checks",
-    "status": "unknown"
-  },
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229/commits",
   "files": [
     {
@@ -283,36 +279,10 @@
       "status": "modified"
     }
   ],
-  "intent": {
-    "author": {
-      "id": 355419376,
-      "login": "JC-Agents"
-    },
-    "kind": "attributed_intent",
-    "summary": "Completes WELL-122's approved development-only content eligibility for the two primary-email-change messages. Product v1.17 / DEC-324 adds only the two narrow Class A `identity_security` classifications and bounded P8-16 development lifecycle; the Account-owned lifecycle remains under DEC-251 and Product \u00a721J.8.\n\nThe four exact EN/AF versions bind immutable identities, byte digests, typed tokens, role capacities and the approved development scope. Evidence records Product, Content & Media, English and Afrikaans capacities separately against the owner\u2019s actual approval sources, without claiming separate human approvals or events. Original approved message bytes remain unchanged.\n\nThe deterministic validator fails closed on changed bytes, identities, tokens, role bindings, scope, withdrawn/superseded status, the exact eligibility map, both runtime-release flags, delivery flags and the exact communication role of each EN/AF version. Negative tests reject missing or extra eligibility grants, contradictory and non-boolean values, and missing, invented or swapped roles. `{{support_contact}}` remains unbound. Runtime, release, publication, production, real-participant, provider/sender and Phase-9 delivery remain disabled.",
-    "title": "WELL-122: add approved primary-email-change content evidence",
-    "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229"
-  },
   "migrations": [],
-  "plane": {
-    "checked_at": "2026-11-13T04:43:56Z",
-    "items": [
-      {
-        "description_sha256": "abcb7e7d45311f90940da4c31a2287090e00dab51a1555df4fbfe8807ef59e73",
-        "id": "330aabfe-f4e5-48f4-9191-36be3d453e75",
-        "identifier": "WELL-122",
-        "name": "WELL-17 upstream \u2014 approve primary-email-change EN/AF confirmation and old-address notice development content",
-        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
-        "sequence_id": 122,
-        "state": "Changes Requested"
-      }
-    ],
-    "source": "connected-plane",
-    "status": "agent_verified"
-  },
   "pr": 229,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/229",
-  "range_base_sha": "cd88e4dea92edef40777d02bb788d40b87d79eca",
+  "range_base_sha": "dd08e3c7d7b03284082bbfc3a2ca7011b51e10d4",
   "schema_version": 1,
   "symbols": [
     {
