@@ -4,36 +4,36 @@
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/232/commits",
   "files": [
     {
-      "blob": "4a53e3d083cb161dbe391843497dada225c7f4c5",
+      "blob": "9b97af51e06fbdb24319fe4e163296312362c8c2",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/identity.primary_email_change.json",
-      "sha256": "fc6662c2ff7cdd9443cc9a0d43783e16fb7034edea1ec67b3ebf76bdea593adb",
+      "sha256": "f04ca8d5d53fad9d67f3dc752efac814aed1ee9e0a6145fa2412b4fa8aaf6ab9",
       "status": "added"
     },
     {
-      "blob": "cc9b5d79b510b361e992c50ab231780b874c2b61",
+      "blob": "7f3e25144dd99676143c3f78bdc1e9a119f8aa1d",
       "mode": "100644",
       "old_blob": "998c338555a56077e9f3c448f4b25b371cd49b83",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.recovery.json",
       "old_sha256": "3d32ad881a7ee2be495fc2c3b3b4d6f8057574c61fd9e9e19bbaffaba81b5b8b",
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "59d2d09a804fccbe4e93ea2de502037ecb36056c724746aca02b333f83122d51",
+      "sha256": "68795c0b82ba6127dee6ec3246f64aae825f078a0ea76101a5ef09a86644f343",
       "status": "modified"
     },
     {
-      "blob": "af3c8782b6c6985bdc9527c00082a577b6ca6c59",
+      "blob": "d2df89334d64a9f7df8da54d2b526cc5a606395f",
       "mode": "100644",
       "old_blob": "08bb1db834e02e2dcd51f14ff44e110878f2d4d5",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.registration.json",
       "old_sha256": "698177056dfe60f429b4ab270ced79c1a13acd44cb1a8ade53b2c08a5f2f4602",
       "path": "docs/development/knowledge/identity.registration.json",
-      "sha256": "83c29a1411b8c8bb2f8c073795b6c5ce6c017fae4a2596f4d3296a9c8e6fde47",
+      "sha256": "c06bf8b4edd4e943d636cc3b66909de05abccd547a78575f0df1a63cdf314363",
       "status": "modified"
     },
     {
@@ -103,36 +103,47 @@
       "status": "added"
     },
     {
-      "blob": "dd616770817308cc56131fe17573278389b4f84e",
+      "blob": "f0b4fc8270cb9452cb6ad9469a0b1f9d189e97f6",
       "mode": "100644",
       "old_blob": "2f2c28d7e82e3cffd7c12979b9d6c86629ce054f",
       "old_mode": "100644",
       "old_path": "lib/new_you/identity.ex",
       "old_sha256": "aa0ba5b43d5a2938aad68eb8ec9d05ad8bf7cf445916dccbb441ab36c92884bf",
       "path": "lib/new_you/identity.ex",
-      "sha256": "6bafa47a2289ce98a032754a598afc0caff6bddc1a0a25b34b2a2716864aaac9",
+      "sha256": "90ba9e7d0ef990538c38482b922d5f8d409f1a2b9a7c557df4fc896038680c81",
       "status": "modified"
     },
     {
-      "blob": "f95268ed070866f8e6b00dd280acb382bc21096a",
+      "blob": "075581d586ecdb5c9abbaecfd10dcdb2afc3d9f9",
       "mode": "100644",
       "old_blob": "018e27e35f78898cdaaf032c3459bb06855eb6e3",
       "old_mode": "100644",
       "old_path": "lib/new_you/identity/account.ex",
       "old_sha256": "d08924f72c8de406e65998afa316f79db011e457e02464ffd258c3d5b1117bdd",
       "path": "lib/new_you/identity/account.ex",
-      "sha256": "40bd00dca5f78a698a4f105e3e4468599827be2a982f06d99acf97e6e2003fe0",
+      "sha256": "515114144a2ba38bd4858e2a5be297ef3d33bd9da50666a4859638f3125bc3ce",
       "status": "modified"
     },
     {
-      "blob": "d1623690e7564266659af8639902f5835fb74552",
+      "blob": "e524eb29d9a23b99af61c885eb4cd14c752ed13f",
+      "mode": "100644",
+      "old_blob": "e8853eecded2f685af9a7598f64017743f85ed19",
+      "old_mode": "100644",
+      "old_path": "lib/new_you/identity/password_reset.ex",
+      "old_sha256": "a1fa8730f8496fe621df33cab8219bc981d83faac7e25f400791a774ced89c96",
+      "path": "lib/new_you/identity/password_reset.ex",
+      "sha256": "464342751261e0c0e6ee37e265eb4ce50b6b1265982dfaa82599d9e1ded2b473",
+      "status": "modified"
+    },
+    {
+      "blob": "e763fe73faa59bbb9712ca59f76481f28b6e645b",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you/identity/primary_email_change.ex",
-      "sha256": "3c8ddba79506305b09a561b587ebdae2192dbf2a3f4a2632760c5861f2f471b1",
+      "sha256": "3c724399df0142dd35f4662e9df8d14db9950ff220574e0222b3862b91637e29",
       "status": "added"
     },
     {
@@ -144,6 +155,17 @@
       "old_sha256": "e4a7120e0e95a8a7c3a6f8056b714aaadc71b2d7ebe9b1b64cdefcca76af6d4c",
       "path": "lib/new_you/identity/privileged_access.ex",
       "sha256": "af02c69e7ef012828c22751a124eed31502d0a2d2212d2363ebf16080e984e29",
+      "status": "modified"
+    },
+    {
+      "blob": "51f3cb8cfb6d0fb2a2f2271fc30ae5f88361ca1e",
+      "mode": "100644",
+      "old_blob": "792f4d0c062ba65b0d8f4106941e39f6ada281bc",
+      "old_mode": "100644",
+      "old_path": "lib/new_you/identity/recovery.ex",
+      "old_sha256": "b0afa08a92a1ce3bf951eb0c26c7fc2a7370272b6b2ccbc1d0471ef5688182c8",
+      "path": "lib/new_you/identity/recovery.ex",
+      "sha256": "15b4c7283c65d701e1016001b34e5c80a0bc97f121803f43d255582c53f83752",
       "status": "modified"
     },
     {
@@ -378,14 +400,14 @@
       "status": "modified"
     },
     {
-      "blob": "7d448ed7e58711cee346581b327e7ad9714a8d0b",
+      "blob": "4c5837991a2922666d0351d7f125042d89f2e8af",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/identity/primary_email_change_test.exs",
-      "sha256": "51694f8cd13166cbae5e670028f2c029f39574dec37886862b803b691931534a",
+      "sha256": "0a510932485741623dd04620610f5857cd1eadebcc6228829b3f82bfe00b96d9",
       "status": "added"
     },
     {
@@ -400,14 +422,14 @@
       "status": "modified"
     },
     {
-      "blob": "e537fbfe9aa8a199b5ab50371456fc264dd55283",
+      "blob": "b0f89ba100e05d87d636d32c543224c0e00e3465",
       "mode": "100644",
       "old_blob": "f4095b55402a2ab232b4c4b071960d3183e3f4b6",
       "old_mode": "100644",
       "old_path": "test/new_you_web/security/authentication_reachability_test.exs",
       "old_sha256": "00fd49c71636d9d35b226787d35a4ac92138fb47373da7892bb11958e5132aff",
       "path": "test/new_you_web/security/authentication_reachability_test.exs",
-      "sha256": "3876fe29d0640b31f6ac18ae6ad613e65e1df6dcb4f1b2c097ee68dbc29e56ca",
+      "sha256": "d7b5227112c068437e58f8226ff02e40df1a2b0914608f9a57e1e4c17b175172",
       "status": "modified"
     },
     {
@@ -749,7 +771,7 @@
       "name": null,
       "old_sha256": "b8a97c976e9eb318641c548a7493e9a77e6d86c170b72b293c93e425e581e56c",
       "path": "lib/new_you/identity.ex",
-      "sha256": "43bbe61bc9f3db7f0e28e42996254fa0abe35b147fb20b92d44a4755c4cbc1f3",
+      "sha256": "f85f2c26c6d0010381efbe8454b4a4277f0a9cc7a6f10c803b80200d3ab30375",
       "status": "parsed"
     },
     {
@@ -910,7 +932,7 @@
       "name": null,
       "old_sha256": "84ed9c7027dac84a4ed8a35c48266cc9ee7de85533f4aaee853b03acf841a9f3",
       "path": "lib/new_you/identity/account.ex",
-      "sha256": "5a64e93e9e36c82d7274c9e9a04594b8d30b8914c60519c1791eb36df2d35b68",
+      "sha256": "f113cc22fc8af455900025f116095239d4aab429aba3e823311e7320474bf522",
       "status": "parsed"
     },
     {
@@ -925,13 +947,34 @@
     },
     {
       "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Identity.PasswordReset",
+      "name": null,
+      "old_sha256": "1c058ac7c73006df8e8d19a1ac96f46df18c4affeb5354a45dccd07246e6c3d8",
+      "path": "lib/new_you/identity/password_reset.ex",
+      "sha256": "e2383e3a66afb4c62f0564237a57d491144687bb5eee2e0bbb0dc00bea4e29d7",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/identity/password_reset.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
       "change": "added",
       "kind": "module",
       "module": "NewYou.Identity.PrimaryEmailChange",
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you/identity/primary_email_change.ex",
-      "sha256": "eb37a9b4d9d92bfdd110a0a425a80aaf816a270b47f291a82a3ca78326720179",
+      "sha256": "913cc797c2cacd03e9498b5b01f8c3032040098804da2c7a7f27732fc0fac4e5",
       "status": "parsed"
     },
     {
@@ -962,6 +1005,40 @@
       "module": null,
       "name": null,
       "path": "lib/new_you/identity/privileged_access.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Identity.Recovery",
+      "name": null,
+      "old_sha256": "85367ee4d45f78f75b248577b4334ecb545ce1a2e43e7b1d65726c25b0f28abe",
+      "path": "lib/new_you/identity/recovery.ex",
+      "sha256": "ee94160460d38e664bf071524b4eb52c42a2f09887d17de73ac3b3bf90a87437",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "changed",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Identity.Recovery",
+      "name": "invalidate_sessions_and_devices",
+      "old_sha256": "5edbe6cfac90ba4b5ad31209478ce911e3a9805891b90f0324ba3618ab902e31",
+      "path": "lib/new_you/identity/recovery.ex",
+      "sha256": "9115cb9f66787e8b002448660a08e2d65acf829e5845dd227ea18492a15eb2bc",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/identity/recovery.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -1467,8 +1544,21 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/identity/primary_email_change_test.exs",
-      "sha256": "16031094a3a2bcf89a580fc5dcdd54b6e0d0a327471e9dd2e354e31dc6c1fe41",
+      "sha256": "36bde3794f590d8079db0b33d2a22282638222a5f74f86ceb18f1b26432fcfe7",
       "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.PrimaryEmailChangeTest",
+      "name": "activate_mfa_and_step_up",
+      "old_sha256": null,
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "sha256": "78357d6552bb6864765e73a63d31d6dc3f0f3fea8aa9b7b2f11c0cbe329c3cc2",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": 1,
@@ -1484,6 +1574,32 @@
       "visibility": "private"
     },
     {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.PrimaryEmailChangeTest",
+      "name": "assert_apply_denied",
+      "old_sha256": null,
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "sha256": "ef14bf9389bbe06f78e08947d99df65e5a603fa5a9e4f9118113712aa3181efc",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.PrimaryEmailChangeTest",
+      "name": "assert_apply_denied_after_logout",
+      "old_sha256": null,
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "sha256": "1d0bd95cf8a8239822a842316a3a9f506462bc767b1f66a5408edc76ff727435",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
       "arity": 2,
       "change": "added",
       "declaration": "defp",
@@ -1493,6 +1609,32 @@
       "old_sha256": null,
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "sha256": "0b080f0a4340f76ed9ef5271bf84950a688573caf3d47d86899eefe6b3792870",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.PrimaryEmailChangeTest",
+      "name": "assert_logout_apply_race",
+      "old_sha256": null,
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "sha256": "cd05cad5399bea449a058a97afac6c9d73366cbc5c7a8beecb34cbde5ddef449",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.PrimaryEmailChangeTest",
+      "name": "assert_no_apply_consequences",
+      "old_sha256": null,
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "sha256": "32ebbccec264f153dc0d1ab6b2a9acffc62aae41e223df27161cb3de28886f67",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1580,10 +1722,36 @@
       "declaration": "defp",
       "kind": "function",
       "module": "NewYou.Identity.PrimaryEmailChangeTest",
+      "name": "current_confirmation_proof",
+      "old_sha256": null,
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "sha256": "1aba3a6f3ee9fc934c14143e1cfdfbd48423bbc94a9ea408b3191482d060e457",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.PrimaryEmailChangeTest",
       "name": "execute_competing_identity_writes",
       "old_sha256": null,
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "sha256": "e6f47b039ff1f1581c825aa8b8689ce0e349662f3069b06f0f4dea8485e9611d",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.PrimaryEmailChangeTest",
+      "name": "execute_logout_apply_race",
+      "old_sha256": null,
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "sha256": "855fa4ff7e3357e7d5a0b63a97478d500491b5f0f17e5540e228d5c596f34ba7",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1597,6 +1765,19 @@
       "old_sha256": null,
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "sha256": "3e36a3d8422e4cbdacc61fb18efe24c7d5a4459d68c40585149ed0ab1c383aa3",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.PrimaryEmailChangeTest",
+      "name": "maybe_activate_mfa",
+      "old_sha256": null,
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "sha256": "86a82fbccc7831405bf259fd25efc6877ebd0175b61183f67285f6c04f1b898f",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1718,6 +1899,32 @@
       "visibility": "private"
     },
     {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.PrimaryEmailChangeTest",
+      "name": "with_confirmed_email_change",
+      "old_sha256": null,
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "sha256": "5a74441b03b5b5a3ad8145c3f6851f90c0975e66e104524594e50edce5718231",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.PrimaryEmailChangeTest",
+      "name": "with_confirmed_email_change",
+      "old_sha256": null,
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "sha256": "7420ae635489ab812cc70a23f0421148bc75cf8b497dc6de2c914760b6a81f10",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
       "arity": null,
       "change": "unknown",
       "kind": "unknown",
@@ -1756,7 +1963,7 @@
       "name": null,
       "old_sha256": "3decf15cd11e04ba6ee65275b5c0c9af887ca557762f7e2659e64f6228ee4d51",
       "path": "test/new_you_web/security/authentication_reachability_test.exs",
-      "sha256": "223a4e84e7535ef1961669af87217b2a3bcce96d64b05e969a1837c8c1c49a03",
+      "sha256": "ba3043a69dbb94e2fe6c2075a6668ccf7f0c7ea9241d7ed217ee9c8a28032521",
       "status": "parsed"
     },
     {
