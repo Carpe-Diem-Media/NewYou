@@ -54,7 +54,10 @@ defmodule NewYou.Privacy do
              Ash.transact([PurposeAuthority, PurposeEvent], fn ->
                withdraw_locked(subject_id, operation_id)
              end) do
-        result
+        case result do
+          {:ok, :missing} -> {:error, :missing}
+          result -> result
+        end
       else
         _ -> {:error, :privacy_authority_unavailable}
       end
@@ -184,7 +187,7 @@ defmodule NewYou.Privacy do
         {:ok, :already_withdrawn}
 
       {:ok, nil} ->
-        {:error, :missing}
+        {:ok, :missing}
 
       _ ->
         {:error, :privacy_authority_unavailable}

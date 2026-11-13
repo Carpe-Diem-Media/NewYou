@@ -110,14 +110,12 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
       {:ok, registration} = Identity.register(request)
       {:ok, :verified} = Identity.verify_email(registration.verification_proof)
 
-      page = get(build_conn(), "/login?locale=en")
-      assert page.status == 200
-      [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
-
       submit = fn email ->
+        page = get(build_conn(), "/login?locale=en")
+        assert page.status == 200
+        [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
+
         page
-        |> recycle()
-        |> put_private(:plug_skip_csrf_protection, false)
         |> post("/login", %{
           email: email,
           password: "same invalid password for both requests",
@@ -127,15 +125,30 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
       end
 
       known = submit.(request.email)
-      unknown = submit.("unknown-#{Ecto.UUID.generate()}@example.test")
+      unknown_email = "unknown-#{Ecto.UUID.generate()}@example.test"
+      unknown = submit.(unknown_email)
 
-      public_result = fn conn ->
+      public_result = fn conn, submitted_email ->
+        {:ok, canonical_email} = Identity.Email.canonicalize(submitted_email)
+
+        body =
+          [submitted_email, canonical_email]
+          |> Enum.uniq()
+          |> Enum.reduce(conn.resp_body, fn email, body ->
+            String.replace(body, email, "[submitted-email]")
+          end)
+
         body =
           Regex.replace(
             ~r/(name="_csrf_token"[^>]*value=")[^"]+/,
-            conn.resp_body,
+            body,
             "\\1[session-token]"
           )
+
+        cookies =
+          conn
+          |> get_resp_header("set-cookie")
+          |> Enum.map(&Regex.replace(~r/(^[^=;]+=)[^;]*/, &1, "\\1[cookie]"))
 
         {
           conn.status,
@@ -144,12 +157,13 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
           get_resp_header(conn, "cache-control"),
           get_resp_header(conn, "referrer-policy"),
           get_resp_header(conn, "content-security-policy"),
-          get_resp_header(conn, "set-cookie")
+          cookies
         }
       end
 
-      assert public_result.(known) == public_result.(unknown)
       assert known.status == 200
+      assert unknown.status == 200
+      assert public_result.(known, request.email) == public_result.(unknown, unknown_email)
       refute get_session(known, :identity_session_id)
       refute get_session(unknown, :identity_session_id)
     end)

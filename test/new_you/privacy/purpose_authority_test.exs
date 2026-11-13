@@ -18,6 +18,9 @@ defmodule NewYou.Privacy.PurposeAuthorityTest do
       assert {:ok, :missing} =
                Privacy.current_p817_proof_purpose(registration.account_id, operation_id)
 
+      assert {:error, :missing} =
+               Privacy.withdraw_p817_proof_purpose(registration.account_id, operation_id)
+
       assert {:ok, :allowed} =
                Privacy.grant_p817_proof_purpose(registration.account_id, operation_id)
 
