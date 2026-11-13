@@ -10,21 +10,19 @@ Start with [identity.registration.json](identity.registration.json), the canonic
 
 ## Agent capture before final review
 
-The [ticket workflow](../../../.agents/skills/ticket-implement/SKILL.md) invokes these steps as normal agent work. The founder runs no commands.
+The [ticket workflow](../../../.agents/skills/ticket-implement/SKILL.md) invokes these steps as normal agent work. The founder runs no commands. Generate once at the review checkpoint, then regenerate only when source or base changes. The check uses stable ticket identifiers in the committed record when `--ticket` is omitted; a supplied ticket must agree.
 
 1. Implement and test the ticket. Commit source changes. For a first PR, create it as a draft with its implementing WELL ticket in the title or description. Push the source checkpoint before fetching metadata, so GitHub's head matches the source revision.
-2. Inspect the live Plane tickets and dependencies through the connected Plane integration. The agent exports those actual responses into a temporary receipt, using the format below. It is an attributed observation by the implementing agent, not independently verified CI evidence. No founder prepares this file. CI receives no Plane credentials and validates its structure and ticket linkage without claiming a live lookup.
-
-   The receipt has `status: agent_verified`, `source: connected-plane`, the actual UTC `checked_at`, and an `items` array. Each item contains the actual `identifier`, `id`, `project_id`, integer `sequence_id`, `name`, `state` name and `description_sha256` of the connector's UTF-8 `description_stripped`. The WELL project ID is checked by the generator. Export this from the observed connector response without inventing missing values. If live verification is unavailable, use `--plane-unavailable REASON` instead of `--plane-context`; the record will explicitly remain unverified.
-3. Save the live PR metadata and generate its record. Replace `NUMBER` with the actual PR number.
+2. Verify the live Plane ticket and dependencies through the connected Plane integration as part of author and reviewer checks. Plane state is not copied into the historical record.
+3. At the review checkpoint, save live PR metadata and generate the record with the explicit ticket from implementation context. Replace `NUMBER` and `WELL-N` with their actual values.
 
 ```sh
 gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER > /tmp/newyou-PR-metadata.json
-mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/newyou-PR-metadata.json --plane-context /tmp/newyou-plane-receipt.json
+mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/newyou-PR-metadata.json --ticket WELL-N
 ```
 
-4. Commit `pr-NUMBER.json` under `history/` and push the final head before requesting review. Only that exact record is excluded from its own mechanical payload. Other history and capability changes remain visible. The committed record contains the exact base, merge base, source blobs and hashes, stable PR commit/check links, and the first Purpose/Summary section of the PR explanation as attributed intent. It never records its own final head SHA, an invented successful CI result or future merge status.
-5. Foundation Smoke independently regenerates against the event's exact PR base/head and compares the committed record. It installs the parser only when changed Elixir source or extractor tooling needs it. Ordinary documentation changes still receive read-only record validation. Parsing never evaluates source. CI never commits changes or receives Plane write credentials. Changed source/base, tampering, invalid linkage or a missing record requires regeneration and fresh review/CI. No generated commit follows final approval.
+4. Commit `pr-NUMBER.json` under `history/` and push it before requesting review. Only that record is excluded from its own mechanical payload; other history and capability changes remain visible. The record contains the exact base, merge base, source blobs and hashes, and stable PR commit/check links. It omits PR prose, author and Plane state, its own final head SHA, and CI or merge outcomes. Existing records keep their historical administrative fields and remain queryable without regeneration.
+5. Foundation Smoke independently regenerates the source fields against the event's exact PR base/head using the committed stable ticket references. Independent review verifies those references against live Plane; CI does not authenticate ticket ownership or current Plane state. It installs the parser only when changed Elixir source or extractor tooling needs it. Ordinary documentation changes still receive read-only record validation. Parsing never evaluates source. CI does not commit changes. Changed source/base, tampering, invalid linkage or a missing record requires regeneration and fresh review/CI. No generated commit follows final approval.
 
 After pushing the final history commit, refresh the metadata and run the same check locally:
 

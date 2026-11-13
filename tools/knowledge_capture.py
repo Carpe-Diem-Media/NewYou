@@ -155,18 +155,19 @@ def _symbols(repo, old_revision, new_revision, old_path, new_path):
     return records
 
 
-def _metadata(metadata, pr, base, head, tickets):
+def _metadata(metadata, pr, base, head):
     if not metadata:
-        return {'url': None, 'source': 'unknown'}
+        return {'url': f'https://github.com/Carpe-Diem-Media/NewYou/pull/{pr}' if pr else None,
+                'source': 'unknown'}
     if 'pull_request' in metadata:
         obj = metadata['pull_request']
         number = metadata.get('number') or obj.get('number')
         base_oid = (obj.get('base') or {}).get('sha')
         head_oid = (obj.get('head') or {}).get('sha')
         url = obj.get('html_url')
-        title_body = ((obj.get('title') or '') + '\n' + (obj.get('body') or ''))
-        author = obj.get('user') or {}
         repository = (metadata.get('repository') or {}).get('full_name') or (obj.get('base') or {}).get('repo', {}).get('full_name')
+        if obj.get('number') is not None and str(obj['number']) != str(pr):
+            raise ValueError('metadata nested PR number does not match --pr')
     else:
         obj = metadata
         number = obj.get('number')
@@ -174,8 +175,6 @@ def _metadata(metadata, pr, base, head, tickets):
         base_oid = obj.get('baseRefOid') or (base_part.get('sha') or base_part.get('refOid') if isinstance(base_part, dict) else None)
         head_oid = obj.get('headRefOid') or (head_part.get('sha') or head_part.get('refOid') if isinstance(head_part, dict) else None)
         url = obj.get('html_url') or obj.get('url')
-        title_body = (obj.get('title') or '') + '\n' + (obj.get('body') or '')
-        author = obj.get('author') or obj.get('user') or {}
         repository = (obj.get('repository') or {}).get('full_name') or (base_part.get('repo') or {}).get('full_name') if isinstance(base_part, dict) else None
         if isinstance(head_part, str):
             head_oid = head_oid or head_part
@@ -192,78 +191,18 @@ def _metadata(metadata, pr, base, head, tickets):
     expected_url = f'https://github.com/Carpe-Diem-Media/NewYou/pull/{pr}'
     if not url or url.rstrip('/') != expected_url:
         raise ValueError('metadata PR URL does not match canonical repository and number')
-    summary = _intent_summary(obj.get('body') or '')
-    stable_intent = (obj.get('title') or '') + '\n' + summary
-    discovered = sorted(set(re.findall(r'\bWELL-[1-9][0-9]*\b', stable_intent)))
-    if metadata and not discovered:
-        raise ValueError('PR metadata has no WELL ticket reference')
-    if tickets and sorted(set(tickets)) != discovered:
-        raise ValueError('ticket IDs do not match PR title/body metadata')
-    return {'url': url or (expected_url if repository else None), 'source': 'github', 'number': pr,
-            'metadata_base': base_oid, 'metadata_head': head_oid,
-            'ticket_ids': discovered or sorted(set(tickets)),
-            'intent': {'kind': 'attributed_intent', 'title': obj.get('title') or '',
-                       'summary': summary,
-                       'author': {'login': author.get('login'), 'id': author.get('id')},
-                       'url': expected_url}}
+    base_repository = (obj.get('base') or {}).get('repo', {}).get('full_name') if isinstance(obj.get('base'), dict) else None
+    if base_repository and base_repository != 'Carpe-Diem-Media/NewYou':
+        raise ValueError('metadata base repository does not match Carpe-Diem-Media/NewYou')
+    return {'url': url, 'source': 'github'}
 
 
-def _intent_summary(body):
-    lines = body.splitlines()
-    for index, line in enumerate(lines):
-        if re.match(r'^#{1,6}\s*(purpose|summary)\s*#*\s*$', line.strip(), re.IGNORECASE):
-            content = []
-            for next_line in lines[index + 1:]:
-                if re.match(r'^#{1,6}\s+', next_line.strip()):
-                    break
-                content.append(next_line)
-            return '\n'.join(content).strip()
-    paragraphs = re.split(r'\n\s*\n', body.strip(), maxsplit=1)
-    return paragraphs[0].strip() if paragraphs and paragraphs[0] else ''
-
-
-PROJECT_ID = '846031af-971b-4f08-92c3-7f008522a5ac'
-
-
-def _plane_context(context, unavailable, tickets):
-    if unavailable:
-        reason = unavailable.strip()
-        if not reason:
-            raise ValueError('Plane unavailable reason must not be blank')
-        return {'status': 'unverified', 'reason': reason}
-    if context is None:
-        raise ValueError('Plane context is required; use --plane-context or --plane-unavailable')
-    if set(context) != {'status', 'source', 'checked_at', 'items'}:
-        raise ValueError('invalid Plane receipt fields')
-    if context['status'] != 'agent_verified' or context['source'] != 'connected-plane':
-        raise ValueError('invalid Plane receipt status or source')
-    if not isinstance(context['checked_at'], str) or not re.fullmatch(r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z', context['checked_at']):
-        raise ValueError('invalid Plane checked_at timestamp')
-    if not isinstance(context['items'], list):
-        raise ValueError('invalid Plane receipt items')
-    normalized = []
-    expected = sorted(set(tickets))
-    for item in context['items']:
-        if set(item) != {'identifier', 'id', 'project_id', 'sequence_id', 'name', 'state', 'description_sha256'}:
-            raise ValueError('invalid Plane item fields')
-        identifier = item['identifier']
-        match = re.fullmatch(r'WELL-([1-9][0-9]*)', identifier or '')
-        if not match or item['project_id'] != PROJECT_ID or item['sequence_id'] != int(match.group(1)):
-            raise ValueError('invalid Plane ticket identity or project')
-        if not re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}', item['id'] or '', re.I):
-            raise ValueError('invalid Plane UUID')
-        states = {'Backlog', 'Planning', 'Ready', 'In Progress', 'In Review', 'Changes Requested',
-                  'Ready to Merge', 'Merging', 'Done', 'Blocked'}
-        if (not isinstance(item['name'], str) or not item['name'].strip()
-                or item['state'] not in states):
-            raise ValueError('invalid Plane ticket title or state')
-        if not re.fullmatch(r'[0-9a-f]{64}', item['description_sha256'] or ''):
-            raise ValueError('invalid Plane description digest')
-        normalized.append(item)
-    if sorted(item['identifier'] for item in normalized) != expected:
-        raise ValueError('Plane receipt tickets do not match PR tickets')
-    return {'status': context['status'], 'source': context['source'], 'checked_at': context['checked_at'],
-            'items': sorted(normalized, key=lambda item: item['identifier'])}
+def _tickets(tickets):
+    if not isinstance(tickets, (list, tuple)) or any(
+            not isinstance(ticket, str) or not re.fullmatch(r'WELL-[1-9][0-9]*', ticket)
+            for ticket in tickets):
+        raise ValueError('invalid ticket references; supply --ticket WELL-N from implementation context')
+    return sorted(set(tickets))
 
 
 def parser_needed(repo, metadata):
@@ -286,15 +225,12 @@ def parser_needed(repo, metadata):
                  'tests/test_knowledge_capture.py', '.tool-versions') for path in paths)
 
 
-def extract(repo=ROOT, base='HEAD^', head='HEAD', pr=0, tickets=(), metadata=None,
-            plane_context=None, plane_unavailable=None):
+def extract(repo=ROOT, base='HEAD^', head='HEAD', pr=0, tickets=(), metadata=None):
     repo = Path(repo).resolve()
     base_sha, head_sha = _resolve(repo, base), _resolve(repo, head)
     range_base_sha = _merge_base(repo, base_sha, head_sha)
-    link = _metadata(metadata, pr, base_sha, head_sha, tickets)
-    linked_tickets = link.get('ticket_ids', sorted(set(tickets)))
-    plane = (_plane_context(plane_context, plane_unavailable, linked_tickets)
-             if plane_context is not None or plane_unavailable else {'status': 'unverified'})
+    link = _metadata(metadata, pr, base_sha, head_sha)
+    linked_tickets = _tickets(tickets)
     old_tree, new_tree = _tree(repo, range_base_sha), _tree(repo, head_sha)
     changes = []
     symbol_records = []
@@ -338,13 +274,11 @@ def extract(repo=ROOT, base='HEAD^', head='HEAD', pr=0, tickets=(), metadata=Non
                 symbol_records.extend([dict(item, path=symbol_path) for item in
                                        _symbols(repo, range_base_sha, head_sha, old_path, new_path)])
     return {'schema_version': 1, 'pr': pr, 'pr_url': link.get('url'), 'tickets': linked_tickets,
-            'intent': link.get('intent'), 'plane': plane,
             'base_sha': base_sha, 'range_base_sha': range_base_sha,
             'commits_url': f'https://github.com/Carpe-Diem-Media/NewYou/pull/{pr}/commits' if pr else None,
             'checks_url': f'https://github.com/Carpe-Diem-Media/NewYou/pull/{pr}/checks' if pr else None,
             'files': changes,
-            'tests': sorted(test_paths), 'migrations': sorted(migration_paths), 'symbols': symbol_records,
-            'ci': {'source': 'external GitHub checks', 'status': 'unknown'}}
+            'tests': sorted(test_paths), 'migrations': sorted(migration_paths), 'symbols': symbol_records}
 
 
 def _safe_path(path):
@@ -373,7 +307,7 @@ def record_path(repo, pr):
 
 
 def check_record(repo, record, expected=None):
-    if record.get('schema_version') != 1:
+    if type(record.get('schema_version')) is not int or record['schema_version'] != 1:
         raise ValueError('unsupported history schema version')
     for file in record.get('files', []):
         if not _safe_path(file['path']) or (file.get('old_path') and not _safe_path(file['old_path'])):
@@ -381,16 +315,20 @@ def check_record(repo, record, expected=None):
         if file.get('sha256') and not re.fullmatch(r'[0-9a-f]{64}', file['sha256']):
             raise ValueError('invalid source SHA-256')
     if expected is not None:
+        # Older records retain their administrative snapshots. They are not
+        # current evidence and are excluded from mechanical source comparison.
+        mechanical = {key: value for key, value in record.items() if key not in ('intent', 'plane', 'ci')}
+        if 'ci' in record and record['ci'] != {'source': 'external GitHub checks', 'status': 'unknown'}:
+            raise ValueError('history cannot claim a CI result')
         canonical = lambda value: json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
-        if canonical(record) != canonical(expected):
-            keys = sorted(set(record) | set(expected))
-            field = next((key for key in keys if record.get(key) != expected.get(key)), 'record')
+        if canonical(mechanical) != canonical(expected):
+            keys = sorted(set(mechanical) | set(expected))
+            field = next((key for key in keys if mechanical.get(key) != expected.get(key)), 'record')
             raise ValueError('history record differs from exact regeneration: ' + field)
     return True
 
 
-def generate(repo, base, head, pr, tickets, metadata=None, check=False,
-             plane_context=None, plane_unavailable=None):
+def generate(repo, base, head, pr, tickets, metadata=None, check=False):
     path = record_path(repo, pr)
     if check:
         relative = path.relative_to(Path(repo).resolve()).as_posix()
@@ -399,20 +337,13 @@ def generate(repo, base, head, pr, tickets, metadata=None, check=False,
         if relative not in head_tree:
             raise ValueError('missing PR history record: ' + str(path))
         existing = _loads(_blob(repo, head_commit, relative).decode())
-        committed_plane = existing.get('plane')
-        if not isinstance(committed_plane, dict):
-            raise ValueError('committed record has no Plane context')
-        if committed_plane.get('status') == 'unverified':
-            plane_unavailable = committed_plane.get('reason')
-            if not isinstance(plane_unavailable, str) or not plane_unavailable.strip():
-                raise ValueError('Plane unavailability reason is required')
-        else:
-            plane_context = {'status': committed_plane.get('status'), 'source': committed_plane.get('source'),
-                             'checked_at': committed_plane.get('checked_at'), 'items': committed_plane.get('items')}
-    elif plane_context is None and not plane_unavailable:
-        raise ValueError('Plane context is required; use --plane-context or --plane-unavailable')
-    expected = extract(repo, base, head, pr, tickets, metadata,
-                       plane_context=plane_context, plane_unavailable=plane_unavailable)
+        committed_tickets = _tickets(existing.get('tickets'))
+        if tickets and _tickets(tickets) != committed_tickets:
+            raise ValueError('ticket references differ from committed implementation context')
+        tickets = committed_tickets
+    if not _tickets(tickets):
+        raise ValueError('at least one explicit --ticket WELL-N is required')
+    expected = extract(repo, base, head, pr, tickets, metadata)
     if check:
         check_record(repo, existing, expected)
         return {'status': 'PASS', 'path': str(path), 'base_sha': expected['base_sha'], 'head_sha': _resolve(repo, head)}
@@ -590,8 +521,6 @@ def main():
         cmd.add_argument('--pr', type=int)
         cmd.add_argument('--ticket', action='append', default=[])
         cmd.add_argument('--metadata-json')
-        cmd.add_argument('--plane-context')
-        cmd.add_argument('--plane-unavailable')
     needs = sub.add_parser('needs-parser')
     needs.add_argument('--metadata-json', required=True)
     needs.add_argument('--github-output')
@@ -603,7 +532,6 @@ def main():
     args = parser.parse_args()
     if args.command in ('generate', 'check'):
         metadata = _loads(Path(args.metadata_json).read_text()) if args.metadata_json else None
-        plane_context = _loads(Path(args.plane_context).read_text()) if args.plane_context else None
         pr = args.pr or (metadata.get('number') if metadata else None)
         if metadata and 'pull_request' in metadata:
             pr = pr or metadata['pull_request'].get('number')
@@ -619,8 +547,7 @@ def main():
         if not head and metadata:
             head_part = metadata.get('head') or {}
             head = metadata.get('headRefOid') or ((head_part.get('sha') or head_part.get('refOid')) if isinstance(head_part, dict) else None)
-        result = generate(args.repo, base, head or 'HEAD', pr, args.ticket, metadata, args.command == 'check',
-                          plane_context, args.plane_unavailable)
+        result = generate(args.repo, base, head or 'HEAD', pr, args.ticket, metadata, args.command == 'check')
     elif args.command == 'needs-parser':
         metadata = _loads(Path(args.metadata_json).read_text())
         parser_required = parser_needed(args.repo, metadata)
