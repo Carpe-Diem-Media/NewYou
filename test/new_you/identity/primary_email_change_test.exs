@@ -523,6 +523,72 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
     )
   end
 
+  test "confirmed operation cannot apply after purpose-bound step-up expires without MFA" do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      assert current_account(fixture.registration.account_id).mfa_enrollment_state == :disabled
+
+      Repo.query!(
+        "UPDATE sessions SET step_up_expires_at = now() - interval '1 second' WHERE id = $1",
+        [Ecto.UUID.dump!(fixture.credentials.session_id)]
+      )
+
+      assert_apply_denied(fixture)
+    end)
+  end
+
+  test "confirmed operation cannot apply after its step-up is cleared without MFA" do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      assert current_account(fixture.registration.account_id).mfa_enrollment_state == :disabled
+      session = Ash.get!(Session, fixture.credentials.session_id, authorize?: false)
+      assert {:ok, _} = Ash.update(session, %{}, action: :clear_step_up, authorize?: false)
+
+      assert_apply_denied(fixture)
+    end)
+  end
+
+  test "confirmed operation cannot apply with wrong-purpose step-up without MFA" do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      assert current_account(fixture.registration.account_id).mfa_enrollment_state == :disabled
+      session = Ash.get!(Session, fixture.credentials.session_id, authorize?: false)
+
+      assert {:ok, _} =
+               Ash.update(
+                 session,
+                 %{step_up_purpose: :review_security_hold},
+                 action: :set_step_up,
+                 authorize?: false
+               )
+
+      assert_apply_denied(fixture)
+    end)
+  end
+
+  test "confirmed operation cannot apply with stale MFA version binding without MFA" do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      assert current_account(fixture.registration.account_id).mfa_enrollment_state == :disabled
+
+      Repo.query!(
+        "UPDATE sessions SET step_up_mfa_version = step_up_mfa_version + 1 WHERE id = $1",
+        [Ecto.UUID.dump!(fixture.credentials.session_id)]
+      )
+
+      assert_apply_denied(fixture)
+    end)
+  end
+
+  test "confirmed operation cannot apply with stale security version binding without MFA" do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      assert current_account(fixture.registration.account_id).mfa_enrollment_state == :disabled
+
+      Repo.query!(
+        "UPDATE sessions SET step_up_security_version = step_up_security_version - 1 WHERE id = $1",
+        [Ecto.UUID.dump!(fixture.credentials.session_id)]
+      )
+
+      assert_apply_denied(fixture)
+    end)
+  end
+
   test "confirmed operation cannot apply with stale MFA version binding" do
     with_confirmed_email_change(
       %{delay_seconds: 0, requires_review?: false},
@@ -659,6 +725,83 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
           |> Ash.read!(authorize?: false)
 
         assert length(intents) == 1
+        assert {:ok, :applied} = Identity.apply_primary_email_change(fixture.operation_id)
+
+        assert current_account(fixture.registration.account_id).email ==
+                 fixture.target_request.email
+      end
+    )
+  end
+
+  test "confirmed delayed operation can refresh password-bound assurance without MFA" do
+    with_confirmed_email_change(
+      %{delay_seconds: 360, requires_review?: false},
+      fn fixture ->
+        original_account = current_account(fixture.registration.account_id)
+        assert original_account.mfa_enrollment_state == :disabled
+
+        Repo.query!(
+          "UPDATE accounts SET primary_email_change_apply_after = now() - interval '1 second' WHERE id = $1",
+          [Ecto.UUID.dump!(fixture.registration.account_id)]
+        )
+
+        Repo.query!(
+          "UPDATE sessions SET step_up_expires_at = now() - interval '1 second' WHERE id = $1",
+          [Ecto.UUID.dump!(fixture.credentials.session_id)]
+        )
+
+        assert_apply_denied(fixture)
+
+        due_account = current_account(fixture.registration.account_id)
+
+        assert {:ok, :assurance_refreshed} =
+                 Identity.reauthenticate_primary_email_change(
+                   fixture.credentials,
+                   fixture.registration_request.password,
+                   fixture.operation_id
+                 )
+
+        refreshed = current_account(fixture.registration.account_id)
+        refreshed_session = Ash.get!(Session, fixture.credentials.session_id, authorize?: false)
+
+        assert refreshed.primary_email_change_state == :delayed
+        assert refreshed.primary_email_change_operation_id == fixture.operation_id
+        assert refreshed.primary_email_change_token_jti == fixture.proof_jti
+        assert refreshed.primary_email_change_confirmation_id == fixture.confirmation_id
+
+        assert refreshed.primary_email_change_confirmed_at ==
+                 original_account.primary_email_change_confirmed_at
+
+        assert refreshed.primary_email_change_apply_after ==
+                 due_account.primary_email_change_apply_after
+
+        assert refreshed.primary_email_change_reauth_session_id == refreshed_session.id
+        assert refreshed_session.step_up_purpose == :change_primary_email
+        assert DateTime.compare(refreshed_session.step_up_at, DateTime.utc_now()) != :gt
+        assert DateTime.compare(refreshed_session.step_up_expires_at, DateTime.utc_now()) == :gt
+        assert refreshed_session.step_up_mfa_version == refreshed.mfa_version
+        assert refreshed_session.step_up_security_version == refreshed.security_version
+
+        proofs =
+          Token
+          |> Ash.Query.filter(
+            account_id == ^fixture.registration.account_id and
+              email_change_operation_id == ^fixture.operation_id
+          )
+          |> Ash.read!(authorize?: false)
+
+        assert length(proofs) == 1
+
+        intents =
+          MessageIntent
+          |> Ash.Query.filter(
+            source_operation_id == ^fixture.operation_id and
+              role == :email_change_confirmation
+          )
+          |> Ash.read!(authorize?: false)
+
+        assert length(intents) == 1
+
         assert {:ok, :applied} = Identity.apply_primary_email_change(fixture.operation_id)
 
         assert current_account(fixture.registration.account_id).email ==

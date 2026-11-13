@@ -424,12 +424,13 @@ defmodule NewYou.Identity.PrimaryEmailChange do
              is_binary(password) and Argon2Provider.valid?(password, account.hashed_password),
            true <- mfa_assurance?(session, account),
            true <- current_consumed_confirmation?(proof, account, operation_id, now),
+           {:ok, refreshed_session} <- refresh_session_assurance(session, account, now),
            {:ok, _refreshed} <-
              Ash.update(
                account,
                %{
                  primary_email_change_reauthenticated_at: now,
-                 primary_email_change_reauth_session_id: session.id,
+                 primary_email_change_reauth_session_id: refreshed_session.id,
                  primary_email_change_security_version: account.security_version,
                  primary_email_change_credential_version: account.credential_version
                },
@@ -441,6 +442,17 @@ defmodule NewYou.Identity.PrimaryEmailChange do
         _ -> unavailable()
       end
     end
+
+    defp refresh_session_assurance(session, %{mfa_enrollment_state: :disabled} = account, now) do
+      # Fresh password verification establishes purpose-bound step-up when no MFA factor exists.
+      set_step_up(session, account, now)
+    end
+
+    defp refresh_session_assurance(session, %{mfa_enrollment_state: :active}, _now),
+      do: {:ok, session}
+
+    defp refresh_session_assurance(_session, _account, _now),
+      do: {:error, :primary_email_change_unavailable}
 
     # Load every operation Token in JTI order before locking the Session. Rebinding
     # assurance after confirmation follows the same Account -> Token -> Session
@@ -1074,8 +1086,8 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     defp current_email_change_assurance?(session, %{mfa_enrollment_state: :active} = account),
       do: current_email_change_step_up?(session, account)
 
-    defp current_email_change_assurance?(_session, %{mfa_enrollment_state: :disabled}),
-      do: true
+    defp current_email_change_assurance?(session, %{mfa_enrollment_state: :disabled} = account),
+      do: current_email_change_step_up?(session, account)
 
     defp current_email_change_assurance?(_session, _account), do: false
 
