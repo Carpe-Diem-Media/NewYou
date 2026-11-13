@@ -6,7 +6,7 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "f151b2916bddc0a080f0b1d911dac64a88e664af",
+    "git_sha": "6288bda8d0120b6a15276079b5d059905d67efdf",
     "semantics": "WELL-18 adds an Identity-owned lookup scope and a read-only current-authority path. The map is refreshed against the committed source checkpoint; it is descriptive, not authorization or merge evidence."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -67,7 +67,7 @@
         "Read-only Identity transaction; no Account mutation, recovery completion, email change, grant expansion or durable lookup record."
       ],
       "caller_constraints": [
-        "The caller needs a current named Support grant scoped to identity_lookup and the exact Account, a current eligible Session, active MFA and a current lookup_identity step-up.",
+        "The caller needs a current named Support grant scoped to identity_lookup, reason-coded security_review and the exact Account, a current eligible Session, active MFA and a current lookup_identity step-up.",
         "The authorized caller may distinguish a match from a non-match only for this grant-bound target; the function is not a public endpoint or directory."
       ],
       "source_ids": [
@@ -165,7 +165,7 @@
   },
   "security_invariants": [
     {
-      "summary": "The grant names a Support Account, role, identity_lookup scope, exact target, independent approver, bounded lifetime and active/revoked state; role labels alone do not authorize use.",
+      "summary": "The grant names a Support Account, role, identity_lookup scope, security_review reason, exact target, independent approver, bounded lifetime and active/revoked state; other reason codes and role labels alone do not authorize lookup.",
       "source_ids": [
         "grant",
         "privilege"
@@ -216,11 +216,12 @@
   ],
   "failure_recovery": [
     {
-      "summary": "Missing, malformed, wrong-actor, wrong-scope, expired, revoked, stale-session and stale-assurance authority returns the same support_lookup_unavailable error.",
+      "summary": "Missing, malformed, wrong-actor, wrong-scope, wrong-reason, expired, revoked, stale-session and stale-assurance authority returns the same support_lookup_unavailable error. Migration rollback refuses while identity_lookup grants remain, preserving those grant rows instead of rewriting their scope.",
       "source_ids": [
         "lookup",
         "privilege",
-        "lookup_test"
+        "lookup_test",
+        "grant_migration"
       ]
     },
     {
@@ -238,6 +239,7 @@
         "Authorized matching and non-matching lookup for the exact grant target.",
         "Duplicate read stability and exact minimum projection.",
         "Missing, wrong-scope, wrong-actor, expired and revoked grant denials.",
+        "Non-security-review grant reason and malformed grant, target and email inputs deny generically.",
         "Invalid and revoked Session, wrong-purpose step-up and stale MFA-version assurance denials.",
         "Unrelated target denial and no Super Admin capability bypass."
       ],
@@ -315,7 +317,7 @@
       "id": "grant",
       "path": "lib/new_you/identity/identity_grant.ex",
       "symbol": "identity_lookup",
-      "sha256": "cd28d1455b54cc3167535953fbc98218754eb9ed9bbdaa8db897b3cc316fe8ed"
+      "sha256": "6d38ba53f70790e9735979930c8dc02f038d8f8fa54cee76e76369a64b2c6bc9"
     },
     {
       "id": "privilege",
@@ -339,13 +341,13 @@
       "id": "grant_migration",
       "path": "priv/repo/migrations/20261113182310_well_18_support_lookup_and_privacy_history.exs",
       "symbol": "identity_grants_scope",
-      "sha256": "89f1f0c4e1a4db9b6cd55575947c73682d9356301ee66ea9338a2ea4c122d9d9"
+      "sha256": "8b9432c35d68f1ca3e82250e998166967e44bf11640c155f73c594d6e333796c"
     },
     {
       "id": "lookup_test",
       "path": "test/new_you/identity/support_lookup_test.exs",
       "symbol": "defmodule NewYou.Identity.SupportLookupTest",
-      "sha256": "5b53c6d7363a9191e71f211aa1e701eb553ae538e635f4a638a34180b07bf15f"
+      "sha256": "22e188bba63112be0c8bcb3410bd923830879e8e27f80bc13d81d6a6cd352cee"
     },
     {
       "id": "audit_contract",
