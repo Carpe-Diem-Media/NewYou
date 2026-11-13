@@ -104,4 +104,58 @@ defmodule NewYou.Privacy.PurposeAuthorityTest do
       assert fresh_process_result == {:ok, :withdrawn}
     end)
   end
+
+  test "PostgreSQL rejects an authority transition without its matching event" do
+    P805.with_fixture(fn ->
+      request = P805.request()
+      operation_id = Ecto.UUID.generate()
+      P805.track_operation(operation_id)
+      {:ok, registration} = Identity.register(request)
+
+      assert_raise Postgrex.Error, fn ->
+        Ash.transact([PurposeAuthority], fn ->
+          Ash.create(
+            PurposeAuthority,
+            %{
+              subject_id: registration.account_id,
+              source_operation_id: operation_id,
+              purpose: :p8_17_protected_mutation,
+              state: :allowed,
+              origin: :p8_17_test_fixture,
+              version: 1
+            },
+            action: :grant_proof_only,
+            authorize?: false
+          )
+        end)
+      end
+
+      assert {:ok, :missing} =
+               Privacy.current_p817_proof_purpose(registration.account_id, operation_id)
+
+      assert {:ok, :allowed} =
+               Privacy.grant_p817_proof_purpose(registration.account_id, operation_id)
+
+      authority =
+        PurposeAuthority
+        |> Ash.Query.filter(
+          subject_id == ^registration.account_id and source_operation_id == ^operation_id
+        )
+        |> Ash.read_one!(authorize?: false)
+
+      assert_raise Postgrex.Error, fn ->
+        Ash.transact([PurposeAuthority], fn ->
+          Ash.update(
+            authority,
+            %{version: authority.version + 1},
+            action: :withdraw_proof_only,
+            authorize?: false
+          )
+        end)
+      end
+
+      assert {:ok, :allowed} =
+               Privacy.current_p817_proof_purpose(registration.account_id, operation_id)
+    end)
+  end
 end
