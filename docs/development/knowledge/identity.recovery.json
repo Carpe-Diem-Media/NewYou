@@ -6,7 +6,7 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "d6c24f52dde49f96d3a3318cc44a6e9be44b75ea",
+    "git_sha": "87bf56abc217342157e915be1238763677b37164",
     "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -775,7 +775,7 @@
   ],
   "concurrency": [
     {
-      "summary": "Account row locks precede recovery case and Token locks; support actor/reviewer Accounts lock in stable order before scoped authority revalidation.",
+      "summary": "Account row locks precede recovery case and Token locks; account-wide Session/Device invalidation locks linked authentication Tokens by JTI before sorted Session and Device rows. Support actor/reviewer Accounts lock in stable order before scoped authority revalidation.",
       "source_ids": [
         "recovery",
         "manual",
@@ -1064,13 +1064,13 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def request_recovery",
-      "sha256": "6bafa47a2289ce98a032754a598afc0caff6bddc1a0a25b34b2a2716864aaac9"
+      "sha256": "90ba9e7d0ef990538c38482b922d5f8d409f1a2b9a7c557df4fc896038680c81"
     },
     {
       "id": "recovery",
       "path": "lib/new_you/identity/recovery.ex",
       "symbol": "defmodule NewYou.Identity.Recovery",
-      "sha256": "b0afa08a92a1ce3bf951eb0c26c7fc2a7370272b6b2ccbc1d0471ef5688182c8"
+      "sha256": "15b4c7283c65d701e1016001b34e5c80a0bc97f121803f43d255582c53f83752"
     },
     {
       "id": "case",
@@ -1088,7 +1088,7 @@
       "id": "account",
       "path": "lib/new_you/identity/account.ex",
       "symbol": ":hold_for_recovery",
-      "sha256": "40bd00dca5f78a698a4f105e3e4468599827be2a982f06d99acf97e6e2003fe0"
+      "sha256": "515114144a2ba38bd4858e2a5be297ef3d33bd9da50666a4859638f3125bc3ce"
     },
     {
       "id": "token",
@@ -1190,7 +1190,7 @@
       "id": "primary_email_change_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "primary-email apply and recovery completion serialize",
-      "sha256": "51694f8cd13166cbae5e670028f2c029f39574dec37886862b803b691931534a"
+      "sha256": "0a510932485741623dd04620610f5857cd1eadebcc6228829b3f82bfe00b96d9"
     },
     {
       "id": "manual_test",

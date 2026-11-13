@@ -10,7 +10,7 @@
     "WELL-96"
   ],
   "implementation_revision": {
-    "git_sha": "d6c24f52dde49f96d3a3318cc44a6e9be44b75ea",
+    "git_sha": "87bf56abc217342157e915be1238763677b37164",
     "semantics": "Registration semantics remain unchanged. Shared Identity, Account, Token and Communications source hashes now bind the WELL-17 additions; the primary-email-change and recovery capabilities are documented separately. This is not an independent merge certification."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -409,7 +409,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def register(request)",
-      "sha256": "6bafa47a2289ce98a032754a598afc0caff6bddc1a0a25b34b2a2716864aaac9"
+      "sha256": "90ba9e7d0ef990538c38482b922d5f8d409f1a2b9a7c557df4fc896038680c81"
     },
     {
       "id": "accept",
@@ -481,7 +481,7 @@
       "id": "account",
       "path": "lib/new_you/identity/account.ex",
       "symbol": "create :register",
-      "sha256": "40bd00dca5f78a698a4f105e3e4468599827be2a982f06d99acf97e6e2003fe0"
+      "sha256": "515114144a2ba38bd4858e2a5be297ef3d33bd9da50666a4859638f3125bc3ce"
     },
     {
       "id": "token",
