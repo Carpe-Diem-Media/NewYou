@@ -2453,24 +2453,14 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
 
   defp restart_p817_privacy_retry(fields) do
     payload = Jason.encode!(fields)
-    executable = System.find_executable("mise") || raise "mise unavailable"
+    executable = System.find_executable("mix") || raise "mix unavailable"
 
     port =
       Port.open({:spawn_executable, executable}, [
         :binary,
         :exit_status,
-        args: [
-          "exec",
-          "--",
-          "devcore-project",
-          "run",
-          "test",
-          "--",
-          "mix",
-          "run",
-          "test/proof/p8_17_privacy_restart.exs"
-        ],
-        env: [{~c"ERL_FLAGS", ~c"+S 2:2"}]
+        args: ["run", "test/proof/p8_17_privacy_restart.exs"],
+        env: [{~c"MIX_ENV", ~c"test"}, {~c"ERL_FLAGS", ~c"+S 2:2"}]
       ])
 
     true = Port.command(port, payload <> "\n")
