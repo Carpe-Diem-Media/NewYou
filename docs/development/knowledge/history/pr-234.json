@@ -15,25 +15,25 @@
       "status": "modified"
     },
     {
-      "blob": "1fb80cb1e36fbc3d004bce5dc5f44abaa3b9506f",
+      "blob": "76283ba57e6f003e4f275c2a537441b848074556",
       "mode": "100644",
       "old_blob": "2402592bb1c855541a5bfdd3225828b8829dd707",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.primary_email_change.json",
       "old_sha256": "e7faafd1f2b4e50bd7fd4bc942d02f1b5b5a376f325dd8c52ccd8810f71785c7",
       "path": "docs/development/knowledge/identity.primary_email_change.json",
-      "sha256": "c9c56456e58f45062f078fb2267928ff5291fa51c7cafa1ef6d2eef4e595917f",
+      "sha256": "d6d32075dcf86786ad7695d6707f0a157154bc75e0ec4e8291209a1dd1e964c8",
       "status": "modified"
     },
     {
-      "blob": "479ae62d1f1a2618324c2a14daf8ddff8588b812",
+      "blob": "6c461b509d86b670e379440f0623fbed771e9054",
       "mode": "100644",
       "old_blob": "a05cf99e1b3671a103af51b3304318c4ef14c8b1",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.recovery.json",
       "old_sha256": "235c13da5abc1b5a14c1769bcd4e2e283922ae37770487c22d2b11f9f1de80af",
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "b57572636a461997ae116936668dbf70ffb23f3aa0728d6fd60c83ec9978a90c",
+      "sha256": "b8aada4e70aecaa7bc07657499cdee778b2adec6a5aa7cd51df0a8f30977dd51",
       "status": "modified"
     },
     {
@@ -59,14 +59,14 @@
       "status": "added"
     },
     {
-      "blob": "fd6c38eaf83ad3c9844955b92cf02727e0f696ab",
+      "blob": "df57a9cc6fddf49c911bf8a9f2ce50be6cc9eecc",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "90bf62df07fd1e6c4124657e1008cb0f79f490bfc9d0c3e348a8be1629f58082",
+      "sha256": "f94657991d7d0dd4e33a70ea020ee644450b6e9dabc9b3b52f6aa83b22581949",
       "status": "added"
     },
     {
