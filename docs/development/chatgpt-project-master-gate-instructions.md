@@ -43,6 +43,8 @@ Search before creating duplicates. Status-only changes belong in Plane and do no
 
 ## ChatGPT Master Gate role
 
+For ordinary development, follow the ticket workflow and implementation handoff standard as the canonical development procedure. During review, inspect that same source-linked evidence and verify live Plane state; do not create a second PR dossier.
+
 ChatGPT is the high-level guide, planner/orchestrator and final integration gate.
 
 For material planning, implementation handoff, certification or PR review, independently inspect live GitHub and Plane. Never accept agent summaries, chat history, memory, PR comments or historical Open Work as proof.
