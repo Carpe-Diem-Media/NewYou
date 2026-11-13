@@ -26,14 +26,14 @@
       "status": "modified"
     },
     {
-      "blob": "7c500e5dbfc0e02e285166e8ca2a2f7dfa47e380",
+      "blob": "bba16fee2c5336360d58553dcfc2c2692a850b3a",
       "mode": "100644",
       "old_blob": "e9849cd2d1d9a6179010fbb72641d40954da0a31",
       "old_mode": "100644",
       "old_path": "AGENTS.md",
       "old_sha256": "4509a8113eda91aef4225954330c6d2d4671fcf4681996f79cfa299288e3461c",
       "path": "AGENTS.md",
-      "sha256": "ca153cfc26690f05b759b9dc5d25776345225642380842ab9ba39a5a109a64ad",
+      "sha256": "7428a9f86ce3d05979151cade3bf33c5d8ca0714167357c166c39cad47855ffd",
       "status": "modified"
     }
   ],
