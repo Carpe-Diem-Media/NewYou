@@ -4,25 +4,25 @@
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/232/commits",
   "files": [
     {
-      "blob": "9b97af51e06fbdb24319fe4e163296312362c8c2",
+      "blob": "2402592bb1c855541a5bfdd3225828b8829dd707",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/identity.primary_email_change.json",
-      "sha256": "f04ca8d5d53fad9d67f3dc752efac814aed1ee9e0a6145fa2412b4fa8aaf6ab9",
+      "sha256": "e7faafd1f2b4e50bd7fd4bc942d02f1b5b5a376f325dd8c52ccd8810f71785c7",
       "status": "added"
     },
     {
-      "blob": "7f3e25144dd99676143c3f78bdc1e9a119f8aa1d",
+      "blob": "a05cf99e1b3671a103af51b3304318c4ef14c8b1",
       "mode": "100644",
       "old_blob": "998c338555a56077e9f3c448f4b25b371cd49b83",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.recovery.json",
       "old_sha256": "3d32ad881a7ee2be495fc2c3b3b4d6f8057574c61fd9e9e19bbaffaba81b5b8b",
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "68795c0b82ba6127dee6ec3246f64aae825f078a0ea76101a5ef09a86644f343",
+      "sha256": "235c13da5abc1b5a14c1769bcd4e2e283922ae37770487c22d2b11f9f1de80af",
       "status": "modified"
     },
     {
@@ -136,14 +136,14 @@
       "status": "modified"
     },
     {
-      "blob": "e763fe73faa59bbb9712ca59f76481f28b6e645b",
+      "blob": "8fb72b5e085ed57e531ce3ca8d3f20f43adb4cf3",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you/identity/primary_email_change.ex",
-      "sha256": "3c724399df0142dd35f4662e9df8d14db9950ff220574e0222b3862b91637e29",
+      "sha256": "8e0936acbdc49f0b55676f71b21c008a769948775008696eda0f3b0a28dbb925",
       "status": "added"
     },
     {
@@ -400,14 +400,14 @@
       "status": "modified"
     },
     {
-      "blob": "4c5837991a2922666d0351d7f125042d89f2e8af",
+      "blob": "d21fa49e90d813f22a9fcf2c89c686862b797553",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/identity/primary_email_change_test.exs",
-      "sha256": "0a510932485741623dd04620610f5857cd1eadebcc6228829b3f82bfe00b96d9",
+      "sha256": "dd4baa3a0e730ef7dfc426b71fd1e148569c82017db118e40a94cae2d0dc0642",
       "status": "added"
     },
     {
@@ -974,7 +974,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you/identity/primary_email_change.ex",
-      "sha256": "913cc797c2cacd03e9498b5b01f8c3032040098804da2c7a7f27732fc0fac4e5",
+      "sha256": "cb40e31d854a576d0f0ae8a996aaec2a3d96250aba90efecedecfbae82bcdcc3",
       "status": "parsed"
     },
     {
@@ -1544,7 +1544,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/identity/primary_email_change_test.exs",
-      "sha256": "36bde3794f590d8079db0b33d2a22282638222a5f74f86ceb18f1b26432fcfe7",
+      "sha256": "410c0eb4cd254c505824982809fae63caa802826e56d5c91bab795365bb09eba",
       "status": "parsed"
     },
     {
