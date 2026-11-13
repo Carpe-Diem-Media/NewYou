@@ -244,6 +244,20 @@ defmodule NewYou.Identity.Account do
       change transition_state(:reauthenticated)
     end
 
+    update :refresh_primary_email_change_assurance do
+      public? false
+
+      accept [
+        :primary_email_change_reauthenticated_at,
+        :primary_email_change_reauth_session_id,
+        :primary_email_change_security_version,
+        :primary_email_change_credential_version
+      ]
+
+      change filter(expr(primary_email_change_state in [:delayed, :reviewed]))
+      change increment(:primary_email_change_version)
+    end
+
     update :issue_primary_email_change_confirmation do
       public? false
       accept [:primary_email_change_token_jti, :primary_email_change_token_expires_at]

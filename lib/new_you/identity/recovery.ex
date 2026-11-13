@@ -518,14 +518,39 @@ defmodule NewYou.Identity.Recovery do
 
   @doc false
   def invalidate_sessions_and_devices(id) do
+    active_session_jtis =
+      Session
+      |> Ash.Query.filter(account_id == ^id and state == :active)
+      |> Ash.Query.sort(:id)
+      |> Ash.read!(authorize?: false)
+      |> Enum.map(& &1.token_jti)
+      |> Enum.uniq()
+
+    linked_tokens =
+      case active_session_jtis do
+        [] ->
+          %{}
+
+        jtis ->
+          Token
+          |> Ash.Query.filter(account_id == ^id and jti in ^jtis)
+          |> Ash.Query.sort(:jti)
+          |> Ash.Query.lock(:for_update)
+          |> Ash.read!(authorize?: false)
+          |> Map.new(&{&1.jti, &1})
+      end
+
+    # Account-level security writes lock related Token rows before Sessions.
+    # This matches password authorization and primary-email apply, and makes a
+    # Session logout finish before the locked state is evaluated here.
     Session
     |> Ash.Query.filter(account_id == ^id and state == :active)
     |> Ash.Query.sort(:id)
     |> Ash.Query.lock(:for_update)
     |> Ash.read!(authorize?: false)
     |> Enum.each(fn session ->
-      case token(session.token_jti, true) do
-        {:ok, %{purpose: "user"} = linked} ->
+      case Map.get(linked_tokens, session.token_jti) do
+        %{purpose: "user"} = linked ->
           Ash.update!(linked, %{}, action: :revoke_authentication, authorize?: false)
 
         _ ->

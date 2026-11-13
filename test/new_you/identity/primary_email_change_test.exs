@@ -421,6 +421,311 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
     end)
   end
 
+  test "confirmed operation cannot apply after its originating Session logs out" do
+    with_confirmed_email_change(
+      %{delay_seconds: 0, requires_review?: false},
+      [active_mfa?: true],
+      fn fixture ->
+        assert :ok = Identity.logout(fixture.credentials)
+
+        assert {:error, :primary_email_change_unavailable} =
+                 Identity.apply_primary_email_change(fixture.operation_id)
+
+        assert current_account(fixture.registration.account_id).email ==
+                 fixture.registration_request.email
+
+        assert Ash.get!(Session, fixture.credentials.session_id, authorize?: false).state ==
+                 :logged_out
+
+        assert_no_apply_consequences(fixture)
+      end
+    )
+  end
+
+  test "confirmed operation cannot apply after its originating Session is revoked" do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      assert :ok = Identity.revoke_session(fixture.credentials)
+
+      assert_apply_denied(fixture)
+
+      assert Ash.get!(Session, fixture.credentials.session_id, authorize?: false).state ==
+               :revoked
+    end)
+  end
+
+  test "confirmed operation cannot apply after its originating Session expires absolutely" do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      Repo.query!(
+        "UPDATE sessions SET expires_at = now() - interval '1 second' WHERE id = $1",
+        [Ecto.UUID.dump!(fixture.credentials.session_id)]
+      )
+
+      assert_apply_denied(fixture)
+    end)
+  end
+
+  test "confirmed operation cannot apply after its originating Session idles out" do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      Repo.query!(
+        "UPDATE sessions SET idle_expires_at = now() - interval '1 second' WHERE id = $1",
+        [Ecto.UUID.dump!(fixture.credentials.session_id)]
+      )
+
+      assert_apply_denied(fixture)
+    end)
+  end
+
+  test "confirmed operation cannot apply after purpose-bound step-up expires" do
+    with_confirmed_email_change(
+      %{delay_seconds: 0, requires_review?: false},
+      [active_mfa?: true],
+      fn fixture ->
+        Repo.query!(
+          "UPDATE sessions SET step_up_expires_at = now() - interval '1 second' WHERE id = $1",
+          [Ecto.UUID.dump!(fixture.credentials.session_id)]
+        )
+
+        assert_apply_denied(fixture)
+      end
+    )
+  end
+
+  test "confirmed operation cannot apply after its current step-up is cleared" do
+    with_confirmed_email_change(
+      %{delay_seconds: 0, requires_review?: false},
+      [active_mfa?: true],
+      fn fixture ->
+        session = Ash.get!(Session, fixture.credentials.session_id, authorize?: false)
+        assert {:ok, _} = Ash.update(session, %{}, action: :clear_step_up, authorize?: false)
+
+        assert_apply_denied(fixture)
+      end
+    )
+  end
+
+  test "confirmed operation cannot apply with step-up bound to the wrong purpose" do
+    with_confirmed_email_change(
+      %{delay_seconds: 0, requires_review?: false},
+      [active_mfa?: true],
+      fn fixture ->
+        session = Ash.get!(Session, fixture.credentials.session_id, authorize?: false)
+
+        assert {:ok, _} =
+                 Ash.update(
+                   session,
+                   %{step_up_purpose: :review_security_hold},
+                   action: :set_step_up,
+                   authorize?: false
+                 )
+
+        assert_apply_denied(fixture)
+      end
+    )
+  end
+
+  test "confirmed operation cannot apply with stale MFA version binding" do
+    with_confirmed_email_change(
+      %{delay_seconds: 0, requires_review?: false},
+      [active_mfa?: true],
+      fn fixture ->
+        Repo.query!(
+          "UPDATE accounts SET mfa_version = mfa_version + 1 WHERE id = $1",
+          [Ecto.UUID.dump!(fixture.registration.account_id)]
+        )
+
+        assert_apply_denied(fixture)
+      end
+    )
+  end
+
+  test "confirmed operation cannot apply with stale Session security version binding" do
+    with_confirmed_email_change(
+      %{delay_seconds: 0, requires_review?: false},
+      [active_mfa?: true],
+      fn fixture ->
+        session = Ash.get!(Session, fixture.credentials.session_id, authorize?: false)
+
+        assert {:ok, _} =
+                 Ash.update(
+                   session,
+                   %{step_up_security_version: session.step_up_security_version - 1},
+                   action: :set_step_up,
+                   authorize?: false
+                 )
+
+        assert_apply_denied(fixture)
+      end
+    )
+  end
+
+  test "confirmed operation cannot apply after its authentication Token is revoked" do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      session = Ash.get!(Session, fixture.credentials.session_id, authorize?: false)
+      token = Ash.get!(Token, session.token_jti, authorize?: false)
+      assert {:ok, _} = Ash.update(token, %{}, action: :revoke_authentication, authorize?: false)
+
+      assert_apply_denied(fixture)
+    end)
+  end
+
+  test "confirmed operation cannot apply after its authentication Token expires" do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      session = Ash.get!(Session, fixture.credentials.session_id, authorize?: false)
+
+      Repo.query!(
+        "UPDATE tokens SET expires_at = now() - interval '1 second' WHERE jti = $1",
+        [session.token_jti]
+      )
+
+      assert_apply_denied(fixture)
+    end)
+  end
+
+  test "confirmed delayed operation can refresh current assurance without restarting confirmation" do
+    with_confirmed_email_change(
+      %{delay_seconds: 360, requires_review?: false},
+      [active_mfa?: true],
+      fn fixture ->
+        original_account = current_account(fixture.registration.account_id)
+
+        Repo.query!(
+          "UPDATE accounts SET primary_email_change_apply_after = now() - interval '1 second' WHERE id = $1",
+          [Ecto.UUID.dump!(fixture.registration.account_id)]
+        )
+
+        Repo.query!(
+          "UPDATE sessions SET step_up_expires_at = now() - interval '1 second' WHERE id = $1",
+          [Ecto.UUID.dump!(fixture.credentials.session_id)]
+        )
+
+        assert {:error, :primary_email_change_unavailable} =
+                 Identity.apply_primary_email_change(fixture.operation_id)
+
+        assert_no_apply_consequences(fixture)
+
+        account = current_account(fixture.registration.account_id)
+        next_period = account.mfa_last_accepted_period + 1
+        previous = Process.put(NewYou.Proof.PrivilegedAccessSeam, next_period * 30)
+
+        try do
+          assert {:ok, :ok} =
+                   Identity.step_up_privileged(
+                     fixture.credentials,
+                     fixture.registration_request.password,
+                     NimbleTOTP.verification_code(fixture.mfa_secret, time: next_period * 30),
+                     :change_primary_email
+                   )
+        after
+          if is_nil(previous),
+            do: Process.delete(NewYou.Proof.PrivilegedAccessSeam),
+            else: Process.put(NewYou.Proof.PrivilegedAccessSeam, previous)
+        end
+
+        assert {:ok, :assurance_refreshed} =
+                 Identity.reauthenticate_primary_email_change(
+                   fixture.credentials,
+                   fixture.registration_request.password,
+                   fixture.operation_id
+                 )
+
+        refreshed = current_account(fixture.registration.account_id)
+        assert refreshed.primary_email_change_state == :delayed
+        assert refreshed.primary_email_change_operation_id == fixture.operation_id
+        assert refreshed.primary_email_change_token_jti == fixture.proof_jti
+        assert refreshed.primary_email_change_confirmation_id == fixture.confirmation_id
+
+        assert refreshed.primary_email_change_confirmed_at ==
+                 original_account.primary_email_change_confirmed_at
+
+        assert refreshed.primary_email_change_apply_after ==
+                 account.primary_email_change_apply_after
+
+        proofs =
+          Token
+          |> Ash.Query.filter(
+            account_id == ^fixture.registration.account_id and
+              email_change_operation_id == ^fixture.operation_id
+          )
+          |> Ash.read!(authorize?: false)
+
+        assert length(proofs) == 1
+
+        intents =
+          MessageIntent
+          |> Ash.Query.filter(
+            source_operation_id == ^fixture.operation_id and
+              role == :email_change_confirmation
+          )
+          |> Ash.read!(authorize?: false)
+
+        assert length(intents) == 1
+        assert {:ok, :applied} = Identity.apply_primary_email_change(fixture.operation_id)
+
+        assert current_account(fixture.registration.account_id).email ==
+                 fixture.target_request.email
+      end
+    )
+  end
+
+  test "a fresh Session can lawfully rebind assurance to the same confirmed operation" do
+    with_confirmed_email_change(
+      %{delay_seconds: 0, requires_review?: false},
+      [active_mfa?: true],
+      fn fixture ->
+        assert :ok = Identity.logout(fixture.credentials)
+
+        {:ok, rebound_credentials} =
+          Identity.authenticate_password(
+            fixture.registration_request.email,
+            fixture.registration_request.password
+          )
+
+        account = current_account(fixture.registration.account_id)
+        next_period = account.mfa_last_accepted_period + 1
+        previous = Process.put(NewYou.Proof.PrivilegedAccessSeam, next_period * 30)
+
+        try do
+          assert {:ok, :ok} =
+                   Identity.step_up_privileged(
+                     rebound_credentials,
+                     fixture.registration_request.password,
+                     NimbleTOTP.verification_code(fixture.mfa_secret, time: next_period * 30),
+                     :change_primary_email
+                   )
+        after
+          if is_nil(previous),
+            do: Process.delete(NewYou.Proof.PrivilegedAccessSeam),
+            else: Process.put(NewYou.Proof.PrivilegedAccessSeam, previous)
+        end
+
+        assert {:ok, :assurance_refreshed} =
+                 Identity.reauthenticate_primary_email_change(
+                   rebound_credentials,
+                   fixture.registration_request.password,
+                   fixture.operation_id
+                 )
+
+        rebound_account = current_account(fixture.registration.account_id)
+
+        assert rebound_account.primary_email_change_reauth_session_id ==
+                 rebound_credentials.session_id
+
+        assert rebound_account.primary_email_change_operation_id == fixture.operation_id
+        assert rebound_account.primary_email_change_token_jti == fixture.proof_jti
+        assert rebound_account.primary_email_change_confirmation_id == fixture.confirmation_id
+        assert {:ok, :applied} = Identity.apply_primary_email_change(fixture.operation_id)
+
+        assert current_account(fixture.registration.account_id).email ==
+                 fixture.target_request.email
+      end
+    )
+  end
+
+  test "competing Session logout and primary-email apply serialize against current authority" do
+    assert_logout_apply_race(:apply_first)
+    assert_logout_apply_race(:logout_first)
+  end
+
   test "guarded apply changes the canonical email and commits security consequences once" do
     with_apply_policy(%{delay_seconds: 0, requires_review?: false}, fn ->
       P805.with_fixture(fn ->
@@ -564,14 +869,7 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
 
         account = current_account(registration.account_id)
 
-        {:ok, {:ok, proof}} =
-          Repo.transaction(fn ->
-            Identity.primary_email_change_delivery(
-              account.primary_email_change_token_jti,
-              target_request.email,
-              "en"
-            )
-          end)
+        proof = current_confirmation_proof(account, target_request.email)
 
         assert current_account(registration.account_id).primary_email_change_state ==
                  :new_address_pending
@@ -639,14 +937,7 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
 
         account = current_account(registration.account_id)
 
-        {:ok, {:ok, proof}} =
-          Repo.transaction(fn ->
-            Identity.primary_email_change_delivery(
-              account.primary_email_change_token_jti,
-              target_request.email,
-              "en"
-            )
-          end)
+        proof = current_confirmation_proof(account, target_request.email)
 
         assert {:ok, :confirmed} = Identity.confirm_primary_email_change(proof)
 
@@ -1191,6 +1482,16 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
         assert reviewed_account.primary_email_change_reauth_session_id == reviewed_session.id
         assert reviewed_session.step_up_purpose == :change_primary_email
 
+        assert {:ok, :assurance_refreshed} =
+                 Identity.reauthenticate_primary_email_change(
+                   credentials,
+                   registration_request.password,
+                   operation_id
+                 )
+
+        assert current_account(registration.account_id).primary_email_change_state == :delayed
+        assert current_account(registration.account_id).primary_email_change_reviewed_at == nil
+
         assert {:error, :primary_email_change_unavailable} =
                  Identity.apply_primary_email_change(operation_id)
 
@@ -1205,6 +1506,174 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
         assert current_account(registration.account_id).email == target_request.email
       end)
     end)
+  end
+
+  defp with_confirmed_email_change(policy, fun),
+    do: with_confirmed_email_change(policy, [], fun)
+
+  defp with_confirmed_email_change(policy, options, fun) do
+    with_apply_policy(policy, fn ->
+      P805.with_fixture(fn ->
+        registration_request = P805.request()
+        target_request = P805.request()
+        operation_id = Ecto.UUID.generate()
+        P805.track_operation(operation_id)
+
+        {:ok, registration} = Identity.register(registration_request)
+        {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+
+        {:ok, credentials} =
+          Identity.authenticate_password(
+            registration_request.email,
+            registration_request.password
+          )
+
+        {:ok, other_credentials} =
+          Identity.authenticate_password(
+            registration_request.email,
+            registration_request.password
+          )
+
+        mfa_secret =
+          maybe_activate_mfa(options, credentials, registration_request.password)
+
+        device_id = Ecto.UUID.generate()
+
+        Repo.query!(
+          "INSERT INTO device_assurances (id,account_id,fingerprint,state,security_version,expires_at) VALUES ($1,$2,$3,'trusted',1,now()+interval '1 day')",
+          [
+            Ecto.UUID.dump!(device_id),
+            Ecto.UUID.dump!(registration.account_id),
+            :crypto.strong_rand_bytes(32)
+          ]
+        )
+
+        assert {:ok, :requested} =
+                 Identity.request_primary_email_change(
+                   credentials,
+                   target_request.email,
+                   "en",
+                   operation_id
+                 )
+
+        assert {:ok, :proof_pending} =
+                 Identity.reauthenticate_primary_email_change(
+                   credentials,
+                   registration_request.password,
+                   operation_id
+                 )
+
+        account = current_account(registration.account_id)
+
+        proof = current_confirmation_proof(account, target_request.email)
+
+        assert {:ok, :confirmed} = Identity.confirm_primary_email_change(proof)
+        account = current_account(registration.account_id)
+
+        fun.(%{
+          registration_request: registration_request,
+          target_request: target_request,
+          registration: registration,
+          operation_id: operation_id,
+          credentials: credentials,
+          other_credentials: other_credentials,
+          proof_jti: account.primary_email_change_token_jti,
+          confirmation_id: account.primary_email_change_confirmation_id,
+          mfa_secret: mfa_secret,
+          device_id: device_id
+        })
+      end)
+    end)
+  end
+
+  defp activate_mfa_and_step_up(credentials, password) do
+    {:ok, %{secret: secret}} = Identity.enroll_privileged_mfa(credentials, password)
+    period = div(System.os_time(:second), 30)
+    previous = Process.put(NewYou.Proof.PrivilegedAccessSeam, period * 30)
+
+    try do
+      assert {:ok, :ok} =
+               Identity.confirm_privileged_mfa(
+                 credentials,
+                 password,
+                 NimbleTOTP.verification_code(secret, time: period * 30)
+               )
+
+      next_period = period + 1
+      Process.put(NewYou.Proof.PrivilegedAccessSeam, next_period * 30)
+
+      assert {:ok, :ok} =
+               Identity.step_up_privileged(
+                 credentials,
+                 password,
+                 NimbleTOTP.verification_code(secret, time: next_period * 30),
+                 :change_primary_email
+               )
+
+      secret
+    after
+      if is_nil(previous),
+        do: Process.delete(NewYou.Proof.PrivilegedAccessSeam),
+        else: Process.put(NewYou.Proof.PrivilegedAccessSeam, previous)
+    end
+  end
+
+  defp maybe_activate_mfa(options, credentials, password) do
+    if Keyword.get(options, :active_mfa?, false),
+      do: activate_mfa_and_step_up(credentials, password)
+  end
+
+  defp current_confirmation_proof(account, destination) do
+    {:ok, {:ok, proof}} =
+      Repo.transaction(fn ->
+        Identity.primary_email_change_delivery(
+          account.primary_email_change_token_jti,
+          destination,
+          "en"
+        )
+      end)
+
+    proof
+  end
+
+  defp assert_no_apply_consequences(fixture) do
+    account = current_account(fixture.registration.account_id)
+
+    assert account.email == fixture.registration_request.email
+    assert account.primary_email_change_state == :delayed
+    assert account.primary_email_change_confirmation_id == fixture.confirmation_id
+
+    assert Ash.get!(Token, fixture.proof_jti, authorize?: false).purpose ==
+             "email_change_confirmation_consumed"
+
+    refute NewYou.Audit.EvidenceObligation
+           |> Ash.Query.filter(
+             source_operation_id == ^fixture.operation_id and
+               evidence_type == :identity_primary_email_change_applied
+           )
+           |> Ash.exists?(authorize?: false)
+
+    assert [] ==
+             MessageIntent
+             |> Ash.Query.filter(
+               source_operation_id == ^fixture.operation_id and
+                 role == :email_change_old_address_notice
+             )
+             |> Ash.read!(authorize?: false)
+
+    assert Ash.get!(Session, fixture.other_credentials.session_id, authorize?: false).state ==
+             :active
+
+    other_session = Ash.get!(Session, fixture.other_credentials.session_id, authorize?: false)
+    assert Ash.get!(Token, other_session.token_jti, authorize?: false).purpose == "user"
+    assert Ash.get!(DeviceAssurance, fixture.device_id, authorize?: false).state == :trusted
+  end
+
+  defp assert_apply_denied(fixture) do
+    assert {:error, :primary_email_change_unavailable} =
+             Identity.apply_primary_email_change(fixture.operation_id)
+
+    assert_no_apply_consequences(fixture)
   end
 
   defp with_apply_policy(policy, fun) do
@@ -1224,6 +1693,164 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
     with_apply_policy(%{delay_seconds: 0, requires_review?: false}, fn ->
       P805.with_fixture(fn -> execute_recovery_race(order) end)
     end)
+  end
+
+  defp assert_logout_apply_race(order) do
+    with_confirmed_email_change(%{delay_seconds: 0, requires_review?: false}, fn fixture ->
+      execute_logout_apply_race(order, fixture)
+    end)
+  end
+
+  defp execute_logout_apply_race(:apply_first, fixture) do
+    parent = self()
+    reference = make_ref()
+    scenario = Scenario.start()
+
+    try do
+      {apply_worker, apply_monitor} =
+        spawn_paused_race_worker(
+          scenario,
+          :primary_email_apply,
+          parent,
+          reference,
+          :apply_result,
+          fn -> Identity.apply_primary_email_change(fixture.operation_id) end
+        )
+
+      apply_backend = await_checkpoint(reference)
+
+      {_logout_worker, logout_monitor} =
+        spawn_contending_race_worker(
+          scenario,
+          parent,
+          reference,
+          :logout_result,
+          fn -> Identity.logout(fixture.credentials) end
+        )
+
+      logout_backend = receive_backend(reference, :second_backend)
+      assert_contention(logout_backend, apply_backend)
+      send(apply_worker, {reference, :release})
+
+      assert await_result(reference, :apply_result) == {:ok, :applied}
+      assert await_result(reference, :logout_result) == {:error, :authentication_unavailable}
+      await_normal(apply_monitor)
+      await_normal(logout_monitor)
+
+      account = current_account(fixture.registration.account_id)
+      assert account.email == fixture.target_request.email
+      assert account.primary_email_change_state == :applied
+
+      assert Ash.get!(Session, fixture.credentials.session_id, authorize?: false).state ==
+               :revoked
+    after
+      :ok = Scenario.stop(scenario)
+    end
+  end
+
+  defp execute_logout_apply_race(:logout_first, fixture) do
+    parent = self()
+    reference = make_ref()
+    scenario = Scenario.start()
+
+    try do
+      {logout_worker, logout_monitor} =
+        Scenario.spawn(scenario, :logout_transaction, fn ->
+          :ok = Sandbox.checkout(Repo, sandbox: false)
+
+          try do
+            result =
+              Repo.transaction(fn ->
+                session = Ash.get!(Session, fixture.credentials.session_id, authorize?: false)
+
+                {:ok, _logged_out, notifications} =
+                  Ash.update(session, %{},
+                    action: :logout,
+                    authorize?: false,
+                    return_notifications?: true
+                  )
+
+                send(parent, {reference, :first_backend, P805.scalar("SELECT pg_backend_pid()")})
+
+                receive do
+                  {^reference, :release_logout} -> :ok
+                after
+                  15_000 -> raise "logout transaction release deadline"
+                end
+
+                notifications
+              end)
+
+            case result do
+              {:ok, notifications} ->
+                Ash.Notifier.notify(notifications)
+                send(parent, {reference, :logout_result, {:ok, :ok}})
+
+              error ->
+                send(parent, {reference, :logout_result, error})
+            end
+          after
+            Sandbox.checkin(Repo)
+          end
+        end)
+
+      logout_backend = receive_backend(reference, :first_backend)
+
+      {_apply_worker, apply_monitor} =
+        spawn_contending_race_worker(
+          scenario,
+          parent,
+          reference,
+          :apply_result,
+          fn -> Identity.apply_primary_email_change(fixture.operation_id) end
+        )
+
+      apply_backend = receive_backend(reference, :second_backend)
+      assert_contention(apply_backend, logout_backend)
+      send(logout_worker, {reference, :release_logout})
+
+      assert await_result(reference, :logout_result) == {:ok, :ok}
+
+      assert await_result(reference, :apply_result) ==
+               {:error, :primary_email_change_unavailable}
+
+      await_normal(logout_monitor)
+      await_normal(apply_monitor)
+
+      assert Ash.get!(Session, fixture.credentials.session_id, authorize?: false).state ==
+               :logged_out
+
+      assert_apply_denied_after_logout(fixture)
+    after
+      :ok = Scenario.stop(scenario)
+    end
+  end
+
+  defp assert_apply_denied_after_logout(fixture) do
+    account = current_account(fixture.registration.account_id)
+    assert account.email == fixture.registration_request.email
+    assert account.primary_email_change_state == :delayed
+    assert account.primary_email_change_confirmation_id == fixture.confirmation_id
+
+    refute NewYou.Audit.EvidenceObligation
+           |> Ash.Query.filter(
+             source_operation_id == ^fixture.operation_id and
+               evidence_type == :identity_primary_email_change_applied
+           )
+           |> Ash.exists?(authorize?: false)
+
+    assert [] ==
+             MessageIntent
+             |> Ash.Query.filter(
+               source_operation_id == ^fixture.operation_id and
+                 role == :email_change_old_address_notice
+             )
+             |> Ash.read!(authorize?: false)
+
+    assert Ash.get!(Session, fixture.other_credentials.session_id, authorize?: false).state ==
+             :active
+
+    assert Ash.get!(DeviceAssurance, fixture.device_id, authorize?: false).state == :trusted
   end
 
   defp execute_recovery_race(order) do

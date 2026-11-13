@@ -2,8 +2,9 @@ defmodule NewYou.Identity.PrimaryEmailChange do
   @moduledoc """
   Account-owned primary-email-change request and proof-issuance boundary.
 
-  Account is locked before the Session and purpose-bound Token. The signed bearer
-  is transient; only its fixed claims and JTI are retained by Identity.
+  Account is locked before related Token rows, which are locked by JTI before the
+  current Session. The signed bearer is transient; only fixed claims and JTIs are
+  retained by Identity.
   """
 
   @enabled Mix.env() in [:dev, :test] and
@@ -42,7 +43,7 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       _, _ -> unavailable()
     end
 
-    @doc "Require fresh password and current Session assurance before issuing new-address proof."
+    @doc "Require fresh password and current Session assurance before issuing or refreshing proof authority."
     def reauthenticate(credentials, password, operation_id) do
       with {:ok, locator} <- session_locator(credentials),
            {:ok, operation_id} <- Ecto.UUID.cast(operation_id),
@@ -52,7 +53,7 @@ defmodule NewYou.Identity.PrimaryEmailChange do
                [Account, Token, Session, MessageIntent, DeliveryAttempt, EvidenceObligation],
                fn -> reauthenticate_locked(locator, credentials, password, operation_id) end
              ) do
-        unwrap(result, :proof_pending)
+        unwrap_reauthenticate(result)
       else
         _ -> unavailable()
       end
@@ -318,7 +319,7 @@ defmodule NewYou.Identity.PrimaryEmailChange do
 
     defp reauthenticate_locked(locator, credentials, password, operation_id) do
       with {:ok, account} <- lock_account(locator.account_id),
-           {:ok, session, _token, _claims} <- lock_current_session(locator, credentials, account),
+           {:ok, session, proof} <- lock_reauthentication_session(locator, credentials, account),
            true <- eligible_account?(account),
            true <- account.primary_email_change_operation_id == operation_id,
            :lt <- DateTime.compare(now_usec(), account.primary_email_change_expires_at),
@@ -326,7 +327,7 @@ defmodule NewYou.Identity.PrimaryEmailChange do
            true <- account.primary_email_change_credential_version == account.credential_version,
            true <- Argon2Provider.valid?(password, account.hashed_password),
            true <- available_target?(account.primary_email_change_target, account.id),
-           result <- reauthenticate_state(account, session, password, operation_id) do
+           result <- reauthenticate_state(account, session, password, operation_id, proof) do
         result
       else
         _ -> unavailable()
@@ -337,7 +338,8 @@ defmodule NewYou.Identity.PrimaryEmailChange do
            %Account{primary_email_change_state: :requested} = account,
            session,
            _password,
-           operation_id
+           operation_id,
+           _proof
          ) do
       if mfa_assurance?(session, account) do
         issue_new_confirmation(account, session, operation_id)
@@ -350,12 +352,25 @@ defmodule NewYou.Identity.PrimaryEmailChange do
            %Account{primary_email_change_state: :new_address_pending} = account,
            session,
            _password,
-           operation_id
+           operation_id,
+           proof
          ) do
-      retry_pending_confirmation(account, session, operation_id)
+      retry_pending_confirmation(account, session, operation_id, proof)
     end
 
-    defp reauthenticate_state(_account, _session, _password, _operation_id), do: unavailable()
+    defp reauthenticate_state(
+           %Account{primary_email_change_state: state} = account,
+           session,
+           password,
+           operation_id,
+           proof
+         )
+         when state in [:delayed, :reviewed] do
+      refresh_assurance(account, session, password, operation_id, proof)
+    end
+
+    defp reauthenticate_state(_account, _session, _password, _operation_id, _proof),
+      do: unavailable()
 
     defp issue_new_confirmation(account, session, operation_id) do
       with true <- mfa_assurance?(session, account),
@@ -381,9 +396,9 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       end
     end
 
-    defp retry_pending_confirmation(account, session, operation_id) do
+    defp retry_pending_confirmation(account, session, operation_id, proof) do
       with true <- account.primary_email_change_reauth_session_id == session.id,
-           {:ok, proof} <- token(account.primary_email_change_token_jti, true),
+           true <- match?(%Token{}, proof),
            true <- current_confirmation?(proof, account),
            {:ok, intent} <-
              MessageIntent
@@ -399,6 +414,79 @@ defmodule NewYou.Identity.PrimaryEmailChange do
         {:ok, :proof_pending}
       else
         _ -> unavailable()
+      end
+    end
+
+    defp refresh_assurance(account, session, password, operation_id, proof) do
+      now = now_usec()
+
+      with true <-
+             is_binary(password) and Argon2Provider.valid?(password, account.hashed_password),
+           true <- mfa_assurance?(session, account),
+           true <- current_consumed_confirmation?(proof, account, operation_id, now),
+           {:ok, _refreshed} <-
+             Ash.update(
+               account,
+               %{
+                 primary_email_change_reauthenticated_at: now,
+                 primary_email_change_reauth_session_id: session.id,
+                 primary_email_change_security_version: account.security_version,
+                 primary_email_change_credential_version: account.credential_version
+               },
+               action: :refresh_primary_email_change_assurance,
+               authorize?: false
+             ) do
+        {:ok, :assurance_refreshed}
+      else
+        _ -> unavailable()
+      end
+    end
+
+    # Load every operation Token in JTI order before locking the Session. Rebinding
+    # assurance after confirmation follows the same Account -> Token -> Session
+    # order as final apply and cannot rely on a stale caller-loaded Session.
+    defp lock_reauthentication_session(locator, credentials, account) do
+      case account.primary_email_change_token_jti do
+        proof_jti when is_binary(proof_jti) ->
+          lock_current_session_and_confirmation(locator, credentials, account, proof_jti)
+
+        _ ->
+          with {:ok, session, _token, _claims} <-
+                 lock_current_session(locator, credentials, account) do
+            {:ok, session, nil}
+          end
+      end
+    end
+
+    defp lock_current_session_and_confirmation(locator, credentials, account, proof_jti) do
+      token_jtis = Enum.sort(Enum.uniq([locator.jti, proof_jti]))
+
+      tokens =
+        Token
+        |> Ash.Query.filter(account_id == ^account.id and jti in ^token_jtis)
+        |> Ash.Query.sort(:jti)
+        |> Ash.Query.lock(:for_update)
+        |> Ash.read!(authorize?: false)
+
+      auth_token = Enum.find(tokens, &(&1.jti == locator.jti))
+      proof = Enum.find(tokens, &(&1.jti == proof_jti))
+
+      with %Token{} = auth_token <- auth_token,
+           %Token{} = proof <- proof,
+           {:ok, [session]} <- lock_session(locator.session_id, account.id, locator.jti),
+           {:ok, %{"sub" => subject, "jti" => jti}, Account} <-
+             Jwt.verify(credentials.token, Account),
+           true <- subject == locator.subject and jti == locator.jti,
+           true <- subject == AshAuthentication.user_to_subject(account),
+           true <-
+             auth_token.subject == subject and auth_token.purpose == "user" and
+               before?(auth_token.expires_at),
+           true <-
+             session.state == :active and before?(session.expires_at) and
+               before?(session.idle_expires_at) do
+        {:ok, session, proof}
+      else
+        _ -> {:error, :authentication_unavailable}
       end
     end
 
@@ -886,7 +974,8 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       with true <- account.primary_email_change_operation_id == operation_id,
            true <- account.primary_email_change_state in [:delayed, :reviewed],
            true <- application_reviewed?(account),
-           {:ok, proof} <- token(account.primary_email_change_token_jti, true),
+           {:ok, {session, auth_token, proof}} <- lock_apply_authority(account),
+           true <- current_apply_authority?(session, auth_token, account),
            true <- current_consumed_confirmation?(proof, account, operation_id, now) do
         if available_target?(account.primary_email_change_target, account.id) do
           commit_apply(account, proof, operation_id, now)
@@ -897,6 +986,98 @@ defmodule NewYou.Identity.PrimaryEmailChange do
         _ -> unavailable()
       end
     end
+
+    defp lock_apply_authority(account) do
+      with {:ok, %Session{id: session_id, token_jti: session_jti}} <-
+             session_reference(account),
+           proof_jti when is_binary(proof_jti) <- account.primary_email_change_token_jti,
+           {:ok, active_session_jtis} <- active_session_jtis(account.id),
+           jtis <- Enum.sort(Enum.uniq([session_jti, proof_jti | active_session_jtis])),
+           {:ok, tokens} <- lock_tokens(account.id, jtis),
+           tokens_by_jti <- Map.new(tokens, &{&1.jti, &1}),
+           %Token{} = auth_token <- Map.get(tokens_by_jti, session_jti),
+           %Token{} = proof <- Map.get(tokens_by_jti, proof_jti),
+           {:ok, sessions} <- lock_apply_sessions(account.id, session_id),
+           %Session{} = session <- Enum.find(sessions, &(&1.id == session_id)),
+           true <- session.token_jti == session_jti do
+        {:ok, {session, auth_token, proof}}
+      else
+        _ -> {:error, :email_change_unavailable}
+      end
+    end
+
+    # This unlocked read supplies only the Session's immutable token JTI. Apply
+    # locks that Token with the proof Token, then reloads and locks the Session
+    # before evaluating any Session or step-up authority.
+    defp session_reference(account) do
+      Session
+      |> Ash.Query.filter(
+        id == ^account.primary_email_change_reauth_session_id and account_id == ^account.id
+      )
+      |> Ash.read_one(authorize?: false)
+    end
+
+    # These JTIs are lock locators only. The final authority check uses Session
+    # rows reloaded under lock after all related Token rows are locked.
+    defp active_session_jtis(account_id) do
+      Session
+      |> Ash.Query.filter(account_id == ^account_id and state == :active)
+      |> Ash.Query.sort(:id)
+      |> Ash.read(authorize?: false)
+      |> case do
+        {:ok, sessions} -> {:ok, Enum.map(sessions, & &1.token_jti)}
+        _ -> {:error, :email_change_unavailable}
+      end
+    end
+
+    defp lock_apply_sessions(account_id, operation_session_id) do
+      Session
+      |> Ash.Query.filter(
+        account_id == ^account_id and
+          (state == :active or id == ^operation_session_id)
+      )
+      |> Ash.Query.sort(:id)
+      |> Ash.Query.lock(:for_update)
+      |> Ash.read(authorize?: false)
+    end
+
+    defp lock_tokens(account_id, jtis) do
+      Token
+      |> Ash.Query.filter(account_id == ^account_id and jti in ^jtis)
+      |> Ash.Query.sort(:jti)
+      |> Ash.Query.lock(:for_update)
+      |> Ash.read(authorize?: false)
+    end
+
+    defp current_apply_authority?(session, auth_token, account) do
+      session_is_operation_bound?(session, auth_token, account) and
+        session_is_current?(session) and auth_token_is_current?(auth_token, account) and
+        current_email_change_assurance?(session, account)
+    end
+
+    defp session_is_operation_bound?(session, auth_token, account) do
+      session.id == account.primary_email_change_reauth_session_id and
+        session.account_id == account.id and session.token_jti == auth_token.jti
+    end
+
+    defp session_is_current?(session) do
+      session.state == :active and before?(session.expires_at) and
+        before?(session.idle_expires_at)
+    end
+
+    defp auth_token_is_current?(auth_token, account) do
+      auth_token.account_id == account.id and
+        auth_token.subject == AshAuthentication.user_to_subject(account) and
+        auth_token.purpose == "user" and before?(auth_token.expires_at)
+    end
+
+    defp current_email_change_assurance?(session, %{mfa_enrollment_state: :active} = account),
+      do: current_email_change_step_up?(session, account)
+
+    defp current_email_change_assurance?(_session, %{mfa_enrollment_state: :disabled}),
+      do: true
+
+    defp current_email_change_assurance?(_session, _account), do: false
 
     defp commit_apply(account, proof, operation_id, now) do
       with {:ok, applied} <-
@@ -1104,6 +1285,16 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     defp unwrap({:ok, {:ok, result}}, result), do: {:ok, result}
     defp unwrap({:ok, result}, result), do: {:ok, result}
     defp unwrap(_, _), do: unavailable()
+
+    defp unwrap_reauthenticate({:ok, {:ok, result}})
+         when result in [:proof_pending, :assurance_refreshed],
+         do: {:ok, result}
+
+    defp unwrap_reauthenticate({:ok, result})
+         when result in [:proof_pending, :assurance_refreshed],
+         do: {:ok, result}
+
+    defp unwrap_reauthenticate(_), do: unavailable()
 
     defp unwrap_apply({:ok, {:ok, result}}), do: {:ok, result}
 

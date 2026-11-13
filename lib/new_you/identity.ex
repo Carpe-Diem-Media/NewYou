@@ -253,9 +253,10 @@ defmodule NewYou.Identity do
   def request_primary_email_change(credentials, target, locale, operation_id),
     do: NewYou.Identity.PrimaryEmailChange.request(credentials, target, locale, operation_id)
 
-  @doc "Require fresh password and current Session assurance before issuing new-address proof."
+  @doc "Require fresh password and current Session assurance before issuing or refreshing proof authority."
   @spec reauthenticate_primary_email_change(term(), term(), term()) ::
-          {:ok, :proof_pending} | {:error, :primary_email_change_unavailable}
+          {:ok, :proof_pending | :assurance_refreshed}
+          | {:error, :primary_email_change_unavailable}
   def reauthenticate_primary_email_change(credentials, password, operation_id),
     do: NewYou.Identity.PrimaryEmailChange.reauthenticate(credentials, password, operation_id)
 
