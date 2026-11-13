@@ -3,11 +3,12 @@
   "capability_id": "identity.primary_email_change",
   "purpose": "Change an Account's canonical primary email only after explicit confirmation of the new mailbox and a guarded, durable Identity apply transaction.",
   "implementing_tickets": [
-    "WELL-17"
+    "WELL-17",
+    "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "6bdf31bcfdac50db923a4b9dad363d2fde5a50b9",
-    "semantics": "Source checkpoint with current purpose-bound Session assurance enforced for all Accounts, including MFA-disabled Accounts, and fresh-password assurance renewal for due operations; the capability map and generated PR history record follow in documentation-only commits."
+    "git_sha": "135c043824448d383e87aece77a154e7267ecd3b",
+    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -27,6 +28,15 @@
       "ownership": "Owns durable minimal evidence obligations for Account lifecycle outcomes. Audit evidence does not mutate canonical email.",
       "source_ids": [
         "audit"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "interface": "require_current_p817_proof_purpose_locked/2 (synthetic proof boundary only)",
+      "ownership": "Owns the operation-bound current purpose and terminal withdrawal truth. Identity reads it under the same source transaction and never copies it into Account, Session or workflow state.",
+      "source_ids": [
+        "privacy",
+        "privacy_proof_test"
       ]
     }
   ],
@@ -165,17 +175,20 @@
         "Applied/already-applied, terminal held/rejected outcomes, or a uniform unavailable error."
       ],
       "side_effects": [
-        "Under the Account lock, reloads and locks the operation-bound Session and related Tokens, then rechecks operation/version identity, current Session and Token validity, purpose-bound Session step-up with MFA/security version bindings, consumed proof, delay/review, Account posture and target uniqueness. Active MFA retains its TOTP step-up; disabled MFA uses password-established Session step-up. Atomically applies canonical email, invalidates Sessions and Devices, establishes old-address notice intent and Audit evidence."
+        "Under the Account lock, reloads and locks the operation-bound Session and related Tokens, then rechecks operation/version identity, current Session and Token validity, purpose-bound Session step-up with MFA/security version bindings, consumed proof, delay/review, Account posture and target uniqueness. Active MFA retains its TOTP step-up; disabled MFA uses password-established Session step-up. In the development/test proof gate only, it also obtains the current Privacy-owned purpose under lock before changing the Account. Atomically applies canonical email, invalidates Sessions and Devices, establishes old-address notice intent and Audit evidence."
       ],
       "caller_constraints": [
-        "Retries are idempotent. The apply operation and existing recovery completion serialize on the authoritative Account transaction."
+        "Retries are idempotent. The apply operation and existing recovery completion serialize on the authoritative Account transaction.",
+        "The P8-17 synthetic proof purpose is development/test-only and flag-controlled; ordinary primary-email change does not require new purpose-specific consent."
       ],
       "source_ids": [
         "identity_api",
         "lifecycle",
         "account",
         "recovery",
-        "test"
+        "test",
+        "privacy",
+        "privacy_proof_test"
       ]
     },
     {
@@ -1119,6 +1132,21 @@
         "migration",
         "test"
       ]
+    },
+    {
+      "summary": "When the P8-17 development/test proof gate is enabled, Identity locks the current Privacy purpose row after its existing Account, Token and Session checks and holds that lock through the source mutation commit. Withdrawal touches only the Privacy row, so it cannot create a reverse Account/Token/Session lock order.",
+      "source_ids": [
+        "lifecycle",
+        "privacy",
+        "privacy_proof_test"
+      ]
+    },
+    {
+      "summary": "Separate PostgreSQL transactions prove withdrawal-first denies before mutation, while source-first obtains the Privacy lock, commits the already-authorized mutation, and allows the waiting withdrawal to commit afterwards.",
+      "source_ids": [
+        "privacy",
+        "privacy_proof_test"
+      ]
     }
   ],
   "idempotency_retry": [
@@ -1136,6 +1164,13 @@
         "lifecycle",
         "communications",
         "audit"
+      ]
+    },
+    {
+      "summary": "A withdrawn proof purpose is terminal in Privacy. Identity's denied retry re-reads the owner row; it cannot restore the prior positive decision from Session or workflow state.",
+      "source_ids": [
+        "privacy",
+        "privacy_proof_test"
       ]
     }
   ],
@@ -1171,6 +1206,13 @@
         "recovery",
         "identity_api",
         "test"
+      ]
+    },
+    {
+      "summary": "Missing, withdrawn or unavailable current Privacy authority fails closed in the proof gate. Retry after withdrawal and a fresh BEAM restart remain denied; Privacy keeps the current durable state and append-only transition evidence.",
+      "source_ids": [
+        "privacy",
+        "privacy_proof_test"
       ]
     }
   ],
@@ -1217,6 +1259,22 @@
       "limits": "Route coverage does not enable production or live participant delivery.",
       "source_ids": [
         "reachability_test"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "cases": [
+        "initial RED, missing current Privacy authority denial and no source success consequences",
+        "committed withdrawal before Identity's locked current read denies the protected mutation and stale retry",
+        "source-first current read blocks withdrawal until mutation commits, then withdrawal commits",
+        "unavailable owner read and fresh BEAM retry after withdrawal both fail closed"
+      ],
+      "proves": "WELL-18 source/Privacy transaction ordering and durable retry behavior through the real Identity apply interface.",
+      "limits": "Synthetic purpose and authority gate are development/test-only; production primary-email policy is unchanged.",
+      "source_ids": [
+        "test",
+        "privacy_proof_test",
+        "privacy"
       ]
     }
   ],
@@ -1295,7 +1353,7 @@
       "id": "identity_api",
       "path": "lib/new_you/identity.ex",
       "symbol": "def request_primary_email_change",
-      "sha256": "90ba9e7d0ef990538c38482b922d5f8d409f1a2b9a7c557df4fc896038680c81"
+      "sha256": "a2c6b0114d3e64f29a3b1d5daefba76220c162b0429c1317b66987e061dab6aa"
     },
     {
       "id": "account",
@@ -1307,7 +1365,7 @@
       "id": "lifecycle",
       "path": "lib/new_you/identity/primary_email_change.ex",
       "symbol": "defmodule NewYou.Identity.PrimaryEmailChange",
-      "sha256": "8e0936acbdc49f0b55676f71b21c008a769948775008696eda0f3b0a28dbb925"
+      "sha256": "517c5dc55343c0dec5a3f22f63112109230c6088baf4b668d1f610c97a9e69f5"
     },
     {
       "id": "token",
@@ -1403,7 +1461,7 @@
       "id": "test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "defmodule NewYou.Identity.PrimaryEmailChangeTest",
-      "sha256": "dd4baa3a0e730ef7dfc426b71fd1e148569c82017db118e40a94cae2d0dc0642"
+      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
     },
     {
       "id": "restart_proof",
@@ -1422,6 +1480,18 @@
       "path": "test/new_you_web/security/authentication_reachability_test.exs",
       "symbol": "request_primary_email_change",
       "sha256": "d7b5227112c068437e58f8226ff02e40df1a2b0914608f9a57e1e4c17b175172"
+    },
+    {
+      "id": "privacy",
+      "path": "lib/new_you/privacy.ex",
+      "symbol": "require_current_p817_proof_purpose_locked",
+      "sha256": "7ea9344742898e8afa0f0f8cecf4f8619169a90a54647d5750fcf0a81c2d90fc"
+    },
+    {
+      "id": "privacy_proof_test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "committed Privacy withdrawal wins before Identity's current mutation check",
+      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
     }
   ]
 }

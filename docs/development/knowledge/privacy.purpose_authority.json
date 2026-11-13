@@ -1,0 +1,548 @@
+{
+  "schema_version": 1,
+  "capability_id": "privacy.purpose_authority",
+  "purpose": "Provide a minimal Privacy-owned, operation-bound purpose and terminal withdrawal record for P8-17 current-authority proof; it is not participant consent or a production email-change requirement.",
+  "implementing_tickets": [
+    "WELL-18"
+  ],
+  "implementation_revision": {
+    "git_sha": "135c043824448d383e87aece77a154e7267ecd3b",
+    "semantics": "WELL-18 introduces a proof-only Privacy state, immutable transition history and a transaction-locked current-authority read at Identity's protected mutation boundary. The map is refreshed against the committed source checkpoint and is not governing authority."
+  },
+  "authoritative_domain": "NewYou.Privacy",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Identity",
+      "interface": "Identity.apply_primary_email_change/1 calls NewYou.Privacy.require_current_p817_proof_purpose_locked/2 inside the owning Account transaction when the development/test proof gate is enabled.",
+      "ownership": "Identity alone owns Account, Session, Token and primary-email mutation. It reads current Privacy authority and never stores a copied permission or performs Privacy writes.",
+      "source_ids": [
+        "identity_integration",
+        "identity_mutation"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Privacy",
+      "resource": "NewYou.Privacy.PurposeAuthority",
+      "actions": [
+        "read",
+        "grant_proof_only (development/test only)",
+        "withdraw_proof_only (development/test only)"
+      ],
+      "caller_boundary": "Privacy-owned Ash Resource and owner functions; allowed-to-withdraw is terminal, and the current row is locked for Identity's authoritative re-read.",
+      "source_ids": [
+        "privacy_domain",
+        "authority"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "resource": "NewYou.Privacy.PurposeEvent",
+      "actions": [
+        "read",
+        "record_transition (development/test only)"
+      ],
+      "caller_boundary": "Append-only Privacy-owned evidence of grant and withdrawal version; it never authorizes an Identity mutation.",
+      "source_ids": [
+        "privacy_domain",
+        "events"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.Account",
+      "actions": [
+        "apply_primary_email_change"
+      ],
+      "caller_boundary": "Identity owns the source mutation and obtains current Privacy authority inside its same PostgreSQL transaction before applying the canonical email change.",
+      "source_ids": [
+        "identity_mutation",
+        "identity_integration"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Privacy",
+      "function": "grant_p817_proof_purpose",
+      "arity": 2,
+      "visibility": "internal",
+      "arguments": [
+        "Identity Account UUID and primary-email operation UUID."
+      ],
+      "returns": [
+        "{:ok, :allowed | :already_allowed} or a closed Privacy error.",
+        "A withdrawn operation cannot be regranted."
+      ],
+      "side_effects": [
+        "Development/test only: create one operation-bound allowed authority row and version-1 grant event through Privacy Ash actions in one transaction."
+      ],
+      "caller_constraints": [
+        "This synthetic purpose is a proof fixture, not participant consent, registration acceptance or production policy."
+      ],
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "events"
+      ]
+    },
+    {
+      "module": "NewYou.Privacy",
+      "function": "withdraw_p817_proof_purpose",
+      "arity": 2,
+      "visibility": "internal",
+      "arguments": [
+        "Identity Account UUID and operation UUID for the existing proof-only authority."
+      ],
+      "returns": [
+        "{:ok, :withdrawn | :already_withdrawn} or a closed Privacy error."
+      ],
+      "side_effects": [
+        "Locks and transitions the Privacy row to withdrawn, increments its version and appends the matching immutable event atomically."
+      ],
+      "caller_constraints": [
+        "Development/test only. Missing records do not create negative state; no restoration transition exists."
+      ],
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "events"
+      ]
+    },
+    {
+      "module": "NewYou.Privacy",
+      "function": "require_current_p817_proof_purpose_locked",
+      "arity": 2,
+      "visibility": "internal",
+      "arguments": [
+        "Identity Account UUID and operation UUID while the source transaction includes PurposeAuthority."
+      ],
+      "returns": [
+        ":ok only for a current allowed row held FOR UPDATE; missing or withdrawn denies and unavailable reads fail closed."
+      ],
+      "side_effects": [
+        "Locks the durable Privacy current-state row through the same Repo transaction as the source mutation; no Identity copy or cache is written."
+      ],
+      "caller_constraints": [
+        "Caller must already be inside the Identity authoritative transaction; a request-start or UI read is insufficient."
+      ],
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "identity_integration"
+      ]
+    },
+    {
+      "module": "NewYou.Identity.PrimaryEmailChange",
+      "function": "apply",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Persisted primary-email operation UUID."
+      ],
+      "returns": [
+        "Existing Identity apply result; proof-gated negative or unavailable Privacy authority maps to the existing unavailable result."
+      ],
+      "side_effects": [
+        "After existing Identity Account, Session, Token, proof, delay and review checks, re-reads and locks current Privacy authority immediately before target mutation."
+      ],
+      "caller_constraints": [
+        "The P8-17 check exists only in development/test and only when the dedicated proof flag is enabled; ordinary primary-email change does not require new consent."
+      ],
+      "source_ids": [
+        "identity_mutation",
+        "identity_integration"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261113181815_well_18_privacy_purpose_authority.exs",
+      "tables": [
+        "privacy_purpose_authorities",
+        "privacy_purpose_events"
+      ],
+      "constraints": [
+        "privacy_purpose_authorities_one_operation_purpose_index",
+        "privacy_purpose_authorities_state",
+        "privacy_purpose_authorities_lifecycle_guard",
+        "privacy_purpose_events_one_transition_per_version_index",
+        "privacy_purpose_events_immutable",
+        "privacy_purpose_events_provenance"
+      ],
+      "source_ids": [
+        "privacy_migration"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "Registration persists Terms and Privacy version acceptance under Identity; a successful registration leaves the separate operation-bound Privacy proof purpose missing.",
+      "source_ids": [
+        "registration_test",
+        "owner_test"
+      ]
+    },
+    {
+      "summary": "A development/test fixture asks the Privacy owner to grant the synthetic purpose for an existing Identity operation; a separate Privacy owner call may withdraw it.",
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "events",
+        "owner_test"
+      ]
+    },
+    {
+      "summary": "Identity's source transaction locks Account, Token and Session authority, then obtains a current FOR UPDATE read from Privacy immediately before its protected mutation.",
+      "source_ids": [
+        "identity_mutation",
+        "identity_integration",
+        "privacy_domain"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "missing",
+      "allowed",
+      "withdrawn (terminal)"
+    ],
+    "transitions": [
+      {
+        "from_state": "missing",
+        "to_state": "allowed",
+        "guards": [
+          "Only the Privacy-owned development/test proof fixture can create this exact synthetic purpose and origin for one subject and source operation.",
+          "The unique subject/purpose/source-operation key prevents a second competing current row."
+        ],
+        "side_effects": [
+          "Create current authority at version 1 and append the matching granted event in one Ash transaction."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "privacy_domain",
+          "authority",
+          "events",
+          "privacy_migration"
+        ]
+      },
+      {
+        "from_state": "allowed",
+        "to_state": "withdrawn (terminal)",
+        "guards": [
+          "Privacy locks the current authority row; the only accepted state change is allowed to withdrawn with exactly one version increment.",
+          "PostgreSQL lifecycle guards reject regrant, delete, truncate, provenance edits and version skips."
+        ],
+        "side_effects": [
+          "Update current Privacy state and append the matching withdrawn event atomically."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "privacy_domain",
+          "authority",
+          "events",
+          "privacy_migration",
+          "owner_test"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Privacy owns the purpose/withdrawal row and event history. Identity reads the current result but does not store a competing grant or write Privacy truth.",
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "events",
+        "identity_integration"
+      ]
+    },
+    {
+      "summary": "The only stored purpose and origin are the P8-17 synthetic protected-mutation proof and its fixture origin; both owner writes and Identity enforcement are development/test gated.",
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "events",
+        "identity_integration"
+      ]
+    },
+    {
+      "summary": "Registration Terms/Privacy acceptance is distinct from purpose-specific permission; registration alone leaves the proof purpose missing.",
+      "source_ids": [
+        "registration_test",
+        "owner_test"
+      ]
+    },
+    {
+      "summary": "Missing, withdrawn, negative or unavailable current Privacy authority fails closed. The affected Identity operation does not accept browser, Session, operator, cache or workflow permission snapshots.",
+      "source_ids": [
+        "privacy_domain",
+        "identity_integration",
+        "identity_mutation",
+        "race_test"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Identity locks Account, sorted related Token rows and Session rows before locking the Privacy current-purpose row. Privacy withdrawal locks only the purpose row, so the selected path has no reverse Account/Token/Session lock dependency.",
+      "source_ids": [
+        "identity_mutation",
+        "privacy_domain",
+        "authority"
+      ]
+    },
+    {
+      "summary": "Both source mutation and withdrawal contend on the same PostgreSQL Privacy row. If withdrawal commits first, Identity reads withdrawn and denies; if Identity locks and commits first, withdrawal waits and records a later withdrawal.",
+      "source_ids": [
+        "identity_integration",
+        "privacy_domain",
+        "race_test",
+        "reverse_order_test"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Grant and withdrawal retries return stable existing states; grant after terminal withdrawal is denied and cannot recreate a positive row.",
+      "source_ids": [
+        "privacy_domain",
+        "owner_test"
+      ]
+    },
+    {
+      "summary": "A denied Identity apply retry re-reads current Privacy state; a fresh BEAM process after withdrawal remains denied, while a source mutation that serialized first is already applied and is not undone by later withdrawal.",
+      "source_ids": [
+        "identity_integration",
+        "identity_mutation",
+        "race_test",
+        "reverse_order_test",
+        "restart_test"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "A missing row denies, and an unavailable Privacy owner read maps to the existing Identity unavailable result without source mutation or downstream apply consequences.",
+      "source_ids": [
+        "privacy_domain",
+        "identity_integration",
+        "owner_test",
+        "race_test"
+      ]
+    },
+    {
+      "summary": "Purpose state is read from PostgreSQL by a fresh process after restart; no process-local flag, cached projection, browser state, Session or Audit record can restore withdrawn permission.",
+      "source_ids": [
+        "privacy_domain",
+        "restart_test",
+        "restart_probe",
+        "identity_mutation"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "cases": [
+        "Registration acceptance leaves authority missing.",
+        "Privacy creates allowed state and versioned grant history.",
+        "Withdrawal is terminal, appends matching immutable history, and cannot be regranted or deleted.",
+        "A current locked read rejects withdrawn authority and a fresh process reads durable withdrawal."
+      ],
+      "proves": "The Privacy owner actions and PostgreSQL constraints preserve operation-bound current truth and transition history.",
+      "limits": "Owner operations are synthetic development/test proof fixtures; this does not implement participant consent UX or legal-purpose policy.",
+      "source_ids": [
+        "owner_test",
+        "privacy_domain",
+        "privacy_migration"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "cases": [
+        "Initial RED: missing current purpose did not deny before implementation.",
+        "Withdrawal commits before source's locked current read, then mutation and stale retry deny without apply consequences.",
+        "Source transaction locks current allowed state first; PostgreSQL reports real withdrawal contention and source commits before later withdrawal.",
+        "Unavailable owner read fails closed.",
+        "Fresh BEAM retry after committed withdrawal denies."
+      ],
+      "proves": "The Identity source transaction and Privacy withdrawal serialize on the same durable PostgreSQL authority row in both commit orders.",
+      "limits": "The selected primary-email mutation is only gated by the synthetic purpose in development/test when the dedicated proof flag is enabled; no production consent requirement is introduced.",
+      "source_ids": [
+        "source_test",
+        "race_test",
+        "reverse_order_test",
+        "restart_test",
+        "identity_mutation",
+        "privacy_domain"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "A future production purpose requires its own approved purpose semantics and Privacy-owned interface before it can use this demonstration; P8-17 does not create one.",
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "identity_integration"
+      ]
+    },
+    {
+      "summary": "Privacy is registered as an Ash domain but is explicitly outside Identity reconciliation; an additional unreviewed domain still blocks reconciliation apply.",
+      "source_ids": [
+        "reconciliation_scope",
+        "reconciliation_guard_test"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Reuse the existing NewYou.Repo PostgreSQL Ash transaction and Identity P8-16 Account/Token/Session lock sequence; do not add a service, cache, Repo or write API.",
+      "source_ids": [
+        "privacy_domain",
+        "identity_mutation",
+        "authority"
+      ]
+    },
+    {
+      "summary": "The certified Phase-7B Privacy dossier disposition remains NOT_REQUIRED; this implementation records only its source-linked code capability map.",
+      "source_ids": [
+        "privacy_domain",
+        "phase7b"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Do not infer purpose permission from registration acceptance or copy a positive Privacy result into Account, Session, operator view, workflow or another Domain.",
+      "source_ids": [
+        "registration_test",
+        "privacy_domain",
+        "identity_integration"
+      ]
+    },
+    {
+      "summary": "Do not use an unlocked request-start read, cache, process state, Audit evidence or derived projection as authority at Identity's mutation boundary.",
+      "source_ids": [
+        "privacy_domain",
+        "identity_integration",
+        "identity_mutation"
+      ]
+    },
+    {
+      "summary": "Do not expand the proof into a consent centre, production primary-email consent rule, legal-basis engine, deletion/export orchestration or a new Privacy dossier.",
+      "source_ids": [
+        "privacy_domain",
+        "identity_integration",
+        "phase7b"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "The demonstration purpose and its grant/withdraw actions compile only for development/test; the Identity apply guard is likewise test/development-only and flag-controlled.",
+    "PostgreSQL order is proven using separate local TEST connections and observed pg_blocking_pids contention. The proof does not model cross-region database failures.",
+    "Unavailable owner-read behavior is exercised with the established deterministic test seam; it does not simulate every physical database outage mode.",
+    "The proof does not establish a production legal consent requirement and does not alter the certified Privacy JIT dossier disposition."
+  ],
+  "follow_up_tickets": [],
+  "sources": [
+    {
+      "id": "privacy_domain",
+      "path": "lib/new_you/privacy.ex",
+      "symbol": "defmodule NewYou.Privacy",
+      "sha256": "7ea9344742898e8afa0f0f8cecf4f8619169a90a54647d5750fcf0a81c2d90fc"
+    },
+    {
+      "id": "authority",
+      "path": "lib/new_you/privacy/purpose_authority.ex",
+      "symbol": "defmodule NewYou.Privacy.PurposeAuthority",
+      "sha256": "a0b47f86f9e63e0fd86d39a8496de6a19f4bf6c88c5534dfce82bb52dd40b4c9"
+    },
+    {
+      "id": "events",
+      "path": "lib/new_you/privacy/purpose_event.ex",
+      "symbol": "defmodule NewYou.Privacy.PurposeEvent",
+      "sha256": "bfbb25c242138ac25e8ad6866db1a8c548122da67f19bb2cad02c7f2c7c6e9e1"
+    },
+    {
+      "id": "identity_integration",
+      "path": "lib/new_you/identity/primary_email_change.ex",
+      "symbol": "current_privacy_proof_purpose",
+      "sha256": "517c5dc55343c0dec5a3f22f63112109230c6088baf4b668d1f610c97a9e69f5"
+    },
+    {
+      "id": "identity_mutation",
+      "path": "lib/new_you/identity/primary_email_change.ex",
+      "symbol": "defp apply_current",
+      "sha256": "517c5dc55343c0dec5a3f22f63112109230c6088baf4b668d1f610c97a9e69f5"
+    },
+    {
+      "id": "reconciliation_scope",
+      "path": "lib/new_you/identity/reconciliation.ex",
+      "symbol": "defp owner_reviews(current)",
+      "sha256": "adc29045d5ec86f0d3483172beceefa05daccea8b1ed1568afd300d85f7ebc9f"
+    },
+    {
+      "id": "reconciliation_guard_test",
+      "path": "test/new_you/identity/reconciliation_test.exs",
+      "symbol": "unreviewed new Domain blocks apply instead of assuming its consequences",
+      "sha256": "0b8a1963b0cb2783c0648db164a8f28e583cc2b7737904547b1463a22e91a68c"
+    },
+    {
+      "id": "privacy_migration",
+      "path": "priv/repo/migrations/20261113181815_well_18_privacy_purpose_authority.exs",
+      "symbol": "privacy_purpose_authorities_lifecycle_guard",
+      "sha256": "9908d3da4f586b53b686b30e18d18821f9acc8086248a9522000792b7cd153eb"
+    },
+    {
+      "id": "owner_test",
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "symbol": "defmodule NewYou.Privacy.PurposeAuthorityTest",
+      "sha256": "69298f60af089eb678b6e52ed03169888cd8ee5fae076eaabdab2419ebfc9c68"
+    },
+    {
+      "id": "source_test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "proof-only protected mutation denies when current Privacy authority is missing",
+      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
+    },
+    {
+      "id": "race_test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "committed Privacy withdrawal wins before Identity's current mutation check",
+      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
+    },
+    {
+      "id": "reverse_order_test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "Identity mutation committed first serializes before Privacy withdrawal",
+      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
+    },
+    {
+      "id": "restart_test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "withdrawn Privacy authority remains denied after a fresh BEAM restart",
+      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
+    },
+    {
+      "id": "restart_probe",
+      "path": "test/proof/p8_17_privacy_restart.exs",
+      "symbol": "P817_RESTART_DENIED",
+      "sha256": "7f10fd40ff26c1e861d9cafb60bbc61600f818ed411d4a3fce80a74d70fa3e58"
+    },
+    {
+      "id": "registration_test",
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "symbol": "proof-only purpose records positive authority, terminal withdrawal and immutable history",
+      "sha256": "69298f60af089eb678b6e52ed03169888cd8ee5fae076eaabdab2419ebfc9c68"
+    },
+    {
+      "id": "phase7b",
+      "path": "docs/delivery/proof/fp-001/FP-001_PHASE_7B_RECONCILIATION_WORKING_v0.1.0.md",
+      "symbol": "NOT_REQUIRED",
+      "sha256": "3120893c526336bbb7c301e800312dc9f7a999038ae91f20e9ff4169d76e1a3c"
+    }
+  ]
+}
