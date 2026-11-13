@@ -7,7 +7,7 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "9a57e29e0b972fe69e6c6ab9e615b109b5d1ffb5",
+    "git_sha": "a423a269debb3890a356859d195d69fb0bbd6738",
     "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1461,7 +1461,7 @@
       "id": "test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "defmodule NewYou.Identity.PrimaryEmailChangeTest",
-      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
+      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
     },
     {
       "id": "restart_proof",
@@ -1491,7 +1491,7 @@
       "id": "privacy_proof_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "committed Privacy withdrawal wins before Identity's current mutation check",
-      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
+      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
     }
   ]
 }

@@ -6,7 +6,7 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "7c0ac093771619cae7e9a67e8bda40f80efaff07",
+    "git_sha": "a423a269debb3890a356859d195d69fb0bbd6738",
     "semantics": "WELL-18 introduces a proof-only Privacy state, immutable transition history, a database guard against initial withdrawal, and a transaction-locked current-authority read at Identity's protected mutation boundary. The map is refreshed against the committed source checkpoint and is not governing authority."
   },
   "authoritative_domain": "NewYou.Privacy",
@@ -573,25 +573,25 @@
       "id": "source_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "proof-only protected mutation denies when current Privacy authority is missing",
-      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
+      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
     },
     {
       "id": "race_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "committed Privacy withdrawal wins before Identity's current mutation check",
-      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
+      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
     },
     {
       "id": "reverse_order_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "Identity mutation committed first serializes before Privacy withdrawal",
-      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
+      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
     },
     {
       "id": "restart_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "withdrawn Privacy authority remains denied after a fresh BEAM restart",
-      "sha256": "2a2e87984493245a2fbd8dd2874645674db1c76837b5fe8baf8e5e237472b3d2"
+      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
     },
     {
       "id": "restart_probe",
