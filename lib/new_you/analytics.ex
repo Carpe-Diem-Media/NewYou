@@ -20,8 +20,6 @@ defmodule NewYou.Analytics do
   use Ash.Domain,
     otp_app: :new_you
 
-  @production_projection_key "p817_current_privacy_aggregate"
-
   if Mix.env() == :test do
     @test_projection_key {__MODULE__, :p817_test_projection_key}
   end
@@ -41,6 +39,8 @@ defmodule NewYou.Analytics do
   """
   @spec rebuild_p817_privacy_projection() :: :ok | projection_error()
   if Mix.env() in [:dev, :test] do
+    @production_projection_key "p817_current_privacy_aggregate"
+
     def rebuild_p817_privacy_projection do
       with {:ok, snapshot} <- NewYou.Privacy.current_p817_proof_purpose_snapshot(),
            :ok <- after_privacy_snapshot_read(snapshot),
@@ -91,7 +91,5 @@ defmodule NewYou.Analytics do
     end
   else
     def rebuild_p817_privacy_projection, do: {:error, :analytics_projection_unavailable}
-
-    defp projection_key, do: @production_projection_key
   end
 end

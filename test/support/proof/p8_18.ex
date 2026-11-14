@@ -59,12 +59,11 @@ defmodule NewYou.Proof.P818 do
         |> Ash.Query.filter(message_intent_id == ^verification_intent.id)
         |> Ash.read!(authorize?: false)
 
+      after_acceptance = Ash.get!(Account, registration.account_id, authorize?: false)
+      P805.check(id, "provider_acceptance_did_not_verify", not after_acceptance.email_verified?)
+
       :ok = reconcile_delivered(verification_attempt, "p818-verification-delivered")
-
       account = Ash.get!(Account, registration.account_id, authorize?: false)
-
-      P805.check(id, "provider_acceptance_did_not_verify", not account.email_verified?)
-
       P805.check(id, "authenticated_callback_did_not_verify", not account.email_verified?)
 
       P805.check(
@@ -397,61 +396,167 @@ defmodule NewYou.Proof.P818 do
   defp executor_state_non_authority(id) do
     request = P805.request()
     {:ok, registration} = Identity.register(request)
+    source_before = identity_state(registration.account_id)
+    queue = String.replace_prefix(P805.analytics_projection_key(), "p817_test_", "p818_")
+    verify_missing_executor_sources(id, queue)
+
+    [obligation] =
+      EvidenceObligation
+      |> Ash.Query.filter(source_operation_id == ^request.operation_id)
+      |> Ash.read!(authorize?: false)
+
+    verify_audit_job_lifecycle(id, obligation, queue)
+    stale_unchanged? = verify_stale_message_completion(id, queue)
+
+    P805.check(
+      id,
+      "source_truth_unchanged",
+      identity_state(registration.account_id) == source_before and
+        stale_unchanged?
+    )
+  end
+
+  defp verify_missing_executor_sources(id, queue) do
     unknown_id = Ecto.UUID.generate()
 
     obligation_worker =
       AshOban.Info.oban_trigger(EvidenceObligation, :registration_evidence).worker
 
     message_worker = AshOban.Info.oban_trigger(MessageIntent, :delivery).worker
+    missing_obligation = enqueue_missing_source(obligation_worker, unknown_id, queue)
+    missing_intent = enqueue_missing_source(message_worker, unknown_id, queue)
 
-    job_states = [{:available, 1}, {:executing, 2}, {:completed, 3}, {:retryable, 5}]
-
-    job_results =
-      for {state, attempt} <- job_states do
-        {
-          perform_unknown_job(obligation_worker, unknown_id, state, attempt, 10),
-          perform_unknown_job(message_worker, unknown_id, state, attempt, 5)
-        }
-      end
-
-    obligation_missing =
-      EvidenceObligation
-      |> Ash.Query.filter(id == ^unknown_id)
-      |> Ash.read_one!(authorize?: false)
-      |> is_nil()
+    %{failure: 2, success: 0} = Oban.drain_queue(queue: queue)
 
     P805.check(
       id,
       "missing_obligation_rejected",
-      obligation_missing
-    )
-
-    intent_missing =
-      MessageIntent
-      |> Ash.Query.filter(id == ^unknown_id)
-      |> Ash.read_one!(authorize?: false)
-      |> is_nil()
-
-    P805.check(id, "missing_intent_rejected", intent_missing)
-
-    P805.check(
-      id,
-      "all_job_states_rejected_missing_sources",
-      obligation_missing and intent_missing and
-        Enum.all?(job_results, fn {obligation_result, intent_result} ->
-          obligation_result == :source_unavailable and intent_result == :source_unavailable
-        end)
+      expected_job_failure?(missing_obligation, :evidence_materialisation_unavailable)
     )
 
     P805.check(
       id,
-      "source_truth_unchanged",
-      identity_state(registration.account_id).email_verified? == false and
-        match?(
-          {:error, :authentication_unavailable},
-          Identity.authenticate_password(request.email, request.password)
-        )
+      "missing_intent_rejected",
+      expected_job_failure?(missing_intent, :delivery_unavailable)
     )
+  end
+
+  defp verify_audit_job_lifecycle(id, obligation, queue) do
+    job = AshOban.run_trigger(obligation, :registration_evidence, queue: queue)
+
+    P805.check(
+      id,
+      "queued_job_did_not_fulfill_obligation",
+      job.state == "available" and open_without_evidence?(obligation.id)
+    )
+
+    previous_hook = Process.get(NewYou.Proof.AuditSeam, :missing)
+    attempt_key = {__MODULE__, :audit_attempt_started}
+    Process.delete(attempt_key)
+
+    Process.put(NewYou.Proof.AuditSeam, fn point ->
+      if is_function(previous_hook, 1), do: previous_hook.(point)
+      audit_retry_checkpoint(point, id, obligation.id, job.id, attempt_key)
+    end)
+
+    try do
+      %{failure: 1, success: 0} = Oban.drain_queue(queue: queue)
+
+      P805.check(
+        id,
+        "retry_preserved_open_obligation",
+        expected_job_failure?(job, "p818_expected_audit_retry") and
+          open_without_evidence?(obligation.id)
+      )
+    after
+      restore_process_value(NewYou.Proof.AuditSeam, previous_hook)
+      Process.delete(attempt_key)
+    end
+
+    :ok = Oban.retry_job(job)
+    %{failure: 0, success: 1} = Oban.drain_queue(queue: queue, with_safety: false)
+    completed = job_row(job.id)
+    current_obligation = Ash.get!(EvidenceObligation, obligation.id, authorize?: false)
+    {:ok, record} = Audit.get_evidence_record_by_obligation(obligation.id, authorize?: false)
+
+    P805.check(
+      id,
+      "retry_used_same_obligation",
+      completed.attempt == 2 and
+        completed.args["primary_key"] == %{"id" => obligation.id}
+    )
+
+    P805.check(
+      id,
+      "completed_job_has_owner_evidence",
+      completed.state == "completed" and
+        current_obligation.state == :fulfilled and match?(%EvidenceRecord{}, record) and
+        record.obligation_id == obligation.id
+    )
+  end
+
+  defp audit_retry_checkpoint(:before_lock, id, obligation_id, job_id, attempt_key) do
+    if not Process.get(attempt_key, false) do
+      Process.put(attempt_key, true)
+
+      P805.check(
+        id,
+        "executing_job_did_not_fulfill_obligation",
+        job_row(job_id).state == "executing" and open_without_evidence?(obligation_id)
+      )
+    end
+  end
+
+  defp audit_retry_checkpoint(:after_record, _id, _obligation_id, _job_id, _attempt_key),
+    do: raise("p818_expected_audit_retry")
+
+  defp audit_retry_checkpoint(_point, _id, _obligation_id, _job_id, _attempt_key), do: :ok
+
+  defp verify_stale_message_completion(id, queue) do
+    stale_request = P805.request()
+    {:ok, stale_registration} = Identity.register(stale_request)
+    [stale_intent] = P805.intents(stale_request.operation_id)
+    {:ok, :verified} = Identity.verify_email(stale_registration.verification_proof)
+    stale_source_before = identity_state(stale_registration.account_id)
+    stale_job = AshOban.run_trigger(stale_intent, :delivery, queue: queue)
+    %{failure: 0, success: 1} = Oban.drain_queue(queue: queue, with_safety: false)
+    closed_intent = Ash.get!(MessageIntent, stale_intent.id, authorize?: false)
+
+    stale_attempts =
+      DeliveryAttempt
+      |> Ash.Query.filter(message_intent_id == ^stale_intent.id)
+      |> Ash.read!(authorize?: false)
+
+    P805.check(
+      id,
+      "stale_message_job_completed_without_delivery",
+      job_row(stale_job.id).state == "completed" and
+        closed_intent.dispatch_disposition == :closed and stale_attempts == []
+    )
+
+    identity_state(stale_registration.account_id) == stale_source_before
+  end
+
+  defp enqueue_missing_source(worker, source_id, queue) do
+    %{"primary_key" => %{"id" => source_id}}
+    |> worker.new(queue: queue)
+    |> Oban.insert!()
+  end
+
+  defp job_row(id), do: Repo.get!(Oban.Job, id)
+
+  defp expected_job_failure?(job, expected_reason) do
+    current = job_row(job.id)
+    marker = if is_atom(expected_reason), do: inspect(expected_reason), else: expected_reason
+
+    current.state == "retryable" and current.attempt == 1 and
+      Enum.any?(current.errors, &String.contains?(&1["error"], marker))
+  end
+
+  defp open_without_evidence?(obligation_id) do
+    obligation = Ash.get!(EvidenceObligation, obligation_id, authorize?: false)
+    {:ok, record} = Audit.get_evidence_record_by_obligation(obligation_id, authorize?: false)
+    obligation.state == :open and is_nil(record)
   end
 
   defp signals_coordination_non_authority(id) do
@@ -460,6 +565,19 @@ defmodule NewYou.Proof.P818 do
     topic = "p818:identity-authority:" <> registration.account_id
     forged_proof = "p818-forged-proof:" <> Ecto.UUID.generate()
     prior_source = identity_state(registration.account_id)
+
+    resources =
+      Application.fetch_env!(:new_you, :ash_domains)
+      |> Enum.flat_map(&Ash.Domain.Info.resources/1)
+
+    P805.check(
+      id,
+      "no_registered_ash_signal_handlers",
+      Enum.all?(resources, fn resource ->
+        Ash.Resource.Info.signals_out(resource) == [] and
+          Ash.Resource.Info.signal_listeners(resource) == []
+      end)
+    )
 
     try do
       :ok = Phoenix.PubSub.subscribe(NewYou.PubSub, topic)
@@ -477,8 +595,8 @@ defmodule NewYou.Proof.P818 do
 
       account = Ash.get!(Account, registration.account_id, authorize?: false)
 
-      P805.check(id, "signal_received", received_count >= 1)
-      P805.check(id, "signal_replay_received", received_count == 2)
+      P805.check(id, "pubsub_claim_received", received_count >= 1)
+      P805.check(id, "pubsub_replay_received", received_count == 2)
 
       P805.check(
         id,
@@ -519,10 +637,73 @@ defmodule NewYou.Proof.P818 do
   end
 
   defp analytics_projection(id) do
-    context = build_analytics_projection()
-    verify_current_projection(id, context.baseline)
-    verify_projection_failure_preserves_source(id, context.baseline)
-    verify_withdrawal_suppresses_projection(id, context)
+    key = {__MODULE__, :projection_writes}
+    Process.put(key, [])
+
+    try do
+      context = build_analytics_projection()
+      verify_current_projection(id, context.baseline)
+      verify_projection_failure_preserves_source(id, context.baseline)
+      verify_withdrawal_suppresses_projection(id, context)
+      writes = Process.get(key, [])
+
+      P805.check(
+        id,
+        "projection_writes_only_own_resource",
+        writes != [] and
+          Enum.all?(writes, &(&1 == "p817_privacy_projections")) and
+          Ash.Domain.Info.resources(NewYou.Analytics) == [NewYou.Analytics.P817PrivacyProjection]
+      )
+    after
+      Process.delete(key)
+    end
+  end
+
+  # Query telemetry records only table names, never SQL parameters or source data.
+  # This observes the current synchronous Ash rebuild. Static command checks cover
+  # source direction separately; neither check is an arbitrary-Elixir sandbox.
+  defp rebuild_projection do
+    reference = make_ref()
+    owner = self()
+    event = (Repo.config()[:telemetry_prefix] || [:new_you, :repo]) ++ [:query]
+    handler_id = {__MODULE__, reference}
+
+    handler = fn _event, _measurements, metadata, parent ->
+      if self() == parent, do: observe_projection_write(metadata.query, parent, reference)
+    end
+
+    :ok = :telemetry.attach(handler_id, event, handler, owner)
+
+    try do
+      NewYou.Analytics.rebuild_p817_privacy_projection()
+    after
+      :telemetry.detach(handler_id)
+      writes = collect_projection_writes(reference, [])
+
+      Process.put(
+        {__MODULE__, :projection_writes},
+        writes ++ Process.get({__MODULE__, :projection_writes}, [])
+      )
+    end
+  end
+
+  defp observe_projection_write(query, parent, reference) do
+    case Regex.run(
+           ~r/\A\s*(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM|MERGE\s+INTO)\s+(?:"[^"]+"\.)?"?([a-z_][a-z_0-9]*)"?/i,
+           query
+         ) do
+      [_, table] -> send(parent, {reference, :projection_write, table})
+      _ -> :ok
+    end
+  end
+
+  defp collect_projection_writes(reference, writes) do
+    receive do
+      {^reference, :projection_write, table} ->
+        collect_projection_writes(reference, [table | writes])
+    after
+      0 -> writes
+    end
   end
 
   defp build_analytics_projection do
@@ -536,7 +717,7 @@ defmodule NewYou.Proof.P818 do
 
     {:ok, :allowed} = Privacy.grant_p817_proof_purpose(subject_id, operation_id)
     {:ok, :allowed} = Privacy.grant_p817_proof_purpose(second_subject_id, second_operation_id)
-    :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
+    :ok = rebuild_projection()
 
     %{
       baseline: baseline,
@@ -566,13 +747,7 @@ defmodule NewYou.Proof.P818 do
     P805.check(
       id,
       "projection_contains_aggregate_only",
-      not Enum.any?(fields, &(&1 in [:subject_id, :source_operation_id, :account_id]))
-    )
-
-    P805.check(
-      id,
-      "projection_writes_only_own_resource",
-      Ash.Domain.Info.resources(NewYou.Analytics) == [NewYou.Analytics.P817PrivacyProjection]
+      Enum.sort(fields) == [:current_allowed_count, :id, :privacy_revision, :projection_key]
     )
 
     projection_actions =
@@ -584,7 +759,8 @@ defmodule NewYou.Proof.P818 do
     P805.check(
       id,
       "no_source_command_api",
-      projection_actions == [{:read, :read, false}, {:rebuild, :create, false}]
+      projection_actions == [{:read, :read, false}, {:rebuild, :create, false}] and
+        boundary_call(load_ash_write_boundary(), :check_app, [File.cwd!()]) == []
     )
 
     P805.check(
@@ -614,7 +790,7 @@ defmodule NewYou.Proof.P818 do
     Process.put(hook_key, fn _snapshot -> {:error, :injected_projection_failure} end)
 
     try do
-      NewYou.Analytics.rebuild_p817_privacy_projection()
+      rebuild_projection()
     after
       if is_nil(previous_hook),
         do: Process.delete(hook_key),
@@ -628,7 +804,7 @@ defmodule NewYou.Proof.P818 do
     {:ok, :withdrawn} =
       Privacy.withdraw_p817_proof_purpose(context.second_subject_id, context.second_operation_id)
 
-    :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
+    :ok = rebuild_projection()
     {:ok, second_withdrawal_snapshot} = Privacy.current_p817_proof_purpose_snapshot()
 
     second_withdrawal_projection_current =
@@ -638,7 +814,7 @@ defmodule NewYou.Proof.P818 do
     {:ok, :withdrawn} =
       Privacy.withdraw_p817_proof_purpose(context.subject_id, context.operation_id)
 
-    :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
+    :ok = rebuild_projection()
     {:ok, withdrawn_snapshot} = Privacy.current_p817_proof_purpose_snapshot()
 
     suppressed =
@@ -655,7 +831,7 @@ defmodule NewYou.Proof.P818 do
         {:error, :withdrawn} and
         Privacy.grant_p817_proof_purpose(context.second_subject_id, context.second_operation_id) ==
           {:error, :withdrawn} and
-        NewYou.Analytics.rebuild_p817_privacy_projection() == :ok and
+        rebuild_projection() == :ok and
         only_projection().current_allowed_count == baseline.current_allowed_count
     )
   end
@@ -666,6 +842,23 @@ defmodule NewYou.Proof.P818 do
     violations = boundary_call(boundary, :check_app, [root])
 
     P805.check(id, "real_application_clean", violations == [])
+
+    for {assertion, source, rule} <- [
+          {"analytics_owner_command_rejected", "apply(NewYou.Identity, :register, [attrs])",
+           :analytics_foreign_command},
+          {"analytics_foreign_ash_write_rejected", "Ash.create(NewYou.Identity.Account, attrs)",
+           :analytics_foreign_ash_write}
+        ] do
+      P805.check(
+        id,
+        assertion,
+        boundary_call(boundary, :check_source, [
+          "defmodule NewYou.Analytics do; def rebuild(attrs), do: " <> source <> "; end",
+          "lib/new_you/analytics.ex"
+        ])
+        |> Enum.any?(&(&1.rule == rule))
+      )
+    end
 
     P805.check(
       id,
@@ -739,17 +932,6 @@ defmodule NewYou.Proof.P818 do
     end
 
     module
-  end
-
-  defp perform_unknown_job(worker, id, state, attempt, max_attempts) do
-    worker.perform(%Oban.Job{
-      args: %{"primary_key" => %{"id" => id}},
-      attempt: attempt,
-      max_attempts: max_attempts,
-      state: state
-    })
-  rescue
-    _error in Ash.Error.Unknown -> :source_unavailable
   end
 
   defp reconcile_delivered(attempt, reference) do

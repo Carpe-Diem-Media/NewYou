@@ -22,26 +22,45 @@ defmodule NewYou.Proof.P805 do
     previous = Map.new(@environment, &{&1, Application.fetch_env(:new_you, &1)})
     projection_key = "p817_test_" <> Ecto.UUID.generate()
     previous_projection_key = Process.get({NewYou.Analytics, :p817_test_projection_key}, :missing)
+    SelfTest.cleanup_manifest!(connections_released: false, locks_released: false)
 
-    try do
-      Process.put({NewYou.Analytics, :p817_test_projection_key}, projection_key)
-      Process.put({__MODULE__, :operations}, [])
-      Process.put({__MODULE__, :emails}, [])
-      configure()
-      fixture_setup_checkpoint(:configured)
+    outcome =
+      try do
+        Process.put({NewYou.Analytics, :p817_test_projection_key}, projection_key)
+        Process.put({__MODULE__, :operations}, [])
+        Process.put({__MODULE__, :emails}, [])
+        configure()
+        fixture_setup_checkpoint(:configured)
 
-      {guardian, guardian_monitor} = start_fixture_guardian(previous, projection_key)
-      Process.put({__MODULE__, :guardian}, guardian)
-      Process.put({__MODULE__, :guardian_monitor}, guardian_monitor)
-      fixture_setup_checkpoint(:guardian_started)
-      :ok = NewYou.Proof.Scenario.register_cleanup_guardian(guardian)
-      :ok = Sandbox.checkout(Repo, sandbox: false)
-      Process.put({__MODULE__, :fixture_checked_out}, true)
-      fixture_setup_checkpoint(:sandbox_checked_out)
-      Process.put({__MODULE__, :consequence_baseline}, capture_consequence_ids())
-      callback.()
-    after
-      finish_fixture(previous, projection_key, previous_projection_key)
+        cleanup_hook = Process.get({__MODULE__, :fixture_cleanup_hook})
+
+        {guardian, guardian_monitor} =
+          start_fixture_guardian(previous, projection_key, cleanup_hook)
+
+        Process.put({__MODULE__, :guardian}, guardian)
+        Process.put({__MODULE__, :guardian_monitor}, guardian_monitor)
+        fixture_setup_checkpoint(:guardian_started)
+        :ok = NewYou.Proof.Scenario.register_cleanup_guardian(guardian)
+        :ok = Sandbox.checkout(Repo, sandbox: false)
+        Process.put({__MODULE__, :fixture_checked_out}, true)
+        fixture_setup_checkpoint(:sandbox_checked_out)
+        Process.put({__MODULE__, :consequence_baseline}, capture_consequence_ids())
+        {:returned, callback.()}
+      catch
+        kind, reason -> {:raised, kind, reason, __STACKTRACE__}
+      end
+
+    cleanup_result =
+      try do
+        finish_fixture(previous, projection_key, previous_projection_key)
+      catch
+        _, _ -> :unconfirmed
+      end
+
+    case outcome do
+      {:returned, value} when cleanup_result == :confirmed -> value
+      {:returned, _value} -> raise "P8-05 fixture cleanup unconfirmed"
+      {:raised, kind, reason, stacktrace} -> :erlang.raise(kind, reason, stacktrace)
     end
   end
 
@@ -69,45 +88,106 @@ defmodule NewYou.Proof.P805 do
   end
 
   defp finish_fixture(previous, projection_key, previous_projection_key) do
-    Process.delete({__MODULE__, :consequence_baseline})
-    Process.delete(RegistrationSeam)
-    checked_out? = Process.delete({__MODULE__, :fixture_checked_out}) == true
+    clear_fixture_execution_state()
+    checked_out? = fixture_checked_out?()
     guardian = Process.get({__MODULE__, :guardian})
     guardian_monitor = Process.get({__MODULE__, :guardian_monitor})
 
-    try do
-      if checked_out? do
-        # A bounded worker can disconnect a borrowed lease on cancellation.
-        # Teardown needs its own live connection, including in that failure path.
-        Sandbox.unboxed_run(Repo, fn ->
-          cleanup(projection_key)
-          false = Repo.in_transaction?()
-          0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'p805_fault_%'")
-        end)
-      else
-        Process.delete({__MODULE__, :operations})
-        Process.delete({__MODULE__, :emails})
-      end
+    cleanup_result =
+      attempt_fixture_cleanup(
+        checked_out?,
+        projection_key,
+        guardian,
+        guardian_monitor,
+        previous,
+        previous_projection_key
+      )
+
+    record_fixture_cleanup(checked_out?, cleanup_result)
+    cleanup_result
+  end
+
+  defp clear_fixture_execution_state do
+    Process.delete({__MODULE__, :consequence_baseline})
+    Process.delete(RegistrationSeam)
+  end
+
+  defp fixture_checked_out?, do: Process.delete({__MODULE__, :fixture_checked_out}) == true
+
+  defp attempt_fixture_cleanup(
+         checked_out?,
+         projection_key,
+         guardian,
+         guardian_monitor,
+         previous,
+         previous_projection_key
+       ) do
+    perform_fixture_cleanup(checked_out?, projection_key)
+    :confirmed
+  rescue
+    _ -> recover_fixture_cleanup(checked_out?, guardian, guardian_monitor)
+  catch
+    _, _ -> recover_fixture_cleanup(checked_out?, guardian, guardian_monitor)
+  after
+    restore_fixture_runtime(guardian, guardian_monitor, previous, previous_projection_key)
+  end
+
+  defp perform_fixture_cleanup(true, projection_key) do
+    # Teardown needs its own live connection if a cancelled worker
+    # disconnected the borrowed lease.
+    Sandbox.unboxed_run(Repo, fn ->
+      cleanup(projection_key)
+      false = Repo.in_transaction?()
+      0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'p805_fault_%'")
+    end)
+  end
+
+  defp perform_fixture_cleanup(false, _projection_key) do
+    Process.delete({__MODULE__, :operations})
+    Process.delete({__MODULE__, :emails})
+  end
+
+  defp recover_fixture_cleanup(true, guardian, monitor)
+       when is_pid(guardian) and is_reference(monitor),
+       do: recover_fixture_guardian(guardian)
+
+  defp recover_fixture_cleanup(_checked_out?, _guardian, _monitor), do: :unconfirmed
+
+  defp restore_fixture_runtime(guardian, guardian_monitor, previous, previous_projection_key) do
+    if is_pid(guardian) and is_reference(guardian_monitor),
+      do: stop_fixture_guardian(guardian, guardian_monitor)
+  after
+    restore_environment(previous)
+
+    restore_process_value(
+      {NewYou.Analytics, :p817_test_projection_key},
+      previous_projection_key
+    )
+
+    Process.delete({__MODULE__, :guardian})
+    Process.delete({__MODULE__, :guardian_monitor})
+    Process.delete({__MODULE__, :setup_checkpoint})
+  end
+
+  defp record_fixture_cleanup(true, cleanup_result) do
+    confirmed? = cleanup_result == :confirmed
+    SelfTest.cleanup_manifest!(connections_released: confirmed?, locks_released: confirmed?)
+  end
+
+  defp record_fixture_cleanup(false, _cleanup_result) do
+    SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
+  end
+
+  defp recover_fixture_guardian(guardian) do
+    reference = make_ref()
+    send(guardian, {:recover_fixture, self(), reference})
+
+    receive do
+      {:fixture_recovered, ^reference, :ok} -> :confirmed
+      {:fixture_recovered, ^reference, _failure} -> :unconfirmed
     after
-      try do
-        if is_pid(guardian) and is_reference(guardian_monitor),
-          do: stop_fixture_guardian(guardian, guardian_monitor)
-      after
-        restore_environment(previous)
-
-        restore_process_value(
-          {NewYou.Analytics, :p817_test_projection_key},
-          previous_projection_key
-        )
-
-        Process.delete({__MODULE__, :guardian})
-        Process.delete({__MODULE__, :guardian_monitor})
-        Process.delete({__MODULE__, :setup_checkpoint})
-      end
+      15_000 -> :unconfirmed
     end
-
-    if checked_out?,
-      do: SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
   end
 
   defp restore_process_value(key, :missing), do: Process.delete(key)
@@ -167,13 +247,13 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
-  defp start_fixture_guardian(previous, projection_key) do
+  defp start_fixture_guardian(previous, projection_key, cleanup_hook) do
     owner = self()
 
     {pid, monitor} =
       spawn_monitor(fn ->
         owner_monitor = Process.monitor(owner)
-        fixture_guardian(owner, owner_monitor, previous, projection_key, [], [])
+        fixture_guardian(owner, owner_monitor, previous, projection_key, cleanup_hook, [], [])
       end)
 
     {pid, monitor}
@@ -189,7 +269,15 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
-  defp fixture_guardian(owner, owner_monitor, previous, projection_key, operations, emails) do
+  defp fixture_guardian(
+         owner,
+         owner_monitor,
+         previous,
+         projection_key,
+         cleanup_hook,
+         operations,
+         emails
+       ) do
     receive do
       {:track, ^owner, reference, :operation, operation} ->
         send(owner, {:fixture_tracked, reference})
@@ -199,6 +287,7 @@ defmodule NewYou.Proof.P805 do
           owner_monitor,
           previous,
           projection_key,
+          cleanup_hook,
           [operation | operations],
           emails
         )
@@ -211,13 +300,45 @@ defmodule NewYou.Proof.P805 do
           owner_monitor,
           previous,
           projection_key,
+          cleanup_hook,
           operations,
           [email | emails]
         )
 
       {:fixture_values, ^owner, reference} ->
         send(owner, {:fixture_values, reference, Enum.uniq(operations), Enum.uniq(emails)})
-        fixture_guardian(owner, owner_monitor, previous, projection_key, operations, emails)
+
+        fixture_guardian(
+          owner,
+          owner_monitor,
+          previous,
+          projection_key,
+          cleanup_hook,
+          operations,
+          emails
+        )
+
+      {:recover_fixture, ^owner, reference} ->
+        result =
+          try do
+            cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook)
+          rescue
+            error -> {:error, error.__struct__}
+          catch
+            kind, _reason -> {:error, kind}
+          end
+
+        send(owner, {:fixture_recovered, reference, result})
+
+        fixture_guardian(
+          owner,
+          owner_monitor,
+          previous,
+          projection_key,
+          cleanup_hook,
+          operations,
+          emails
+        )
 
       :fixture_complete ->
         Process.demonitor(owner_monitor, [:flush])
@@ -225,7 +346,7 @@ defmodule NewYou.Proof.P805 do
 
       {:DOWN, ^owner_monitor, :process, ^owner, _reason} ->
         try do
-          cleanup_orphaned_fixture(operations, emails, projection_key)
+          cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook)
         after
           restore_environment(previous)
         end
@@ -239,11 +360,11 @@ defmodule NewYou.Proof.P805 do
     end)
   end
 
-  defp cleanup_orphaned_fixture(operations, emails, projection_key) do
+  defp cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook) do
     :ok = Sandbox.checkout(Repo, sandbox: false)
 
     try do
-      cleanup(operations, emails, projection_key)
+      cleanup(operations, emails, projection_key, cleanup_hook)
       :ok = SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
     after
       :ok = Sandbox.checkin(Repo)
@@ -1088,12 +1209,14 @@ defmodule NewYou.Proof.P805 do
   defp cleanup(projection_key) do
     operations = Process.get({__MODULE__, :operations}, [])
     emails = Process.get({__MODULE__, :emails}, [])
+    cleanup(operations, emails, projection_key, Process.get({__MODULE__, :fixture_cleanup_hook}))
     Process.delete({__MODULE__, :operations})
     Process.delete({__MODULE__, :emails})
-    cleanup(operations, emails, projection_key)
   end
 
-  defp cleanup(operations, emails, projection_key) do
+  defp cleanup(operations, emails, projection_key, cleanup_hook) do
+    if is_function(cleanup_hook, 0), do: cleanup_hook.()
+    :ok = cleanup_test_oban_queue(projection_key)
     :ok = cleanup_test_analytics_projection(projection_key)
 
     operations = Enum.uniq(operations) |> Enum.map(&Ecto.UUID.dump!/1)
@@ -1268,6 +1391,14 @@ defmodule NewYou.Proof.P805 do
 
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
   end
+
+  defp cleanup_test_oban_queue("p817_test_" <> suffix) when suffix != "" do
+    queue = "p818_" <> suffix
+    Repo.query!("DELETE FROM oban_jobs WHERE queue = $1", [queue])
+    :ok
+  end
+
+  defp cleanup_test_oban_queue(_projection_key), do: :ok
 
   @doc false
   @spec analytics_projection_key() :: String.t()

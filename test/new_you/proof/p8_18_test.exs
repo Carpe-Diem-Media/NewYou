@@ -18,6 +18,78 @@ defmodule NewYou.Proof.P818Test do
     p818.arc_029_enforcement
   )
 
+  @tag :hardening
+  test "the Analytics proof rejects an actual source write during a rebuild" do
+    {result, _cleanup} =
+      execute_case("p818.analytics_projection", fn ->
+        Process.put({NewYou.Analytics, :after_privacy_snapshot}, fn _snapshot ->
+          {:ok, _registration} = NewYou.Identity.register(P805.request())
+          :ok
+        end)
+      end)
+
+    assert result["verdict"] == "FAIL"
+    assert result["reason_codes"] == ["assertion.failed"]
+  end
+
+  @tag :hardening
+  test "the executor proof does not mistake an unrelated worker crash for source rejection" do
+    {result, _cleanup} =
+      execute_case("p818.executor_state_non_authority", fn ->
+        Process.put(NewYou.Proof.AuditSeam, fn
+          :before_lock -> raise "unrelated worker failure"
+          _point -> :ok
+        end)
+      end)
+
+    assert result["verdict"] == "FAIL"
+    assert result["reason_codes"] == ["assertion.failed"]
+  end
+
+  @tag :hardening
+  test "the executor proof traverses the actual Oban execution mechanism" do
+    reference = make_ref()
+    owner = self()
+    handler_id = {__MODULE__, reference}
+
+    :ok =
+      :telemetry.attach(
+        handler_id,
+        [:oban, :job, :start],
+        fn _event, _, metadata, parent ->
+          send(parent, {reference, metadata.job.queue, metadata.job.id, metadata.job.state})
+        end,
+        owner
+      )
+
+    worker =
+      AshOban.Info.oban_trigger(NewYou.Audit.EvidenceObligation, :registration_evidence).worker
+
+    sentinel =
+      Sandbox.unboxed_run(NewYou.Repo, fn ->
+        %{"primary_key" => %{"id" => Ecto.UUID.generate()}}
+        |> worker.new(queue: "p818_unrelated_" <> Ecto.UUID.generate())
+        |> Oban.insert!()
+      end)
+
+    try do
+      {result, _cleanup} = execute_case("p818.executor_state_non_authority")
+      assert result["verdict"] == "PASS", inspect(result)
+      assert_receive {^reference, "p818_" <> suffix, job_id, "executing"}
+      assert is_integer(job_id)
+
+      Sandbox.unboxed_run(NewYou.Repo, fn ->
+        assert NewYou.Repo.get!(Oban.Job, sentinel.id).state == "available"
+
+        assert P805.scalar("SELECT count(*) FROM oban_jobs WHERE queue = $1", ["p818_" <> suffix]) ==
+                 0
+      end)
+    after
+      :telemetry.detach(handler_id)
+      Sandbox.unboxed_run(NewYou.Repo, fn -> NewYou.Repo.delete!(sentinel) end)
+    end
+  end
+
   test "P8-18 registers the complete source-authority negative family" do
     manifests = Catalog.required().business_manifests
     family = manifests[@coverage_id]
@@ -349,6 +421,19 @@ defmodule NewYou.Proof.P818Test do
              |> Ash.read!(authorize?: false)
 
     projection
+  end
+
+  defp execute_case(case_id, prepare \\ fn -> :ok end) do
+    registration =
+      Enum.find(NewYou.Proof.P818Catalog.registrations(), &(&1.case_id == case_id))
+
+    NewYou.Proof.SelfTest.execute_registered_case(
+      Map.put(registration.manifest, :version, "p8-18.hardening"),
+      fn ->
+        prepare.()
+        registration.callback.()
+      end
+    )
   end
 
   defp projection_keys(keys) do

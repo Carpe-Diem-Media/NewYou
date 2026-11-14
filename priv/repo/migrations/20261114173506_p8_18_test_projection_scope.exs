@@ -20,6 +20,19 @@ defmodule NewYou.Repo.Migrations.P818TestProjectionScope do
   def down do
     drop_if_exists constraint(:p817_privacy_projections, :p817_privacy_projections_valid_key)
 
+    # Test projections are derived fixture rows. Remove only the UUID keys that up accepts
+    # before restoring the production-only constraint; keep the reserved aggregate row.
+    projection_table =
+      case prefix() do
+        nil -> "p817_privacy_projections"
+        schema -> ~s("#{String.replace(schema, "\"", "\"\"")}".p817_privacy_projections)
+      end
+
+    execute("""
+    DELETE FROM #{projection_table}
+    WHERE projection_key ~ '^p817_test_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    """)
+
     create constraint(:p817_privacy_projections, :p817_privacy_projections_single_key,
              check: """
                projection_key = 'p817_current_privacy_aggregate'

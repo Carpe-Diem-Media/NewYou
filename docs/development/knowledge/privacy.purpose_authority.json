@@ -8,7 +8,7 @@
   ],
   "implementation_revision": {
     "git_sha": "1593c26559f34547ec2c33ebc72416512515b025",
-    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. The projection schema reserves a fixed production key used by the development rebuild; each test proof fixture receives a separate opaque key and cleanup deletes only that fixture\u2019s row. Production has no rebuild path or purpose for this proof. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count."
+    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. The projection schema reserves a fixed production key used by the development rebuild; each test proof fixture receives a separate opaque key and cleanup deletes only that fixture\u2019s row. Production has no rebuild path or purpose for this proof. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count. WELL-19 hardening observes the tables written during each synchronous Analytics rebuild and rejects foreign NewYou commands with a bounded AST check. Persisted jobs run through Oban execution, rollback on injected failure, retry the same obligation, and complete only with owner evidence. A stale message job completes with its intent closed and no delivery attempt. Fixture cleanup retries once through its guardian and reports persistent failure; it removes only its own opaque projection key and derived executor queue. Migration rollback removes validated test-key projections before restoring the fixed-key constraint, preserving the reserved aggregate."
   },
   "authoritative_domain": "NewYou.Privacy",
   "collaborating_domains": [
@@ -550,6 +550,20 @@
         "privacy_snapshot_interface",
         "analytics_revision_test"
       ]
+    },
+    {
+      "summary": "Fixture teardown retains tracked identities until cleanup succeeds, then acknowledges recovery. One guardian retry handles a transient failure. Persistent failure marks cleanup unconfirmed and fails a returning callback; an original callback error is preserved. Global test environment and process keys are restored in either case. Executor queue cleanup is scoped to the fixture UUID.",
+      "source_ids": [
+        "p805_fixture",
+        "fixture_recovery_test"
+      ]
+    },
+    {
+      "summary": "The test-key migration rollback deletes only exact validated test-key projections before reinstating the single fixed key. A populated isolated-schema rollback test preserves the reserved aggregate and verifies that new test keys are rejected afterward. Shared DEV and TEST schemas are not rolled back.",
+      "source_ids": [
+        "analytics_fixture_scope_migration",
+        "analytics_rollback_test"
+      ]
     }
   ],
   "tests": [
@@ -603,7 +617,7 @@
       "path": "test/new_you/proof/p8_18_test.exs",
       "cases": [
         "The complete seven-case family-9 manifest registers distinct owner invariants and deterministic assertion IDs.",
-        "Provider evidence, stale browser/session state, Audit records, executor state and replayed Signals cannot transition source-owned facts.",
+        "Provider evidence, stale browser/session state, Audit records and persisted Oban jobs cannot transition the sampled source-owned facts. A replayed PubSub claim is rejected by the Identity interface; registered Ash Signal producers and listeners are absent.",
         "Each explicit Analytics rebuild reads the current Privacy count and revision, stores no identifiers, and suppresses withdrawn state across reverse-order and repeated rebuilds.",
         "A delayed older Analytics rebuild cannot replace a newer committed Privacy withdrawal projection.",
         "Test fixture cleanup deletes only its own Analytics projection row.",
@@ -615,10 +629,12 @@
         "The shared P8-04 runner preserves a pre-existing provider override after its provider proof.",
         "A direct SQL write cannot store a negative Analytics privacy revision.",
         "A forged replayed verification event crosses the actual PubSub transport but Identity.verify_email/1 rejects the fabricated proof without changing verification, security version, or Sessions.",
-        "Privacy returns the exact allowed count and revision sum from one database-side COUNT/SUM query."
+        "Privacy returns the exact allowed count and revision sum from one database-side COUNT/SUM query.",
+        "An actual Identity.register write injected into the Analytics rebuild makes its proof fail. An unrelated worker failure also makes the executor proof fail.",
+        "Oban telemetry confirms actual execution; stored jobs establish queued, executing, retryable and completed states. Cleanup removes the fixture queue and preserves an unrelated queue."
       ],
-      "proves": "P8-18 supplies the complete authority-negative family-9 proof entry with deterministic manifests, owner-bound assertions, current Privacy suppression, an overlap regression, and executable ARC-029 enforcement.",
-      "limits": "A passing P8-18 family is not a TB-001, Phase-8, or Phase-9 certification. Browser and database fixtures use synthetic development/test state.",
+      "proves": "Seven P8-18 cases register 51 deterministic assertions. They exercise owner-bound authority negatives, current Privacy suppression, concurrent rebuild ordering, persisted executor lifecycle and bounded ARC-029 command checks.",
+      "limits": "The suite samples supported synchronous owner paths. It is not a general Elixir sandbox or a certification of future signal consumers, the complete TB-001 matrix, Phase 8 or Phase 9.",
       "source_ids": [
         "p818_manifest",
         "p818_proof",
@@ -632,6 +648,32 @@
         "p805_fixture",
         "migration_identity_test",
         "analytics_revision_guard_migration"
+      ]
+    },
+    {
+      "path": "test/new_you/proof/fixture_connection_test.exs",
+      "cases": [
+        "A transient teardown failure retries through the guardian and removes a real projection row while preserving the callback error.",
+        "A persistent failure raises after a successful callback and marks connection and lock cleanup false in the real P8-18 runner.",
+        "Setup failure and borrowed-connection loss restore fixture state."
+      ],
+      "proves": "Fixture recovery is bounded and cleanup failure cannot produce a successful case.",
+      "limits": "Deterministic failure hooks exercise TEST-only cleanup; tests are serialized because the fixture restores application environment.",
+      "source_ids": [
+        "p805_fixture",
+        "fixture_recovery_test"
+      ]
+    },
+    {
+      "path": "test/tools/architecture/analytics_projection_rollback_test.exs",
+      "cases": [
+        "Apply and roll back the test-key migration in a unique schema with both fixed and test-key rows."
+      ],
+      "proves": "Rollback succeeds with valid fixture rows, preserves the fixed aggregate, and reinstates the fixed-key constraint.",
+      "limits": "Uses the actual migration runner in an isolated TEST schema; it does not roll back shared databases.",
+      "source_ids": [
+        "analytics_fixture_scope_migration",
+        "analytics_rollback_test"
       ]
     }
   ],
@@ -725,7 +767,9 @@
     "Unavailable owner-read behavior is exercised with the established deterministic test seam; it does not simulate every physical database outage mode.",
     "The proof does not establish a production legal consent requirement and does not alter the certified Privacy JIT dossier disposition.",
     "The P8-18 Analytics projection is an eventually consistent count of the synthetic P8-17 purpose rebuilt only in development/test. The schema reserves a fixed production key used by development; test fixtures use separate validated opaque keys and scoped teardown. Production has no rebuild path or purpose for this proof. It contains no participant identifiers, is not a current-authority read, and cannot decide authorization or suppression; Privacy remains authoritative. It does not certify the complete TB-001 or Phase-8 proof matrix.",
-    "P8-18 provides the family-9 result for later P8-19 integration; it does not itself declare Phase-8 PASS or authorize Phase 9."
+    "P8-18 provides the family-9 result for later P8-19 integration; it does not itself declare Phase-8 PASS or authorize Phase 9.",
+    "No Ash Signal producers or listeners are registered in the configured Domains. The Signals case inventories that absence and exercises PubSub transport plus direct Identity verification rejection. A future consumer requires its own mutation-boundary and replay proof.",
+    "The Analytics write observer inspects current-process Repo query telemetry for synchronous rebuilds. It records table names without query parameters. The architecture checker covers static calls, imports, aliases and module bindings, but does not prove arbitrary metaprogramming, spawned workers, external services or database triggers safe. New mechanisms require new proof."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -859,7 +903,7 @@
       "id": "analytics_domain",
       "path": "lib/new_you/analytics.ex",
       "symbol": "defmodule NewYou.Analytics",
-      "sha256": "ca212b1e00511dfb1624bf896db954804eb44f92cbcc3c79b664aad8363ac937"
+      "sha256": "4b2df5014e0da4411a5179c8512fbce2bb4c048df5f5e03f6b487b50f1aa37b7"
     },
     {
       "id": "analytics_projection",
@@ -883,31 +927,31 @@
       "id": "p818_manifest",
       "path": "test/support/proof/p8_18_catalog.ex",
       "symbol": "defmodule NewYou.Proof.P818Catalog",
-      "sha256": "37c8a7650c06f43833d830b70c595ece197f2937520ea04f2b316ea7826f4a37"
+      "sha256": "ce70a029b577ae301eace8018558666e3088b4c5b660b7334156d01c021fc21b"
     },
     {
       "id": "p818_proof",
       "path": "test/support/proof/p8_18.ex",
       "symbol": "defmodule NewYou.Proof.P818",
-      "sha256": "d88ecdcb162cd7d652dc5f8cf12348b2c5f56de8492edefe65b1514716e1ad81"
+      "sha256": "a015e25c403e73588c3a11685401f592b3ee91f46f6f90c5213f4fbe36c7e71e"
     },
     {
       "id": "p818_test",
       "path": "test/new_you/proof/p8_18_test.exs",
       "symbol": "defmodule NewYou.Proof.P818Test",
-      "sha256": "76bcb7413830b911b1b8a0a6345a9f280c613e339fc2ff1ea2098cb6d2e0d2bd"
+      "sha256": "9bf202036575aafd7ce588aa385c0e7edb29b6fd6b49476b92edf033e5df2f97"
     },
     {
       "id": "p818_architecture_checker",
       "path": "tools/architecture/ash_write_boundary.ex",
       "symbol": "check_app(root",
-      "sha256": "7ecd925a7b5355261eb78e853e588319f90b10c32e5e2336fec84d34e52cddbf"
+      "sha256": "418e05213df4d0239677608832afc0dc674de5181e9c16259a9f05af9737c105"
     },
     {
       "id": "p818_architecture_test",
       "path": "test/tools/architecture/ash_write_boundary_test.exs",
       "symbol": "defmodule NewYou.Architecture.AshWriteBoundaryTest do",
-      "sha256": "d50b0d0d6d6b71d08ba14df59252a190866ef6a86956193e70413f0b90e7d081"
+      "sha256": "26b29b042c19fc463754b882acfa621782431921b79935bef7f119e79168c807"
     },
     {
       "id": "p818_browser",
@@ -943,19 +987,19 @@
       "id": "analytics_revision_test",
       "path": "test/new_you/proof/p8_18_test.exs",
       "symbol": "a stale overlapping Analytics rebuild cannot replace a newer Privacy snapshot",
-      "sha256": "76bcb7413830b911b1b8a0a6345a9f280c613e339fc2ff1ea2098cb6d2e0d2bd"
+      "sha256": "9bf202036575aafd7ce588aa385c0e7edb29b6fd6b49476b92edf033e5df2f97"
     },
     {
       "id": "analytics_fixture_scope_migration",
       "path": "priv/repo/migrations/20261114173506_p8_18_test_projection_scope.exs",
       "symbol": "defmodule NewYou.Repo.Migrations.P818TestProjectionScope",
-      "sha256": "dfa256a2330d276f66eaa85a47f7d23a896a7669cb40e220bd2569c2fbdf3003"
+      "sha256": "1ddfba5391066db8fd960dac72fec879c1910446796d7b1ecb104fd40778cf90"
     },
     {
       "id": "p805_fixture",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defmodule NewYou.Proof.P805",
-      "sha256": "b426d83e7223114688d33700edc911d59400bbe828436d278ee5018c40d5edfe"
+      "sha256": "fe8b1a969232008c80b1cab073e2f727a81f41a217fb756983b93423ffcdd468"
     },
     {
       "id": "migration_identity_test",
@@ -968,6 +1012,18 @@
       "path": "priv/repo/migrations/20261114183535_p8_18_privacy_revision_guard.exs",
       "symbol": "defmodule NewYou.Repo.Migrations.P818PrivacyRevisionGuard",
       "sha256": "839f8afa1077a5026cd3444bc07a45086baed1679a40599ff4ccb714b5d0dbbd"
+    },
+    {
+      "id": "fixture_recovery_test",
+      "path": "test/new_you/proof/fixture_connection_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureConnectionTest",
+      "sha256": "40f6729fa820bdbba06f7c27ffbf5f48df90c22899bfccc7c7c8d490d68fb762"
+    },
+    {
+      "id": "analytics_rollback_test",
+      "path": "test/tools/architecture/analytics_projection_rollback_test.exs",
+      "symbol": "defmodule NewYou.Architecture.AnalyticsProjectionRollbackTest",
+      "sha256": "7a4c274f494de3d83e5e301c186dd138332e8558ad752fa822bc30d4e4a3fb2f"
     }
   ]
 }
