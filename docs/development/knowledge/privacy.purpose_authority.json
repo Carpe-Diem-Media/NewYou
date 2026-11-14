@@ -7,8 +7,8 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "cbb6b48c4f305aeb19d0131b7eac633485c80742",
-    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot selects state and version in one AshPostgres query. Production and development use the fixed Analytics projection key. Each test proof fixture receives an opaque key and cleanup deletes only the row for that fixture. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count."
+    "git_sha": "93006b4cd045e26e1f4c3130850f87f077d47d73",
+    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. Production and development use the fixed Analytics projection key. Each test proof fixture receives an opaque key and cleanup deletes only the row for that fixture. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count."
   },
   "authoritative_domain": "NewYou.Privacy",
   "collaborating_domains": [
@@ -614,7 +614,8 @@
         "The P8-18 projection proof reads the Analytics row through the current fixture key.",
         "The shared P8-04 runner preserves a pre-existing provider override after its provider proof.",
         "A direct SQL write cannot store a negative Analytics privacy revision.",
-        "A forged replayed verification event crosses the actual PubSub transport but Identity.verify_email/1 rejects the fabricated proof without changing verification, security version, or Sessions."
+        "A forged replayed verification event crosses the actual PubSub transport but Identity.verify_email/1 rejects the fabricated proof without changing verification, security version, or Sessions.",
+        "Privacy returns the exact allowed count and revision sum from one database-side COUNT/SUM query."
       ],
       "proves": "P8-18 supplies the complete authority-negative family-9 proof entry with deterministic manifests, owner-bound assertions, current Privacy suppression, an overlap regression, and executable ARC-029 enforcement.",
       "limits": "A passing P8-18 family is not a TB-001, Phase-8, or Phase-9 certification. Browser and database fixtures use synthetic development/test state.",
@@ -732,7 +733,7 @@
       "id": "privacy_domain",
       "path": "lib/new_you/privacy.ex",
       "symbol": "defmodule NewYou.Privacy",
-      "sha256": "7d933ae735d0753d1d38ce76be66f605ca4f305050658ce509d8a803bf85372a"
+      "sha256": "3144a53703a873d9e4a549f8f74cd224a738d99dc5d6bbc7542b3376f2c1bc75"
     },
     {
       "id": "authority",
@@ -870,7 +871,7 @@
       "id": "privacy_count_interface",
       "path": "lib/new_you/privacy.ex",
       "symbol": "current_p817_proof_purpose_count",
-      "sha256": "7d933ae735d0753d1d38ce76be66f605ca4f305050658ce509d8a803bf85372a"
+      "sha256": "3144a53703a873d9e4a549f8f74cd224a738d99dc5d6bbc7542b3376f2c1bc75"
     },
     {
       "id": "analytics_migration",
@@ -894,7 +895,7 @@
       "id": "p818_test",
       "path": "test/new_you/proof/p8_18_test.exs",
       "symbol": "defmodule NewYou.Proof.P818Test",
-      "sha256": "ef471473eb83a1bfa283b5df158adc741864e20114e4c717292eabdd83f93e44"
+      "sha256": "d9f147dff0fae2d15fb153d9649830dde1b382dcd16c9806aecac55c2fa88f9e"
     },
     {
       "id": "p818_architecture_checker",
@@ -930,7 +931,7 @@
       "id": "privacy_snapshot_interface",
       "path": "lib/new_you/privacy.ex",
       "symbol": "current_p817_proof_purpose_snapshot",
-      "sha256": "7d933ae735d0753d1d38ce76be66f605ca4f305050658ce509d8a803bf85372a"
+      "sha256": "3144a53703a873d9e4a549f8f74cd224a738d99dc5d6bbc7542b3376f2c1bc75"
     },
     {
       "id": "analytics_revision_migration",
@@ -942,7 +943,7 @@
       "id": "analytics_revision_test",
       "path": "test/new_you/proof/p8_18_test.exs",
       "symbol": "a stale overlapping Analytics rebuild cannot replace a newer Privacy snapshot",
-      "sha256": "ef471473eb83a1bfa283b5df158adc741864e20114e4c717292eabdd83f93e44"
+      "sha256": "d9f147dff0fae2d15fb153d9649830dde1b382dcd16c9806aecac55c2fa88f9e"
     },
     {
       "id": "analytics_fixture_scope_migration",
