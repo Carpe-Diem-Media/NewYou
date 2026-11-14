@@ -319,6 +319,16 @@ defmodule NewYou.Architecture.AshWriteBoundaryTest do
       assert [:analytics_foreign_ash_write] == rules(source, @analytics_path)
     end
 
+    test "later module bindings cannot hide earlier foreign commands" do
+      for source <- [
+            "defmodule NewYou.Analytics do; def bad(attrs) do; owner = NewYou.Identity; owner.register(attrs); end; def good do; owner = NewYou.Analytics; owner.rebuild_p817_privacy_projection(); end; end",
+            "defmodule NewYou.Analytics do; @owner NewYou.Identity; def bad(attrs), do: @owner.register(attrs); @owner NewYou.Analytics; def good, do: @owner.rebuild_p817_privacy_projection(); end",
+            "defmodule NewYou.Analytics do; def bad(attrs) do; alias NewYou.Identity, as: Owner; Owner.register(attrs); end; def good do; alias NewYou.Analytics, as: Owner; Owner.rebuild_p817_privacy_projection(); end; end"
+          ] do
+        assert :analytics_foreign_command in rules(source, @analytics_path)
+      end
+    end
+
     test "captured and applied foreign commands fail" do
       for expression <- [
             "(&NewYou.Identity.register/1).(attrs)",

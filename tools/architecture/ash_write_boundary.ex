@@ -171,7 +171,7 @@ defmodule NewYou.Architecture.AshWriteBoundary do
         imports = collect_imports(ast, aliases)
         repo_variables = collect_repo_variables(ast, aliases)
         repo_attributes = collect_repo_attributes(ast, aliases)
-        analytics_violations = analytics_violations(ast, path, aliases, imports)
+        analytics_violations = analytics_violations(ast, path)
 
         context =
           if String.starts_with?(path, "lib/new_you_web/"),
@@ -210,8 +210,10 @@ defmodule NewYou.Architecture.AshWriteBoundary do
     end
   end
 
-  defp analytics_violations(ast, path, aliases, imports) do
+  defp analytics_violations(ast, path) do
     if analytics_file?(path) do
+      aliases = collect_analytics_aliases(ast)
+      imports = collect_imports(ast, aliases)
       variables = collect_module_variables(ast, aliases)
       attributes = collect_module_attributes(ast, aliases)
 
@@ -275,6 +277,32 @@ defmodule NewYou.Architecture.AshWriteBoundary do
     end
   end
 
+  # Different lexical scopes may reuse a name. Reject ambiguous module bindings
+  # instead of letting the last binding hide an earlier foreign command.
+  defp collect_analytics_aliases(ast) do
+    {_, aliases} =
+      Macro.prewalk(ast, %{}, fn
+        {:alias, _, _} = node, acc ->
+          merged =
+            Map.merge(acc, collect_aliases(node), fn _name, left, right ->
+              consistent_analytics_binding(left, right)
+            end)
+
+          {node, merged}
+
+        node, acc ->
+          {node, acc}
+      end)
+
+    aliases
+  end
+
+  defp consistent_analytics_binding(module, module), do: module
+  defp consistent_analytics_binding(_left, _right), do: [:AmbiguousAnalyticsReceiver]
+
+  defp remember_analytics_binding(bindings, name, module),
+    do: Map.update(bindings, name, module, &consistent_analytics_binding(&1, module))
+
   defp analytics_import_violations(imports, function, args, meta, path, aliases) do
     imports
     |> Enum.filter(&imported_function?(&1, function, length(args)))
@@ -323,6 +351,23 @@ defmodule NewYou.Architecture.AshWriteBoundary do
            line,
            :analytics_foreign_command,
            "Analytics apply target must be statically owned or an approved read"
+         )
+       ]
+
+  defp analytics_call_violation(
+         [:AmbiguousAnalyticsReceiver | _],
+         _function,
+         _args,
+         line,
+         path,
+         _aliases
+       ),
+       do: [
+         violation(
+           path,
+           line,
+           :analytics_foreign_command,
+           "Analytics receiver bindings must resolve to one module; ambiguous aliases or assignments require explicit calls"
          )
        ]
 
@@ -398,7 +443,7 @@ defmodule NewYou.Architecture.AshWriteBoundary do
     {_, values} =
       Macro.prewalk(ast, %{}, fn
         {:=, _, [{name, _, _}, {:__aliases__, _, _} = target]} = node, acc when is_atom(name) ->
-          {node, Map.put(acc, name, resolve(target, aliases))}
+          {node, remember_analytics_binding(acc, name, resolve(target, aliases))}
 
         node, acc ->
           {node, acc}
@@ -411,7 +456,7 @@ defmodule NewYou.Architecture.AshWriteBoundary do
     {_, values} =
       Macro.prewalk(ast, %{}, fn
         {:@, _, [{name, _, [{:__aliases__, _, _} = target]}]} = node, acc when is_atom(name) ->
-          {node, Map.put(acc, name, resolve(target, aliases))}
+          {node, remember_analytics_binding(acc, name, resolve(target, aliases))}
 
         node, acc ->
           {node, acc}
