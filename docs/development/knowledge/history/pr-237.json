@@ -15,14 +15,14 @@
       "status": "modified"
     },
     {
-      "blob": "eb72627b6080faed8041b594d8eccff3d6b8c5ea",
+      "blob": "b5adc77a526f60e611a6329bbd1de6d84f477b61",
       "mode": "100644",
       "old_blob": "21ea989bbb3b79fed57e62c036bc76bd2965ca80",
       "old_mode": "100644",
       "old_path": ".agents/skills/ticket-implement/SKILL.md",
       "old_sha256": "6e568429b369c2a88b84be56eba99dd73999661e588e87b12ef8732fd0dcd0b4",
       "path": ".agents/skills/ticket-implement/SKILL.md",
-      "sha256": "bce1d7386b7b885400b93986cc424ca104e16e5a05df77ef79163e41a021e91c",
+      "sha256": "a040c34fc27e759fc7ab834ccd4966e6faff41604a213ece620a5ed88067cfb3",
       "status": "modified"
     },
     {
