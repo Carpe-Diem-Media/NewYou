@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "capability_id": "privacy.purpose_authority",
-  "purpose": "Provide a minimal Privacy-owned, operation-bound purpose and terminal withdrawal record for P8-17 current-authority proof, plus one Analytics-owned aggregate projection of current allowed proof-purpose rows. Neither feature is participant consent or a production email-change requirement.",
+  "purpose": "Provide a minimal Privacy-owned, operation-bound purpose and terminal withdrawal record for P8-17 current-authority proof, plus one Analytics-owned, identifier-free aggregate projection with a Privacy source revision. Neither feature is participant consent or a production email-change requirement.",
   "implementing_tickets": [
     "WELL-18",
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "3fc9759ba915cecac7d4a6539be48b9818920161",
-    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate whose explicit rebuilds sample Privacy's current allowed rows. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority."
+    "git_sha": "a5782b1daaa118867cff44f6e4d43cde938435ec",
+    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a monotonic sum of owner-managed authority versions; Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority."
   },
   "authoritative_domain": "NewYou.Privacy",
   "collaborating_domains": [
@@ -23,7 +23,7 @@
     },
     {
       "domain": "NewYou.Analytics",
-      "interface": "Analytics.rebuild_p817_privacy_projection/0 obtains only Privacy.current_p817_proof_purpose_count/0 and writes its own fixed aggregate projection.",
+      "interface": "Analytics.rebuild_p817_privacy_projection/0 reads Privacy.current_p817_proof_purpose_snapshot/0 and conditionally upserts its own fixed aggregate using the Privacy revision.",
       "ownership": "Analytics owns only the derived aggregate row. Privacy remains authoritative for allowed/withdrawn purpose state, and Analytics has no source-domain command interface.",
       "source_ids": [
         "analytics_domain",
@@ -79,7 +79,7 @@
         "read (private)",
         "rebuild (private, development/test only)"
       ],
-      "caller_boundary": "Analytics exposes one development/test rebuild function that reads a Privacy aggregate and upserts only this fixed-key projection. The resource stores no subject or operation identifiers and has no source-domain write action.",
+      "caller_boundary": "Analytics exposes one development/test rebuild function that reads a minimized Privacy count and revision, then upserts only this fixed-key projection when its source revision is at least as new as the stored revision. The resource stores no subject or operation identifiers and has no source-domain write action.",
       "source_ids": [
         "analytics_domain",
         "analytics_projection"
@@ -192,7 +192,7 @@
         "Counts only current allowed rows for the fixed synthetic P8-17 purpose through Privacy's Ash Resource. It returns no subject or operation identifiers."
       ],
       "caller_constraints": [
-        "Analytics consumes this minimized read only as derived input; the count does not grant authority or establish participant consent."
+        "Privacy owns this minimized count. Analytics uses the snapshot interface with a source revision for its projection; neither read grants authority or establishes participant consent."
       ],
       "source_ids": [
         "privacy_domain",
@@ -209,15 +209,35 @@
         ":ok or {:error, :privacy_projection_unavailable}; production returns the unavailable result."
       ],
       "side_effects": [
-        "Reads the current Privacy aggregate and upserts one fixed-key Analytics row. Repeated calls store only the latest aggregate and do not write any source Domain."
+        "Reads Privacy's current allowed count and source revision, then upserts one fixed-key Analytics row only when the incoming revision is at least the stored revision. Repeated or stale rebuilds do not write source Domains."
       ],
       "caller_constraints": [
-        "The projection is derived-only and contains no identity or source-operation identifiers. It cannot restore Privacy authority."
+        "The projection is derived-only, eventually consistent between rebuilds, and contains no identity or source-operation identifiers. It cannot restore Privacy authority or decide current suppression."
       ],
       "source_ids": [
         "analytics_domain",
         "analytics_projection",
         "privacy_count_interface"
+      ]
+    },
+    {
+      "module": "NewYou.Privacy",
+      "function": "current_p817_proof_purpose_snapshot",
+      "arity": 0,
+      "visibility": "supported",
+      "arguments": [],
+      "returns": [
+        "{:ok, %{current_allowed_count: non_neg_integer(), revision: non_neg_integer()}} or {:error, :privacy_authority_unavailable}; production returns the unavailable result."
+      ],
+      "side_effects": [
+        "Reads only the fixed synthetic P8-17 purpose state and versions through Privacy's Ash Resource. The revision sums owner-managed row versions; the returned snapshot contains no subject or operation identifiers."
+      ],
+      "caller_constraints": [
+        "Analytics uses the snapshot only as derived input. Privacy remains authoritative for current suppression and authorization."
+      ],
+      "source_ids": [
+        "privacy_domain",
+        "privacy_snapshot_interface"
       ]
     }
   ],
@@ -278,6 +298,18 @@
       "source_ids": [
         "analytics_migration"
       ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261114154132_p8_18_analytics_projection.exs",
+      "tables": [
+        "p817_privacy_projections"
+      ],
+      "constraints": [
+        "privacy_revision"
+      ],
+      "source_ids": [
+        "analytics_revision_migration"
+      ]
     }
   ],
   "request_flow": [
@@ -306,11 +338,11 @@
       ]
     },
     {
-      "summary": "Analytics asks Privacy for the current allowed proof-purpose count, then upserts only its own fixed-key aggregate row. No cross-Domain source write or identity-level data enters the projection.",
+      "summary": "Analytics reads Privacy's minimized allowed count and monotonic source revision, then conditionally upserts its own fixed-key aggregate. A delayed older rebuild cannot replace a newer committed revision; the projection may still lag until a rebuild runs.",
       "source_ids": [
         "analytics_domain",
         "analytics_projection",
-        "privacy_count_interface"
+        "privacy_snapshot_interface"
       ]
     }
   ],
@@ -398,11 +430,12 @@
       ]
     },
     {
-      "summary": "The Analytics projection stores only the aggregate count sampled from currently allowed synthetic P8-17 rows during an explicit rebuild. It stores no subject, account or operation identifier, has no action that mutates source truth, and may lag after source changes or overlapping rebuilds. Privacy remains authoritative for any decision requiring current suppression.",
+      "summary": "The Analytics projection stores only the aggregate count and Privacy source revision sampled during an explicit rebuild. It stores no subject, account or operation identifier, has no action that mutates source truth, and cannot overwrite a newer committed source revision. It may lag after source changes; Privacy remains authoritative for current suppression.",
       "source_ids": [
         "analytics_domain",
         "analytics_projection",
-        "privacy_count_interface",
+        "privacy_snapshot_interface",
+        "analytics_revision_test",
         "p818_test"
       ]
     }
@@ -423,6 +456,15 @@
         "privacy_domain",
         "race_test",
         "reverse_order_test"
+      ]
+    },
+    {
+      "summary": "Overlapping Analytics rebuilds may read different Privacy snapshots. The upsert compares the incoming revision with the stored revision and skips a stale write; the regression test commits a newer withdrawal projection before releasing an older rebuild.",
+      "source_ids": [
+        "privacy_snapshot_interface",
+        "analytics_domain",
+        "analytics_projection",
+        "analytics_revision_test"
       ]
     }
   ],
@@ -446,12 +488,13 @@
       ]
     },
     {
-      "summary": "Each Analytics rebuild rereads Privacy's current allowed rows and upserts one fixed aggregate. The family-9 proof withdraws rows in reverse order, repeats the rebuild, and confirms terminal withdrawals cannot be regranted or reappear in the aggregate.",
+      "summary": "Each Analytics rebuild rereads Privacy's current allowed rows and revision, then upserts one fixed aggregate. Equal revisions carry the same source count; stale revisions leave the newer projection intact. The family-9 proof withdraws rows in reverse order, repeats the rebuild, and confirms terminal withdrawals cannot be regranted or reappear.",
       "source_ids": [
         "analytics_domain",
-        "privacy_count_interface",
+        "privacy_snapshot_interface",
         "p818_proof",
-        "p818_test"
+        "p818_test",
+        "analytics_revision_test"
       ]
     }
   ],
@@ -475,11 +518,12 @@
       ]
     },
     {
-      "summary": "A failed Privacy count or Analytics upsert returns a closed unavailable result. The projection retains no input identifiers that could restore source authority or participant data.",
+      "summary": "A failed Privacy snapshot or Analytics upsert returns a closed unavailable result. An older snapshot skipped by the revision guard returns successfully without changing the current projection. The projection retains no input identifiers that could restore source authority or participant data.",
       "source_ids": [
         "analytics_domain",
         "analytics_projection",
-        "privacy_count_interface"
+        "privacy_snapshot_interface",
+        "analytics_revision_test"
       ]
     }
   ],
@@ -534,16 +578,18 @@
       "cases": [
         "The complete seven-case family-9 manifest registers distinct owner invariants and deterministic assertion IDs.",
         "Provider evidence, stale browser/session state, Audit records, executor state and replayed Signals cannot transition source-owned facts.",
-        "Each explicit Analytics rebuild reads only Privacy's current count, stores no identifiers, and suppresses withdrawn state across reverse-order and repeated rebuilds. The aggregate is eventually consistent between rebuilds and cannot make authorization or suppression decisions.",
+        "Each explicit Analytics rebuild reads the current Privacy count and revision, stores no identifiers, and suppresses withdrawn state across reverse-order and repeated rebuilds.",
+        "A delayed older Analytics rebuild cannot replace a newer committed Privacy withdrawal projection.",
         "The real ARC-029 application scan is clean and negative fixtures reject every required bypass class, parser errors fail closed, and narrow exceptions remain accepted.",
         "The shared P8-04 runner emits machine-readable completed PASS results for every P8-18 case without certifying the full Phase-8 matrix."
       ],
-      "proves": "P8-18 supplies the complete authority-negative family-9 proof entry with deterministic manifests, owner-bound assertions, and executable callbacks.",
+      "proves": "P8-18 supplies the complete authority-negative family-9 proof entry with deterministic manifests, owner-bound assertions, current Privacy suppression, an overlap regression, and executable ARC-029 enforcement.",
       "limits": "A passing P8-18 family is not a TB-001, Phase-8, or Phase-9 certification. Browser and database fixtures use synthetic development/test state.",
       "source_ids": [
         "p818_manifest",
         "p818_proof",
         "p818_test",
+        "analytics_revision_test",
         "p818_architecture_checker",
         "p818_architecture_test",
         "p818_browser",
@@ -650,7 +696,7 @@
       "id": "privacy_domain",
       "path": "lib/new_you/privacy.ex",
       "symbol": "defmodule NewYou.Privacy",
-      "sha256": "527fcf1b040e7d4f61fe69d1e3f1fc51b23460a26403f39c39d4e68ff9e27f7b"
+      "sha256": "fe132876d35a49ff2edddba8b2ed31b456b04ed6eb49fa55c5067688e3a5c21f"
     },
     {
       "id": "authority",
@@ -776,19 +822,19 @@
       "id": "analytics_domain",
       "path": "lib/new_you/analytics.ex",
       "symbol": "defmodule NewYou.Analytics",
-      "sha256": "4c619900abb47e4d809d98dc994ff18d5e2779e45a472aa330821477cdb6b724"
+      "sha256": "920a8a998667fb17bc3cabe9748733d73d4141979fa61b4fe7cb685ce719e563"
     },
     {
       "id": "analytics_projection",
       "path": "lib/new_you/analytics/p817_privacy_projection.ex",
       "symbol": "defmodule NewYou.Analytics.P817PrivacyProjection",
-      "sha256": "db7ca63c515d5c6a516187a6820c2644a088c93a4195a03c52cd827d1de5d4cc"
+      "sha256": "0ce16e27bccccaff26d8ff82972dc312a758f6b607a470fc2d7e8ddc2fc41778"
     },
     {
       "id": "privacy_count_interface",
       "path": "lib/new_you/privacy.ex",
       "symbol": "current_p817_proof_purpose_count",
-      "sha256": "527fcf1b040e7d4f61fe69d1e3f1fc51b23460a26403f39c39d4e68ff9e27f7b"
+      "sha256": "fe132876d35a49ff2edddba8b2ed31b456b04ed6eb49fa55c5067688e3a5c21f"
     },
     {
       "id": "analytics_migration",
@@ -806,13 +852,13 @@
       "id": "p818_proof",
       "path": "test/support/proof/p8_18.ex",
       "symbol": "defmodule NewYou.Proof.P818",
-      "sha256": "e6925eca43e30e7574a5a5fbece58ef0f49503933596015e25e16a2af9af80e7"
+      "sha256": "98b84076121d3d16c127d45cf2cd1661cf550642d357655b4b30c649705f5088"
     },
     {
       "id": "p818_test",
       "path": "test/new_you/proof/p8_18_test.exs",
       "symbol": "defmodule NewYou.Proof.P818Test",
-      "sha256": "3cf7d8087243796f92d01cdb386e69e65160b87f82347f521f095e967333dee2"
+      "sha256": "a369c5ab7232854819102233afc9408229f429292f1258a855e4ee24b2752f17"
     },
     {
       "id": "p818_architecture_checker",
@@ -843,6 +889,24 @@
       "path": "test/support/proof/catalog.ex",
       "symbol": "def compiled_business_registrations,",
       "sha256": "871b65e82ff8bfbba0ee30e242adf74dc91971d3b08b3946f16bba8dadd56e80"
+    },
+    {
+      "id": "privacy_snapshot_interface",
+      "path": "lib/new_you/privacy.ex",
+      "symbol": "current_p817_proof_purpose_snapshot",
+      "sha256": "fe132876d35a49ff2edddba8b2ed31b456b04ed6eb49fa55c5067688e3a5c21f"
+    },
+    {
+      "id": "analytics_revision_migration",
+      "path": "priv/repo/migrations/20261114154132_p8_18_analytics_projection.exs",
+      "symbol": "privacy_revision",
+      "sha256": "320131f25a43325c200530c9191bf334f6665de2c65c561422494f22de9c69bc"
+    },
+    {
+      "id": "analytics_revision_test",
+      "path": "test/new_you/proof/p8_18_test.exs",
+      "symbol": "a stale overlapping Analytics rebuild cannot replace a newer Privacy snapshot",
+      "sha256": "a369c5ab7232854819102233afc9408229f429292f1258a855e4ee24b2752f17"
     }
   ]
 }
