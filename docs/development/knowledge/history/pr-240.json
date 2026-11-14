@@ -37,36 +37,36 @@
       "status": "modified"
     },
     {
-      "blob": "70bdfd5786f2cba510bebf57cce02f0dbde82e6e",
+      "blob": "67c415d8e42ddd86b2fc004a78cb2386d8cce52a",
       "mode": "100644",
       "old_blob": "df57a9cc6fddf49c911bf8a9f2ce50be6cc9eecc",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
       "old_sha256": "f94657991d7d0dd4e33a70ea020ee644450b6e9dabc9b3b52f6aa83b22581949",
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "ab0c9d1ae7cb16ea211dd40282249b90a265d55103f45c27b67b31c5af28522b",
+      "sha256": "172638f54cd5df2f85b54dd77cca2cadff1ad027086c9150e187981f6b66f442",
       "status": "modified"
     },
     {
-      "blob": "38aac08c4d888014abaea45d06438f2988a66ea2",
+      "blob": "082dd2c41282294fd6a49b2ab4c23218f39509ee",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you/analytics.ex",
-      "sha256": "b6fd7b47d01606a737c10920c4d483f2b58538b71b370e5d47b630b8fb115cb6",
+      "sha256": "3f940418a56857e7c51afab80f36c36b869bb6ae62e4845cbe95576edc4ef60b",
       "status": "added"
     },
     {
-      "blob": "d7d3d3f0d6e763169f34bed8794f8e4e650418ab",
+      "blob": "1df104b38e6e13bc194b4670501fd672f03beba8",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you/analytics/p817_privacy_projection.ex",
-      "sha256": "0ce16e27bccccaff26d8ff82972dc312a758f6b607a470fc2d7e8ddc2fc41778",
+      "sha256": "cfd3828d6b29e23f50b17302a491022de5d4cd33875f7f8b600f5f1e4ab0546d",
       "status": "added"
     },
     {
@@ -125,6 +125,28 @@
       "status": "added"
     },
     {
+      "blob": "7c112d7f8b9189db68d35715e7168220405517d5",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261114173506_p8_18_test_projection_scope.exs",
+      "sha256": "dfa256a2330d276f66eaa85a47f7d23a896a7669cb40e220bd2569c2fbdf3003",
+      "status": "added"
+    },
+    {
+      "blob": "91461fb11abbf23634e7a6ca29c1a1d023213387",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261114183535_p8_18_privacy_revision_guard.exs",
+      "sha256": "839f8afa1077a5026cd3444bc07a45086baed1679a40599ff4ccb714b5d0dbbd",
+      "status": "added"
+    },
+    {
       "blob": "373fc5ce216ad75db6b0cb6bec78cdf6012539d5",
       "mode": "100644",
       "old_blob": null,
@@ -147,6 +169,28 @@
       "status": "added"
     },
     {
+      "blob": "671ab2fa35ab89d9302125b5cb6d032efda2589c",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "priv/resource_snapshots/repo/p817_privacy_projections/20261114173507.json",
+      "sha256": "1eadf196066896bb30ece65637a760b299a653c1085135e30cfc3eddbcbb4467",
+      "status": "added"
+    },
+    {
+      "blob": "b2a9c2224cb2bf152f25ec7bf1aaa39d6855acb4",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "priv/resource_snapshots/repo/p817_privacy_projections/20261114183536.json",
+      "sha256": "3b264df20fd7ea5377cbe9538966db469f78423d1719f9fb5f719de9ed231dc0",
+      "status": "added"
+    },
+    {
       "blob": "872dfcc4337a36d5e2680e26003144e5acdfca0c",
       "mode": "100644",
       "old_blob": "6ad97a5c30b469fd003877d2d211e74a56872796",
@@ -155,6 +199,17 @@
       "old_sha256": "38d82dc76a6de3de89c07a4386bd192f93b3b5005b36f8062702fd0e09523f44",
       "path": "test/new_you/bootstrap_test.exs",
       "sha256": "be023cddd0f311c48908fa82bf61124f89b4a12f8feb44e4d102655d18aa27f8",
+      "status": "modified"
+    },
+    {
+      "blob": "38709bc87bf0bc774342991a7b7af5fb6b133f32",
+      "mode": "100644",
+      "old_blob": "c6c76115304f515fb9294dc6a357acd9110d2c0a",
+      "old_mode": "100644",
+      "old_path": "test/new_you/privacy/purpose_authority_test.exs",
+      "old_sha256": "e56f7e0ea9e7dc9ff935bcb85ac2960a0316eb4f85d6ba2339e2d3ff63bedd61",
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "sha256": "8715a040aa86258433007ac4e0950b07ff3b58cedf40301ebc1373d1ca306d53",
       "status": "modified"
     },
     {
@@ -180,14 +235,14 @@
       "status": "modified"
     },
     {
-      "blob": "df12c544764e987b0a077dcc43cd339240b0cf43",
+      "blob": "95db51ecf4bdc4e1e85cafa2df720052a6625391",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/proof/p8_18_test.exs",
-      "sha256": "a369c5ab7232854819102233afc9408229f429292f1258a855e4ee24b2752f17",
+      "sha256": "ef471473eb83a1bfa283b5df158adc741864e20114e4c717292eabdd83f93e44",
       "status": "added"
     },
     {
@@ -202,14 +257,14 @@
       "status": "modified"
     },
     {
-      "blob": "91d62825f3b90cac81266f5713d44923b405b7ca",
+      "blob": "4c732e9fb70fcaab63630e700047cfdb988ecc31",
       "mode": "100644",
       "old_blob": "754738fec22e13b086f9af5b24607bc2f743168c",
       "old_mode": "100644",
       "old_path": "test/proof/p8_05_browser.mjs",
       "old_sha256": "ed5ff59fb296011753d3392ef7f7843792802a90d642cb8f374d866cd9b2e920",
       "path": "test/proof/p8_05_browser.mjs",
-      "sha256": "6d83bc73b0e1c234d289767c5c7a09b4f3412b537187e751dfb65b95a7e9d33b",
+      "sha256": "646bc1f8554c3bf6cd57517f7400aced633c3995b5411a94689335482ee4b655",
       "status": "modified"
     },
     {
@@ -235,14 +290,14 @@
       "status": "modified"
     },
     {
-      "blob": "dbeddb4a71dc7c42eec7dbb9e319ad0861c344df",
+      "blob": "9e9b29fa1825a11a61ebccb846a4756b1a1767b0",
       "mode": "100644",
       "old_blob": "b431323b1e33edb95a548e8fa9d02625397a58d3",
       "old_mode": "100644",
       "old_path": "test/support/proof/p8_05.ex",
       "old_sha256": "baaccec1d1523620f0dc88288f8036414420dbc3d01c9932cd76e83db5ea3424",
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "15314f165d1dc6582179ff5acb05dcd8f090c6b31835e705da06a4de67a57288",
+      "sha256": "b426d83e7223114688d33700edc911d59400bbe828436d278ee5018c40d5edfe",
       "status": "modified"
     },
     {
@@ -257,47 +312,36 @@
       "status": "modified"
     },
     {
-      "blob": "407408a753079ceb74d3a0b055312423dd1f0044",
+      "blob": "8b33b7e4aebe3f10e11e0929586384cdb206c54a",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_18.ex",
-      "sha256": "0ff1cdd79670153282e4d43ac636ee8731e118eb483206fb370a5c649500dc7a",
+      "sha256": "d88ecdcb162cd7d652dc5f8cf12348b2c5f56de8492edefe65b1514716e1ad81",
       "status": "added"
     },
     {
-      "blob": "445eda8ebed32f1ee611bc576c1b81188d242ce6",
+      "blob": "84ba0f757ca7d0dbdb82552588cedcd2ee092d17",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_18_catalog.ex",
-      "sha256": "23b3352d934f47e625b8e65e91296ee8cf6c3c1db190bf33537825fe68fecbe3",
+      "sha256": "37c8a7650c06f43833d830b70c595ece197f2937520ea04f2b316ea7826f4a37",
       "status": "added"
     },
     {
-      "blob": "8f9dab34cca1401fb89fabfd0971151a0a887597",
-      "mode": "100644",
-      "old_blob": "b1de89101f85a9d4f10ca99f541e5163fd0fa531",
-      "old_mode": "100644",
-      "old_path": "test/tools/architecture/ash_write_boundary_test.exs",
-      "old_sha256": "d50b0d0d6d6b71d08ba14df59252a190866ef6a86956193e70413f0b90e7d081",
-      "path": "test/tools/architecture/ash_write_boundary_test.exs",
-      "sha256": "90b8156c1e39219665fc1a8aca3f2e4c3fabb7371fae9ba2d9d700ec55037a2d",
-      "status": "modified"
-    },
-    {
-      "blob": "044a1622ca2f6585a7809fe30260f2ac984c1feb",
+      "blob": "8ee7558f6de43a7d990b9dacda333e414cb70214",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/tools/architecture/migration_identity_test.exs",
-      "sha256": "fde94e088de5e78b76334728293c641434c1a0c3fb98db11b50cc2708a8e1f87",
+      "sha256": "93593ad0c8f8b9e364fd427752be3abfe91c2f24757211f8ab7d2e710ec93f0d",
       "status": "added"
     },
     {
@@ -325,7 +369,9 @@
   ],
   "migrations": [
     "priv/repo/migrations/20261114125357_p8_18_analytics_projection.exs",
-    "priv/repo/migrations/20261114154132_p8_18_analytics_projection_revision.exs"
+    "priv/repo/migrations/20261114154132_p8_18_analytics_projection_revision.exs",
+    "priv/repo/migrations/20261114173506_p8_18_test_projection_scope.exs",
+    "priv/repo/migrations/20261114183535_p8_18_privacy_revision_guard.exs"
   ],
   "pr": 240,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/240",
@@ -350,7 +396,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you/analytics.ex",
-      "sha256": "4c26464c4899af20e00a7375fd19b86961c7376085d782d31fb03a2f7f65e9fe",
+      "sha256": "16dad17213fc3b6cbf6de0e746f29f0dc7a2b572acaeefb20f2959deaf00fb8c",
       "status": "parsed"
     },
     {
@@ -371,7 +417,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you/analytics/p817_privacy_projection.ex",
-      "sha256": "42c5af95c6bc82a101d1eea81eb4de87a21b5e96a9d4b0737ac0c394cd00caba",
+      "sha256": "31d56124266444520c843925f9b057912be2b51e3096e4ffce9e11ff3ef419ad",
       "status": "parsed"
     },
     {
@@ -569,6 +615,100 @@
     },
     {
       "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYou.Repo.Migrations.P818TestProjectionScope",
+      "name": null,
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261114173506_p8_18_test_projection_scope.exs",
+      "sha256": "93b87129175dfcef9f30bf153a5f89185f0cbddcd72a4fd7a14238d5e64994f6",
+      "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Repo.Migrations.P818TestProjectionScope",
+      "name": "down",
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261114173506_p8_18_test_projection_scope.exs",
+      "sha256": "203232dbacf132bc9cb114a26247bc279494e7b282a7b7789e8719df96e51530",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Repo.Migrations.P818TestProjectionScope",
+      "name": "up",
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261114173506_p8_18_test_projection_scope.exs",
+      "sha256": "6eef4af1f87b526d738fa759bd5ecd9771d6d8d9c105b6fd1d3d4d7415a38529",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "priv/repo/migrations/20261114173506_p8_18_test_projection_scope.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYou.Repo.Migrations.P818PrivacyRevisionGuard",
+      "name": null,
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261114183535_p8_18_privacy_revision_guard.exs",
+      "sha256": "2ca129f9605f87d4ecb4e46c95420e72e3d92d4e771d6bacd90d0431a9517c50",
+      "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Repo.Migrations.P818PrivacyRevisionGuard",
+      "name": "down",
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261114183535_p8_18_privacy_revision_guard.exs",
+      "sha256": "e4e95eb6a7b3eeaac4cd4b9763de327565d4b8e3e357da0a36d0681b9fc72579",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Repo.Migrations.P818PrivacyRevisionGuard",
+      "name": "up",
+      "old_sha256": null,
+      "path": "priv/repo/migrations/20261114183535_p8_18_privacy_revision_guard.exs",
+      "sha256": "21cdd3269d25a084ff7dfea95a4db5cff70be82cc5b32002589ec8ffdd03ad89",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "priv/repo/migrations/20261114183535_p8_18_privacy_revision_guard.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
       "change": "changed",
       "kind": "module",
       "module": "NewYou.BootstrapTest",
@@ -585,6 +725,27 @@
       "module": null,
       "name": null,
       "path": "test/new_you/bootstrap_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Privacy.PurposeAuthorityTest",
+      "name": null,
+      "old_sha256": "3dd55e595d15f7d90d48284c43623a9148306829722a9553a5a9ba63843d7de0",
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "sha256": "8660e3bd705254edc67b4fb2ba4f671d52bad4fbafb6777d6b0e688f98e0abdb",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -638,7 +799,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/proof/p8_18_test.exs",
-      "sha256": "1166598b29254e11b796e287fa65731d891a6cefc0ccc0f96da23bb47132f049",
+      "sha256": "053c497c8244e6c474c19e49fde4fad63bda39445ab14021456ab17b069334a6",
       "status": "parsed"
     },
     {
@@ -663,7 +824,7 @@
       "name": "only_projection",
       "old_sha256": null,
       "path": "test/new_you/proof/p8_18_test.exs",
-      "sha256": "d49fc9d42f2f774428f30ee1122cf3233fe7e1ffc258b2caf94d7bdd37b0ca41",
+      "sha256": "77e55a7489f5728deaa17e2679f19d1006207c020427fbd1b2171ccf21f14a46",
       "status": "parsed",
       "visibility": "private"
     },
@@ -677,6 +838,32 @@
       "old_sha256": null,
       "path": "test/new_you/proof/p8_18_test.exs",
       "sha256": "4d9179e2b4af6e0c7b3c51bec823b5bf8c2633dfe2b25f1611785513088a1332",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P818Test",
+      "name": "projection_keys",
+      "old_sha256": null,
+      "path": "test/new_you/proof/p8_18_test.exs",
+      "sha256": "6e4e0d32fcedeff353279daaa031402b494e75bd801beef4f77078284e743c76",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P818Test",
+      "name": "stop_rebuild_tasks",
+      "old_sha256": null,
+      "path": "test/new_you/proof/p8_18_test.exs",
+      "sha256": "98dd6d7ce7427ab99ee78077f7eebf6287199d17130bd3eba00b98f433641f4e",
       "status": "parsed",
       "visibility": "private"
     },
@@ -800,32 +987,214 @@
       "name": null,
       "old_sha256": "c25e7d8b3d55cb901052ed689bd474d36207cb488800aa61df26d7741dddbf55",
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "96ebb8586e085082efc6b88ad46cb733a105e24f83891f7a1735ec4ceb8571f5",
+      "sha256": "770de2609f80cd8ed8d67927cc621f6ad50f5157b54af84ce06da06dd0bd1261",
       "status": "parsed"
     },
     {
+      "arity": 0,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "analytics_projection_key",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "d77db6a6e037389c7fbb85646e0e810aab8530a7bc9bedc9eca5c8ae78d5ae53",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 0,
+      "change": "removed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "cleanup",
+      "old_sha256": "966d88e41204f7fb61332fc9e2c6ab3337e4db75831e4b2b1aeb197674a6eec2",
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": null,
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "cleanup",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "0090b822f6ca65e6427a39a5809d16962814dc057049a1c3fed7c9f4708608fd",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
       "arity": 2,
-      "change": "changed",
+      "change": "removed",
       "declaration": "defp",
       "kind": "function",
       "module": "NewYou.Proof.P805",
       "name": "cleanup",
       "old_sha256": "3a48e3713dd82b077f7227a9ee209a01208d3d787b8b9e8ff6046beca64f798b",
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "f40f723ccfe9e8e0cb09c95001d23ef579b04d4f82a1293d27fa8a6e20cb93b4",
+      "sha256": null,
       "status": "parsed",
       "visibility": "private"
     },
     {
-      "arity": 0,
+      "arity": 3,
       "change": "added",
       "declaration": "defp",
       "kind": "function",
       "module": "NewYou.Proof.P805",
-      "name": "clear_test_analytics_projection",
+      "name": "cleanup",
       "old_sha256": null,
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "3133be0fadc4a8e4a72a5bff551bf9b609032bc49aa4d98306633152a887c119",
+      "sha256": "d55e8f317ed81445436828d037e6e645dc88aad4de133b8bcf352ba32a5b067f",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "removed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "cleanup_orphaned_fixture",
+      "old_sha256": "a572987db4f88f569a55720e9661a142d6c61354563b9af37834b48ec7c916b5",
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": null,
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "cleanup_orphaned_fixture",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "0d5eb5f87061d90f137e15bff109e56048b45a1d00a3cb7f55a7407ca12aae1b",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "cleanup_test_analytics_projection",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "d302824241227890b38faae68783c2166cbbd6e54c1126c0d106c997451318f9",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 1,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "execute",
+      "old_sha256": "ac230de8560fe18ab176a60a304f3b1752c8af51c193ee3585e031ccd82951db",
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "5b57d03dbaefb1d7c5b298691b50027bb54b6f0601583599148001a05018846e",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "finish_fixture",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "3d0527f16d803d3298752812d468ffbb1bd7da26d8be40da07124432a1e24326",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 5,
+      "change": "removed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "fixture_guardian",
+      "old_sha256": "07934239ec2eeed261b401284be5aee7f6178d38006bd2e9fe85df55e9dd45ea",
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": null,
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 6,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "fixture_guardian",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "02b607dbb1f743c6b83504d5cc745c3e68571f18a7d7a8e46cdeb250a7fd4d93",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "fixture_setup_checkpoint",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "346fe549fae5520170b5fdc69570b5d28248935ab9bdc68b548f2c63980f878c",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "restore_process_value",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "a79dc09228237b4d8dcd8fbd3b82dde9f808b66af9fe4717a73b713d0c8e04bb",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "removed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "start_fixture_guardian",
+      "old_sha256": "1358ecd35db6181d2596768746e61dd2b02efd45942c12d851e78a1d29eca345",
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": null,
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "start_fixture_guardian",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "ac888bfdce45bd4eb0adae9b1cd68e110e2a41fbe3ea11b2c94e2746e8ea64e1",
       "status": "parsed",
       "visibility": "private"
     },
@@ -838,7 +1207,7 @@
       "name": "with_fixture",
       "old_sha256": "10fd14a292f64516307f9356f6f30ae5039e8e602d39196fd37724f96a4399d9",
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "98a86d89a780e7222e2744e4a645111d04c31e2b1f7a1e1692f13fea7c65ba3a",
+      "sha256": "0b6ab6c6177fb793890c83f260a4090a3443e09e80975266652d10c6993f5a64",
       "status": "parsed",
       "visibility": "public"
     },
@@ -918,7 +1287,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_18.ex",
-      "sha256": "8a66589d4bea758ee698d65c2a993749bd389190fbdca05b4b7059f5ea3f683a",
+      "sha256": "97e96a9994db2b16a1cb32742339bf5291226b3e531570d85dd810afe9bc49bc",
       "status": "parsed"
     },
     {
@@ -1060,7 +1429,7 @@
       "name": "only_projection",
       "old_sha256": null,
       "path": "test/support/proof/p8_18.ex",
-      "sha256": "3db650d897aa3b02e0c8d1cde71ad0c478429b46ec540fa24e769abb3b06e998",
+      "sha256": "4d60539e8168dc5f01cafe01d9ed96fdf137cb828d26e8d9fb5541f1d8cc9b1c",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1099,7 +1468,20 @@
       "name": "provider_observation",
       "old_sha256": null,
       "path": "test/support/proof/p8_18.ex",
-      "sha256": "499839f717149795afe2c3f85065ed5dbea190301e1858b0efa04adc0720fa10",
+      "sha256": "58a15123ef6e8da8758ddf51a11a0873faf83543635f6e70b73903ab4d8df6cd",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P818",
+      "name": "receive_identity_signals",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_18.ex",
+      "sha256": "9614deacc77cc9b6abaa04e4847455ff4139a993f7beaaff9ac064cfc66d5693",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1126,6 +1508,19 @@
       "old_sha256": null,
       "path": "test/support/proof/p8_18.ex",
       "sha256": "e90a421c68e624de74873e5390a6d245916cdb627200db64fb8e2d8d43fcc394",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P818",
+      "name": "restore_process_value",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_18.ex",
+      "sha256": "a79dc09228237b4d8dcd8fbd3b82dde9f808b66af9fe4717a73b713d0c8e04bb",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1164,7 +1559,7 @@
       "name": "signals_coordination_non_authority",
       "old_sha256": null,
       "path": "test/support/proof/p8_18.ex",
-      "sha256": "9e9d1ff7f6f7ff035120d2d03ff6c11395e957ba7acc1d14f9f0f4ab2157c017",
+      "sha256": "ed0f586db992985530858f5ac9d80d639d4c823c4ed63398a857b62bec41fb6a",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1238,7 +1633,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_18_catalog.ex",
-      "sha256": "6e19887f9985689b97f13aefaa440756796209409838100523e3b4fe65b7e689",
+      "sha256": "7fb3d1994fad027b172e7594c0354a04f89ee98abae54bb64e09a5b1ab419241",
       "status": "parsed"
     },
     {
@@ -1279,34 +1674,13 @@
     },
     {
       "arity": null,
-      "change": "changed",
-      "kind": "module",
-      "module": "NewYou.Architecture.AshWriteBoundaryTest",
-      "name": null,
-      "old_sha256": "460259f46025e61a01b6704b6a2d072792d1c38a54106e94ee6cd471c9322b8d",
-      "path": "test/tools/architecture/ash_write_boundary_test.exs",
-      "sha256": "27f90ccbfcc24eb31c6b91583e69e40851b45e324e23ea4d8c49dd7e6a98258a",
-      "status": "parsed"
-    },
-    {
-      "arity": null,
-      "change": "unknown",
-      "kind": "unknown",
-      "module": null,
-      "name": null,
-      "path": "test/tools/architecture/ash_write_boundary_test.exs",
-      "reason": "module expression may generate declarations; expressions are not evaluated",
-      "status": "unknown"
-    },
-    {
-      "arity": null,
       "change": "added",
       "kind": "module",
       "module": "NewYou.Architecture.MigrationIdentityTest",
       "name": null,
       "old_sha256": null,
       "path": "test/tools/architecture/migration_identity_test.exs",
-      "sha256": "78b4a55e6b1fd370c4042d723be3398683f1ffbc245f410b54637f3b33a42dce",
+      "sha256": "c9555e49bfbc86c4f9396fcd9e58de31998b8e0e0745338e64de1faa2984789a",
       "status": "parsed"
     },
     {
@@ -1336,6 +1710,32 @@
       "visibility": "private"
     },
     {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Architecture.MigrationIdentityTest",
+      "name": "migration_identity",
+      "old_sha256": null,
+      "path": "test/tools/architecture/migration_identity_test.exs",
+      "sha256": "80d674ae96a090569b430370be7371dd26e9edbca69ef3c4c8638eaa74cac8ca",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Architecture.MigrationIdentityTest",
+      "name": "migration_module",
+      "old_sha256": null,
+      "path": "test/tools/architecture/migration_identity_test.exs",
+      "sha256": "8e0395e42d491a945ae3e115793ce6d20272bd7743a801b9b089bdb6da849e61",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
       "arity": null,
       "change": "unknown",
       "kind": "unknown",
@@ -1348,6 +1748,7 @@
   ],
   "tests": [
     "test/new_you/bootstrap_test.exs",
+    "test/new_you/privacy/purpose_authority_test.exs",
     "test/new_you/proof/catalog_test.exs",
     "test/new_you/proof/p8_05_test.exs",
     "test/new_you/proof/p8_18_test.exs",
@@ -1359,7 +1760,6 @@
     "test/support/proof/p8_05_browser.ex",
     "test/support/proof/p8_18.ex",
     "test/support/proof/p8_18_catalog.ex",
-    "test/tools/architecture/ash_write_boundary_test.exs",
     "test/tools/architecture/migration_identity_test.exs",
     "tests/test_capability_knowledge.py"
   ],
