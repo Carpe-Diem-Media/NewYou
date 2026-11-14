@@ -114,14 +114,14 @@
       "status": "modified"
     },
     {
-      "blob": "f818bcd85dbabaabc44e5f50758a3a030a02deae",
+      "blob": "e1ea8b4c58c0dd64b35730830de57cbce06cf38c",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "tests/test_agent_instruction_contract.py",
-      "sha256": "cc281484195904b010af2d1e51ea1c579436c9d45bb9e05faf8a2fce88ce92a8",
+      "sha256": "81ae965343eb93b61dbd9b0caedbeec56e6e09ea81570f88716e4cd1b2f9f634",
       "status": "added"
     },
     {
