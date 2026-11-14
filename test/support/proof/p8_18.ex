@@ -45,8 +45,9 @@ defmodule NewYou.Proof.P818 do
       )
       |> Ash.read_one!(authorize?: false)
 
-    previous_evidence_key =
-      Application.put_env(:new_you, :communications_proof_evidence_key, String.duplicate("k", 32))
+    previous_evidence_key = Application.get_env(:new_you, :communications_proof_evidence_key)
+
+    Application.put_env(:new_you, :communications_proof_evidence_key, String.duplicate("k", 32))
 
     Process.put(:p810_provider, fn _, _ -> :accepted end)
 
@@ -122,6 +123,12 @@ defmodule NewYou.Proof.P818 do
         else:
           Application.put_env(:new_you, :communications_proof_evidence_key, previous_evidence_key)
     end
+
+    P805.check(
+      id,
+      "provider_evidence_key_restored",
+      Application.get_env(:new_you, :communications_proof_evidence_key) == previous_evidence_key
+    )
   end
 
   defp prove_primary_email_callback_is_non_authoritative(id, recovery_attempt) do

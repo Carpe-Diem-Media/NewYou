@@ -7,7 +7,7 @@ defmodule NewYou.Proof.P818Catalog do
   @definitions [
     {"provider_observation", "communications_delivery_evidence",
      "identity.provider_evidence_cannot_transition_source",
-     ~w(provider_acceptance_did_not_verify authenticated_callback_did_not_verify provider_reference_did_not_create_session recovery_delivery_did_not_complete recovery_delivery_did_not_apply_email primary_email_callback_did_not_confirm_or_apply)},
+     ~w(provider_acceptance_did_not_verify authenticated_callback_did_not_verify provider_reference_did_not_create_session recovery_delivery_did_not_complete recovery_delivery_did_not_apply_email primary_email_callback_did_not_confirm_or_apply provider_evidence_key_restored)},
     {"stale_browser_authority", "browser_cookie_and_session_projection",
      "identity.revocation_and_supersession_are_current_authority",
      ~w(browser_stale_page_denied_on_reconnect owner_revocation_persisted stale_session_denied_after_reconnect superseded_proof_denied)},
