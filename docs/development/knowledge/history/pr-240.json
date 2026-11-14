@@ -26,25 +26,25 @@
       "status": "modified"
     },
     {
-      "blob": "3db656a776880b9021ec5b54a4f226454c694706",
+      "blob": "f3d8abc43585bfe3dbc5f90f3a9cf3535f3683ef",
       "mode": "100644",
       "old_blob": "76283ba57e6f003e4f275c2a537441b848074556",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.primary_email_change.json",
       "old_sha256": "d6d32075dcf86786ad7695d6707f0a157154bc75e0ec4e8291209a1dd1e964c8",
       "path": "docs/development/knowledge/identity.primary_email_change.json",
-      "sha256": "d4e8adea73beee99b1d02ac16b6a0f2860b867d753f6fa7fd170b3aa4d510320",
+      "sha256": "da42478d20880701abd82184391960666acdf267c5162672bc0e13ea3265b412",
       "status": "modified"
     },
     {
-      "blob": "67c415d8e42ddd86b2fc004a78cb2386d8cce52a",
+      "blob": "8bcae364f1fa48009d9c25cb1289000c627b6e3f",
       "mode": "100644",
       "old_blob": "df57a9cc6fddf49c911bf8a9f2ce50be6cc9eecc",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
       "old_sha256": "f94657991d7d0dd4e33a70ea020ee644450b6e9dabc9b3b52f6aa83b22581949",
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "172638f54cd5df2f85b54dd77cca2cadff1ad027086c9150e187981f6b66f442",
+      "sha256": "466a6578e938d79416d95a46f6e9c243d44455c89a8d43821e315bd8b75ba2da",
       "status": "modified"
     },
     {
@@ -81,14 +81,14 @@
       "status": "modified"
     },
     {
-      "blob": "7c12139786b54a99d8cb4a25b51e899401d5abc4",
+      "blob": "ea2accd58e0a99fb80dd70f8f7eb753a637a4457",
       "mode": "100644",
       "old_blob": "9a32cb3332b68d2c9b9a760708f0ea087004985b",
       "old_mode": "100644",
       "old_path": "lib/new_you/privacy.ex",
       "old_sha256": "214f70d35fbb363b136dba1bc4d1fa345ef630fb03170fc981a8590c6e4a2104",
       "path": "lib/new_you/privacy.ex",
-      "sha256": "7d933ae735d0753d1d38ce76be66f605ca4f305050658ce509d8a803bf85372a",
+      "sha256": "3144a53703a873d9e4a549f8f74cd224a738d99dc5d6bbc7542b3376f2c1bc75",
       "status": "modified"
     },
     {
@@ -235,14 +235,14 @@
       "status": "modified"
     },
     {
-      "blob": "95db51ecf4bdc4e1e85cafa2df720052a6625391",
+      "blob": "249c9d70c511377b8ddbe1ba47ddc5521ff0efba",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/proof/p8_18_test.exs",
-      "sha256": "ef471473eb83a1bfa283b5df158adc741864e20114e4c717292eabdd83f93e44",
+      "sha256": "d9f147dff0fae2d15fb153d9649830dde1b382dcd16c9806aecac55c2fa88f9e",
       "status": "added"
     },
     {
@@ -472,7 +472,7 @@
       "name": null,
       "old_sha256": "87a0b78c43c52c364485722e37fe9b7ac4564dc52d7bb6bbfa9589da52b664fc",
       "path": "lib/new_you/privacy.ex",
-      "sha256": "5b306364826e6ca1af70a2d23005f3ba8be35cddad275c71145ce3242d76f5dd",
+      "sha256": "a2ff71bb8980c66e5525a10e938af37b7c46ad3a0791294ad60d76f6ade68933",
       "status": "parsed"
     },
     {
@@ -799,8 +799,34 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/proof/p8_18_test.exs",
-      "sha256": "053c497c8244e6c474c19e49fde4fad63bda39445ab14021456ab17b069334a6",
+      "sha256": "cffe33629a0876bfd9b9d08b2be188c00e1347e00bc6eec23a81b498a4e0f061",
       "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P818Test",
+      "name": "collect_snapshot_queries",
+      "old_sha256": null,
+      "path": "test/new_you/proof/p8_18_test.exs",
+      "sha256": "da8c74c85a563041e019eff570a404373b43dee32330bf14115be82f75204b9c",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P818Test",
+      "name": "collect_snapshot_queries",
+      "old_sha256": null,
+      "path": "test/new_you/proof/p8_18_test.exs",
+      "sha256": "da8c74c85a563041e019eff570a404373b43dee32330bf14115be82f75204b9c",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": 3,
