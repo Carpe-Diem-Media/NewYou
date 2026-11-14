@@ -398,7 +398,7 @@
       ]
     },
     {
-      "summary": "The Analytics projection stores only the current aggregate count for the synthetic P8-17 purpose. It stores no subject, account or operation identifier and has no action that mutates source truth.",
+      "summary": "The Analytics projection stores only the aggregate count sampled from currently allowed synthetic P8-17 rows during an explicit rebuild. It stores no subject, account or operation identifier, has no action that mutates source truth, and may lag after source changes or overlapping rebuilds. Privacy remains authoritative for any decision requiring current suppression.",
       "source_ids": [
         "analytics_domain",
         "analytics_projection",
@@ -534,7 +534,7 @@
       "cases": [
         "The complete seven-case family-9 manifest registers distinct owner invariants and deterministic assertion IDs.",
         "Provider evidence, stale browser/session state, Audit records, executor state and replayed Signals cannot transition source-owned facts.",
-        "The Analytics projection reads only Privacy's current count, stores no identifiers, and suppresses withdrawn state across reverse-order and repeated rebuilds.",
+        "Each explicit Analytics rebuild reads only Privacy's current count, stores no identifiers, and suppresses withdrawn state across reverse-order and repeated rebuilds. The aggregate is eventually consistent between rebuilds and cannot make authorization or suppression decisions.",
         "The real ARC-029 application scan is clean and negative fixtures reject every required bypass class, parser errors fail closed, and narrow exceptions remain accepted.",
         "The shared P8-04 runner emits machine-readable completed PASS results for every P8-18 case without certifying the full Phase-8 matrix."
       ],
@@ -641,7 +641,7 @@
     "PostgreSQL order is proven using separate local TEST connections and observed pg_blocking_pids contention. The proof does not model cross-region database failures.",
     "Unavailable owner-read behavior is exercised with the established deterministic test seam; it does not simulate every physical database outage mode.",
     "The proof does not establish a production legal consent requirement and does not alter the certified Privacy JIT dossier disposition.",
-    "The P8-18 Analytics projection is a development/test-only count of the synthetic P8-17 purpose. It contains no participant identifiers and does not certify the complete TB-001 or Phase-8 proof matrix.",
+    "The P8-18 Analytics projection is a development/test-only, eventually consistent count of the synthetic P8-17 purpose. It contains no participant identifiers, is not a current-authority read, and cannot decide authorization or suppression; Privacy remains authoritative. It does not certify the complete TB-001 or Phase-8 proof matrix.",
     "P8-18 provides the family-9 result for later P8-19 integration; it does not itself declare Phase-8 PASS or authorize Phase 9."
   ],
   "follow_up_tickets": [],

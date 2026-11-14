@@ -2,9 +2,13 @@ defmodule NewYou.Analytics do
   @moduledoc """
   Analytics owns rebuildable derived projections and aggregates.
 
-  P8-18 adds only one P8-17 proof fixture aggregate. Rebuilding reads minimized
-  current Privacy authority and writes this Domain's projection. This module
-  exposes no command for another Domain.
+  P8-18 adds only one P8-17 proof fixture aggregate. An explicit rebuild reads
+  Privacy's minimized current allowed count and then writes this Domain's
+  projection. The projection is eventually consistent between rebuilds and may
+  lag after a source change or overlapping rebuilds. It is not a current
+  authority read and must not decide authorization or suppression; Privacy
+  remains authoritative for those decisions. This module exposes no command
+  for another Domain.
   """
 
   use Ash.Domain,
