@@ -198,6 +198,34 @@
             "minItems": 1
           }
         },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "arity"
+              ],
+              "properties": {
+                "arity": {
+                  "const": 0
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "arguments": {
+                  "maxItems": 0
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "arguments": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ],
         "required": [
           "module",
           "function",

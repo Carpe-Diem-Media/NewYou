@@ -1,8 +1,9 @@
 """Validate the versioned capability-map schema and source references (stdlib only).
 
-The schema deliberately uses only $ref, type, const, enum, pattern, minLength,
-minItems, required, properties, additionalProperties and items. This is a small
-validator for that declared schema, not a general JSON Schema implementation.
+The schema deliberately uses a small subset: $ref, type, const, enum, pattern,
+minLength, minItems, maxItems, required, properties, additionalProperties,
+items, allOf, if, then and else. This is a validator for that declared schema,
+not a general JSON Schema implementation.
 Shape and locators cannot prove semantic truth; independent source review does.
 """
 import hashlib
@@ -49,8 +50,11 @@ def validate(value, rule, schema, location='$'):
     if isinstance(value, list):
         if len(value) < rule.get('minItems', 0):
             raise ValueError(location + ': empty list')
-        for i, item in enumerate(value):
-            validate(item, rule['items'], schema, f'{location}[{i}]')
+        if len(value) > rule.get('maxItems', float('inf')):
+            raise ValueError(location + ': too many items')
+        if 'items' in rule:
+            for i, item in enumerate(value):
+                validate(item, rule['items'], schema, f'{location}[{i}]')
     if isinstance(value, dict):
         if set(rule.get('required', [])) - value.keys():
             raise ValueError(location + ': missing required fields')
@@ -60,16 +64,22 @@ def validate(value, rule, schema, location='$'):
         for name, item in value.items():
             if name in properties:
                 validate(item, properties[name], schema, location + '.' + name)
+    for clause in rule.get('allOf', []):
+        validate(value, clause, schema, location)
+    if 'if' in rule:
+        try:
+            validate(value, rule['if'], schema, location)
+        except ValueError:
+            branch = rule.get('else')
+        else:
+            branch = rule.get('then')
+        if branch is not None:
+            validate(value, branch, schema, location)
 
 
 def validate_map(record, root=ROOT):
     schema = loads(SCHEMA.read_text())
     validate(record, schema, schema)
-    for index, interface in enumerate(record['interfaces']):
-        if (interface['arity'] == 0) != (len(interface['arguments']) == 0):
-            raise ValueError(
-                f'interfaces[{index}]: arguments must be empty exactly when arity is zero'
-            )
     ids = set()
     for source in record['sources']:
         if source['id'] in ids:

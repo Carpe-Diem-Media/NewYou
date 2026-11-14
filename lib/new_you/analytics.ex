@@ -4,8 +4,11 @@ defmodule NewYou.Analytics do
 
   P8-18 adds only a P8-17 proof aggregate. An explicit rebuild reads Privacy's
   minimized current allowed count and then writes this Domain's projection.
-  Production and development use one fixed projection key. Test proof fixtures
-  use an opaque per-fixture key so cleanup cannot erase another fixture's row.
+  The rebuild interface is available only in development and test; production
+  returns `:analytics_projection_unavailable` because this proof has no
+  production purpose or rebuild path. The projection reserves one fixed
+  production key in its schema. Test proof fixtures use an opaque per-fixture
+  key so cleanup cannot erase another fixture's row.
   Privacy supplies an owner-managed revision with the count, and Analytics
   rejects an older upsert if a newer rebuild already committed. The projection
   remains eventually consistent between rebuilds and may lag after a source
@@ -27,9 +30,14 @@ defmodule NewYou.Analytics do
   @type projection_error ::
           {:error, :privacy_authority_unavailable | :analytics_projection_unavailable}
 
+  @doc """
+  Rebuild the P8-17 proof aggregate from Privacy's minimized current allowed
+  count and revision. The rebuild path is available only in development and
+  test; production returns `:analytics_projection_unavailable` because this
+  proof defines no production purpose or rebuild flow.
+  """
+  @spec rebuild_p817_privacy_projection() :: :ok | projection_error()
   if Mix.env() in [:dev, :test] do
-    @doc "Rebuild the P8-17 proof aggregate from Privacy's current allowed state."
-    @spec rebuild_p817_privacy_projection() :: :ok | projection_error()
     def rebuild_p817_privacy_projection do
       with {:ok, snapshot} <- NewYou.Privacy.current_p817_proof_purpose_snapshot(),
            :ok <- after_privacy_snapshot_read(snapshot),
@@ -79,8 +87,6 @@ defmodule NewYou.Analytics do
       defp projection_key, do: @production_projection_key
     end
   else
-    @doc "Rebuild the P8-17 proof aggregate when the development proof surface is enabled."
-    @spec rebuild_p817_privacy_projection() :: :ok | projection_error()
     def rebuild_p817_privacy_projection, do: {:error, :analytics_projection_unavailable}
 
     defp projection_key, do: @production_projection_key
