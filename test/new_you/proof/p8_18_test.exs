@@ -30,6 +30,11 @@ defmodule NewYou.Proof.P818Test do
 
     assert result["verdict"] == "FAIL"
     assert result["reason_codes"] == ["assertion.failed"]
+
+    assert result["assertions_executed"] == 7
+
+    assert List.last(result["assertion_ids"]) ==
+             "p818.analytics_projection.reordered_rebuild_remains_suppressed"
   end
 
   @tag :hardening
@@ -44,6 +49,9 @@ defmodule NewYou.Proof.P818Test do
 
     assert result["verdict"] == "FAIL"
     assert result["reason_codes"] == ["assertion.failed"]
+
+    assert result["assertion_ids"] == []
+    assert result["assertions_executed"] == 0
   end
 
   @tag :hardening
