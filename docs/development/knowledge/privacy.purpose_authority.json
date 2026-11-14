@@ -7,8 +7,8 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "93006b4cd045e26e1f4c3130850f87f077d47d73",
-    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. Production and development use the fixed Analytics projection key. Each test proof fixture receives an opaque key and cleanup deletes only the row for that fixture. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count."
+    "git_sha": "ba38550431f23be76736faa303434dfc90c0f348",
+    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. The projection schema reserves a fixed production key used by the development rebuild; each test proof fixture receives a separate opaque key and cleanup deletes only that fixture\u2019s row. Production has no rebuild path or purpose for this proof. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count."
   },
   "authoritative_domain": "NewYou.Privacy",
   "collaborating_domains": [
@@ -23,7 +23,7 @@
     },
     {
       "domain": "NewYou.Analytics",
-      "interface": "Analytics.rebuild_p817_privacy_projection/0 reads Privacy.current_p817_proof_purpose_snapshot/0 and conditionally upserts its own derived aggregate using the Privacy revision. Production and development use the fixed key; test proof fixtures use separate opaque keys for scoped cleanup.",
+      "interface": "Analytics.rebuild_p817_privacy_projection/0 reads Privacy.current_p817_proof_purpose_snapshot/0 and conditionally upserts its own derived aggregate using the Privacy revision. Development uses the projection\u2019s reserved production key; test proof fixtures use separate opaque keys for scoped cleanup, and production has no rebuild path or purpose for this proof.",
       "ownership": "Analytics owns only the derived aggregate row. Privacy remains authoritative for allowed/withdrawn purpose state, and Analytics has no source-domain command interface.",
       "source_ids": [
         "analytics_domain",
@@ -79,7 +79,7 @@
         "read (private)",
         "rebuild (private, development/test only)"
       ],
-      "caller_boundary": "Analytics exposes one development/test rebuild function that reads a minimized Privacy count and revision, then upserts only its own projection when its source revision is at least as new as the stored revision. Production and development use one fixed key; test proof fixtures use opaque per-fixture keys. The resource stores no subject or operation identifiers and has no source-domain write action.",
+      "caller_boundary": "Analytics exposes one development/test rebuild function that reads a minimized Privacy count and revision, then upserts only its own projection when its source revision is at least as new as the stored revision. Development uses the projection\u2019s reserved production key; test proof fixtures use opaque per-fixture keys. Production has no rebuild path or purpose for this proof. The resource stores no subject or operation identifiers and has no source-domain write action.",
       "source_ids": [
         "analytics_domain",
         "analytics_projection"
@@ -363,7 +363,7 @@
       ]
     },
     {
-      "summary": "Analytics reads Privacy's minimized allowed count and monotonic source revision, then conditionally upserts its own aggregate. Production and development use the fixed key; test proof fixtures use isolated opaque keys. A delayed older rebuild cannot replace a newer committed revision; the projection may still lag until a rebuild runs.",
+      "summary": "Analytics reads Privacy's minimized allowed count and monotonic source revision, then conditionally upserts its own aggregate. Development uses the projection\u2019s reserved production key; test proof fixtures use isolated opaque keys. Production has no rebuild path or purpose for this proof. A delayed older rebuild cannot replace a newer committed revision; the projection may still lag until a rebuild runs.",
       "source_ids": [
         "analytics_domain",
         "analytics_projection",
@@ -455,7 +455,7 @@
       ]
     },
     {
-      "summary": "The Analytics projection stores only the aggregate count and Privacy source revision sampled during an explicit rebuild. Production and development use the fixed projection key, while test fixtures use validated opaque keys and remove only their own row. The resource stores no subject, account or operation identifier, has no action that mutates source truth, and cannot overwrite a newer committed source revision. It may lag after source changes; Privacy remains authoritative for current suppression.",
+      "summary": "The Analytics projection stores only the aggregate count and Privacy source revision sampled during an explicit rebuild. The projection schema reserves a fixed production key used by development, while test fixtures use validated opaque keys and remove only their own row. Production has no rebuild path or purpose for this proof. The resource stores no subject, account or operation identifier, has no action that mutates source truth, and cannot overwrite a newer committed source revision. It may lag after source changes; Privacy remains authoritative for current suppression.",
       "source_ids": [
         "analytics_domain",
         "analytics_projection",
@@ -513,7 +513,7 @@
       ]
     },
     {
-      "summary": "Each Analytics rebuild rereads Privacy's current allowed rows and revision, then upserts the production/development fixed aggregate or the current test fixture's aggregate. Equal revisions carry the same source count; stale revisions leave the newer projection intact. The family-9 proof withdraws rows in reverse order, repeats the rebuild, and confirms terminal withdrawals cannot be regranted or reappear.",
+      "summary": "Each Analytics rebuild rereads Privacy's current allowed rows and revision, then upserts the reserved development aggregate or the current test fixture's aggregate. Equal revisions carry the same source count; stale revisions leave the newer projection intact. The family-9 proof withdraws rows in reverse order, repeats the rebuild, and confirms terminal withdrawals cannot be regranted or reappear.",
       "source_ids": [
         "analytics_domain",
         "privacy_snapshot_interface",
@@ -677,7 +677,7 @@
       ]
     },
     {
-      "summary": "Analytics uses the existing Ash Domain/resource pattern and NewYou.Repo. Its only input is a count from Privacy's current owner Resource, and its only write targets its own derived projection. Production and development use one fixed key; tests isolate fixture rows with validated opaque keys.",
+      "summary": "Analytics uses the existing Ash Domain/resource pattern and NewYou.Repo. Its only input is a count from Privacy's current owner Resource, and its only write targets its own derived projection. Development uses the projection\u2019s reserved fixed production key; tests isolate fixture rows with validated opaque keys. Production has no rebuild path or purpose for this proof.",
       "source_ids": [
         "analytics_domain",
         "analytics_projection",
@@ -724,7 +724,7 @@
     "PostgreSQL order is proven using separate local TEST connections and observed pg_blocking_pids contention. The proof does not model cross-region database failures.",
     "Unavailable owner-read behavior is exercised with the established deterministic test seam; it does not simulate every physical database outage mode.",
     "The proof does not establish a production legal consent requirement and does not alter the certified Privacy JIT dossier disposition.",
-    "The P8-18 Analytics projection is a development/test-only, eventually consistent count of the synthetic P8-17 purpose. Production and development use one fixed key; test fixtures use separate validated opaque keys and scoped teardown. It contains no participant identifiers, is not a current-authority read, and cannot decide authorization or suppression; Privacy remains authoritative. It does not certify the complete TB-001 or Phase-8 proof matrix.",
+    "The P8-18 Analytics projection is an eventually consistent count of the synthetic P8-17 purpose rebuilt only in development/test. The schema reserves a fixed production key used by development; test fixtures use separate validated opaque keys and scoped teardown. Production has no rebuild path or purpose for this proof. It contains no participant identifiers, is not a current-authority read, and cannot decide authorization or suppression; Privacy remains authoritative. It does not certify the complete TB-001 or Phase-8 proof matrix.",
     "P8-18 provides the family-9 result for later P8-19 integration; it does not itself declare Phase-8 PASS or authorize Phase 9."
   ],
   "follow_up_tickets": [],
@@ -859,7 +859,7 @@
       "id": "analytics_domain",
       "path": "lib/new_you/analytics.ex",
       "symbol": "defmodule NewYou.Analytics",
-      "sha256": "3f940418a56857e7c51afab80f36c36b869bb6ae62e4845cbe95576edc4ef60b"
+      "sha256": "fee24d72906cd4db3e42df1e584ac16c0a8141da54dd3fc7968551bf0cb913be"
     },
     {
       "id": "analytics_projection",
