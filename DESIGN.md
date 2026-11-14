@@ -310,6 +310,15 @@ decision supersedes flat/no-shadow restrictions only for those opt-in examples,
 not default production components, legacy screens or new dark/error states.
 Candidate amounts remain subject to rendered contrast and owner visual review.
 
+Owner refinement, 2026-11-14: give the Lit Primary a visible static sheen.
+Raise `--action-light-strength` from 4% to 14% and use three vertical stops:
+the lightened top, the unmodified semantic action colour at
+`--action-shine-height: 12px`, and the existing 6% shaded base. The bright band
+ends above the label, including wrapped labels at enlarged text sizes. Apply the same relationship to hover/pressed
+colours. Preserve directional borders, geometry, restrained shadows and
+solid/forced-colour fallbacks. This changes only the existing lit treatment;
+no animation or new palette source is introduced.
+
 Owner decision, 2026-11-12: self-host Inter and centralize font selection across the whole site. `assets/css/design-tokens.css` owns `--font-body`, initially `Inter, sans-serif`, and `--font-display`, initially `var(--font-body)`. Change `--font-body` once to update normal UI text and headings together. Override `--font-display` only for an intentional separate heading family. Canonical, default Tailwind and existing `--ny-font-*` consumers resolve these same roles. The legacy font-family values are superseded; its colors, sizes, error and dark-mode behavior are not migrated by this decision. The registered local Inter variable face supports the existing weights, including canonical 400/500/700, with `font-display: swap` and a sans-serif fallback. A replacement custom family needs its font asset registered once in this same CSS file. New font assets must carry their license. This owner decision supersedes the earlier no-font-download implementation restriction for Inter.
 
 The owner requested a token-driven NewYou style guide in WELL-112. The development-only guide may render every approved token as a labelled specimen, including palette swatches. A swatch is a reference sample, not permission to use its color as a general-purpose component surface.

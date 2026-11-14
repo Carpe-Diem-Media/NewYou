@@ -127,7 +127,8 @@
   --shadow-flat: none;
   --shadow-ink: transparent;
   --shadow-strength: 8%;
-  --action-light-strength: 4%;
+  --action-light-strength: 14%;
+  --action-shine-height: 12px;
   --action-shade-strength: 6%;
   --action-edge-light-strength: 22%;
   --action-edge-dark-strength: 18%;
@@ -239,8 +240,8 @@
     --action-primary-hover-bottom: color-mix(in oklab, var(--secondary) var(--action-shade-strength), var(--primary-hover));
     --action-primary-hover-edge-light: color-mix(in oklab, var(--surface) var(--action-edge-light-strength), var(--primary-hover));
     --action-primary-hover-edge-dark: color-mix(in oklab, var(--secondary) var(--action-edge-dark-strength), var(--primary-hover));
-    --action-primary-gradient: linear-gradient(180deg, var(--action-primary-top), var(--action-primary-bottom));
-    --action-primary-hover-gradient: linear-gradient(180deg, var(--action-primary-hover-top), var(--action-primary-hover-bottom));
+    --action-primary-gradient: linear-gradient(180deg, var(--action-primary-top), var(--primary) var(--action-shine-height), var(--action-primary-bottom));
+    --action-primary-hover-gradient: linear-gradient(180deg, var(--action-primary-hover-top), var(--primary-hover) var(--action-shine-height), var(--action-primary-hover-bottom));
     --design-surface-tint: color-mix(in oklab, var(--primary) var(--design-tint-strength), var(--surface));
     --design-surface-shade: color-mix(in oklab, var(--secondary) var(--design-shade-strength), var(--canvas));
     --design-overlay: color-mix(in oklab, var(--secondary) var(--design-overlay-strength), transparent);

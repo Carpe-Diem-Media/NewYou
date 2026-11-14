@@ -131,11 +131,17 @@ try {
     b.style.fontSize = `${parseFloat(getComputedStyle(b).fontSize) * 2}px`
     const result = {fits: b.scrollWidth <= b.clientWidth + 1, grows: b.getBoundingClientRect().height > 48,
       pageFits: document.documentElement.scrollWidth <= innerWidth}
-    b.textContent = old
-    b.style.fontSize = oldFont
-    return result
+    return {result, old, oldFont}
   })
-  assert.deepEqual(resized, {fits: true, grows: true, pageFits: true})
+  assert.deepEqual(resized.result, {fits: true, grows: true, pageFits: true})
+  await page.mouse.move(0, 0)
+  const resizedPixels = await measureContrast(button)
+  const resizedContrast = Math.min(...resizedPixels.map(rgb => contrastRatio([255, 255, 255], rgb)))
+  assert.ok(resizedContrast >= 4.5, `wrapped enlarged label contrast ${resizedContrast.toFixed(2)}:1`)
+  await button.evaluate((b, saved) => {
+    b.textContent = saved.old
+    b.style.fontSize = saved.oldFont
+  }, resized)
 
   await page.setViewport({width: 1440, height: 1000})
   const changed = await page.evaluate(() => {
@@ -176,7 +182,7 @@ try {
   assert.ok(removedMixing > 0, "remove mixing enhancement rules to exercise fallback declarations")
   assert.equal((await state()).gradient, "none", "solid fallback remains usable")
   assert.deepEqual(errors, [])
-  console.log("PASS: lighting hierarchy, native states, screenshot gradient contrast, 320px/200% text reflow, keyboard focus, token propagation and forced-colour/solid fallbacks", JSON.stringify(minimumContrast))
+  console.log("PASS: lighting hierarchy, native states, screenshot gradient contrast, 320px/200% text reflow, keyboard focus, token propagation and forced-colour/solid fallbacks", JSON.stringify({states: minimumContrast, wrappedEnlarged: Number(resizedContrast.toFixed(2))}))
 } finally {
   await browser.close()
 }

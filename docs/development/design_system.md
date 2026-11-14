@@ -543,3 +543,45 @@ assets build, design enforcement, deep check, browser proofs, routing/smoke and
 Hallmark. `mix check.deep` reported zero errors/skips. Only handoff and generated
 history files changed afterward. Final-head hosted CI and independent merge
 review remain separate requirements; this correction does not close WELL-114.
+
+## Lit Primary sheen refinement, 2026-11-14
+
+The owner requested a more visible gradient and shine on the existing Lit
+Primary. `--action-light-strength` is now 14%, and the three-stop gradient fades
+from the lightened top to the semantic action colour at
+`--action-shine-height: 12px`, then to the existing 6% shaded base. The hover
+and pressed gradient uses the matching hover role. These relationships still
+resolve at the component. Borders, shadows, geometry and flat/fallback states
+retain their existing definitions. The effect is static.
+
+Edit the two inputs in `assets/css/design-tokens.css`; both are displayed in
+the guide's Lighting tokens list. Keep the bright band above the label.
+Increasing its height requires checking wrapped and resized label contrast,
+not only a short button. The chosen 12px ends before the shared 14.3px block
+padding and the label. It does not require another font, overlay element,
+pseudo-element, animation or JavaScript.
+
+The expanded lighting regression samples the painted label region after
+wrapping the bilingual label and doubling its text size at 320px. A temporary
+run with the previous full-height highlight reproduced a failure at 4.06:1.
+The final short-band treatment passes at 5.31:1 there, 5.32:1 for the ordinary
+label, and 9.41:1 on hover/press. The unchanged forced-colour and solid fallback
+assertions pass. The main guide and scoped-token browser proofs also pass.
+Focused component/LiveView tests pass 35/35; assets build and routing/smoke
+54/54 pass. No new tests merely assert the literal cosmetic input values.
+
+The supported three-target Hallmark guide render reports zero FAIL/open REFLEX,
+one WARN and the existing numeric-weight waiver. Gate 40 reports 3.97:1 at
+the bright gradient endpoint. This remains a recorded caution, not a waived
+label failure: that endpoint is above the text; actual label-region samples
+and wrapped-text proof pass as described above. The rendered action row was
+inspected. The initial full-height candidate did not protect wrapped labels;
+its superseded engineering run was stopped and the final source was checked
+again. Full-suite, deep-check and exact-head history outcomes are recorded
+with the implementation SHA below and in Plane.
+
+Documentation impact: presentation-only refinement of the existing shared
+component, with no Domain/schema/lifecycle or durable-interface change. The
+existing handoff remains canonical and the capability-map exemption applies.
+The prior WELL-114 certification and other delivery gaps remain open; this
+refinement does not imply integration approval.
