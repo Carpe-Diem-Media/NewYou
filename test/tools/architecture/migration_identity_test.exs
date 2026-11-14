@@ -30,6 +30,11 @@ defmodule NewYou.Architecture.MigrationIdentityTest do
     end
   end
 
+  test "migration module identity accepts indentation before defmodule" do
+    assert migration_module("  defmodule NewYou.Repo.Migrations.Indented do\nend", "indented.exs") ==
+             "NewYou.Repo.Migrations.Indented"
+  end
+
   test "same migration timestamp is duplicated even when suffixes differ" do
     entries = [
       %{path: "20261114154132_analytics.exs", timestamp: 20_261_114_154_132},
@@ -65,7 +70,7 @@ defmodule NewYou.Architecture.MigrationIdentityTest do
   end
 
   defp migration_module(source, path) do
-    case Regex.run(~r/^defmodule\s+([A-Za-z0-9_.]+)\s+do/m, source) do
+    case Regex.run(~r/^[ \t]*defmodule\s+([A-Za-z0-9_.]+)\s+do/m, source) do
       [_, module] -> module
       _ -> flunk("missing migration module declaration: #{path}")
     end

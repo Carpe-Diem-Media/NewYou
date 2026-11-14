@@ -457,30 +457,43 @@ defmodule NewYou.Proof.P818 do
   defp signals_coordination_non_authority(id) do
     request = P805.request()
     {:ok, registration} = Identity.register(request)
-    topic = "p818:coordination:" <> Ecto.UUID.generate()
+    topic = "p818:identity-authority:" <> registration.account_id
+    forged_proof = "p818-forged-proof:" <> Ecto.UUID.generate()
+    prior_source = identity_state(registration.account_id)
 
     try do
       :ok = Phoenix.PubSub.subscribe(NewYou.PubSub, topic)
-      :ok = Phoenix.PubSub.broadcast(NewYou.PubSub, topic, {:identity_verified, :claimed})
-      :ok = Phoenix.PubSub.broadcast(NewYou.PubSub, topic, {:identity_verified, :claimed})
+      message = {:identity_verified, registration.account_id, forged_proof}
+      :ok = Phoenix.PubSub.broadcast(NewYou.PubSub, topic, message)
+      :ok = Phoenix.PubSub.broadcast(NewYou.PubSub, topic, message)
 
-      received =
-        receive do
-          {:identity_verified, :claimed} ->
-            receive do
-              {:identity_verified, :claimed} -> 2
-            after
-              100 -> 1
-            end
-        after
-          100 -> 0
+      received = receive_identity_signals(registration.account_id, forged_proof, 2)
+      received_count = Enum.count(received, &(&1 == :received))
+
+      owner_results =
+        for :received <- received do
+          Identity.verify_email(forged_proof)
         end
 
       account = Ash.get!(Account, registration.account_id, authorize?: false)
 
-      P805.check(id, "signal_received", received >= 1)
-      P805.check(id, "signal_replay_received", received == 2)
-      P805.check(id, "source_verification_unchanged", not account.email_verified?)
+      P805.check(id, "signal_received", received_count >= 1)
+      P805.check(id, "signal_replay_received", received_count == 2)
+
+      P805.check(
+        id,
+        "owner_interface_rejected_forged_signal",
+        received_count == 2 and
+          Enum.all?(owner_results, &(&1 == {:error, :verification_unavailable}))
+      )
+
+      P805.check(
+        id,
+        "source_verification_unchanged",
+        not account.email_verified? and
+          account.security_version == prior_source.security_version and
+          session_count(registration.account_id) == prior_source.session_count
+      )
 
       P805.check(
         id,
@@ -493,6 +506,16 @@ defmodule NewYou.Proof.P818 do
     after
       Phoenix.PubSub.unsubscribe(NewYou.PubSub, topic)
     end
+  end
+
+  defp receive_identity_signals(account_id, proof, count) do
+    Enum.map(1..count, fn _ ->
+      receive do
+        {:identity_verified, ^account_id, ^proof} -> :received
+      after
+        100 -> :missing
+      end
+    end)
   end
 
   defp analytics_projection(id) do

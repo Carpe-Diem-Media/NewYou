@@ -109,6 +109,22 @@ defmodule NewYou.Proof.P818Test do
     end)
   end
 
+  test "the database rejects a negative Analytics privacy revision" do
+    P805.with_fixture(fn ->
+      assert :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
+      projection_key = P805.analytics_projection_key()
+
+      assert_raise Postgrex.Error, fn ->
+        NewYou.Repo.query!(
+          "UPDATE p817_privacy_projections SET privacy_revision = -1 WHERE projection_key = $1",
+          [projection_key]
+        )
+      end
+
+      assert only_projection().privacy_revision >= 0
+    end)
+  end
+
   test "fixture setup failure restores environment and Analytics fixture key" do
     projection_scope_key = {NewYou.Analytics, :p817_test_projection_key}
     setup_hook_key = {P805, :setup_checkpoint}

@@ -18,6 +18,9 @@ defmodule NewYou.Analytics.P817PrivacyProjection do
 
       check_constraint :current_allowed_count, "p817_privacy_projections_non_negative_count",
         check: "current_allowed_count >= 0"
+
+      check_constraint :privacy_revision, "p817_privacy_projections_non_negative_revision",
+        check: "privacy_revision >= 0"
     end
   end
 

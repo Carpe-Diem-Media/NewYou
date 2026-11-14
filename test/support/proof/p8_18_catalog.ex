@@ -19,7 +19,7 @@ defmodule NewYou.Proof.P818Catalog do
      ~w(missing_obligation_rejected missing_intent_rejected all_job_states_rejected_missing_sources source_truth_unchanged)},
     {"signals_coordination_non_authority", "signals_and_pubsub_coordination",
      "identity.signal_requires_owner_transition",
-     ~w(signal_received signal_replay_received source_verification_unchanged session_authority_absent)},
+     ~w(signal_received signal_replay_received owner_interface_rejected_forged_signal source_verification_unchanged session_authority_absent)},
     {"analytics_projection", "privacy_to_analytics_derived_projection",
      "privacy.current_suppression_and_analytics_derived_only",
      ~w(current_privacy_read projection_contains_aggregate_only projection_writes_only_own_resource no_source_command_api privacy_authority_rows_cannot_be_deleted projection_failure_preserves_privacy_source withdrawal_suppressed reordered_rebuild_remains_suppressed)},
