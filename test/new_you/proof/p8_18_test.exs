@@ -1,6 +1,7 @@
 defmodule NewYou.Proof.P818Test do
   use ExUnit.Case, async: false
 
+  alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.Privacy
   alias NewYou.Proof.{Catalog, FullCatalog, P805}
 
@@ -50,6 +51,7 @@ defmodule NewYou.Proof.P818Test do
            )
 
     assert documented_and_typed?(NewYou.Privacy, :current_p817_proof_purpose_count, 0)
+    assert documented_and_typed?(NewYou.Privacy, :current_p817_proof_purpose_snapshot, 0)
 
     refute function_exported?(NewYou.Analytics, :verify_identity, 1)
     refute function_exported?(NewYou.Analytics, :complete_recovery, 2)
@@ -59,12 +61,13 @@ defmodule NewYou.Proof.P818Test do
       subject_id = Ecto.UUID.generate()
       operation_id = Ecto.UUID.generate()
       P805.track_operation(operation_id)
+      assert {:ok, baseline} = Privacy.current_p817_proof_purpose_snapshot()
 
       assert {:ok, :allowed} = Privacy.grant_p817_proof_purpose(subject_id, operation_id)
       assert :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
 
       projection = only_projection()
-      assert projection.current_allowed_count == 1
+      assert projection.current_allowed_count == baseline.current_allowed_count + 1
 
       refute Enum.any?(
                projection_fields(),
@@ -73,11 +76,84 @@ defmodule NewYou.Proof.P818Test do
 
       assert {:ok, :withdrawn} = Privacy.withdraw_p817_proof_purpose(subject_id, operation_id)
       assert :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
-      assert only_projection().current_allowed_count == 0
+      assert only_projection().current_allowed_count == baseline.current_allowed_count
 
       assert {:error, :withdrawn} = Privacy.grant_p817_proof_purpose(subject_id, operation_id)
       assert :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
-      assert only_projection().current_allowed_count == 0
+      assert only_projection().current_allowed_count == baseline.current_allowed_count
+    end)
+  end
+
+  test "a stale overlapping Analytics rebuild cannot replace a newer Privacy snapshot" do
+    P805.with_fixture(fn ->
+      subject_id = Ecto.UUID.generate()
+      operation_id = Ecto.UUID.generate()
+      P805.track_operation(operation_id)
+      assert {:ok, baseline} = Privacy.current_p817_proof_purpose_snapshot()
+
+      assert {:ok, :allowed} = Privacy.grant_p817_proof_purpose(subject_id, operation_id)
+      assert :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
+
+      parent = self()
+      pause_key = {NewYou.Analytics, :after_privacy_snapshot}
+
+      first =
+        Task.async(fn ->
+          :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
+
+          Process.put(pause_key, fn snapshot ->
+            send(parent, {:first_privacy_snapshot, snapshot})
+
+            receive do
+              :continue_first_rebuild -> :ok
+            after
+              5_000 -> raise "timed out waiting to resume the first projection rebuild"
+            end
+          end)
+
+          try do
+            NewYou.Analytics.rebuild_p817_privacy_projection()
+          after
+            Process.delete(pause_key)
+            :ok = Sandbox.checkin(NewYou.Repo)
+          end
+        end)
+
+      assert_receive {:first_privacy_snapshot, first_snapshot}, 5_000
+      assert first_snapshot.current_allowed_count == baseline.current_allowed_count + 1
+      assert first_snapshot.revision > baseline.revision
+      assert {:ok, :withdrawn} = Privacy.withdraw_p817_proof_purpose(subject_id, operation_id)
+
+      second =
+        Task.async(fn ->
+          :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
+
+          Process.put(pause_key, fn snapshot ->
+            send(parent, {:second_privacy_snapshot, snapshot})
+            :ok
+          end)
+
+          send(parent, :second_rebuild_started)
+
+          try do
+            NewYou.Analytics.rebuild_p817_privacy_projection()
+          after
+            Process.delete(pause_key)
+            :ok = Sandbox.checkin(NewYou.Repo)
+          end
+        end)
+
+      assert_receive :second_rebuild_started, 5_000
+
+      assert_receive {:second_privacy_snapshot, second_snapshot}, 5_000
+      assert second_snapshot.current_allowed_count == baseline.current_allowed_count
+      assert second_snapshot.revision > first_snapshot.revision
+      assert :ok = Task.await(second, 5_000)
+
+      send(first.pid, :continue_first_rebuild)
+
+      assert :ok = Task.await(first, 5_000)
+      assert only_projection().current_allowed_count == baseline.current_allowed_count
     end)
   end
 

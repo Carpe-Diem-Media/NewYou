@@ -14,6 +14,11 @@ defmodule NewYou.Privacy do
   @proof_purpose :p8_17_protected_mutation
   @proof_origin :p8_17_test_fixture
 
+  @type p817_proof_purpose_snapshot :: %{
+          required(:current_allowed_count) => non_neg_integer(),
+          required(:revision) => non_neg_integer()
+        }
+
   resources do
     resource PurposeAuthority
     resource PurposeEvent
@@ -111,6 +116,48 @@ defmodule NewYou.Privacy do
       _, _ -> {:error, :privacy_authority_unavailable}
     end
 
+    @doc """
+    Return the minimized P8-17 source snapshot for an Analytics projection.
+
+    The revision sums owner-managed authority versions, so a newer grant or
+    withdrawal snapshot cannot be overwritten by a delayed older rebuild. The
+    result contains no subject or operation identifiers.
+    """
+    @spec current_p817_proof_purpose_snapshot() ::
+            {:ok, p817_proof_purpose_snapshot()} | {:error, :privacy_authority_unavailable}
+    def current_p817_proof_purpose_snapshot do
+      query =
+        PurposeAuthority
+        |> Ash.Query.filter(purpose == ^@proof_purpose)
+        |> Ash.Query.select([:state, :version])
+
+      case Ash.read(query, domain: __MODULE__, authorize?: false) do
+        {:ok, authorities} ->
+          snapshot =
+            Enum.reduce(
+              authorities,
+              %{current_allowed_count: 0, revision: 0},
+              fn authority, snapshot ->
+                %{
+                  current_allowed_count:
+                    snapshot.current_allowed_count +
+                      if(authority.state == :allowed, do: 1, else: 0),
+                  revision: snapshot.revision + authority.version
+                }
+              end
+            )
+
+          {:ok, snapshot}
+
+        {:error, _} ->
+          {:error, :privacy_authority_unavailable}
+      end
+    rescue
+      _ -> {:error, :privacy_authority_unavailable}
+    catch
+      _, _ -> {:error, :privacy_authority_unavailable}
+    end
+
     @doc false
     def require_current_p817_proof_purpose_locked(subject_id, operation_id) do
       with :ok <- owner_read_checkpoint(),
@@ -139,6 +186,11 @@ defmodule NewYou.Privacy do
     @spec current_p817_proof_purpose_count() ::
             {:ok, non_neg_integer()} | {:error, :privacy_authority_unavailable}
     def current_p817_proof_purpose_count, do: {:error, :privacy_authority_unavailable}
+
+    @doc "Return the current minimized P8-17 source snapshot for Analytics."
+    @spec current_p817_proof_purpose_snapshot() ::
+            {:ok, p817_proof_purpose_snapshot()} | {:error, :privacy_authority_unavailable}
+    def current_p817_proof_purpose_snapshot, do: {:error, :privacy_authority_unavailable}
 
     def require_current_p817_proof_purpose_locked(_, _),
       do: {:error, :privacy_authority_unavailable}

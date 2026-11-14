@@ -1,0 +1,101 @@
+{
+  "attributes": [
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"uuid_generate_v7()\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": true,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "projection_key",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "current_allowed_count",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "0",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "privacy_revision",
+      "type": "bigint"
+    }
+  ],
+  "base_filter": null,
+  "check_constraints": [
+    {
+      "attribute": [
+        "projection_key"
+      ],
+      "base_filter": null,
+      "check": "projection_key = 'p817_current_privacy_aggregate'",
+      "name": "p817_privacy_projections_single_key"
+    },
+    {
+      "attribute": [
+        "current_allowed_count"
+      ],
+      "base_filter": null,
+      "check": "current_allowed_count >= 0",
+      "name": "p817_privacy_projections_non_negative_count"
+    }
+  ],
+  "create_table_options": null,
+  "custom_indexes": [],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "28353F5A9E136C1E19B50C9710F2C26BB3E6B81F22358C002548D6414C09ED88",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "p817_privacy_projections_single_projection_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "projection_key"
+        }
+      ],
+      "name": "single_projection",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
+  "multitenancy": {
+    "attribute": null,
+    "global": null,
+    "strategy": null
+  },
+  "repo": "Elixir.NewYou.Repo",
+  "schema": null,
+  "table": "p817_privacy_projections",
+  "temporal": null
+}

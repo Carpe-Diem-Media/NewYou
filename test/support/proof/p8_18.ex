@@ -45,9 +45,8 @@ defmodule NewYou.Proof.P818 do
       )
       |> Ash.read_one!(authorize?: false)
 
-    previous_evidence_key = Application.get_env(:new_you, :communications_proof_evidence_key)
-
-    Application.put_env(:new_you, :communications_proof_evidence_key, String.duplicate("k", 32))
+    previous_evidence_key = Process.get(:communications_proof_evidence_key)
+    Process.put(:communications_proof_evidence_key, String.duplicate("k", 32))
 
     Process.put(:p810_provider, fn _, _ -> :accepted end)
 
@@ -119,15 +118,14 @@ defmodule NewYou.Proof.P818 do
       Process.delete(:p810_provider)
 
       if previous_evidence_key == nil,
-        do: Application.delete_env(:new_you, :communications_proof_evidence_key),
-        else:
-          Application.put_env(:new_you, :communications_proof_evidence_key, previous_evidence_key)
+        do: Process.delete(:communications_proof_evidence_key),
+        else: Process.put(:communications_proof_evidence_key, previous_evidence_key)
     end
 
     P805.check(
       id,
       "provider_evidence_key_restored",
-      Application.get_env(:new_you, :communications_proof_evidence_key) == previous_evidence_key
+      Process.get(:communications_proof_evidence_key) == previous_evidence_key
     )
   end
 
@@ -486,18 +484,25 @@ defmodule NewYou.Proof.P818 do
     second_operation_id = Ecto.UUID.generate()
     P805.track_operation(operation_id)
     P805.track_operation(second_operation_id)
+    {:ok, baseline} = Privacy.current_p817_proof_purpose_snapshot()
 
     {:ok, :allowed} = Privacy.grant_p817_proof_purpose(subject_id, operation_id)
     {:ok, :allowed} = Privacy.grant_p817_proof_purpose(second_subject_id, second_operation_id)
     :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
     projection = only_projection()
+    {:ok, current_snapshot} = Privacy.current_p817_proof_purpose_snapshot()
 
     fields =
       NewYou.Analytics.P817PrivacyProjection
       |> Ash.Resource.Info.attributes()
       |> Enum.map(& &1.name)
 
-    P805.check(id, "current_privacy_read", projection.current_allowed_count == 2)
+    P805.check(
+      id,
+      "current_privacy_read",
+      projection.current_allowed_count == current_snapshot.current_allowed_count and
+        current_snapshot.current_allowed_count == baseline.current_allowed_count + 2
+    )
 
     P805.check(
       id,
@@ -527,12 +532,20 @@ defmodule NewYou.Proof.P818 do
       Privacy.withdraw_p817_proof_purpose(second_subject_id, second_operation_id)
 
     :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
-    second_withdrawal_projection_current = only_projection().current_allowed_count == 1
+    {:ok, second_withdrawal_snapshot} = Privacy.current_p817_proof_purpose_snapshot()
+
+    second_withdrawal_projection_current =
+      only_projection().current_allowed_count == second_withdrawal_snapshot.current_allowed_count and
+        second_withdrawal_snapshot.current_allowed_count == baseline.current_allowed_count + 1
+
     {:ok, :withdrawn} = Privacy.withdraw_p817_proof_purpose(subject_id, operation_id)
     :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
+    {:ok, withdrawn_snapshot} = Privacy.current_p817_proof_purpose_snapshot()
 
     suppressed =
-      second_withdrawal_projection_current and only_projection().current_allowed_count == 0
+      second_withdrawal_projection_current and
+        withdrawn_snapshot.current_allowed_count == baseline.current_allowed_count and
+        only_projection().current_allowed_count == withdrawn_snapshot.current_allowed_count
 
     P805.check(id, "withdrawal_suppressed", suppressed)
 
@@ -543,7 +556,7 @@ defmodule NewYou.Proof.P818 do
         Privacy.grant_p817_proof_purpose(second_subject_id, second_operation_id) ==
           {:error, :withdrawn} and
         NewYou.Analytics.rebuild_p817_privacy_projection() == :ok and
-        only_projection().current_allowed_count == 0
+        only_projection().current_allowed_count == baseline.current_allowed_count
     )
   end
 
@@ -640,7 +653,9 @@ defmodule NewYou.Proof.P818 do
   end
 
   defp reconcile_delivered(attempt, reference) do
-    key = Application.fetch_env!(:new_you, :communications_proof_evidence_key)
+    key =
+      Process.get(:communications_proof_evidence_key) ||
+        Application.fetch_env!(:new_you, :communications_proof_evidence_key)
 
     signature =
       :crypto.mac(:hmac, :sha256, key, attempt.id <> "|delivered|" <> reference)

@@ -30,7 +30,8 @@ defmodule NewYou.Analytics.P817PrivacyProjection do
       create :rebuild do
         description "Rebuild one minimized aggregate through the Analytics owner interface."
         public? false
-        accept [:projection_key, :current_allowed_count]
+        accept [:projection_key, :current_allowed_count, :privacy_revision]
+        upsert_condition expr(privacy_revision <= upsert_conflict(:privacy_revision))
       end
     end
   end
@@ -52,6 +53,13 @@ defmodule NewYou.Analytics.P817PrivacyProjection do
     attribute :current_allowed_count, :integer do
       allow_nil? false
       constraints min: 0
+      public? false
+    end
+
+    attribute :privacy_revision, :integer do
+      allow_nil? false
+      constraints min: 0
+      default 0
       public? false
     end
   end

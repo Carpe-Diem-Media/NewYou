@@ -27,6 +27,7 @@ defmodule NewYou.Proof.P805 do
     Process.put({__MODULE__, :guardian}, guardian)
     :ok = NewYou.Proof.Scenario.register_cleanup_guardian(guardian)
     :ok = Sandbox.checkout(Repo, sandbox: false)
+    clear_test_analytics_projection()
 
     try do
       Process.put({__MODULE__, :consequence_baseline}, capture_consequence_ids())
@@ -1038,6 +1039,8 @@ defmodule NewYou.Proof.P805 do
   end
 
   defp cleanup(operations, emails) do
+    clear_test_analytics_projection()
+
     operations = Enum.uniq(operations) |> Enum.map(&Ecto.UUID.dump!/1)
     emails = Enum.uniq(emails)
 
@@ -1209,5 +1212,12 @@ defmodule NewYou.Proof.P805 do
       end)
 
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
+  end
+
+  defp clear_test_analytics_projection do
+    # Fixture teardown removes synthetic Privacy authorities, so their derived
+    # projection revision must not carry into another fixture.
+    Repo.query!("DELETE FROM p817_privacy_projections")
+    :ok
   end
 end
