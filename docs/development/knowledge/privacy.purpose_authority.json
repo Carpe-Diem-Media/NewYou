@@ -7,7 +7,7 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "9725241132d98aaa4a7a2a764e28d4e50821d090",
+    "git_sha": "2b427c0959e806e23cb26049122d8e648d3b0c71",
     "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot selects state and version in one AshPostgres query. Test fixture cleanup clears the projection alongside its synthetic authority rows. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority."
   },
   "authoritative_domain": "NewYou.Privacy",
@@ -852,7 +852,7 @@
       "id": "p818_proof",
       "path": "test/support/proof/p8_18.ex",
       "symbol": "defmodule NewYou.Proof.P818",
-      "sha256": "785eea911ed9bfe4c9320d9a13cd1eff5e358c568c588b4212b5d22f0b6d793a"
+      "sha256": "0ff1cdd79670153282e4d43ac636ee8731e118eb483206fb370a5c649500dc7a"
     },
     {
       "id": "p818_test",
@@ -882,7 +882,7 @@
       "id": "p818_browser_owner_interface",
       "path": "test/support/proof/p8_05_browser.ex",
       "symbol": "def run_stale_session(request, locale) do",
-      "sha256": "ea8661ef76fc41ebfe859c9c4bb68b0722965d10c100c44ff58776fdae39654f"
+      "sha256": "310167f89ab5b25c73a50859ae8fdde090c689698868614f8bcc68609fa0d3da"
     },
     {
       "id": "proof_catalog",
