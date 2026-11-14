@@ -32,6 +32,12 @@ class CapabilityKnowledgeTests(unittest.TestCase):
         changed=copy.deepcopy(self.sample);changed['interfaces'][0]['source_ids']=['invented']
         with self.assertRaises(ValueError):self.knowledge.validate_map(changed,self.root)
 
+    def test_zero_arity_public_interfaces_allow_empty_arguments(self):
+        changed=copy.deepcopy(self.sample)
+        changed['interfaces'][0]['arity']=0
+        changed['interfaces'][0]['arguments']=[]
+        self.knowledge.validate_map(changed,self.root)
+
     def test_invented_table_or_unlinked_migration_refuses(self):
         changed=copy.deepcopy(self.sample);changed['persistence'][1]['tables']=['invented_table']
         with self.assertRaises(ValueError):self.knowledge.validate_map(changed,self.root)

@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
   "capability_id": "privacy.purpose_authority",
-  "purpose": "Provide a minimal Privacy-owned, operation-bound purpose and terminal withdrawal record for P8-17 current-authority proof; it is not participant consent or a production email-change requirement.",
+  "purpose": "Provide a minimal Privacy-owned, operation-bound purpose and terminal withdrawal record for P8-17 current-authority proof, plus one Analytics-owned aggregate projection of current allowed proof-purpose rows. Neither feature is participant consent or a production email-change requirement.",
   "implementing_tickets": [
-    "WELL-18"
+    "WELL-18",
+    "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "a423a269debb3890a356859d195d69fb0bbd6738",
-    "semantics": "WELL-18 introduces a proof-only Privacy state, immutable transition history, a database guard against initial withdrawal, and a transaction-locked current-authority read at Identity's protected mutation boundary. The map is refreshed against the committed source checkpoint and is not governing authority."
+    "git_sha": "a24668588b79a8e2d3b860e1cbb6f6361f0c6270",
+    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free Analytics aggregate that rebuilds from Privacy's current allowed rows. The map is refreshed against committed source and is not governing authority."
   },
   "authoritative_domain": "NewYou.Privacy",
   "collaborating_domains": [
@@ -18,6 +19,16 @@
       "source_ids": [
         "identity_integration",
         "identity_mutation"
+      ]
+    },
+    {
+      "domain": "NewYou.Analytics",
+      "interface": "Analytics.rebuild_p817_privacy_projection/0 obtains only Privacy.current_p817_proof_purpose_count/0 and writes its own fixed aggregate projection.",
+      "ownership": "Analytics owns only the derived aggregate row. Privacy remains authoritative for allowed/withdrawn purpose state, and Analytics has no source-domain command interface.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_count_interface"
       ]
     }
   ],
@@ -59,6 +70,19 @@
       "source_ids": [
         "identity_mutation",
         "identity_integration"
+      ]
+    },
+    {
+      "domain": "NewYou.Analytics",
+      "resource": "NewYou.Analytics.P817PrivacyProjection",
+      "actions": [
+        "read (private)",
+        "rebuild (private, development/test only)"
+      ],
+      "caller_boundary": "Analytics exposes one development/test rebuild function that reads a Privacy aggregate and upserts only this fixed-key projection. The resource stores no subject or operation identifiers and has no source-domain write action.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection"
       ]
     }
   ],
@@ -154,6 +178,47 @@
         "identity_mutation",
         "identity_integration"
       ]
+    },
+    {
+      "module": "NewYou.Privacy",
+      "function": "current_p817_proof_purpose_count",
+      "arity": 0,
+      "visibility": "supported",
+      "arguments": [],
+      "returns": [
+        "{:ok, non_neg_integer()} or {:error, :privacy_authority_unavailable}; production returns the unavailable result."
+      ],
+      "side_effects": [
+        "Counts only current allowed rows for the fixed synthetic P8-17 purpose through Privacy's Ash Resource. It returns no subject or operation identifiers."
+      ],
+      "caller_constraints": [
+        "Analytics consumes this minimized read only as derived input; the count does not grant authority or establish participant consent."
+      ],
+      "source_ids": [
+        "privacy_domain",
+        "privacy_count_interface"
+      ]
+    },
+    {
+      "module": "NewYou.Analytics",
+      "function": "rebuild_p817_privacy_projection",
+      "arity": 0,
+      "visibility": "supported",
+      "arguments": [],
+      "returns": [
+        ":ok or {:error, :privacy_projection_unavailable}; production returns the unavailable result."
+      ],
+      "side_effects": [
+        "Reads the current Privacy aggregate and upserts one fixed-key Analytics row. Repeated calls store only the latest aggregate and do not write any source Domain."
+      ],
+      "caller_constraints": [
+        "The projection is derived-only and contains no identity or source-operation identifiers. It cannot restore Privacy authority."
+      ],
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_count_interface"
+      ]
     }
   ],
   "persistence": [
@@ -199,6 +264,20 @@
       "source_ids": [
         "privacy_event_migration"
       ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261114125357_p8_18_analytics_projection.exs",
+      "tables": [
+        "p817_privacy_projections"
+      ],
+      "constraints": [
+        "p817_privacy_projections_single_key",
+        "p817_privacy_projections_non_negative_count",
+        "p817_privacy_projections_single_projection_index"
+      ],
+      "source_ids": [
+        "analytics_migration"
+      ]
     }
   ],
   "request_flow": [
@@ -224,6 +303,14 @@
         "identity_mutation",
         "identity_integration",
         "privacy_domain"
+      ]
+    },
+    {
+      "summary": "Analytics asks Privacy for the current allowed proof-purpose count, then upserts only its own fixed-key aggregate row. No cross-Domain source write or identity-level data enters the projection.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_count_interface"
       ]
     }
   ],
@@ -309,6 +396,15 @@
         "identity_mutation",
         "race_test"
       ]
+    },
+    {
+      "summary": "The Analytics projection stores only the current aggregate count for the synthetic P8-17 purpose. It stores no subject, account or operation identifier and has no action that mutates source truth.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_count_interface",
+        "p818_test"
+      ]
     }
   ],
   "concurrency": [
@@ -348,6 +444,15 @@
         "reverse_order_test",
         "restart_test"
       ]
+    },
+    {
+      "summary": "Each Analytics rebuild rereads Privacy's current allowed rows and upserts one fixed aggregate. The family-9 proof withdraws rows in reverse order, repeats the rebuild, and confirms terminal withdrawals cannot be regranted or reappear in the aggregate.",
+      "source_ids": [
+        "analytics_domain",
+        "privacy_count_interface",
+        "p818_proof",
+        "p818_test"
+      ]
     }
   ],
   "failure_recovery": [
@@ -367,6 +472,14 @@
         "restart_test",
         "restart_probe",
         "identity_mutation"
+      ]
+    },
+    {
+      "summary": "A failed Privacy count or Analytics upsert returns a closed unavailable result. The projection retains no input identifiers that could restore source authority or participant data.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_count_interface"
       ]
     }
   ],
@@ -415,6 +528,28 @@
         "identity_mutation",
         "privacy_domain"
       ]
+    },
+    {
+      "path": "test/new_you/proof/p8_18_test.exs",
+      "cases": [
+        "The complete seven-case family-9 manifest registers distinct owner invariants and deterministic assertion IDs.",
+        "Provider evidence, stale browser/session state, Audit records, executor state and replayed Signals cannot transition source-owned facts.",
+        "The Analytics projection reads only Privacy's current count, stores no identifiers, and suppresses withdrawn state across reverse-order and repeated rebuilds.",
+        "The real ARC-029 application scan is clean and negative fixtures reject every required bypass class, parser errors fail closed, and narrow exceptions remain accepted.",
+        "The shared P8-04 runner emits machine-readable completed PASS results for every P8-18 case without certifying the full Phase-8 matrix."
+      ],
+      "proves": "P8-18 supplies the complete authority-negative family-9 proof entry with deterministic manifests, owner-bound assertions, and executable callbacks.",
+      "limits": "A passing P8-18 family is not a TB-001, Phase-8, or Phase-9 certification. Browser and database fixtures use synthetic development/test state.",
+      "source_ids": [
+        "p818_manifest",
+        "p818_proof",
+        "p818_test",
+        "p818_architecture_checker",
+        "p818_architecture_test",
+        "p818_browser",
+        "p818_browser_owner_interface",
+        "proof_catalog"
+      ]
     }
   ],
   "safe_extensions": [
@@ -429,6 +564,14 @@
     {
       "summary": "Privacy is registered as an Ash domain but is explicitly outside Identity reconciliation; an additional unreviewed domain still blocks reconciliation apply.",
       "source_ids": [
+        "reconciliation_scope",
+        "reconciliation_guard_test"
+      ]
+    },
+    {
+      "summary": "Analytics is registered only to host its derived projection. Identity reconciliation explicitly treats it as a non-owning derived Domain, while unknown Domains continue to fail closed.",
+      "source_ids": [
+        "analytics_domain",
         "reconciliation_scope",
         "reconciliation_guard_test"
       ]
@@ -448,6 +591,14 @@
       "source_ids": [
         "privacy_domain",
         "phase7b"
+      ]
+    },
+    {
+      "summary": "Analytics uses the existing Ash Domain/resource pattern and NewYou.Repo. Its only input is a count from Privacy's current owner Resource, and its only write targets its own one-row projection.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_count_interface"
       ]
     }
   ],
@@ -475,13 +626,23 @@
         "identity_integration",
         "phase7b"
       ]
+    },
+    {
+      "summary": "Do not use the Analytics aggregate as Identity, Privacy, Content, Communications or Audit authority. Do not add source commands, subject identifiers, a broad Analytics platform or a new Analytics dossier.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "phase7b"
+      ]
     }
   ],
   "proof_limitations": [
     "The demonstration purpose and its grant/withdraw actions compile only for development/test; the Identity apply guard is likewise test/development-only and flag-controlled.",
     "PostgreSQL order is proven using separate local TEST connections and observed pg_blocking_pids contention. The proof does not model cross-region database failures.",
     "Unavailable owner-read behavior is exercised with the established deterministic test seam; it does not simulate every physical database outage mode.",
-    "The proof does not establish a production legal consent requirement and does not alter the certified Privacy JIT dossier disposition."
+    "The proof does not establish a production legal consent requirement and does not alter the certified Privacy JIT dossier disposition.",
+    "The P8-18 Analytics projection is a development/test-only count of the synthetic P8-17 purpose. It contains no participant identifiers and does not certify the complete TB-001 or Phase-8 proof matrix.",
+    "P8-18 provides the family-9 result for later P8-19 integration; it does not itself declare Phase-8 PASS or authorize Phase 9."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -489,7 +650,7 @@
       "id": "privacy_domain",
       "path": "lib/new_you/privacy.ex",
       "symbol": "defmodule NewYou.Privacy",
-      "sha256": "214f70d35fbb363b136dba1bc4d1fa345ef630fb03170fc981a8590c6e4a2104"
+      "sha256": "527fcf1b040e7d4f61fe69d1e3f1fc51b23460a26403f39c39d4e68ff9e27f7b"
     },
     {
       "id": "authority",
@@ -519,7 +680,7 @@
       "id": "reconciliation_scope",
       "path": "lib/new_you/identity/reconciliation.ex",
       "symbol": "defp owner_reviews(current)",
-      "sha256": "adc29045d5ec86f0d3483172beceefa05daccea8b1ed1568afd300d85f7ebc9f"
+      "sha256": "5a71867420a439318517569d4369b2b653534e2ea611c757242ecdc32ce8c1ef"
     },
     {
       "id": "reconciliation_guard_test",
@@ -610,6 +771,78 @@
       "path": "docs/delivery/proof/fp-001/FP-001_PHASE_7B_RECONCILIATION_WORKING_v0.1.0.md",
       "symbol": "NOT_REQUIRED",
       "sha256": "3120893c526336bbb7c301e800312dc9f7a999038ae91f20e9ff4169d76e1a3c"
+    },
+    {
+      "id": "analytics_domain",
+      "path": "lib/new_you/analytics.ex",
+      "symbol": "defmodule NewYou.Analytics",
+      "sha256": "65b95cf37cad365268cca23f1fb6fa83d59d8a205120f41b7d6666101719dc30"
+    },
+    {
+      "id": "analytics_projection",
+      "path": "lib/new_you/analytics/p817_privacy_projection.ex",
+      "symbol": "defmodule NewYou.Analytics.P817PrivacyProjection",
+      "sha256": "db7ca63c515d5c6a516187a6820c2644a088c93a4195a03c52cd827d1de5d4cc"
+    },
+    {
+      "id": "privacy_count_interface",
+      "path": "lib/new_you/privacy.ex",
+      "symbol": "current_p817_proof_purpose_count",
+      "sha256": "527fcf1b040e7d4f61fe69d1e3f1fc51b23460a26403f39c39d4e68ff9e27f7b"
+    },
+    {
+      "id": "analytics_migration",
+      "path": "priv/repo/migrations/20261114125357_p8_18_analytics_projection.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.P818AnalyticsProjection",
+      "sha256": "8ab2feab1604f8c32e4e91ea5d847f3ed899cac82037bd7ff359c9b8e2a3cec1"
+    },
+    {
+      "id": "p818_manifest",
+      "path": "test/support/proof/p8_18_catalog.ex",
+      "symbol": "defmodule NewYou.Proof.P818Catalog",
+      "sha256": "8cc69645fe1ae67e6faa8bb3b30a2d0f4c1cac546285d94ba3f8e08c8977ebb0"
+    },
+    {
+      "id": "p818_proof",
+      "path": "test/support/proof/p8_18.ex",
+      "symbol": "defmodule NewYou.Proof.P818",
+      "sha256": "509cf5feac00469a1aece78fb7a7bfbddd36ee4318ce40413292e3110d4eab81"
+    },
+    {
+      "id": "p818_test",
+      "path": "test/new_you/proof/p8_18_test.exs",
+      "symbol": "defmodule NewYou.Proof.P818Test",
+      "sha256": "3cf7d8087243796f92d01cdb386e69e65160b87f82347f521f095e967333dee2"
+    },
+    {
+      "id": "p818_architecture_checker",
+      "path": "tools/architecture/ash_write_boundary.ex",
+      "symbol": "check_app(root",
+      "sha256": "7ecd925a7b5355261eb78e853e588319f90b10c32e5e2336fec84d34e52cddbf"
+    },
+    {
+      "id": "p818_architecture_test",
+      "path": "test/tools/architecture/ash_write_boundary_test.exs",
+      "symbol": "defmodule NewYou.Architecture.AshWriteBoundaryTest do",
+      "sha256": "90b8156c1e39219665fc1a8aca3f2e4c3fabb7371fae9ba2d9d700ec55037a2d"
+    },
+    {
+      "id": "p818_browser",
+      "path": "test/proof/p8_05_browser.mjs",
+      "symbol": "input.mode === 'stale_session'",
+      "sha256": "6d83bc73b0e1c234d289767c5c7a09b4f3412b537187e751dfb65b95a7e9d33b"
+    },
+    {
+      "id": "p818_browser_owner_interface",
+      "path": "test/support/proof/p8_05_browser.ex",
+      "symbol": "def run_stale_session(request, locale) do",
+      "sha256": "ea8661ef76fc41ebfe859c9c4bb68b0722965d10c100c44ff58776fdae39654f"
+    },
+    {
+      "id": "proof_catalog",
+      "path": "test/support/proof/catalog.ex",
+      "symbol": "def compiled_business_registrations,",
+      "sha256": "871b65e82ff8bfbba0ee30e242adf74dc91971d3b08b3946f16bba8dadd56e80"
     }
   ]
 }
