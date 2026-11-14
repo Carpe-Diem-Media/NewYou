@@ -7,7 +7,7 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "18b3482a163a191700edd9f19b2ebb854913b073",
+    "git_sha": "1593c26559f34547ec2c33ebc72416512515b025",
     "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. The projection schema reserves a fixed production key used by the development rebuild; each test proof fixture receives a separate opaque key and cleanup deletes only that fixture\u2019s row. Production has no rebuild path or purpose for this proof. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count."
   },
   "authoritative_domain": "NewYou.Privacy",
@@ -733,7 +733,7 @@
       "id": "privacy_domain",
       "path": "lib/new_you/privacy.ex",
       "symbol": "defmodule NewYou.Privacy",
-      "sha256": "3144a53703a873d9e4a549f8f74cd224a738d99dc5d6bbc7542b3376f2c1bc75"
+      "sha256": "355c81a487c9ca14a138b8bae731f30ed104340500dbc95b8cb6a50d22f369df"
     },
     {
       "id": "authority",
@@ -871,7 +871,7 @@
       "id": "privacy_count_interface",
       "path": "lib/new_you/privacy.ex",
       "symbol": "current_p817_proof_purpose_count",
-      "sha256": "3144a53703a873d9e4a549f8f74cd224a738d99dc5d6bbc7542b3376f2c1bc75"
+      "sha256": "355c81a487c9ca14a138b8bae731f30ed104340500dbc95b8cb6a50d22f369df"
     },
     {
       "id": "analytics_migration",
@@ -895,7 +895,7 @@
       "id": "p818_test",
       "path": "test/new_you/proof/p8_18_test.exs",
       "symbol": "defmodule NewYou.Proof.P818Test",
-      "sha256": "d9f147dff0fae2d15fb153d9649830dde1b382dcd16c9806aecac55c2fa88f9e"
+      "sha256": "76bcb7413830b911b1b8a0a6345a9f280c613e339fc2ff1ea2098cb6d2e0d2bd"
     },
     {
       "id": "p818_architecture_checker",
@@ -931,7 +931,7 @@
       "id": "privacy_snapshot_interface",
       "path": "lib/new_you/privacy.ex",
       "symbol": "current_p817_proof_purpose_snapshot",
-      "sha256": "3144a53703a873d9e4a549f8f74cd224a738d99dc5d6bbc7542b3376f2c1bc75"
+      "sha256": "355c81a487c9ca14a138b8bae731f30ed104340500dbc95b8cb6a50d22f369df"
     },
     {
       "id": "analytics_revision_migration",
@@ -943,7 +943,7 @@
       "id": "analytics_revision_test",
       "path": "test/new_you/proof/p8_18_test.exs",
       "symbol": "a stale overlapping Analytics rebuild cannot replace a newer Privacy snapshot",
-      "sha256": "d9f147dff0fae2d15fb153d9649830dde1b382dcd16c9806aecac55c2fa88f9e"
+      "sha256": "76bcb7413830b911b1b8a0a6345a9f280c613e339fc2ff1ea2098cb6d2e0d2bd"
     },
     {
       "id": "analytics_fixture_scope_migration",
