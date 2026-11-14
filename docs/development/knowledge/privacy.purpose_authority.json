@@ -7,7 +7,7 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "a5782b1daaa118867cff44f6e4d43cde938435ec",
+    "git_sha": "ccf5066e3f741e4b08d2aa2759debdb401e9913a",
     "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a monotonic sum of owner-managed authority versions; Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority."
   },
   "authoritative_domain": "NewYou.Privacy",
@@ -300,7 +300,7 @@
       ]
     },
     {
-      "migration": "priv/repo/migrations/20261114154132_p8_18_analytics_projection.exs",
+      "migration": "priv/repo/migrations/20261114154132_p8_18_analytics_projection_revision.exs",
       "tables": [
         "p817_privacy_projections"
       ],
@@ -898,9 +898,9 @@
     },
     {
       "id": "analytics_revision_migration",
-      "path": "priv/repo/migrations/20261114154132_p8_18_analytics_projection.exs",
-      "symbol": "privacy_revision",
-      "sha256": "320131f25a43325c200530c9191bf334f6665de2c65c561422494f22de9c69bc"
+      "path": "priv/repo/migrations/20261114154132_p8_18_analytics_projection_revision.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.P818AnalyticsProjectionRevision",
+      "sha256": "e94442dba60013e84db940677a09054e10b5538022711a9fb4cc1bdeb3577ec8"
     },
     {
       "id": "analytics_revision_test",
