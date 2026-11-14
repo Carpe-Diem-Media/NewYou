@@ -94,6 +94,23 @@ defmodule NewYou.Privacy do
       _, _ -> {:error, :privacy_authority_unavailable}
     end
 
+    @doc "Return only the current allowed P8-17 proof-purpose count for a minimized Analytics projection."
+    @spec current_p817_proof_purpose_count() ::
+            {:ok, non_neg_integer()} | {:error, :privacy_authority_unavailable}
+    def current_p817_proof_purpose_count do
+      query =
+        Ash.Query.filter(PurposeAuthority, purpose == ^@proof_purpose and state == :allowed)
+
+      case Ash.count(query, domain: __MODULE__, authorize?: false) do
+        {:ok, count} -> {:ok, count}
+        {:error, _} -> {:error, :privacy_authority_unavailable}
+      end
+    rescue
+      _ -> {:error, :privacy_authority_unavailable}
+    catch
+      _, _ -> {:error, :privacy_authority_unavailable}
+    end
+
     @doc false
     def require_current_p817_proof_purpose_locked(subject_id, operation_id) do
       with :ok <- owner_read_checkpoint(),
@@ -117,6 +134,11 @@ defmodule NewYou.Privacy do
     end
   else
     def current_p817_proof_purpose(_, _), do: {:error, :privacy_authority_unavailable}
+
+    @doc "Return the current allowed P8-17 proof-purpose count without subject identifiers."
+    @spec current_p817_proof_purpose_count() ::
+            {:ok, non_neg_integer()} | {:error, :privacy_authority_unavailable}
+    def current_p817_proof_purpose_count, do: {:error, :privacy_authority_unavailable}
 
     def require_current_p817_proof_purpose_locked(_, _),
       do: {:error, :privacy_authority_unavailable}

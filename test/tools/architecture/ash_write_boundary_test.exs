@@ -2,7 +2,9 @@ defmodule NewYou.Architecture.AshWriteBoundaryTest do
   # Pure AST tests: no database, no application start.
   use ExUnit.Case, async: true
 
-  Code.require_file(Path.expand("../../../tools/architecture/ash_write_boundary.ex", __DIR__))
+  unless Code.ensure_loaded?(NewYou.Architecture.AshWriteBoundary) do
+    Code.require_file(Path.expand("../../../tools/architecture/ash_write_boundary.ex", __DIR__))
+  end
 
   alias NewYou.Architecture.AshWriteBoundary
 

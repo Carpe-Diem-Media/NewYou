@@ -102,6 +102,15 @@ try {
     await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
     checks.protected_access = await evaluate(`location.pathname === '/session/protected'`);
     checks.reloaded_access = await evaluate(`fetch('/session/protected').then(r => r.status === 200)`);
+  } else if (input.mode === 'stale_session') {
+    await navigation(() => cdp('Page.navigate', {url: `${base}/login?locale=${input.locale}`}));
+    checks.login_form = await evaluate(`!!document.querySelector('form[action="/login"] [name="_csrf_token"]')`);
+    await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.email)}; document.querySelector('[name="password"]').value=${JSON.stringify(input.password)};`);
+    await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
+    checks.protected_page_loaded = await evaluate(`location.pathname === '/session/protected'`);
+    checks.logout_completed = await evaluate(`(async () => { const html = await fetch('/login?locale=${input.locale}', {cache: 'no-store'}).then(r => r.text()); const csrf = html.match(/name="_csrf_token"[^>]*value="([^"]+)"/)?.[1]; if (!csrf) return false; const response = await fetch('/session/logout', {method: 'POST', headers: {'content-type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams({_csrf_token: csrf})}); return response.status === 204; })()`);
+    checks.reconnect_denied = await evaluate(`fetch('/session/protected', {cache: 'no-store'}).then(r => r.status === 401)`);
+    checks.stale_page_retained = await evaluate(`location.pathname === '/session/protected'`);
   } else if (input.mode === 'password_reset') {
     await cdp('Emulation.setDeviceMetricsOverride', {width: 375, height: 800, deviceScaleFactor: 1, mobile: true});
     await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
