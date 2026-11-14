@@ -7,8 +7,8 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "ccf5066e3f741e4b08d2aa2759debdb401e9913a",
-    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a monotonic sum of owner-managed authority versions; Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority."
+    "git_sha": "161034639a7813d6455d069335c26fd5c7386071",
+    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot selects state and version in one AshPostgres query. Test fixture cleanup clears the projection alongside its synthetic authority rows. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority."
   },
   "authoritative_domain": "NewYou.Privacy",
   "collaborating_domains": [
@@ -206,10 +206,10 @@
       "visibility": "supported",
       "arguments": [],
       "returns": [
-        ":ok or {:error, :privacy_projection_unavailable}; production returns the unavailable result."
+        ":ok or {:error, :privacy_authority_unavailable | :analytics_projection_unavailable}; production returns {:error, :analytics_projection_unavailable}."
       ],
       "side_effects": [
-        "Reads Privacy's current allowed count and source revision, then upserts one fixed-key Analytics row only when the incoming revision is at least the stored revision. Repeated or stale rebuilds do not write source Domains."
+        "Reads Privacy's current allowed count and source revision, then upserts one fixed-key Analytics row only when the incoming revision is at least the stored revision. Privacy read failures and Analytics projection failures have distinct error atoms; unexpected exceptions propagate for diagnosis. Repeated or stale rebuilds do not write source Domains."
       ],
       "caller_constraints": [
         "The projection is derived-only, eventually consistent between rebuilds, and contains no identity or source-operation identifiers. It cannot restore Privacy authority or decide current suppression."
@@ -696,7 +696,7 @@
       "id": "privacy_domain",
       "path": "lib/new_you/privacy.ex",
       "symbol": "defmodule NewYou.Privacy",
-      "sha256": "fe132876d35a49ff2edddba8b2ed31b456b04ed6eb49fa55c5067688e3a5c21f"
+      "sha256": "7d933ae735d0753d1d38ce76be66f605ca4f305050658ce509d8a803bf85372a"
     },
     {
       "id": "authority",
@@ -822,7 +822,7 @@
       "id": "analytics_domain",
       "path": "lib/new_you/analytics.ex",
       "symbol": "defmodule NewYou.Analytics",
-      "sha256": "920a8a998667fb17bc3cabe9748733d73d4141979fa61b4fe7cb685ce719e563"
+      "sha256": "b6fd7b47d01606a737c10920c4d483f2b58538b71b370e5d47b630b8fb115cb6"
     },
     {
       "id": "analytics_projection",
@@ -834,7 +834,7 @@
       "id": "privacy_count_interface",
       "path": "lib/new_you/privacy.ex",
       "symbol": "current_p817_proof_purpose_count",
-      "sha256": "fe132876d35a49ff2edddba8b2ed31b456b04ed6eb49fa55c5067688e3a5c21f"
+      "sha256": "7d933ae735d0753d1d38ce76be66f605ca4f305050658ce509d8a803bf85372a"
     },
     {
       "id": "analytics_migration",
@@ -846,13 +846,13 @@
       "id": "p818_manifest",
       "path": "test/support/proof/p8_18_catalog.ex",
       "symbol": "defmodule NewYou.Proof.P818Catalog",
-      "sha256": "f8b33402eea6c14891ee5eda94786665e5ee0289f3133069de50b835ae917ebb"
+      "sha256": "23b3352d934f47e625b8e65e91296ee8cf6c3c1db190bf33537825fe68fecbe3"
     },
     {
       "id": "p818_proof",
       "path": "test/support/proof/p8_18.ex",
       "symbol": "defmodule NewYou.Proof.P818",
-      "sha256": "98b84076121d3d16c127d45cf2cd1661cf550642d357655b4b30c649705f5088"
+      "sha256": "139ba616e323c93df3e464a7a5e233949fece83a2efd3cfd9e3cec273764ec11"
     },
     {
       "id": "p818_test",
@@ -894,7 +894,7 @@
       "id": "privacy_snapshot_interface",
       "path": "lib/new_you/privacy.ex",
       "symbol": "current_p817_proof_purpose_snapshot",
-      "sha256": "fe132876d35a49ff2edddba8b2ed31b456b04ed6eb49fa55c5067688e3a5c21f"
+      "sha256": "7d933ae735d0753d1d38ce76be66f605ca4f305050658ce509d8a803bf85372a"
     },
     {
       "id": "analytics_revision_migration",
