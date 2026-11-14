@@ -15,14 +15,25 @@
       "status": "modified"
     },
     {
-      "blob": "20a172c3b6a8801930da13b8ae09556f3ce84aa4",
+      "blob": "3a7d5c25773c761d657d04876be720898742fffc",
+      "mode": "100644",
+      "old_blob": "4f8d1fc4a8ec7a6959e49c0bea16fc70acedb98f",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/README.md",
+      "old_sha256": "dc077097d11a320ba6c29cb8b520d057d31116eddaeefe665bcc0c2467fbec6d",
+      "path": "docs/development/knowledge/README.md",
+      "sha256": "683eaa9d11724f382840a44d404faaf51091bf967626e79703a1444b074e2034",
+      "status": "modified"
+    },
+    {
+      "blob": "69fc7ec7e37f749eed1d318a23afdf83216cd386",
       "mode": "100644",
       "old_blob": "8dd2fd08c2f1c4cc45a8dc278cc261f3074375e5",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/capability.schema.json",
       "old_sha256": "7f2ef25f931d1106849c1808325eddc05e865c711363c621d7e046c60e37a607",
       "path": "docs/development/knowledge/capability.schema.json",
-      "sha256": "398c71e0a891b373f2c535d897a0c57cafde04a725e12fa30456eb7b20d86cf6",
+      "sha256": "cd6962ae5722d759d5eadb4f4e980dbc71a1965bc8feaa9a07f8076d0644a527",
       "status": "modified"
     },
     {
@@ -37,25 +48,25 @@
       "status": "modified"
     },
     {
-      "blob": "8bcae364f1fa48009d9c25cb1289000c627b6e3f",
+      "blob": "61899bf9e5ce7fa57dd96bab0bd7f9abab0197b8",
       "mode": "100644",
       "old_blob": "df57a9cc6fddf49c911bf8a9f2ce50be6cc9eecc",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
       "old_sha256": "f94657991d7d0dd4e33a70ea020ee644450b6e9dabc9b3b52f6aa83b22581949",
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "466a6578e938d79416d95a46f6e9c243d44455c89a8d43821e315bd8b75ba2da",
+      "sha256": "17f4178970fc377b12d2b2122277eae9217ecdcb34de012b0949a39711646334",
       "status": "modified"
     },
     {
-      "blob": "082dd2c41282294fd6a49b2ab4c23218f39509ee",
+      "blob": "5a74f065901395960d826f816785ba2de857b243",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you/analytics.ex",
-      "sha256": "3f940418a56857e7c51afab80f36c36b869bb6ae62e4845cbe95576edc4ef60b",
+      "sha256": "ca212b1e00511dfb1624bf896db954804eb44f92cbcc3c79b664aad8363ac937",
       "status": "added"
     },
     {
@@ -345,25 +356,25 @@
       "status": "added"
     },
     {
-      "blob": "0d7f5030b1d35bd4a6e3fe744ae162fe5bc76851",
+      "blob": "6c2c29d6d10b5ec07ab367caf37ff13942c4a2bf",
       "mode": "100644",
       "old_blob": "f1b1da5f69d1d86e2841eb8bc521af725a65fb95",
       "old_mode": "100644",
       "old_path": "tests/test_capability_knowledge.py",
       "old_sha256": "22b828b4fcfb2fc2782e75e6f0494bad2c48e7b31a0147a5e1e05c7ae8d48840",
       "path": "tests/test_capability_knowledge.py",
-      "sha256": "71c4bd19112c50242b41b8ad8342f752cd6689c954a5c42b431395df6f66ea33",
+      "sha256": "c1abba08b3cef963e0d00d3838ba63a176c473b508688f82fb6f111181dc58b7",
       "status": "modified"
     },
     {
-      "blob": "c57bbd193135592d8deffd4d5845a81a0c6b52fc",
+      "blob": "86d4158d097142a7877268c9e9dce406edf02657",
       "mode": "100644",
       "old_blob": "789bcec58407ffe9c8f835d361ee3ed34cc13c7d",
       "old_mode": "100644",
       "old_path": "tools/capability_knowledge.py",
       "old_sha256": "d3f86ec94400544b475db2e6d36fc48410e12a14bd150b8bd0612bc9c2cc0dd3",
       "path": "tools/capability_knowledge.py",
-      "sha256": "8b002fda78d4cdc15f10502d6ff987a4ee2cd9bb91d9aff529316c3468231e0d",
+      "sha256": "bbdfa125af04335e8a9c96edeac789ab478ee5accf8f6ab9b71292b7873c1044",
       "status": "modified"
     }
   ],
@@ -396,7 +407,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you/analytics.ex",
-      "sha256": "16dad17213fc3b6cbf6de0e746f29f0dc7a2b572acaeefb20f2959deaf00fb8c",
+      "sha256": "a3f76500df74d8f743ada34261f119f86d654d831012de810eca9846c5c23dd2",
       "status": "parsed"
     },
     {
