@@ -1,0 +1,34 @@
+name: Disposable runner controller tests
+
+on:
+  pull_request:
+    paths:
+      - tools/runner_firewall_proof.py
+      - tools/runner_firewall_inspector.py
+      - tools/runner_firewall_inspector.sudoers
+      - tools/disposable_runner.py
+      - tools/runner_guest_network.py
+      - tools/runner_guest_privilege.py
+      - tools/runner_diagnostics.py
+      - tools/disposable_runner_drills.py
+      - tools/runner_guest_application.sh
+      - tests/test_disposable_runner.py
+      - tests/test_runner_*.py
+      - .github/workflows/disposable-runner-*.yml
+
+permissions:
+  contents: read
+
+jobs:
+  controller-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: python -m unittest tests.test_disposable_runner tests.test_runner_recovery tests.test_runner_diagnostics tests.test_runner_application tests.test_runner_preparation tests.test_runner_privilege tests.test_runner_network tests.test_runner_firewall_inspector tests.test_runner_firewall_proof -v
+      - run: /usr/sbin/visudo -c -f tools/runner_firewall_inspector.sudoers
