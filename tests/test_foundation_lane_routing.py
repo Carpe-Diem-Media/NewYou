@@ -49,6 +49,19 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
                 self.assertEqual("application", classify_path(path))
                 self.assertEqual({"application_changes": True}, _route([path]))
 
+    def test_design_authority_and_tracked_hallmark_records_run_application_ci(self):
+        for path in ["DESIGN.md", ".hallmark/log.json", ".hallmark/preflight.json"]:
+            with self.subTest(path=path):
+                self.assertEqual("application", classify_path(path))
+                self.assertEqual({"application_changes": True}, _route([path]))
+                self.assertFalse(classify_deep_application_changes([path]))
+
+        for path in ["DESIGN-unknown.md", ".hallmark/unclassified.json"]:
+            with self.subTest(path=path):
+                self.assertEqual("unknown", classify_path(path))
+                with self.assertRaises(ValueError):
+                    _route([path])
+
     def test_engineering_tooling_and_ci_are_classified_intentionally(self):
         for path in [
             "mix.exs",

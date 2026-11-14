@@ -71,7 +71,7 @@ defmodule NewYouWeb.PasswordSessionController do
     |> put_resp_header("referrer-policy", "no-referrer")
     |> put_resp_header(
       "content-security-policy",
-      "default-src 'none'; style-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+      "default-src 'none'; style-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
     )
     |> put_root_layout(false)
     |> put_view(html: NewYouWeb.PasswordSessionHTML)

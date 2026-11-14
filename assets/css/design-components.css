@@ -1,0 +1,88 @@
+/* Hallmark · theme: locked DESIGN.md · shape: component · genre: modern-minimal · scope: component · surface: absolute · v2.0.0 */
+/* Critique: opt-in overhead lighting adds depth through fine edges and short shadows; flat defaults remain available. */
+
+@layer components {
+  .ds-design-button[data-treatment="lit"] {
+    @apply gap-design-sm;
+    max-width: 100%;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    border-width: var(--design-border-width);
+    border-style: solid;
+  }
+
+  .ds-design-button[data-treatment="lit"][data-variant="primary"] {
+    color: var(--on-primary);
+    background-color: var(--primary);
+    background-image: var(--action-primary-gradient);
+    border-color: var(--action-primary-edge-dark);
+    border-top-color: var(--action-primary-edge-light);
+    box-shadow: var(--action-primary-shadow);
+  }
+
+  @media (hover: hover) {
+    .ds-design-button[data-treatment="lit"][data-variant="primary"]:enabled:hover {
+      background-color: var(--primary-hover);
+      background-image: var(--action-primary-hover-gradient);
+      border-color: var(--action-primary-hover-edge-dark);
+      border-top-color: var(--action-primary-hover-edge-light);
+      box-shadow: var(--action-primary-hover-shadow);
+    }
+  }
+
+  .ds-design-button[data-treatment="lit"][data-variant="primary"]:enabled:active {
+    background-color: var(--primary-hover);
+    background-image: var(--action-primary-hover-gradient);
+    border-color: var(--action-primary-hover-edge-dark);
+    border-bottom-color: var(--action-primary-hover-edge-light);
+    box-shadow: var(--action-primary-pressed-shadow);
+  }
+
+  .ds-design-button[data-treatment="lit"][data-variant="secondary"] {
+    color: var(--secondary);
+    background-color: var(--surface-panel);
+    border-color: var(--edge-side);
+    border-top-color: var(--edge-highlight);
+    border-bottom-color: var(--edge-shade);
+    box-shadow: var(--shadow-control);
+  }
+
+  .ds-design-button[data-treatment="lit"][data-variant="secondary"]:enabled:active {
+    border-top-color: var(--edge-shade);
+    border-bottom-color: var(--edge-highlight);
+    box-shadow: var(--edge-inset-shadow);
+  }
+
+  .ds-design-button[data-treatment="lit"]:disabled {
+    box-shadow: var(--shadow-flat);
+  }
+
+  .ds-design-card[data-variant="raised"] {
+    background-color: var(--surface-raised);
+    border-color: var(--edge-side);
+    border-top-color: var(--edge-highlight);
+    border-bottom-color: var(--edge-shade);
+    box-shadow: var(--shadow-raised);
+  }
+
+  @media (forced-colors: active) {
+    .ds-design-button[data-treatment="lit"][data-variant],
+    .ds-design-button[data-treatment="lit"][data-variant]:enabled:hover,
+    .ds-design-button[data-treatment="lit"][data-variant]:enabled:active {
+      color: var(--system-button-text);
+      background-color: var(--system-button-face);
+      background-image: none;
+      border-color: var(--system-button-text);
+      box-shadow: var(--shadow-flat);
+    }
+    .ds-design-button[data-treatment="lit"][data-variant]:disabled {
+      color: var(--system-disabled-text);
+      border-color: var(--system-disabled-text);
+    }
+    .ds-design-card[data-variant="raised"] {
+      border-color: var(--system-button-text);
+      box-shadow: var(--shadow-flat);
+    }
+  }
+}

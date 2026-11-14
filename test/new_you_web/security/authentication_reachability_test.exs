@@ -112,6 +112,8 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
     assert routes ==
              Enum.sort([
                {:get, "/", NewYouWeb.PageController, :home},
+               {:get, "/dev/design-system", Phoenix.LiveView.Plug, :index},
+               {:get, "/dev/design-system/preview", Phoenix.LiveView.Plug, :preview},
                {:get, "/register", NewYouWeb.RegistrationController, :new},
                {:post, "/register", NewYouWeb.RegistrationController, :create},
                {:post, "/verification/resend", NewYouWeb.RegistrationController, :resend},

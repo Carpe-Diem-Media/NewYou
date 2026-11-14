@@ -31,6 +31,9 @@ class FoundationSmokeTests(unittest.TestCase):
         root = Path(directory)
         shutil.copy2(ROOT / "AGENTS.md", root / "AGENTS.md")
         shutil.copy2(ROOT / "DESIGN.md", root / "DESIGN.md")
+        (root / ".hallmark").mkdir()
+        for record in ("log.json", "preflight.json"):
+            shutil.copy2(ROOT / ".hallmark" / record, root / ".hallmark" / record)
         for relative in ("docs/governance", "docs/delivery", "docs/history"):
             shutil.copytree(ROOT / relative, root / relative)
         shutil.copytree(ROOT / "docs/superpowers", root / "docs/superpowers")
@@ -48,6 +51,7 @@ class FoundationSmokeTests(unittest.TestCase):
                 shutil.copy2(ROOT / source["path"], target)
         shutil.copytree(ROOT / "tools/hex_audit", root / "tools/hex_audit")
         shutil.copytree(ROOT / "priv/resource_snapshots", root / "priv/resource_snapshots")
+        shutil.copytree(ROOT / "priv/static/fonts", root / "priv/static/fonts")
         shutil.copytree(ROOT / ".agents/skills", root / ".agents/skills")
         (root / ".github/workflows").mkdir(parents=True, exist_ok=True)
         shutil.copy2(

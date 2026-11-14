@@ -1,22 +1,23 @@
 {
-  "scanned": "2026-11-02",
+  "scanned": "2026-11-10",
+  "task": "WELL-112",
+  "baseline": "98fbeb8766ff1d20efe4f4f10baa6fc3abcc62f6",
   "findings": {
-    "framework": "Phoenix 1.8.16 controllers and HEEx; Ash 3.37.2 owns Identity state",
-    "fonts": "No custom font assets or project font tokens; Tailwind system sans is the current default",
-    "palette": "DaisyUI light/dark palettes in assets/css/app.css, not suitable as the P8-05 page palette",
-    "motion": "No motion library; app.js includes an existing theme bootstrap",
-    "spacing": "Tailwind v4 utility spacing; no separate NewYou semantic design token file",
-    "existing_surface": "GET /register is a scratch controller/HEEx page; the browser form and legal routes are incomplete"
+    "authority": "DESIGN.md:1 defines the locked palette, type, geometry and responsive baseline; its project authority note governs new UI.",
+    "framework": "mix.exs:1 and mix.lock pin Phoenix 1.8, LiveView 1.2, Tailwind 4.3.3; preserve native Phoenix components and the current asset pipeline.",
+    "tokens": "assets/css/design-tokens.css:1 is the canonical executable layer. Existing assets/css/tokens.css and DaisyUI remain the legacy compatibility lane.",
+    "font": "The approved Inter fallback has no bundled font file; retain the declared sans-serif fallback and disclose it in the guide.",
+    "material": "Real canonical tokens and semantic components; no photographs, metrics or testimonials are needed for this internal reference."
   },
   "preserve": [
-    "Existing Phoenix route and semantic field names",
-    "Exact registered P8-05 copy and configured platform name",
-    "Identity ownership and existing operation-binding behavior",
-    "The existing root layout, global app assets, and accessible server-rendered baseline"
+    "All existing palette, typography, spacing, radius and breakpoint values",
+    "Existing primary-button API, routes, layouts, assets and legacy styling",
+    "No business, Ash Resource, dependency or database-schema changes"
   ],
   "introduce": [
-    "A scoped NewYou participant-page token layer and responsive registration composition",
-    "Server-rendered registration, pending, resend, and gated development legal routes",
-    "Hallmark states, responsive review, and final rendered sloplint evidence"
+    "Development-only LiveView guide and real iframe preview",
+    "Owner-requested editable CSS aliases with existing Tailwind consumers",
+    "Computed token and contrast measurements, accessible copy and display controls",
+    "Regression tests and source-linked design-system usage documentation"
   ]
 }

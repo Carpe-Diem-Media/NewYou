@@ -4,6 +4,8 @@
 @import "tailwindcss" source(none);
 @import "./design-tokens.css";
 @import "./tokens.css";
+@import "./design-components.css";
+@import "./design-system.css";
 @import "phoenix-colocated/new_you/colocated.css";
 @source "../css";
 @source "../js";

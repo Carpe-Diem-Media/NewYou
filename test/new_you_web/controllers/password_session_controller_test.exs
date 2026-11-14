@@ -26,6 +26,11 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
 
       page = get(build_conn(), "/login?locale=en")
       assert page.status == 200
+
+      assert get_resp_header(page, "content-security-policy") == [
+               "default-src 'none'; style-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+             ]
+
       [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
 
       invalid =

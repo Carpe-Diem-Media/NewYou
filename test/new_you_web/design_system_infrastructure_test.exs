@@ -5,18 +5,310 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
 
   alias Mix.Tasks.Design.Check
   alias NewYouWeb.Components.Design.Button
+  alias NewYouWeb.Components.Design.Card
+
+  test "numeric token inputs preserve bounds and accept deliberate descending size endpoints" do
+    css = File.read!("assets/css/design-tokens.css")
+    assert [] = Check.token_numeric_violations(css)
+
+    descending =
+      css
+      |> String.replace("--fluid-display-min: 2.5rem", "--fluid-display-min: 4rem")
+      |> String.replace("--fluid-display-max: 4rem", "--fluid-display-max: 2.5rem")
+
+    assert [] = Check.token_numeric_violations(descending)
+
+    for value <- ["0%", "100%"] do
+      assert [] =
+               Check.token_numeric_violations(
+                 String.replace(css, "--shadow-strength: 8%", "--shadow-strength: #{value}")
+               )
+    end
+
+    assert [] = Check.token_numeric_violations(css <> "\n/* --fluid-vmin: 1rem; */")
+
+    for value <- [".5", "+.5", "5e-1"] do
+      assert [] =
+               Check.token_numeric_violations(
+                 String.replace(
+                   css,
+                   "--design-noise-opacity: 0.06",
+                   "--design-noise-opacity: #{value}"
+                 )
+               )
+    end
+  end
+
+  test "numeric token gate rejects invalid or ambiguous editable inputs" do
+    css = File.read!("assets/css/design-tokens.css")
+
+    for {original, invalid, token} <- [
+          {"--fluid-vmin: 30rem", "--fluid-vmin: 75rem", "--fluid-vmin"},
+          {"--fluid-vmin: 30rem", "--fluid-vmin: 80rem", "--fluid-vmin"},
+          {"--fluid-vmin: 30rem", "--fluid-vmin: 0rem", "--fluid-vmin"},
+          {"--fluid-vmin: 30rem", "--fluid-vmin: 480px", "--fluid-vmin"},
+          {"--fluid-display-min: 2.5rem", "--fluid-display-min: -1rem", "--fluid-display-min"},
+          {"--fluid-body-max: 1.125rem", "--fluid-body-max: NaN", "--fluid-body-max"},
+          {"--fluid-space-max: 3rem", "--fluid-space-max: var(--unknown)", "--fluid-space-max"},
+          {"--shadow-strength: 8%", "--shadow-strength: 101%", "--shadow-strength"},
+          {"--shadow-strength: 8%", "--shadow-strength: -1%", "--shadow-strength"},
+          {"--shadow-strength: 8%", "--shadow-strength: 8px", "--shadow-strength"},
+          {"--shadow-strength: 8%", "--shadow-strength: 1/* split */0%", "--shadow-strength"},
+          {"--design-noise-opacity: 0.06", "--design-noise-opacity: 1.01",
+           "--design-noise-opacity"},
+          {"--design-noise-opacity: 0.06", "--design-noise-opacity: -0.1",
+           "--design-noise-opacity"},
+          {"--design-noise-opacity: 0.06", "--design-noise-opacity: 6%", "--design-noise-opacity"}
+        ] do
+      assert Enum.any?(
+               Check.token_numeric_violations(String.replace(css, original, invalid)),
+               &String.contains?(&1, token)
+             ),
+             "expected rejection for #{invalid}"
+    end
+
+    for invalid <- [
+          String.replace(css, "--fluid-vmin: 30rem;", ""),
+          String.replace(css, "--fluid-vmin: 30rem", "--fluid-vmin: 1e9999rem"),
+          String.replace(
+            css,
+            "--fluid-vmin: 30rem",
+            "--fluid-vmin: #{String.duplicate("9", 400)}rem"
+          ),
+          css <> "\n:root { --fluid-vmin: 35rem; }"
+        ] do
+      assert Enum.any?(
+               Check.token_numeric_violations(invalid),
+               &String.contains?(&1, "--fluid-vmin")
+             )
+    end
+  end
+
+  test "lit treatments and raised cards are bounded opt-ins with native semantics" do
+    for component <- [&Button.primary_button/1, &Button.secondary_button/1] do
+      html =
+        render_component(component, %{
+          treatment: "lit",
+          disabled: true,
+          inner_block: [%{inner_block: fn _, _ -> "Continue" end}]
+        })
+
+      button = html |> LazyHTML.from_fragment() |> LazyHTML.query("button[data-treatment=lit]")
+      assert LazyHTML.attribute(button, "disabled") != []
+
+      assert_raise ArgumentError, ~r/unsupported design button treatment/, fn ->
+        render_component(component, %{
+          treatment: "glossy",
+          inner_block: [%{inner_block: fn _, _ -> "Continue" end}]
+        })
+      end
+
+      for key <- [:"data-treatment", "data-treatment"] do
+        assert_raise ArgumentError, ~r/does not accept caller-provided data-treatment/, fn ->
+          render_component(component, %{
+            rest: %{key => "lit"},
+            inner_block: [%{inner_block: fn _, _ -> "Continue" end}]
+          })
+        end
+      end
+    end
+
+    html =
+      render_component(&Card.design_card/1, %{
+        title: "Raised",
+        variant: "raised",
+        inner_block: [%{inner_block: fn _, _ -> "Content" end}]
+      })
+
+    assert html =~ ~s|data-variant="raised"|
+  end
+
+  test "semantic components own bounded variants while preserving native state and metadata" do
+    for {component, variant, extra} <- [
+          {&Button.primary_button/1, "primary", %{}},
+          {&Button.secondary_button/1, "secondary", %{}}
+        ],
+        disabled <- [false, true] do
+      html =
+        render_component(
+          component,
+          Map.merge(extra, %{
+            :"aria-busy" => "true",
+            :"phx-click" => "save",
+            :"data-tracking-id" => "action",
+            disabled: disabled,
+            type: "submit",
+            inner_block: [%{inner_block: fn _, _ -> "Save" end}]
+          })
+        )
+
+      button = html |> LazyHTML.from_fragment() |> LazyHTML.query("button.ds-design-button")
+      assert LazyHTML.attribute(button, "data-variant") == [variant]
+      assert LazyHTML.attribute(button, "aria-busy") == ["true"]
+      assert LazyHTML.attribute(button, "phx-click") == ["save"]
+      assert LazyHTML.attribute(button, "data-tracking-id") == ["action"]
+      assert LazyHTML.attribute(button, "disabled") != [] == disabled
+      assert LazyHTML.attribute(button, "data-disabled") == []
+    end
+
+    html =
+      render_component(&Card.design_card/1, %{
+        :"aria-label" => "Reference",
+        :"data-tracking-id" => "card",
+        title: "A card",
+        inner_block: [%{inner_block: fn _, _ -> "Content" end}]
+      })
+
+    card = html |> LazyHTML.from_fragment() |> LazyHTML.query("article.ds-design-card")
+    assert LazyHTML.attribute(card, "data-variant") == ["flat"]
+    assert LazyHTML.attribute(card, "aria-label") == ["Reference"]
+    assert LazyHTML.attribute(card, "data-tracking-id") == ["card"]
+    assert LazyHTML.attribute(card, "role") == []
+    assert LazyHTML.attribute(card, "tabindex") == []
+  end
+
+  test "callers cannot override controlled variant attributes or classes in forwarded maps" do
+    for component <- [&Button.primary_button/1, &Button.secondary_button/1, &Card.design_card/1],
+        key <- [:"data-variant", "data-variant", :class, "class"] do
+      assert_raise ArgumentError, ~r/does not accept caller-provided/, fn ->
+        render_component(component, %{
+          title: "A card",
+          rest: %{key => "unapproved"},
+          inner_block: [%{inner_block: fn _, _ -> "Content" end}]
+        })
+      end
+    end
+  end
+
+  test "the card rejects unsupported variants" do
+    assert_raise ArgumentError, ~r/unsupported design card variant/, fn ->
+      render_component(&Card.design_card/1, %{
+        title: "A card",
+        variant: "promotional",
+        inner_block: [%{inner_block: fn _, _ -> "Content" end}]
+      })
+    end
+  end
+
+  test "attribute-selected utilities retain token and reserved-context enforcement" do
+    source =
+      ~s|<button class="data-[variant=primary]:bg-design-primary data-[variant=primary]:hover:bg-design-primary-deep"></button>|
+
+    assert [] = Check.violations("lib/new_you_web/components/design/button.ex", source)
+    assert [_ | _] = Check.violations("lib/new_you_web/pages/new_page.html.heex", source)
+
+    assert [_ | _] =
+             Check.violations(
+               "lib/new_you_web/components/design/button.ex",
+               ~s|<button class="data-[variant=primary]:bg-red-500"></button>|
+             )
+  end
+
+  test "identity OKLCH conversion preserves palette authority without accepting color transforms" do
+    design = ~s|colors:\n  primary: "#0061ef"\n|
+
+    css = """
+    :root { --palette-primary-srgb: #0061ef; --primary: var(--palette-primary-srgb); }
+    @supports (color: oklch(from red l c h)) {
+      :root { --primary: oklch(from var(--palette-primary-srgb) l c h); }
+    }
+    @theme static { --color-design-primary: var(--primary); }
+    """
+
+    assert [] = Check.token_color_violations(design, css)
+
+    for invalid <- [
+          String.replace(css, "#0061ef", "#123456"),
+          String.replace(css, "l c h", "calc(l + 0.1) c h"),
+          String.replace(css, "l c h", "l c h / 0.5"),
+          String.replace(
+            css,
+            "oklch(from var(--palette-primary-srgb) l c h)",
+            "oklch(from var(--missing) l c h)"
+          ),
+          String.replace(
+            css,
+            "--palette-primary-srgb: #0061ef",
+            "--palette-primary-srgb: var(--primary)"
+          )
+        ] do
+      assert [_ | _] = Check.token_color_violations(design, invalid)
+    end
+  end
+
+  test "the palette contract resolves shared aliases without accepting unapproved colors" do
+    design = ~s|colors:\n  primary: "#0061ef"\n|
+
+    css =
+      ":root { --primary: #0061ef; }\n@theme static {\n--color-design-primary: var(--primary);\n}"
+
+    assert [] = Check.token_color_violations(design, css)
+
+    for invalid <- [
+          String.replace(css, "#0061ef", "#123456"),
+          String.replace(css, "var(--primary)", "var(--missing)"),
+          String.replace(css, "#0061ef", "var(--color-design-primary)")
+        ] do
+      assert [_ | _] = Check.token_color_violations(design, invalid)
+    end
+
+    assert [_ | _] =
+             Check.token_color_violations(
+               design,
+               css <> "\n--color-design-surprise: var(--missing);"
+             )
+  end
+
+  test "CSS can consume declared aliases while unknown references and raw values still fail" do
+    path = "assets/css/new-feature.css"
+
+    assert [] =
+             Check.violations(
+               path,
+               ".scope { color: var(--primary); border-radius: var(--radius); box-shadow: var(--box-shadow); }"
+             )
+
+    for value <- ["var(--unapproved)", "var(--primary, #123456)", "#0061ef"] do
+      assert [_ | _] = Check.violations(path, ".scope { color: #{value}; }")
+    end
+  end
+
+  test "secondary buttons keep caller semantics without caller-owned visual classes" do
+    html =
+      render_component(&Button.secondary_button/1, %{
+        :"phx-click" => "save",
+        :"aria-label" => "Save changes",
+        type: "submit",
+        disabled: true,
+        inner_block: [%{inner_block: fn _, _ -> "Save changes" end}]
+      })
+
+    assert html =~ ~s|type="submit"|
+    assert html =~ "disabled"
+    assert html =~ ~s|phx-click="save"|
+    assert html =~ ~s|aria-label="Save changes"|
+    assert html =~ "rounded-design-full"
+
+    assert_raise ArgumentError, ~r/does not accept caller-provided classes/, fn ->
+      render_component(&Button.secondary_button/1, %{
+        class: "bg-red-500",
+        inner_block: [%{inner_block: fn _, _ -> "Save" end}]
+      })
+    end
+  end
 
   test "the main stylesheet imports the executable design token layer" do
     app_css = File.read!(Path.expand("../../assets/css/app.css", __DIR__))
     tokens = File.read!(Path.expand("../../assets/css/design-tokens.css", __DIR__))
 
     assert app_css =~ ~s|@import "./design-tokens.css";|
-    assert tokens =~ "--color-design-primary: #0061ef;"
-    assert tokens =~ "--color-design-primary-deep: #0000ee;"
-    assert tokens =~ "--radius-design-xl: 32px;"
-    assert tokens =~ "--spacing-design-md: 12px;"
-    assert tokens =~ "--text-design-display-xl: 64px;"
-    assert tokens =~ "--leading-design-display-xl: 1.05;"
+    assert tokens =~ "--palette-primary-srgb: #0061ef;"
+    assert tokens =~ "--primary: oklch(from var(--palette-primary-srgb) l c h);"
+    assert tokens =~ "--palette-primary-hover-srgb: #0000ee;"
+    assert tokens =~ "--radius-xl: 32px;"
+    assert tokens =~ "--space-md: 12px;"
+    assert tokens =~ "--text-display-xl: 64px;"
+    assert tokens =~ "--leading-display-xl: 1.05;"
     assert tokens =~ "--breakpoint-design-tablet: 744px;"
     assert tokens =~ "--breakpoint-design-desktop: 1128px;"
     assert tokens =~ "--breakpoint-design-wide: 1441px;"
@@ -298,8 +590,8 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
     changed_tokens =
       String.replace(
         tokens,
-        "--color-design-primary: #0061ef;",
-        "--color-design-primary: #123456;"
+        "--palette-primary-srgb: #0061ef;",
+        "--palette-primary-srgb: #123456;"
       )
 
     assert [_violation | _] = Check.token_color_violations(design, changed_tokens)

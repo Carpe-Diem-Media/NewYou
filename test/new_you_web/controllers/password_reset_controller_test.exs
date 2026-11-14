@@ -28,6 +28,11 @@ defmodule NewYouWeb.PasswordResetControllerTest do
       for locale <- ["en", "af"] do
         page = get(build_conn(), "/password/reset?locale=#{locale}")
         assert page.status == 200
+
+        assert get_resp_header(page, "content-security-policy") == [
+                 "default-src 'none'; style-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+               ]
+
         assert page.resp_body =~ "autocomplete=\"email\""
 
         known =

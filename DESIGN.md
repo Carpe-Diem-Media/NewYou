@@ -294,6 +294,66 @@ components:
 - The existing `text-input.height` of 58px maps to `--spacing-design-input-height`; this component alias does not extend the general spacing scale.
 - Participant form input boundaries use the existing `{colors.ink-muted}` token to meet Hallmark's 3:1 control contrast floor. The captured cool hairline below remains historical source evidence.
 
+### Editable token contract and development reference
+
+Owner decision, 2026-11-12: implement the proposed overhead-lighting treatment in
+the development guide for visual refinement. Shared buttons may opt into
+`treatment="lit"` and cards into `variant="raised"`; their default flat appearances
+remain unchanged. This explicitly permits derived neutral elevation fills,
+one-pixel directional borders, short downward shadows, a subtle vertical primary
+CTA gradient and recessed pressed edges for those specimens. All values live in
+`assets/css/design-tokens.css`, derived from the existing brand palette. The
+component stylesheet owns the treatment, with native interaction states, visible
+focus and solid/forced-colour fallbacks. Preserve the existing font, 48px button
+height and radius roles. The guide compares flat and lit/raised examples; this
+decision supersedes flat/no-shadow restrictions only for those opt-in examples,
+not default production components, legacy screens or new dark/error states.
+Candidate amounts remain subject to rendered contrast and owner visual review.
+
+Owner decision, 2026-11-12: self-host Inter and centralize font selection across the whole site. `assets/css/design-tokens.css` owns `--font-body`, initially `Inter, sans-serif`, and `--font-display`, initially `var(--font-body)`. Change `--font-body` once to update normal UI text and headings together. Override `--font-display` only for an intentional separate heading family. Canonical, default Tailwind and existing `--ny-font-*` consumers resolve these same roles. The legacy font-family values are superseded; its colors, sizes, error and dark-mode behavior are not migrated by this decision. The registered local Inter variable face supports the existing weights, including canonical 400/500/700, with `font-display: swap` and a sans-serif fallback. A replacement custom family needs its font asset registered once in this same CSS file. New font assets must carry their license. This owner decision supersedes the earlier no-font-download implementation restriction for Inter.
+
+The owner requested a token-driven NewYou style guide in WELL-112. The development-only guide may render every approved token as a labelled specimen, including palette swatches. A swatch is a reference sample, not permission to use its color as a general-purpose component surface.
+
+`assets/css/design-tokens.css` holds editable `:root` values and maps them into the existing `design-*` Tailwind namespaces. `--primary` maps to `colors.primary`, `--primary-hover` to `colors.primary-deep`, and `--secondary` to `colors.ink`. Secondary remains the neutral outline/text role; it does not authorise a second saturated CTA. `--radius` is the 16px card radius, with the other existing radius tiers remaining separate. `--box-shadow` is `none`, preserving the flat system. `--font-body` selects the centrally configured Inter family. Existing type sizes, line heights, weights, spacing and palette values remain unchanged.
+
+The content container is 1280px, as specified below. `--gutter` and `--grid-gap` initially use the existing 24px spacing tier. A two-column grid starts at the 744px project tablet breakpoint and a three-column grid at the 1128px desktop breakpoint. Incomplete final rows may align to the start or centre while retaining the same card width. Guide-only preview widths use the project breakpoints and a 390px phone viewport; they do not add application breakpoints.
+
+The guide's card specimen uses the approved white surface, charcoal text, hairline border, 16px radius, 24px padding and no shadow. Its headings use `heading-sm`, and its body uses `body-xs`. Plain text links use the existing charcoal navigation style with an underline and visible focus. The secondary button uses the existing outline-button definition, 48px height, 24px horizontal padding and full radius. Disabled examples preserve native disabled semantics and the existing appearance because no separate disabled palette is approved.
+
+Editing a token updates all canonical consumers through CSS. Changes to locked visual values still require the corresponding intentional update to this file; the guide is a refinement tool and does not approve a replacement design by itself. Existing legacy screens remain on the temporary compatibility lane until deliberately migrated.
+
+The owner's continuation on 2026-11-13 authorises hardening the editing mechanism
+identified in the second-pass research. Semantic visual utilities read their
+inputs at the consuming element; shared button/card lighting relationships are
+re-evaluated at that component scope. This preserves all approved default values
+and does not approve a new local theme, palette or global fluid-size migration.
+The build-time design check validates the known literal fluid bounds/endpoints,
+mix percentages and noise opacity. Viewport bounds must be positive, ordered rem
+lengths; size endpoints are non-negative rem lengths and may deliberately
+decrease. Percentages stay within 0..100 and noise opacity within 0..1. Each
+numeric source input has one declaration. New supported expression forms require
+an intentional extension to the validator, not bypassing the check. Arbitrary
+runtime CSS overrides still require rendered verification.
+
+### Color representation and refinement candidates
+
+The owner approved extending the development reference with modern CSS color relationships, surface-treatment comparisons and fluid sizing. This intentionally extends the guide contract without replacing the flat application design or approving a new global surface role.
+
+The `--palette-*-srgb` variables in `assets/css/design-tokens.css` are the single authored source for the exact palette listed below. Existing semantic names such as `--primary`, `--secondary` and `--canvas` reference those sources. Where relative colors are supported, identity `oklch(from var(--palette-…-srgb) l c h)` conversion expresses the same color in OKLCH. The sRGB alias is the fallback. Do not change lightness, chroma, hue or alpha during this identity conversion. The palette check permits only this identity conversion and still rejects mismatches, unknown references, cycles and extra Tailwind palette roles. Changing a brand source still requires an intentional palette update here.
+
+Development-only candidate tokens define:
+
+- `--design-surface-tint`: 12% primary mixed with the white surface in Oklab. `--design-surface-shade`: 12% secondary ink mixed with the warm canvas. These are opaque reference pairs with measured text contrast, not new card or CTA variants.
+- `--design-overlay`: 72% secondary ink mixed with transparency. It demonstrates a static scrim. It does not approve a modal implementation, an interaction-blocking layer or universal text-on-image contrast.
+- `--design-gradient-soft`: a 135-degree canvas-to-tint wash, interpolated in Oklab where supported. The two-stop conventional gradient remains the fallback. It is a decorative specimen only, without a whole-background contrast claim. Tailwind exposes it as `bg-design-wash`.
+- `--design-noise-image`: a local, seeded, monochrome SVG turbulence texture, tiled at 128px and composited at `--design-noise-opacity` 0.06. Noise is static, pointer-transparent and decorative. It must not carry information or reduce control/text legibility. No external texture request or animation is introduced.
+
+Color-mix specimens fall back to existing opaque palette roles where the function is unsupported. The fallback scrim is opaque ink. The guide reports capabilities; fallback appearance is not presented as an identical mixed color.
+
+Fluid sizing is a separate candidate comparison, not an automatic change to existing `--text-*`, `--space-*`, line-height, tracking or breakpoint contracts. `--fluid-vmin` is 30rem and `--fluid-vmax` is 75rem. Keep the lower bound below the upper bound. `--fluid` is clamped to 0 to 1. Its progression is static minimum, feature-detected trigonometric ratio, then feature-detected native `progress()`. No JavaScript controls sizing.
+
+Independent semantic endpoints are display 2.5rem to 4rem, body 1rem to 1.125rem, section space 1rem to 3rem and gutter 1rem to 1.5rem. The display maximum is the existing 64px at the default 16px root. Rem-based endpoints intentionally grow with user font preferences; do not cap them with fixed pixels. These candidate values support direct visual comparison before a later explicit component-wide adoption. Breakpoints continue to control layout composition independently of continuous fluid sizing.
+
 ## Overview
 
 Headspace's marketing surface reads less like a meditation app and more like a children's storybook re-laid as a web product page. The base canvas is a **warm off-white** (`{colors.canvas}` — #f9f4f2), the load-bearing ink is a **warm charcoal** (`{colors.ink}` — #2d2c2b) running every h1, h2, h3, and body paragraph, and the single saturated voltage is a confident blue (`{colors.primary}` — #0061ef) on the "Try for free" CTA pill. Where most meditation brands reach for sage greens or terracotta to signal serenity, Headspace argues through its chrome that wellness can be playful — even loud — as long as the type stays warm and the canvas stays cream.

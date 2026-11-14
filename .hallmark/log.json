@@ -1,52 +1,204 @@
 [
   {
-    "shape": "app screen",
-    "theme": "custom",
-    "axes": "light/roman-serif/chromatic-green",
-    "hero": "approved launch and safety copy precedes registration",
-    "nav": "language switch",
-    "footer": "none",
-    "imagery": "none",
-    "photos": [],
-    "entry": "/register",
-    "fingerprint": "Left-margin|Asymmetric spans|Hairline|Solid|None|None",
-    "sections": [
-      "launch",
-      "safety",
-      "registration",
-      "verification pending",
-      "resend"
-    ],
-    "signature": "the exact safety boundary comes before the account action",
-    "waived": [],
-    "prompt": "Warm, grounded, calm, editorial and practical bilingual registration and verification pending for adult women in South Africa.",
-    "date": "2026-11-02",
-    "mode": "build",
+    "date": "2026-11-12",
+    "entry": "WELL-112 overhead lighting guide specimens",
+    "implementation_sha": "f5973a306045ce8a97de6a8cd1f1936d2d9d26f6",
+    "scope": "Owner-approved extension of existing guide; flat defaults preserved; no redesign workflow",
     "verification": {
-      "date": "2026-11-03",
-      "sloplint": "clean: 0 FAIL, 0 REFLEX, 0 WARN across the NewYou token stylesheet and 3 rendered registration URLs",
-      "rendered": [
-        "/register (default English entry)",
-        "/register?locale=en",
-        "/register?locale=af",
-        "sanitized EN pending/resend snapshot (prior capture; templates unchanged)",
-        "sanitized AF pending/resend snapshot (prior capture; templates unchanged)"
+      "command": "HALLMARK_PUPPETEER=/tmp/newyou-refinement-tools CHROME_PATH=/usr/bin/google-chrome node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-components.css assets/css/design-system.css --scope app --genre modern-minimal --url http://127.0.0.1:4237/dev/design-system --json",
+      "fails": 0,
+      "open_reflex": 0,
+      "warns": 0,
+      "waived": 1,
+      "rejected": 0,
+      "supported_source_files": 3,
+      "waiver": "Existing gate 37 misclassifies numeric 400/500/700 weights as font families. The authored project family remains Inter.",
+      "render": "Five supported viewport screenshots; focused lighting section inspected at 1440px."
+    },
+    "browser_proof": {
+      "script": "test/assets/design_lighting_browser.mjs",
+      "passed": [
+        "neutral lightness order",
+        "actual PNG gradient label samples",
+        "native default/hover/pressed/disabled",
+        "raised card and secondary edge direction",
+        "keyboard focus",
+        "320px reflow",
+        "long bilingual labels at 200% text size",
+        "live primary-token update",
+        "forced colours during press",
+        "solid fill fallback"
       ],
-      "hallmark_capture_viewports": [
-        "sloplint widths: 320, 375, 414, 768, 1024, 1280, 1920",
-        "fold screenshots: 1280x800, 1440x900, 1920x1080",
-        "full-page screenshots: 375 and 1440",
-        "capture.mjs: phone 390x844, tablet 834x1112, laptop 1280x800, desktop 1440x900"
-      ],
-      "manual_review_viewports": [
-        "375px full page",
-        "390x844 phone",
-        "834x1112 tablet",
-        "1280x800 laptop",
-        "1440x900 desktop",
-        "1920x1080 wide desktop"
-      ],
-      "notes": "The default route renders the registered English launch and safety content and keeps the Afrikaans/English switcher visible. The pending/resend templates did not change in this correction; their exact EN/AF copy remains covered by controller tests."
-    }
+      "minimum_label_contrast": {
+        "rest": 5.08,
+        "hover": 8.65,
+        "pressed": 8.65
+      },
+      "regression": "Original guide and typography browser proofs pass. Expanded lighting-token list fits at 320px.",
+      "limits": "System Chrome/Puppeteer proof; no new Firefox/WebKit claim. Solid fallback is exercised through token overrides; unsupported colour-mix engines are not emulated."
+    },
+    "source_review": "Bounded independent source review found no actionable defects. Its noted edge-output coverage gap was addressed in the browser proof; it did not run tests or certify merge.",
+    "engineering": "At implementation source f5973a306045ce8a97de6a8cd1f1936d2d9d26f6: canonical mix check exits 0 with 637 passed in 326.8 seconds; mix check.deep exits 0 with zero errors/skips; 33 focused tests, assets, design enforcement, four Node and 54 Python routing/smoke tests pass.",
+    "inherited_gaps": "Registration/Tidewave gate 26a and WELL-114 independent resulting-main certification remain open. Guide checks do not certify the whole site or close those gates."
+  },
+  {
+    "date": "2026-11-12",
+    "entry": "WELL-112 controlled component attributes",
+    "implementation_sha": "4ee2ecfa4d8a5cbc2b275f8a62d2c0ba423e54b2",
+    "scope": "existing button/card presentation refactor; established design preserved",
+    "verification": {
+      "command": "HALLMARK_PUPPETEER=/tmp/newyou-refinement-tools CHROME_PATH=/usr/bin/google-chrome node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-system.css lib/new_you_web/components/design/button.ex lib/new_you_web/components/design/card.ex --scope app --genre modern-minimal --url http://127.0.0.1:4237/dev/design-system --json",
+      "supported_source_files": 2,
+      "rendered_route": "/dev/design-system",
+      "fails": 0,
+      "open_reflex": 0,
+      "warns": 0,
+      "waived": 1,
+      "rejected": 0,
+      "waiver": "Existing gate 37 reports numeric 400/500/700 weights as font families; source uses the single approved Inter family.",
+      "limitation": "The linter reads the two CSS files; Phoenix .ex files are not supported static targets. The guide runtime renders the changed components. No full Hallmark redesign/audit was initiated."
+    },
+    "runtime": "Updated Chrome/Puppeteer guide proof passes: explicit desktop hover media, approved button geometry/hover, native disabled state, flat cards, eight widths, grid centering, live token propagation, focus, reduced motion and no browser errors. Separate typography proof passes.",
+    "source_review": "Bounded read-only independent review against b80e391 found no actionable findings. It did not rerun tests and is not Master Gate certification.",
+    "delivery": "Full mix check exited 2 after 371.4 seconds: 635/636 passed, with an unchanged PasswordSessionTest global token-count failure recorded on WELL-114. Isolated retry passed 1 test with 16 excluded; cause remains unproven. Prior registration/Tidewave gate 26a and WELL-114 independent post-merge certification remain unresolved; no blanket whole-site Hallmark or merge claim."
+  },
+  {
+    "date": "2026-11-12",
+    "entry": "WELL-112 owner-approved site-wide font centralization",
+    "implementation_sha": "36034f67f21b887b94687cf203737b32fe764215",
+    "scope": "existing UI typography extension; no redesign",
+    "theme": "locked DESIGN.md with approved Inter adoption",
+    "verification": {
+      "guide": {
+        "command": "HALLMARK_PUPPETEER=/tmp/newyou-refinement-tools CHROME_PATH=/usr/bin/google-chrome node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-system.css --scope app --genre modern-minimal --url http://127.0.0.1:4237/dev/design-system --json",
+        "fails": 0,
+        "open_reflex": 0,
+        "warns": 0,
+        "waived": 1,
+        "rejected": 0,
+        "waiver": "Existing gate 37 numeric-weight/font-family misclassification."
+      },
+      "registration": {
+        "command": "HALLMARK_PUPPETEER=/tmp/newyou-refinement-tools CHROME_PATH=/usr/bin/google-chrome node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/tokens.css --scope app --genre editorial --url 'http://127.0.0.1:4237/register?locale=en' --json",
+        "fails": 1,
+        "open_reflex": 0,
+        "finding": "Gate 26a reports body after tabbing into the existing Tidewave developer toolbar. All 12 product controls have visible solid 2px focus outlines; the new typography browser proof verifies product keyboard focus.",
+        "disposition": "Recorded DEV-tool finding; not waived; no claim of a wholly green Hallmark result."
+      }
+    },
+    "runtime": "System Chrome with external Puppeteer; guide and typography scripts pass. Phone and desktop registration renders inspected.",
+    "delivery": "Full mix check 630/632; WELL-114 and independent certification remain open. No merge recommendation."
+  },
+{
+ "date": "2026-11-11",
+ "entry": "WELL-112 owner-approved token refinement",
+ "theme": "locked DESIGN.md",
+ "shape": "app screen",
+ "genre": "modern-minimal",
+ "scope": "existing guide extension",
+ "implementation_sha": "52a56259b912c930cd44517d0cbe5c942387babb",
+ "signature": "computed color and fluid token comparisons",
+ "sections": [
+  "surface treatments",
+  "fluid comparisons"
+ ],
+ "material": "existing palette, CSS-derived opaque pairs, seeded local noise and real browser-computed sizing",
+ "verification": {
+  "command": "HALLMARK_PUPPETEER=/tmp/newyou-refinement-tools CHROME_PATH=/usr/bin/google-chrome node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-system.css --scope app --genre modern-minimal --url http://127.0.0.1:4237/dev/design-system --json",
+  "observed": {
+   "fails": 0,
+   "open_reflex": 0,
+   "warnings": 0,
+   "waived": 1,
+   "rejected": 0,
+   "screenshots": 5
+  },
+  "waiver": "Gate 37 misidentifies numeric weight tokens as font families. The only family is the existing Inter fallback.",
+  "review": "Fresh bounded spec and code-quality reviews found no remaining actionable issue after adding resolved endpoint measurements and forced color fallback checks. These reviews are not Master Gate certification.",
+  "limits": "WELL-114 independent post-merge certification remains open in Plane under the explicit owner exception; no merge or completed-delivery certification."
+ }
+},
+{
+  "scope": "app",
+  "shape": "app screen",
+  "theme": "locked DESIGN.md",
+  "axes": [
+   "existing palette",
+   "shared CSS tokens"
+  ],
+  "nav": "section index",
+  "footer": "token editing instructions",
+  "imagery": "live component specimens",
+  "entry": "WELL-112",
+  "signature": "live CSS specimens with measured color and responsive grids",
+  "sections": [
+   "palette",
+   "typography",
+   "spacing",
+   "buttons",
+   "cards",
+   "layout",
+   "relationships",
+   "shape"
+  ],
+  "waived": [
+   "7b: approved on-canvas black swatch and mapping",
+   "37: numeric font weights are not extra families"
+  ],
+  "prompt": "Build NewYou token-driven LiveView design-system reference",
+  "finish_review": "subagent; one finding resolved with disabled lock icon",
+  "sweep": "0 FAIL; 0 open REFLEX; 0 WARN; 3 waived findings",
+  "date": "2026-11-10",
+  "mode": "build"
+ },
+ {
+  "shape": "app screen",
+  "theme": "custom",
+  "axes": "light/roman-serif/chromatic-green",
+  "hero": "approved launch and safety copy precedes registration",
+  "nav": "language switch",
+  "footer": "none",
+  "imagery": "none",
+  "photos": [],
+  "entry": "/register",
+  "fingerprint": "Left-margin|Asymmetric spans|Hairline|Solid|None|None",
+  "sections": [
+   "launch",
+   "safety",
+   "registration",
+   "verification pending",
+   "resend"
+  ],
+  "signature": "the exact safety boundary comes before the account action",
+  "waived": [],
+  "prompt": "Warm, grounded, calm, editorial and practical bilingual registration and verification pending for adult women in South Africa.",
+  "date": "2026-11-02",
+  "mode": "build",
+  "verification": {
+   "date": "2026-11-03",
+   "sloplint": "clean: 0 FAIL, 0 REFLEX, 0 WARN across the NewYou token stylesheet and 3 rendered registration URLs",
+   "rendered": [
+    "/register (default English entry)",
+    "/register?locale=en",
+    "/register?locale=af",
+    "sanitized EN pending/resend snapshot (prior capture; templates unchanged)",
+    "sanitized AF pending/resend snapshot (prior capture; templates unchanged)"
+   ],
+   "hallmark_capture_viewports": [
+    "sloplint widths: 320, 375, 414, 768, 1024, 1280, 1920",
+    "fold screenshots: 1280x800, 1440x900, 1920x1080",
+    "full-page screenshots: 375 and 1440",
+    "capture.mjs: phone 390x844, tablet 834x1112, laptop 1280x800, desktop 1440x900"
+   ],
+   "manual_review_viewports": [
+    "375px full page",
+    "390x844 phone",
+    "834x1112 tablet",
+    "1280x800 laptop",
+    "1440x900 desktop",
+    "1920x1080 wide desktop"
+   ],
+   "notes": "The default route renders the registered English launch and safety content and keeps the Afrikaans/English switcher visible. The pending/resend templates did not change in this correction; their exact EN/AF copy remains covered by controller tests."
   }
+ }
 ]

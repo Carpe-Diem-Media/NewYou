@@ -1,0 +1,404 @@
+<div id="design-system" class="ds-guide" phx-hook="DesignSystem">
+  <div :if={@preview?} id="preview-content" class="ds-preview-content">
+    <h1 class="ds-responsive-heading">A little room to grow.</h1>
+    <p class="ds-lead">The same tokens, at every width.</p>
+    <div class="ds-preview-actions">
+      <.primary_button treatment="lit" data-demo-action="primary">Primary action</.primary_button>
+      <.secondary_button treatment="lit" data-demo-action="secondary">Secondary action</.secondary_button>
+    </div>
+    <div class="ds-card-grid" data-alignment="center">
+      <.design_card :for={n <- 1..5} title={"Card #{n}"}>
+        Shared type, spacing and shape. Resize to see the grid respond.
+      </.design_card>
+    </div>
+    <p id="preview-status" class="ds-note" role="status" aria-live="polite"></p>
+  </div>
+
+  <div :if={!@preview?} class="ds-guide-container">
+    <header class="ds-topbar">
+      <a href="#main" class="ds-wordmark">NewYou<span>Design reference</span></a>
+      <span class="ds-dev-label">Development only</span>
+    </header>
+
+    <div class="ds-guide-layout">
+      <aside class="ds-index">
+        <nav aria-label="Design system sections">
+          <a href="#main" class="ds-index-title">Foundations</a>
+          <ol>
+            <li><a href="#palette">Colour palette</a></li>
+            <li><a href="#typography">Typography</a></li>
+            <li><a href="#spacing">Spacing</a></li>
+            <li><a href="#buttons">Buttons & links</a></li>
+            <li><a href="#cards">Cards & icons</a></li>
+            <li><a href="#layout">Layout & grids</a></li>
+            <li><a href="#relationships">Colour pairs</a></li>
+            <li><a href="#surfaces">Surface treatments</a></li>
+            <li><a href="#lighting">Lighting & depth</a></li>
+            <li><a href="#fluid">Fluid comparisons</a></li>
+            <li><a href="#shape">Radius & shadow</a></li>
+          </ol>
+        </nav>
+        <div class="ds-index-note">
+          <p>One token source.</p>
+          <p>One consistent system.</p>
+          <a href="#editing">How to refine it</a>
+        </div>
+      </aside>
+
+      <main id="main" class="ds-main" tabindex="-1">
+        <div class="ds-introduction">
+          <h1>Design system</h1>
+          <p class="ds-lead">Our foundations, in one place. Change a token. See it everywhere.</p>
+          <div class="ds-intro-details">
+            <span>LiveView + Tailwind</span>
+            <span data-viewport-readout>Viewport measured in browser</span>
+          </div>
+        </div>
+
+        <section id="palette" aria-labelledby="palette-title">
+          <div class="ds-section-heading">
+            <h2 id="palette-title">Colour palette</h2>
+            <p>Warm neutrals, one primary action, five supporting accents.</p>
+          </div>
+          <.palette />
+          <p class="ds-note">
+            Swatches show approved values. Their labels describe roles, not interchangeable fills.
+          </p>
+        </section>
+
+        <section id="typography" aria-labelledby="typography-title">
+          <div class="ds-section-heading">
+            <h2 id="typography-title">Typography</h2>
+            <p>A shared family. A deliberate hierarchy. Every size and line height visible.</p>
+          </div>
+          <.typography />
+        </section>
+
+        <section id="spacing" aria-labelledby="spacing-title">
+          <div class="ds-section-heading">
+            <h2 id="spacing-title">Spacing</h2>
+            <p>The rhythm between elements, inside components and across a page.</p>
+          </div>
+          <.spacing />
+        </section>
+
+        <section id="buttons" aria-labelledby="buttons-title">
+          <div class="ds-section-heading">
+            <h2 id="buttons-title">Buttons & links</h2>
+            <p>One clear action hierarchy. Try hover, press and keyboard focus.</p>
+          </div>
+          <div class="ds-button-examples">
+            <div class="ds-button-example">
+              <span>Primary</span>
+              <.primary_button treatment="lit" data-demo-action="primary">Primary action</.primary_button>
+              <code>--primary</code>
+            </div>
+            <div class="ds-button-example">
+              <span>Secondary</span>
+              <.secondary_button treatment="lit" data-demo-action="secondary">Secondary action</.secondary_button>
+              <code>--secondary</code>
+            </div>
+            <div class="ds-button-example">
+              <span>Disabled</span>
+              <.primary_button treatment="lit" disabled>
+                <span class="hero-lock-closed size-4 mr-design-sm" aria-hidden="true"></span>
+                Unavailable
+              </.primary_button>
+              <span>Native disabled state</span>
+            </div>
+            <div class="ds-button-example">
+              <span>Text link</span>
+              <.text_link href="#typography">Explore typography</.text_link>
+              <span>Underlined, with visible focus</span>
+            </div>
+          </div>
+          <p class="ds-note">
+            These examples use the lit treatment. Compare the flat version in Lighting & depth. No loading, error or success palette is implied.
+          </p>
+        </section>
+
+        <section id="cards" aria-labelledby="cards-title">
+          <div class="ds-section-heading">
+            <h2 id="cards-title">Cards & icons</h2>
+            <p>Shared components. Consistent gaps. Balanced final rows.</p>
+          </div>
+          <form id="grid-controls" class="ds-controls" phx-change="grid">
+            <label for="grid-count">
+              Cards
+              <select id="grid-count" name="grid[count]">
+                <option :for={count <- @counts} value={count} selected={count == @count}>
+                  {count}
+                </option>
+              </select>
+            </label>
+            <label for="grid-alignment">
+              Incomplete row
+              <select id="grid-alignment" name="grid[alignment]">
+                <option value="start" selected={@alignment == "start"}>Align to start</option>
+                <option value="center" selected={@alignment == "center"}>Centre the row</option>
+              </select>
+            </label>
+            <span class="ds-control-note">1 column / 2 at tablet / 3 at desktop</span>
+          </form>
+          <div id="card-grid" class="ds-card-grid" data-alignment={@alignment}>
+            <.design_card :for={n <- 1..@card_count} title={"Card #{n}"}>
+              <p>
+                Shared surface, spacing and radius. The width stays consistent in the last row.
+              </p>
+              <a class="ds-card-link" href="#shape">Inspect card tokens</a>
+            </.design_card>
+          </div>
+          <details class="ds-code-details">
+            <summary>View the centring recipe</summary>
+            <pre><code>{"/* At the desktop breakpoint */\n.ds-card-grid {\n  display: grid;\n  grid-template-columns: repeat(6, minmax(0, 1fr));\n  gap: var(--grid-gap);\n}\n.ds-card-grid > * { grid-column: span 2; }\n/* One remaining card */\n[data-alignment=\"center\"] > :last-child:nth-child(3n + 1) {\n  grid-column: 3 / span 2;\n}\n/* Two remaining cards */\n[data-alignment=\"center\"] > :nth-last-child(2):nth-child(3n + 1) {\n  grid-column: 2 / span 2;\n}"}</code></pre>
+          </details>
+          <div class="ds-icon-list" aria-label="Heroicons specimens">
+            <div>
+              <span class="hero-heart ds-icon" aria-hidden="true"></span><span>Heart</span>
+            </div>
+            <div><span class="hero-sun ds-icon" aria-hidden="true"></span><span>Sun</span></div>
+            <div>
+              <span class="hero-sparkles ds-icon" aria-hidden="true"></span><span>Sparkles</span>
+            </div>
+            <div>
+              <span class="hero-book-open ds-icon" aria-hidden="true"></span><span>Book</span>
+            </div>
+            <div>
+              <span class="hero-calendar-days ds-icon" aria-hidden="true"></span><span>Calendar</span>
+            </div>
+            <div>
+              <span class="hero-arrow-path ds-icon" aria-hidden="true"></span><span>Refresh</span>
+            </div>
+          </div>
+          <p class="ds-note">Heroicons share currentColor. Icon size uses --space-lg.</p>
+        </section>
+
+        <section id="layout" aria-labelledby="layout-title">
+          <div class="ds-section-heading">
+            <h2 id="layout-title">Layout & responsiveness</h2>
+            <p>Real viewports. The same stylesheet. Resize freely between the presets.</p>
+          </div>
+          <dl class="ds-layout-tokens">
+            <div>
+              <dt>Content width</dt><dd><.token_value name="--content-width" /></dd>
+            </div>
+            <div>
+              <dt>Page gutter</dt><dd><.token_value name="--gutter" /></dd>
+            </div>
+            <div>
+              <dt>Grid gap</dt><dd><.token_value name="--grid-gap" /></dd>
+            </div>
+          </dl>
+          <div class="ds-breakpoints">
+            <div>
+              <span>Tablet starts</span><.token_value name="--breakpoint-design-tablet" />
+            </div>
+            <div>
+              <span>Desktop starts</span><.token_value name="--breakpoint-design-desktop" />
+            </div>
+            <div><span>Wide starts</span><.token_value name="--breakpoint-design-wide" /></div>
+          </div>
+          <div class="ds-viewport-controls" role="group" aria-label="Preview viewport">
+            <button
+              type="button"
+              phx-click="viewport"
+              phx-value-viewport="auto"
+              aria-pressed={@viewport == "auto"}
+            >Fit</button>
+            <button
+              type="button"
+              phx-click="viewport"
+              phx-value-viewport="phone"
+              aria-pressed={@viewport == "phone"}
+            >Phone</button>
+            <button
+              type="button"
+              phx-click="viewport"
+              phx-value-viewport="tablet"
+              aria-pressed={@viewport == "tablet"}
+            >Tablet</button>
+            <button
+              type="button"
+              phx-click="viewport"
+              phx-value-viewport="desktop"
+              aria-pressed={@viewport == "desktop"}
+            >Desktop</button>
+            <button
+              type="button"
+              phx-click="viewport"
+              phx-value-viewport="wide"
+              aria-pressed={@viewport == "wide"}
+            >Wide</button>
+          </div>
+          <div id="responsive-preview" class="ds-preview" data-viewport={@viewport}>
+            <div class="ds-preview-meta">
+              <output data-preview-readout>Preview measured in browser</output>
+            </div>
+            <div id="preview-stage" class="ds-preview-stage" phx-update="ignore">
+              <iframe
+                id="design-preview-frame"
+                title="Responsive component preview"
+                src={~p"/dev/design-system/preview"}
+                loading="lazy"
+              ></iframe>
+            </div>
+          </div>
+          <p class="ds-note">
+            Large previews scale to fit this panel. Their internal CSS viewport keeps the selected width.
+          </p>
+        </section>
+
+        <section id="relationships" aria-labelledby="relationships-title">
+          <div class="ds-section-heading">
+            <h2 id="relationships-title">Colour relationships</h2>
+            <p>See colours together. Check the measured text contrast before using a pair.</p>
+          </div>
+          <.relationships />
+        </section>
+
+        <section id="surfaces" aria-labelledby="surfaces-title">
+          <div class="ds-section-heading">
+            <h2 id="surfaces-title">Surface treatments</h2>
+            <p>Compare decorative treatments and derived opaque color pairs.</p>
+          </div>
+          <.relationships surface_only?={true} />
+          <.surfaces />
+        </section>
+
+        <section id="lighting" aria-labelledby="lighting-title">
+          <div class="ds-section-heading">
+            <h2 id="lighting-title">Lighting & depth</h2>
+            <p>Light from above. Compare flat foundations with the new soft-depth treatment.</p>
+          </div>
+          <div class="ds-lighting-stage">
+            <div class="ds-lighting-levels" aria-label="Neutral surface levels">
+              <div class="ds-lighting-level" data-level="canvas">
+                <span>Canvas</span><.token_reference name="--surface-canvas" />
+              </div>
+              <div class="ds-lighting-level" data-level="panel">
+                <span>Panel</span><.token_reference name="--surface-panel" />
+              </div>
+              <div class="ds-lighting-level" data-level="raised">
+                <span>Raised surface</span><.token_reference name="--surface-raised" />
+              </div>
+            </div>
+            <div class="ds-lighting-cards">
+              <.design_card title="Flat foundation">
+                The existing white surface, hairline edge and no cast shadow.
+              </.design_card>
+              <.design_card title="Light from above" variant="raised">
+                A lighter upper edge, shaded lower edge and a soft shadow beneath.
+              </.design_card>
+            </div>
+            <div class="ds-lighting-actions">
+              <div class="ds-lighting-action">
+                <span>Flat primary</span>
+                <.primary_button data-demo-action="flat-lighting">Primary action</.primary_button>
+              </div>
+              <div class="ds-lighting-action">
+                <span>Lit primary</span>
+                <.primary_button
+                  id="lighting-primary"
+                  treatment="lit"
+                  data-demo-action="lit-primary"
+                >Primary action</.primary_button>
+              </div>
+              <div class="ds-lighting-action">
+                <span>Quiet secondary</span>
+                <.secondary_button
+                  id="lighting-secondary"
+                  treatment="lit"
+                  data-demo-action="lit-secondary"
+                >Secondary action</.secondary_button>
+              </div>
+              <div class="ds-lighting-action">
+                <span>Disabled</span>
+                <.primary_button id="lighting-disabled" treatment="lit" disabled>
+                  <.icon name="hero-lock-closed" /> Unavailable
+                </.primary_button>
+              </div>
+            </div>
+            <p class="ds-lighting-note">
+              Hover, press, or use Tab to compare states. Raised edges catch light at the top;
+              pressing moves the shading inside the control. Disabled controls keep native behavior.
+            </p>
+          </div>
+          <p class="ds-note">
+            Candidate treatment for review. All fills, edges and shadows come from <code>assets/css/design-tokens.css</code>. Existing production defaults remain flat.
+          </p>
+          <details class="ds-lighting-token-list">
+            <summary>Lighting tokens</summary>
+            <dl>
+              <div :for={
+                token <-
+                  ~w(--surface-canvas --surface-panel --surface-raised --edge-highlight --edge-shade --shadow-control --shadow-raised --action-primary-gradient)
+              }>
+                <dt><.token_reference name={token} /></dt>
+                <dd><.token_value name={token} /></dd>
+              </div>
+            </dl>
+          </details>
+        </section>
+
+        <section id="fluid" aria-labelledby="fluid-title">
+          <div class="ds-section-heading">
+            <h2 id="fluid-title">Fluid comparisons</h2>
+            <p>Compare candidate type and spacing values across viewport sizes.</p>
+          </div>
+          <.fluid />
+        </section>
+
+        <section id="shape" aria-labelledby="shape-title">
+          <div class="ds-section-heading">
+            <h2 id="shape-title">Radius & shadow</h2>
+            <p>Soft corners. Flat surfaces. Shape follows the component's role.</p>
+          </div>
+          <div class="ds-radius-list">
+            <div data-radius="sm">
+              <span class="ds-radius-specimen"></span><.token_reference name="--radius-sm" /><.token_value name="--radius-sm" />
+            </div>
+            <div data-radius="md">
+              <span class="ds-radius-specimen"></span><.token_reference name="--radius" /><.token_value name="--radius" />
+            </div>
+            <div data-radius="lg">
+              <span class="ds-radius-specimen"></span><.token_reference name="--radius-lg" /><.token_value name="--radius-lg" />
+            </div>
+            <div data-radius="xl">
+              <span class="ds-radius-specimen"></span><.token_reference name="--radius-xl" /><.token_value name="--radius-xl" />
+            </div>
+            <div data-radius="full">
+              <span class="ds-radius-specimen"></span><.token_reference name="--radius-full" /><.token_value name="--radius-full" />
+            </div>
+          </div>
+          <div class="ds-shadow-example">
+            <span>Card elevation</span>
+            <.token_reference name="--box-shadow" />
+            <.token_value name="--box-shadow" />
+          </div>
+        </section>
+
+        <footer id="editing" class="ds-editing">
+          <h2>Refine at the source.</h2>
+          <p>
+            Edit source colours once in <code>assets/css/design-tokens.css</code>
+            through tokens such as <code>--palette-primary-srgb</code>. Semantic tokens such as
+            <code>--primary</code>
+            keep their
+            component roles and can still be overridden deliberately.
+          </p>
+          <p class="ds-note">
+            Keep approved changes in DESIGN.md. Legacy screens move to these tokens as they are deliberately migrated.
+          </p>
+          <div class="ds-footer-actions">
+            <button type="button" class="ds-quiet-button" data-refresh-tokens>Refresh measurements</button>
+            <.text_link href="#main">Back to top</.text_link>
+          </div>
+        </footer>
+      </main>
+    </div>
+    <p id="token-status" class="ds-token-status" role="status" aria-live="polite"></p>
+    <noscript><p class="ds-note">
+      Tokens and specimens remain visible. Enable JavaScript for measurements, copying and preview controls.
+    </p></noscript>
+  </div>
+</div>

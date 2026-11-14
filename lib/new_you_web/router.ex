@@ -48,6 +48,16 @@ defmodule NewYouWeb.Router do
     get "/legal/privacy", RegistrationController, :privacy
   end
 
+  # The design reference is a development tool, never a production route.
+  if Mix.env() in [:dev, :test] do
+    scope "/dev", NewYouWeb do
+      pipe_through :browser
+
+      live "/design-system", DesignSystemLive, :index
+      live "/design-system/preview", DesignSystemLive, :preview
+    end
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", NewYouWeb do
   #   pipe_through :api
