@@ -38,8 +38,12 @@ class AgentInstructionContractTests(unittest.TestCase):
     def test_pinned_dev_test_commands_and_no_unwrapped_local_mix_examples(self):
         for document in (self.agents, self.ticket, self.verify, self.devcore):
             for line in document.splitlines():
-                if re.search(r'^\s*(?:[-*] )?`?(?:devcore-project run (?:dev|test) -- )?mix ', line):
+                if re.search(r'^\s*(?:[-*] )?(?:(?:DEV|TEST):\s*)?`?(?:devcore-project run (?:dev|test) -- )?(?:mix|elixir|iex) ', line):
                     self.fail(f'unpinned local command: {line}')
+            # Labels and inline examples must not hide an unpinned DevCore
+            # invocation. Plain references to aliases such as `mix check` are
+            # prose, so this guard checks concrete profile commands only.
+            self.assertNotRegex(document, r'(?<!mise exec -- )devcore-project run (?:dev|test) -- (?:mix|elixir|iex)\b')
         for profile in ('dev', 'test'):
             self.assertIn(f'mise exec -- devcore-project run {profile} --', self.agents)
         self.assertIn('DEV and TEST', self.agents)
@@ -51,6 +55,7 @@ class AgentInstructionContractTests(unittest.TestCase):
                      'fixture interference', 'suspected nondeterminism', 'source SHA',
                      'narrowest', 'diagnostic reason', 'Do not weaken', 'stable candidate'):
             self.assertIn(term, policy)
+        self.assertIn('When a broad verification command fails, diagnose the failure before repeating that broad command.', policy)
         self.assertIn('mix check', policy)
         self.assertIn('non-executable documentation', policy)
         self.assertIn('Verification stages and failure diagnosis', self.ticket)
@@ -61,6 +66,7 @@ class AgentInstructionContractTests(unittest.TestCase):
         self.assertIn('satisfies the included architecture obligation', self.verify)
         self.assertNotRegex(self.verify, r'Confirm architecture[^\n]*`mise exec -- devcore-project run test -- mix check.architecture` passes')
         self.assertIn('focused development', self.verify)
+        self.assertIn('do not demand a duplicate final invocation', self.verify)
 
     def test_identity_and_independent_integration_contract_remains_explicit(self):
         for term in ('gh api user --jq .login', 'JC-Agents', 'JCSchoeman96', 'pr-preflight'):
@@ -71,6 +77,7 @@ class AgentInstructionContractTests(unittest.TestCase):
         self.assertIn('after applicable local checks pass', self.ticket)
         self.assertIn('Do not self-certify merge authority', self.ticket)
         self.assertIn('Any head change', self.ticket)
+        self.assertIn('tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"', self.ticket)
         self.assertIn('mechanical history-only commit', self.verify)
 
     def test_smoke_runs_instruction_contract_tests(self):
