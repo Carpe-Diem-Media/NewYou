@@ -33,9 +33,11 @@ defmodule NewYou.Proof.P805 do
       {guardian, guardian_monitor} = start_fixture_guardian(previous, projection_key)
       Process.put({__MODULE__, :guardian}, guardian)
       Process.put({__MODULE__, :guardian_monitor}, guardian_monitor)
+      fixture_setup_checkpoint(:guardian_started)
       :ok = NewYou.Proof.Scenario.register_cleanup_guardian(guardian)
       :ok = Sandbox.checkout(Repo, sandbox: false)
       Process.put({__MODULE__, :fixture_checked_out}, true)
+      fixture_setup_checkpoint(:sandbox_checked_out)
       Process.put({__MODULE__, :consequence_baseline}, capture_consequence_ids())
       callback.()
     after

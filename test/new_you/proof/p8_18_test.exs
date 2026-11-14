@@ -120,7 +120,7 @@ defmodule NewYou.Proof.P818Test do
       Process.put(projection_scope_key, fixture_key)
 
       Process.put(setup_hook_key, fn
-        :configured -> raise "injected P8-05 setup failure"
+        :sandbox_checked_out -> raise "injected P8-05 setup failure"
         _stage -> :ok
       end)
 
@@ -235,27 +235,41 @@ defmodule NewYou.Proof.P818Test do
 
   test "the complete P8-18 callbacks pass through the shared P8-04 runner" do
     manifests = Catalog.required().business_manifests
+    previous_provider = Process.get(:p810_provider, :missing)
+    provider = fn _, _ -> :accepted end
 
     registrations =
       Catalog.compiled_business_registrations()
       |> Enum.filter(&(&1.coverage_id == @coverage_id))
 
-    assert {:ok, observations, cleanup} =
-             FullCatalog.execute(%{@coverage_id => manifests[@coverage_id]}, registrations)
+    try do
+      Process.put(:p810_provider, provider)
 
-    failures = Enum.reject(observations, &(&1["verdict"] == "PASS"))
-    assert failures == [], "P8-18 family failures: #{inspect(failures, limit: :infinity)}"
-    assert Enum.sort(Enum.map(observations, & &1["case_id"])) == Enum.sort(@case_ids)
-    assert Enum.all?(observations, &(&1["status"] == "completed"))
+      assert {:ok, observations, cleanup} =
+               FullCatalog.execute(%{@coverage_id => manifests[@coverage_id]}, registrations)
 
-    for observation <- observations do
-      manifest = Enum.find(manifests[@coverage_id].cases, &(&1.case_id == observation["case_id"]))
-      assert observation["invariant_id"] == manifest.invariant_id
-      assert observation["assertion_ids"] == manifest.assertion_ids
-      assert observation["assertions_executed"] == length(manifest.assertion_ids)
+      failures = Enum.reject(observations, &(&1["verdict"] == "PASS"))
+      assert failures == [], "P8-18 family failures: #{inspect(failures, limit: :infinity)}"
+      assert Enum.sort(Enum.map(observations, & &1["case_id"])) == Enum.sort(@case_ids)
+      assert Enum.all?(observations, &(&1["status"] == "completed"))
+
+      for observation <- observations do
+        manifest =
+          Enum.find(manifests[@coverage_id].cases, &(&1.case_id == observation["case_id"]))
+
+        assert observation["invariant_id"] == manifest.invariant_id
+        assert observation["assertion_ids"] == manifest.assertion_ids
+        assert observation["assertions_executed"] == length(manifest.assertion_ids)
+      end
+
+      assert cleanup["verdict"] == "PASS"
+      assert Process.get(:p810_provider) == provider
+    after
+      case previous_provider do
+        :missing -> Process.delete(:p810_provider)
+        previous -> Process.put(:p810_provider, previous)
+      end
     end
-
-    assert cleanup["verdict"] == "PASS"
   end
 
   defp only_projection do
@@ -287,7 +301,22 @@ defmodule NewYou.Proof.P818Test do
   defp stop_rebuild_tasks(tasks, first_pid) do
     Enum.each(tasks, fn task ->
       if task.pid == first_pid, do: send(task.pid, :continue_first_rebuild)
-      _ = Task.shutdown(task, 5_000)
+
+      if Process.alive?(task.pid) do
+        try do
+          Task.await(task, 10_000)
+        rescue
+          _error -> :ok
+        catch
+          :exit, {:timeout, _details} ->
+            raise "P8-18 Analytics rebuild worker did not settle after release"
+
+          :exit, _reason ->
+            :ok
+        end
+      else
+        _ = Task.yield(task, 0)
+      end
     end)
   end
 

@@ -45,7 +45,8 @@ defmodule NewYou.Proof.P818 do
       )
       |> Ash.read_one!(authorize?: false)
 
-    previous_evidence_key = Process.get(:communications_proof_evidence_key)
+    previous_evidence_key = Process.get(:communications_proof_evidence_key, :missing)
+    previous_provider = Process.get(:p810_provider, :missing)
     Process.put(:communications_proof_evidence_key, String.duplicate("k", 32))
 
     Process.put(:p810_provider, fn _, _ -> :accepted end)
@@ -115,17 +116,14 @@ defmodule NewYou.Proof.P818 do
 
       prove_primary_email_callback_is_non_authoritative(id, recovery_attempt)
     after
-      Process.delete(:p810_provider)
-
-      if previous_evidence_key == nil,
-        do: Process.delete(:communications_proof_evidence_key),
-        else: Process.put(:communications_proof_evidence_key, previous_evidence_key)
+      restore_process_value(:p810_provider, previous_provider)
+      restore_process_value(:communications_proof_evidence_key, previous_evidence_key)
     end
 
     P805.check(
       id,
       "provider_evidence_key_restored",
-      Process.get(:communications_proof_evidence_key) == previous_evidence_key
+      Process.get(:communications_proof_evidence_key, :missing) == previous_evidence_key
     )
   end
 
@@ -781,4 +779,7 @@ defmodule NewYou.Proof.P818 do
 
     projection
   end
+
+  defp restore_process_value(key, :missing), do: Process.delete(key)
+  defp restore_process_value(key, value), do: Process.put(key, value)
 end

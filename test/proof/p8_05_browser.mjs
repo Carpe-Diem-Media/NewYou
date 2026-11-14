@@ -112,7 +112,7 @@ try {
     await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.email)}; document.querySelector('[name="password"]').value=${JSON.stringify(input.password)};`);
     await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
     checks.protected_page_loaded = await evaluate(`location.pathname === '/session/protected'`);
-    checks.logout_completed = await evaluate(`(async () => { const html = await fetch(${loginPathLiteral}, {cache: 'no-store'}).then(r => r.text()); const csrf = html.match(/name="_csrf_token"[^>]*value="([^"]+)"/)?.[1]; if (!csrf) return false; const response = await fetch('/session/logout', {method: 'POST', headers: {'content-type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams({_csrf_token: csrf})}); return response.status === 204; })()`);
+    checks.logout_completed = await evaluate(`(async () => { const html = await fetch(${loginPathLiteral}, {cache: 'no-store'}).then(r => r.text()); const form = new DOMParser().parseFromString(html, 'text/html'); const csrf = form.querySelector('form[action="/login"] [name="_csrf_token"]')?.value; if (!csrf) return false; const response = await fetch('/session/logout', {method: 'POST', headers: {'content-type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams({_csrf_token: csrf})}); return response.status === 204; })()`);
     checks.reconnect_denied = await evaluate(`fetch('/session/protected', {cache: 'no-store'}).then(r => r.status === 401)`);
     checks.stale_page_retained = await evaluate(`location.pathname === '/session/protected'`);
   } else if (input.mode === 'password_reset') {
