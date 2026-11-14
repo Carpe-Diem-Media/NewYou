@@ -6,15 +6,8 @@ defmodule NewYou.Architecture.MigrationIdentityTest do
       Path.wildcard(Path.join(File.cwd!(), "priv/repo/migrations/*.exs"))
       |> Enum.map(fn path ->
         source = File.read!(path)
-
-        [timestamp, migration_name] =
-          path
-          |> Path.basename()
-          |> String.replace_suffix(".exs", "")
-          |> String.split("_", parts: 2)
-
-        assert String.match?(timestamp, ~r/^\d+$/), "invalid migration version in #{path}"
-        [_, migration_module] = Regex.run(~r/^defmodule\s+([A-Za-z0-9_.]+)\s+do/m, source)
+        {timestamp, migration_name} = migration_identity(path)
+        migration_module = migration_module(source, path)
 
         %{
           path: path,
@@ -27,6 +20,14 @@ defmodule NewYou.Architecture.MigrationIdentityTest do
     assert_unique(entries, & &1.timestamp, "migration timestamps")
     assert_unique(entries, & &1.name, "migration names")
     assert_unique(entries, & &1.module, "migration modules")
+  end
+
+  test "malformed migration filename reports its path" do
+    path = "priv/repo/migrations/malformed_migration.exs"
+
+    assert_raise ExUnit.AssertionError, ~r/invalid repository migration filename: #{path}/, fn ->
+      migration_identity(path)
+    end
   end
 
   test "same migration timestamp is duplicated even when suffixes differ" do
@@ -54,5 +55,19 @@ defmodule NewYou.Architecture.MigrationIdentityTest do
   defp assert_unique(entries, key_fun, label) do
     duplicates = duplicate_values(entries, key_fun)
     assert duplicates == [], "duplicate #{label}: #{inspect(duplicates)}"
+  end
+
+  defp migration_identity(path) do
+    case Regex.run(~r/^([0-9]{14})_(.+)\.exs$/, Path.basename(path)) do
+      [_, timestamp, migration_name] -> {timestamp, migration_name}
+      _ -> flunk("invalid repository migration filename: #{path}")
+    end
+  end
+
+  defp migration_module(source, path) do
+    case Regex.run(~r/^defmodule\s+([A-Za-z0-9_.]+)\s+do/m, source) do
+      [_, module] -> module
+      _ -> flunk("missing migration module declaration: #{path}")
+    end
   end
 end

@@ -21,42 +21,25 @@ defmodule NewYou.Proof.P805 do
   def with_fixture(callback) when is_function(callback, 0) do
     previous = Map.new(@environment, &{&1, Application.fetch_env(:new_you, &1)})
     projection_key = "p817_test_" <> Ecto.UUID.generate()
-    Process.put({NewYou.Analytics, :p817_test_projection_key}, projection_key)
-    configure()
-    Process.put({__MODULE__, :operations}, [])
-    Process.put({__MODULE__, :emails}, [])
-    {guardian, guardian_monitor} = start_fixture_guardian(previous, projection_key)
-    Process.put({__MODULE__, :guardian}, guardian)
-    :ok = NewYou.Proof.Scenario.register_cleanup_guardian(guardian)
-    :ok = Sandbox.checkout(Repo, sandbox: false)
+    previous_projection_key = Process.get({NewYou.Analytics, :p817_test_projection_key}, :missing)
 
     try do
+      Process.put({NewYou.Analytics, :p817_test_projection_key}, projection_key)
+      Process.put({__MODULE__, :operations}, [])
+      Process.put({__MODULE__, :emails}, [])
+      configure()
+      fixture_setup_checkpoint(:configured)
+
+      {guardian, guardian_monitor} = start_fixture_guardian(previous, projection_key)
+      Process.put({__MODULE__, :guardian}, guardian)
+      Process.put({__MODULE__, :guardian_monitor}, guardian_monitor)
+      :ok = NewYou.Proof.Scenario.register_cleanup_guardian(guardian)
+      :ok = Sandbox.checkout(Repo, sandbox: false)
+      Process.put({__MODULE__, :fixture_checked_out}, true)
       Process.put({__MODULE__, :consequence_baseline}, capture_consequence_ids())
       callback.()
     after
-      Process.delete({__MODULE__, :consequence_baseline})
-      Process.delete(RegistrationSeam)
-
-      try do
-        # A bounded worker can disconnect a borrowed lease on cancellation.
-        # Teardown needs its own live connection, including in that failure path.
-        Sandbox.unboxed_run(Repo, fn ->
-          cleanup(projection_key)
-          false = Repo.in_transaction?()
-          0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'p805_fault_%'")
-        end)
-      after
-        Enum.each(previous, fn
-          {key, {:ok, value}} -> Application.put_env(:new_you, key, value)
-          {key, :error} -> Application.delete_env(:new_you, key)
-        end)
-
-        stop_fixture_guardian(guardian, guardian_monitor)
-        Process.delete({__MODULE__, :guardian})
-        Process.delete({NewYou.Analytics, :p817_test_projection_key})
-      end
-
-      :ok = SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
+      finish_fixture(previous, projection_key, previous_projection_key)
     end
   end
 
@@ -75,6 +58,58 @@ defmodule NewYou.Proof.P805 do
 
     Application.put_env(:new_you, :p8_05_browser_development_fixtures, true)
   end
+
+  defp fixture_setup_checkpoint(stage) do
+    case Process.get({__MODULE__, :setup_checkpoint}) do
+      callback when is_function(callback, 1) -> callback.(stage)
+      _ -> :ok
+    end
+  end
+
+  defp finish_fixture(previous, projection_key, previous_projection_key) do
+    Process.delete({__MODULE__, :consequence_baseline})
+    Process.delete(RegistrationSeam)
+    checked_out? = Process.delete({__MODULE__, :fixture_checked_out}) == true
+    guardian = Process.get({__MODULE__, :guardian})
+    guardian_monitor = Process.get({__MODULE__, :guardian_monitor})
+
+    try do
+      if checked_out? do
+        # A bounded worker can disconnect a borrowed lease on cancellation.
+        # Teardown needs its own live connection, including in that failure path.
+        Sandbox.unboxed_run(Repo, fn ->
+          cleanup(projection_key)
+          false = Repo.in_transaction?()
+          0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'p805_fault_%'")
+        end)
+      else
+        Process.delete({__MODULE__, :operations})
+        Process.delete({__MODULE__, :emails})
+      end
+    after
+      try do
+        if is_pid(guardian) and is_reference(guardian_monitor),
+          do: stop_fixture_guardian(guardian, guardian_monitor)
+      after
+        restore_environment(previous)
+
+        restore_process_value(
+          {NewYou.Analytics, :p817_test_projection_key},
+          previous_projection_key
+        )
+
+        Process.delete({__MODULE__, :guardian})
+        Process.delete({__MODULE__, :guardian_monitor})
+        Process.delete({__MODULE__, :setup_checkpoint})
+      end
+    end
+
+    if checked_out?,
+      do: SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
+  end
+
+  defp restore_process_value(key, :missing), do: Process.delete(key)
+  defp restore_process_value(key, value), do: Process.put(key, value)
 
   def request(overrides \\ %{}) do
     operation_id = Ecto.UUID.generate()

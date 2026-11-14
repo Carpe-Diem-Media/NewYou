@@ -109,6 +109,42 @@ defmodule NewYou.Proof.P818Test do
     end)
   end
 
+  test "fixture setup failure restores environment and Analytics fixture key" do
+    projection_scope_key = {NewYou.Analytics, :p817_test_projection_key}
+    setup_hook_key = {P805, :setup_checkpoint}
+    fixture_key = "p817_test_" <> Ecto.UUID.generate()
+    prior_fixture_key = Process.get(projection_scope_key, :missing)
+    prior_environment = Application.fetch_env(:new_you, :p8_05_browser_development_fixtures)
+
+    try do
+      Process.put(projection_scope_key, fixture_key)
+
+      Process.put(setup_hook_key, fn
+        :configured -> raise "injected P8-05 setup failure"
+        _stage -> :ok
+      end)
+
+      assert_raise RuntimeError, "injected P8-05 setup failure", fn ->
+        P805.with_fixture(fn -> flunk("fixture callback should not run after setup failure") end)
+      end
+
+      assert Application.fetch_env(:new_you, :p8_05_browser_development_fixtures) ==
+               prior_environment
+
+      assert Process.get(projection_scope_key) == fixture_key
+      refute Process.get({P805, :guardian})
+      refute Process.get({P805, :fixture_checked_out})
+      refute Process.get(setup_hook_key)
+    after
+      case prior_fixture_key do
+        :missing -> Process.delete(projection_scope_key)
+        previous -> Process.put(projection_scope_key, previous)
+      end
+
+      Process.delete(setup_hook_key)
+    end
+  end
+
   test "a stale overlapping Analytics rebuild cannot replace a newer Privacy snapshot" do
     P805.with_fixture(fn ->
       subject_id = Ecto.UUID.generate()
@@ -123,6 +159,7 @@ defmodule NewYou.Proof.P818Test do
       pause_key = {NewYou.Analytics, :after_privacy_snapshot}
       projection_key = P805.analytics_projection_key()
       projection_scope_key = {NewYou.Analytics, :p817_test_projection_key}
+      task_registry_key = {__MODULE__, :p818_rebuild_tasks}
 
       first =
         Task.async(fn ->
@@ -148,43 +185,51 @@ defmodule NewYou.Proof.P818Test do
           end
         end)
 
-      assert_receive {:first_privacy_snapshot, first_snapshot}, 5_000
-      assert first_snapshot.current_allowed_count == baseline.current_allowed_count + 1
-      assert first_snapshot.revision > baseline.revision
-      assert {:ok, :withdrawn} = Privacy.withdraw_p817_proof_purpose(subject_id, operation_id)
+      Process.put(task_registry_key, [first])
 
-      second =
-        Task.async(fn ->
-          :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
-          Process.put(projection_scope_key, projection_key)
+      try do
+        assert_receive {:first_privacy_snapshot, first_snapshot}, 5_000
+        assert first_snapshot.current_allowed_count == baseline.current_allowed_count + 1
+        assert first_snapshot.revision > baseline.revision
+        assert {:ok, :withdrawn} = Privacy.withdraw_p817_proof_purpose(subject_id, operation_id)
 
-          Process.put(pause_key, fn snapshot ->
-            send(parent, {:second_privacy_snapshot, snapshot})
-            :ok
+        second =
+          Task.async(fn ->
+            :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
+            Process.put(projection_scope_key, projection_key)
+
+            Process.put(pause_key, fn snapshot ->
+              send(parent, {:second_privacy_snapshot, snapshot})
+              :ok
+            end)
+
+            send(parent, :second_rebuild_started)
+
+            try do
+              NewYou.Analytics.rebuild_p817_privacy_projection()
+            after
+              Process.delete(pause_key)
+              Process.delete(projection_scope_key)
+              :ok = Sandbox.checkin(NewYou.Repo)
+            end
           end)
 
-          send(parent, :second_rebuild_started)
+        Process.put(task_registry_key, [first, second])
+        assert_receive :second_rebuild_started, 5_000
 
-          try do
-            NewYou.Analytics.rebuild_p817_privacy_projection()
-          after
-            Process.delete(pause_key)
-            Process.delete(projection_scope_key)
-            :ok = Sandbox.checkin(NewYou.Repo)
-          end
-        end)
+        assert_receive {:second_privacy_snapshot, second_snapshot}, 5_000
+        assert second_snapshot.current_allowed_count == baseline.current_allowed_count
+        assert second_snapshot.revision > first_snapshot.revision
+        assert :ok = Task.await(second, 5_000)
 
-      assert_receive :second_rebuild_started, 5_000
-
-      assert_receive {:second_privacy_snapshot, second_snapshot}, 5_000
-      assert second_snapshot.current_allowed_count == baseline.current_allowed_count
-      assert second_snapshot.revision > first_snapshot.revision
-      assert :ok = Task.await(second, 5_000)
-
-      send(first.pid, :continue_first_rebuild)
-
-      assert :ok = Task.await(first, 5_000)
-      assert only_projection().current_allowed_count == baseline.current_allowed_count
+        send(first.pid, :continue_first_rebuild)
+        assert :ok = Task.await(first, 5_000)
+        assert only_projection().current_allowed_count == baseline.current_allowed_count
+      after
+        tasks = Process.get(task_registry_key, [])
+        Process.delete(task_registry_key)
+        stop_rebuild_tasks(tasks, first.pid)
+      end
     end)
   end
 
@@ -237,6 +282,13 @@ defmodule NewYou.Proof.P818Test do
     NewYou.Analytics.P817PrivacyProjection
     |> Ash.Resource.Info.attributes()
     |> Enum.map(& &1.name)
+  end
+
+  defp stop_rebuild_tasks(tasks, first_pid) do
+    Enum.each(tasks, fn task ->
+      if task.pid == first_pid, do: send(task.pid, :continue_first_rebuild)
+      _ = Task.shutdown(task, 5_000)
+    end)
   end
 
   defp documented_and_typed?(module, function, arity) do

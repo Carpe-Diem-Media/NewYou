@@ -772,7 +772,13 @@ defmodule NewYou.Proof.P818 do
   end
 
   defp only_projection do
-    [projection] = Ash.read!(NewYou.Analytics.P817PrivacyProjection, authorize?: false)
+    projection_key = P805.analytics_projection_key()
+
+    [projection] =
+      NewYou.Analytics.P817PrivacyProjection
+      |> Ash.Query.filter(projection_key == ^projection_key)
+      |> Ash.read!(authorize?: false)
+
     projection
   end
 end

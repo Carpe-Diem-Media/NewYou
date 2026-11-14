@@ -95,20 +95,24 @@ try {
     finally { clearTimeout(timer); events.delete(key); }
   };
   const base = `http://127.0.0.1:${input.port}`;
+  const loginUrl = new URL('/login', base);
+  loginUrl.searchParams.set('locale', input.locale);
+  const loginPath = `${loginUrl.pathname}${loginUrl.search}`;
+  const loginPathLiteral = JSON.stringify(loginPath);
   if (input.mode === 'login') {
-    await navigation(() => cdp('Page.navigate', {url: `${base}/login?locale=${input.locale}`}));
+    await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
     checks.login_form = await evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && !!document.querySelector('form[action="/login"] [name="_csrf_token"]')`);
     await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.email)}; document.querySelector('[name="password"]').value=${JSON.stringify(input.password)};`);
     await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
     checks.protected_access = await evaluate(`location.pathname === '/session/protected'`);
     checks.reloaded_access = await evaluate(`fetch('/session/protected').then(r => r.status === 200)`);
   } else if (input.mode === 'stale_session') {
-    await navigation(() => cdp('Page.navigate', {url: `${base}/login?locale=${input.locale}`}));
+    await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
     checks.login_form = await evaluate(`!!document.querySelector('form[action="/login"] [name="_csrf_token"]')`);
     await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.email)}; document.querySelector('[name="password"]').value=${JSON.stringify(input.password)};`);
     await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
     checks.protected_page_loaded = await evaluate(`location.pathname === '/session/protected'`);
-    checks.logout_completed = await evaluate(`(async () => { const html = await fetch('/login?locale=${input.locale}', {cache: 'no-store'}).then(r => r.text()); const csrf = html.match(/name="_csrf_token"[^>]*value="([^"]+)"/)?.[1]; if (!csrf) return false; const response = await fetch('/session/logout', {method: 'POST', headers: {'content-type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams({_csrf_token: csrf})}); return response.status === 204; })()`);
+    checks.logout_completed = await evaluate(`(async () => { const html = await fetch(${loginPathLiteral}, {cache: 'no-store'}).then(r => r.text()); const csrf = html.match(/name="_csrf_token"[^>]*value="([^"]+)"/)?.[1]; if (!csrf) return false; const response = await fetch('/session/logout', {method: 'POST', headers: {'content-type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams({_csrf_token: csrf})}); return response.status === 204; })()`);
     checks.reconnect_denied = await evaluate(`fetch('/session/protected', {cache: 'no-store'}).then(r => r.status === 401)`);
     checks.stale_page_retained = await evaluate(`location.pathname === '/session/protected'`);
   } else if (input.mode === 'password_reset') {
