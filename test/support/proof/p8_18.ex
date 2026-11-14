@@ -209,23 +209,14 @@ defmodule NewYou.Proof.P818 do
     {:ok, credentials} = Identity.authenticate_password(request.email, request.password)
     {:ok, %{account_id: account_id}} = Identity.authorize_session(credentials)
 
-    previous = Application.get_env(:new_you, :p8_08_browser_development_fixtures)
-    Application.put_env(:new_you, :p8_08_browser_development_fixtures, true)
+    browser_checks = NewYou.Proof.P805Browser.run_stale_session(request, "af")
 
-    try do
-      browser_checks = NewYou.Proof.P805Browser.run_stale_session(request, "af")
-
-      P805.check(
-        id,
-        "browser_stale_page_denied_on_reconnect",
-        browser_checks["protected_page_loaded"] and browser_checks["logout_completed"] and
-          browser_checks["reconnect_denied"] and browser_checks["stale_page_retained"]
-      )
-    after
-      if previous == nil,
-        do: Application.delete_env(:new_you, :p8_08_browser_development_fixtures),
-        else: Application.put_env(:new_you, :p8_08_browser_development_fixtures, previous)
-    end
+    P805.check(
+      id,
+      "browser_stale_page_denied_on_reconnect",
+      browser_checks["protected_page_loaded"] and browser_checks["logout_completed"] and
+        browser_checks["reconnect_denied"] and browser_checks["stale_page_retained"]
+    )
 
     :ok = Identity.revoke_session(credentials)
 

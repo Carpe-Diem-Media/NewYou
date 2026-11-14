@@ -8,7 +8,8 @@ defmodule NewYouWeb.PasswordSessionController do
   defp require_proof_environment(conn, _) do
     if :erlang.andalso(
          @development_environment,
-         Application.get_env(:new_you, :p8_08_browser_development_fixtures) == true
+         Application.get_env(:new_you, :p8_08_browser_development_fixtures) == true or
+           conn.private[:p8_08_browser_development_fixtures] == true
        ) do
       conn
     else

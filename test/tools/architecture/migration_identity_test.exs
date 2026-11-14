@@ -16,19 +16,43 @@ defmodule NewYou.Architecture.MigrationIdentityTest do
         assert String.match?(timestamp, ~r/^\d+$/), "invalid migration version in #{path}"
         [_, migration_module] = Regex.run(~r/^defmodule\s+([A-Za-z0-9_.]+)\s+do/m, source)
 
-        %{path: path, name: migration_name, module: migration_module}
+        %{
+          path: path,
+          timestamp: String.to_integer(timestamp),
+          name: migration_name,
+          module: migration_module
+        }
       end)
 
-    duplicate_names = duplicate_values(entries, & &1.name)
-    duplicate_modules = duplicate_values(entries, & &1.module)
+    assert_unique(entries, & &1.timestamp, "migration timestamps")
+    assert_unique(entries, & &1.name, "migration names")
+    assert_unique(entries, & &1.module, "migration modules")
+  end
 
-    assert duplicate_names == [], "duplicate migration names: #{inspect(duplicate_names)}"
-    assert duplicate_modules == [], "duplicate migration modules: #{inspect(duplicate_modules)}"
+  test "same migration timestamp is duplicated even when suffixes differ" do
+    entries = [
+      %{path: "20261114154132_analytics.exs", timestamp: 20_261_114_154_132},
+      %{path: "20261114154132_analytics_revision.exs", timestamp: 20_261_114_154_132}
+    ]
+
+    assert duplicate_values(entries, & &1.timestamp) == [
+             {20_261_114_154_132,
+              ["20261114154132_analytics.exs", "20261114154132_analytics_revision.exs"]}
+           ]
+
+    assert_raise ExUnit.AssertionError, ~r/duplicate migration timestamps/, fn ->
+      assert_unique(entries, & &1.timestamp, "migration timestamps")
+    end
   end
 
   defp duplicate_values(entries, key_fun) do
     entries
     |> Enum.group_by(key_fun, & &1.path)
     |> Enum.filter(fn {_value, paths} -> length(paths) > 1 end)
+  end
+
+  defp assert_unique(entries, key_fun, label) do
+    duplicates = duplicate_values(entries, key_fun)
+    assert duplicates == [], "duplicate #{label}: #{inspect(duplicates)}"
   end
 end

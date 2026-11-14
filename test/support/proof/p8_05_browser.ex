@@ -326,6 +326,7 @@ defmodule NewYou.Proof.P805Browser.Endpoint do
 
         response
       end)
+      |> Plug.Conn.put_private(:p8_08_browser_development_fixtures, true)
 
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo, sandbox: false)
 
