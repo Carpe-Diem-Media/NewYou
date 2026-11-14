@@ -134,6 +134,8 @@ Do not create a separate governance document merely to record these implementati
 
 ## 6. Implement test-first
 
+Follow `AGENTS.md` "Verification stages and failure diagnosis" throughout implementation. Use focused checks while developing. Diagnose a failed broad command before another broad run; record command/SHA, classify the cause, reproduce narrowly, correct and prove the correction before returning to the stable-candidate gate. Do not repeat expensive gates on unchanged inputs without a recorded diagnostic reason.
+
 For each material behaviour:
 
 1. write the smallest focused test that expresses the required behaviour;
@@ -165,7 +167,7 @@ Do not mutate Product/Architecture/Domain/Roadmap or semantic contracts merely t
 
 ## 8. Automatic knowledge capture before review
 
-At the review checkpoint, generate the PR history record from live PR metadata and the WELL ticket already identified in implementation context. Export metadata with `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` and run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/pr.json --ticket WELL-N`. The ticket argument is explicit; the tool does not infer it from the PR title or body. GitHub metadata validates repository, PR, base, head and URL. The record does not copy PR prose, author details or Plane state. Do not add a manual receipt or Plane-unavailable explanation.
+After applicable local checks, commit the stable source and run the existing OCR checkpoint against that committed SHA. If needed, open a Draft PR after the identity preflight below and push the source checkpoint. At the review checkpoint, generate the PR history record from live PR metadata and the WELL ticket already identified in implementation context. Export metadata with `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` and run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/pr.json --ticket WELL-N`. The ticket argument is explicit; the tool does not infer it from the PR title or body. GitHub metadata validates repository, PR, base, head and URL. The record does not copy PR prose, author details or Plane state. Do not add a manual receipt or Plane-unavailable explanation.
 
 Commit `docs/development/knowledge/history/pr-NUMBER.json` before final review. Regenerate it if source or base changes, then request fresh review and CI. Do not regenerate for prose, author or Plane-state changes. Foundation Integrity checks the exact event binding and record with `mise exec -- python3 -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"`; when `--ticket` is omitted, check uses stable tickets in the committed record. If supplied, the ticket must agree. Keep the mechanical record and canonical capability map; do not create a duplicate PR dossier. A final approval must never be followed by a generated commit.
 
@@ -191,6 +193,8 @@ For DB-dependent commands, use the DevCore workflow in `AGENTS.md` when configur
 Do not claim a check passed unless you observed it pass. Separate unrelated pre-existing failures from PR-caused failures with evidence; do not hide either.
 
 ## 10. Open the PR and hand off exact evidence
+
+Before creating or updating a routine PR, run `gh api user --jq .login`. It must return `JC-Agents`. Run `python3 -m tools.newyou_attest pr-preflight`, or add `--pr NUMBER` for an existing PR to verify its author too. Stop on wrong/missing authentication or a founder-authored PR. Do not request founder credentials. `JCSchoeman96` independently reviews the exact final head; the agent cannot approve its own work.
 
 When the implementation and required local verification are review-ready:
 

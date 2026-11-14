@@ -391,6 +391,35 @@ Ordinary JIT implementation choices do not justify governance amendments merely 
 
 Investigate material Foundation Full regressions reported by a nightly run against `main`, and use the recorded run SHA to identify affected changes.
 
+### Verification stages and failure diagnosis
+
+Focused development proof answers whether the changed implementation behaves correctly. During IMPLEMENTING, run the narrowest useful test, formatting, compile, architecture or Python contract check. Do not run `mix check` after every edit or `mix check.deep` during each iteration. Reuse settled reconnaissance until a relevant input changes.
+
+When a broad verification command fails, diagnose the failure before repeating that broad command. Enter TARGETED_FAILURE and:
+
+1. Record the failing command and exact source SHA, including any uncommitted inputs.
+2. Inspect the failing test, step, compilation error or relevant logs.
+3. Classify the cause as an implementation defect, test defect, environment issue, dependency issue, fixture interference or suspected nondeterminism.
+4. Reproduce with the narrowest appropriate command.
+5. Correct the identified cause and run focused verification on the correction.
+6. Return to CANDIDATE_STABLE only after focused checks pass and material implementation is complete, then rerun the applicable complete gate.
+
+Never blindly rerun an expensive suite on unchanged inputs. An unchanged-input retry needs a documented diagnostic reason, such as a suspected transient infrastructure failure. A successful retry does not resolve the original failure; investigate it. Do not weaken tests, assertions, security checks or timeouts to hide failures.
+
+Final candidate proof checks the complete applicable repository obligations. For a stable candidate with application code or executable engineering changes, run `mise exec -- devcore-project run test -- mix check` once under normal circumstances. It includes architecture validation. Run `mise exec -- devcore-project run test -- mix check.deep` for application code, dependencies or architecture-rule changes, plus applicable checks not included by those aliases. Focused tests do not replace final integration proof. Material corrections invalidate affected evidence and require fresh verification; there is no artificial retry limit after actual changes.
+
+For proven non-executable documentation, inspect the complete diff and actual consumers. Run directly relevant documentation, instruction, router, knowledge and provenance checks; verify security and workflow requirements remain intact. File extensions alone do not establish an exemption. A Markdown build input still needs its applicable engineering gates. Record a reasoned OCR exemption where permitted. Do not require the full Elixir suite solely because a file is Markdown.
+
+LOCAL_VERIFIED requires all applicable local gates passing. Follow the ticket skill for source commit, Draft PR and generated history. A mechanical history-only commit does not require another full application suite when verified application inputs remain identical. Final provenance and hosted checks still bind the exact final PR head/base.
+
+PR_CI_PENDING cannot become REVIEW_READY until all required exact-head hosted checks, knowledge validation and applicable OCR are complete. PR_CI_FAILED follows the same diagnosis procedure before rerun. Preserve the current local-checks-before-OCR order pending separate WELL-125 reconciliation. CHANGES_REQUESTED requires corrections, refreshed invalidated proof and fresh exact-head review. Changed implementation, stale CI, missing approval and base drift prevent advancement.
+
+APPROVED requires authenticated independent Master Gate approval for the exact final head. Before authorised integration run the read-only native candidate check. INTEGRATED requires the read-only native result check and resulting-main reconciliation. Only that proof permits Plane Done and dependent work. Merge alone never completes delivery.
+
+### Routine PR identity preflight
+
+Before creating or updating a routine PR, run `gh api user --jq .login` and `python3 -m tools.newyou_attest pr-preflight`, adding `--pr NUMBER` for an existing PR. Require actual authenticated `JC-Agents` identity and an agent-authored existing PR. Git commit name/email is insufficient. Wrong, missing or unverifiable authentication stops PR creation/update. Never request founder credentials. `JCSchoeman96` remains the independent code-owner reviewer; do not self-approve, relax protection or merge without independent authority.
+
 ### Independent OCR review checkpoint
 
 For material engineering changes (application code, dependencies, migrations, authentication/authorization, security/privacy, lifecycles or cross-Domain behaviour), pass applicable local engineering checks first. Then run `ocr review --from origin/main --to HEAD` against the implementation SHA before independent Master Gate handoff. The command must use the current intended `origin/main` baseline. Follow `.agents/skills/code-change-verification/SKILL.md` for coverage, exclusions and evidence.
@@ -446,6 +475,8 @@ If ".devcore/project.conf" exists:
 4. Run local Elixir/Mix commands requiring a project environment with:
    - "mise exec -- devcore-project run dev -- <command>"
    - "mise exec -- devcore-project run test -- <command>"
+
+If doctor passes initially, proceed without render. Rendering is allowed automatically only for the missing/stale local-file case above; a healthy worktree needs no recovery.
 
 "devcore-project activate" is a provisioning operation, not routine worktree setup or a generic doctor-failure repair. Use it only for separately authorised workstation provisioning, never as an automatic fallback in agent startup.
 

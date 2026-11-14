@@ -3,6 +3,15 @@ name: Warm application dependency cache
 on:
   push:
     branches: [main]
+    paths:
+      - 'mix.exs'
+      - 'mix.lock'
+      - '.tool-versions'
+      - 'config/**/*.exs'
+      - '.github/workflows/application-cache.yml'
+      - '.github/workflows/application-ci.yml'
+      - 'tools/ci/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,6 +21,7 @@ env:
 
 jobs:
   warm:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -32,7 +42,7 @@ jobs:
             deps
             _build/test/lib
             _build/ci-dependency-cache.json
-          key: app-deps-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs') }}
+          key: app-deps-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', '.github/workflows/application-cache.yml', '.github/workflows/application-ci.yml', 'tools/ci/**') }}
       - name: Prepare locked dependencies
         env:
           CACHE_RESTORE_OUTCOME: ${{ steps.cache.outcome }}
@@ -50,4 +60,4 @@ jobs:
             deps
             _build/test/lib
             _build/ci-dependency-cache.json
-          key: app-deps-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs') }}
+          key: app-deps-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', '.github/workflows/application-cache.yml', '.github/workflows/application-ci.yml', 'tools/ci/**') }}

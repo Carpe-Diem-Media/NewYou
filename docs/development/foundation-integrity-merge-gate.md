@@ -4,7 +4,7 @@ This is the current operational CI and merge contract. The workflows define the 
 
 ## Required gate
 
-The public repository protects `main` with active ruleset `24191860`, which requires a pull request and a successful **Foundation Integrity** status check. Eligible development follows the review and merge procedure below. Apply stronger approval only when a governing or external obligation requires it. Foundation Integrity comes from hosted pull request CI. Every pull request runs Foundation Smoke. Application CI and the Hex security audit run when changed paths select them. Foundation Full runs only in the scheduled nightly hardening workflow and is not part of PR checks or the required aggregate. The application cache warmer is separate. It may save dependency caches from trusted `main` pushes; PR runs may restore those caches but do not save them. Cache entries contain no test results or build output.
+The public repository protects `main` with active ruleset `24191860`, which requires a pull request and a successful **Foundation Integrity** status check. Eligible development follows the review and merge procedure below. Apply stronger approval only when a governing or external obligation requires it. Foundation Integrity comes from hosted pull request CI. Every pull request runs Foundation Smoke. Application CI and the Hex security audit run when changed paths select them. Foundation Full runs only in the scheduled nightly hardening workflow and is not part of PR checks or the required aggregate. The application cache warmer is separate. It may save dependency caches from dependency-relevant trusted `main` pushes or a main-only manual recovery run; PR runs may restore those caches but do not save them. Cache entries contain dependency source and compiled dependencies, never application test results.
 
 The aggregate requires successful routing and Smoke, plus successful Application CI and Hex security audit when selected. It does not wait for Foundation Full.
 
@@ -23,7 +23,9 @@ The repository path communicates the normal CI route:
 | `.agents/**`, `AGENTS.md` and normal engineering files | Smoke + applicable engineering CI |
 | unknown, empty or unclassifiable diffs | route job fails; Smoke still runs |
 
-Classification is explicit. Python files under `tests/` do not select Application CI by language or location alone. Foundation Full tests and tooling are named directly in the classifier so governance-owned changes can skip Application CI. No PR path selects Foundation Full. Unknown paths and unreadable ranges fail the required route job.
+Exact allowlisted non-executable instruction/operating documentation and the current event's generated PR-history record use Smoke without Application CI. The allowlist and unsafe-mode/deletion guards live in the single router. Smoke still checks instruction contracts and exact-event provenance; arbitrary JSON and capability maps are not exempt. See [CI routing details](foundation-integrity-ci.md#ci-routing).
+
+Classification is explicit. Python regression tests retain Application CI unless explicitly classified as Foundation machinery. Foundation Full tests and tooling are named directly in the classifier so governance-owned changes can skip Application CI. No PR path selects Foundation Full. Unknown paths and unreadable ranges fail the required route job.
 
 Delivery state such as Ready, blockers, dependencies, PR review and Done remains in Plane project `WELL`; it is not mirrored into repository documents.
 
@@ -55,6 +57,8 @@ The historical pre-migration suite and audit use temporary compatibility views i
 See [Foundation Integrity CI](foundation-integrity-ci.md) for certification history and command details.
 
 ## Eligible development merge
+
+Before creating or updating a routine PR, follow the actual-authentication and existing-author preflight in `AGENTS.md`. The implementing account must be `JC-Agents`; a founder-authored PR cannot use the routine agent/founder approval route. Never request founder credentials or change protections to resolve an identity mismatch.
 
 For eligible development work, ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the exact final head. That review is both technical approval and standing merge authorization. That is the only approval comment required for this route. Do not add a second founder comment or a base-SHA line. The implementing agent must not use founder credentials. The founder has approved retaining JC-Agents' All-repository Admin, CI/CD Admin and Security manager roles. Native verification accepts effective repository Admin or Write for the exact JC-Agents login and user ID, while retaining active organization Member access. Admin access does not authorize bypass, self-approval or a merge without the current-head founder review. Re-review any changed head.
 

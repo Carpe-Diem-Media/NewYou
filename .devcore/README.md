@@ -2,6 +2,8 @@
 
 NewYou uses existing shared DEV and TEST PostgreSQL allocations. Each checkout/worktree has its own Git-ignored `.env.dev.local` and `.env.test.local` files. A new worktree may lack those files without any database or credential fault. The T3 Code worktree bootstrap may render them before an agent starts; verify in the actual worktree regardless.
 
+The canonical startup policy is in [AGENTS.md](../AGENTS.md). If doctor passes initially, proceed without render.
+
 From the current worktree root:
 
 1. Run `devcore-project doctor`.

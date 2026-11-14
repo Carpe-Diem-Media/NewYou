@@ -3,6 +3,9 @@
 
 Every changed path is classified into exactly one category:
 
+* ``documentation``: exact allowlisted non-executable instructions/docs and
+  generated PR history. Always-on Smoke validates instruction contracts and
+  exact-event provenance, including missing records and tampering.
 * ``application``: application source, delivery contracts, development docs,
   agent instructions, application tests and normal engineering files. These
   run Application CI.
@@ -34,6 +37,20 @@ import os
 import subprocess
 import sys
 from pathlib import PurePosixPath
+
+
+# Only reviewed instruction and operational documentation paths qualify.
+# Source-linked capability maps and unknown skills/docs retain engineering CI.
+DOCUMENTATION_FILES = frozenset({
+    "AGENTS.md",
+    ".devcore/README.md",
+    ".agents/skills/ticket-implement/SKILL.md",
+    ".agents/skills/code-change-verification/SKILL.md",
+    ".agents/skills/project-implementation/SKILL.md",
+    "docs/development/foundation-integrity-ci.md",
+    "docs/development/foundation-integrity-merge-gate.md",
+    "docs/development/knowledge/README.md",
+})
 
 
 # --- Application / normal engineering --------------------------------------
@@ -126,13 +143,17 @@ GOVERNANCE_PREFIXES = (
 )
 
 
-def classify_path(path: str) -> str:
-    """Return ``application``, ``governance`` or ``unknown`` for one repo path."""
+def classify_path(path: str, *, pr_number: int | None = None) -> str:
+    """Classify paths; documentation eligibility still requires Smoke validation."""
 
     normalized = path.removeprefix("./")
     parts = PurePosixPath(normalized).parts
     if not normalized or normalized.startswith("/") or "\\" in normalized or ".." in parts:
         return "unknown"
+    if (normalized in DOCUMENTATION_FILES or
+            (pr_number is not None and pr_number > 0
+             and normalized == f"docs/development/knowledge/history/pr-{pr_number}.json")):
+        return "documentation"
     if normalized in GOVERNANCE_FILES or normalized.startswith(GOVERNANCE_PREFIXES):
         return "governance"
     if normalized in APPLICATION_FILES or normalized.startswith(APPLICATION_PREFIXES):
@@ -146,7 +167,7 @@ def is_application_path(path: str) -> bool:
     return classify_path(path) == "application"
 
 
-def classify_changed_paths(paths: list[str]) -> dict[str, bool]:
+def classify_changed_paths(paths: list[str], *, pr_number: int | None = None) -> dict[str, bool]:
     """Route a list of changed paths.
 
     * Empty change ranges and unknown paths fail closed by rejecting the route.
@@ -157,9 +178,9 @@ def classify_changed_paths(paths: list[str]) -> dict[str, bool]:
     normalized = [path for path in paths if path]
     if not normalized:
         raise RoutingError("change range is empty; refusing to skip routed CI")
-    categories = {classify_path(path) for path in normalized}
+    categories = {classify_path(path, pr_number=pr_number) for path in normalized}
     if "unknown" in categories:
-        unknown = sorted(path for path in normalized if classify_path(path) == "unknown")
+        unknown = sorted(path for path in normalized if classify_path(path, pr_number=pr_number) == "unknown")
         raise RoutingError(f"unclassified changed path(s): {', '.join(unknown)}")
     return {"application_changes": "application" in categories}
 
@@ -187,7 +208,8 @@ def _changed_paths(event_name: str, base_sha: str, head_sha: str, cwd: str) -> l
     return [os.fsdecode(path) for path in result.stdout.split(b"\0") if path]
 
 
-def _validated_event_paths(event_name: str, base_sha: str, head_sha: str, cwd: str) -> list[str]:
+def _validated_event_paths(event_name: str, base_sha: str, head_sha: str, cwd: str,
+                           pr_number: int | None = None) -> list[str]:
     if event_name not in {"pull_request", "push"}:
         raise RoutingError(f"unsupported routing event: {event_name or '<missing>'}")
     if not base_sha or not head_sha:
@@ -198,24 +220,51 @@ def _validated_event_paths(event_name: str, base_sha: str, head_sha: str, cwd: s
         raise RoutingError(f"could not read {event_name} change range") from exc
     if not paths:
         raise RoutingError(f"{event_name} change range is empty; refusing to skip routed CI")
+    # Extension/path allowlisting does not permit an executable, symlink,
+    # deletion or rename to silently use the reduced documentation route.
+    try:
+        comparison = base_sha
+        if event_name == "pull_request":
+            comparison = subprocess.run(
+                ["git", "merge-base", base_sha, head_sha], cwd=cwd,
+                capture_output=True, text=True, check=True,
+            ).stdout.strip()
+        for path in paths:
+            if classify_path(path, pr_number=pr_number) != "documentation":
+                continue
+            modes = []
+            for revision in (comparison, head_sha):
+                entry = subprocess.run(
+                    ["git", "ls-tree", "-z", revision, "--", path], cwd=cwd,
+                    capture_output=True, check=True,
+                ).stdout
+                modes.append(entry.split(b" ", 1)[0] if entry else None)
+            if modes[1] != b"100644" or modes[0] not in (None, b"100644"):
+                raise RoutingError(f"unsafe documentation mode or deletion: {path}")
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RoutingError("could not validate documentation file modes") from exc
     return paths
 
 
-def classify_event(event_name: str, base_sha: str, head_sha: str, cwd: str = ".") -> dict[str, bool]:
+def classify_event(event_name: str, base_sha: str, head_sha: str, cwd: str = ".", *,
+                   pr_number: int | None = None) -> dict[str, bool]:
     """Classify a GitHub event, failing closed when its range is unknown."""
 
-    return classify_changed_paths(_validated_event_paths(event_name, base_sha, head_sha, cwd))
+    return classify_changed_paths(
+        _validated_event_paths(event_name, base_sha, head_sha, cwd, pr_number), pr_number=pr_number
+    )
 
 
-def classify_deep_event(event_name: str, base_sha: str, head_sha: str, cwd: str = ".") -> bool:
+def classify_deep_event(event_name: str, base_sha: str, head_sha: str, cwd: str = ".", *,
+                        pr_number: int | None = None) -> bool:
     """Classify whether an event needs the slower Application CI lane.
 
     Missing, unreadable, empty or unclassified ranges fail the route job. The
     event classifier validates these conditions before selecting any lane.
     """
 
-    paths = _validated_event_paths(event_name, base_sha, head_sha, cwd)
-    classify_changed_paths(paths)
+    paths = _validated_event_paths(event_name, base_sha, head_sha, cwd, pr_number)
+    classify_changed_paths(paths, pr_number=pr_number)
     return classify_deep_application_changes(paths)
 
 
@@ -245,12 +294,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--base-sha", default=os.environ.get("BASE_SHA", ""))
     parser.add_argument("--head-sha", default=os.environ.get("HEAD_SHA", ""))
     parser.add_argument("--root", default=".")
+    parser.add_argument("--pr-number", type=int, default=os.environ.get("PR_NUMBER") or None)
     args = parser.parse_args(argv)
 
     try:
-        decision = classify_event(args.event, args.base_sha, args.head_sha, args.root)
+        decision = classify_event(args.event, args.base_sha, args.head_sha, args.root, pr_number=args.pr_number)
         deep_application_changes = classify_deep_event(
-            args.event, args.base_sha, args.head_sha, args.root
+            args.event, args.base_sha, args.head_sha, args.root, pr_number=args.pr_number
         )
     except RoutingError as exc:
         print(f"CI lane routing failed: {exc}", file=sys.stderr)

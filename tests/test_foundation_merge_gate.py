@@ -48,14 +48,41 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
     def test_cache_writer_is_main_only_and_pr_jobs_restore_only(self):
         warmer = (WORKFLOWS / "application-cache.yml").read_text(encoding="utf-8")
         application = (WORKFLOWS / "application-ci.yml").read_text(encoding="utf-8")
-        self.assertIn("  push:\n    branches: [main]", warmer)
+        self.assertIn("  push:\n    branches: [main]\n    paths:", warmer)
+        self.assertIn("  workflow_dispatch:", warmer)
+        self.assertIn("    if: github.ref == 'refs/heads/main'", warmer)
+        for path in (
+            "mix.exs",
+            "mix.lock",
+            ".tool-versions",
+            "config/**/*.exs",
+            ".github/workflows/application-cache.yml",
+            ".github/workflows/application-ci.yml",
+            "tools/ci/**",
+        ):
+            with self.subTest(path=path):
+                self.assertIn(f"      - '{path}'", warmer)
+        # Exact filter ownership prevents a broad docs/lib/** entry from
+        # accidentally restoring the every-merge workflow trigger.
+        import re
+        filters = re.findall(r"^      - '([^']+)'$", warmer, re.MULTILINE)
+        self.assertEqual({"mix.exs", "mix.lock", ".tool-versions", "config/**/*.exs",
+                          ".github/workflows/application-cache.yml",
+                          ".github/workflows/application-ci.yml", "tools/ci/**"}, set(filters))
+        save = warmer.split("      - name: Save trusted dependency cache", 1)[1]
+        self.assertNotIn("continue-on-error", save)
+        self.assertLess(warmer.index("run: bash tools/ci/prepare_cached_dependencies.sh"),
+                        warmer.index("run: python3 tools/ci/cache_manifest.py write"))
+        self.assertLess(warmer.index("run: python3 tools/ci/cache_manifest.py write"),
+                        warmer.index("uses: actions/cache/save@v4"))
         self.assertNotIn("pull_request", warmer)
         self.assertNotIn("workflow_run", warmer)
         self.assertIn("actions/cache/save@v4", warmer)
         self.assertEqual(2, application.count("actions/cache/restore@v4"))
         self.assertNotIn("actions/cache/save@v4", application)
         self.assertNotIn("pull_request_target", warmer + application)
-        self.assertEqual(4, (application + warmer).count("app-deps-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs') }}"))
+        key = "app-deps-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', '.github/workflows/application-cache.yml', '.github/workflows/application-ci.yml', 'tools/ci/**') }}"
+        self.assertEqual(4, (application + warmer).count(key))
 
     def test_mix_aliases_enforce_warnings_and_strict_security_parsing(self):
         mix = (ROOT / "mix.exs").read_text(encoding="utf-8")
@@ -120,6 +147,31 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
         self.assertNotIn("workflow_dispatch:", nightly)
         self.assertIn("    - cron: '0 2 * * *'\n      timezone: Africa/Johannesburg", nightly)
         self.assertIn("uses: ./.github/workflows/foundation-full.yml", nightly)
+
+
+class FoundationAggregateExecutionTests(unittest.TestCase):
+    def test_aggregate_requires_all_selected_results_and_accepts_only_expected_skips(self):
+        import os
+        import subprocess
+        workflow = (WORKFLOWS / 'foundation-integrity.yml').read_text()
+        script = workflow.split('          set -euo pipefail\n', 1)[1]
+        script = 'set -euo pipefail\n' + '\n'.join(line[10:] for line in script.splitlines())
+        baseline = dict(os.environ, ROUTE_RESULT='success', SMOKE_RESULT='success',
+                        APP_REQUIRED='false', APP_RESULT='skipped',
+                        AUDIT_REQUIRED='false', AUDIT_RESULT='skipped')
+        cases = [({}, True), ({'APP_REQUIRED': 'true', 'APP_RESULT': 'success'}, True)]
+        for key in ('ROUTE_RESULT', 'SMOKE_RESULT'):
+            for result in ('', 'failure', 'cancelled', 'skipped'):
+                cases.append(({key: result}, False))
+        for required, result in (('', 'skipped'), ('true', ''), ('true', 'skipped'),
+                                 ('true', 'failure'), ('false', ''), ('false', 'success')):
+            cases.append(({'APP_REQUIRED': required, 'APP_RESULT': result}, False))
+            cases.append(({'AUDIT_REQUIRED': required, 'AUDIT_RESULT': result}, False))
+        for changes, expected in cases:
+            with self.subTest(changes=changes):
+                result = subprocess.run(['bash', '-c', script], env=dict(baseline, **changes),
+                                        capture_output=True, text=True)
+                self.assertEqual(expected, result.returncode == 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":

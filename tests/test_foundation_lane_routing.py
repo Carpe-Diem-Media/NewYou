@@ -34,7 +34,7 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
         self.assertEqual({"application_changes": True}, decision)
 
     def test_root_engineering_files_run_engineering_checks_without_full(self):
-        for path in ["AGENTS.md", ".tool-versions", ".gitattributes", ".devcore/project.conf", ".agents/skills/project-implementation/SKILL.md"]:
+        for path in [".tool-versions", ".gitattributes", ".devcore/project.conf"]:
             with self.subTest(path=path):
                 self.assertEqual("application", classify_path(path))
                 self.assertEqual({"application_changes": True}, _route([path]))
@@ -193,10 +193,7 @@ class SemanticRootRoutingTests(unittest.TestCase):
             "docs/delivery/execution/p8-05-registration-jit-spec.md",
             "docs/delivery/content-evidence/verification-messages/evidence.json",
             "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
-            "docs/development/foundation-integrity-merge-gate.md",
             "docs/README.md",
-            "AGENTS.md",
-            ".agents/skills/ticket-implement/SKILL.md",
             "tests/test_application_regression.py",
             "tests/test_delivery_contract_regression.py",
             "tests/test_foundation_smoke.py",
@@ -215,8 +212,6 @@ class SemanticRootRoutingTests(unittest.TestCase):
     def test_deep_application_lane_is_limited_to_code_and_dependency_inputs(self):
         for path in [
             "docs/delivery/jit/identity/IDENTITY_JIT.md",
-            "docs/development/foundation-integrity-merge-gate.md",
-            ".agents/skills/ticket-implement/SKILL.md",
             "tests/test_application_regression.py",
             "test/new_you/accounts_test.exs",
         ]:
@@ -419,6 +414,7 @@ class TopologyTests(unittest.TestCase):
     def test_required_entry_point_keeps_name_and_has_no_full_lane(self):
         workflow = (WORKFLOWS / "foundation-integrity.yml").read_text(encoding="utf-8")
         self.assertIn("name: Foundation Integrity", workflow)
+        self.assertIn("PR_NUMBER: ${{ github.event.pull_request.number }}", workflow)
         self.assertIn("uses: ./.github/workflows/application-ci.yml", workflow)
         self.assertIn("needs.route.outputs.application_changes == 'true'", workflow)
         self.assertNotIn("foundation_full", workflow)
@@ -456,6 +452,113 @@ class TopologyTests(unittest.TestCase):
             in path.read_text(encoding="utf-8")
         ]
         self.assertEqual(["nightly-hardening.yml"], callers)
+
+
+class NonExecutableDocumentationRoutingTests(unittest.TestCase):
+    def test_exact_allowlist_and_pr236_regression(self):
+        paths = ['AGENTS.md', '.devcore/README.md',
+                 '.agents/skills/ticket-implement/SKILL.md',
+                 '.agents/skills/code-change-verification/SKILL.md',
+                 '.agents/skills/project-implementation/SKILL.md',
+                 'docs/development/foundation-integrity-ci.md',
+                 'docs/development/foundation-integrity-merge-gate.md',
+                 'docs/development/knowledge/README.md',
+                 'docs/development/knowledge/history/pr-236.json']
+        for path in paths:
+            with self.subTest(path=path):
+                self.assertEqual('documentation', classify_path(path, pr_number=236))
+                self.assertFalse(classify_deep_application_changes([path]))
+                self.assertFalse(classify_hex_audit_changes([path]))
+                self.assertEqual({'application_changes': False}, classify_changed_paths([path], pr_number=236))
+        self.assertEqual({'application_changes': False}, classify_changed_paths([
+            '.devcore/README.md', 'AGENTS.md', 'docs/development/knowledge/history/pr-236.json'], pr_number=236))
+
+    def test_only_current_pr_history_record_can_use_reduced_lane(self):
+        path = 'docs/development/knowledge/history/pr-236.json'
+        self.assertEqual({'application_changes': False}, classify_changed_paths([path], pr_number=236))
+        self.assertEqual({'application_changes': True}, classify_changed_paths([path], pr_number=237))
+        self.assertEqual({'application_changes': True}, classify_changed_paths([path]))
+
+    def test_markdown_and_json_are_not_blanket_exemptions(self):
+        for path in ['docs/development/example.md', '.agents/skills/unknown/SKILL.md',
+                     '.devcore/bootstrap.sh', 'docs/development/knowledge/identity.registration.json',
+                     'docs/development/knowledge/history/arbitrary.json',
+                     'docs/development/knowledge/history/pr-0.json',
+                     'docs/development/knowledge/history/nested/pr-236.json']:
+            with self.subTest(path=path):
+                self.assertEqual({'application_changes': True}, classify_changed_paths([path], pr_number=236))
+        for path in ['lib/app.ex', 'test/app_test.exs', 'priv/repo/migrations/x.exs',
+                     'mix.exs', 'mix.lock', '.devcore/script.sh', '.github/workflows/application-ci.yml']:
+            with self.subTest(path=path):
+                self.assertEqual({'application_changes': True}, _route(['AGENTS.md', path]))
+        with self.assertRaises(ValueError):
+            _route(['AGENTS.md', 'unknown.txt'])
+
+    def test_deleted_renamed_executable_or_symlinked_allowlisted_docs_fail_closed(self):
+        for operation in ('delete', 'rename', 'executable', 'symlink'):
+            with self.subTest(operation=operation), tempfile.TemporaryDirectory() as directory:
+                root, git = EventRoutingTests()._repo(directory)
+                (root / 'AGENTS.md').write_text('contract\n')
+                git('add', '.')
+                git('commit', '--quiet', '-m', 'instruction baseline')
+                base = git('rev-parse', 'HEAD')
+                if operation == 'delete':
+                    (root / 'AGENTS.md').unlink()
+                elif operation == 'rename':
+                    git('mv', 'AGENTS.md', 'README.md')
+                elif operation == 'executable':
+                    (root / 'AGENTS.md').chmod(0o755)
+                else:
+                    (root / 'AGENTS.md').unlink()
+                    (root / 'AGENTS.md').symlink_to('lib/app.ex')
+                git('add', '-A')
+                git('commit', '--quiet', '-m', operation)
+                with self.assertRaises(ValueError):
+                    classify_event('pull_request', base, git('rev-parse', 'HEAD'), str(root))
+
+    def test_event_history_skip_is_bound_to_pr_number(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root, git = EventRoutingTests()._repo(directory)
+            base = git('rev-parse', 'HEAD')
+            record = root / 'docs/development/knowledge/history/pr-236.json'
+            record.parent.mkdir(parents=True)
+            record.write_text('{}')  # Routing only; Smoke rejects invalid provenance.
+            git('add', '.')
+            git('commit', '--quiet', '-m', 'history')
+            head = git('rev-parse', 'HEAD')
+            for number, expected in ((236, False), (237, True), (None, True)):
+                with self.subTest(pr_number=number):
+                    self.assertEqual({'application_changes': expected},
+                                     classify_event('pull_request', base, head, str(root), pr_number=number))
+
+    def test_regular_instruction_edit_can_skip_application_ci(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root, git = EventRoutingTests()._repo(directory)
+            base = git('rev-parse', 'HEAD')
+            (root / 'AGENTS.md').write_text('contract\n')
+            git('add', '.')
+            git('commit', '--quiet', '-m', 'non-executable instructions')
+            self.assertEqual({'application_changes': False},
+                             classify_event('pull_request', base, git('rev-parse', 'HEAD'), str(root)))
+
+
+class HistoricalDocumentationRoutingTests(unittest.TestCase):
+    def test_live_github_path_snapshots_231_233_236(self):
+        # Captured using pulls/{number}/files on 2026-11-14. The previous
+        # router selected Application CI for each. README remains outside the
+        # reviewed allowlist, so #231 is deliberately a negative fixture.
+        fixtures = {
+            231: (['.agents/skills/code-change-verification/SKILL.md', 'AGENTS.md',
+                   'README.md', 'docs/development/knowledge/history/pr-231.json'], True),
+            233: (['.agents/skills/code-change-verification/SKILL.md',
+                   '.agents/skills/ticket-implement/SKILL.md', 'AGENTS.md',
+                   'docs/development/knowledge/history/pr-233.json'], False),
+            236: (['.devcore/README.md', 'AGENTS.md',
+                   'docs/development/knowledge/history/pr-236.json'], False),
+        }
+        for number, (paths, required) in fixtures.items():
+            with self.subTest(pr=number):
+                self.assertEqual({'application_changes': required}, classify_changed_paths(paths, pr_number=number))
 
 
 if __name__ == "__main__":
