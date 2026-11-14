@@ -89,6 +89,8 @@ defmodule NewYou.Proof.P818Test do
   test "Privacy computes the Analytics snapshot with one database-side aggregate query" do
     P805.with_fixture(fn ->
       assert {:ok, baseline} = Privacy.current_p817_proof_purpose_snapshot()
+      assert baseline.current_allowed_count >= 0
+      assert baseline.revision >= 0
 
       allowed_subject = Ecto.UUID.generate()
       allowed_operation = Ecto.UUID.generate()
@@ -119,6 +121,8 @@ defmodule NewYou.Proof.P818Test do
 
       try do
         assert {:ok, snapshot} = Privacy.current_p817_proof_purpose_snapshot()
+        assert snapshot.current_allowed_count >= 0
+        assert snapshot.revision >= 0
         assert snapshot.current_allowed_count == baseline.current_allowed_count + 1
         assert snapshot.revision == baseline.revision + 3
 

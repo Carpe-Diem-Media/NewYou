@@ -138,10 +138,14 @@ defmodule NewYou.Privacy do
       ]
 
       case Ash.aggregate(query, aggregates, domain: __MODULE__, authorize?: false) do
-        {:ok, snapshot} ->
-          {:ok, snapshot}
+        {:ok, %{current_allowed_count: count, revision: revision}}
+        when is_integer(count) and count >= 0 and is_integer(revision) and revision >= 0 ->
+          {:ok, %{current_allowed_count: count, revision: revision}}
 
         {:error, _} ->
+          {:error, :privacy_authority_unavailable}
+
+        _ ->
           {:error, :privacy_authority_unavailable}
       end
     rescue
