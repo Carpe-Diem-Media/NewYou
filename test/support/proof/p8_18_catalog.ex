@@ -7,7 +7,7 @@ defmodule NewYou.Proof.P818Catalog do
   @definitions [
     {"provider_observation", "communications_delivery_evidence",
      "identity.provider_evidence_cannot_transition_source",
-     ~w(provider_acceptance_did_not_verify authenticated_callback_did_not_verify provider_reference_did_not_create_session recovery_delivery_did_not_complete recovery_delivery_did_not_apply_email primary_email_callback_did_not_confirm_or_apply provider_evidence_key_restored)},
+     ~w(provider_acceptance_did_not_verify authenticated_callback_did_not_verify provider_reference_did_not_create_session recovery_delivery_did_not_complete recovery_delivery_did_not_apply_email email_change_intent_held_without_attempt primary_email_callback_did_not_confirm_or_apply provider_evidence_key_restored)},
     {"stale_browser_authority", "browser_cookie_and_session_projection",
      "identity.revocation_and_supersession_are_current_authority",
      ~w(browser_stale_page_denied_on_reconnect owner_revocation_persisted stale_session_denied_after_reconnect superseded_proof_denied)},
@@ -22,7 +22,7 @@ defmodule NewYou.Proof.P818Catalog do
      ~w(signal_received signal_replay_received source_verification_unchanged session_authority_absent)},
     {"analytics_projection", "privacy_to_analytics_derived_projection",
      "privacy.current_suppression_and_analytics_derived_only",
-     ~w(current_privacy_read projection_contains_aggregate_only projection_writes_only_own_resource no_source_command_api withdrawal_suppressed reordered_rebuild_remains_suppressed)},
+     ~w(current_privacy_read projection_contains_aggregate_only projection_writes_only_own_resource no_source_command_api privacy_authority_rows_cannot_be_deleted projection_failure_preserves_privacy_source withdrawal_suppressed reordered_rebuild_remains_suppressed)},
     {"arc_029_enforcement", "ordinary_application_write_boundary",
      "architecture.arc_029_owner_ash_write_boundary",
      ~w(real_application_clean repo_write_rejected raw_sql_write_rejected ecto_multi_write_rejected parallel_schema_rejected outer_ash_write_rejected parse_error_rejected narrow_exception_retained)}

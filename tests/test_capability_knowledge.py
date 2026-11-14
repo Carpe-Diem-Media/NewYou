@@ -38,6 +38,16 @@ class CapabilityKnowledgeTests(unittest.TestCase):
         changed['interfaces'][0]['arguments']=[]
         self.knowledge.validate_map(changed,self.root)
 
+    def test_argument_descriptions_are_empty_only_for_zero_arity(self):
+        for arity, arguments in [(0, ['unexpected']), (2, [])]:
+            changed=copy.deepcopy(self.sample)
+            changed['interfaces'][0]['arity']=arity
+            changed['interfaces'][0]['arguments']=arguments
+            with self.subTest(arity=arity, arguments=arguments), self.assertRaisesRegex(
+                ValueError, 'arguments must be empty exactly when arity is zero'
+            ):
+                self.knowledge.validate_map(changed,self.root)
+
     def test_invented_table_or_unlinked_migration_refuses(self):
         changed=copy.deepcopy(self.sample);changed['persistence'][1]['tables']=['invented_table']
         with self.assertRaises(ValueError):self.knowledge.validate_map(changed,self.root)

@@ -155,10 +155,37 @@ defmodule NewYou.Proof.P818 do
         email_change_operation
       )
 
-    callback_proof = "p818-email-change-delivered"
-    :ok = reconcile_delivered(recovery_attempt, callback_proof)
-    callback_confirmation = Identity.confirm_primary_email_change(callback_proof)
+    email_change_intent =
+      MessageIntent
+      |> Ash.Query.filter(
+        source_operation_id == ^email_change_operation and role == :email_change_confirmation
+      )
+      |> Ash.read_one!(authorize?: false)
+
+    email_change_delivery = Communications.execute(email_change_intent.id)
+
+    email_change_attempts =
+      DeliveryAttempt
+      |> Ash.Query.filter(message_intent_id == ^email_change_intent.id)
+      |> Ash.read!(authorize?: false)
+
+    held_email_change_intent =
+      Ash.get!(MessageIntent, email_change_intent.id, authorize?: false)
+
+    P805.check(
+      id,
+      "email_change_intent_held_without_attempt",
+      email_change_delivery == {:ok, :held} and
+        held_email_change_intent.dispatch_disposition == :held and email_change_attempts == []
+    )
+
+    unrelated_provider_reference = "p818-recovery-delivery-is-not-email-change-proof"
+    :ok = reconcile_delivered(recovery_attempt, unrelated_provider_reference)
+    callback_confirmation = Identity.confirm_primary_email_change(unrelated_provider_reference)
     callback_application = Identity.apply_primary_email_change(email_change_operation)
+
+    unrelated_provider_intent =
+      Ash.get!(MessageIntent, recovery_attempt.message_intent_id, authorize?: false)
 
     current_email_change_account =
       Ash.get!(Account, email_registration.account_id, authorize?: false)
@@ -168,6 +195,8 @@ defmodule NewYou.Proof.P818 do
       "primary_email_callback_did_not_confirm_or_apply",
       callback_confirmation == {:error, :primary_email_change_unavailable} and
         callback_application == {:error, :primary_email_change_unavailable} and
+        unrelated_provider_intent.role == :account_recovery and
+        unrelated_provider_intent.source_operation_id != email_change_operation and
         current_email_change_account.email == email_request.email and
         current_email_change_account.primary_email_change_state == :new_address_pending
     )
@@ -526,6 +555,36 @@ defmodule NewYou.Proof.P818 do
       id,
       "no_source_command_api",
       projection_actions == [{:read, :read, false}, {:rebuild, :create, false}]
+    )
+
+    P805.check(
+      id,
+      "privacy_authority_rows_cannot_be_deleted",
+      is_nil(Ash.Resource.Info.action(NewYou.Privacy.PurposeAuthority, :destroy))
+    )
+
+    hook_key = {NewYou.Analytics, :after_privacy_snapshot}
+    previous_hook = Process.get(hook_key)
+    Process.put(hook_key, fn _snapshot -> {:error, :injected_projection_failure} end)
+
+    projection_failure =
+      try do
+        NewYou.Analytics.rebuild_p817_privacy_projection()
+      after
+        if is_nil(previous_hook),
+          do: Process.delete(hook_key),
+          else: Process.put(hook_key, previous_hook)
+      end
+
+    {:ok, source_after_projection_failure} = Privacy.current_p817_proof_purpose_snapshot()
+
+    P805.check(
+      id,
+      "projection_failure_preserves_privacy_source",
+      projection_failure == {:error, :analytics_projection_unavailable} and
+        source_after_projection_failure.current_allowed_count ==
+          baseline.current_allowed_count + 2 and
+        only_projection().current_allowed_count == baseline.current_allowed_count + 2
     )
 
     {:ok, :withdrawn} =

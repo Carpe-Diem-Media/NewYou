@@ -19,7 +19,8 @@ defmodule NewYou.Analytics do
     resource NewYou.Analytics.P817PrivacyProjection
   end
 
-  @type projection_error :: {:error, :privacy_projection_unavailable}
+  @type projection_error ::
+          {:error, :privacy_authority_unavailable | :analytics_projection_unavailable}
 
   if Mix.env() in [:dev, :test] do
     @doc "Rebuild the P8-17 proof aggregate from Privacy's current allowed state."
@@ -30,12 +31,9 @@ defmodule NewYou.Analytics do
            {:ok, _projection} <- write_projection(snapshot) do
         :ok
       else
-        _ -> {:error, :privacy_projection_unavailable}
+        {:error, :privacy_authority_unavailable} -> {:error, :privacy_authority_unavailable}
+        _ -> {:error, :analytics_projection_unavailable}
       end
-    rescue
-      _ -> {:error, :privacy_projection_unavailable}
-    catch
-      _, _ -> {:error, :privacy_projection_unavailable}
     end
 
     defp write_projection(snapshot) do
@@ -70,6 +68,6 @@ defmodule NewYou.Analytics do
   else
     @doc "Rebuild the P8-17 proof aggregate when the development proof surface is enabled."
     @spec rebuild_p817_privacy_projection() :: :ok | projection_error()
-    def rebuild_p817_privacy_projection, do: {:error, :privacy_projection_unavailable}
+    def rebuild_p817_privacy_projection, do: {:error, :analytics_projection_unavailable}
   end
 end

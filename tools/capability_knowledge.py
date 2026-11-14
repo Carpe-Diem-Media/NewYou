@@ -65,6 +65,11 @@ def validate(value, rule, schema, location='$'):
 def validate_map(record, root=ROOT):
     schema = loads(SCHEMA.read_text())
     validate(record, schema, schema)
+    for index, interface in enumerate(record['interfaces']):
+        if (interface['arity'] == 0) != (len(interface['arguments']) == 0):
+            raise ValueError(
+                f'interfaces[{index}]: arguments must be empty exactly when arity is zero'
+            )
     ids = set()
     for source in record['sources']:
         if source['id'] in ids:

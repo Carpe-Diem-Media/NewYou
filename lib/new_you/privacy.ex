@@ -119,9 +119,11 @@ defmodule NewYou.Privacy do
     @doc """
     Return the minimized P8-17 source snapshot for an Analytics projection.
 
-    The revision sums owner-managed authority versions, so a newer grant or
-    withdrawal snapshot cannot be overwritten by a delayed older rebuild. The
-    result contains no subject or operation identifiers.
+    Grants create authority version 1, terminal withdrawals increment it, and
+    this resource exposes no delete action. The sum of authority versions is
+    therefore monotonic for supported source mutations. State and version are
+    read together in one Ash query, so the snapshot comes from one statement
+    snapshot. The result contains no subject or operation identifiers.
     """
     @spec current_p817_proof_purpose_snapshot() ::
             {:ok, p817_proof_purpose_snapshot()} | {:error, :privacy_authority_unavailable}
