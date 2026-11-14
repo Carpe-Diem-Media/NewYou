@@ -21,7 +21,10 @@ defmodule NewYou.Analytics do
     otp_app: :new_you
 
   @production_projection_key "p817_current_privacy_aggregate"
-  @test_projection_key {__MODULE__, :p817_test_projection_key}
+
+  if Mix.env() == :test do
+    @test_projection_key {__MODULE__, :p817_test_projection_key}
+  end
 
   resources do
     resource NewYou.Analytics.P817PrivacyProjection
