@@ -7,7 +7,7 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "cacb5ca746f80aa338667a8ccf4034d2e73f1529",
+    "git_sha": "549ee1e64b236028be0de450d189806ec386ad61",
     "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. The projection schema reserves a fixed production key used by the development rebuild; each test proof fixture receives a separate opaque key and cleanup deletes only that fixture\u2019s row. Production has no rebuild path or purpose for this proof. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count. WELL-19 hardening observes the tables written during each synchronous Analytics rebuild and rejects foreign NewYou commands with a bounded AST check. Persisted jobs run through Oban execution, rollback on injected failure, retry the same obligation, and complete only with owner evidence. A stale message job completes with its intent closed and no delivery attempt. Fixture cleanup retries once through its guardian and reports persistent failure; it removes only its own opaque projection key and derived executor queue. Migration rollback removes validated test-key projections before restoring the fixed-key constraint, preserving the reserved aggregate."
   },
   "authoritative_domain": "NewYou.Privacy",
@@ -933,7 +933,7 @@
       "id": "p818_proof",
       "path": "test/support/proof/p8_18.ex",
       "symbol": "defmodule NewYou.Proof.P818",
-      "sha256": "a015e25c403e73588c3a11685401f592b3ee91f46f6f90c5213f4fbe36c7e71e"
+      "sha256": "8029475e62bd7dc2925dd3219bb9e99149132b9333ed3f69b8e0dc27d7eb2f9c"
     },
     {
       "id": "p818_test",
@@ -945,13 +945,13 @@
       "id": "p818_architecture_checker",
       "path": "tools/architecture/ash_write_boundary.ex",
       "symbol": "check_app(root",
-      "sha256": "418e05213df4d0239677608832afc0dc674de5181e9c16259a9f05af9737c105"
+      "sha256": "35bd499b59926ef970a1f869c1cf443734be560ba5fce8f0a37e57a407df3c82"
     },
     {
       "id": "p818_architecture_test",
       "path": "test/tools/architecture/ash_write_boundary_test.exs",
       "symbol": "defmodule NewYou.Architecture.AshWriteBoundaryTest do",
-      "sha256": "26b29b042c19fc463754b882acfa621782431921b79935bef7f119e79168c807"
+      "sha256": "a6240363fcb1f758391522a6c2be987546804ba48fae8a1292410e3a7e978841"
     },
     {
       "id": "p818_browser",
