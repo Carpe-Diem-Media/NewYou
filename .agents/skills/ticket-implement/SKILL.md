@@ -153,6 +153,22 @@ Use owning Ash interfaces for business writes. Do not create parallel ordinary R
 
 Do not add infrastructure or dependencies merely because they are convenient. Apply the authority and Ash-first rules in `AGENTS.md`.
 
+### Public interface documentation and typespecs
+
+For every new or materially changed public Domain or application interface:
+
+- Use `@moduledoc` to explain a public module's responsibility, authoritative ownership, and primary integration boundary.
+- Use `@doc` to describe externally meaningful functions, including authorization assumptions, side effects, failure results, and idempotency/retry semantics where relevant.
+- Use `@spec` to describe public function inputs and success/error results. Prefer meaningful types over broad `term()` annotations where practical.
+- Use `@type` or `@typep` when shared domain data, lifecycle states, or return contracts benefit from named types.
+- Use `@impl true` for behaviour callbacks where applicable.
+
+Internal implementation modules may use `@moduledoc false` and `@doc false`. Do not require documentation or typespecs for every private helper, trivial function, or Ash DSL declaration.
+Cross-Domain interfaces must make the owning Domain and authorization boundary understandable without introducing competing business authority.
+These annotations complement the existing source-linked capability maps; they do not replace them or require duplicate documentation.
+Apply prospectively to code created or materially changed within the ticket. Do not perform unrelated documentation cleanups.
+
+
 ## 7. Control scope and discovered work
 
 Implement the ticket acceptance contract only.
