@@ -324,6 +324,7 @@ defmodule NewYou.Architecture.AshWriteBoundaryTest do
             "(&NewYou.Identity.register/1).(attrs)",
             "apply(NewYou.Identity, :register, [attrs])",
             "Kernel.apply(NewYou.Identity, :register, [attrs])",
+            ":erlang.apply(NewYou.Identity, :register, [attrs])",
             "import NewYou.Identity, only: [register: 1]; command = &register/1; command.(attrs)"
           ] do
         source = "defmodule NewYou.Analytics do; def run(attrs) do; #{expression}; end; end"

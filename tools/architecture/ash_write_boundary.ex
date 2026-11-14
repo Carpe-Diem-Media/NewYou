@@ -291,14 +291,14 @@ defmodule NewYou.Architecture.AshWriteBoundary do
   end
 
   defp analytics_call_violation(
-         [:Kernel],
+         module,
          :apply,
          [receiver, function, args],
          line,
          path,
          aliases
        )
-       when is_atom(function) and is_list(args) do
+       when module in [[:Kernel], [:erlang]] and is_atom(function) and is_list(args) do
     case analytics_receiver(receiver, aliases, %{}, %{}) do
       nil ->
         [
@@ -315,15 +315,16 @@ defmodule NewYou.Architecture.AshWriteBoundary do
     end
   end
 
-  defp analytics_call_violation([:Kernel], :apply, _args, line, path, _aliases),
-    do: [
-      violation(
-        path,
-        line,
-        :analytics_foreign_command,
-        "Analytics apply target must be statically owned or an approved read"
-      )
-    ]
+  defp analytics_call_violation(module, :apply, _args, line, path, _aliases)
+       when module in [[:Kernel], [:erlang]],
+       do: [
+         violation(
+           path,
+           line,
+           :analytics_foreign_command,
+           "Analytics apply target must be statically owned or an approved read"
+         )
+       ]
 
   defp analytics_call_violation([:NewYou | _] = module, function, args, line, path, _aliases) do
     cond do
@@ -379,6 +380,8 @@ defmodule NewYou.Architecture.AshWriteBoundary do
     path = String.replace(path, "\\", "/")
     path == "lib/new_you/analytics.ex" or String.starts_with?(path, "lib/new_you/analytics/")
   end
+
+  defp analytics_receiver(:erlang, _aliases, _variables, _attributes), do: [:erlang]
 
   defp analytics_receiver({:__aliases__, _, _} = receiver, aliases, _variables, _attributes),
     do: resolve(receiver, aliases)

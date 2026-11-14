@@ -844,8 +844,8 @@ defmodule NewYou.Proof.P818 do
     P805.check(id, "real_application_clean", violations == [])
 
     for {assertion, source, rule} <- [
-          {"analytics_owner_command_rejected", "apply(NewYou.Identity, :register, [attrs])",
-           :analytics_foreign_command},
+          {"analytics_owner_command_rejected",
+           ":erlang.apply(NewYou.Identity, :register, [attrs])", :analytics_foreign_command},
           {"analytics_foreign_ash_write_rejected", "Ash.create(NewYou.Identity.Account, attrs)",
            :analytics_foreign_ash_write}
         ] do
