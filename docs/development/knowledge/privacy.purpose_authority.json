@@ -7,8 +7,8 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "2f623547752cc6b3c8870e4fa0a39e283d20ce6d",
-    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free Analytics aggregate that rebuilds from Privacy's current allowed rows. The map is refreshed against committed source and is not governing authority."
+    "git_sha": "3fc9759ba915cecac7d4a6539be48b9818920161",
+    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate whose explicit rebuilds sample Privacy's current allowed rows. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority."
   },
   "authoritative_domain": "NewYou.Privacy",
   "collaborating_domains": [
@@ -776,7 +776,7 @@
       "id": "analytics_domain",
       "path": "lib/new_you/analytics.ex",
       "symbol": "defmodule NewYou.Analytics",
-      "sha256": "65b95cf37cad365268cca23f1fb6fa83d59d8a205120f41b7d6666101719dc30"
+      "sha256": "4c619900abb47e4d809d98dc994ff18d5e2779e45a472aa330821477cdb6b724"
     },
     {
       "id": "analytics_projection",
