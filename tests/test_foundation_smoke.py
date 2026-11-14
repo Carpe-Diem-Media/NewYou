@@ -31,6 +31,8 @@ class FoundationSmokeTests(unittest.TestCase):
         root = Path(directory)
         shutil.copy2(ROOT / "AGENTS.md", root / "AGENTS.md")
         shutil.copy2(ROOT / "DESIGN.md", root / "DESIGN.md")
+        (root / ".devcore").mkdir()
+        shutil.copy2(ROOT / ".devcore/README.md", root / ".devcore/README.md")
         for relative in ("docs/governance", "docs/delivery", "docs/history"):
             shutil.copytree(ROOT / relative, root / relative)
         shutil.copytree(ROOT / "docs/superpowers", root / "docs/superpowers")

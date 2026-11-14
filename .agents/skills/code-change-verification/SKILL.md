@@ -10,10 +10,10 @@ Do not claim success without evidence from this exact head.
 1. **Review the exact diff.** Run `git diff --stat origin/main...HEAD` and read the full diff. Confirm every changed path is in ticket scope.
 2. **Record the exact head SHA** with `git rev-parse HEAD`. All evidence below must refer to this SHA.
 3. **Record the local toolchain.** Capture `mise current` and `mise exec -- elixir --version` so the resolved Erlang/OTP and Elixir versions are tied to the repository pin.
-4. **Run the fast gate:** `mise exec -- devcore-project run test -- mix check`. It must pass.
+4. **Apply the canonical scope policy.** Follow `AGENTS.md` "Verification stages and failure diagnosis". For a stable application or executable engineering candidate, run `mise exec -- devcore-project run test -- mix check`. It must pass. For proven non-executable documentation, inspect actual consumers and the complete diff, run applicable instruction/document/router/knowledge/provenance checks, and record why the application suite is not applicable. Markdown alone is insufficient justification. Diagnose broad failures before another broad run.
 5. **Run applicable targeted tests** for the changed behaviour with `mise exec -- devcore-project run test -- mix test <target>`.
 6. **Run the deep gate where required:** `mise exec -- devcore-project run test -- mix check.deep`. Required for changes touching application code, dependencies or the architecture rules.
-7. **Confirm architecture and lifecycle invariants:** `mise exec -- devcore-project run test -- mix check.architecture` passes; no new Repo, raw-SQL or Multi business writes; no Redis, extra Repo or speculative infrastructure; Tidewave remains DEV-only.
+7. **Confirm architecture and lifecycle invariants.** A passing complete `mix check` on the same applicable inputs satisfies the included architecture obligation. Retain `mise exec -- devcore-project run test -- mix check.architecture` for focused development or independent diagnostics; do not demand a duplicate final invocation. Confirm no new Repo, raw-SQL or Multi business writes; no Redis, extra Repo or speculative infrastructure; Tidewave remains DEV-only.
 8. **Confirm the CI-sensitive scope.** Foundation Full runs only through nightly hardening and is not selected by PR paths. Every PR runs Foundation Smoke; classified application/engineering changes also run their routed Application CI and Hex audit lanes. Unknown or unreadable ranges fail routing. Explain any routing-sensitive changes against the ticket.
 9. **Reconcile Plane.** Confirm the issue state, blockers, dependency relations and follow-ups. Nothing delivery-affecting may remain only in chat, PR comments or TODOs.
 10. **Run and record the independent OCR checkpoint before review handoff.** After applicable local gates pass, run `ocr review --from origin/main --to HEAD` for material engineering changes and capture all findings, exclusions, the scanned implementation SHA and tool outcome using the procedure below. For trivial/cosmetic or documentation-only changes, record a justified exemption.
@@ -22,7 +22,7 @@ Do not claim success without evidence from this exact head.
 
 ## Independent OCR checkpoint (material engineering PRs)
 
-Run this **after applicable targeted, fast, deep and architecture checks pass** and before declaring the implementation ready for Master Gate. The PR may subsequently gain the required generated PR-history commit; record both the OCR-scanned implementation SHA and final PR head. Refresh `origin/main` and verify the intended comparison base before running:
+Run this **after applicable local checks pass** and before declaring the implementation ready for Master Gate. The PR may subsequently gain the required generated PR-history commit; record both the OCR-scanned implementation SHA and final PR head. Refresh `origin/main` and verify the intended comparison base before running:
 
 ```bash
 git rev-parse HEAD
@@ -57,3 +57,7 @@ Run `python3 -m tools.capability_knowledge` and its focused tests when maps/sche
 After merge, verify resulting main SHA, ordered parents and tested tree before Plane Done. The native-result check is read-only and stores no intent or evidence file. If its result is uncertain, inspect GitHub state and resolve the discrepancy before updating Plane.
 
 At the review checkpoint, compare PR history using `mise exec -- python3 -m tools.knowledge_capture check --metadata-json /tmp/PR-metadata.json`. Check uses the stable ticket identifiers in the committed record; if `--ticket` is supplied, it must agree. Foundation Integrity runs the same check against the exact event head/base. Verify generated history, semantic maps and current-tree index serve distinct purposes. Do not regenerate for prose, author or Plane-state changes, and do not commit generated changes after final approval.
+
+A mechanical history-only commit does not invalidate passing application evidence when the complete diff confirms identical verified application inputs. Record the tested implementation SHA and final PR head separately. Run final history validation and exact-head hosted CI; source/base changes require regeneration and refreshed affected proof. OCR remains separate advisory evidence, never a substitute for CI or independent Master Gate.
+
+Before a routine PR update, follow the actual `JC-Agents` authentication and existing-author preflight in `AGENTS.md` and `ticket-implement`. A founder-authored PR is ineligible for the routine agent/founder approval route.

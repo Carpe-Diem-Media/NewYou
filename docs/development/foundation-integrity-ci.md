@@ -46,15 +46,11 @@ Every pull request runs Foundation Smoke; ordinary pushes to `main` do not. The 
 does not use path filters, so the required status check cannot disappear when
 files change.
 
-The route job compares the pull request base to its head. `docs/governance/**`,
-`docs/history/**` and explicit Foundation Full/provenance machinery run Smoke
-without selecting Application CI by location alone. `docs/delivery/**`,
-`docs/development/**`, `.agents/**`, application source and tests select
-Application CI as appropriate. Unknown paths, empty ranges and unresolvable
-pull-request diffs fail the route job; they never select Foundation Full.
-Python language and the generic `tests/**` root do not select Application CI
-or Foundation Full by themselves. Git rename detection is disabled for path
-classification, so both source and destination are considered.
+The single routing authority is `tools/foundation_integrity_routing.py`. The route job compares the exact PR base/head diff. Governance, frozen history and explicit Foundation machinery keep their existing Smoke route. Application source, runtime tests, migrations, executable tooling, CI internals and dependency inputs retain their applicable engineering lanes. Unknown paths, empty or unreadable ranges fail closed.
+
+The `DOCUMENTATION_FILES` allowlist contains only `AGENTS.md`, `.devcore/README.md`, the ticket/verification/legacy-shim `SKILL.md` files, this CI document, the merge-gate document and `knowledge/README.md`. These paths use Smoke instruction contracts without unrelated Elixir application tests. Other Markdown, unknown skills and source-linked capability maps retain engineering CI. Reduced routing requires regular non-executable Git file modes at both revisions. Deletions, renames out of an allowlisted path, symlinks and executable modes fail the route. Mixed application/documentation diffs select Application CI.
+
+Only the event's own generated record under `docs/development/knowledge/history/`, named `pr-NUMBER.json` using the PR number supplied by GitHub, qualifies as generated-history documentation. Other PR history records retain engineering CI. This path classification grants no provenance exemption. Smoke still regenerates the current PR record against exact event identity, base, source blobs and hashes. Missing, stale or tampered records fail Foundation Integrity. Other JSON retains engineering CI. PR #236's exact three paths now select Smoke without Application CI; #233 is another positive fixture and #231 remains an engineering fixture because root `README.md` is not allowlisted.
 
 Foundation Smoke runs on each PR. The required **Foundation Integrity** aggregate
 waits for successful routing and Smoke, plus routed Application CI and the
@@ -197,3 +193,13 @@ manifest rule and historical manifest record pin the same immutable bytes;
 other unregistered Tracer Bullet or architectural-proof artifacts still fail.
 No Product, Architecture, Domain, Roadmap, TB-001, or Feature Pack semantics
 were changed, and no historical evidence was deleted.
+
+## Conditional trusted dependency cache
+
+The cache producer previously ran on every `main` push. It now uses push path filters for `mix.exs`, `mix.lock`, `.tool-versions`, `config/**/*.exs`, both application cache/CI workflows and `tools/ci/**`. Ordinary source, tests, instructions and generated history do not match. The manual warm-up runs only on `refs/heads/main`; there is no warm-up schedule. PR jobs restore only and cannot publish caches.
+
+Producer and consumers use the same v3 key, including OS/architecture, runner image, TEST environment, dependency/configuration inputs and cache workflow/script fingerprints. Cache logic changes therefore invalidate old entries. A missing, incompatible, damaged or invalid cache is discarded before locked dependency preparation; preparation failure retries once from clean dependency files, and persistent failure fails the job. Cache saving follows successful preparation and manifest creation. A save failure is not successful cache publication or application proof. Cache entries contain dependency source and compiled dependencies, never test results.
+
+GitHub builds push path-filter diffs with two-dot comparison. Its current [workflow syntax documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#git-diff-comparisons) limits evaluation to the first 3,000 files and always runs workflows for pushes above 1,000 commits or a diff-generation timeout. Large diffs can therefore miss warming or cause an extra run. A miss is safe because consumers prepare clean dependencies. Eviction, image rotation and damaged immutable entries may also require clean preparation. An authorised manual run on main can warm a missing key; GitHub's immutable cache entries cannot be overwritten by that run. No cache is correctness evidence.
+
+Local verification stages and failure diagnosis belong to [AGENTS.md](../../AGENTS.md). The [implementation skill](../../.agents/skills/ticket-implement/SKILL.md) owns the practical sequence; the [verification skill](../../.agents/skills/code-change-verification/SKILL.md) owns final evidence. Do not run full application gates solely for allowlisted non-executable documentation or repeat the included architecture check after a passing complete `mix check` on the same inputs.
