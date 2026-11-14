@@ -208,6 +208,8 @@ For DB-dependent commands, use the DevCore workflow in `AGENTS.md` when configur
 
 Do not claim a check passed unless you observed it pass. Separate unrelated pre-existing failures from PR-caused failures with evidence; do not hide either.
 
+Check new or materially changed public Domain/application interfaces for appropriate @moduledoc, @doc and @spec coverage. Correct meaningful omissions before handoff, or record a narrowly justified exemption. Do not block compliant Ash DSL or private implementation code merely for missing annotations.
+
 ## 10. Open the PR and hand off exact evidence
 
 Before creating or updating a routine PR, run `gh api user --jq .login`. It must return `JC-Agents`. Run `python3 -m tools.newyou_attest pr-preflight`, or add `--pr NUMBER` for an existing PR to verify its author too. Stop on wrong/missing authentication or a founder-authored PR. Do not request founder credentials. `JCSchoeman96` independently reviews the exact final head; the agent cannot approve its own work.
