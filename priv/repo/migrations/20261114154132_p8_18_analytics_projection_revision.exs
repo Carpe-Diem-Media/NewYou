@@ -1,4 +1,4 @@
-defmodule NewYou.Repo.Migrations.P818AnalyticsProjection do
+defmodule NewYou.Repo.Migrations.P818AnalyticsProjectionRevision do
   @moduledoc """
   Updates resources based on their most recent snapshots.
 
