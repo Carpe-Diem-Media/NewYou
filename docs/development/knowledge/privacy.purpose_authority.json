@@ -7,7 +7,7 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "ba38550431f23be76736faa303434dfc90c0f348",
+    "git_sha": "18b3482a163a191700edd9f19b2ebb854913b073",
     "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. The projection schema reserves a fixed production key used by the development rebuild; each test proof fixture receives a separate opaque key and cleanup deletes only that fixture\u2019s row. Production has no rebuild path or purpose for this proof. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count."
   },
   "authoritative_domain": "NewYou.Privacy",
@@ -859,7 +859,7 @@
       "id": "analytics_domain",
       "path": "lib/new_you/analytics.ex",
       "symbol": "defmodule NewYou.Analytics",
-      "sha256": "fee24d72906cd4db3e42df1e584ac16c0a8141da54dd3fc7968551bf0cb913be"
+      "sha256": "ca212b1e00511dfb1624bf896db954804eb44f92cbcc3c79b664aad8363ac937"
     },
     {
       "id": "analytics_projection",
