@@ -507,6 +507,13 @@ defmodule NewYou.Proof.P818 do
   end
 
   defp analytics_projection(id) do
+    context = build_analytics_projection()
+    verify_current_projection(id, context.baseline)
+    verify_projection_failure_preserves_source(id, context.baseline)
+    verify_withdrawal_suppresses_projection(id, context)
+  end
+
+  defp build_analytics_projection do
     subject_id = Ecto.UUID.generate()
     operation_id = Ecto.UUID.generate()
     second_subject_id = Ecto.UUID.generate()
@@ -518,6 +525,17 @@ defmodule NewYou.Proof.P818 do
     {:ok, :allowed} = Privacy.grant_p817_proof_purpose(subject_id, operation_id)
     {:ok, :allowed} = Privacy.grant_p817_proof_purpose(second_subject_id, second_operation_id)
     :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
+
+    %{
+      baseline: baseline,
+      subject_id: subject_id,
+      operation_id: operation_id,
+      second_subject_id: second_subject_id,
+      second_operation_id: second_operation_id
+    }
+  end
+
+  defp verify_current_projection(id, baseline) do
     projection = only_projection()
     {:ok, current_snapshot} = Privacy.current_p817_proof_purpose_snapshot()
 
@@ -562,20 +580,10 @@ defmodule NewYou.Proof.P818 do
       "privacy_authority_rows_cannot_be_deleted",
       is_nil(Ash.Resource.Info.action(NewYou.Privacy.PurposeAuthority, :destroy))
     )
+  end
 
-    hook_key = {NewYou.Analytics, :after_privacy_snapshot}
-    previous_hook = Process.get(hook_key)
-    Process.put(hook_key, fn _snapshot -> {:error, :injected_projection_failure} end)
-
-    projection_failure =
-      try do
-        NewYou.Analytics.rebuild_p817_privacy_projection()
-      after
-        if is_nil(previous_hook),
-          do: Process.delete(hook_key),
-          else: Process.put(hook_key, previous_hook)
-      end
-
+  defp verify_projection_failure_preserves_source(id, baseline) do
+    projection_failure = injected_projection_failure()
     {:ok, source_after_projection_failure} = Privacy.current_p817_proof_purpose_snapshot()
 
     P805.check(
@@ -586,9 +594,27 @@ defmodule NewYou.Proof.P818 do
           baseline.current_allowed_count + 2 and
         only_projection().current_allowed_count == baseline.current_allowed_count + 2
     )
+  end
+
+  defp injected_projection_failure do
+    hook_key = {NewYou.Analytics, :after_privacy_snapshot}
+    previous_hook = Process.get(hook_key)
+    Process.put(hook_key, fn _snapshot -> {:error, :injected_projection_failure} end)
+
+    try do
+      NewYou.Analytics.rebuild_p817_privacy_projection()
+    after
+      if is_nil(previous_hook),
+        do: Process.delete(hook_key),
+        else: Process.put(hook_key, previous_hook)
+    end
+  end
+
+  defp verify_withdrawal_suppresses_projection(id, context) do
+    %{baseline: baseline} = context
 
     {:ok, :withdrawn} =
-      Privacy.withdraw_p817_proof_purpose(second_subject_id, second_operation_id)
+      Privacy.withdraw_p817_proof_purpose(context.second_subject_id, context.second_operation_id)
 
     :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
     {:ok, second_withdrawal_snapshot} = Privacy.current_p817_proof_purpose_snapshot()
@@ -597,7 +623,9 @@ defmodule NewYou.Proof.P818 do
       only_projection().current_allowed_count == second_withdrawal_snapshot.current_allowed_count and
         second_withdrawal_snapshot.current_allowed_count == baseline.current_allowed_count + 1
 
-    {:ok, :withdrawn} = Privacy.withdraw_p817_proof_purpose(subject_id, operation_id)
+    {:ok, :withdrawn} =
+      Privacy.withdraw_p817_proof_purpose(context.subject_id, context.operation_id)
+
     :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
     {:ok, withdrawn_snapshot} = Privacy.current_p817_proof_purpose_snapshot()
 
@@ -611,8 +639,9 @@ defmodule NewYou.Proof.P818 do
     P805.check(
       id,
       "reordered_rebuild_remains_suppressed",
-      Privacy.grant_p817_proof_purpose(subject_id, operation_id) == {:error, :withdrawn} and
-        Privacy.grant_p817_proof_purpose(second_subject_id, second_operation_id) ==
+      Privacy.grant_p817_proof_purpose(context.subject_id, context.operation_id) ==
+        {:error, :withdrawn} and
+        Privacy.grant_p817_proof_purpose(context.second_subject_id, context.second_operation_id) ==
           {:error, :withdrawn} and
         NewYou.Analytics.rebuild_p817_privacy_projection() == :ok and
         only_projection().current_allowed_count == baseline.current_allowed_count
