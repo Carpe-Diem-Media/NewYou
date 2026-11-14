@@ -86,6 +86,53 @@ defmodule NewYou.Proof.P818Test do
     end)
   end
 
+  test "Privacy computes the Analytics snapshot with one database-side aggregate query" do
+    P805.with_fixture(fn ->
+      assert {:ok, baseline} = Privacy.current_p817_proof_purpose_snapshot()
+
+      allowed_subject = Ecto.UUID.generate()
+      allowed_operation = Ecto.UUID.generate()
+      withdrawn_subject = Ecto.UUID.generate()
+      withdrawn_operation = Ecto.UUID.generate()
+
+      P805.track_operation(allowed_operation)
+      P805.track_operation(withdrawn_operation)
+
+      assert {:ok, :allowed} =
+               Privacy.grant_p817_proof_purpose(allowed_subject, allowed_operation)
+
+      assert {:ok, :allowed} =
+               Privacy.grant_p817_proof_purpose(withdrawn_subject, withdrawn_operation)
+
+      assert {:ok, :withdrawn} =
+               Privacy.withdraw_p817_proof_purpose(withdrawn_subject, withdrawn_operation)
+
+      handler_id = {__MODULE__, make_ref()}
+      event = (NewYou.Repo.config()[:telemetry_prefix] || [:new_you, :repo]) ++ [:query]
+      parent = self()
+
+      handler = fn _event, _measurements, metadata, owner ->
+        send(owner, {:p818_privacy_snapshot_query, metadata.query})
+      end
+
+      assert :ok = :telemetry.attach(handler_id, event, handler, parent)
+
+      try do
+        assert {:ok, snapshot} = Privacy.current_p817_proof_purpose_snapshot()
+        assert snapshot.current_allowed_count == baseline.current_allowed_count + 1
+        assert snapshot.revision == baseline.revision + 3
+
+        queries = collect_snapshot_queries()
+
+        assert [query] = queries
+        assert query =~ ~r/COUNT\s*\(/i
+        assert query =~ ~r/SUM\s*\(/i
+      after
+        :telemetry.detach(handler_id)
+      end
+    end)
+  end
+
   test "proof fixture cleanup deletes only its own Analytics projection key" do
     P805.with_fixture(fn ->
       fixture_key = P805.analytics_projection_key()
@@ -312,6 +359,14 @@ defmodule NewYou.Proof.P818Test do
     NewYou.Analytics.P817PrivacyProjection
     |> Ash.Resource.Info.attributes()
     |> Enum.map(& &1.name)
+  end
+
+  defp collect_snapshot_queries(queries \\ []) do
+    receive do
+      {:p818_privacy_snapshot_query, query} -> collect_snapshot_queries([query | queries])
+    after
+      0 -> Enum.reverse(queries)
+    end
   end
 
   defp stop_rebuild_tasks(tasks, first_pid) do

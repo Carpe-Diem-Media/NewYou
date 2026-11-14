@@ -131,24 +131,14 @@ defmodule NewYou.Privacy do
       query =
         PurposeAuthority
         |> Ash.Query.filter(purpose == ^@proof_purpose)
-        |> Ash.Query.select([:state, :version])
 
-      case Ash.read(query, domain: __MODULE__, authorize?: false) do
-        {:ok, authorities} ->
-          snapshot =
-            Enum.reduce(
-              authorities,
-              %{current_allowed_count: 0, revision: 0},
-              fn authority, snapshot ->
-                %{
-                  current_allowed_count:
-                    snapshot.current_allowed_count +
-                      if(authority.state == :allowed, do: 1, else: 0),
-                  revision: snapshot.revision + authority.version
-                }
-              end
-            )
+      aggregates = [
+        {:current_allowed_count, :count, query: [filter: [state: :allowed]]},
+        {:revision, :sum, [field: :version, default: 0]}
+      ]
 
+      case Ash.aggregate(query, aggregates, domain: __MODULE__, authorize?: false) do
+        {:ok, snapshot} ->
           {:ok, snapshot}
 
         {:error, _} ->
