@@ -365,7 +365,7 @@ For commands that need NewYou's DEV or TEST environment, put DevCore inside Mise
 - `mise exec -- devcore-project run dev -- mix <task>`
 - `mise exec -- devcore-project run test -- mix <task>`
 
-Do not run local Mix commands through an unwrapped `devcore-project run ...` command or rely on the calling shell's active Elixir version. This rule does not apply to `devcore-project plan`, `doctor` or `activate`, which do not invoke Elixir or Mix. GitHub Actions uses its configured runner toolchain.
+Do not run local Mix commands through an unwrapped `devcore-project run ...` command or rely on the calling shell's active Elixir version. This rule does not apply to `devcore-project plan`, `doctor`, `render` or `activate`, which do not invoke Elixir or Mix. GitHub Actions uses its configured runner toolchain.
 
 Before reporting local verification success, record the exact command, the resolved Elixir and Erlang/OTP versions from `mise current`, and the observed outcome. Confirm the active Elixir runtime with `mise exec -- elixir --version`.
 
@@ -436,15 +436,20 @@ Local DevCore credentials
 
 DO NOT ASK THE USER FOR LOCAL DB PASSWORDS OR DEVCORE-MANAGED DB VARIABLES.
 
+NewYou uses existing shared DEV and TEST PostgreSQL allocations. Every linked worktree has separate Git-ignored ".env.dev.local" and ".env.test.local" files. A new worktree can lack these files even when both databases and their centrally managed credentials are healthy. T3 Code may render them in its worktree setup action; agents must still verify readiness in their actual working directory.
+
 If ".devcore/project.conf" exists:
 
-1. run "devcore-project doctor";
-2. if state is missing or stale, run "devcore-project activate";
-3. run local Elixir/Mix commands requiring a project environment with:
+1. From the current repository/worktree root, run "devcore-project doctor".
+2. If the only reported problem is a missing or stale worktree-local rendered environment file, run "devcore-project render", then rerun "devcore-project doctor". Rendering uses existing central credentials; it does not provision databases or change role passwords.
+3. If authentication, role/ownership invariants, central credentials, PostgreSQL services, or other infrastructure checks fail, stop environment preparation and report the exact non-secret error. Do not automatically invoke "devcore-project activate" or change shared state.
+4. Run local Elixir/Mix commands requiring a project environment with:
    - "mise exec -- devcore-project run dev -- <command>"
    - "mise exec -- devcore-project run test -- <command>"
 
-Never request or print password values.
+"devcore-project activate" is a provisioning operation, not routine worktree setup or a generic doctor-failure repair. Use it only for separately authorised workstation provisioning, never as an automatic fallback in agent startup.
+
+Never request, print or commit password values or rendered secret-bearing files.
 
 The repository must not start, stop, recreate or delete shared DevCore services or volumes.
 
