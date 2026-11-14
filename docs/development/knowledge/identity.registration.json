@@ -4,14 +4,15 @@
   "purpose": "Accept registration transactionally and return a neutral verification-pending result without authenticating a browser session.",
   "implementing_tickets": [
     "WELL-6",
+    "WELL-18",
     "WELL-48",
     "WELL-49",
     "WELL-50",
     "WELL-96"
   ],
   "implementation_revision": {
-    "git_sha": "87bf56abc217342157e915be1238763677b37164",
-    "semantics": "Registration semantics remain unchanged. Shared Identity, Account, Token and Communications source hashes now bind the WELL-17 additions; the primary-email-change and recovery capabilities are documented separately. This is not an independent merge certification."
+    "git_sha": "f151b2916bddc0a080f0b1d911dac64a88e664af",
+    "semantics": "Registration behavior remains unchanged. WELL-18 strengthens real HTTP evidence that a new Account and canonical duplicate render the same neutral public result class; no Account-existence result is added."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -337,6 +338,20 @@
       "source_ids": [
         "orchestration_test"
       ]
+    },
+    {
+      "path": "test/new_you_web/controllers/registration_controller_test.exs",
+      "cases": [
+        "Real new and canonical-duplicate registrations return the same normalized status, complete response body, messages, redirect/security headers and session result; only submitted email and per-session CSRF/resend tokens are normalized.",
+        "Registration response does not expose Account identifiers and keeps the neutral accepted copy."
+      ],
+      "proves": "The existing registration HTTP path does not disclose canonical Account existence through deterministic response classes.",
+      "limits": "This compares deterministic observable classes; it makes no timing-equality or rate-limit claim.",
+      "source_ids": [
+        "public_response_test",
+        "controller",
+        "identity"
+      ]
     }
   ],
   "safe_extensions": [
@@ -409,7 +424,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def register(request)",
-      "sha256": "90ba9e7d0ef990538c38482b922d5f8d409f1a2b9a7c557df4fc896038680c81"
+      "sha256": "a2c6b0114d3e64f29a3b1d5daefba76220c162b0429c1317b66987e061dab6aa"
     },
     {
       "id": "accept",
@@ -488,6 +503,12 @@
       "path": "lib/new_you/identity/token.ex",
       "symbol": "defmodule NewYou.Identity.Token",
       "sha256": "248faddf863dc1d2c1ddeadb16152d215aef6ecc5d8236a4cac0bdf5c69434f1"
+    },
+    {
+      "id": "public_response_test",
+      "path": "test/new_you_web/controllers/registration_controller_test.exs",
+      "symbol": "duplicate canonical email receives the same neutral pending outcome",
+      "sha256": "6b760b947197d6e34b2fd88853c66a9421854b49d292884da85d08f6423a317c"
     }
   ]
 }

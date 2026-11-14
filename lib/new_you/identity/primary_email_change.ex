@@ -98,7 +98,8 @@ defmodule NewYou.Identity.PrimaryEmailChange do
                  DeviceAssurance,
                  MessageIntent,
                  DeliveryAttempt,
-                 EvidenceObligation
+                 EvidenceObligation,
+                 NewYou.Privacy.PurposeAuthority
                ],
                fn -> apply_locked(operation_id) end
              ) do
@@ -988,7 +989,8 @@ defmodule NewYou.Identity.PrimaryEmailChange do
            true <- application_reviewed?(account),
            {:ok, {session, auth_token, proof}} <- lock_apply_authority(account),
            true <- current_apply_authority?(session, auth_token, account),
-           true <- current_consumed_confirmation?(proof, account, operation_id, now) do
+           true <- current_consumed_confirmation?(proof, account, operation_id, now),
+           :ok <- current_privacy_proof_purpose(account, operation_id) do
         if available_target?(account.primary_email_change_target, account.id) do
           commit_apply(account, proof, operation_id, now)
         else
@@ -1365,5 +1367,37 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     def expire_due(_), do: {:error, :primary_email_change_unavailable}
     def review(_, _, _), do: {:error, :primary_email_change_unavailable}
     def delivery(_, _, _), do: {:error, :source_invalid}
+  end
+
+  if Mix.env() in [:dev, :test] do
+    defp current_privacy_proof_purpose(account, operation_id) do
+      if Application.get_env(:new_you, :p8_17_test_proof_purpose?) == true do
+        with :ok <- privacy_checkpoint(:before_current_read),
+             :ok <-
+               NewYou.Privacy.require_current_p817_proof_purpose_locked(
+                 account.id,
+                 operation_id
+               ),
+             :ok <- privacy_checkpoint(:after_current_read) do
+          :ok
+        else
+          _ -> {:error, :privacy_authority_denied}
+        end
+      else
+        :ok
+      end
+    rescue
+      _ -> {:error, :privacy_authority_unavailable}
+    catch
+      _, _ -> {:error, :privacy_authority_unavailable}
+    end
+
+    if Mix.env() == :test do
+      defp privacy_checkpoint(point), do: NewYou.Proof.P817PrivacySeam.checkpoint(point)
+    else
+      defp privacy_checkpoint(_point), do: :ok
+    end
+  else
+    defp current_privacy_proof_purpose(_account, _operation_id), do: :ok
   end
 end

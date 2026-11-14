@@ -104,6 +104,72 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
     end)
   end
 
+  test "known wrong-password and unknown-account login failures have the same public response" do
+    P805.with_fixture(fn ->
+      request = P805.request()
+      {:ok, registration} = Identity.register(request)
+      {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+
+      submit = fn email ->
+        page = get(build_conn(), "/login?locale=en")
+        assert page.status == 200
+        [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
+
+        page
+        |> post("/login", %{
+          email: email,
+          password: "same invalid password for both requests",
+          locale: "en",
+          _csrf_token: csrf
+        })
+      end
+
+      known = submit.(request.email)
+      unknown_email = "unknown-#{Ecto.UUID.generate()}@example.test"
+      unknown = submit.(unknown_email)
+
+      public_result = fn conn, submitted_email ->
+        {:ok, canonical_email} = Identity.Email.canonicalize(submitted_email)
+
+        body =
+          [submitted_email, canonical_email]
+          |> Enum.uniq()
+          |> Enum.reduce(conn.resp_body, fn email, body ->
+            String.replace(body, email, "[submitted-email]")
+          end)
+
+        body =
+          Regex.replace(
+            ~r/(name="_csrf_token"[^>]*value=")[^"]+/,
+            body,
+            "\\1[session-token]"
+          )
+
+        cookies =
+          conn
+          |> get_resp_header("set-cookie")
+          |> Enum.map(&Regex.replace(~r/(^[^=;]+=)[^;]*/, &1, "\\1[cookie]"))
+
+        {
+          conn.status,
+          body,
+          get_resp_header(conn, "location"),
+          get_resp_header(conn, "cache-control"),
+          get_resp_header(conn, "referrer-policy"),
+          get_resp_header(conn, "content-security-policy"),
+          cookies,
+          get_session(conn) |> Map.drop(["_csrf_token"])
+        }
+      end
+
+      assert known.status == 200
+      assert unknown.status == 200
+      assert public_result.(known, request.email) == public_result.(unknown, unknown_email)
+      refute get_session(known, :identity_session_id)
+      refute get_session(unknown, :identity_session_id)
+    end)
+  end
+
   test "Chromium submits the bilingual form and reconstructs protected access" do
     for locale <- ["en", "af"] do
       P805.with_fixture(fn ->

@@ -6,7 +6,7 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "6bdf31bcfdac50db923a4b9dad363d2fde5a50b9",
+    "git_sha": "a423a269debb3890a356859d195d69fb0bbd6738",
     "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1064,7 +1064,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def request_recovery",
-      "sha256": "90ba9e7d0ef990538c38482b922d5f8d409f1a2b9a7c557df4fc896038680c81"
+      "sha256": "a2c6b0114d3e64f29a3b1d5daefba76220c162b0429c1317b66987e061dab6aa"
     },
     {
       "id": "recovery",
@@ -1100,13 +1100,13 @@
       "id": "session",
       "path": "lib/new_you/identity/session.ex",
       "symbol": "defmodule NewYou.Identity.Session",
-      "sha256": "9ad6168cfc4ef61ee85c27aa6af69a761372589652d4bf8f09bfec97bbf8b1de"
+      "sha256": "e59451e7a1c8341c9fa88c0d90b0c819cc58c8ca3dc1aebb2f8745b65d24d8ce"
     },
     {
       "id": "privilege",
       "path": "lib/new_you/identity/privileged_access.ex",
       "symbol": "defmodule NewYou.Identity.PrivilegedAccess",
-      "sha256": "af02c69e7ef012828c22751a124eed31502d0a2d2212d2363ebf16080e984e29"
+      "sha256": "c3cabe7fd241751a268b030242cbd21adf3e7df81f286aa492f6c14e864eacad"
     },
     {
       "id": "communications",
@@ -1190,7 +1190,7 @@
       "id": "primary_email_change_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "primary-email apply and recovery completion serialize",
-      "sha256": "dd4baa3a0e730ef7dfc426b71fd1e148569c82017db118e40a94cae2d0dc0642"
+      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
     },
     {
       "id": "manual_test",

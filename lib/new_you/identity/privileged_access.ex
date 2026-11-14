@@ -15,7 +15,8 @@ defmodule NewYou.Identity.PrivilegedAccess do
     :apply_reconciliation,
     :change_primary_email,
     :approve_manual_recovery,
-    :complete_manual_recovery
+    :complete_manual_recovery,
+    :lookup_identity
   ]
   @step_up_seconds 5 * 60
   @max_failed_codes 5

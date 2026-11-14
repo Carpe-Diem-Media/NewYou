@@ -17,7 +17,7 @@ defmodule NewYou.Identity.IdentityGrant do
 
       check_constraint :scope, "identity_grants_scope",
         check:
-          "scope IN ('security_hold_restriction', 'security_hold_review', 'security_hold_release', 'identity_reconciliation', 'identity_recovery')"
+          "scope IN ('security_hold_restriction', 'security_hold_review', 'security_hold_release', 'identity_reconciliation', 'identity_recovery', 'identity_lookup')"
 
       check_constraint :state, "identity_grants_state", check: "state IN ('active', 'revoked')"
 
@@ -104,7 +104,8 @@ defmodule NewYou.Identity.IdentityGrant do
                     :security_hold_review,
                     :security_hold_release,
                     :identity_reconciliation,
-                    :identity_recovery
+                    :identity_recovery,
+                    :identity_lookup
                   ]
 
       public? false
@@ -159,8 +160,8 @@ defmodule NewYou.Identity.IdentityGrant do
   end
 
   # Product §15.1A fixes role/scope authority. These bounded Support scopes are
-  # JIT names for the selected hold and reconciliation operations; the target Account narrows each
-  # assignment. A caller cannot choose an additional per-subject capability.
+  # JIT names for selected bounded Support operations; the target Account
+  # narrows each assignment. A caller cannot choose a per-subject capability.
   @support_scope_capabilities %{
     security_hold_restriction: [:place_security_hold],
     security_hold_review: [:review_security_hold],
@@ -168,6 +169,14 @@ defmodule NewYou.Identity.IdentityGrant do
     identity_reconciliation: [:review_reconciliation, :apply_reconciliation],
     identity_recovery: [:approve_manual_recovery, :complete_manual_recovery]
   }
+
+  def permits?(
+        %{role: :support, scope: :identity_lookup, reason_code: :security_review},
+        :lookup_identity
+      ),
+      do: true
+
+  def permits?(%{role: :support, scope: :identity_lookup}, _capability), do: false
 
   @doc "Derive protected capabilities from the bounded Support role/scope catalogue. Current grant validity is checked by the owning action."
   @spec permits?(map(), atom()) :: boolean()
