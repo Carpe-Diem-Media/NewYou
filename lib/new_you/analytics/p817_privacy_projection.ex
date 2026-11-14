@@ -12,8 +12,9 @@ defmodule NewYou.Analytics.P817PrivacyProjection do
     repo NewYou.Repo
 
     check_constraints do
-      check_constraint :projection_key, "p817_privacy_projections_single_key",
-        check: "projection_key = 'p817_current_privacy_aggregate'"
+      check_constraint :projection_key, "p817_privacy_projections_valid_key",
+        check:
+          "projection_key = 'p817_current_privacy_aggregate' OR projection_key ~ '^p817_test_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'"
 
       check_constraint :current_allowed_count, "p817_privacy_projections_non_negative_count",
         check: "current_allowed_count >= 0"

@@ -5,6 +5,8 @@ defmodule NewYou.Proof.P818Test do
   alias NewYou.Privacy
   alias NewYou.Proof.{Catalog, FullCatalog, P805}
 
+  require Ash.Query
+
   @coverage_id "source_authority_bypass_negatives"
   @case_ids ~w(
     p818.provider_observation
@@ -84,6 +86,29 @@ defmodule NewYou.Proof.P818Test do
     end)
   end
 
+  test "proof fixture cleanup deletes only its own Analytics projection key" do
+    P805.with_fixture(fn ->
+      fixture_key = P805.analytics_projection_key()
+      other_key = "p817_test_" <> Ecto.UUID.generate()
+      scope_key = {NewYou.Analytics, :p817_test_projection_key}
+
+      try do
+        Process.put(scope_key, fixture_key)
+        assert :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
+
+        Process.put(scope_key, other_key)
+        assert :ok = NewYou.Analytics.rebuild_p817_privacy_projection()
+        assert projection_keys([fixture_key, other_key]) == Enum.sort([fixture_key, other_key])
+
+        assert :ok = P805.cleanup_test_analytics_projection(fixture_key)
+        assert projection_keys([fixture_key, other_key]) == [other_key]
+      after
+        Process.put(scope_key, fixture_key)
+        :ok = P805.cleanup_test_analytics_projection(other_key)
+      end
+    end)
+  end
+
   test "a stale overlapping Analytics rebuild cannot replace a newer Privacy snapshot" do
     P805.with_fixture(fn ->
       subject_id = Ecto.UUID.generate()
@@ -96,10 +121,13 @@ defmodule NewYou.Proof.P818Test do
 
       parent = self()
       pause_key = {NewYou.Analytics, :after_privacy_snapshot}
+      projection_key = P805.analytics_projection_key()
+      projection_scope_key = {NewYou.Analytics, :p817_test_projection_key}
 
       first =
         Task.async(fn ->
           :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
+          Process.put(projection_scope_key, projection_key)
 
           Process.put(pause_key, fn snapshot ->
             send(parent, {:first_privacy_snapshot, snapshot})
@@ -115,6 +143,7 @@ defmodule NewYou.Proof.P818Test do
             NewYou.Analytics.rebuild_p817_privacy_projection()
           after
             Process.delete(pause_key)
+            Process.delete(projection_scope_key)
             :ok = Sandbox.checkin(NewYou.Repo)
           end
         end)
@@ -127,6 +156,7 @@ defmodule NewYou.Proof.P818Test do
       second =
         Task.async(fn ->
           :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
+          Process.put(projection_scope_key, projection_key)
 
           Process.put(pause_key, fn snapshot ->
             send(parent, {:second_privacy_snapshot, snapshot})
@@ -139,6 +169,7 @@ defmodule NewYou.Proof.P818Test do
             NewYou.Analytics.rebuild_p817_privacy_projection()
           after
             Process.delete(pause_key)
+            Process.delete(projection_scope_key)
             :ok = Sandbox.checkin(NewYou.Repo)
           end
         end)
@@ -184,8 +215,22 @@ defmodule NewYou.Proof.P818Test do
 
   defp only_projection do
     resource = NewYou.Analytics.P817PrivacyProjection
-    assert [projection] = Ash.read!(resource, authorize?: false)
+    projection_key = P805.analytics_projection_key()
+
+    assert [projection] =
+             resource
+             |> Ash.Query.filter(projection_key == ^projection_key)
+             |> Ash.read!(authorize?: false)
+
     projection
+  end
+
+  defp projection_keys(keys) do
+    NewYou.Analytics.P817PrivacyProjection
+    |> Ash.Query.filter(projection_key in ^keys)
+    |> Ash.read!(authorize?: false)
+    |> Enum.map(& &1.projection_key)
+    |> Enum.sort()
   end
 
   defp projection_fields do

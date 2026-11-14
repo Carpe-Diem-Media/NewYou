@@ -20,14 +20,15 @@ defmodule NewYou.Proof.P805 do
   @doc false
   def with_fixture(callback) when is_function(callback, 0) do
     previous = Map.new(@environment, &{&1, Application.fetch_env(:new_you, &1)})
+    projection_key = "p817_test_" <> Ecto.UUID.generate()
+    Process.put({NewYou.Analytics, :p817_test_projection_key}, projection_key)
     configure()
     Process.put({__MODULE__, :operations}, [])
     Process.put({__MODULE__, :emails}, [])
-    {guardian, guardian_monitor} = start_fixture_guardian(previous)
+    {guardian, guardian_monitor} = start_fixture_guardian(previous, projection_key)
     Process.put({__MODULE__, :guardian}, guardian)
     :ok = NewYou.Proof.Scenario.register_cleanup_guardian(guardian)
     :ok = Sandbox.checkout(Repo, sandbox: false)
-    clear_test_analytics_projection()
 
     try do
       Process.put({__MODULE__, :consequence_baseline}, capture_consequence_ids())
@@ -40,7 +41,7 @@ defmodule NewYou.Proof.P805 do
         # A bounded worker can disconnect a borrowed lease on cancellation.
         # Teardown needs its own live connection, including in that failure path.
         Sandbox.unboxed_run(Repo, fn ->
-          cleanup()
+          cleanup(projection_key)
           false = Repo.in_transaction?()
           0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'p805_fault_%'")
         end)
@@ -52,6 +53,7 @@ defmodule NewYou.Proof.P805 do
 
         stop_fixture_guardian(guardian, guardian_monitor)
         Process.delete({__MODULE__, :guardian})
+        Process.delete({NewYou.Analytics, :p817_test_projection_key})
       end
 
       :ok = SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
@@ -128,13 +130,13 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
-  defp start_fixture_guardian(previous) do
+  defp start_fixture_guardian(previous, projection_key) do
     owner = self()
 
     {pid, monitor} =
       spawn_monitor(fn ->
         owner_monitor = Process.monitor(owner)
-        fixture_guardian(owner, owner_monitor, previous, [], [])
+        fixture_guardian(owner, owner_monitor, previous, projection_key, [], [])
       end)
 
     {pid, monitor}
@@ -150,19 +152,35 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
-  defp fixture_guardian(owner, owner_monitor, previous, operations, emails) do
+  defp fixture_guardian(owner, owner_monitor, previous, projection_key, operations, emails) do
     receive do
       {:track, ^owner, reference, :operation, operation} ->
         send(owner, {:fixture_tracked, reference})
-        fixture_guardian(owner, owner_monitor, previous, [operation | operations], emails)
+
+        fixture_guardian(
+          owner,
+          owner_monitor,
+          previous,
+          projection_key,
+          [operation | operations],
+          emails
+        )
 
       {:track, ^owner, reference, :email, email} ->
         send(owner, {:fixture_tracked, reference})
-        fixture_guardian(owner, owner_monitor, previous, operations, [email | emails])
+
+        fixture_guardian(
+          owner,
+          owner_monitor,
+          previous,
+          projection_key,
+          operations,
+          [email | emails]
+        )
 
       {:fixture_values, ^owner, reference} ->
         send(owner, {:fixture_values, reference, Enum.uniq(operations), Enum.uniq(emails)})
-        fixture_guardian(owner, owner_monitor, previous, operations, emails)
+        fixture_guardian(owner, owner_monitor, previous, projection_key, operations, emails)
 
       :fixture_complete ->
         Process.demonitor(owner_monitor, [:flush])
@@ -170,7 +188,7 @@ defmodule NewYou.Proof.P805 do
 
       {:DOWN, ^owner_monitor, :process, ^owner, _reason} ->
         try do
-          cleanup_orphaned_fixture(operations, emails)
+          cleanup_orphaned_fixture(operations, emails, projection_key)
         after
           restore_environment(previous)
         end
@@ -184,11 +202,11 @@ defmodule NewYou.Proof.P805 do
     end)
   end
 
-  defp cleanup_orphaned_fixture(operations, emails) do
+  defp cleanup_orphaned_fixture(operations, emails, projection_key) do
     :ok = Sandbox.checkout(Repo, sandbox: false)
 
     try do
-      cleanup(operations, emails)
+      cleanup(operations, emails, projection_key)
       :ok = SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
     after
       :ok = Sandbox.checkin(Repo)
@@ -433,7 +451,7 @@ defmodule NewYou.Proof.P805 do
     input = request()
     {:ok, accepted} = Identity.register(input)
     retired = account!(accepted.account_id).pmr
-    cleanup()
+    cleanup(analytics_projection_key())
 
     check(
       id,
@@ -1030,16 +1048,16 @@ defmodule NewYou.Proof.P805 do
 
   # Fixture teardown only, never an application mutation interface. PMR
   # reservations deliberately remain permanent, as in existing owner tests.
-  defp cleanup do
+  defp cleanup(projection_key) do
     operations = Process.get({__MODULE__, :operations}, [])
     emails = Process.get({__MODULE__, :emails}, [])
     Process.delete({__MODULE__, :operations})
     Process.delete({__MODULE__, :emails})
-    cleanup(operations, emails)
+    cleanup(operations, emails, projection_key)
   end
 
-  defp cleanup(operations, emails) do
-    clear_test_analytics_projection()
+  defp cleanup(operations, emails, projection_key) do
+    :ok = cleanup_test_analytics_projection(projection_key)
 
     operations = Enum.uniq(operations) |> Enum.map(&Ecto.UUID.dump!/1)
     emails = Enum.uniq(emails)
@@ -1214,10 +1232,23 @@ defmodule NewYou.Proof.P805 do
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
   end
 
-  defp clear_test_analytics_projection do
-    # Fixture teardown removes synthetic Privacy authorities, so their derived
-    # projection revision must not carry into another fixture.
-    Repo.query!("DELETE FROM p817_privacy_projections")
+  @doc false
+  @spec analytics_projection_key() :: String.t()
+  def analytics_projection_key do
+    case Process.get({NewYou.Analytics, :p817_test_projection_key}) do
+      "p817_test_" <> _ = projection_key -> projection_key
+      _ -> raise "P8-05 fixture Analytics projection key is unavailable"
+    end
+  end
+
+  @doc false
+  @spec cleanup_test_analytics_projection(String.t()) :: :ok
+  def cleanup_test_analytics_projection("p817_test_" <> _ = projection_key) do
+    Repo.query!("DELETE FROM p817_privacy_projections WHERE projection_key = $1", [projection_key])
+
     :ok
   end
+
+  def cleanup_test_analytics_projection(_projection_key),
+    do: raise(ArgumentError, "invalid P8-05 test Analytics projection key")
 end
