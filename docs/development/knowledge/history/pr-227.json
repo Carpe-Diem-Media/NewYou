@@ -30,14 +30,14 @@
       "status": "modified"
     },
     {
-      "blob": "71ebf9ba2bf8c5706cc7dccc992cc03c8aac0241",
+      "blob": "27ce1c58504fca20aadb16dc03e6a909c0ef40b4",
       "mode": "100644",
       "old_blob": "b8f66ed5e28fd682bf40de67fcf7b0748cdc3d12",
       "old_mode": "100644",
       "old_path": "DESIGN.md",
       "old_sha256": "ffb88c9e8997e997dc75f47783f8a70a919c39a6f0b62b4e656e6e84777b1aed",
       "path": "DESIGN.md",
-      "sha256": "ff6136cd44a257b035abc9ea85bfc3990b58d901d7d9a8e14eb8cd3872eb61f0",
+      "sha256": "6ef32e0f5e52429c0bf509c109a6330e3d094503dd2940311f8f9eab2f428ea1",
       "status": "modified"
     },
     {
@@ -74,14 +74,14 @@
       "status": "added"
     },
     {
-      "blob": "adffc10cc4c396b2c8919ab10d20d4d380ae4806",
+      "blob": "2474039e69b86a2e31b0239e00409cf869f98fc7",
       "mode": "100644",
       "old_blob": "53acbf1c16b0dbfda02da449aae8b22155ec4ed4",
       "old_mode": "100644",
       "old_path": "assets/css/design-tokens.css",
       "old_sha256": "1ff08b553dee7f8427f22387a78aeba909c4be0165baa1b96d909b5ca42b8729",
       "path": "assets/css/design-tokens.css",
-      "sha256": "63b8e9a74e09341bc796c38f5a9f0e3f9f7316633e04380cf494056c598bf533",
+      "sha256": "851335469d545f79ec7b13cfce75c995257e33f7e39e811e8024b0f93799f129",
       "status": "modified"
     },
     {
@@ -118,14 +118,14 @@
       "status": "added"
     },
     {
-      "blob": "dfeef441ffe2bf2afef1d95562033f419c031ea3",
+      "blob": "0d48618b115a010880c1fe39e9784e9d577332e3",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "970b4d073186a7bba8f4c2a1883421bd5aeeb688b5fec492cbf5fdefaabc253a",
+      "sha256": "9acad35c7a4700f1b69a9791dac7686a3e79f38c5ba4a60984111a7fa8f8b58b",
       "status": "modified"
     },
     {
@@ -338,14 +338,14 @@
       "status": "added"
     },
     {
-      "blob": "de2ff9f4a1dc22283ce0b1d5317c973212a631c7",
+      "blob": "d4e3ebc85b040a4ca85587bfc85c7c202268798b",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.html.heex",
-      "sha256": "1165acfadb3466414df9abd7b88d9725a5b90d0eedc7155471023a053caad3f8",
+      "sha256": "656c8ff71cf908b2730461fccee7c5cd56818963f98427458e6191ab2cf420e8",
       "status": "added"
     },
     {
@@ -393,14 +393,14 @@
       "status": "added"
     },
     {
-      "blob": "dfefb49cb0477179cb172583d1fe82edc584996c",
+      "blob": "db54aa1e8f599f8b3591140bfeb507a8cf7e76ec",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_lighting_browser.mjs",
-      "sha256": "90bff827968a0c82b0e40496df4a0dacb4b840439b7418c0e23c115a441330ca",
+      "sha256": "d3665ad3bcb11db889122b79067d697e3a2284a1af5ac2c6b7a02fdc5e7bfc35",
       "status": "added"
     },
     {
@@ -564,13 +564,13 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.",
+    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.",
     "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-13T06:28:26.966590Z",
+    "checked_at": "2026-11-14T20:38:10.435287Z",
     "items": [
       {
         "description_sha256": "37e40677ccfc39b60b5e720efb6483fcc3575d647c09ff296a9e8faedd4a3e32",
