@@ -1,7 +1,8 @@
 defmodule NewYouWeb.RegistrationBoundary do
   @moduledoc """
-  Dispatches the registration browser paths without Phoenix.Router's full-conn
-  dispatch telemetry. Controllers still own rendering and call Identity interfaces.
+  Dispatches the reviewed browser paths without Phoenix.Router's full-conn
+  telemetry. Unknown paths fail closed before framework error telemetry can
+  retain their session transport. Controllers render and call Identity interfaces.
   """
 
   @behaviour Plug
@@ -16,106 +17,133 @@ defmodule NewYouWeb.RegistrationBoundary do
   def init(opts), do: opts
 
   @impl Plug
-  def call(%Plug.Conn{method: "GET", request_path: "/"} = conn, _opts) do
+  def call(conn, opts) do
+    conn
+    |> Plug.Parsers.call(
+      Plug.Parsers.init(
+        parsers: [:urlencoded, :multipart, :json],
+        pass: ["*/*"],
+        json_decoder: Phoenix.json_library()
+      )
+    )
+    |> Plug.MethodOverride.call(Plug.MethodOverride.init([]))
+    |> Plug.Head.call(Plug.Head.init([]))
+    |> dispatch(opts)
+  rescue
+    error ->
+      log_browser_failure(error.__struct__)
+      fail_closed_response(conn, Plug.Exception.status(error))
+  catch
+    kind, _reason ->
+      log_browser_failure(kind)
+      fail_closed_response(conn, 500)
+  end
+
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/"} = conn, _opts) do
     dispatch_browser_request(conn, :new)
   end
 
-  def call(%Plug.Conn{method: "GET", request_path: "/register"} = conn, _opts) do
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/register"} = conn, _opts) do
     dispatch_browser_request(conn, :new)
   end
 
-  def call(%Plug.Conn{method: "POST", request_path: "/register"} = conn, _opts) do
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/register"} = conn, _opts) do
     dispatch_browser_request(conn, :create)
   end
 
-  def call(%Plug.Conn{method: "POST", request_path: "/verification/resend"} = conn, _opts) do
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/verification/resend"} = conn, _opts) do
     dispatch_browser_request(conn, :resend)
   end
 
-  def call(%Plug.Conn{method: "GET", request_path: "/verification/confirm"} = conn, _opts) do
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/verification/confirm"} = conn, _opts) do
     dispatch_browser_request(conn, :show, EmailVerificationController)
   end
 
-  def call(%Plug.Conn{method: "POST", request_path: "/verification/confirm"} = conn, _opts) do
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/verification/confirm"} = conn, _opts) do
     dispatch_browser_request(conn, :confirm, EmailVerificationController)
   end
 
-  def call(
-        %Plug.Conn{method: method, request_path: "/primary-email-change/confirm"} = conn,
-        _opts
-      )
-      when method in ["GET", "HEAD"] do
+  defp dispatch(
+         %Plug.Conn{method: method, request_path: "/primary-email-change/confirm"} = conn,
+         _opts
+       )
+       when method in ["GET", "HEAD"] do
     dispatch_browser_request(conn, :show, PrimaryEmailChangeController)
   end
 
-  def call(
-        %Plug.Conn{method: "POST", request_path: "/primary-email-change/confirm"} = conn,
-        _opts
-      ) do
+  defp dispatch(
+         %Plug.Conn{method: "POST", request_path: "/primary-email-change/confirm"} = conn,
+         _opts
+       ) do
     dispatch_browser_request(conn, :confirm, PrimaryEmailChangeController)
   end
 
-  def call(%Plug.Conn{method: "GET", request_path: "/recovery"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/recovery"} = conn, _opts),
     do: dispatch_browser_request(conn, :new, NewYouWeb.RecoveryController)
 
-  def call(%Plug.Conn{method: "GET", request_path: "/recovery/confirm"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/recovery/confirm"} = conn, _opts),
     do: dispatch_browser_request(conn, :show, NewYouWeb.RecoveryController)
 
-  def call(%Plug.Conn{method: "POST", request_path: "/recovery"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/recovery"} = conn, _opts),
     do: dispatch_browser_request(conn, :request, NewYouWeb.RecoveryController)
 
-  def call(%Plug.Conn{method: "POST", request_path: "/recovery/confirm"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/recovery/confirm"} = conn, _opts),
     do: dispatch_browser_request(conn, :confirm, NewYouWeb.RecoveryController)
 
-  def call(%Plug.Conn{method: "POST", request_path: "/recovery/complete"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/recovery/complete"} = conn, _opts),
     do: dispatch_browser_request(conn, :complete, NewYouWeb.RecoveryController)
 
-  def call(%Plug.Conn{method: "POST", request_path: "/recovery/cancel"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/recovery/cancel"} = conn, _opts),
     do: dispatch_browser_request(conn, :cancel, NewYouWeb.RecoveryController)
 
-  def call(%Plug.Conn{method: "GET", request_path: "/password/reset"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/password/reset"} = conn, _opts),
     do: dispatch_browser_request(conn, :new, NewYouWeb.PasswordResetController)
 
-  def call(%Plug.Conn{method: "POST", request_path: "/password/reset"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/password/reset"} = conn, _opts),
     do: dispatch_browser_request(conn, :request, NewYouWeb.PasswordResetController)
 
-  def call(%Plug.Conn{method: "GET", request_path: "/password/reset/confirm"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/password/reset/confirm"} = conn, _opts),
     do: dispatch_browser_request(conn, :show, NewYouWeb.PasswordResetController)
 
-  def call(%Plug.Conn{method: "POST", request_path: "/password/reset/confirm"} = conn, _opts),
-    do: dispatch_browser_request(conn, :confirm, NewYouWeb.PasswordResetController)
+  defp dispatch(
+         %Plug.Conn{method: "POST", request_path: "/password/reset/confirm"} = conn,
+         _opts
+       ),
+       do: dispatch_browser_request(conn, :confirm, NewYouWeb.PasswordResetController)
 
-  def call(%Plug.Conn{method: "GET", request_path: "/login"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/login"} = conn, _opts),
     do: dispatch_browser_request(conn, :new, PasswordSessionController)
 
-  def call(%Plug.Conn{method: "GET", request_path: "/login/magic"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/login/magic"} = conn, _opts),
     do: dispatch_browser_request(conn, :new, MagicLoginController)
 
-  def call(%Plug.Conn{method: "POST", request_path: "/login/magic"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/login/magic"} = conn, _opts),
     do: dispatch_browser_request(conn, :request, MagicLoginController)
 
-  def call(%Plug.Conn{method: "GET", request_path: "/login/magic/confirm"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/login/magic/confirm"} = conn, _opts),
     do: dispatch_browser_request(conn, :show, MagicLoginController)
 
-  def call(%Plug.Conn{method: "POST", request_path: "/login/magic/confirm"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/login/magic/confirm"} = conn, _opts),
     do: dispatch_browser_request(conn, :confirm, MagicLoginController)
 
-  def call(%Plug.Conn{method: "POST", request_path: "/login"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/login"} = conn, _opts),
     do: dispatch_browser_request(conn, :create, PasswordSessionController)
 
-  def call(%Plug.Conn{method: "GET", request_path: "/session/protected"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/session/protected"} = conn, _opts),
     do: dispatch_browser_request(conn, :protected, PasswordSessionController)
 
-  def call(%Plug.Conn{method: "POST", request_path: "/session/logout"} = conn, _opts),
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/session/logout"} = conn, _opts),
     do: dispatch_browser_request(conn, :logout, PasswordSessionController)
 
-  def call(%Plug.Conn{request_path: path} = conn, _opts) do
-    if sensitive_browser_path?(path) do
-      fail_closed_response(conn, 404)
-    else
-      NewYouWeb.Router.call(conn, NewYouWeb.Router.init([]))
-    end
-  end
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/legal/terms"} = conn, _opts),
+    do: dispatch_browser_request(conn, :terms)
+
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/legal/privacy"} = conn, _opts),
+    do: dispatch_browser_request(conn, :privacy)
+
+  # Every current browser route is dispatched above. A Router fallback would
+  # expose session-bearing connections through dispatch or error telemetry.
+  defp dispatch(%Plug.Conn{} = conn, _opts), do: fail_closed_response(conn, 404)
 
   defp dispatch_browser_request(conn, action, controller \\ RegistrationController) do
     conn
@@ -150,23 +178,5 @@ defmodule NewYouWeb.RegistrationBoundary do
   defp log_browser_failure(error_kind) do
     require Logger
     Logger.error("WELL-52 browser action failed (#{inspect(error_kind)})")
-  end
-
-  defp sensitive_browser_path?(path) do
-    Enum.any?(
-      [
-        "/",
-        "/register",
-        "/verification",
-        "/primary-email-change",
-        "/login",
-        "/session",
-        "/password",
-        "/recovery"
-      ],
-      fn root ->
-        path == root or String.starts_with?(path, root <> "/")
-      end
-    )
   end
 end
