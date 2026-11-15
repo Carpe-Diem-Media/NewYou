@@ -6,7 +6,7 @@
     "WELL-20"
   ],
   "implementation_revision": {
-    "git_sha": "280207d0708c3914f1f280ce2e438b5da20738e4",
+    "git_sha": "3c8bcaff53d9049972ac967c85b2953f625cf4cb",
     "semantics": "WELL-20 proof integration only. It adds no business behavior or certification authority."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
@@ -106,7 +106,7 @@
         "Existing upstream manifest map assembled by Catalog"
       ],
       "returns": [
-        "Fixed ten-entry integration map; upstream case-set loss keeps the affected family partial"
+        "Fixed ten-entry integration map; upstream loss, case identity drift, owner callback-target drift or mandatory proof-claim drift keeps the affected family partial"
       ],
       "side_effects": [
         "None; computes reviewed case mappings and manifest digests."
@@ -145,7 +145,7 @@
       ]
     },
     {
-      "summary": "The standalone canonical command compares each complete family against the separately maintained TB-001-linked required case/invariant inventory. Dropped or substituted declarations leave the family partial and fail preflight before callbacks run. Inventory changes require an explicit independent review diff.",
+      "summary": "The standalone canonical command independently binds all 133 case/invariant identities and the 74 P8-19 owner module/function/arity targets to the static TB-001-linked inventory. It compares the actual emitted boundary, cut, race and expected claim for each added case. Any declaration or claim mismatch leaves the affected family partial; Runner rejects it before any canonical callback executes. Inventory changes require an explicit independent review diff.",
       "source_ids": [
         "inventory",
         "integration",
@@ -154,7 +154,7 @@
       ]
     },
     {
-      "summary": "FullCatalog executes required callbacks in fixed order and stops after an unsatisfied invariant. Shared upstream scenarios retain their assertions; completion reaches the runner ledger only after those assertions return.",
+      "summary": "FullCatalog executes required callbacks in fixed order and stops after an unsatisfied invariant. Shared upstream scenarios retain their assertions. The P8-19 ledger records one aggregate owner_assertions marker only after the independently pinned named owner scenario returns normally. The marker does not enumerate each underlying ExUnit assertion; scenario implementation changes still require exact-source review.",
       "source_ids": [
         "executor",
         "integration",
@@ -312,13 +312,18 @@
         "the reviewed TB-001 catalog compiles every required family and callback",
         "removing any compiled required callback is a registration failure",
         "an isolated broken full-proof callback exits nonzero with family and cut identity",
-        "loss of reviewed upstream coverage leaves the affected family partial"
+        "loss of reviewed upstream coverage leaves the affected family partial",
+        "standalone canonical acceptance rejects identity target authority and mandatory claim drift",
+        "callback target and mandatory boundary cut and race claims are independently bound",
+        "deleting or substituting a declared P8-19 obligation leaves its family partial"
       ],
-      "proves": "Fixed inventory and callback completeness, upstream loss rejection, isolated full-result negative and nonzero OS exit.",
+      "proves": "Independent identity, owner callback-target and emitted mandatory-claim binding. Fresh TEST VMs invoke the ordinary canonical script after drop, substitution, stale authority, harmless normally returning callback, boundary, cut and race mutations. Callback substitution preserves case/invariant identity and produces no owner assertions or observations. Separate unit mutations also remove cuts/races only from the emitted manifest. Existing broken-invariant fixture retains its family/cut failure and cleanup proof.",
       "limits": "Does not certify Phase 8 or substitute for clean-head canonical execution and hosted CI.",
       "source_ids": [
         "integration_test",
-        "negative"
+        "negative",
+        "inventory",
+        "inventory_negative"
       ]
     },
     {
@@ -377,7 +382,7 @@
     "Final proof artifacts remain outside the checkout and must name the exact final PR head. Review actual artifacts and hosted CI independently.",
     "The current Privacy purpose is a synthetic development/test proof, not a production consent requirement.",
     "Full applicable local gates, OCR, exact-head CI and independent Master Gate review remain separate obligations. This map does not assert those results.",
-    "The fixed identity inventory is an engineering acceptance input linked to TB-001 sections 7-8. It is separate from callback declarations and does not create business or certification authority. Fresh independent Master Gate review must assess its semantic completeness. Submitted browser checkpoints record attempts; owning Account/Session/protected-access assertions determine success."
+    "The static identity, owner callback-target and mandatory-claim inventory is linked to TB-001 sections 7-8. It remains separate from executable declarations and creates no business or certification authority. Fresh independent Master Gate review must assess semantic completeness and scenario source. The aggregate ledger marker does not enumerate underlying assertions or protect against arbitrary edits inside an owner scenario. Browser verification_form records the observed CSRF form; owning Account/Session/protected-access assertions determine success."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -391,7 +396,7 @@
       "id": "integration",
       "path": "test/support/proof/p8_19_catalog.ex",
       "symbol": "defmodule NewYou.Proof.P819Catalog",
-      "sha256": "b52d872ce4669f12b5b7f0a58d44c2dda763c3669d2c341c0aeb8c9ae6130761"
+      "sha256": "ac81b8f9e959a84fc8328eb1a6859ebf10c664c8941709d342ebe162f1f4ab8d"
     },
     {
       "id": "runner",
@@ -439,7 +444,7 @@
       "id": "browser_script",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'spine'",
-      "sha256": "2c7b146732120c86dae7f5df09b5d4176dce1472fa6b9fbc14d551573d7fcfbf"
+      "sha256": "d9136a658d6295dfb612ea3dbecbac22470e1bb5f0027c220754e7164b0268e9"
     },
     {
       "id": "fixture",
@@ -475,19 +480,19 @@
       "id": "web_scenarios",
       "path": "test/support/proof/web_scenarios.ex",
       "symbol": "def recovery_neutral()",
-      "sha256": "c90158d7f9115a4096052db9d9ebe18176600b9cd41574e59e223aae952d58aa"
+      "sha256": "d33e18605b1495218a788d5e000c47977f410811a2af11cc2c480d9387df7a58"
     },
     {
       "id": "capability_scenarios",
       "path": "test/support/proof/capability_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.MagicScannerCases",
-      "sha256": "2a851980eac3769cb20e28641a35b3e96480d3a8fcc47f41f681cabcc6e6a2fe"
+      "sha256": "8a4a1553d9006b3a72db0c38451498a921b89a28232181743dc05a4b5f795c17"
     },
     {
       "id": "integration_test",
       "path": "test/new_you/proof/tb001_integration_test.exs",
       "symbol": "defmodule NewYou.Proof.TB001IntegrationTest",
-      "sha256": "3db2ddf3cabc23e6de97f996fb023b03ee5153d6c9a561793d1701c9b73e939d"
+      "sha256": "9293c6ad47c7f5cdeeeca725f41faf34b38b251d258f8d8e319f8314ef2c50b2"
     },
     {
       "id": "matrix_test",
@@ -541,13 +546,13 @@
       "id": "inventory",
       "path": "test/proof/tb001_required_cases.json",
       "symbol": "\"contract\": \"TB-001/v0.1.3\"",
-      "sha256": "c9c374eac33c88adf56b4557ade9fdf6bdf619194372160f17a19d630954eb55"
+      "sha256": "e8122a4a151f6c0ed3116660919f92a87d73478acf5a8ee6de5e3e5dddf9c7f3"
     },
     {
       "id": "inventory_negative",
       "path": "test/proof/tb001_inventory_broken.exs",
       "symbol": "Code.eval_file(\"test/proof/run.exs\")",
-      "sha256": "0cab8012881a80f6dbaf794d0fc066d1c93ebda984cc1af53fbc29f1bbd7fb62"
+      "sha256": "20d9c782be9ecd9ec6448749fef6ce5e40e2856708948644927c24a8cc8ca66f"
     },
     {
       "id": "passive_evidence",
