@@ -11,17 +11,18 @@
     min-inline-size: 0;
     inline-size: 100%;
     font-family: var(--font-body);
-    border: var(--design-border-width) solid var(--ink-meta);
+    border: var(--border-control);
     caret-color: var(--primary);
   }
-  .ds-design-field-input[aria-invalid="true"] { border-width: calc(2 * var(--design-border-width)); }
+  .ds-design-field-input[aria-invalid="true"] { border-width: var(--design-control-invalid-width); }
   .ds-design-field-input:focus-visible { @apply outline-2 outline-offset-2 outline-design-primary; }
   .ds-design-field-input:disabled { cursor: not-allowed; }
   .ds-field-error { @apply pl-design-sm text-design-body-xs leading-design-body-xs font-design-medium text-design-ink; border-inline-start: calc(2 * var(--design-border-width)) solid var(--secondary); }
 
   .ds-design-card {
     border-radius: var(--radius);
-    border-width: var(--design-border-width);
+    border: var(--border-decorative);
+    border-width: var(--design-card-border-width);
     padding-inline: var(--design-card-padding-inline, var(--space-lg));
     padding-block: var(--design-card-padding-block, var(--space-lg));
     overflow-wrap: anywhere;
@@ -50,7 +51,7 @@
   }
   .ds-design-icon[data-treatment="boxed"] {
     padding: var(--design-icon-padding, var(--space-sm));
-    border: var(--design-border-width) solid var(--edge-side);
+    border: var(--design-icon-border);
     border-radius: var(--design-icon-radius, var(--radius-sm));
     background: var(--surface-panel);
   }
@@ -61,8 +62,8 @@
     min-width: 0;
     white-space: normal;
     overflow-wrap: anywhere;
-    border-width: var(--design-border-width);
-    border-style: solid;
+    border-width: var(--design-lit-border-width);
+    border-style: var(--design-lit-border-style);
   }
 
   .ds-design-button[data-treatment="lit"][data-variant="primary"] {
@@ -112,6 +113,7 @@
   }
 
   .ds-design-card[data-variant="raised"] {
+    border-style: var(--design-lit-border-style);
     background-color: var(--surface-raised);
     border-color: var(--edge-side);
     border-top-color: var(--edge-highlight);

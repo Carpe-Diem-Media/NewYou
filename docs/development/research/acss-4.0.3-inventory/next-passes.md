@@ -65,6 +65,8 @@ Exit: changing one spacing role affects its intended consumers without moving un
 
 ## Pass 3: finish borders and divider contracts
 
+Implementation continuation: [border purpose and divider notes](pass3-borders.md) record canonical inputs, local precedence, actual selected-border radius math, native state comparisons and nested ownership. The checklist remains the contract; current execution and exact-head verification belong in Plane.
+
 - [ ] Distinguish decorative hairlines, visible control boundaries, semantic separators and directional lighting edges. Document width, style, color, ownership and local override rules for each purpose.
 - [ ] Keep top edges lighter than lower edges for lit treatments, with restrained downward shadows where already approved. Preserve the premium primary gradient and shine through default, hover, pressed, loading, disabled and focus states.
 - [ ] Extend existing divider arithmetic and native `hr` proof only for new behavior. Check nested groups, long labels, forced colors, focus clipping and contrast appropriate to each boundary's purpose.

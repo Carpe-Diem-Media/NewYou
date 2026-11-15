@@ -252,11 +252,28 @@
   --design-type-heading-xxl-max: var(--text-display-md);
 }
 
+/* Border purposes resolve locally. Optional --border-{purpose}-{width|style|color}
+   inputs stay unset so existing local --design-border-width overrides still work.
+   Edit/add purpose inputs in canonical CSS; these shorthands are derived outputs. */
+:root, :where(.ds-design-card) {
+  --border-decorative: var(--border-decorative-width, var(--design-border-width)) var(--border-decorative-style, solid) var(--border-decorative-color, var(--hairline));
+}
+:root, :where(.ds-design-field-input) {
+  --border-control: var(--border-control-width, var(--design-border-width)) var(--border-control-style, solid) var(--border-control-color, var(--ink-meta));
+  --design-control-invalid-width: calc(2 * var(--border-control-width, var(--design-border-width)));
+}
+:root, :where(.ds-divider, .ds-divided) {
+  --border-separator: var(--divider-width, var(--border-separator-width, var(--design-border-width))) var(--divider-style, var(--border-separator-style, solid)) var(--divider-color, var(--border-separator-color, var(--hairline)));
+}
+
 /* Shared lighting relationships resolve against each root or component's inputs. */
 :root,
 :where(.ds-design-button),
 :where(.ds-design-card),
 :where(.ds-design-icon) {
+  --design-lit-border-width: var(--border-lit-width, var(--design-border-width));
+  --design-lit-border-style: var(--border-lit-style, solid);
+  --design-icon-border: var(--design-lit-border-width) var(--design-lit-border-style) var(--edge-side);
   --surface-canvas: var(--canvas);
   --surface-panel: var(--surface);
   --surface-raised: var(--surface);
@@ -282,8 +299,12 @@
 /* Component relationships resolve on the consumer. Optional override inputs stay
    unset by default, so ancestor overrides and local source-token edits both work. */
 :where(.ds-design-card) {
-  --design-card-inset-radius-x: max(0px, calc(var(--radius) - var(--design-border-width) - var(--design-card-padding-inline, var(--space-lg))));
-  --design-card-inset-radius-y: max(0px, calc(var(--radius) - var(--design-border-width) - var(--design-card-padding-block, var(--space-lg))));
+  --design-card-border-width: var(--border-decorative-width, var(--design-border-width));
+  --design-card-inset-radius-x: max(0px, calc(var(--radius) - var(--design-card-border-width) - var(--design-card-padding-inline, var(--space-lg))));
+  --design-card-inset-radius-y: max(0px, calc(var(--radius) - var(--design-card-border-width) - var(--design-card-padding-block, var(--space-lg))));
+}
+:where(.ds-design-card[data-variant="raised"]) {
+  --design-card-border-width: var(--design-lit-border-width);
 }
 :where(.ds-design-icon) {
   --design-icon-glyph-size: var(--design-icon-size, var(--space-lg));
@@ -311,8 +332,15 @@
 }
 :where(.ds-divider, .ds-divided) {
   --design-divider-space: var(--divider-gap, calc(var(--content-gap) / 2));
-  --design-divider-border: var(--divider-width, var(--design-border-width)) var(--divider-style, solid) var(--divider-color, var(--hairline));
+  --design-divider-border: var(--border-separator);
 }
+/* Labelled border lab overrides retain existing scale/ink values. */
+#border-divider-local {
+  --divider-width: calc(2 * var(--design-border-width));
+  --divider-style: dashed;
+  --divider-color: var(--secondary);
+}
+#border-divided-inner { --divider-gap: var(--space-sm); }
 /* Labelled local guide override. Existing scale values remain the only sizes. */
 #prose-local {
   --prose-flow-space: var(--space-sm);

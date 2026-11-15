@@ -154,6 +154,32 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     refute has_element?(preview, "#prose-en")
   end
 
+  test "border lab distinguishes purpose, native state and nested decorative groups", %{
+    conn: conn
+  } do
+    {:ok, view, _} = live(conn, "/dev/design-system")
+    assert has_element?(view, "nav a[href='#borders']")
+
+    for role <- ~w(decorative control separator) do
+      assert has_element?(view, "#borders output[data-token='--border-#{role}']")
+    end
+
+    assert has_element?(
+             view,
+             "#borders output[data-measure-target=border-field-control][data-measure-property=border-top-width]"
+           )
+
+    assert has_element?(view, "#border-divider-default.ds-divider")
+    assert has_element?(view, "#border-divider-local.ds-divider")
+    assert has_element?(view, "#border-divided-frame > #border-divided-inner.ds-divided")
+    assert has_element?(view, "#border-field-control.ds-design-field-input")
+    assert has_element?(view, "#border-action-pending[disabled][aria-busy=true]")
+    refute has_element?(view, "#border-action-ready[disabled]")
+
+    {:ok, preview, _} = live(conn, "/dev/design-system/preview")
+    refute has_element?(preview, "#borders")
+  end
+
   test "modular typography candidates expose scale math and semantic comparisons without adoption",
        %{conn: conn} do
     {:ok, view, _} = live(conn, "/dev/design-system")

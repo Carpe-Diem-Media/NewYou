@@ -125,3 +125,5 @@ Next-run sequencing: [design-system next-pass roadmap](next-passes.md). Start wi
 Next pass 1: [candidate modular typography](pass1-typography.md) documents the new guide scale, independent mobile/desktop endpoints, scope and step overrides, semantic comparisons, validation and proof limits. Production type roles remain unchanged pending review and bounded adoption.
 
 Next pass 2: [contextual card spacing and scoped prose](pass2-content.md) documents separate card roles, figure/caption flow, explicit nested spacing boundaries, actual consumers and missing proof. The existing values and premium CTA remain intact.
+
+Next pass 3: [border purposes and divider ownership](pass3-borders.md) documents optional purpose inputs, selected-border inset math, nested divider frames, native states, contrast and bounded browser proof. Current delivery state remains in Plane.
