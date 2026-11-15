@@ -2,7 +2,7 @@
 
 > Execute this approved roadmap continuation in the current isolated worktree. Use the requesting-code-review skill for independent bounded review. The owner approved continued UI work with the WELL-114 certification gap recorded; this does not authorize integration.
 
-Goal: implement Pass 4 of [the next-pass roadmap](../../development/research/acss-4.0.3-inventory/next-passes.md#pass-4-complete-surface-and-foreground-pairings), continuing WELL-112 and draft PR #227 from `2267fce3321335eb1ee8579fdf93f6b13bcdca93`. Current main is `f004ac7`. Existing palette, geometry, typography and premium CTA definitions remain fixed.
+Goal: implement Pass 4 of [the next-pass roadmap](../../development/research/acss-4.0.3-inventory/next-passes.md#pass-4-complete-surface-and-foreground-pairings), continuing WELL-112 and draft PR #227 from `2267fce3321335eb1ee8579fdf93f6b13bcdca93`. Main at the start was `f004ac7`; it advanced to `79fa504` during this pass. That separate integration is not imported or certified here. Existing palette, geometry, typography and premium CTA definitions remain fixed.
 
 ## Acceptance criteria
 
@@ -15,9 +15,9 @@ Goal: implement Pass 4 of [the next-pass roadmap](../../development/research/acs
 
 ## Tasks and file ownership
 
-- [ ] Write `test/assets/design_surface_contract.mjs` and `design_surfaces_browser.mjs` with a missing-surface RED run against the current DEV guide. Add pure component and LiveView contracts. Do not start TEST.
-- [ ] Extend `assets/css/design-tokens.css` with system-color tokens and local profile derivations. Add `.ds-surface` to existing lighting recomputation. Keep color-mix math/strengths and all CTA expressions unchanged. Append the narrow DESIGN.md note.
-- [ ] Add `lib/new_you_web/components/design/surface.ex`. Update card-owned attributes/classes and the text-link marker. Add shared `assets/css/design-surfaces.css` for context colors/focus and guide layouts; import it from app.css. Do not change numeric/color enforcement merely to add utilities.
-- [ ] Add `lib/new_you_web/live/design_system_surfaces.ex`, import/render it in the normal guide and add navigation. Reuse actual components and existing JS measurements. Extend the compatibility runner with independent surface geometry/contrast proof.
-- [ ] Build once before browser runs. Resolve introduced failures, inspect captures and run supported Hallmark targets. Request a bounded TEST/PLT window after final source is concrete. Review source independently, commit unchanged implementation, run granted gates sequentially and explicitly release.
-- [ ] Write `pass4-surfaces.md`, developer/roadmap/index links and exact proof. Update draft PR intent before history generation, generate history from live GitHub/Plane, independently audit final evidence and record delivery gaps. No merge, Done, participant release or resulting-main certification.
+- [x] Write `test/assets/design_surface_contract.mjs` and `design_surfaces_browser.mjs` with a missing-surface RED run against the current DEV guide. Add pure component and LiveView contracts. Do not start TEST.
+- [x] Extend `assets/css/design-tokens.css` with system-color tokens and local profile derivations. Add `.ds-surface` to existing lighting recomputation. Keep color-mix math/strengths and all CTA expressions unchanged. Append the narrow DESIGN.md note.
+- [x] Add `lib/new_you_web/components/design/surface.ex`. Update card-owned attributes/classes and the text-link marker. Add shared `assets/css/design-surfaces.css` for context colors/focus and guide layouts; import it from app.css. Do not change numeric/color enforcement merely to add utilities.
+- [x] Add `lib/new_you_web/live/design_system_surfaces.ex`, import/render it in the normal guide and add navigation. Reuse actual components and existing JS measurements. Extend the compatibility runner with independent surface geometry/contrast proof.
+- [x] Build once before browser runs. Resolve introduced failures, inspect captures and run supported Hallmark targets. Request a bounded TEST/PLT window after final source is concrete. Review source independently, commit unchanged implementation, run granted gates sequentially and explicitly release.
+- [x] Write `pass4-surfaces.md`, developer/roadmap/index links and exact proof. Update draft PR intent before history generation, generate history from live GitHub/Plane, independently audit final evidence and record delivery gaps. No merge, Done, participant release or resulting-main certification.
