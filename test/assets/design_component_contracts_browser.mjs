@@ -178,7 +178,7 @@ const contrast = await page.evaluate(() => {
   await page.$eval("#contracts", n => n.scrollIntoView())
   await page.screenshot({path:"/tmp/newyou-phase3-components-phone.png"})
   await page.setJavaScriptEnabled(false)
-  await page.goto(`${base}/dev/design-system#contracts`, {waitUntil:"networkidle0"})
+  await page.reload({waitUntil:"networkidle0"})
   check(await page.$eval("#contract-card-local", n => n.offsetHeight > 0), "no-JavaScript card visibility")
   check(await page.$eval("#contract-icon-named", n => n.offsetWidth > 0 && n.getAttribute("aria-label") === "Saved"), "no-JavaScript icon semantics")
   assert.deepEqual(errors, []); checks++
