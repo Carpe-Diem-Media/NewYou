@@ -6,8 +6,8 @@
     "WELL-134"
   ],
   "implementation_revision": {
-    "git_sha": "092ba5df3bba0faa6477cccd24003eab3e07bfcf",
-    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse."
+    "git_sha": "63274439676ef18db0be25f2b50f613408f1187d",
+    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling."
   },
   "authoritative_domain": "Identity",
   "collaborating_domains": [
@@ -467,6 +467,15 @@
         "journey",
         "browser"
       ]
+    },
+    {
+      "summary": "Endpoint start/stop always use the existing redacted connection projection because cookies accompany ordinary URLs. Legal GET/HEAD dispatch through the existing browser boundary. Unknown paths return 404; malformed JSON/query input returns its safe parser status with class-only logging, avoiding full-connection router/error telemetry. Parser, method override and HEAD order is retained inside the existing boundary; Session transport remains in Endpoint.",
+      "source_ids": [
+        "browser_telemetry",
+        "browser_telemetry_test",
+        "boundary",
+        "endpoint"
+      ]
     }
   ],
   "concurrency": [
@@ -616,6 +625,20 @@
       "source_ids": [
         "production_test"
       ]
+    },
+    {
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "cases": [
+        "endpoint events redact transport and payload on every request path",
+        "legal pages keep session-bearing requests out of router dispatch telemetry",
+        "unfinished paths and unsupported methods fail closed without router errors or telemetry",
+        "malformed requests return safe errors without full-connection error telemetry"
+      ],
+      "proves": "Permanent synthetic transport regressions for endpoint projection, ordinary legal GET/HEAD and disabled entry, unknown method/path denial and malformed login/magic/query errors without full-connection telemetry or marker-bearing logs. Real connection transport is left intact.",
+      "limits": "Synthetic local protocol tests. No participant data, real bearer, database reset or public endpoint activation.",
+      "source_ids": [
+        "browser_telemetry_test"
+      ]
     }
   ],
   "safe_extensions": [
@@ -659,7 +682,8 @@
     "Hallmark existing-design extension check renders 20 EN/AF normal/error/pending/confirmation/protected/reauthentication/logout states. Generated unchanged app.css reports 96 static FAILs: gate 48 x89, 10a x4, 15 x2, 20 x1. No page-level FAIL is introduced; do not describe the whole inherited stylesheet as clean.",
     "Hallmark REFLEX 39b x8 is waived because DESIGN.md explicitly requires 58px input height. Generated dependency/token CSS REFLEX 7b x6, 22 x5, 24b x2 belongs to unchanged compatibility/design styles. F1 x5 preserves exact approved apostrophes, F23 x20 is non-public authentication metadata, and unchanged CSS warnings 10b x2/F7 x1 are recorded. Balanced heads removed both F26 stub warnings.",
     "Browser tests assert real Tab focus with visible outline, labels, styles loaded, reduced-motion state, responsive widths 320/375/768/1280/1920 and 200% text resize. Hallmark render contrast checks report no page-level contrast failure; source review preserves shared tokens. No redesign or theme run was invoked.",
-    "Current-session logout only. Remaining FP-001 Q.2 session controls, recovery/email-change/support/reconciliation product journeys, OQ-035 abuse thresholds, OQ-036 real channel/retry proof and participant content/legal eligibility remain release obligations. Existing owner capabilities do not grant participant UI or release access."
+    "Current-session logout only. Remaining FP-001 Q.2 session controls, recovery/email-change/support/reconciliation product journeys, OQ-035 abuse thresholds, OQ-036 real channel/retry proof and participant content/legal eligibility remain release obligations. Existing owner capabilities do not grant participant UI or release access.",
+    "The browser checks normal-size layouts at five widths and 200% text resize at 1920px only. OCR identified the missing mobile 200% resize proof; independent Master Gate must assess that advisory finding. No mobile-resize pass is claimed."
   ],
   "follow_up_tickets": [
     "WELL-21",
@@ -722,13 +746,13 @@
       "id": "boundary",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "defp dispatch_browser_request",
-      "sha256": "ff5cd556c7a495abd3e67aa80f9c6c1795e12077f066841071b5698234437c77"
+      "sha256": "dba784a2fa960cd3f0cb01f1b9ea195e20818d5d47b430b91173adf3a348c47c"
     },
     {
       "id": "endpoint",
       "path": "lib/new_you_web/endpoint.ex",
       "symbol": "Plug.Session",
-      "sha256": "6f2b03b65c3a3207731bba3c73f961f2f2770f33d4c50dda1aba6df70f82303d"
+      "sha256": "874d6f005f6323293adb2c7279a0d5e78b75d1d88ae0c1b3ed976184a9224655"
     },
     {
       "id": "copy",
@@ -879,6 +903,18 @@
       "path": "test/proof/self_test.exs",
       "symbol": "NewYou.Content.SignInCopy.available?()",
       "sha256": "e7f1025c567dea6bd64404286901a260894c31b4dd56498570b0e428296f7e72"
+    },
+    {
+      "id": "browser_telemetry",
+      "path": "lib/new_you_web/privacy_telemetry.ex",
+      "symbol": "defmodule NewYouWeb.PrivacyTelemetry",
+      "sha256": "d002278f8536002bfde7b08b3b88270a7180723110206854b432d2fce65b11b0"
+    },
+    {
+      "id": "browser_telemetry_test",
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "symbol": "defmodule NewYouWeb.PrivacyTelemetryTest",
+      "sha256": "53b16f110f5821e069f05e073d324475185c7dcd551e0cb8f8d4f06bc4a9ca32"
     }
   ]
 }
