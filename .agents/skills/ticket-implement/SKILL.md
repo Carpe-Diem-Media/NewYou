@@ -183,9 +183,9 @@ Do not mutate Product/Architecture/Domain/Roadmap or semantic contracts merely t
 
 ## 8. Automatic knowledge capture before review
 
-After applicable local checks, commit the stable source and run the existing OCR checkpoint against that committed SHA. If needed, open a Draft PR after the identity preflight below and push the source checkpoint. At the review checkpoint, generate the PR history record from live PR metadata and the WELL ticket already identified in implementation context. Export metadata with `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` and run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/pr.json --ticket WELL-N`. The ticket argument is explicit; the tool does not infer it from the PR title or body. GitHub metadata validates repository, PR, base, head and URL. The record does not copy PR prose, author details or Plane state. Do not add a manual receipt or Plane-unavailable explanation.
+After applicable local checks pass, commit the stable source and run local OCR before the first PR push wherever practical. Neither a PR nor hosted CI is a prerequisite for local OCR. Investigate every finding, repair genuine defects with regression proof and fresh affected local/OCR checks, and preserve unresolved findings for independent review. Then open/update the Draft PR after the identity preflight below and push the source checkpoint. Draft creation is not review-ready handoff. The mandatory sequence is local verification → local OCR → exact-head hosted CI → independent Master Gate. At the review checkpoint, generate the PR history record from live PR metadata and the WELL ticket already identified in implementation context. Export metadata with `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` and run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/pr.json --ticket WELL-N`. The ticket argument is explicit; the tool does not infer it from the PR title or body. GitHub metadata validates repository, PR, base, head and URL. The record does not copy PR prose, author details or Plane state. Do not add a manual receipt or Plane-unavailable explanation.
 
-Commit `docs/development/knowledge/history/pr-NUMBER.json` before final review. Regenerate it if source or base changes, then request fresh review and CI. Do not regenerate for prose, author or Plane-state changes. Foundation Integrity checks the exact event binding and record with `mise exec -- python3 -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"`; when `--ticket` is omitted, check uses stable tickets in the committed record. If supplied, the ticket must agree. Keep the mechanical record and canonical capability map; do not create a duplicate PR dossier. A final approval must never be followed by a generated commit.
+Commit `docs/development/knowledge/history/pr-NUMBER.json` after local OCR and before final exact-head CI/review. A genuinely mechanical history-only commit may reuse application/OCR proof only after independently checking identical material inputs, comparison base and selection, plus canonical history validation. Record scanned implementation SHA and final PR head separately. Regenerate it if source or base changes, then request fresh review and CI. Do not regenerate for prose, author or Plane-state changes. Foundation Integrity checks the exact event binding and record with `mise exec -- python3 -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"`; when `--ticket` is omitted, check uses stable tickets in the committed record. If supplied, the ticket must agree. Keep the mechanical record and canonical capability map; do not create a duplicate PR dossier. A final approval must never be followed by a generated commit.
 
 ## 9. Verify before handoff
 
@@ -202,7 +202,7 @@ At minimum:
 - verify required handoff source links and material claims, including a cold-start walkthrough for a new substantial slice, against the exact head;
 - resolve the exact base and head SHAs;
 - verify no secrets/sensitive payloads leaked into code, logs, fixtures, jobs, or evidence;
-- **after applicable local checks pass**, complete the independent OCR checkpoint in `code-change-verification` for material engineering changes, preserving findings and coverage exclusions without automatically editing code. Document a reasoned exemption for trivial/cosmetic or documentation-only changes.
+- **after applicable local checks pass**, preview and run local subscription-backed OCR on the committed implementation using `.agents/skills/code-change-verification/scripts/handoff.py`, as specified in `code-change-verification`. Do this before pushing wherever practical, without requiring a PR or green CI. Reject incomplete manifests, unknown coverage, budget exhaustion and unresolved warnings. Investigate findings and disclose unresolved material risks. Then preserve authenticated PR/history workflow and require successful exact-final-head Foundation Integrity and every applicable routed lane against the current base before handoff. Document a reasoned exemption for trivial/cosmetic or proven documentation-only changes.
 
 For DB-dependent commands, use the DevCore workflow in `AGENTS.md` when configured.
 
@@ -214,11 +214,13 @@ Check new or materially changed public Domain/application interfaces for appropr
 
 Before creating or updating a routine PR, run `gh api user --jq .login`. It must return `JC-Agents`. Run `python3 -m tools.newyou_attest pr-preflight`, or add `--pr NUMBER` for an existing PR to verify its author too. Stop on wrong/missing authentication or a founder-authored PR. Do not request founder credentials. `JCSchoeman96` independently reviews the exact final head; the agent cannot approve its own work.
 
-When the implementation and required local verification are review-ready:
+Keep the PR Draft while local verification, exact-head hosted CI or local OCR is incomplete or blocked. Ordinary PR discovery uses the actual worktree and HEAD, not T3Code attached metadata. Any source correction invalidates affected local, CI, OCR and review evidence and requires the fresh sequence.
 
-1. create or update the PR;
+Only when the full sequence is review-ready:
+
+1. update the existing Draft PR with the complete evidence, then mark it ready for independent review;
 2. confirm the PR contains only authorised ticket scope;
-3. include an `OCR Review Findings` section containing the scanned implementation SHA, all advisory findings/exclusions and preliminary assessments (or an explicit exemption), as required by `code-change-verification`; do not auto-fix OCR findings;
+3. include an `OCR Review Findings` section containing the scanned implementation SHA/range separately from final PR head, model, soft budget/usage, manifest/session, all findings and reviewed dispositions, exclusions and risks, or an explicit exemption. Report local commands/outcomes, exact required CI, Plane ticket, PR, base/head and "awaiting independent Master Gate". Do not auto-fix OCR findings;
 4. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
 5. record material JIT choices and discovered work in Plane/PR evidence where useful;
 6. hand off for independent Master Gate review, including OCR adjudication, the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.

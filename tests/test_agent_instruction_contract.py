@@ -80,6 +80,20 @@ class AgentInstructionContractTests(unittest.TestCase):
         self.assertIn('tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"', self.ticket)
         self.assertIn('mechanical history-only commit', self.verify)
 
+    def test_handoff_sequence_and_cost_controls_are_consistent(self):
+        for document in (self.agents, self.ticket, self.verify):
+            self.assertIn('local verification → local OCR → exact-head hosted CI → independent Master Gate', document)
+            self.assertIn('Draft', document)
+            self.assertIn('.agents/skills/code-change-verification/scripts/handoff.py', document)
+        for term in ('100,000', 'concurrency 1', 'soft', 'GitHub Actions', 'ocr.run-manifest/v1',
+                     'warnings', 'failed/waived', 'T3Code', 'source-changing correction'):
+            self.assertIn(term, self.agents)
+        for term in ('preview --budget 100000', '--effort low --concurrency 1', '--max-tokens-budget 100000',
+                     '--disposition-review', 'no API-key fallback', 'no eligible files', 'fresh session'):
+            self.assertIn(term.lower(), self.verify.lower())
+        self.assertIn('python -m unittest tests.test_agent_handoff -v',
+                      (ROOT / '.github/workflows/foundation-integrity.yml').read_text())
+
     def test_smoke_runs_instruction_contract_tests(self):
         self.assertIn('python -m unittest tests.test_agent_instruction_contract -v',
                       (ROOT / '.github/workflows/foundation-integrity.yml').read_text())

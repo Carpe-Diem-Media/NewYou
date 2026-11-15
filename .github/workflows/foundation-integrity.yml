@@ -75,6 +75,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_foundation_lane_routing.py' -v
       - name: Verify agent instruction contracts
         run: python -m unittest tests.test_agent_instruction_contract -v
+      - name: Verify local handoff state machine without subscription calls
+        run: python -m unittest tests.test_agent_handoff -v
       - name: Run dependency cache recovery tests
         run: python -m unittest discover -s tests -p 'test_ci_cache_recovery.py' -v
       - name: Run Hex security audit regression tests
