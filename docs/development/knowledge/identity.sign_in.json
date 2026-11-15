@@ -6,8 +6,8 @@
     "WELL-134"
   ],
   "implementation_revision": {
-    "git_sha": "63274439676ef18db0be25f2b50f613408f1187d",
-    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling."
+    "git_sha": "aa53cc48220d7cb15091c5f5899a18b487290f90",
+    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles."
   },
   "authoritative_domain": "Identity",
   "collaborating_domains": [
@@ -431,7 +431,7 @@
       ]
     },
     {
-      "summary": "Exact C-01 v0.1 is development-only and pinned at use to both artifact hashes. Original canonical digest 43ee2ad61accfed40aceaa8fcb035c01282210a3ac69f5949df6c913419ccc5b is preserved as source identity, not claimed as the derived serialization hash. Missing/changed/withdrawn artifact fails closed with no fallback.",
+      "summary": "Exact C-01 v0.1 is development-only. Both pinned artifact and approval hashes are checked before embedding; decoding uses the exact bytes that passed verification. Runtime consumption rechecks both current source hashes. Compile-time tampering followed by restoration cannot admit unapproved embedded text. Original canonical digest 43ee2ad61accfed40aceaa8fcb035c01282210a3ac69f5949df6c913419ccc5b is preserved as source identity, not claimed as the derived serialization hash. Missing/changed/withdrawn artifact fails closed with no fallback.",
       "source_ids": [
         "copy",
         "approval",
@@ -607,9 +607,12 @@
       "path": "test/new_you/content/sign_in_copy_test.exs",
       "cases": [
         "only the exact owner-approved bilingual development version is eligible",
-        "a changed locale, approval, scope, lifecycle or source digest cannot acquire eligibility"
+        "a changed locale, approval, scope, lifecycle or source digest cannot acquire eligibility",
+        "modified compile-time text cannot become eligible after the approved file is restored",
+        "modified approval bytes are rejected before embedding text",
+        "approved compiled text retains current-source eligibility without fallback"
       ],
-      "proves": "Exact content eligibility, no unsupported key/locale and immutable candidate rejection.",
+      "proves": "Exact owner text, compile/restore mismatch rejection before embedding, approval-byte binding, runtime missing/changed/withdrawn source denial and restoration, and unsupported key/locale rejection. Isolated temporary artifacts and uniquely named modules leave shared fixtures unchanged.",
       "limits": "Immutable development artifact admission, not a Content publishing/resource lifecycle.",
       "source_ids": [
         "copy_test"
@@ -683,7 +686,7 @@
     "Hallmark REFLEX 39b x8 is waived because DESIGN.md explicitly requires 58px input height. Generated dependency/token CSS REFLEX 7b x6, 22 x5, 24b x2 belongs to unchanged compatibility/design styles. F1 x5 preserves exact approved apostrophes, F23 x20 is non-public authentication metadata, and unchanged CSS warnings 10b x2/F7 x1 are recorded. Balanced heads removed both F26 stub warnings.",
     "Browser tests assert real Tab focus with visible outline, labels, styles loaded, reduced-motion state, responsive widths 320/375/768/1280/1920 and 200% text resize. Hallmark render contrast checks report no page-level contrast failure; source review preserves shared tokens. No redesign or theme run was invoked.",
     "Current-session logout only. Remaining FP-001 Q.2 session controls, recovery/email-change/support/reconciliation product journeys, OQ-035 abuse thresholds, OQ-036 real channel/retry proof and participant content/legal eligibility remain release obligations. Existing owner capabilities do not grant participant UI or release access.",
-    "The browser checks normal-size layouts at five widths and 200% text resize at 1920px only. OCR identified the missing mobile 200% resize proof; independent Master Gate must assess that advisory finding. No mobile-resize pass is claimed."
+    "Permanent ordinary EN/AF browser proof doubles computed text sizes and numeric line heights at widths 320/375/768/1280/1920, checks horizontal document and text/control fit, then restores original inline styles. This runs on the login state; the earlier 20-state resize supplement remains separate evidence, not permanent all-state coverage."
   ],
   "follow_up_tickets": [
     "WELL-21",
@@ -758,7 +761,7 @@
       "id": "copy",
       "path": "lib/new_you/content/sign_in_copy.ex",
       "symbol": "def available?",
-      "sha256": "bce7644a51270f770644f2499ec1c3eaf86e2ecb1837e3493dc164e877269297"
+      "sha256": "1617dd42a4f5e523bb2ac0ed416adbb067b489ec067753bde657160f5ee81cdc"
     },
     {
       "id": "approval",
@@ -830,7 +833,7 @@
       "id": "browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'signin'",
-      "sha256": "a7724656e9a15748199845d9643e1a19147a95dd355c67aa8b137abe2100f005"
+      "sha256": "0738d5c69e0651dffb3b7ec0fef7f422eca3b2843f9d3415c71619528995a52b"
     },
     {
       "id": "password_test",
@@ -896,7 +899,7 @@
       "id": "copy_test",
       "path": "test/new_you/content/sign_in_copy_test.exs",
       "symbol": "a changed locale",
-      "sha256": "6b5280d2d569c340a7fa5f5661d51e8a59dfc156e96d6d861e85d7ad790ee88d"
+      "sha256": "34d97c0f779c32587cadb5e923536406ee7ca4d56bd2b68a9dc006d4c7e68108"
     },
     {
       "id": "production_test",
