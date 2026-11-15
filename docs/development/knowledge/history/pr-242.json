@@ -37,14 +37,14 @@
       "status": "modified"
     },
     {
-      "blob": "cc720b07a756324fd6f53fcd465256443e3fae11",
+      "blob": "3d8fe73eca6a04634e5db8a7c37e01045a1c65aa",
       "mode": "100644",
       "old_blob": "7ceb913d30c5140191d42fa52795c34ede7ea092",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.registration.json",
       "old_sha256": "d5b6f82823bee010ffab70f9727e267501084d960fa64ccdb7de8b84d099f05f",
       "path": "docs/development/knowledge/identity.registration.json",
-      "sha256": "11a2f23423ec084d9dddaf35d81de493e1ad88af2374bed15e6975446872a449",
+      "sha256": "75e58e9eb12098455129ed55997eb6baff5dc9ca86c6e5d6d6ed461d481e18db",
       "status": "modified"
     },
     {
@@ -92,14 +92,14 @@
       "status": "added"
     },
     {
-      "blob": "978998da4abde7de6c15cad0fc68e7caca6d872f",
+      "blob": "8efd0853194465f2eb0a371d4f577ca51cab5eae",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you/content/registration.ex",
-      "sha256": "247776ca5e00cadbbf92e1f83e126003548af323314fa6d48d217196b2aa6d5b",
+      "sha256": "5551966426eb9f0787275772acedbbe545b2e4e4edff4be3939178ef1f17ccb6",
       "status": "added"
     },
     {
@@ -213,14 +213,14 @@
       "status": "modified"
     },
     {
-      "blob": "28699344872296a2d2a48c2352e3d760a2937b1f",
+      "blob": "f3f9ee110ae9965b85806894202ca42fcb2ba7e1",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/content/registration_test.exs",
-      "sha256": "f8c938542139a0615c2bd8ba9052559401e237f79cee0882bf96e43cc274ff9b",
+      "sha256": "ed841f1b5df3f48609ab43452ca919a7ee7a1109b83355f7d8abc72cbb6dffe1",
       "status": "added"
     },
     {
@@ -409,7 +409,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you/content/registration.ex",
-      "sha256": "d2642dc403c870a227e601e4697b1c51848e42534328cb95a0a2a75eb175d88e",
+      "sha256": "ef7e77dd4caed5d317626e6c797ada2df97a130afecfec1246eac563c04e6e19",
       "status": "parsed"
     },
     {
@@ -474,6 +474,19 @@
       "old_sha256": null,
       "path": "lib/new_you/content/registration.ex",
       "sha256": "6d6ace3440afff5424eb7d0ebc6c4dcab62d142b53fc97870ed5d92f928329b6",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.Registration",
+      "name": "context_policy_valid?",
+      "old_sha256": null,
+      "path": "lib/new_you/content/registration.ex",
+      "sha256": "4692a3afcbad33f37afa94343059ab03683362d5481d9be5777e01aaf75fa819",
       "status": "parsed",
       "visibility": "private"
     },
@@ -564,7 +577,7 @@
       "name": "manifest_entry_valid?",
       "old_sha256": null,
       "path": "lib/new_you/content/registration.ex",
-      "sha256": "715aa9b0c7e4c932a4dac2399704c8b48d9bf3124464370fd4a9f1e056845585",
+      "sha256": "416a7fb60a97a146353c60b1e14f7cd1c1d15cf59e12872c69df0d7071cfd2c2",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1068,8 +1081,21 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/content/registration_test.exs",
-      "sha256": "9b64e424c44ff01877ad5f3892aec5793982f94a67278d3dca92346e10b97996",
+      "sha256": "32da5d531c147a7f8fff8075d3b868b992232642f5d3eee32aaea60c7658525f",
       "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RegistrationTest",
+      "name": "legal_baselines",
+      "old_sha256": null,
+      "path": "test/new_you/content/registration_test.exs",
+      "sha256": "1de5197f203631b5e3ac4dc54eb67ecc0402b36e02200bbfbaf5cd1e9f7ffc2c",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": null,
