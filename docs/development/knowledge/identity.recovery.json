@@ -6,7 +6,7 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "d288e3ae502c86a7de3d4c3cfa146fe6e00758cd",
+    "git_sha": "7fded47dab9ad6b45017c6f772b83a8fd5551475",
     "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1325,7 +1325,7 @@
       "id": "web_scenarios",
       "path": "test/support/proof/web_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.WebScenarios",
-      "sha256": "15b5a5eb8d6ec618f5b6596ee2e5206ad4466d95e9176bc9ec924ce7da7bf5cf"
+      "sha256": "c90158d7f9115a4096052db9d9ebe18176600b9cd41574e59e223aae952d58aa"
     }
   ]
 }

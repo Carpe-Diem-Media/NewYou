@@ -6,7 +6,7 @@
     "WELL-20"
   ],
   "implementation_revision": {
-    "git_sha": "d288e3ae502c86a7de3d4c3cfa146fe6e00758cd",
+    "git_sha": "7fded47dab9ad6b45017c6f772b83a8fd5551475",
     "semantics": "WELL-20 proof integration only. It adds no business behavior or certification authority."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
@@ -391,7 +391,7 @@
       "id": "integration",
       "path": "test/support/proof/p8_19_catalog.ex",
       "symbol": "defmodule NewYou.Proof.P819Catalog",
-      "sha256": "137baf43ca8559131de07abefec1d5cb77676ce740d51b68362c0d411bca91d8"
+      "sha256": "b52d872ce4669f12b5b7f0a58d44c2dda763c3669d2c341c0aeb8c9ae6130761"
     },
     {
       "id": "runner",
@@ -475,7 +475,7 @@
       "id": "web_scenarios",
       "path": "test/support/proof/web_scenarios.ex",
       "symbol": "def recovery_neutral()",
-      "sha256": "15b5a5eb8d6ec618f5b6596ee2e5206ad4466d95e9176bc9ec924ce7da7bf5cf"
+      "sha256": "c90158d7f9115a4096052db9d9ebe18176600b9cd41574e59e223aae952d58aa"
     },
     {
       "id": "capability_scenarios",
@@ -487,7 +487,7 @@
       "id": "integration_test",
       "path": "test/new_you/proof/tb001_integration_test.exs",
       "symbol": "defmodule NewYou.Proof.TB001IntegrationTest",
-      "sha256": "31eed05c2f4af1b8d3cbbea0bc55faafe53cf73f8f666931bc27d4791d55c7e7"
+      "sha256": "3db2ddf3cabc23e6de97f996fb023b03ee5153d6c9a561793d1701c9b73e939d"
     },
     {
       "id": "matrix_test",
@@ -547,7 +547,7 @@
       "id": "inventory_negative",
       "path": "test/proof/tb001_inventory_broken.exs",
       "symbol": "Code.eval_file(\"test/proof/run.exs\")",
-      "sha256": "4de45018dce92e412f4b72479bffc0649de23886b5019605c7fe77f4b0475b48"
+      "sha256": "0cab8012881a80f6dbaf794d0fc066d1c93ebda984cc1af53fbc29f1bbd7fb62"
     },
     {
       "id": "passive_evidence",
