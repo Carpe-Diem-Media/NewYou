@@ -119,3 +119,5 @@ Phase 4 implementation: [actual registration pilot, adopted recipes, formulas, n
 Phase 5 implementation: [contextual spacing, scoped prose, divider arithmetic and application proof](phase5-content.md). Existing values and exact legal responses remain intact.
 
 Phase 5 proof continuation: [Chrome/Firefox compatibility, exact text enlargement and Hallmark diagnosis](phase5-compatibility.md). This adds bounded evidence and preserves the unresolved delivery gates.
+
+Next-run sequencing: [design-system next-pass roadmap](next-passes.md). Start with endpoint-first modular typography using the existing native `progress()` engine and fallbacks, then finish content/component contracts and bounded consumer adoption. This planning note does not change the earlier phase numbering or promote candidate visual values.
