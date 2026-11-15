@@ -18,6 +18,7 @@ defmodule NewYou.Proof.P819Browser do
 
       {:ok, {_, port}} = ThousandIsland.listener_info(server)
       SelfTest.cleanup_manifest!(workers_stopped: false)
+      Process.put({__MODULE__, reference}, false)
 
       try do
         payload =
@@ -36,6 +37,7 @@ defmodule NewYou.Proof.P819Browser do
             payload
           )
 
+        Process.put({__MODULE__, reference}, result["cleanup"] == true)
         assert result["cleanup"] == true
         Enum.each(result["operations"], &P805.track_operation/1)
 
@@ -62,7 +64,11 @@ defmodule NewYou.Proof.P819Browser do
                ]) == 1
       after
         Supervisor.stop(server)
-        SelfTest.cleanup_manifest!(workers_stopped: not Process.alive?(server))
+        browser_stopped? = Process.delete({__MODULE__, reference}) == true
+
+        SelfTest.cleanup_manifest!(
+          workers_stopped: not Process.alive?(server) and browser_stopped?
+        )
       end
     end)
   end
