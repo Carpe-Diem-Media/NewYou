@@ -5,6 +5,8 @@ defmodule NewYouWeb.Components.Design.Card do
   border and per-axis padding from the outer radius; only the inset clips content.
   Put actions in native controls. CSS owns presentation; the article has no click,
   keyboard, role or tabindex API. Heading levels follow the containing page outline.
+  Card content/action gaps are separate semantic roles. Padding and prose flow
+  retain their own inputs; actions use auto margin for bottom alignment when stretched.
   """
   use Phoenix.Component
 
@@ -33,7 +35,7 @@ defmodule NewYouWeb.Components.Design.Card do
 
     ~H"""
     <article
-      class="ds-design-card flex min-w-0 flex-col gap-design-base border data-[variant=flat]:border-design-hairline data-[variant=flat]:bg-design-surface text-design-ink font-design-sans data-[variant=flat]:shadow-design"
+      class="ds-design-card flex min-w-0 flex-col gap-design-card-content border data-[variant=flat]:border-design-hairline data-[variant=flat]:bg-design-surface text-design-ink font-design-sans data-[variant=flat]:shadow-design"
       data-variant={@variant}
       {@rest}
     >

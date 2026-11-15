@@ -129,6 +129,31 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     refute has_element?(preview, "#content")
   end
 
+  test "content specimens include card roles, native figures and explicit nested prose", %{
+    conn: conn
+  } do
+    {:ok, view, _} = live(conn, "/dev/design-system")
+
+    for role <- ~w(card-content-gap card-action-gap) do
+      assert has_element?(view, "#content output[data-token='--#{role}']")
+    end
+
+    for locale <- ~w(en af) do
+      assert has_element?(view, "#prose-#{locale} figure > blockquote")
+      assert has_element?(view, "#prose-#{locale} figure > figcaption")
+      assert has_element?(view, "#prose-#{locale} .ds-prose > p + p")
+    end
+
+    for scope <- ~w(default local) do
+      assert has_element?(view, "#content-card-#{scope}.ds-design-card")
+      assert has_element?(view, "#content-card-#{scope} .ds-design-card-actions > a")
+    end
+
+    {:ok, preview, _} = live(conn, "/dev/design-system/preview")
+    refute has_element?(preview, "#content-card-default")
+    refute has_element?(preview, "#prose-en")
+  end
+
   test "modular typography candidates expose scale math and semantic comparisons without adoption",
        %{conn: conn} do
     {:ok, view, _} = live(conn, "/dev/design-system")

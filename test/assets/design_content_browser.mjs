@@ -2,6 +2,7 @@
 import assert from "node:assert/strict"
 import {createRequire} from "node:module"
 import {resolve} from "node:path"
+import {verifyContentContracts} from "./design_content_contract.mjs"
 const require=createRequire(resolve(process.env.BROWSER_TOOLS_ROOT || ".", "package.json"))
 const browser=await require("puppeteer-core").launch({executablePath:process.env.CHROME_PATH || "/usr/bin/google-chrome",headless:true})
 const page=await browser.newPage()
@@ -30,6 +31,7 @@ try {
   await page.goto(`${base}/dev/design-system#content`,{waitUntil:"networkidle0"})
   await page.waitForSelector("#prose-en",{timeout:5000})
   await page.waitForFunction(()=>document.querySelector('#content [data-token="--content-gap"]').textContent.trim()==="24px")
+  checks+=(await page.evaluate(verifyContentContracts)).checks
   for(const locale of ["en","af"]) {
     const r=await rhythm(`#prose-${locale}`)
     near(r.first,0,"first child has no leading margin");near(r.last,0,"last child has no trailing margin")
@@ -73,18 +75,30 @@ try {
   check(await page.evaluate(()=>document.activeElement.closest("#prose-af") && getComputedStyle(document.activeElement).outlineStyle!=="none"),"native links retain visible keyboard focus")
   await page.$eval("#content",n=>n.scrollIntoView())
   await (await page.$("#content")).screenshot({path:"/tmp/newyou-phase5-content-desktop.png"})
+  await (await page.$("#content-cards")).screenshot({path:"/tmp/newyou-spacing-cards-desktop.png"})
+  await (await page.$("#prose-en-figure")).screenshot({path:"/tmp/newyou-spacing-figure-desktop.png"})
   for(const width of [320,390,744,1440,1920]) {
     await page.setViewport({width,height:1000})
-    const fits=()=>page.$eval("#content",n=>[n,...n.querySelectorAll("article, p, li, blockquote, .ds-divided")].every(x=>x.scrollWidth<=x.clientWidth+1))
+    const fits=()=>page.$eval("#content",n=>[n,...n.querySelectorAll("article, p, li, blockquote, figure, figcaption, .ds-divided")].every(x=>x.scrollWidth<=x.clientWidth+1))
     check(await fits(),`content reflows at ${width}`)
     check(await page.$eval("#content",n=>{
-      const originals=[...n.querySelectorAll("h3,h4,p,li,a,blockquote")].map(x=>[x,parseFloat(getComputedStyle(x).fontSize)])
+      const originals=[...n.querySelectorAll("h3,h4,h5,p,li,a,blockquote,figcaption")].map(x=>[x,parseFloat(getComputedStyle(x).fontSize)])
       // Snapshot every computed size before changing ancestors.
       for(const [x,size] of originals) {x.dataset.pilotStyle=x.getAttribute("style") || "";x.style.fontSize=`${size*2}px`}
       const p=n.querySelector("#prose-af > p");p.dataset.original=p.textContent;p.textContent+=" "+"LangAfrikaanseBeskrywingLongEnglishContent".repeat(10)
-      return [n,...n.querySelectorAll("article,p,li,blockquote,.ds-divided")].every(x=>x.scrollWidth<=x.clientWidth+1)
+      return originals.every(([x,size])=>Math.abs(parseFloat(getComputedStyle(x).fontSize)-size*2)<.1) &&
+        [n,...n.querySelectorAll("article,p,li,blockquote,figure,figcaption,.ds-divided")].every(x=>x.scrollWidth<=x.clientWidth+1)
     }),`doubled long EN/AF content at ${width}`)
     await page.$eval("#content",n=>{for(const x of n.querySelectorAll("[data-pilot-style]")){x.setAttribute("style",x.dataset.pilotStyle);delete x.dataset.pilotStyle}const p=n.querySelector("[data-original]");p.textContent=p.dataset.original;delete p.dataset.original})
+    for(const candidate of [false,true]) {
+      await page.$$eval("#prose-en,#prose-af",(nodes,candidate)=>nodes.forEach(n=>n.classList.toggle("ds-scale-reading",candidate)),candidate)
+      check(await fits(),`${candidate?"candidate":"production"} type with figures/nested prose at ${width}`)
+      const textSpacing=await page.addStyleTag({content:"#content p { margin-block-end: 2em !important; } #content :is(h3,h4,h5,p,li,a,blockquote,figcaption) { line-height: 1.5 !important; letter-spacing: .12em !important; word-spacing: .16em !important; }"})
+      check(await fits(),`${candidate?"candidate":"production"} type with user text spacing at ${width}`)
+      await textSpacing.evaluate(s=>s.remove())
+      await textSpacing.dispose()
+    }
+    await page.$$eval("#prose-en,#prose-af",nodes=>nodes.forEach(n=>n.classList.remove("ds-scale-reading")))
     if(width===320){await page.$eval("#content",n=>n.scrollIntoView());await page.screenshot({path:"/tmp/newyou-phase5-content-phone.png"})}
   }
   await page.setViewport({width:1440,height:1000})
@@ -113,6 +127,10 @@ try {
   await page.goto(`${base}/dev/design-system#content`,{waitUntil:"networkidle0"});await page.reload({waitUntil:"networkidle0"})
   check(await page.$eval("#prose-en",n=>n.offsetHeight>0 && n.textContent.includes("Grouped content")),"prose remains visible without scripting")
   check(await page.$eval("#content-divider",n=>getComputedStyle(n).borderBlockStartWidth==="1px"),"no-JavaScript separator")
+  for(const locale of ["en","af"]) {
+    check(await page.$eval(`#prose-${locale}-figure`,n=>n.querySelector("figcaption").offsetHeight>0 && n.querySelector("blockquote p").offsetHeight>0),`${locale} native figure/caption remains visible without scripting`)
+    check(await page.$eval(`#prose-${locale}-nested`,n=>n.querySelectorAll("p").length===2 && n.offsetHeight>0),`${locale} nested prose remains visible without scripting`)
+  }
   assert.deepEqual(errors,[]);checks++
   console.log(`PASS: ${checks} content-rhythm assertions; ${await browser.version()}`)
 } finally {await browser.close()}

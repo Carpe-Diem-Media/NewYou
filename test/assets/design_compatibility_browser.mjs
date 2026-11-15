@@ -6,6 +6,7 @@ import {mkdtemp, rm} from "node:fs/promises"
 import {resolve, join} from "node:path"
 import {verifyLayoutFoundations} from "./design_layouts_browser.mjs"
 import {verifyTypeScale,verifyTypeScaleOverrides} from "./design_type_scale_browser.mjs"
+import {verifyContentContracts,verifyContentReflow} from "./design_content_contract.mjs"
 
 const require=createRequire(resolve(process.env.BROWSER_TOOLS_ROOT || ".", "package.json"))
 const engine=process.env.DESIGN_BROWSER || "chrome"
@@ -48,6 +49,8 @@ try {
   for(const width of [320,744,1440]) {
     await page.setViewport({width,height:1000})
     checks+=(await page.evaluate(verifyLayoutFoundations)).checks
+    checks+=(await page.evaluate(verifyContentContracts)).checks
+    checks+=(await page.evaluate(verifyContentReflow)).checks
   }
   const components=await page.evaluate(()=>{
     const card=document.querySelector("#contract-card-local"),s=getComputedStyle(card)

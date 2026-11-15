@@ -5,6 +5,20 @@ defmodule NewYouWeb.DesignComponentContractsTest do
 
   defp content(text), do: [%{inner_block: fn _, _ -> text end}]
 
+  test "card layout owns contextual content spacing and an independently wrapping action row" do
+    html =
+      render_component(&Card.design_card/1, %{
+        title: "Spacing contract",
+        inner_block: content("Body"),
+        actions: content("Actions")
+      })
+
+    dom = LazyHTML.from_fragment(html)
+    assert LazyHTML.query(dom, "article.gap-design-card-content") |> Enum.any?()
+    refute LazyHTML.query(dom, "article.gap-design-base") |> Enum.any?()
+    assert LazyHTML.query(dom, "article > .ds-design-card-actions") |> Enum.any?()
+  end
+
   test "card slots retain a noninteractive article and a configurable heading" do
     for level <- 2..6 do
       html =

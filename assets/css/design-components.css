@@ -34,7 +34,7 @@
     overflow: clip;
   }
   .ds-design-card > .ds-design-card-actions {
-    @apply flex flex-wrap items-center gap-design-base;
+    @apply flex flex-wrap items-center gap-design-card-action;
     margin-block-start: auto;
   }
   .ds-design-icon {

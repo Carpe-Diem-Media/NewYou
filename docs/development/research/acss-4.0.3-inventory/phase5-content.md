@@ -1,5 +1,7 @@
 # Phase 5 contextual spacing, prose and dividers
 
+The later [Pass 2 continuation](pass2-content.md) extends this baseline with card content/action roles, figure/caption flow and explicit nested spacing boundaries. The recorded Phase 5 evidence below retains its original scope and revision.
+
 WELL-112 / draft PR [#227](https://github.com/Carpe-Diem-Media/NewYou/pull/227), continuing from `9c95f8cc0e68a8597d5a5451a53ad22af66117aa`. The owner accepted the recommended contextual-spacing, scoped-prose and divider batch. This addendum describes independently implemented CSS relationships and their bounded consumers. It does not import ACSS, add Sass or promote a participant journey.
 
 The [Phase 1 inventory](README.md), [Phase 2 layouts](phase2-layouts.md), [Phase 3 component contracts](phase3-components.md) and [Phase 4 registration proof](phase4-registration.md) retain their recorded source baselines and proof limits. No vendor code or asset is copied, compiled or executed. Direct vendor-source reuse terms remain unresolved in the earlier research.

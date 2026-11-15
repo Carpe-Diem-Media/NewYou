@@ -53,6 +53,8 @@ Exit: documented inputs and override precedence, verified endpoint arithmetic an
 
 Build on the existing content/section/control roles and `.ds-prose` rather than repeating Phase 5.
 
+Implementation continuation: [card spacing and scoped prose notes](pass2-content.md) document the role assignments, figure/caption flow, explicit nesting boundary, consumer inspection and proof. Current delivery state remains in Plane, including shared TEST coordination.
+
 - [ ] Define card content/action spacing roles and map their initial values to the current geometry. Keep padding distinct from child spacing and control spacing.
 - [ ] Add explicit figure/caption and nested rich-text behavior. One owner controls layout gaps; prose owns its margin flow. Preserve first/last-child rules and avoid doubled spacing.
 - [ ] Show root edits and supported local overrides in the guide, with long EN/AF content and narrow parent examples. Identify an eligible existing content-page consumer for Pass 6. If none exists, record that fact instead of inventing a page or changing legal responses.
