@@ -36,8 +36,8 @@
   padding-inline: min(var(--gutter), 50%);
 }
 .ds-layout-container { background-color: var(--canvas); }
-.ds-stack { display: flex; flex-direction: column; min-inline-size: 0; gap: var(--space-lg); }
-.ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-base); min-inline-size: 0; }
+.ds-stack { display: flex; flex-direction: column; min-inline-size: 0; gap: var(--content-gap); }
+.ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--control-gap); min-inline-size: 0; }
 .ds-layout-nested { @apply py-design-base bg-design-surface; min-inline-size: 0; overflow-wrap: anywhere; }
 .ds-layout-nested > p { @apply px-design-sm; }
 .ds-layout-breakout {

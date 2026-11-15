@@ -1,0 +1,48 @@
+/* Hallmark · theme: locked DESIGN.md · shape: app screen · genre: modern-minimal · scope: app · signature: scoped content rhythm · v2.0.0 */
+/* Critique: prose owns adjacent content margins while divided groups own their separator spacing. */
+
+.ds-divider {
+  flex: none;
+  inline-size: 100%;
+  min-inline-size: 0;
+  margin: 0;
+  border: 0;
+  border-block-start: var(--design-divider-border);
+}
+
+.ds-prose {
+  @apply text-design-body-xs leading-design-body-xs;
+  display: flow-root;
+  min-inline-size: 0;
+  max-inline-size: var(--measure);
+  font-family: var(--font-body);
+  overflow-wrap: anywhere;
+}
+.ds-prose :where(h1, h2, h3, h4, h5, h6, p, ul, ol, li, blockquote) { margin-block: 0; }
+.ds-prose > * { min-inline-size: 0; }
+.ds-prose > * + * { margin-block-start: var(--design-prose-flow); }
+.ds-prose > :where(h1, h2, h3, h4, h5, h6):not(:first-child) { margin-block-start: var(--design-prose-heading-gap); }
+.ds-prose :where(h1, h2, h3, h4, h5, h6) { @apply font-design-bold; font-family: var(--font-display); text-wrap: balance; }
+.ds-prose :where(h1) { @apply text-design-display-md leading-design-display-md tracking-design-display-md; }
+.ds-prose :where(h2) { @apply text-design-heading-md leading-design-heading-md tracking-design-heading-md; }
+.ds-prose :where(h3) { @apply text-design-heading-sm leading-design-heading-sm tracking-design-heading-sm; }
+.ds-prose :where(h4) { @apply text-design-body-md leading-design-body-md tracking-design-body-md; }
+.ds-prose :where(h5, h6) { @apply text-design-body-xs leading-design-body-xs; }
+.ds-prose :where(ul, ol) { padding-inline-start: var(--design-prose-indent); list-style-position: outside; }
+.ds-prose :where(ul) { list-style-type: disc; }
+.ds-prose :where(ol) { list-style-type: decimal; }
+.ds-prose :where(li + li, li > ul, li > ol, li > * + *) { margin-block-start: var(--design-prose-list-gap); }
+.ds-prose :where(blockquote > * + *) { margin-block-start: var(--design-prose-flow); }
+.ds-prose :where(blockquote) { padding-inline-start: var(--design-prose-indent); }
+.ds-prose :where(a) { @apply underline underline-offset-4; }
+.ds-prose :where(a):focus-visible { @apply outline-2 outline-offset-2 outline-design-primary; }
+.ds-divided { display: flex; flex-direction: column; min-inline-size: 0; gap: 0; }
+.ds-divided > * { min-inline-size: 0; margin-block: 0; }
+.ds-divided > * + * {
+  margin-block-start: var(--design-divider-space);
+  padding-block-start: var(--design-divider-space);
+  border-block-start: var(--design-divider-border);
+}
+.ds-content-examples { @apply mt-design-xl; }
+.ds-content-tokens { @apply mt-design-lg; }
+.ds-content-tokens > div { @apply flex flex-wrap justify-between gap-design-control; }

@@ -213,6 +213,33 @@ defmodule NewYouWeb.RegistrationControllerTest do
       end
     end
 
+    test "the content pilot preserves exact explanatory text and legal links", %{conn: conn} do
+      for locale <- ~w(en af) do
+        dom =
+          conn
+          |> get("/register?locale=#{locale}")
+          |> html_response(200)
+          |> LazyHTML.from_document()
+
+        assert LazyHTML.query(dom, "hr#registration-safety-divider.ds-divider")
+               |> LazyHTML.to_html() != ""
+
+        assert LazyHTML.query(dom, "#registration-privacy-copy.ds-prose > p") |> Enum.count() == 2
+
+        assert LazyHTML.query(dom, "#registration-privacy-copy > p:first-child")
+               |> LazyHTML.text()
+               |> String.trim() ==
+                 expected_copy("identity.registration.privacy_presentation", locale)
+
+        assert LazyHTML.query(dom, "#registration-privacy-copy a[href='/legal/privacy']")
+               |> LazyHTML.text()
+               |> String.trim() == expected_copy("identity.registration.privacy_link", locale)
+
+        assert LazyHTML.query(dom, "#registration-legal-items.ds-divided > div") |> Enum.count() ==
+                 2
+      end
+    end
+
     test "keeps exact launch and safety content before the full-width canonical registration card",
          %{conn: conn} do
       for locale <- ~w(en af) do

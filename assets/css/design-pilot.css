@@ -10,10 +10,9 @@
 .ds-registration-header > p { @apply text-design-body-sm font-design-bold; }
 .ds-registration-header a { @apply inline-flex items-center min-h-design-button-height; }
 .ds-registration-header a[aria-current="page"] { @apply font-design-bold; text-decoration-thickness: var(--design-border-width); }
-.ds-registration-content { @apply py-design-2xl; }
+.ds-registration-content { @apply py-design-section; }
 .ds-registration-heading { @apply text-design-display-sm font-design-bold leading-design-display-sm tracking-design-display-sm; }
 .ds-registration-intro > p { @apply text-design-body-sm leading-design-body-sm; align-self: end; }
-.ds-registration-safety { @apply border-t border-design-hairline pt-design-lg; }
 .ds-registration-form { @apply mt-design-lg; }
 .ds-registration-form > :is(fieldset, .ds-registration-wide, .ds-registration-submit) { grid-column: 1 / -1; min-inline-size: 0; }
 .ds-registration-form legend { @apply font-design-medium; }

@@ -12,6 +12,7 @@ defmodule NewYouWeb.DesignSystemLive do
   import NewYouWeb.Components.Design.Button, only: [primary_button: 1, secondary_button: 1]
   import NewYouWeb.Components.Design.Card
   import NewYouWeb.Components.Design.Link
+  import NewYouWeb.DesignSystemContent
   import NewYouWeb.DesignSystemContracts
   import NewYouWeb.Components.Design.Icon
   import NewYouWeb.DesignSystemLayouts

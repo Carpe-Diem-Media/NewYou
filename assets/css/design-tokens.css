@@ -108,6 +108,9 @@
   --measure: 65ch;
   --gutter: var(--space-lg);
   --grid-gap: var(--space-lg);
+  --content-gap: var(--space-lg);
+  --section-space: var(--space-2xl);
+  --control-gap: var(--space-base);
   --design-content-width: var(--content-width);
   --design-gutter: var(--gutter);
   --design-grid-gap: var(--grid-gap);
@@ -119,7 +122,7 @@
   --design-preview-scale: 1;
   --design-border-width: 1px;
 
-  /* Guide-only layout candidates. Production composition keeps its current values. */
+  /* Layout dimensions shared by guide specimens and the bounded registration pilot. */
   --design-layout-min: 12rem;
   --design-layout-columns: 3;
   --design-layout-narrow: 18rem;
@@ -227,6 +230,26 @@
   --design-card-padding-inline: var(--space-base);
   --design-card-padding-block: var(--space-md);
 }
+
+/* Optional content inputs resolve locally; they have no root alias defaults. */
+:where(.ds-prose) {
+  --design-prose-flow: var(--prose-flow-space, var(--content-gap));
+  --design-prose-heading-gap: max(var(--design-prose-flow), var(--prose-heading-space, var(--space-xl)));
+  --design-prose-list-gap: var(--prose-list-space, var(--space-sm));
+  --design-prose-indent: var(--prose-indent, var(--space-lg));
+}
+:where(.ds-divider, .ds-divided) {
+  --design-divider-space: var(--divider-gap, calc(var(--content-gap) / 2));
+  --design-divider-border: var(--divider-width, var(--design-border-width)) var(--divider-style, solid) var(--divider-color, var(--hairline));
+}
+/* Labelled local guide override. Existing scale values remain the only sizes. */
+#prose-local {
+  --prose-flow-space: var(--space-sm);
+  --prose-heading-space: var(--space-lg);
+  --prose-list-space: var(--space-xxs);
+}
+/* Preserve the registration pilot's existing 24px space on either side of its separator. */
+#registration-legal-items { --divider-gap: var(--content-gap); }
 
 /* The guide and actual page consume the same container/grid recipes. */
 .ds-layout-container {
@@ -386,6 +409,9 @@
   --spacing-design-lg: var(--space-lg);
   --spacing-design-xl: var(--space-xl);
   --spacing-design-2xl: var(--space-2xl);
+  --spacing-design-content: var(--content-gap);
+  --spacing-design-section: var(--section-space);
+  --spacing-design-control: var(--control-gap);
 
   --spacing-design-button-block: var(--space-button-block);
   --spacing-design-button-inline: var(--space-button-inline);

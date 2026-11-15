@@ -106,6 +106,29 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     refute has_element?(preview, "#contracts")
   end
 
+  test "content recipes use semantic prose, separators and live token references", %{conn: conn} do
+    {:ok, view, _} = live(conn, "/dev/design-system")
+    assert has_element?(view, "nav a[href='#content']", "Content")
+    assert has_element?(view, "section#content")
+
+    for locale <- ~w(en af) do
+      assert has_element?(view, "article#prose-#{locale}.ds-prose[lang=#{locale}]")
+      assert has_element?(view, "#prose-#{locale} ul li ul li")
+      assert has_element?(view, "#prose-#{locale} blockquote")
+      assert has_element?(view, "#prose-#{locale} a[href='#content']")
+    end
+
+    assert has_element?(view, "hr#content-divider.ds-divider")
+    assert has_element?(view, "#content-divided.ds-divided > div")
+
+    for role <- ~w(content-gap section-space control-gap) do
+      assert has_element?(view, "#content output[data-token='--#{role}']")
+    end
+
+    {:ok, preview, _} = live(conn, "/dev/design-system/preview")
+    refute has_element?(preview, "#content")
+  end
+
   test "grid choices are bounded and survive reload through query parameters", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/dev/design-system")
 

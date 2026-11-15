@@ -25,7 +25,8 @@
       </h1>
       <p>{copy("public.entry.launch.body", @locale)}</p>
     </div>
-    <section class="ds-registration-safety">
+    <hr id="registration-safety-divider" class="ds-divider" />
+    <section class="ds-registration-safety ds-prose">
       <p>{copy("public.entry.safety.body", @locale)}</p>
     </section>
     <.design_card
@@ -154,77 +155,85 @@
             {copy("legal.shared.document_language_disclosure", @locale)}
           </p>
 
-          <div class="ds-design-field">
-            <div class="ds-row">
+          <div id="registration-legal-items" class="ds-divided">
+            <div class="ds-design-field">
+              <div class="ds-row">
+                <label
+                  for="registration-terms"
+                  class="ds-registration-check"
+                >
+                  <input
+                    id="registration-terms"
+                    type="checkbox"
+                    name="registration[terms_accepted]"
+                    value="true"
+                    checked={Map.get(@values, "terms_accepted") == "true"}
+                    required
+                    aria-required="true"
+                    aria-invalid={if @errors["terms_accepted"], do: "true"}
+                    aria-describedby={
+                      if @errors["terms_accepted"], do: "registration-terms-error"
+                    }
+                    class="ds-registration-checkbox"
+                  />
+                  <span>{copy("identity.registration.terms_acceptance", @locale)}</span>
+                </label>
+                <.text_link href="/legal/terms">
+                  {copy("identity.registration.terms_link", @locale)}
+                </.text_link>
+              </div>
+              <%= if @errors["terms_accepted"] do %>
+                <p
+                  id="registration-terms-error"
+                  role="alert"
+                  class="ds-field-error"
+                >
+                  {copy(@errors["terms_accepted"], @locale)}
+                </p>
+              <% end %>
+            </div>
+
+            <div class="ds-stack">
+              <div id="registration-privacy-copy" class="ds-prose">
+                <p class="ds-note-text">
+                  {copy("identity.registration.privacy_presentation", @locale)}
+                </p>
+                <p>
+                  <.text_link href="/legal/privacy">
+                    {copy("identity.registration.privacy_link", @locale)}
+                  </.text_link>
+                </p>
+              </div>
               <label
-                for="registration-terms"
+                for="registration-privacy"
                 class="ds-registration-check"
               >
                 <input
-                  id="registration-terms"
+                  id="registration-privacy"
                   type="checkbox"
-                  name="registration[terms_accepted]"
+                  name="registration[privacy_accepted]"
                   value="true"
-                  checked={Map.get(@values, "terms_accepted") == "true"}
+                  checked={Map.get(@values, "privacy_accepted") == "true"}
                   required
                   aria-required="true"
-                  aria-invalid={if @errors["terms_accepted"], do: "true"}
-                  aria-describedby={if @errors["terms_accepted"], do: "registration-terms-error"}
+                  aria-invalid={if @errors["privacy_accepted"], do: "true"}
+                  aria-describedby={
+                    if @errors["privacy_accepted"], do: "registration-privacy-error"
+                  }
                   class="ds-registration-checkbox"
                 />
-                <span>{copy("identity.registration.terms_acceptance", @locale)}</span>
+                <span>{copy("identity.registration.privacy_acceptance", @locale)}</span>
               </label>
-              <.text_link href="/legal/terms">
-                {copy("identity.registration.terms_link", @locale)}
-              </.text_link>
+              <%= if @errors["privacy_accepted"] do %>
+                <p
+                  id="registration-privacy-error"
+                  role="alert"
+                  class="ds-field-error"
+                >
+                  {copy(@errors["privacy_accepted"], @locale)}
+                </p>
+              <% end %>
             </div>
-            <%= if @errors["terms_accepted"] do %>
-              <p
-                id="registration-terms-error"
-                role="alert"
-                class="ds-field-error"
-              >
-                {copy(@errors["terms_accepted"], @locale)}
-              </p>
-            <% end %>
-          </div>
-
-          <div class="ds-stack border-t border-design-hairline pt-design-lg">
-            <p class="ds-note-text">
-              {copy("identity.registration.privacy_presentation", @locale)}
-            </p>
-            <.text_link href="/legal/privacy">
-              {copy("identity.registration.privacy_link", @locale)}
-            </.text_link>
-            <label
-              for="registration-privacy"
-              class="ds-registration-check"
-            >
-              <input
-                id="registration-privacy"
-                type="checkbox"
-                name="registration[privacy_accepted]"
-                value="true"
-                checked={Map.get(@values, "privacy_accepted") == "true"}
-                required
-                aria-required="true"
-                aria-invalid={if @errors["privacy_accepted"], do: "true"}
-                aria-describedby={
-                  if @errors["privacy_accepted"], do: "registration-privacy-error"
-                }
-                class="ds-registration-checkbox"
-              />
-              <span>{copy("identity.registration.privacy_acceptance", @locale)}</span>
-            </label>
-            <%= if @errors["privacy_accepted"] do %>
-              <p
-                id="registration-privacy-error"
-                role="alert"
-                class="ds-field-error"
-              >
-                {copy(@errors["privacy_accepted"], @locale)}
-              </p>
-            <% end %>
           </div>
         </div>
 
