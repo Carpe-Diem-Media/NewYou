@@ -6,7 +6,7 @@
     "WELL-20"
   ],
   "implementation_revision": {
-    "git_sha": "6fa5fb8dad1eae3d0d9d1de3f807511736e1354b",
+    "git_sha": "ff983390a64c7055faa450e3a08de0fe244df7e8",
     "semantics": "WELL-20 proof integration only. It adds no business behavior or certification authority."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
@@ -432,7 +432,7 @@
       "id": "delivery_scenarios",
       "path": "test/support/proof/delivery_recovery_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.DeliveryRecoveryScenarios",
-      "sha256": "f0c9744cac91c40e29274f1edacea48bb3c89387d965632b4ed5dd76c0748f3f"
+      "sha256": "e14ac0b0d6f0234d3753d6b160d4825074882e86682fbbd288936ba8dd6ef407"
     },
     {
       "id": "recovery_scenarios",
@@ -444,13 +444,13 @@
       "id": "email_scenarios",
       "path": "test/support/proof/email_change_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
-      "sha256": "af09a88f3f743e7e0ae877e14a6d472f1177fc5cbfeceb185ba3fd8ea5c10e5c"
+      "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
     },
     {
       "id": "reconciliation_scenarios",
       "path": "test/support/proof/reconciliation_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.ReconciliationScenarios",
-      "sha256": "5c91330047dd421b45e7fec05c52dcba1ae25eb3c391d7ccb1ad760cf0d7738e"
+      "sha256": "4868cc6e35f16ac9f6d40fbc47f20541db1727e965eddb57b5f03c88a0b6a7b5"
     },
     {
       "id": "web_scenarios",

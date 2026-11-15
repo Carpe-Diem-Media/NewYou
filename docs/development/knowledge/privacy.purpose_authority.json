@@ -7,7 +7,7 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "1b41a01099f4977c566f98c15761a2e47249fcc8",
+    "git_sha": "ff983390a64c7055faa450e3a08de0fe244df7e8",
     "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. The projection schema reserves a fixed production key used by the development rebuild; each test proof fixture receives a separate opaque key and cleanup deletes only that fixture\u2019s row. Production has no rebuild path or purpose for this proof. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count. WELL-19 hardening observes the tables written during each synchronous Analytics rebuild and rejects foreign NewYou commands with a bounded AST check. Persisted jobs run through Oban execution, rollback on injected failure, retry the same obligation, and complete only with owner evidence. A stale message job completes with its intent closed and no delivery attempt. Fixture cleanup retries once through its guardian and reports persistent failure; it removes only its own opaque projection key and derived executor queue. Migration rollback removes validated test-key projections before restoring the fixed-key constraint, preserving the reserved aggregate. The bounded Analytics checker rejects conflicting aliases and module receiver bindings rather than allowing a later lexical scope to hide an earlier foreign command. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged."
   },
   "authoritative_domain": "NewYou.Privacy",
@@ -1045,13 +1045,13 @@
       "id": "email_scenarios",
       "path": "test/support/proof/email_change_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
-      "sha256": "af09a88f3f743e7e0ae877e14a6d472f1177fc5cbfeceb185ba3fd8ea5c10e5c"
+      "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
     },
     {
       "id": "reconciliation_scenarios",
       "path": "test/support/proof/reconciliation_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.ReconciliationScenarios",
-      "sha256": "5c91330047dd421b45e7fec05c52dcba1ae25eb3c391d7ccb1ad760cf0d7738e"
+      "sha256": "4868cc6e35f16ac9f6d40fbc47f20541db1727e965eddb57b5f03c88a0b6a7b5"
     },
     {
       "id": "integration",
