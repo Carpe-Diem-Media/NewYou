@@ -6,7 +6,7 @@
     "WELL-20"
   ],
   "implementation_revision": {
-    "git_sha": "7fded47dab9ad6b45017c6f772b83a8fd5551475",
+    "git_sha": "67782d2c66570ee45ed7ccd686d8f3934798f291",
     "semantics": "WELL-20 proof integration only. It adds no business behavior or certification authority."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
@@ -559,7 +559,7 @@
       "id": "transport_tests",
       "path": "test/new_you/proof/passive_evidence_test.exs",
       "symbol": "defmodule NewYou.Proof.PassiveEvidenceTest",
-      "sha256": "4b37bd89c6a61d50b7c61a6109d048c13adf79e228ea92851a172ee4a38bef14"
+      "sha256": "87e0bc29b8d703e643f0e83328f636277f6d9276237abdd351f4aa87d9f1744a"
     }
   ]
 }
