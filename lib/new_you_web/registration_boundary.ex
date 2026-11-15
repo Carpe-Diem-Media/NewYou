@@ -16,6 +16,10 @@ defmodule NewYouWeb.RegistrationBoundary do
   def init(opts), do: opts
 
   @impl Plug
+  def call(%Plug.Conn{method: "GET", request_path: "/"} = conn, _opts) do
+    dispatch_browser_request(conn, :new)
+  end
+
   def call(%Plug.Conn{method: "GET", request_path: "/register"} = conn, _opts) do
     dispatch_browser_request(conn, :new)
   end
@@ -151,6 +155,7 @@ defmodule NewYouWeb.RegistrationBoundary do
   defp sensitive_browser_path?(path) do
     Enum.any?(
       [
+        "/",
         "/register",
         "/verification",
         "/primary-email-change",

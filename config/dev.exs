@@ -1,5 +1,7 @@
 import Config
 
+config :new_you, :fp001_development_entry, true
+
 config :new_you, :verification_development_fixtures, true
 config :new_you, :p8_05_browser_development_fixtures, true
 

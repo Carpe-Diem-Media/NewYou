@@ -400,7 +400,7 @@ defmodule NewYouWeb.RegistrationControllerTest do
       assert Enum.all?(Map.keys(session), &(&1 == "_csrf_token"))
     end
 
-    test "pending navigation separates the public entry content from home" do
+    test "pending navigation preserves the locale for public content and home" do
       for locale <- ["en", "af"] do
         registration = valid_registration(locale)
 
@@ -412,10 +412,10 @@ defmodule NewYouWeb.RegistrationControllerTest do
         browse_label = expected_copy("identity.verification.pending.browse_public", locale)
         home_label = expected_copy("identity.verification.pending.home", locale)
 
-        assert link_target(html, browse_label) == "/register?locale=#{locale}"
-        assert link_target(html, home_label) == "/register"
+        assert link_target(html, browse_label) == "/?locale=#{locale}#launch-heading"
+        assert link_target(html, home_label) == "/?locale=#{locale}"
         refute link_target(html, browse_label) == link_target(html, home_label)
-        assert html =~ ~r/<a href="\/register" class="[^"]*whitespace-nowrap/
+        assert html =~ ~r/<a href="\/\?locale=#{locale}" class="[^"]*whitespace-nowrap/
       end
     end
 

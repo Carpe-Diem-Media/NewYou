@@ -151,7 +151,33 @@ try {
     await navigation(() => evaluate(`document.querySelector('#email-confirmation button').click()`));
     checks.safe_replay = await hasState('unavailable') && await evaluate(`!document.querySelector('[name="proof"]') && !document.body.textContent.includes(${JSON.stringify(input.proof)})`);
   } else {
-  await navigation(() => cdp('Page.navigate', { url: `${base}/register?locale=${input.locale}` }));
+  const entry = input.mode === 'entry';
+  await navigation(() => cdp('Page.navigate', { url: `${base}${entry ? '/' : '/register'}?locale=${input.locale}` }));
+  if (entry) {
+    checks.root_entry = await evaluate(`location.pathname === '/' && document.documentElement.lang === ${JSON.stringify(input.locale)} && !!document.querySelector('#registration-form')`);
+    const other = input.locale === 'af' ? 'en' : 'af';
+    await navigation(() => evaluate(`document.querySelector('nav a[lang="${other}"]').click()`));
+    checks.locale_switch = await evaluate(`document.documentElement.lang === ${JSON.stringify(other)}`);
+    await navigation(() => evaluate(`document.querySelector('nav a[lang="${input.locale}"]').click()`));
+    checks.locale_switch &&= await evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)}`);
+    await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+    checks.responsive = true;
+    for (const width of [320, 375, 768, 1280, 1920]) {
+      await cdp('Emulation.setDeviceMetricsOverride', {width, height: 800, deviceScaleFactor: 1, mobile: false});
+      checks.responsive &&= await evaluate('document.documentElement.scrollWidth <= innerWidth');
+    }
+    await cdp('Emulation.setDeviceMetricsOverride', {width: 1280, height: 800, deviceScaleFactor: 1, mobile: false});
+    checks.reduced_motion = await evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0`);
+    checks.stylesheet_loaded = await evaluate(`document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
+    checks.associated_labels = await evaluate(`Array.from(document.querySelectorAll('#registration-form input:not([type="hidden"])')).every(input => input.labels.length > 0)`);
+    await evaluate(`document.querySelector('nav a:last-child').focus()`);
+    await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    checks.keyboard_focus = await evaluate(`document.activeElement.name === 'registration[first_name]' && document.activeElement.matches(':focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+    await evaluate(`document.querySelector('#registration-form').noValidate = true`);
+    await navigation(() => evaluate(`document.querySelector('#registration-form').requestSubmit()`));
+    checks.validation_errors = await evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && document.querySelector('[name="registration[first_name]"]').getAttribute('aria-invalid') === 'true' && document.querySelector('[name="registration[first_name]"]').getAttribute('aria-describedby') === 'registration-first-name-error' && document.querySelector('[name="registration[password]"]').value === '' && !!document.querySelector('[role="alert"]')`);
+  }
   const registry = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/COPY_REGISTRY.json', 'utf8'));
   const text = (key, locale) => registry.entries.find(entry => entry.key === key)[locale].text.replaceAll('{{platform_name}}', input.platform_name);
   const registrationKeys = ['public.entry.launch.title', 'public.entry.launch.body', 'public.entry.safety.body', 'identity.registration.title', 'identity.registration.intro', 'identity.registration.first_name.label', 'identity.registration.surname.label', 'identity.registration.email.label', 'identity.registration.password.label', 'identity.registration.preferred_language.label', 'identity.registration.preferred_language.help', 'identity.registration.age_confirmation', 'legal.shared.document_language_disclosure', 'identity.registration.terms_acceptance', 'identity.registration.terms_link', 'identity.registration.privacy_presentation', 'identity.registration.privacy_link', 'identity.registration.privacy_acceptance', 'identity.registration.submit'];
@@ -160,7 +186,9 @@ try {
   const noFallback = async keys => {
     const other = input.locale === 'af' ? 'en' : 'af';
     const alternatives = keys.filter(key => text(key, other) !== text(key, input.locale)).map(key => text(key, other));
-    return evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && (${JSON.stringify(alternatives)}).every(text => !document.body.textContent.includes(text))`);
+    // Exact rendered text nodes keep a short AF label such as "Van" from
+    // matching part of another word or an opaque CSRF/attribute value.
+    return evaluate(`(() => { const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); const texts = []; while (walker.nextNode()) { const node = walker.currentNode; if (!['SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) texts.push(node.textContent.trim()); } return document.documentElement.lang === ${JSON.stringify(input.locale)} && (${JSON.stringify(alternatives)}).every(text => !texts.includes(text)); })()`);
   };
   checks.approved_copy = sha256(readFileSync('docs/delivery/content-evidence/copy/COPY_REGISTRY.json')) === '744f1a34ad80c0158c86395f3f66227622714969526f5e9d69ee62314fd48635' && await hasCopy(registrationKeys, input.locale);
   checks.approved_copy &&= await evaluate(`document.body.innerText.indexOf(${JSON.stringify(text('public.entry.safety.body', input.locale))}) < document.body.innerText.indexOf(${JSON.stringify(text('identity.registration.title', input.locale))})`);
@@ -183,7 +211,7 @@ try {
   checks.explicit_resend = operations[0] !== resendOperation && nextOperation !== resendOperation && await hasCopy([...pendingKeys, 'identity.verification.resend.accepted_neutral'], input.locale);
   checks.locale_no_fallback = registrationLocale && pendingLocale && await noFallback(pendingKeys);
   checks.no_session = await evaluate(`!document.body.textContent.includes(${JSON.stringify(input.input.password)}) && !document.querySelector('a[href*="consume"]')`);
-  if (input.mode === 'spine') {
+  if (input.mode === 'spine' || entry) {
     checks['spine.registration'] = true;
     const delivered = await evaluate(`fetch('/__proof/delivery?' + new URLSearchParams({operation: ${JSON.stringify(resendOperation)}})).then(r => { if (!r.ok) throw new Error('delivery'); return r.json(); })`);
     checks['spine.delivery'] = true;
@@ -193,6 +221,18 @@ try {
     checks['spine.verification_form'] = checks.explicit_verification;
     await navigation(() => evaluate(`document.querySelector('form[action="/verification/confirm"]').requestSubmit()`));
     checks['spine.verification_submitted'] = true;
+    if (entry) {
+      const fixture = JSON.parse(readFileSync('docs/development/fixtures/p8-07-copy-v1.json', 'utf8'));
+      const resultText = state => fixture.entries[`identity.verification.result.${state}.title`][input.locale].text;
+      const hasResult = state => evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && document.querySelector('h1').textContent.trim() === ${JSON.stringify(resultText(state))} && !document.querySelector('[name="proof"]') && !document.body.textContent.includes(${JSON.stringify(delivered.proof)})`);
+      checks.verified_result = await hasResult('verified');
+      await navigation(() => cdp('Page.navigate', {url: verifyUrl}));
+      await navigation(() => evaluate(`document.querySelector('form[action="/verification/confirm"]').requestSubmit()`));
+      checks.safe_replay = await hasResult('unavailable');
+      await navigation(() => evaluate(`document.querySelector('a[href="/register?locale=${input.locale}"]').click()`));
+      checks.return_locale = await evaluate(`location.pathname === '/register' && document.documentElement.lang === ${JSON.stringify(input.locale)}`);
+      checks.protected_access_denied = await evaluate(`fetch('/session/protected').then(r => r.status === 401)`);
+    } else {
     await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
     checks.login_form = await evaluate(`!!document.querySelector('form[action="/login"] [name="_csrf_token"]')`);
     await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.input.email)}; document.querySelector('[name="password"]').value=${JSON.stringify(input.input.password)};`);
@@ -201,6 +241,7 @@ try {
     checks['spine.login_submitted'] = true;
     await navigation(() => cdp('Page.reload'));
     checks.reloaded_access = await evaluate(`location.pathname === '/session/protected' && fetch('/session/protected').then(r => r.status === 200)`);
+    }
   }
 
   }

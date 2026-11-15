@@ -3,11 +3,12 @@
   "capability_id": "proof.tb001",
   "purpose": "Execute the complete fixed TB-001 integration through the existing P8-04 runner and real owning interfaces, and emit one immutable exact-head result for independent review.",
   "implementing_tickets": [
-    "WELL-20"
+    "WELL-20",
+    "WELL-131"
   ],
   "implementation_revision": {
-    "git_sha": "3c8bcaff53d9049972ac967c85b2953f625cf4cb",
-    "semantics": "WELL-20 proof integration only. It adds no business behavior or certification authority."
+    "git_sha": "7d3ce6c146d9608984da0dd1abcae979098b76cd",
+    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
   "collaborating_domains": [
@@ -382,7 +383,8 @@
     "Final proof artifacts remain outside the checkout and must name the exact final PR head. Review actual artifacts and hosted CI independently.",
     "The current Privacy purpose is a synthetic development/test proof, not a production consent requirement.",
     "Full applicable local gates, OCR, exact-head CI and independent Master Gate review remain separate obligations. This map does not assert those results.",
-    "The static identity, owner callback-target and mandatory-claim inventory is linked to TB-001 sections 7-8. It remains separate from executable declarations and creates no business or certification authority. Fresh independent Master Gate review must assess semantic completeness and scenario source. The aggregate ledger marker does not enumerate underlying assertions or protect against arbitrary edits inside an owner scenario. Browser verification_form records the observed CSRF form; owning Account/Session/protected-access assertions determine success."
+    "The static identity, owner callback-target and mandatory-claim inventory is linked to TB-001 sections 7-8. It remains separate from executable declarations and creates no business or certification authority. Fresh independent Master Gate review must assess semantic completeness and scenario source. The aggregate ledger marker does not enumerate underlying assertions or protect against arbitrary edits inside an owner scenario. Browser verification_form records the observed CSRF form; owning Account/Session/protected-access assertions determine success.",
+    "The WELL-131 ordinary entry mode has separate ExUnit acceptance and is not a new TB-001 inventory case. Existing spine/login modes and the fixed mandatory Catalog inventory remain intact. Production-exclusion now also checks the normal development entry, copy and legal gates with fixture flags set."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -414,7 +416,7 @@
       "id": "assertions",
       "path": "test/proof/self_test.exs",
       "symbol": "defmodule NewYou.Proof.SelfTest",
-      "sha256": "fcffa17b1cf022218253497ca1b5b1fade30bb5924ef958143fdb8a4c377dc87"
+      "sha256": "b7d2ab4abd357ded122b785b18171e8e221b79db7c27d80b68ba9199280d8562"
     },
     {
       "id": "result",
@@ -444,7 +446,7 @@
       "id": "browser_script",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'spine'",
-      "sha256": "d9136a658d6295dfb612ea3dbecbac22470e1bb5f0027c220754e7164b0268e9"
+      "sha256": "1a70e731d359c5076a014492df9e92a79ab5a1b4a6d781e6ae712c74c55c82d1"
     },
     {
       "id": "fixture",
@@ -504,7 +506,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "defmodule NewYou.Identity",
-      "sha256": "a2c6b0114d3e64f29a3b1d5daefba76220c162b0429c1317b66987e061dab6aa"
+      "sha256": "2ccafe5ad95aff2ef46b468e11debc580a402625daddd5b133b6684553399137"
     },
     {
       "id": "account",
