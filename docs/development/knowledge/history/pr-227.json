@@ -30,25 +30,25 @@
       "status": "modified"
     },
     {
-      "blob": "3cb25d4a81e189f4d64b64b2ecaf7a82a2cd2ee1",
+      "blob": "1f0fb32e1010c6408cccc20140ca2d2ba980118a",
       "mode": "100644",
       "old_blob": "b8f66ed5e28fd682bf40de67fcf7b0748cdc3d12",
       "old_mode": "100644",
       "old_path": "DESIGN.md",
       "old_sha256": "ffb88c9e8997e997dc75f47783f8a70a919c39a6f0b62b4e656e6e84777b1aed",
       "path": "DESIGN.md",
-      "sha256": "278f88d75d505e7fc2d112284403893d3deee9d798ea001843cb542eb8be079f",
+      "sha256": "9ed1f770d03f30a1bafc62b8d8b76ef440035d761b27c16756fc3ad56214b516",
       "status": "modified"
     },
     {
-      "blob": "340039061458e378363405bd0cbbbdd2be8f5773",
+      "blob": "c3a1a5ea059c8691adeb2a4503e7f0a740077db4",
       "mode": "100644",
       "old_blob": "840e633874a6f223f594b0feda3a02ecbcaad852",
       "old_mode": "100644",
       "old_path": "assets/css/app.css",
       "old_sha256": "00af014c8a6e82b87c25957e5a2d6a73069937bfb3674fbb32048f96544fa339",
       "path": "assets/css/app.css",
-      "sha256": "d93c2d83114e1c0f079066a24f8de049e587afe678e6d7fc97a4664ebeeeb1a6",
+      "sha256": "603518953d9ee7c1a9c7bc2a59ad372bacdaab7b396103a692312355d28ff7e9",
       "status": "modified"
     },
     {
@@ -63,14 +63,14 @@
       "status": "added"
     },
     {
-      "blob": "2cf67cce3d3731fee9b4ec4d18500e3e85b2292f",
+      "blob": "7c56dcad1123ec6a357f3b575c03ad887c1956fc",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/css/design-components.css",
-      "sha256": "0a6fe3da9c4755bfe4da7d3ea0508bff269320060cb11118e485e80956b725cc",
+      "sha256": "64eacbda6d3b577cc5bf593659034ab3cd2cfb0ae1cb0851a6d3a915c8e379a2",
       "status": "added"
     },
     {
@@ -85,6 +85,17 @@
       "status": "added"
     },
     {
+      "blob": "bfe063ceafb2ef7658947d64b05c3df9c49573d3",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "assets/css/design-forms.css",
+      "sha256": "429f0c86fb7280ec330952d54e2031e6b28244de4218b0dc183f2730047ecccc",
+      "status": "added"
+    },
+    {
       "blob": "e18a19d4af95836ac6d023b7963edb0b99b34e20",
       "mode": "100644",
       "old_blob": null,
@@ -96,14 +107,14 @@
       "status": "added"
     },
     {
-      "blob": "d3b75fc9526e0dabd050ad4632c26937e05403ff",
+      "blob": "111527d98938f478c00a1272c97d0112f7588564",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/css/design-pilot.css",
-      "sha256": "5b5d71a0494261be0b0e028b9c250744029e2d9cc0db810562a8f9f3b369dd1f",
+      "sha256": "11e70833214b42361f86fb49a253784c10657e867111341d8e0bb217b6e9e780",
       "status": "added"
     },
     {
@@ -129,14 +140,14 @@
       "status": "added"
     },
     {
-      "blob": "40de231bc1dc25a46dbc29f10d43739215d09221",
+      "blob": "3193a24f9cd20287b8c45169514571fe77faa8ea",
       "mode": "100644",
       "old_blob": "53acbf1c16b0dbfda02da449aae8b22155ec4ed4",
       "old_mode": "100644",
       "old_path": "assets/css/design-tokens.css",
       "old_sha256": "1ff08b553dee7f8427f22387a78aeba909c4be0165baa1b96d909b5ca42b8729",
       "path": "assets/css/design-tokens.css",
-      "sha256": "0f466df3e6b35098787da95ab68ab226e0d27793123f12b4fbb129cc3b1c4e53",
+      "sha256": "794a825e29849c42a489471a07265b6026adbbb68f3edefabce7a659ed7a92a3",
       "status": "modified"
     },
     {
@@ -184,25 +195,25 @@
       "status": "added"
     },
     {
-      "blob": "f793cd9977f46abb44fb21f92a7d4c061c4a1d74",
+      "blob": "46cb37aab2d03ca799f52bf497c60273f99e0c04",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "9e54b6d0ef18c29ae4c8c372f3c7c91f93dc9818d36ff3085d866f72858d52b6",
+      "sha256": "74be1441e6b60482dd443bc863bbc1c072fae997865fe7632d3254857b0a1a26",
       "status": "modified"
     },
     {
-      "blob": "9b20f05705916578e7add5000a499c1922befccd",
+      "blob": "cb37d751e7217781f214d9a98ce58b0dea26c670",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/README.md",
-      "sha256": "44a03d0c8f4b1462b8af4e9b9dd993f453a055701751945117bc5e24ead5c7cf",
+      "sha256": "cd9c1c602f84924c08c71599c93248af6671a2a3b274dfb52c03087a502bc1ee",
       "status": "added"
     },
     {
@@ -239,14 +250,14 @@
       "status": "added"
     },
     {
-      "blob": "325c00b0fe23dfd75e400a6b10d9b3c591455e6e",
+      "blob": "426ede284267a7bd1d603d042c903e6f0f0b625e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/next-passes.md",
-      "sha256": "2b7ae1a255d1397e1245dd4a5312c58bcc2cf63f5fa0ff1c4e83ed71768d4310",
+      "sha256": "dd793f4e83bf49f6eedf70055fb1492fa413129ba8f6f24d05232f453548615e",
       "status": "added"
     },
     {
@@ -291,6 +302,28 @@
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/pass4-surfaces.md",
       "sha256": "748c8cb85cc6176baa42ed24521b54b7366d75d8bde87e1ec42f2b44303c1701",
+      "status": "added"
+    },
+    {
+      "blob": "f4acc24129fee7e4dd113d94702d3929eb46a5db",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/pass5-native-forms-evidence.json",
+      "sha256": "e04c185871f3184eeb6fb8d08ec7fbfc79471114a61f9ca0202dc62db156d177",
+      "status": "added"
+    },
+    {
+      "blob": "3f312e2276d6ee8a8b8153957725fcb8d3b2e076",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/pass5-native-forms.md",
+      "sha256": "ed4fe2741d1f4d84a2159a814016c134011b81b94ef19d0221a91ab8da4f2518",
       "status": "added"
     },
     {
@@ -525,6 +558,17 @@
       "status": "added"
     },
     {
+      "blob": "c0e7f782ec9d5c42c66d305c4e13fe04f3d64936",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/superpowers/plans/2026-11-15-native-form-contracts.md",
+      "sha256": "000847eb8d99e751a0b847781b99ec48c15a3937f52ead7c0b9351cd982bd802",
+      "status": "added"
+    },
+    {
       "blob": "7ce23c790575e0b7f8afb3a63600d8ae14f786f8",
       "mode": "100644",
       "old_blob": null,
@@ -602,14 +646,14 @@
       "status": "added"
     },
     {
-      "blob": "1718040473840ab3083844ec42683bd13ea5a000",
+      "blob": "4e74a2d536c43494b69cfc858e8f81589a8b2427",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/field.ex",
-      "sha256": "3afc2caaca544eb055cc7459ee70d7ab5cbcd7ecbff51a00bffe5ab283478d21",
+      "sha256": "31b9ffe75767fc67e93219958f897fdf34f462105cd6833c695b98754bce4845",
       "status": "added"
     },
     {
@@ -701,14 +745,14 @@
       "status": "modified"
     },
     {
-      "blob": "53dacb576377c0177cd29a87d769f24ba6e7d009",
+      "blob": "4ff15bc65c31ecb0feeb5412e71e987043f4fa0f",
       "mode": "100644",
       "old_blob": "f9ca9a44606fb0f3339bd1ac3afcce2be5e0cdad",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/controllers/registration_html/new.html.heex",
       "old_sha256": "72169956025e6b78200c35222ac2646ac95ef6c3a628956f213377e6a2405981",
       "path": "lib/new_you_web/controllers/registration_html/new.html.heex",
-      "sha256": "1ac8ba5266508848fbecbb7c621909b11603c4ba0ee78537e5303e7bbd57cc08",
+      "sha256": "d6f631b75f2c12b3998916328d6fb8f38654280fd57d3f0299da68ffc97686a1",
       "status": "modified"
     },
     {
@@ -756,6 +800,17 @@
       "status": "added"
     },
     {
+      "blob": "063a0470f41d30f04c5d020aaaeeafba8617c7df",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_forms.ex",
+      "sha256": "6c3f17d7f3c75d6a8cb17aa0f09f9695461c0ae05c8f9ffa5feeca20405f4026",
+      "status": "added"
+    },
+    {
       "blob": "5158f7ceff68effb295f8ed08c45648c398cd08e",
       "mode": "100644",
       "old_blob": null,
@@ -767,25 +822,25 @@
       "status": "added"
     },
     {
-      "blob": "5e48940c541615fb8f19f04400c6eeff211b1a74",
+      "blob": "31035b75ed6257cd761611e985968fe7b7827cd8",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
-      "sha256": "bc5d764266a2901bc9d06ddf648e4971bb57b906bf091c2f4577942acce8fa1c",
+      "sha256": "c34143c86d91e96e86af33f06473b3c393437d91de5ba353b90de612f498f3e9",
       "status": "added"
     },
     {
-      "blob": "d4a2eb3d68551b7a8df768c63ba7020153aa77e7",
+      "blob": "d1f9d1eaa04c699b86f7ec97952b856e8f2b1996",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.html.heex",
-      "sha256": "8d690e6917d6c367d7db928e003e3d0d136ad0c95fd21283b18e503ce489d606",
+      "sha256": "940b3372c30613227e51f52f15d4f9af57e3e458a767aa1a4ac8164f814fe73b",
       "status": "added"
     },
     {
@@ -877,14 +932,14 @@
       "status": "added"
     },
     {
-      "blob": "742688c9372961a0e8c8e5a439157ec0b912b2bb",
+      "blob": "a414e0b3066a66d67d71a060b93622c9162b3d7d",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_compatibility_browser.mjs",
-      "sha256": "1b13577876fe0d37c2caa11d64f1c9d76792c22234eb97514026c7e16607f08c",
+      "sha256": "c9754db63992798611347d48c32537cf402ad3e89e0fbd84ea5fcc319968d8e1",
       "status": "added"
     },
     {
@@ -940,6 +995,28 @@
       "old_sha256": null,
       "path": "test/assets/design_lighting_browser.mjs",
       "sha256": "d3665ad3bcb11db889122b79067d697e3a2284a1af5ac2c6b7a02fdc5e7bfc35",
+      "status": "added"
+    },
+    {
+      "blob": "c81079ede66f400210d24d0561965237c69df773",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_native_form_contract.mjs",
+      "sha256": "56f08278276998edf93da7cc34523a811ef4ec23962ca6d72c52a2bf512c3331",
+      "status": "added"
+    },
+    {
+      "blob": "fc3758110da19497c4a65cca6734844115f8c197",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_native_forms_browser.mjs",
+      "sha256": "c0f321b30f963d98600b76558323efb335b69e7115f9e7a03bc137b11c39ec25",
       "status": "added"
     },
     {
@@ -1075,14 +1152,14 @@
       "status": "modified"
     },
     {
-      "blob": "84aeeba66b84305bf24e0cbce940610e4bb1d522",
+      "blob": "3bc697f52c854164948a1003c7807caeb681d03c",
       "mode": "100644",
       "old_blob": "acf6b3f194bfbd10ef8a1e72a108f4bb17576d71",
       "old_mode": "100644",
       "old_path": "test/new_you_web/controllers/registration_controller_test.exs",
       "old_sha256": "b157f5e2707e6053fdb522a2e88864760fd9e2726045e086ec04acac68998f26",
       "path": "test/new_you_web/controllers/registration_controller_test.exs",
-      "sha256": "3d0e8feb249e5713415df1416d5ca4e4075819cc4dfa518b6e5af4427a9f9bb9",
+      "sha256": "ad7748981ee6563822e1aeed9a509660f276b0be3153e6bb99abb68bf86f74b1",
       "status": "modified"
     },
     {
@@ -1108,6 +1185,17 @@
       "status": "added"
     },
     {
+      "blob": "5bca776ffdb9530fa3a011f6bae9690c9a3ae6b5",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/new_you_web/design_native_form_test.exs",
+      "sha256": "1a6eee69a74b37c5ecafec7bcae40167ac65ff134040057a2200e79a162c6e6f",
+      "status": "added"
+    },
+    {
       "blob": "014f422c2c211106cbd76b6082850b0d634ccc82",
       "mode": "100644",
       "old_blob": null,
@@ -1130,14 +1218,14 @@
       "status": "modified"
     },
     {
-      "blob": "cd65e956e4f11dc82756b47e3ecc3d42f948f69a",
+      "blob": "e4292b372eecf117ad958f5a0630bc5103ac975d",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "5efd25aeb60e3e27dd4d496e23bfbc5be5e3d46a6cd6c499e77e6ce9fe00f73e",
+      "sha256": "2fbb430dd6110f668ae3aa12490cdfa0f151f03ce940cd3785ea1874e393d51a",
       "status": "added"
     },
     {
@@ -1191,13 +1279,13 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system`. The guide renders the same token-driven buttons, links, cards, fields and icons as application consumers. Fonts, colors, typography, spacing, radii, shadows, grids, containers and viewport previews expose CSS token names and browser-computed values. Self-hosted Inter and central body/display font inputs support changing font selection in one CSS file.\n\nCanonical semantic CSS inputs feed Tailwind utilities at the consuming element. Shared lighting recomputes locally, including solid fallbacks. The approved palette, typography roles and geometry remain intact. Lit primary buttons retain directional borders, a gradient, a short upper shine above the label and natural pressed edges. Fluid typography uses endpoint-first modular scale math with the existing native progress/trigonometric/static interpolation engine. Its semantic mappings remain guide candidates pending visual adoption.\n\nReusable layout recipes cover fixed grids, intrinsic auto-fit/auto-fill, column limits, incomplete-row centering, capped containers, single-owner gutters, stacks and wrapping rows. Breakout remains a guide comparison. Cards have noninteractive article semantics and explicit leading/inset/action slots; inset radii subtract the selected border and per-axis padding. Heroicons retain decorative/named semantics and native system-color behavior. Scoped prose and divider recipes separate content, section, card and control spacing. Purpose-owned borders distinguish decorative hairlines, native control boundaries, separators and directional lighting.\n\nComplete opaque plain, canvas, panel and raised profiles provide background, heading, body, muted, link, hover and focus roles together. A color-only Phoenix surface component owns finite data-surface values. Every nested boundary recomputes all roles; shared cards own plain/raised profiles and shared links read contextual ink. The guide demonstrates local profile inputs, inherited named inputs, nested resets, long EN/AF content and measured text/focus readouts. Missing, translucent and image-bearing grounds are not scored. Decorative gradients/noise/overlays retain their existing limits.\n\nThe existing development-gated registration template consumes these same components and layout/content recipes in EN/AF. Exact copy, form transport, age/legal facts, password handling, controller/Domain behavior and release boundaries are preserved. This presentation pilot is separate from the broader WELL-131 journey. Legacy styling remains outside the bounded migration.\n\nSource-linked Automatic.css 4.0.3 research inventories all ten requested systems and records inputs, formulas, generated tokens/selectors, dependencies, source identities, adopt/adapt/defer choices and missing proof. NewYou's implementation adds no vendor runtime/code, Sass/WordPress dependency, service, Domain state, schema or migration.",
+    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system`. The guide renders the same token-driven buttons, links, cards, fields and icons as application consumers. Fonts, colors, typography, spacing, radii, shadows, grids, containers and viewport previews expose CSS token names and browser-computed values. Self-hosted Inter and central body/display font inputs support changing font selection in one CSS file.\n\nCanonical semantic CSS inputs feed Tailwind utilities at the consuming element. Shared lighting recomputes locally, including solid fallbacks. The approved palette, typography roles and geometry remain intact. Lit primary buttons retain directional borders, a gradient, a short upper shine above the label and natural pressed edges. Fluid typography uses endpoint-first modular scale math with the existing native progress/trigonometric/static interpolation engine. Its semantic mappings remain guide candidates pending visual adoption.\n\nReusable layout recipes cover fixed grids, intrinsic auto-fit/auto-fill, column limits, incomplete-row centering, capped containers, single-owner gutters, stacks and wrapping rows. Breakout remains a guide comparison. Cards have noninteractive article semantics and explicit leading/inset/action slots; inset radii subtract the selected border and per-axis padding. Heroicons retain decorative/named semantics and native system-color behavior. Scoped prose and divider recipes separate content, section, card and control spacing. Purpose-owned borders distinguish decorative hairlines, native control boundaries, separators and directional lighting.\n\nComplete opaque plain, canvas, panel and raised profiles provide background, heading, body, muted, link, hover and focus roles together. A color-only Phoenix surface component owns finite data-surface values. Every nested boundary recomputes all roles; shared cards own plain/raised profiles and shared links read contextual ink. The guide demonstrates local profile inputs, inherited named inputs, nested resets, long EN/AF content and measured text/focus readouts. Missing, translucent and image-bearing grounds are not scored. Decorative gradients/noise/overlays retain their existing limits.\n\nShared native checkbox and fieldset contracts now serve registration and the guide's native-form lab. Text fields support associated help. Native checked/required/disabled behavior, deterministic help/error associations and local field/choice spacing share one component and CSS owner. Related actions remain outside checkbox labels; unchecked values remain omitted.\n\nThe existing development-gated registration template consumes these same components and layout/content recipes in EN/AF. Exact copy, form transport, age/legal facts, password handling, controller/Domain behavior and release boundaries are preserved. This presentation pilot is separate from the broader WELL-131 journey. Legacy styling remains outside the bounded migration.\n\nSource-linked Automatic.css 4.0.3 research inventories all ten requested systems and records inputs, formulas, generated tokens/selectors, dependencies, source identities, adopt/adapt/defer choices and missing proof. NewYou's implementation adds no vendor runtime/code, Sass/WordPress dependency, service, Domain state, schema or migration.",
     "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-15T21:26:52Z",
+    "checked_at": "2026-11-15T22:20:01Z",
     "items": [
       {
         "description_sha256": "0dc493ca6de6c09b18c612c4e99a22e8df9ec8c05068ee6352532f229e756442",
@@ -1479,8 +1567,60 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/field.ex",
-      "sha256": "b12d5294c7011521e369d5dcc557c50bd4061e3ddcc162f3219a12868392010c",
+      "sha256": "d977e52d2bee22732233c381b85b494eb7631a775f11b3f5f05534260d490cc5",
       "status": "parsed"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.Components.Design.Field",
+      "name": "assert_no_attribute_collisions!",
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/field.ex",
+      "sha256": "deb2329ea10d12143c6a80036ffccc9e93deb2db301acc6d66622b79b500ed45",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.Components.Design.Field",
+      "name": "checkbox_owned_attributes",
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/field.ex",
+      "sha256": "3a42c5bc394c6d7d17c00604a1f3708e72f4492cda722a58207a40db33d1a119",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.Components.Design.Field",
+      "name": "description_ids",
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/field.ex",
+      "sha256": "a859539ebb74fdc19b4a6796faa09f3f0e484ffaee9b06afd88a104a1eab50a8",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.Components.Design.Field",
+      "name": "design_checkbox",
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/field.ex",
+      "sha256": "5a1c5ca2ba7393a88850692c6acddbb8d354d19c73b9a03193ac4af4e1a909e4",
+      "status": "parsed",
+      "visibility": "public"
     },
     {
       "arity": 1,
@@ -1491,9 +1631,35 @@
       "name": "design_field",
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/field.ex",
-      "sha256": "0f783230c7751b6e180ae38830c99f98fdf5a8e73dec27d0ea6fcd7f0714ae90",
+      "sha256": "7358c6cb58c0e88bdc808c0c62667e6e8ce05ff6b0ea173a4ce8d3234f01d17b",
       "status": "parsed",
       "visibility": "public"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.Components.Design.Field",
+      "name": "design_fieldset",
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/field.ex",
+      "sha256": "aaa5bfcdb3d2b406ca710784992f55ff3742c940e567760d173287ed77df7c64",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.Components.Design.Field",
+      "name": "fieldset_owned_attributes",
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/field.ex",
+      "sha256": "eb9e14b304deab8320907524041d50b76058086843009c97275916968eb82d4b",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": null,
@@ -2008,6 +2174,40 @@
       "arity": null,
       "change": "added",
       "kind": "module",
+      "module": "NewYouWeb.DesignSystemForms",
+      "name": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_forms.ex",
+      "sha256": "a30ada30897b8710271609b64f75ce3a636cd49469363c17d09450fae11b3c2c",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.DesignSystemForms",
+      "name": "native_forms",
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_forms.ex",
+      "sha256": "b8fd9e6d17a6dcd64c05e2547611e373a60ec9dc13825e284885dd7f073ac3d4",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/live/design_system_forms.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
       "module": "NewYouWeb.DesignSystemLayouts",
       "name": null,
       "old_sha256": null,
@@ -2072,7 +2272,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
-      "sha256": "1ee37dc8928a809a9b7260ccef50827a8498ebf67a252458fb46a54ae07a802f",
+      "sha256": "9b2d45c847281ce6c5f895c717d2d24eeaaddde41415749c7b55374e148bf036",
       "status": "parsed"
     },
     {
@@ -2331,7 +2531,7 @@
       "name": null,
       "old_sha256": "8197345e6c2bb471275d39974ec53f92ccfb6577f82ebef41b817c1978c0adbb",
       "path": "test/new_you_web/controllers/registration_controller_test.exs",
-      "sha256": "03083ffc4c6373ab51c45774dc6ea5af72b4dc1c1321a736736aa23a99e10f3b",
+      "sha256": "b90d4adb624d407f7cba750a7e25505bd51ed456c09a4336f7b922a03e704350",
       "status": "parsed"
     },
     {
@@ -2403,6 +2603,27 @@
       "arity": null,
       "change": "added",
       "kind": "module",
+      "module": "NewYouWeb.DesignNativeFormTest",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/new_you_web/design_native_form_test.exs",
+      "sha256": "02d8680af71e13de024070f386cbdba34d2041abb76db378f2aa7a85b913dc6c",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you_web/design_native_form_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
       "module": "NewYouWeb.DesignSurfaceTest",
       "name": null,
       "old_sha256": null,
@@ -2462,7 +2683,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "afac7fa1ae5803969db7956651ae77af69ff8e3ca89f64ff9425156962a3b836",
+      "sha256": "3d36b533a3c8fe677dda5625faa039b5a91ea8e802155c00a92ac24eaa9fed5e",
       "status": "parsed"
     },
     {
@@ -2519,6 +2740,8 @@
     "test/assets/design_content_contract.mjs",
     "test/assets/design_layouts_browser.mjs",
     "test/assets/design_lighting_browser.mjs",
+    "test/assets/design_native_form_contract.mjs",
+    "test/assets/design_native_forms_browser.mjs",
     "test/assets/design_registration_browser.mjs",
     "test/assets/design_surface_contract.mjs",
     "test/assets/design_surfaces_browser.mjs",
@@ -2534,6 +2757,7 @@
     "test/new_you_web/controllers/registration_controller_test.exs",
     "test/new_you_web/design_component_contracts_test.exs",
     "test/new_you_web/design_field_test.exs",
+    "test/new_you_web/design_native_form_test.exs",
     "test/new_you_web/design_surface_test.exs",
     "test/new_you_web/design_system_infrastructure_test.exs",
     "test/new_you_web/live/design_system_live_test.exs",
