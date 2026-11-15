@@ -15,47 +15,47 @@
       "status": "modified"
     },
     {
-      "blob": "bd9b82330ac6d538569dd4e951258026ff97ecf1",
+      "blob": "26bac5edb95ae179e2985937f276010de8532dfd",
       "mode": "100644",
       "old_blob": "6c461b509d86b670e379440f0623fbed771e9054",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.recovery.json",
       "old_sha256": "b8aada4e70aecaa7bc07657499cdee778b2adec6a5aa7cd51df0a8f30977dd51",
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "23f6f56a43f1c480d8f572aadcf46d50d3cb03d7cb57195f88828f446bfd7e70",
+      "sha256": "3e38306279ae26619c83877bf7ac2953b2423ec0acbae6cc8a8be9e7247b1d97",
       "status": "modified"
     },
     {
-      "blob": "d0d14cd20f31173f14844434e923a9cc485a8f59",
+      "blob": "eb1d83b71469d9438b731f4febcae9409cd703d6",
       "mode": "100644",
       "old_blob": "a90d93c65d4ac97a46981a91ff314282b876e0b2",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.support_lookup.json",
       "old_sha256": "e28055bbbb55502ad7841507a17c238f723e0b5af7b7836c9f8530c5b9a9f114",
       "path": "docs/development/knowledge/identity.support_lookup.json",
-      "sha256": "5f86b894ae8c4be632b7400942eb042061e7f145ab9faef41815766347b5c72b",
+      "sha256": "81a72400c194e3b86245736791ada84272a4b6f6ab3286441a544b2feb7fa8d3",
       "status": "modified"
     },
     {
-      "blob": "f0c2615fa23e079680cbc6b33ba7de865c0be305",
+      "blob": "4b728d97710f96dc2e38ec9fc897f2497b68ba7e",
       "mode": "100644",
       "old_blob": "08f28004b76f1edabde0078a7f5895f4bc736752",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
       "old_sha256": "b70e328957f94941a47daa77ce50be1a7788ea34f65661c64fa7e0e47d21a285",
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "0f67a27ae283cc06b3f2f87ffddbf403f9258d020312f1f5d96cefb72bfc1ae4",
+      "sha256": "0487e56354d12b56e66030673c7e0ec644a931e778b0f511840adf70e34a6200",
       "status": "modified"
     },
     {
-      "blob": "8753661c48b81631676e06987aad3bc94a4e875e",
+      "blob": "8c7f0ffb1bdef3df15f4c9bfba9cbe98c4926ae9",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/proof.tb001.json",
-      "sha256": "c27d1f2fbf99c1673764df64d4fbc62260e7f34082a38a52a3e523a37422bff8",
+      "sha256": "a2bf98d466f167a4df66607ea6b3e3f9ff1f4b9643702e6eaeca9baa319cc564",
       "status": "added"
     },
     {
@@ -213,14 +213,14 @@
       "status": "added"
     },
     {
-      "blob": "cff383b7a859ecfe1d243ee45874a08503be4b63",
+      "blob": "28302cd0bba70761a86deb5315a8cfa6540deac3",
       "mode": "100644",
       "old_blob": "e1397f429edf76949f5a861c0c03f1bccf647034",
       "old_mode": "100644",
       "old_path": "test/new_you/proof/result_test.exs",
       "old_sha256": "5eb6d90bc2709e7774caae3f49f5955e1ea28f792e11a6e5f284260435609a1f",
       "path": "test/new_you/proof/result_test.exs",
-      "sha256": "c06408c3a1a577e8794a1812db8a1b0031977e630f5e90bc6cb322dcc1f0d376",
+      "sha256": "7af835c3aba90a5fff3b7709e1f94c0192860fc1436fca5d8d8e6ab5326834cb",
       "status": "modified"
     },
     {
@@ -235,14 +235,14 @@
       "status": "modified"
     },
     {
-      "blob": "84c751ae57e2e62f6806427b76b51f7b939507a6",
+      "blob": "bd830ab6d9d606d2597d606cd1bda3b7f3290310",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/proof/tb001_integration_test.exs",
-      "sha256": "3db2ddf3cabc23e6de97f996fb023b03ee5153d6c9a561793d1701c9b73e939d",
+      "sha256": "9293c6ad47c7f5cdeeeca725f41faf34b38b251d258f8d8e319f8314ef2c50b2",
       "status": "added"
     },
     {
@@ -301,14 +301,14 @@
       "status": "modified"
     },
     {
-      "blob": "91b5de4c05de69e27dc3ac6d589c47a4175d4b88",
+      "blob": "d9f0bc56a36707984d6d57c19b3b6327c9c66656",
       "mode": "100644",
       "old_blob": "4c732e9fb70fcaab63630e700047cfdb988ecc31",
       "old_mode": "100644",
       "old_path": "test/proof/p8_05_browser.mjs",
       "old_sha256": "646bc1f8554c3bf6cd57517f7400aced633c3995b5411a94689335482ee4b655",
       "path": "test/proof/p8_05_browser.mjs",
-      "sha256": "2c7b146732120c86dae7f5df09b5d4176dce1472fa6b9fbc14d551573d7fcfbf",
+      "sha256": "d9136a658d6295dfb612ea3dbecbac22470e1bb5f0027c220754e7164b0268e9",
       "status": "modified"
     },
     {
@@ -323,36 +323,36 @@
       "status": "added"
     },
     {
-      "blob": "68c23fca19c40bcdf523e094fb2f3c36510d2cee",
+      "blob": "34aead38d57c2277c241f2337cea46ce68a9b458",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/proof/tb001_inventory_broken.exs",
-      "sha256": "0cab8012881a80f6dbaf794d0fc066d1c93ebda984cc1af53fbc29f1bbd7fb62",
+      "sha256": "20d9c782be9ecd9ec6448749fef6ce5e40e2856708948644927c24a8cc8ca66f",
       "status": "added"
     },
     {
-      "blob": "27b5676e210d4c3f333caf4014d0332fe1385620",
+      "blob": "19ff08f1c0b5f687b4314d793f48616b6de1ec4e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/proof/tb001_required_cases.json",
-      "sha256": "c9c374eac33c88adf56b4557ade9fdf6bdf619194372160f17a19d630954eb55",
+      "sha256": "e8122a4a151f6c0ed3116660919f92a87d73478acf5a8ee6de5e3e5dddf9c7f3",
       "status": "added"
     },
     {
-      "blob": "22be4fc3e8db0b18692e9f89f56a183696c1bef5",
+      "blob": "b945fee91a53921956a5ce6b3e5a51da7658c731",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/capability_scenarios.ex",
-      "sha256": "2a851980eac3769cb20e28641a35b3e96480d3a8fcc47f41f681cabcc6e6a2fe",
+      "sha256": "8a4a1553d9006b3a72db0c38451498a921b89a28232181743dc05a4b5f795c17",
       "status": "added"
     },
     {
@@ -444,14 +444,14 @@
       "status": "added"
     },
     {
-      "blob": "e192f0444405f1926b1b1ad6dc5d98bb4d5c7858",
+      "blob": "dc4d8e6dcdbbfeb7ea9099be4a28420bdbee82b0",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_19_catalog.ex",
-      "sha256": "b52d872ce4669f12b5b7f0a58d44c2dda763c3669d2c341c0aeb8c9ae6130761",
+      "sha256": "ac81b8f9e959a84fc8328eb1a6859ebf10c664c8941709d342ebe162f1f4ab8d",
       "status": "added"
     },
     {
@@ -510,14 +510,14 @@
       "status": "modified"
     },
     {
-      "blob": "2b92f44a81b6c6c7fea2ac3bd5a4452f23c6566c",
+      "blob": "d96bbe3086e70bc6591d33ef7bcb26a7df7baf5a",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/web_scenarios.ex",
-      "sha256": "c90158d7f9115a4096052db9d9ebe18176600b9cd41574e59e223aae952d58aa",
+      "sha256": "d33e18605b1495218a788d5e000c47977f410811a2af11cc2c480d9387df7a58",
       "status": "added"
     }
   ],
@@ -1934,7 +1934,7 @@
       "name": null,
       "old_sha256": "c055402247e2edb8827ee1f07f4c88f93ecddd5e05190b5b0bb5e5a5192b538d",
       "path": "test/new_you/proof/result_test.exs",
-      "sha256": "5bff8bf407289bd3843e231d5646a847a19bf3c2d8ebe91b1767abe55f4b6155",
+      "sha256": "99f8d0b2b0dff47def1c4b2e79dc6548e2fdad78092ec420a16c6170a2a435b6",
       "status": "parsed"
     },
     {
@@ -1989,7 +1989,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/proof/tb001_integration_test.exs",
-      "sha256": "ad4cf0d5ba29062998b2fffcfc9814fb2ba77cdf4e3a4094150bf3be87e0970d",
+      "sha256": "8e27d7911a0ecece62641c9630289a9714b7cb00e139fa4ebe87b7dc7ed31bee",
       "status": "parsed"
     },
     {
@@ -2261,7 +2261,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/capability_scenarios.ex",
-      "sha256": "b2b87fcabd96ee04efd868a9addc08cbd0f86938560db0610b13a65f5cb97d6e",
+      "sha256": "6d9bdd3678a68a294cb572b44daf88e8028d186037dbad734b2804ccc77d97cd",
       "status": "parsed"
     },
     {
@@ -4522,7 +4522,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_19_catalog.ex",
-      "sha256": "24eb414efe990d2ca5f5b28586e7b1f33b71e70deb966b4a94c7c67809d73434",
+      "sha256": "1fa530f8222dfc5a748fc59ae93a8726078a5030d469490bd3d46b8bfd59bc18",
       "status": "parsed"
     },
     {
@@ -4573,9 +4573,22 @@
       "name": "manifests",
       "old_sha256": null,
       "path": "test/support/proof/p8_19_catalog.ex",
-      "sha256": "0a4e5f539e765427c084c6eac565bf3bb64fd011156b53f75c2315e847df4dd6",
+      "sha256": "cb920adbf55efaf6ad729e95088f43dae197b982b767260f3d0112e819428986",
       "status": "parsed",
       "visibility": "public"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P819Catalog",
+      "name": "owner_obligations_bound?",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_19_catalog.ex",
+      "sha256": "bfe2606e238f8dc6259d46b3efbcd73ae0ee556762ccb4ebed2cf6d5c7e745d7",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": 0,
@@ -5337,7 +5350,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/web_scenarios.ex",
-      "sha256": "799f0c28685a94ff7d300e97119d175767b1c589061a7f52e6ee3f7ff1223b60",
+      "sha256": "5af87a7a5777fb2a3a831fa1ba19727908063aa34d37525d7d67ebe40ce782fb",
       "status": "parsed"
     },
     {
@@ -5401,7 +5414,7 @@
       "name": "recovery_neutral",
       "old_sha256": null,
       "path": "test/support/proof/web_scenarios.ex",
-      "sha256": "88878e5429b23c6dfa6b3835c88de4126aa8a5f9bc681a2be104a54dc43095b0",
+      "sha256": "790344f571bb304f94157ea5609fdf46fb111e3de78386babecf4c3444366b31",
       "status": "parsed",
       "visibility": "public"
     },
