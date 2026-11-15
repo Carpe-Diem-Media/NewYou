@@ -79,30 +79,7 @@ defmodule NewYou.Proof.WebScenarios do
             ] do
           id = Ecto.UUID.generate()
           P805.track_operation(id)
-          before_owner = PassiveEvidence.snapshot(registered.account_id)
-
-          if kind == :unavailable do
-            Process.put(
-              NewYou.Proof.RegistrationSeam,
-              {:observe,
-               fn ->
-                 Process.put({__MODULE__, :unavailable_observed}, true)
-                 raise "synthetic recovery source unavailable"
-               end}
-            )
-          end
-
-          conn =
-            try do
-              post(build_conn(), "/recovery", %{email: email, locale: "af", operation_id: id})
-            after
-              Process.delete(NewYou.Proof.RegistrationSeam)
-            end
-
-          if kind == :unavailable do
-            assert Process.delete({__MODULE__, :unavailable_observed}) == true
-            assert :ok = PassiveEvidence.assert_unchanged!(registered.account_id, before_owner)
-          end
+          conn = recovery_request(kind, email, id, registered.account_id)
 
           assert conn.status == 200
           assert get_resp_header(conn, "cache-control") == ["no-store"]
@@ -117,6 +94,35 @@ defmodule NewYou.Proof.WebScenarios do
       assert length(Enum.uniq(responses)) == 1
       assert Ash.get!(Account, other.account_id, authorize?: false) == before_account
     end)
+  end
+
+  defp recovery_request(kind, email, id, account_id) do
+    before_owner = PassiveEvidence.snapshot(account_id)
+
+    if kind == :unavailable do
+      Process.put(
+        NewYou.Proof.RegistrationSeam,
+        {:observe,
+         fn ->
+           Process.put({__MODULE__, :unavailable_observed}, true)
+           raise "synthetic recovery source unavailable"
+         end}
+      )
+    end
+
+    conn =
+      try do
+        post(build_conn(), "/recovery", %{email: email, locale: "af", operation_id: id})
+      after
+        Process.delete(NewYou.Proof.RegistrationSeam)
+      end
+
+    if kind == :unavailable do
+      assert Process.delete({__MODULE__, :unavailable_observed}) == true
+      assert :ok = PassiveEvidence.assert_unchanged!(account_id, before_owner)
+    end
+
+    conn
   end
 
   def login_neutral() do

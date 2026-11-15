@@ -5,7 +5,7 @@ defmodule NewYou.Proof.TB001IntegrationTest do
 
   @tag timeout: 120_000
   test "standalone canonical acceptance rejects removed and substituted obligations" do
-    for mutation <- ["drop", "substitute"] do
+    for mutation <- ["drop", "substitute", "authority"] do
       output = Path.join(System.tmp_dir!(), "tb001-inventory-#{Ecto.UUID.generate()}.json")
       on_exit(fn -> File.rm(output) end)
 
@@ -32,8 +32,8 @@ defmodule NewYou.Proof.TB001IntegrationTest do
       # A fresh unmodified validator also rejects the mutated declaration's
       # digest and required IDs, independently of its nonzero command outcome.
       assert {:error, errors} = NewYou.Proof.Result.validate(artifact, mode: :tb001)
-      assert :invalid_business_required_cases in errors
       assert :invalid_business_manifest_digest in errors
+      if mutation != "authority", do: assert(:invalid_business_required_cases in errors)
     end
   end
 
@@ -43,12 +43,20 @@ defmodule NewYou.Proof.TB001IntegrationTest do
     previous = Code.compiler_options(ignore_module_conflict: true)
 
     try do
-      for mutation <- [:drop, :substitute] do
+      for mutation <- [:drop, :substitute, :authority] do
         ast = Code.string_to_quoted!(source)
 
         damaged =
           Macro.prewalk(ast, fn
-            {:@, meta, [{:obligations, attribute_meta, [[first | rest]]}]} ->
+            {:@, meta, [{:required_inventory, attribute_meta, [value]}]}
+            when mutation == :authority ->
+              damaged =
+                quote do: Map.put(unquote(value), "source_sha256", String.duplicate("0", 64))
+
+              {:@, meta, [{:required_inventory, attribute_meta, [damaged]}]}
+
+            {:@, meta, [{:obligations, attribute_meta, [[first | rest]]}]}
+            when mutation != :authority ->
               obligations =
                 case mutation do
                   :drop ->

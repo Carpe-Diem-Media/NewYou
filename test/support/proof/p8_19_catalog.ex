@@ -14,6 +14,7 @@ defmodule NewYou.Proof.P819Catalog do
   # Never derive or regenerate it when changing a callback declaration.
   @external_resource Path.expand("../../proof/tb001_required_cases.json", __DIR__)
   @required_inventory @external_resource |> File.read!() |> Jason.decode!()
+  @contract "docs/delivery/feature-contracts/fp-001/FP-001_TRACER_BULLET_CONTRACT_WORKING_v0.1.3.md"
 
   @upstream_cases %{
     "audit_e1" =>
@@ -312,7 +313,8 @@ defmodule NewYou.Proof.P819Catalog do
       required = @required_inventory["families"][family]["cases"]
 
       scope =
-        if Enum.sort(Enum.map(prior, & &1.case_id)) == Enum.sort(expected_prior) and
+        if authority_bound?() and
+             Enum.sort(Enum.map(prior, & &1.case_id)) == Enum.sort(expected_prior) and
              Enum.sort(identities) == Enum.sort(required),
            do: :complete,
            else: :partial
@@ -330,6 +332,20 @@ defmodule NewYou.Proof.P819Catalog do
 
       {family, Map.put(manifest, :digest, digest)}
     end)
+  end
+
+  defp authority_bound? do
+    case File.read(@contract) do
+      {:ok, source} ->
+        digest = :crypto.hash(:sha256, source) |> Base.encode16(case: :lower)
+
+        @required_inventory["contract"] == "TB-001/v0.1.3" and
+          @required_inventory["source"] == @contract and
+          @required_inventory["source_sha256"] == digest
+
+      _ ->
+        false
+    end
   end
 
   @doc false
