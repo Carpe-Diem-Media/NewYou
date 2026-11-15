@@ -2,17 +2,9 @@ defmodule NewYouWeb.PrivacyTelemetry do
   @moduledoc false
 
   @behaviour Plug
-  @sensitive_browser_paths [
-    "/",
-    "/register",
-    "/verification",
-    "/login",
-    "/session",
-    "/password",
-    "/recovery",
-    "/primary-email-change"
-  ]
 
+  # Session cookies accompany ordinary and unknown URLs too. Redact the
+  # telemetry projection for every request, leaving the real connection intact.
   @impl Plug
   def init(opts) do
     {event_prefix, opts} = Keyword.pop(opts, :event_prefix)
@@ -26,26 +18,19 @@ defmodule NewYouWeb.PrivacyTelemetry do
     :telemetry.execute(
       start_event,
       %{system_time: System.system_time()},
-      %{conn: telemetry_conn(conn), options: opts}
+      %{conn: sanitize_conn(conn), options: opts}
     )
 
     Plug.Conn.register_before_send(conn, fn response_conn ->
       :telemetry.execute(
         stop_event,
         %{duration: System.monotonic_time() - started_at},
-        %{conn: telemetry_conn(response_conn), options: opts}
+        %{conn: sanitize_conn(response_conn), options: opts}
       )
 
       response_conn
     end)
   end
-
-  defp telemetry_conn(%Plug.Conn{request_path: path} = conn)
-       when is_binary(path) do
-    if sensitive_browser_path?(path), do: sanitize_conn(conn), else: conn
-  end
-
-  defp telemetry_conn(conn), do: conn
 
   defp sanitize_conn(conn) do
     %{
@@ -70,11 +55,5 @@ defmodule NewYouWeb.PrivacyTelemetry do
         path_info: ["registration"],
         script_name: []
     }
-  end
-
-  defp sensitive_browser_path?(path) do
-    Enum.any?(@sensitive_browser_paths, fn root ->
-      path == root or String.starts_with?(path, root <> "/")
-    end)
   end
 end
