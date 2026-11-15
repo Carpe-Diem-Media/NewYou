@@ -1,32 +1,53 @@
 defmodule NewYouWeb.Components.Design.Card do
-  @moduledoc "Token-owned card with flat default and an opt-in raised lighting specimen."
+  @moduledoc """
+  Noninteractive article with flat default and opt-in raised lighting. The leading,
+  inset and actions slots are explicit direct children. Inset corners subtract
+  border and per-axis padding from the outer radius; only the inset clips content.
+  Put actions in native controls. CSS owns presentation; the article has no click,
+  keyboard, role or tabindex API. Heading levels follow the containing page outline.
+  """
   use Phoenix.Component
 
   attr :title, :string, required: true
   attr :variant, :string, default: "flat", values: ~w(flat raised)
+  attr :heading_level, :integer, default: 3, values: [2, 3, 4, 5, 6]
   attr :rest, :global
+  slot :leading
+  slot :inset
+  slot :actions
   slot :inner_block, required: true
 
   @doc "Renders a noninteractive card; put any actions in its content as native links or buttons."
   def design_card(%{variant: variant} = assigns) when variant in ~w(flat raised) do
-    if Map.has_key?(assigns.rest, :class) or Map.has_key?(assigns.rest, "class") do
-      raise ArgumentError, "design_card does not accept caller-provided classes"
+    unless assigns.heading_level in 2..6 do
+      raise ArgumentError, "design_card heading_level must be an integer from 2 through 6"
     end
 
-    if Map.has_key?(assigns.rest, :"data-variant") or Map.has_key?(assigns.rest, "data-variant") do
-      raise ArgumentError, "design_card does not accept caller-provided data-variant"
+    for key <- Map.keys(assigns.rest),
+        to_string(key) in ~w(class style data-variant role tabindex onclick onkeydown onkeyup phx-click phx-capture-click phx-keydown phx-keyup) do
+      raise ArgumentError, "design_card does not accept caller-provided #{key}"
     end
+
+    assigns = assign(assigns, :heading_tag, "h#{assigns.heading_level}")
 
     ~H"""
     <article
-      class="ds-design-card flex min-w-0 flex-col gap-design-base rounded-design-md border data-[variant=flat]:border-design-hairline data-[variant=flat]:bg-design-surface p-design-lg text-design-ink font-design-sans data-[variant=flat]:shadow-design"
+      class="ds-design-card flex min-w-0 flex-col gap-design-base border data-[variant=flat]:border-design-hairline data-[variant=flat]:bg-design-surface text-design-ink font-design-sans data-[variant=flat]:shadow-design"
       data-variant={@variant}
       {@rest}
     >
-      <h3 class="text-design-heading-sm font-design-bold leading-design-heading-sm tracking-design-heading-sm">
+      <div :if={@leading != []} class="ds-design-card-leading">{render_slot(@leading)}</div>
+      <.dynamic_tag
+        tag_name={@heading_tag}
+        class="text-design-heading-sm font-design-bold leading-design-heading-sm tracking-design-heading-sm"
+      >
         {@title}
-      </h3>
-      <div class="text-design-body-xs leading-design-body-xs">{render_slot(@inner_block)}</div>
+      </.dynamic_tag>
+      <div :if={@inset != []} class="ds-design-card-inset">{render_slot(@inset)}</div>
+      <div class="ds-design-card-body text-design-body-xs leading-design-body-xs">
+        {render_slot(@inner_block)}
+      </div>
+      <div :if={@actions != []} class="ds-design-card-actions">{render_slot(@actions)}</div>
     </article>
     """
   end

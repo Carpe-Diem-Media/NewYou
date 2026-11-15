@@ -8,7 +8,7 @@ defmodule NewYouWeb.Components.Design.Link do
 
   @doc "Renders an underlined native link with a visible keyboard focus indicator."
   def text_link(assigns) do
-    if Map.has_key?(assigns.rest, :class) do
+    if Map.has_key?(assigns.rest, :class) or Map.has_key?(assigns.rest, "class") do
       raise ArgumentError, "design text_link does not accept caller-provided classes"
     end
 

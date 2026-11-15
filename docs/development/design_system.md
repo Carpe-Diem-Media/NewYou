@@ -611,3 +611,9 @@ Review; its independent certification and final-head hosted CI/Master Gate
 review are still required. Those responsible independent checks must resolve
 before reaching 8+/10 delivery evidence. No merge recommendation or issue-state
 transition follows from this local verification.
+
+## Phase 3 component contracts
+
+The shared card and Heroicons contracts are rendered at `/dev/design-system#contracts`. See the [Phase 3 addendum](research/acss-4.0.3-inventory/phase3-components.md) for supported Phoenix attributes/slots, owned data attributes, local CSS override inputs, border-aware per-axis inset radii, native pending semantics, accessibility rules and regression commands. The existing flat defaults, approved radius tiers and lit primary shine remain intact. Media/avatar frameworks, global auto-radius and inverted corners remain deferred. These presentation-only changes require no new Domain capability map; the generated PR history records their source.
+
+The guide does not certify Firefox/WebKit or assistive-technology behavior. WELL-114 post-merge certification and PR #227 integration/hosted-check gaps remain separate delivery work, as recorded in Plane.

@@ -181,7 +181,8 @@
 /* Shared lighting relationships resolve against each root or component's inputs. */
 :root,
 :where(.ds-design-button),
-:where(.ds-design-card) {
+:where(.ds-design-card),
+:where(.ds-design-icon) {
   --surface-canvas: var(--canvas);
   --surface-panel: var(--surface);
   --surface-raised: var(--surface);
@@ -202,6 +203,28 @@
   --action-primary-shadow: inset 0 1px 0 var(--action-primary-edge-light), var(--shadow-control);
   --action-primary-hover-shadow: inset 0 1px 0 var(--action-primary-hover-edge-light), var(--shadow-control);
   --action-primary-pressed-shadow: inset 0 1px 2px var(--action-primary-hover-edge-dark), inset 0 -1px 0 var(--action-primary-hover-edge-light);
+}
+
+/* Component relationships resolve on the consumer. Optional override inputs stay
+   unset by default, so ancestor overrides and local source-token edits both work. */
+:where(.ds-design-card) {
+  --design-card-inset-radius-x: max(0px, calc(var(--radius) - var(--design-border-width) - var(--design-card-padding-inline, var(--space-lg))));
+  --design-card-inset-radius-y: max(0px, calc(var(--radius) - var(--design-border-width) - var(--design-card-padding-block, var(--space-lg))));
+}
+:where(.ds-design-icon) {
+  --design-icon-glyph-size: var(--design-icon-size, var(--space-lg));
+}
+:where(.ds-design-icon[data-size="sm"]) {
+  --design-icon-glyph-size: var(--design-icon-size, var(--space-base));
+}
+:where(.ds-design-icon[data-size="lg"]) {
+  --design-icon-glyph-size: var(--design-icon-size, var(--space-xl));
+}
+/* Labelled guide override, not a new global radius or padding default. */
+#contract-card-local {
+  --radius: var(--radius-xl);
+  --design-card-padding-inline: var(--space-base);
+  --design-card-padding-block: var(--space-md);
 }
 
 /* Identity conversion preserves exact brand colors without rounded OKLCH constants. */
@@ -231,7 +254,8 @@
 @supports (color: color-mix(in oklab, red, white)) {
   :root,
   :where(.ds-design-button),
-  :where(.ds-design-card) {
+  :where(.ds-design-card),
+  :where(.ds-design-icon) {
     --surface-canvas: color-mix(in oklab, var(--secondary) var(--surface-canvas-shade), var(--canvas));
     --surface-panel: color-mix(in oklab, var(--canvas) var(--surface-panel-mix), var(--surface));
     --edge-highlight: color-mix(in oklab, var(--surface) var(--edge-highlight-strength), transparent);
@@ -276,6 +300,7 @@
 }
 
 @theme static inline {
+  --spacing-design-icon-glyph: var(--design-icon-glyph-size);
   --background-image-design-wash: var(--design-gradient-soft);
   --color-design-primary: var(--primary);
   --color-design-primary-deep: var(--primary-hover);

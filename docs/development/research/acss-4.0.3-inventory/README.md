@@ -111,3 +111,5 @@ Observed research checks on this documentation delta:
 - Local Markdown link targets and `git diff --check` passed. DevCore doctor confirmed DEV and TEST connectivity without credential disclosure.
 
 The canonical engineering-gate result, final PR head and live delivery state belong in PR/Plane evidence. No fresh rendering, cross-engine, Hallmark or post-merge certification is claimed by this inventory. A documentation-only delta has no new Domain/interface/lifecycle/schema behavior and does not require a new capability map.
+
+Phase 3 implementation: [component contracts, token math, ownership, accessibility and proof limits](phase3-components.md). The Phase 1 source catalog remains historical.

@@ -73,6 +73,31 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     assert has_element?(view, "#design-system[phx-hook='DesignSystem']")
   end
 
+  test "component contract specimens use shared components and native states", %{conn: conn} do
+    {:ok, view, _} = live(conn, "/dev/design-system")
+    assert has_element?(view, "section#contracts")
+    assert has_element?(view, "nav a[href='#contracts']")
+    assert has_element?(view, "#contract-card-default > .ds-design-card-inset")
+
+    assert has_element?(
+             view,
+             "#contract-card-local[data-variant=raised] > .ds-design-card-actions a[href='#shape']"
+           )
+
+    assert has_element?(view, "#contract-icon-named[role=img][aria-label='Saved']")
+
+    assert has_element?(
+             view,
+             "#contract-icon-action[aria-label='Refresh specimens'] .ds-design-icon[aria-hidden=true]"
+           )
+
+    assert has_element?(view, "#contract-busy[aria-busy=true][disabled]")
+    refute has_element?(view, "#contracts article[tabindex]")
+    refute has_element?(view, "#contracts [data-disabled], #contracts [data-loading]")
+    {:ok, preview, _} = live(conn, "/dev/design-system/preview")
+    refute has_element?(preview, "#contracts")
+  end
+
   test "grid choices are bounded and survive reload through query parameters", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/dev/design-system")
 

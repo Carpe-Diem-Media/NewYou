@@ -2,6 +2,42 @@
 /* Critique: opt-in overhead lighting adds depth through fine edges and short shadows; flat defaults remain available. */
 
 @layer components {
+  .ds-design-card {
+    border-radius: var(--radius);
+    border-width: var(--design-border-width);
+    padding-inline: var(--design-card-padding-inline, var(--space-lg));
+    padding-block: var(--design-card-padding-block, var(--space-lg));
+    overflow-wrap: anywhere;
+  }
+  .ds-design-card > .ds-design-card-inset {
+    @apply p-design-base text-design-body-xs leading-design-body-xs;
+    min-width: 0;
+    border-radius: var(--design-card-inset-radius-x) / var(--design-card-inset-radius-y);
+    background: var(--surface-panel);
+    overflow: clip;
+  }
+  .ds-design-card > .ds-design-card-actions {
+    @apply flex flex-wrap items-center gap-design-base;
+    margin-block-start: auto;
+  }
+  .ds-design-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    vertical-align: middle;
+    color: inherit;
+  }
+  .ds-design-icon > .ds-design-icon-glyph {
+    flex: none;
+  }
+  .ds-design-icon[data-treatment="boxed"] {
+    padding: var(--design-icon-padding, var(--space-sm));
+    border: var(--design-border-width) solid var(--edge-side);
+    border-radius: var(--design-icon-radius, var(--radius-sm));
+    background: var(--surface-panel);
+  }
+
   .ds-design-button[data-treatment="lit"] {
     @apply gap-design-sm;
     max-width: 100%;
@@ -80,6 +116,7 @@
       color: var(--system-disabled-text);
       border-color: var(--system-disabled-text);
     }
+    .ds-design-icon[data-treatment="boxed"],
     .ds-design-card[data-variant="raised"] {
       border-color: var(--system-button-text);
       box-shadow: var(--shadow-flat);
