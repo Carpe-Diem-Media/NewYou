@@ -25,9 +25,11 @@ Documentation impact: no material Domain capability/schema/business interface or
 
 ## Steps
 
-- [ ] Write and run pure component RED for missing checkbox/fieldset and associated help; add browser RED for missing real shared markers. Capture output before application edits. Use `mix run --no-start` with DEV environment, no test_helper/application/DB startup.
-- [ ] Implement the shared helpers and token/CSS relationships. Run pure tests GREEN, compile/format and source checks. Test negative owned-attribute keys and no-help/password regressions.
-- [ ] Migrate the bounded existing markup and add the guide. Preserve text/order/transport snapshots. Build assets, then run dedicated browser contracts without POSTs and inspect phone/desktop captures.
-- [ ] Run supported Hallmark and broader available regressions; fix introduced failures. Obtain independent exact-source review. Commit the implementation before any granted final-source TEST/deep verification.
+- [x] Write and run pure component RED for missing checkbox/fieldset and associated help; add browser RED for missing real shared markers. Capture output before application edits. Use `mix run --no-start` with DEV environment, no test_helper/application/DB startup.
+- [x] Implement the shared helpers and token/CSS relationships. Run pure tests GREEN, compile/format and source checks. Test negative owned-attribute keys and no-help/password regressions.
+- [x] Migrate the bounded existing markup and add the guide. Preserve text/order/transport snapshots. Build assets, then run dedicated browser contracts without POSTs and inspect phone/desktop captures.
+- [x] Run supported Hallmark and broader available regressions; fix introduced failures. Obtain independent exact-source review. Commit the implementation before any granted final-source TEST/deep verification.
 - [ ] After explicit release and fresh grants, record activation, doctor, focused tests, one canonical check and separate deep check sequentially. Explicitly release TEST/PLT afterward. No reset or manual cleanup.
 - [ ] Record proof and exclusions, review final diff, update draft PR intent, push/link, generate/check fresh history, obtain final evidence review and leave the worktree clean. Keep WELL-114, inherited Hallmark, conflicts, CI and independent integration proof open.
+
+Implementation source is `6b03daf6207fcd2816f4b2f1e9a2e85d7f643ddf`. The [proof checkpoint](../../development/research/acss-4.0.3-inventory/pass5-native-forms.md#source-bound-proof-checkpoint) records observed checks and the pending resource grant. The checked Hallmark step means the checks ran and introduced findings were addressed; inherited registration gate 26a remains open. No fresh TEST/PLT grant or DB-backed Pass 5 result is claimed.
