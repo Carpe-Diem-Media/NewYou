@@ -6,6 +6,7 @@ Start with [identity.registration.json](identity.registration.json), the canonic
 
 - The JSON records under `history/`, named by PR number, record the exact PR change range, file status/modes/blob IDs/hashes, parseable Elixir declarations, changed tests and migrations. Each record describes historical changes, including removed source. GitHub supplies actual review, CI and merge status.
 - `<capability_id>.json` describes source-verified ownership, public Ash interfaces, flow, lifecycle, invariants, failure/recovery, proof limits and extension points. Maintain one map per meaningful capability. Use [capability.schema.json](capability.schema.json). The agent contributes semantic facts with source locators, without manually enumerating every changed file or function.
+- Interface entries require argument descriptions exactly when `arity` is nonzero. The JSON Schema expresses that relationship, and the repository's bounded validator enforces the declared schema subset.
 - The `index` and `query` commands compute a lookup view from the requested Git tree. They do not create a database or commit another index. Historical references do not certify that a past symbol still exists.
 
 ## Agent capture before final review

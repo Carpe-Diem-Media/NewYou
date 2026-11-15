@@ -7,7 +7,7 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "a423a269debb3890a356859d195d69fb0bbd6738",
+    "git_sha": "1593c26559f34547ec2c33ebc72416512515b025",
     "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1485,7 +1485,7 @@
       "id": "privacy",
       "path": "lib/new_you/privacy.ex",
       "symbol": "require_current_p817_proof_purpose_locked",
-      "sha256": "214f70d35fbb363b136dba1bc4d1fa345ef630fb03170fc981a8590c6e4a2104"
+      "sha256": "355c81a487c9ca14a138b8bae731f30ed104340500dbc95b8cb6a50d22f369df"
     },
     {
       "id": "privacy_proof_test",

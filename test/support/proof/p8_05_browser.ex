@@ -45,6 +45,45 @@ defmodule NewYou.Proof.P805Browser do
         )
 
       true = result["cleanup"]
+
+      result["checks"]
+    after
+      Supervisor.stop(server)
+    end
+  end
+
+  @doc "Run a Chromium session that retains its protected page after owner-authorized logout."
+  @spec run_stale_session(map(), String.t()) :: map()
+  def run_stale_session(request, locale) do
+    reference = make_ref()
+
+    {:ok, server} =
+      Bandit.start_link(
+        plug: {NewYou.Proof.P805Browser.Endpoint, {self(), reference}},
+        ip: {127, 0, 0, 1},
+        port: 0
+      )
+
+    {:ok, {_address, port}} = ThousandIsland.listener_info(server)
+
+    try do
+      payload =
+        Jason.encode!(%{
+          mode: "stale_session",
+          port: port,
+          locale: locale,
+          email: request.email,
+          password: request.password
+        })
+
+      result =
+        run_port(
+          System.find_executable("node"),
+          Path.expand("../../proof/p8_05_browser.mjs", __DIR__),
+          payload
+        )
+
+      true = result["cleanup"]
       result["checks"]
     after
       Supervisor.stop(server)
@@ -287,6 +326,7 @@ defmodule NewYou.Proof.P805Browser.Endpoint do
 
         response
       end)
+      |> Plug.Conn.put_private(:p8_08_browser_development_fixtures, true)
 
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo, sandbox: false)
 

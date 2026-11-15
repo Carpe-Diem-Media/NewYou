@@ -455,7 +455,7 @@ defmodule NewYou.Proof.RunnerTest do
         &Map.has_key?(Catalog.required().business_manifests, &1["coverage_id"])
       )
 
-    assert length(unavailable) == 4
+    assert length(unavailable) == 3
 
     assert Enum.all?(
              unavailable,

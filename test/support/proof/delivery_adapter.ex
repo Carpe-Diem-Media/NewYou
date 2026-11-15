@@ -5,7 +5,9 @@ defmodule NewYou.Proof.DeliveryAdapter do
   def checkpoint(point), do: NewYou.Proof.DeliverySeam.checkpoint(point)
 
   def authenticated?(attempt_id, outcome, evidence_ref, signature) do
-    key = Application.get_env(:new_you, :communications_proof_evidence_key)
+    key =
+      Process.get(:communications_proof_evidence_key) ||
+        Application.get_env(:new_you, :communications_proof_evidence_key)
 
     if is_binary(key) and byte_size(key) >= 32 and is_binary(signature) and
          byte_size(signature) == 32 do

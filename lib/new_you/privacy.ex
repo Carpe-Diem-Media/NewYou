@@ -14,6 +14,11 @@ defmodule NewYou.Privacy do
   @proof_purpose :p8_17_protected_mutation
   @proof_origin :p8_17_test_fixture
 
+  @type p817_proof_purpose_snapshot :: %{
+          required(:current_allowed_count) => non_neg_integer(),
+          required(:revision) => non_neg_integer()
+        }
+
   resources do
     resource PurposeAuthority
     resource PurposeEvent
@@ -94,6 +99,61 @@ defmodule NewYou.Privacy do
       _, _ -> {:error, :privacy_authority_unavailable}
     end
 
+    @doc "Return only the current allowed P8-17 proof-purpose count for a minimized Analytics projection."
+    @spec current_p817_proof_purpose_count() ::
+            {:ok, non_neg_integer()} | {:error, :privacy_authority_unavailable}
+    def current_p817_proof_purpose_count do
+      query =
+        Ash.Query.filter(PurposeAuthority, purpose == ^@proof_purpose and state == :allowed)
+
+      case Ash.count(query, domain: __MODULE__, authorize?: false) do
+        {:ok, count} -> {:ok, count}
+        {:error, _} -> {:error, :privacy_authority_unavailable}
+      end
+    rescue
+      _ -> {:error, :privacy_authority_unavailable}
+    catch
+      _, _ -> {:error, :privacy_authority_unavailable}
+    end
+
+    @doc """
+    Return the minimized P8-17 source snapshot for an Analytics projection.
+
+    Grants create authority version 1, terminal withdrawals increment it, and
+    this resource exposes no delete action. The sum of authority versions is
+    therefore monotonic for supported source mutations. State and version are
+    read together in one Ash query, so the snapshot comes from one statement
+    snapshot. The result contains no subject or operation identifiers.
+    """
+    @spec current_p817_proof_purpose_snapshot() ::
+            {:ok, p817_proof_purpose_snapshot()} | {:error, :privacy_authority_unavailable}
+    def current_p817_proof_purpose_snapshot do
+      query =
+        PurposeAuthority
+        |> Ash.Query.filter(purpose == ^@proof_purpose)
+
+      aggregates = [
+        {:current_allowed_count, :count, query: [filter: [state: :allowed]]},
+        {:revision, :sum, [field: :version, default: 0]}
+      ]
+
+      case Ash.aggregate(query, aggregates, domain: __MODULE__, authorize?: false) do
+        {:ok, %{current_allowed_count: count, revision: revision}}
+        when is_integer(count) and count >= 0 and is_integer(revision) and revision >= 0 ->
+          {:ok, %{current_allowed_count: count, revision: revision}}
+
+        {:error, _} ->
+          {:error, :privacy_authority_unavailable}
+
+        _ ->
+          {:error, :privacy_authority_unavailable}
+      end
+    rescue
+      _ -> {:error, :privacy_authority_unavailable}
+    catch
+      _, _ -> {:error, :privacy_authority_unavailable}
+    end
+
     @doc false
     def require_current_p817_proof_purpose_locked(subject_id, operation_id) do
       with :ok <- owner_read_checkpoint(),
@@ -117,6 +177,16 @@ defmodule NewYou.Privacy do
     end
   else
     def current_p817_proof_purpose(_, _), do: {:error, :privacy_authority_unavailable}
+
+    @doc "Return the current allowed P8-17 proof-purpose count without subject identifiers."
+    @spec current_p817_proof_purpose_count() ::
+            {:ok, non_neg_integer()} | {:error, :privacy_authority_unavailable}
+    def current_p817_proof_purpose_count, do: {:error, :privacy_authority_unavailable}
+
+    @doc "Return the current minimized P8-17 source snapshot for Analytics."
+    @spec current_p817_proof_purpose_snapshot() ::
+            {:ok, p817_proof_purpose_snapshot()} | {:error, :privacy_authority_unavailable}
+    def current_p817_proof_purpose_snapshot, do: {:error, :privacy_authority_unavailable}
 
     def require_current_p817_proof_purpose_locked(_, _),
       do: {:error, :privacy_authority_unavailable}

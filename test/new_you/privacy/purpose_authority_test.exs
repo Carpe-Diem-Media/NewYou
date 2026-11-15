@@ -163,6 +163,55 @@ defmodule NewYou.Privacy.PurposeAuthorityTest do
     end)
   end
 
+  test "Ash proof actions cannot commit a caller-selected authority version" do
+    P805.with_fixture(fn ->
+      subject_id = Ecto.UUID.generate()
+      operation_id = Ecto.UUID.generate()
+      P805.track_operation(operation_id)
+      assert {:ok, baseline} = Privacy.current_p817_proof_purpose_snapshot()
+
+      assert {:error, _reason} =
+               Ash.transact([PurposeAuthority], fn ->
+                 Ash.create(
+                   PurposeAuthority,
+                   %{
+                     subject_id: subject_id,
+                     source_operation_id: operation_id,
+                     purpose: :p8_17_protected_mutation,
+                     state: :allowed,
+                     origin: :p8_17_test_fixture,
+                     version: 9
+                   },
+                   action: :grant_proof_only,
+                   authorize?: false
+                 )
+               end)
+
+      assert {:ok, :missing} = Privacy.current_p817_proof_purpose(subject_id, operation_id)
+      assert {:ok, :allowed} = Privacy.grant_p817_proof_purpose(subject_id, operation_id)
+
+      authority =
+        PurposeAuthority
+        |> Ash.Query.filter(subject_id == ^subject_id and source_operation_id == ^operation_id)
+        |> Ash.read_one!(authorize?: false)
+
+      assert {:error, _reason} =
+               Ash.transact([PurposeAuthority], fn ->
+                 Ash.update(
+                   authority,
+                   %{version: authority.version + 9},
+                   action: :withdraw_proof_only,
+                   authorize?: false
+                 )
+               end)
+
+      assert {:ok, snapshot} = Privacy.current_p817_proof_purpose_snapshot()
+      assert snapshot.revision == baseline.revision + 1
+      assert snapshot.current_allowed_count == baseline.current_allowed_count + 1
+      assert {:ok, :allowed} = Privacy.current_p817_proof_purpose(subject_id, operation_id)
+    end)
+  end
+
   test "PostgreSQL rejects an initial withdrawn authority even with matching history" do
     P805.with_fixture(fn ->
       subject_id = Ecto.UUID.generate()

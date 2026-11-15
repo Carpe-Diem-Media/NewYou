@@ -70,7 +70,13 @@ config :spark,
 
 config :new_you,
   ecto_repos: [NewYou.Repo],
-  ash_domains: [NewYou.Communications, NewYou.Identity, NewYou.Audit, NewYou.Privacy],
+  ash_domains: [
+    NewYou.Analytics,
+    NewYou.Communications,
+    NewYou.Identity,
+    NewYou.Audit,
+    NewYou.Privacy
+  ],
   generators: [timestamp_type: :utc_datetime]
 
 # SQL query parameters can contain Identity credential verifiers.

@@ -493,10 +493,11 @@ defmodule NewYou.Identity.Reconciliation do
     # This bounded phase has only these implemented business owners. A later
     # Domain must supply its own review before it can participate in apply.
     # Privacy is registered for the P8-17 proof purpose but does not participate
-    # in reconciliation or own any reconciliation consequence.
+    # in reconciliation or own any reconciliation consequence. Analytics owns
+    # only derived projections and likewise contributes no reconciliation truth.
     with true <-
            Enum.sort(Application.get_env(:new_you, :ash_domains, [])) ==
-             Enum.sort([Identity, Communications, Audit, NewYou.Privacy]),
+             Enum.sort([Identity, Communications, Audit, NewYou.Privacy, NewYou.Analytics]),
          {:ok, communications} <-
            Communications.review_identity_reconciliation(
              current.candidate_id,

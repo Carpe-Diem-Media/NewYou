@@ -13,6 +13,7 @@ defmodule NewYou.BootstrapTest do
     assert Application.fetch_env!(:new_you, :ecto_repos) == [NewYou.Repo]
 
     assert Application.fetch_env!(:new_you, :ash_domains) == [
+             NewYou.Analytics,
              NewYou.Communications,
              NewYou.Identity,
              NewYou.Audit,
