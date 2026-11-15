@@ -2,6 +2,7 @@ defmodule NewYouWeb.MagicLoginController do
   use NewYouWeb, :controller
 
   alias NewYou.Identity
+  alias NewYouWeb.{DevelopmentEntry, SignInCopy}
 
   @development_environment Mix.env() in [:dev, :test]
   @verification_development_fixtures Application.compile_env(
@@ -49,9 +50,10 @@ defmodule NewYouWeb.MagicLoginController do
         |> clear_session()
         |> put_session(:identity_session_id, id)
         |> put_session(:identity_token, token)
+        |> put_session(:identity_locale, locale)
         |> security_headers()
         |> put_status(:see_other)
-        |> redirect(to: "/")
+        |> redirect(to: "/session/protected")
 
       _ ->
         render_page(conn, :confirmation_result, locale, %{})
@@ -68,7 +70,9 @@ defmodule NewYouWeb.MagicLoginController do
          @development_environment,
          :erlang.andalso(
            @verification_development_fixtures == true,
-           Application.get_env(:new_you, :p8_09_browser_development_fixtures) == true
+           SignInCopy.available?() and
+             (DevelopmentEntry.enabled?() or
+                Application.get_env(:new_you, :p8_09_browser_development_fixtures) == true)
          )
        ) do
       conn

@@ -1614,12 +1614,14 @@ defmodule NewYou.Proof.SelfTest do
         expression = """
         Application.put_env(:new_you, :proof, %{enabled: true})
         for key <- [:fp001_development_entry, :verification_development_fixtures,
-                    :p8_05_browser_development_fixtures],
+                    :p8_05_browser_development_fixtures, :p8_08_browser_development_fixtures,
+                    :p8_09_browser_development_fixtures],
           do: Application.put_env(:new_you, key, true)
         Application.put_env(:new_you, :p8_07_browser_development_fixtures, "p8-07-temporary-v1")
         if Application.get_env(:new_you, :proof) != %{enabled: true} or
              Code.ensure_loaded?(NewYou.Proof.Runner) or
              NewYouWeb.DevelopmentEntry.enabled?() or NewYou.Content.EntryCopy.available?() or
+             NewYou.Content.SignInCopy.available?() or
              NewYouWeb.VerificationCopy.enabled?() or
              NewYou.Content.Registration.legal_versions() != {:error, :content_ineligible},
           do: System.halt(1)

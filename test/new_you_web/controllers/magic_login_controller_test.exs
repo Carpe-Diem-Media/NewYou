@@ -189,7 +189,7 @@ defmodule NewYouWeb.MagicLoginControllerTest do
         })
 
       assert confirmation.status == 303
-      assert get_resp_header(confirmation, "location") == ["/"]
+      assert get_resp_header(confirmation, "location") == ["/session/protected"]
       refute confirmation.resp_body =~ proof
       assert is_binary(get_session(confirmation, :identity_session_id))
       assert is_binary(get_session(confirmation, :identity_token))

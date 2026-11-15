@@ -112,9 +112,72 @@ try {
     await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.email)}; document.querySelector('[name="password"]').value=${JSON.stringify(input.password)};`);
     await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
     checks.protected_page_loaded = await evaluate(`location.pathname === '/session/protected'`);
-    checks.logout_completed = await evaluate(`(async () => { const html = await fetch(${loginPathLiteral}, {cache: 'no-store'}).then(r => r.text()); const form = new DOMParser().parseFromString(html, 'text/html'); const csrf = form.querySelector('form[action="/login"] [name="_csrf_token"]')?.value; if (!csrf) return false; const response = await fetch('/session/logout', {method: 'POST', headers: {'content-type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams({_csrf_token: csrf})}); return response.status === 204; })()`);
+    checks.logout_completed = await evaluate(`(async () => { const html = await fetch(${loginPathLiteral}, {cache: 'no-store'}).then(r => r.text()); const form = new DOMParser().parseFromString(html, 'text/html'); const csrf = form.querySelector('form[action="/login"] [name="_csrf_token"]')?.value; if (!csrf) return false; const response = await fetch('/session/logout', {method: 'POST', headers: {'content-type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams({_csrf_token: csrf})}); const doc = new DOMParser().parseFromString(await response.text(), 'text/html'); return response.status === 200 && doc.querySelector('h1')?.textContent.trim() === ${JSON.stringify(JSON.parse(readFileSync('docs/development/fixtures/well134-c01-v0.1.json', 'utf8')).entries['identity.session.logout.confirmed.title'][input.locale].text)}; })()`);
     checks.reconnect_denied = await evaluate(`fetch('/session/protected', {cache: 'no-store'}).then(r => r.status === 401)`);
     checks.stale_page_retained = await evaluate(`location.pathname === '/session/protected'`);
+  } else if (input.mode === 'signin') {
+    const approved = JSON.parse(readFileSync('docs/development/fixtures/well134-c01-v0.1.json', 'utf8'));
+    const text = key => approved.entries[key][input.locale].text;
+    const literal = key => JSON.stringify(text(key));
+    const hasTitle = key => evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && document.querySelector('h1')?.textContent.trim() === ${literal(key)}`);
+    const passwordSubmit = async password => {
+      await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.input.email)}; document.querySelector('[name="password"]').value=${JSON.stringify(password)};`);
+      await navigation(() => evaluate(`document.querySelector('#password-login').requestSubmit()`));
+    };
+    await navigation(() => cdp('Page.navigate', {url: `${base}/?locale=${input.locale}`}));
+    checks.normal_navigation = await evaluate(`!!document.querySelector('a[href="/login?locale=${input.locale}"]')`);
+    await navigation(() => evaluate(`document.querySelector('a[href="/login?locale=${input.locale}"]').click()`));
+    checks.locale = await hasTitle('identity.login.title');
+    for (let tab = 0; tab < 5 && !(await evaluate(`document.activeElement.id === 'email'`)); tab++) {
+      await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+      await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    }
+    checks.focus = await evaluate(`document.activeElement.id === 'email' && document.activeElement.matches(':focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2 && !!document.querySelector('label[for="email"]') && !!document.querySelector('label[for="password"]')`);
+    checks.responsive = true;
+    await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+    checks.reduced_motion = await evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0`);
+    checks.stylesheet_loaded = await evaluate(`document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
+    for (const width of [320, 375, 768, 1280, 1920]) {
+      await cdp('Emulation.setDeviceMetricsOverride', {width, height: 900, deviceScaleFactor: 1, mobile: width < 768});
+      checks.responsive = checks.responsive && await evaluate(`document.documentElement.scrollWidth <= innerWidth && document.querySelector('button').getBoundingClientRect().width > 0`);
+    }
+    checks.text_resize = await evaluate(`(() => { document.documentElement.style.fontSize = '200%'; const fits = document.documentElement.scrollWidth <= innerWidth; document.documentElement.style.fontSize = ''; return fits; })()`);
+    await passwordSubmit('incorrect-test-password');
+    checks.invalid_correction = await evaluate(`document.querySelector('#sign-in-error')?.textContent.trim() === ${literal('identity.login.credential_failure')} && document.querySelector('#password').value === ''`);
+    await passwordSubmit(input.input.password);
+    checks.password = await hasTitle('identity.session.protected.title');
+    await navigation(() => cdp('Page.reload'));
+    checks.protected_reload = await hasTitle('identity.session.protected.title') && await evaluate(`fetch('/session/protected').then(r => r.status === 200)`);
+    checks.unfinished = await evaluate(`Promise.all(['/checkout','/assessment','/health','/support'].map(path => fetch(path).then(r => [401,404].includes(r.status)))).then(values => values.every(Boolean))`);
+    const {cookies: priorCookies} = await cdp('Network.getCookies', {urls: [base]});
+    await navigation(() => evaluate(`document.querySelector('#session-logout').requestSubmit()`));
+    checks.logout = await hasTitle('identity.session.logout.confirmed.title');
+    await cdp('Network.setCookies', {cookies: priorCookies.map(cookie => ({name: cookie.name, value: cookie.value, url: base, path: cookie.path, secure: cookie.secure, httpOnly: cookie.httpOnly, sameSite: cookie.sameSite, ...(cookie.expires > 0 ? {expires: cookie.expires} : {})}))});
+    await navigation(() => cdp('Page.navigate', {url: `${base}/session/protected?locale=${input.locale}`}));
+    checks.stale_cookie = await evaluate(`document.querySelector('#sign-in-error')?.textContent.trim() === ${literal('identity.session.reauthentication_required')} && !!document.querySelector('#password-login')`);
+    await navigation(() => evaluate(`document.querySelector('a[href="/login/magic?locale=${input.locale}"]').click()`));
+    const operation = await evaluate(`document.querySelector('[name="operation_id"]').value`);
+    operations.push(operation);
+    await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.input.email)}`);
+    await navigation(() => evaluate(`document.querySelector('#magic-login-request').requestSubmit()`));
+    checks.magic_request = await hasTitle('identity.magic.request.result.title');
+    const response = await fetch(`${base}/__well134/delivery?${new URLSearchParams({operation})}`);
+    if (!response.ok) throw new Error('browser.protocol');
+    const {proof} = await response.json();
+    const confirmation = `${base}/login/magic/confirm?${new URLSearchParams({proof, locale: input.locale})}`;
+    const head = await fetch(confirmation, {method: 'HEAD'});
+    await navigation(() => cdp('Page.navigate', {url: confirmation}));
+    checks.passive_confirmation = head.status === 200 && await hasTitle('identity.magic.confirm.title');
+    await navigation(() => evaluate(`document.querySelector('#magic-login-confirmation').requestSubmit()`));
+    checks.magic_sign_in = await hasTitle('identity.session.protected.title');
+    await navigation(() => evaluate(`document.querySelector('#session-logout').requestSubmit()`));
+    await navigation(() => cdp('Page.navigate', {url: confirmation}));
+    await navigation(() => evaluate(`document.querySelector('#magic-login-confirmation').requestSubmit()`));
+    checks.magic_replay = await hasTitle('identity.magic.confirm.unavailable.title');
+    await navigation(() => evaluate(`document.querySelector('a[href="/login/magic?locale=${input.locale}"]').click()`));
+    await navigation(() => evaluate(`document.querySelector('a[href="/login?locale=${input.locale}"]').click()`));
+    await passwordSubmit(input.input.password);
+    checks.recovery = await hasTitle('identity.session.protected.title');
   } else if (input.mode === 'password_reset') {
     await cdp('Emulation.setDeviceMetricsOverride', {width: 375, height: 800, deviceScaleFactor: 1, mobile: true});
     await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});

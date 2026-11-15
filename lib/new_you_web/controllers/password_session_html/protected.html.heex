@@ -1,0 +1,22 @@
+<.auth_shell
+  title={Copy.text!("identity.session.protected.title", @locale)}
+  locale={@locale}
+  locale_path="/session/protected"
+>
+  <p role="status" class="max-w-prose text-design-body-sm leading-design-body-sm">
+    {Copy.text!("identity.session.protected.status", @locale)}
+  </p>
+  <p class="max-w-prose text-design-body-sm leading-design-body-sm">
+    {Copy.text!("identity.session.protected.body", @locale)}
+  </p>
+  <.form
+    for={%{}}
+    action="/session/logout"
+    method="post"
+    id="session-logout"
+    class="grid gap-design-base justify-items-start"
+  >
+    <input type="hidden" name="locale" value={@locale} />
+    <.primary_button type="submit">{Copy.text!("shared.navigation.logout", @locale)}</.primary_button>
+  </.form>
+</.auth_shell>
