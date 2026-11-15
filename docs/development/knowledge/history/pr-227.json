@@ -30,14 +30,14 @@
       "status": "modified"
     },
     {
-      "blob": "7fe21d7078a50a1609f06402d965165823f46409",
+      "blob": "38f398e5f2976ff537f07ece7bebdf56359e8063",
       "mode": "100644",
       "old_blob": "b8f66ed5e28fd682bf40de67fcf7b0748cdc3d12",
       "old_mode": "100644",
       "old_path": "DESIGN.md",
       "old_sha256": "ffb88c9e8997e997dc75f47783f8a70a919c39a6f0b62b4e656e6e84777b1aed",
       "path": "DESIGN.md",
-      "sha256": "ea84ffd9f37cd295c3e92e126adc94f2f18ed2de17339b7e328aaeb57fcfe2a5",
+      "sha256": "f3e67d15781494edfd0f4a8c8a144e03a276925f9097aea22b41da4d965ed370",
       "status": "modified"
     },
     {
@@ -52,25 +52,25 @@
       "status": "modified"
     },
     {
-      "blob": "c3918d76ca36b50bab621d6b473a0b61107ff576",
+      "blob": "149fdf66f74d7ab32481790d37b6bb92941e96d8",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/css/design-components.css",
-      "sha256": "42ae152a48065b3ea5942cd2d7151604490b2c10bdb51f6426f046de1097e7c2",
+      "sha256": "eee76f580811c93be51230c5abb70827ab74f7005c7d41cc510cfecd0ef34abc",
       "status": "added"
     },
     {
-      "blob": "894f97cc94ea1d5dcf5564a28bdbfdf7d8fd5b33",
+      "blob": "864a13082f0dbc0e983ef5c5274cdf1a2c7b15b7",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/css/design-content.css",
-      "sha256": "d802f60485959d77fc2c07ff618e8c7c078c9b42e4115db18fcece01499d5b3e",
+      "sha256": "1c251f2180a81336a2bdd27017df731ab455b7ff5b288556ba9d4bd0a6974a36",
       "status": "added"
     },
     {
@@ -107,14 +107,14 @@
       "status": "added"
     },
     {
-      "blob": "ab04d31819288aa8c35d001e3726c980480c5004",
+      "blob": "eb71edfe3ec0a7a6f69adfaaf16c039e6770600b",
       "mode": "100644",
       "old_blob": "53acbf1c16b0dbfda02da449aae8b22155ec4ed4",
       "old_mode": "100644",
       "old_path": "assets/css/design-tokens.css",
       "old_sha256": "1ff08b553dee7f8427f22387a78aeba909c4be0165baa1b96d909b5ca42b8729",
       "path": "assets/css/design-tokens.css",
-      "sha256": "5b29888c62c4fbe15b356dfabe53cb19a6a05d72993dacce501f57d59e7b25a2",
+      "sha256": "e9187eb644ec94b8f4bca2f77f9fc0a1204a5f90de7da7a9676261add087cfc3",
       "status": "modified"
     },
     {
@@ -162,25 +162,25 @@
       "status": "added"
     },
     {
-      "blob": "b812d30409f002eb2325d98fe0b29fd1f37d8df6",
+      "blob": "4534d3282d08023cbac179a063c62b19e9e9b64a",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "c071c945e537434e2e2159cc3faa94cfea4d882df2fbde475004a125b0753e4e",
+      "sha256": "9d6be65f21c60751e3dee06f2b7d6ff58e42e02712835c6720b2a5be822e726c",
       "status": "modified"
     },
     {
-      "blob": "920b5c59d936ce65d28e8a697923c5bf5122d0b0",
+      "blob": "f74973194149ffd55ca967aadb6b4cde0848d6f8",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/README.md",
-      "sha256": "4f8498948ac37d09ebac6c7c1c5d439f566b16ad244081e67d82ec1a59ed7fcc",
+      "sha256": "7c0f30ba4949f8401b072bb0c2cf9586585d43423f94373e9a2c61b717e359a5",
       "status": "added"
     },
     {
@@ -217,14 +217,14 @@
       "status": "added"
     },
     {
-      "blob": "ea67e26bbca341afd6dc7c4f782fd8fb75b5c2f9",
+      "blob": "df31dae825431c6d39d109e0726b65b44c075f50",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/next-passes.md",
-      "sha256": "d6c36f30a965b53d013b1b6a4cdd122ab167d20abcd10a8c41a89c5447a7d270",
+      "sha256": "bd913d7823423d36580172f81c8cbe13f7c484f0dac1f376818f8836e4fd7732",
       "status": "added"
     },
     {
@@ -236,6 +236,17 @@
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/pass1-typography.md",
       "sha256": "65fce7ab644911f42ba8894753ccb498a952b4e2b7bc1da0724af784687dc830",
+      "status": "added"
+    },
+    {
+      "blob": "2402d115c16feddb2b18bb4d1e96a19fc4792b31",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/pass2-content.md",
+      "sha256": "87bd1527e883ee239efde54c945272526fcf9feb93459bafae3f4d8641f90a8b",
       "status": "added"
     },
     {
@@ -283,14 +294,14 @@
       "status": "added"
     },
     {
-      "blob": "d602005fb893d0bf0481f7cec39756709943ddf1",
+      "blob": "33935f136041ce0cd99589980bc229b377583336",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/phase5-content.md",
-      "sha256": "b581670ebd35ea259c93fd0498466d16c4d54499b13739a5f62fce8128bc4a9e",
+      "sha256": "07864278f0090bdbae0a26a6d5938700ccd7e35365a8762afaad93bd801c3dfd",
       "status": "added"
     },
     {
@@ -437,6 +448,17 @@
       "status": "added"
     },
     {
+      "blob": "c174b37044d5c154ec185c7f0b2b3446047be739",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/superpowers/plans/2026-11-15-contextual-spacing.md",
+      "sha256": "f89356d7b8c056d796041ccfff959de94cd905529a4db1073344fa98dae0a4f4",
+      "status": "added"
+    },
+    {
       "blob": "a29813ad581f7db97696cec87c7b1f0495da65b1",
       "mode": "100644",
       "old_blob": null,
@@ -503,14 +525,14 @@
       "status": "modified"
     },
     {
-      "blob": "f40626541de168374ae3ad3ef1bdcf0a34b5b786",
+      "blob": "ce0933fe4fb395a329bda9b84eee9bb6f8a03a77",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "055bf7c9eb268165fa72ca964e478fdd76719c1ce80c467e635df1504459c307",
+      "sha256": "08d417455b972df8dcd3a6a41e54011a695ebc2898fd98cc6ded28a03bc48d82",
       "status": "added"
     },
     {
@@ -624,14 +646,14 @@
       "status": "added"
     },
     {
-      "blob": "3ff9b436eafe1892e3a1f9c7b1bd69022f217813",
+      "blob": "2f8ad3f9e4cf03ec441663ca9a830f8cce3d5cf9",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_content.ex",
-      "sha256": "1ec9755945f4614f9dce3b9b76af1b94cf2771917972cbfc8594b62a2fda84a8",
+      "sha256": "d586c0156306ce62f49b5cd85497b2bdb7eaf94117b5f323ec1267926e9a8092",
       "status": "added"
     },
     {
@@ -734,14 +756,14 @@
       "status": "added"
     },
     {
-      "blob": "770ee5540e5f4f5c6d50158f8e1b02904c213ef7",
+      "blob": "6737abb110b951fbf3d1d1ab8ce050a0915f4649",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_compatibility_browser.mjs",
-      "sha256": "ddd424f1f100af7ff32936ed457e7cc23a7f9bc17553682f5dd715bbfeef53fa",
+      "sha256": "c2fc99999d539d0d7cf840a259b0cb2aea0ad71145286accbadd5bc4ea041130",
       "status": "added"
     },
     {
@@ -756,14 +778,25 @@
       "status": "added"
     },
     {
-      "blob": "791dacfd037815489487ddf6b2c8c587f174bc02",
+      "blob": "4a9f74f6bab805792df8e500f2f0e966edc0cf16",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_content_browser.mjs",
-      "sha256": "a116e36028412b71b0ab620673b415c7b200502a4f863808deea54d4d550e5e5",
+      "sha256": "ea96c718940587ad14b1fceed008b2c53e19db38a032a958abf32cb112568308",
+      "status": "added"
+    },
+    {
+      "blob": "87c60cae1ff0808fa692e11a760706109466fef0",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_content_contract.mjs",
+      "sha256": "f796a985b68ee20cf8a0c1d5ae279dfd4622471030d148bd46d4ff64cca0908f",
       "status": "added"
     },
     {
@@ -910,14 +943,14 @@
       "status": "modified"
     },
     {
-      "blob": "86e402e9efec3b3b4e4e9fbe424f8e1464a6a469",
+      "blob": "4693bfae4a3d34b2d2dca437ff182c99a947f940",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/design_component_contracts_test.exs",
-      "sha256": "754d8a64f7cede9d92f170fc286084838295aefc39861b023878bb172009035e",
+      "sha256": "b4bd9f5e0bb74a88d4ea26205a2db1513c93651bf34f62f724f1542b63c1105f",
       "status": "added"
     },
     {
@@ -943,14 +976,14 @@
       "status": "modified"
     },
     {
-      "blob": "f95f2db79347d963a6f9048c565804a1e53c3679",
+      "blob": "7a2bb5854b03d9501f0c18e0fca7511b9bc6f75e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "85518a2a47d3194d31398eaf8195ea5be47672c620752072daba289beb1f5174",
+      "sha256": "aec963f0dacba0ab4c49ac82ecc4724124907b0ceb920481a315ce25fc14cf75",
       "status": "added"
     },
     {
@@ -1004,13 +1037,13 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.\n\nPhase 1 ACSS research now inventories all ten requested systems: grid, auto-grid, shadows, radius, gutter, content width, breakout, icons, cards and data attributes. Source-linked notes record inputs, formulas, gated token/selector output, dependencies, NewYou coverage, proposed decisions and 26 concrete proof items. A catalog binds 74 source files and 104 locators to the supplied archive and NewYou baseline. Eight systems are proposed adaptations, component-owned attributes are retained selectively, and breakout remains deferred without a current consumer. No runtime, token or visual change is introduced by this documentation batch.\n\nPhase 2 adds a layout lab within the existing guide: fixed grids, intrinsic auto-fit/auto-fill with a live column limit, capped containers, single-owner gutters and seven-track breakout comparisons. Bounded URL-backed controls vary allocation, item count and fixed-grid remainder alignment. Four guide-only CSS inputs own the candidate dimensions; the design gate validates their units, bounds, uniqueness and integer column count. Recipes compute from local inputs, without JS sizing formulas or a production layout migration. Phase 2 notes link implementation seams, formulas, source research and remaining proof.\n\nPhase 3 completes bounded card and icon presentation contracts. Cards add explicit leading/inset/action slots and heading levels while remaining noninteractive articles. Token-sized Heroicons add decorative/named semantics and plain/boxed variants. Consumer-local formulas derive inset corner radii from outer radius, uniform border and per-axis padding. Native actions keep HTML/ARIA state ownership. The guide shows actual shared components, isolated local overrides and a pending-state comparison. Flat defaults, palette, radius tiers and the lit primary shine remain intact; no media/avatar framework, global auto-radius, inverted corners or shadow ladder is added. Mask artwork follows system text ink in forced colors, with a bounded system-ink fallback. Detailed ownership, formulas, accessibility rules and proof limits live in the Phase 3 addendum.\n\nPhase 4 migrates the actual development-gated registration template in EN/AF to the same flat card, decorative icon, text link and lit primary components. A bounded native text/email/password field helper also renders in the guide. Container and auto-fit declarations are shared by guide and application; stack/wrapping-row recipes and optional local cap/grid inputs now have a real consumer. Exact copy, transport, CSRF/operation IDs, age/legal facts, password handling, controller/Domain behavior and release gates remain intact. Only the opted-in pilot excludes legacy registration styles and uses the approved light palette under either legacy theme. The addendum records formulas, field ownership, adopted versus deferred recipes and proof limits. This does not release registration or implement the broader WELL-131 journey.\n\nPhase 5 adds contextual content/section/control spacing roles, a scoped block-flow prose recipe and shared native/decorative divider recipes. The existing guide includes EN/AF prose, nested lists and quotations, computed role readouts, semantic hr and local-override specimens. The registration pilot consumes the same recipes around unchanged safety/privacy text and legal-item groups, preserving the existing 49px separator transitions. Legal routes continue to serve byte-identical hash-checked artifacts. Palette, typography roles, card inputs and premium CTA shine remain intact. No global prose reset, builder-specific interpreter, fluid promotion, new dependency or broader participant journey is added. Detailed source findings and equations are recorded in the Phase 5 addendum.\n\nA proof-only continuation adds an explicit Chrome/Firefox compatibility runner for actual layout geometry, shared card/icon/prose/divider contracts, contextual tokens, fluid interpolation and shipped fallbacks, and EN/AF registration. The registration browser test now snapshots every original font size before applying exact 200% text sizing, preventing inherited nested links from being compounded to 400%. Application source and approved visuals remain unchanged. Native no-JavaScript proof uses separately owned Firefox profiles. The runner records the inherited Chrome Hallmark shadow-focus diagnosis and unresolved Firefox DEV reload diagnostics explicitly.\n\nThe next-pass roadmap now places endpoint-first modular typography with the existing native `progress()` engine and fallbacks ahead of the remaining contextual spacing/prose, border, surface, native form, bounded page-adoption and diagnostics passes. It records source seams, verification work and exit checks. This documentation update changes no runtime CSS or approval state.\n\nThe typography pass adds guide-only endpoint-first modular scales for body and heading families, each with separate mobile/desktop bases and ratios and six steps. It reuses the shipped progress/trigonometric/static engine, validates source inputs and derived arithmetic, and exposes separate candidate semantic Tailwind mappings. `/dev/design-system#type-scale` compares all twelve current roles with candidates, includes computed endpoints, scoped/step overrides and long EN/AF specimens. Production typography, the application preview, registration and the premium CTA remain unchanged. Detailed editing and proof contracts are in the typography pass addendum.",
+    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.\n\nPhase 1 ACSS research now inventories all ten requested systems: grid, auto-grid, shadows, radius, gutter, content width, breakout, icons, cards and data attributes. Source-linked notes record inputs, formulas, gated token/selector output, dependencies, NewYou coverage, proposed decisions and 26 concrete proof items. A catalog binds 74 source files and 104 locators to the supplied archive and NewYou baseline. Eight systems are proposed adaptations, component-owned attributes are retained selectively, and breakout remains deferred without a current consumer. No runtime, token or visual change is introduced by this documentation batch.\n\nPhase 2 adds a layout lab within the existing guide: fixed grids, intrinsic auto-fit/auto-fill with a live column limit, capped containers, single-owner gutters and seven-track breakout comparisons. Bounded URL-backed controls vary allocation, item count and fixed-grid remainder alignment. Four guide-only CSS inputs own the candidate dimensions; the design gate validates their units, bounds, uniqueness and integer column count. Recipes compute from local inputs, without JS sizing formulas or a production layout migration. Phase 2 notes link implementation seams, formulas, source research and remaining proof.\n\nPhase 3 completes bounded card and icon presentation contracts. Cards add explicit leading/inset/action slots and heading levels while remaining noninteractive articles. Token-sized Heroicons add decorative/named semantics and plain/boxed variants. Consumer-local formulas derive inset corner radii from outer radius, uniform border and per-axis padding. Native actions keep HTML/ARIA state ownership. The guide shows actual shared components, isolated local overrides and a pending-state comparison. Flat defaults, palette, radius tiers and the lit primary shine remain intact; no media/avatar framework, global auto-radius, inverted corners or shadow ladder is added. Mask artwork follows system text ink in forced colors, with a bounded system-ink fallback. Detailed ownership, formulas, accessibility rules and proof limits live in the Phase 3 addendum.\n\nPhase 4 migrates the actual development-gated registration template in EN/AF to the same flat card, decorative icon, text link and lit primary components. A bounded native text/email/password field helper also renders in the guide. Container and auto-fit declarations are shared by guide and application; stack/wrapping-row recipes and optional local cap/grid inputs now have a real consumer. Exact copy, transport, CSRF/operation IDs, age/legal facts, password handling, controller/Domain behavior and release gates remain intact. Only the opted-in pilot excludes legacy registration styles and uses the approved light palette under either legacy theme. The addendum records formulas, field ownership, adopted versus deferred recipes and proof limits. This does not release registration or implement the broader WELL-131 journey.\n\nPhase 5 adds contextual content/section/control spacing roles, a scoped block-flow prose recipe and shared native/decorative divider recipes. The existing guide includes EN/AF prose, nested lists and quotations, computed role readouts, semantic hr and local-override specimens. The registration pilot consumes the same recipes around unchanged safety/privacy text and legal-item groups, preserving the existing 49px separator transitions. Legal routes continue to serve byte-identical hash-checked artifacts. Palette, typography roles, card inputs and premium CTA shine remain intact. No global prose reset, builder-specific interpreter, fluid promotion, new dependency or broader participant journey is added. Detailed source findings and equations are recorded in the Phase 5 addendum.\n\nA proof-only continuation adds an explicit Chrome/Firefox compatibility runner for actual layout geometry, shared card/icon/prose/divider contracts, contextual tokens, fluid interpolation and shipped fallbacks, and EN/AF registration. The registration browser test now snapshots every original font size before applying exact 200% text sizing, preventing inherited nested links from being compounded to 400%. Application source and approved visuals remain unchanged. Native no-JavaScript proof uses separately owned Firefox profiles. The runner records the inherited Chrome Hallmark shadow-focus diagnosis and unresolved Firefox DEV reload diagnostics explicitly.\n\nThe next-pass roadmap now places endpoint-first modular typography with the existing native `progress()` engine and fallbacks ahead of the remaining contextual spacing/prose, border, surface, native form, bounded page-adoption and diagnostics passes. It records source seams, verification work and exit checks. This documentation update changes no runtime CSS or approval state.\n\nThe typography pass adds guide-only endpoint-first modular scales for body and heading families, each with separate mobile/desktop bases and ratios and six steps. It reuses the shipped progress/trigonometric/static engine, validates source inputs and derived arithmetic, and exposes separate candidate semantic Tailwind mappings. `/dev/design-system#type-scale` compares all twelve current roles with candidates, includes computed endpoints, scoped/step overrides and long EN/AF specimens. Production typography, the application preview, registration and the premium CTA remain unchanged. Detailed editing and proof contracts are in the typography pass addendum.\n\nPass 2 finishes contextual card spacing and scoped prose. Shared cards consume separate content/action gap roles at their existing 16px defaults; padding, inset radii, prose and controls retain independent owners. The guide adds native quotation figures/captions, explicit nested flow wrappers and actual shared card comparisons with long EN/AF content. Scoped caption spacing uses existing type/spacing tokens. Current production typography, legal response bytes, registration behavior and the premium CTA are preserved. No new page, parser, media/crop framework, dependency or business state is introduced. The Pass 2 addendum records source findings, formulas, cascade limits, actual consumers and the missing standalone rich-content consumer for later adoption.",
     "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-15T18:47:37.191Z",
+    "checked_at": "2026-11-15T19:15:18.619235Z",
     "items": [
       {
         "description_sha256": "0dc493ca6de6c09b18c612c4e99a22e8df9ec8c05068ee6352532f229e756442",
@@ -1258,7 +1291,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "16d8e9ddc8a4bbf69ec246e9a877c4a323388876d1cf180871a636b90dbcc584",
+      "sha256": "3473f714b063554362eb898f7b3126285549fa77e68f01656b872484a79eb7e9",
       "status": "parsed"
     },
     {
@@ -1270,7 +1303,7 @@
       "name": "design_card",
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "a7d4155df080b7abafc05da7a078846908eb8e0b376910cbd9505a9ab26b1ee5",
+      "sha256": "992cd5dfd84ff5b106cf971d7f7b8092dd3e37e3921b069c6234aad86abc040e",
       "status": "parsed",
       "visibility": "public"
     },
@@ -1689,7 +1722,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_content.ex",
-      "sha256": "822aafc77fa43a137e5eebc9b1cceb2d9f1b65dc3332f344a793e2677e161b00",
+      "sha256": "5b5acbcb47b8e8fc9d488fbc44d22dfe1d8ca87439e17664f7e59680d8d094c0",
       "status": "parsed"
     },
     {
@@ -1701,7 +1734,7 @@
       "name": "content_recipes",
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_content.ex",
-      "sha256": "3f8dc25870bc863fb9d5c46cdaa3999e139d36be038d3d2dbc8491d51132ed97",
+      "sha256": "c87c78f64682f7618f8158285707ab73d93ea7a98e90cb77fffbc92def0a453d",
       "status": "parsed",
       "visibility": "public"
     },
@@ -2063,7 +2096,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/design_component_contracts_test.exs",
-      "sha256": "1f8637d4ae58b51dd8e0b3140a5becf685300b312e2af1b260f112c400c09f48",
+      "sha256": "8b1bdf72f633dfff190ced5d9a272d67a1b9c8aefebbccc4534a53a91968aef6",
       "status": "parsed"
     },
     {
@@ -2139,7 +2172,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "7feb405776d867d3c3890c2858d136d9c8455ee8e14dbc6e9306c47b4a92ba79",
+      "sha256": "5cc41f77bd986d500b6cc0dafff33274e0cc8e91678d912fa4c9246911cd534b",
       "status": "parsed"
     },
     {
@@ -2191,6 +2224,7 @@
     "test/assets/design_compatibility_browser.mjs",
     "test/assets/design_component_contracts_browser.mjs",
     "test/assets/design_content_browser.mjs",
+    "test/assets/design_content_contract.mjs",
     "test/assets/design_layouts_browser.mjs",
     "test/assets/design_lighting_browser.mjs",
     "test/assets/design_registration_browser.mjs",
