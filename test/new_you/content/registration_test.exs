@@ -59,4 +59,90 @@ defmodule NewYou.Content.RegistrationTest do
 
     refute Registration.legal_baseline_valid?(:terms, terms_entry, File.read!(@terms_path) <> " ")
   end
+
+  test "accepts the pinned context policy for both documents regardless of list order" do
+    for {document, entry, body} <- legal_baselines() do
+      assert Registration.legal_baseline_valid?(document, entry, body)
+
+      reordered =
+        entry
+        |> Map.update!("allowed_contexts", &Enum.reverse/1)
+        |> Map.update!("prohibited_contexts", &Enum.reverse/1)
+
+      assert Registration.legal_baseline_valid?(document, reordered, body)
+    end
+  end
+
+  test "rejects unexpected additional allowed contexts" do
+    for {document, entry, body} <- legal_baselines(),
+        context <- entry["prohibited_contexts"] ++ ["unapproved_development_context"] do
+      changed = Map.update!(entry, "allowed_contexts", &(&1 ++ [context]))
+
+      refute Registration.legal_baseline_valid?(document, changed, body),
+             "#{document} admitted additional allowed context #{context}"
+    end
+  end
+
+  test "rejects removal of each approved development context" do
+    for {document, entry, body} <- legal_baselines(), context <- entry["allowed_contexts"] do
+      changed = Map.update!(entry, "allowed_contexts", &List.delete(&1, context))
+
+      refute Registration.legal_baseline_valid?(document, changed, body),
+             "#{document} admitted policy without development context #{context}"
+    end
+  end
+
+  test "rejects removal of each mandatory prohibited context" do
+    for {document, entry, body} <- legal_baselines(), context <- entry["prohibited_contexts"] do
+      changed = Map.update!(entry, "prohibited_contexts", &List.delete(&1, context))
+
+      refute Registration.legal_baseline_valid?(document, changed, body),
+             "#{document} admitted policy without prohibited context #{context}"
+    end
+  end
+
+  test "rejects a development context that is also prohibited" do
+    for {document, entry, body} <- legal_baselines(), context <- entry["allowed_contexts"] do
+      changed = Map.update!(entry, "prohibited_contexts", &(&1 ++ [context]))
+
+      refute Registration.legal_baseline_valid?(document, changed, body),
+             "#{document} admitted contradictory context #{context}"
+    end
+  end
+
+  test "rejects unexpected prohibited contexts" do
+    for {document, entry, body} <- legal_baselines() do
+      changed = Map.update!(entry, "prohibited_contexts", &(&1 ++ ["unknown_context"]))
+
+      refute Registration.legal_baseline_valid?(document, changed, body)
+    end
+  end
+
+  test "rejects missing, malformed and duplicate context-policy metadata" do
+    for {document, entry, body} <- legal_baselines(),
+        field <- ["allowed_contexts", "prohibited_contexts"] do
+      refute Registration.legal_baseline_valid?(document, Map.delete(entry, field), body)
+
+      for value <- [nil, "local_development", %{}, [], true, 1, [nil], [["local_development"]]] do
+        refute Registration.legal_baseline_valid?(document, Map.put(entry, field, value), body),
+               "#{document} admitted malformed #{field}: #{inspect(value)}"
+      end
+
+      for extra <- [nil, 1, %{}, ["local_development"], hd(entry[field])] do
+        changed = Map.update!(entry, field, &(&1 ++ [extra]))
+
+        refute Registration.legal_baseline_valid?(document, changed, body),
+               "#{document} admitted invalid #{field} entry: #{inspect(extra)}"
+      end
+    end
+  end
+
+  defp legal_baselines do
+    manifest = @manifest_path |> File.read!() |> Jason.decode!()
+
+    for {document, path} <- [terms: @terms_path, privacy: @privacy_path] do
+      entry = Enum.find(manifest["versions"], &(&1["document_type"] == Atom.to_string(document)))
+      {document, entry, File.read!(path)}
+    end
+  end
 end

@@ -39,6 +39,7 @@ defmodule NewYou.Content.Registration do
     development_environments
     bounded_phase_8_architectural_proof
   )
+  @prohibited_contexts ~w(production public_release paid_pilot real_participant_use)
 
   @doc "Returns the pinned terms and privacy version identifiers when eligible."
   @spec legal_versions() ::
@@ -123,10 +124,23 @@ defmodule NewYou.Content.Registration do
       fn {key, value} -> entry[key] == value end
     ) and entry["withdrawal"]["status"] == "NOT_WITHDRAWN" and
       match?(%{"superseded_by" => nil}, entry["supersession"]) and
-      Enum.all?(@allowed_contexts, &(&1 in entry["allowed_contexts"]))
+      context_policy_valid?(entry)
   rescue
     _ -> false
   end
+
+  defp context_policy_valid?(%{
+         "allowed_contexts" => allowed,
+         "prohibited_contexts" => prohibited
+       })
+       when is_list(allowed) and is_list(prohibited) do
+    # Exact lists preserve the approved policy without treating order as authority
+    # or silently accepting duplicates, extra scope, or contradictory entries.
+    Enum.sort(allowed) == Enum.sort(@allowed_contexts) and
+      Enum.sort(prohibited) == Enum.sort(@prohibited_contexts)
+  end
+
+  defp context_policy_valid?(_), do: false
 
   defp artifact_valid?(body, spec) do
     Enum.all?(
