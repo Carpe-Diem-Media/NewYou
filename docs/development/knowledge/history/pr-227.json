@@ -30,14 +30,14 @@
       "status": "modified"
     },
     {
-      "blob": "edd5af619bfe96300f1c0d308a5e6cd275a77d7c",
+      "blob": "ad821a5d23b23a7df7c9bd0720184648070225b6",
       "mode": "100644",
       "old_blob": "b8f66ed5e28fd682bf40de67fcf7b0748cdc3d12",
       "old_mode": "100644",
       "old_path": "DESIGN.md",
       "old_sha256": "ffb88c9e8997e997dc75f47783f8a70a919c39a6f0b62b4e656e6e84777b1aed",
       "path": "DESIGN.md",
-      "sha256": "eb406c2e12bbd27a92cb45bc766f58a8191ddcda3304f95e569684326b0dfadb",
+      "sha256": "19c5155cb4ad76d8a49448319a0f5fbd822dceff3a3b6862945fbdb69754df2b",
       "status": "modified"
     },
     {
@@ -52,14 +52,14 @@
       "status": "modified"
     },
     {
-      "blob": "9bffdd09e914893fad63807a0a6352286bcbcac8",
+      "blob": "aa02fe4bafb4b65535bd767fdc2faf98cf3a0e5b",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/css/design-components.css",
-      "sha256": "9a9cc0017fa5f0d66fe389c57dd00de81583dfa4d84509778d91d4f264371d31",
+      "sha256": "a628ca4195a041ddcf74bbb495ded3f31a29b01910bffde3bf7a70d76fd81c76",
       "status": "added"
     },
     {
@@ -85,14 +85,14 @@
       "status": "added"
     },
     {
-      "blob": "3e585d7d1777dae6a54f1759634fde10477dcc4e",
+      "blob": "528e6a0c76ba70335ae192063c01b46a94218fc3",
       "mode": "100644",
       "old_blob": "53acbf1c16b0dbfda02da449aae8b22155ec4ed4",
       "old_mode": "100644",
       "old_path": "assets/css/design-tokens.css",
       "old_sha256": "1ff08b553dee7f8427f22387a78aeba909c4be0165baa1b96d909b5ca42b8729",
       "path": "assets/css/design-tokens.css",
-      "sha256": "0a275b4bbda737c13a0ed65db8fb95d01b2cb50f41909de043693162b875b065",
+      "sha256": "6d56d19bdb2c36dd0ffbaad92f4cc2a86b7e8cb8fbdb9a6f25e75bc4b079a7a2",
       "status": "modified"
     },
     {
@@ -129,25 +129,25 @@
       "status": "added"
     },
     {
-      "blob": "d068a8ba01a893d696134e117296da26c1bbf09b",
+      "blob": "ee1d890406c76e874e31f765239b971006df7660",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "f74a54b510a368ef19eeae7228b7eb95c8a8a9d2219e20566f6640ef0e750410",
+      "sha256": "fd032a5248ea37386ef5116af5070c1f06dc5d152b709148311e1b72e218511d",
       "status": "modified"
     },
     {
-      "blob": "b642dcbf9c24cd620b5646198d6eafd74c66df22",
+      "blob": "1c11a9cab0e625923ce926b11c3d1bf8e57e3467",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/README.md",
-      "sha256": "6dc4c8b9cc2e42a9fa35705ae65c57a342f302f1ee742a9cb9f15949b3e0a956",
+      "sha256": "f2f38227095bd5e27cb1e8fd25a45f976af9c9b40f653ba92e6c686b47026522",
       "status": "added"
     },
     {
@@ -192,6 +192,17 @@
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/phase2-layouts.md",
       "sha256": "7a11b243c6a729b227013d2e62570261a4f7765f3fab59a0c30f8f01d608192f",
+      "status": "added"
+    },
+    {
+      "blob": "530523bccbcaa8a5fc9ab91627f4318c5c31e31b",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/phase3-components.md",
+      "sha256": "2ed0e150e5b210673c8b21dab4e5ac596d91d313d796e6f1a6e6583a23d061d6",
       "status": "added"
     },
     {
@@ -305,6 +316,17 @@
       "status": "added"
     },
     {
+      "blob": "5101d222321c9c65105103ff28138451391bca2b",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/superpowers/plans/2026-11-15-component-contracts.md",
+      "sha256": "0bbc23ecce5fe1f1f10e87e9d7981fec9d4c064e0591fde87bfa7abce7a6c594",
+      "status": "added"
+    },
+    {
       "blob": "a29813ad581f7db97696cec87c7b1f0495da65b1",
       "mode": "100644",
       "old_blob": null,
@@ -349,25 +371,36 @@
       "status": "modified"
     },
     {
-      "blob": "2bf2b81cc11b2e413fe7adf946177b5a64626f8e",
+      "blob": "fd5777a9eed09dbe10f0f461ed6e25a41fa69a24",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "b850f531c8d538661762b9010b710d0f3514d396c33a2499182d4707c8382fef",
+      "sha256": "a4a7f00fb4028391f82b1f3a86aaf038473d53d9116389d606e047432ce47c63",
       "status": "added"
     },
     {
-      "blob": "b4972ed3ab63ab69dec710456ef3b56b0ed86b83",
+      "blob": "feeb7b5fe452cea9926834f5fad54d31df34fd7a",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/icon.ex",
+      "sha256": "a97ff4fe740570f5c79c35853abb9968e985284dec583bdd31c06073cc0d5952",
+      "status": "added"
+    },
+    {
+      "blob": "e2cab05ba3ece3f0b0e777355aec717d822dd2fb",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/link.ex",
-      "sha256": "786097e07ca8bc029e95534d638e746c46ada9697b06f9cc3893017d4d521f0f",
+      "sha256": "ddeeb2a7f5392984b42c05291a02937db09ae97efa503730acc582e81b53102a",
       "status": "added"
     },
     {
@@ -426,6 +459,17 @@
       "status": "added"
     },
     {
+      "blob": "cffa94df37b21397f807c5b22464201aceb4a003",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_contracts.ex",
+      "sha256": "3e3b09115e91f34ed5b1a2c6aa080d741f5f139c414069fe1f6e76377edf4e42",
+      "status": "added"
+    },
+    {
       "blob": "5158f7ceff68effb295f8ed08c45648c398cd08e",
       "mode": "100644",
       "old_blob": null,
@@ -437,25 +481,25 @@
       "status": "added"
     },
     {
-      "blob": "ede9956310946a853d0045fe4faf20d129e981c3",
+      "blob": "5ae48af8cd145f94bd74269fc95e4443571ccd43",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
-      "sha256": "6b9a3871776e240911fbf0cdb171b20502a6d17ff8519395e517c5a2b38edd3d",
+      "sha256": "14fd3ba001befdba49620c18ddb59c7dce36aadb511a78a67dadbc2a2372e840",
       "status": "added"
     },
     {
-      "blob": "1e1143729756fd769fabc28dddb6ac31c6cfa46f",
+      "blob": "8850ceb5520a0ea6f1361ed806991d8496e36cf5",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.html.heex",
-      "sha256": "0f503ff3a7f61826a72c18272e01deba76e6b1479a0f9d1fc635cc828a147c61",
+      "sha256": "e02e66895ed4edcaf9128d67ae7f29b5ffd4f3cf095466107eb301c059290c50",
       "status": "added"
     },
     {
@@ -500,6 +544,17 @@
       "old_sha256": null,
       "path": "priv/static/fonts/inter/README.md",
       "sha256": "28f91b8131408627c0ff1ba93d0d42ddc8fd2a5b96b3f93e4932f8251bb596f9",
+      "status": "added"
+    },
+    {
+      "blob": "56e54e7138f5681d94a3e0a7972ac1d3f89a3aae",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_component_contracts_browser.mjs",
+      "sha256": "2c7afcc31f744a78945b5396e4b7d6aaecffe56259535efce41184e53b6a751a",
       "status": "added"
     },
     {
@@ -613,6 +668,17 @@
       "status": "modified"
     },
     {
+      "blob": "86e402e9efec3b3b4e4e9fbe424f8e1464a6a469",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/new_you_web/design_component_contracts_test.exs",
+      "sha256": "754d8a64f7cede9d92f170fc286084838295aefc39861b023878bb172009035e",
+      "status": "added"
+    },
+    {
       "blob": "8a85436174306edd8b8dbb0884ac3e22a1249f67",
       "mode": "100644",
       "old_blob": "38ece4da8846283f11e0913c9cf1062781929d11",
@@ -624,14 +690,14 @@
       "status": "modified"
     },
     {
-      "blob": "3bd775c5b16c89486f1816300294f4b083db4c59",
+      "blob": "fb2e962376486d0656b5c567a4946978cde94247",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "da092558092cb7ec3f43c6246d3802f11692bff58e2f420ec51090867b47d343",
+      "sha256": "776198f8ddfca6d16e331abeecc48a71fac43477ef19d39fa014211aa3d0eed5",
       "status": "added"
     },
     {
@@ -685,13 +751,13 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.\n\nPhase 1 ACSS research now inventories all ten requested systems: grid, auto-grid, shadows, radius, gutter, content width, breakout, icons, cards and data attributes. Source-linked notes record inputs, formulas, gated token/selector output, dependencies, NewYou coverage, proposed decisions and 26 concrete proof items. A catalog binds 74 source files and 104 locators to the supplied archive and NewYou baseline. Eight systems are proposed adaptations, component-owned attributes are retained selectively, and breakout remains deferred without a current consumer. No runtime, token or visual change is introduced by this documentation batch.\n\nPhase 2 adds a layout lab within the existing guide: fixed grids, intrinsic auto-fit/auto-fill with a live column limit, capped containers, single-owner gutters and seven-track breakout comparisons. Bounded URL-backed controls vary allocation, item count and fixed-grid remainder alignment. Four guide-only CSS inputs own the candidate dimensions; the design gate validates their units, bounds, uniqueness and integer column count. Recipes compute from local inputs, without JS sizing formulas or a production layout migration. Phase 2 notes link implementation seams, formulas, source research and remaining proof.",
+    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.\n\nPhase 1 ACSS research now inventories all ten requested systems: grid, auto-grid, shadows, radius, gutter, content width, breakout, icons, cards and data attributes. Source-linked notes record inputs, formulas, gated token/selector output, dependencies, NewYou coverage, proposed decisions and 26 concrete proof items. A catalog binds 74 source files and 104 locators to the supplied archive and NewYou baseline. Eight systems are proposed adaptations, component-owned attributes are retained selectively, and breakout remains deferred without a current consumer. No runtime, token or visual change is introduced by this documentation batch.\n\nPhase 2 adds a layout lab within the existing guide: fixed grids, intrinsic auto-fit/auto-fill with a live column limit, capped containers, single-owner gutters and seven-track breakout comparisons. Bounded URL-backed controls vary allocation, item count and fixed-grid remainder alignment. Four guide-only CSS inputs own the candidate dimensions; the design gate validates their units, bounds, uniqueness and integer column count. Recipes compute from local inputs, without JS sizing formulas or a production layout migration. Phase 2 notes link implementation seams, formulas, source research and remaining proof.\n\nPhase 3 completes bounded card and icon presentation contracts. Cards add explicit leading/inset/action slots and heading levels while remaining noninteractive articles. Token-sized Heroicons add decorative/named semantics and plain/boxed variants. Consumer-local formulas derive inset corner radii from outer radius, uniform border and per-axis padding. Native actions keep HTML/ARIA state ownership. The guide shows actual shared components, isolated local overrides and a pending-state comparison. Flat defaults, palette, radius tiers and the lit primary shine remain intact; no media/avatar framework, global auto-radius, inverted corners or shadow ladder is added. Detailed ownership, formulas, accessibility rules and proof limits live in the Phase 3 addendum.",
     "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-15T12:34:19.980Z",
+    "checked_at": "2026-11-15T13:13:11Z",
     "items": [
       {
         "description_sha256": "37e40677ccfc39b60b5e720efb6483fcc3575d647c09ff296a9e8faedd4a3e32",
@@ -917,7 +983,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "9d12db33618a93393aab545186241385c33662b38a94e467e251b24eed21a4b8",
+      "sha256": "ee351e5cf2751a6c8cd5abc69ac9a475a6fa1331fae1c8e35513e3f1686e3617",
       "status": "parsed"
     },
     {
@@ -929,7 +995,7 @@
       "name": "design_card",
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "20e56c35ee7c42bf2398943916e1558ec417a7dc2fb46e28c350a8321e5fe5df",
+      "sha256": "fbd2eaf2544e815f9db2c7da1c49a1d8e84b78a78c054552022494d33c13792a",
       "status": "parsed",
       "visibility": "public"
     },
@@ -947,11 +1013,45 @@
       "arity": null,
       "change": "added",
       "kind": "module",
+      "module": "NewYouWeb.Components.Design.Icon",
+      "name": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/icon.ex",
+      "sha256": "50eae8d3defaa3dbb0046fd5d637af5c31288bbed6049273246043a837a2e465",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.Components.Design.Icon",
+      "name": "design_icon",
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/icon.ex",
+      "sha256": "44970c22a06ed1b9b212c76fd5075220ee053828c0071fd2f850c1a900947399",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/components/design/icon.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
       "module": "NewYouWeb.Components.Design.Link",
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/link.ex",
-      "sha256": "36ba8b32e839f8d3fe00e73c6bf94aedea84117551067d0d81ac908ee0f4f3bf",
+      "sha256": "b36e5c5f50ebc695c06a6316e4921983a0fb811d293af1f69b20f7780dfb4a0b",
       "status": "parsed"
     },
     {
@@ -963,7 +1063,7 @@
       "name": "text_link",
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/link.ex",
-      "sha256": "bd89d7066f8490526922122dd089e152f74ab7325e605bff42c771fd4a77762c",
+      "sha256": "c3e6bd2fc89cb0380270d1a7ed021c9615ebe78de9b7cc3fdbd6eaf508be7332",
       "status": "parsed",
       "visibility": "public"
     },
@@ -1255,6 +1355,40 @@
       "arity": null,
       "change": "added",
       "kind": "module",
+      "module": "NewYouWeb.DesignSystemContracts",
+      "name": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_contracts.ex",
+      "sha256": "0371b02ec4d84a06a98a55f85ade730d3d62cacd36c52051d77ef282c2250082",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.DesignSystemContracts",
+      "name": "component_contracts",
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_contracts.ex",
+      "sha256": "ad5f94c26b73826747332a41e05e10602675754d29cbcd9ca3566af8fcfeb893",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/live/design_system_contracts.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
       "module": "NewYouWeb.DesignSystemLayouts",
       "name": null,
       "old_sha256": null,
@@ -1319,7 +1453,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
-      "sha256": "f002c1d5746fe1a88ac100523e13c2a3fbd937cc2900af7efca18a0469f202e7",
+      "sha256": "26686d8a5a7bfd294ca20e949da027ead655e3543c7898922ee1a75ced0c2a11",
       "status": "parsed"
     },
     {
@@ -1504,6 +1638,40 @@
     },
     {
       "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYouWeb.DesignComponentContractsTest",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/new_you_web/design_component_contracts_test.exs",
+      "sha256": "1f8637d4ae58b51dd8e0b3140a5becf685300b312e2af1b260f112c400c09f48",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.DesignComponentContractsTest",
+      "name": "content",
+      "old_sha256": null,
+      "path": "test/new_you_web/design_component_contracts_test.exs",
+      "sha256": "e0d1d283137ce39b82f1df508af6458a45caa2f6599c0a45f39053975f91d465",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you_web/design_component_contracts_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
       "change": "changed",
       "kind": "module",
       "module": "NewYouWeb.DesignSystemInfrastructureTest",
@@ -1531,7 +1699,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "02280b0475e215e4590e1bb69a9c832c3689d67f1de09ba203a3219f15edf3db",
+      "sha256": "fd0c339914a3d1002ff6eb80bf57209a5c358cb7f49d3c57c9c76c45b89d73b2",
       "status": "parsed"
     },
     {
@@ -1580,6 +1748,7 @@
     }
   ],
   "tests": [
+    "test/assets/design_component_contracts_browser.mjs",
     "test/assets/design_layouts_browser.mjs",
     "test/assets/design_lighting_browser.mjs",
     "test/assets/design_system_browser.mjs",
@@ -1590,6 +1759,7 @@
     "test/new_you_web/controllers/magic_login_controller_test.exs",
     "test/new_you_web/controllers/password_reset_controller_test.exs",
     "test/new_you_web/controllers/password_session_controller_test.exs",
+    "test/new_you_web/design_component_contracts_test.exs",
     "test/new_you_web/design_system_infrastructure_test.exs",
     "test/new_you_web/live/design_system_live_test.exs",
     "test/new_you_web/security/authentication_reachability_test.exs",
