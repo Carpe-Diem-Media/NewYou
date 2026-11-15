@@ -8,6 +8,7 @@ defmodule NewYouWeb.Components.Design.Card do
   keyboard, role or tabindex API. Heading levels follow the containing page outline.
   Card content/action gaps are separate semantic roles. Padding and prose flow
   retain their own inputs; actions use auto margin for bottom alignment when stretched.
+  The card owns a plain/raised surface boundary, so parent foreground outputs reset.
   """
   use Phoenix.Component
 
@@ -28,7 +29,7 @@ defmodule NewYouWeb.Components.Design.Card do
     end
 
     for key <- Map.keys(assigns.rest),
-        to_string(key) in ~w(class style data-variant role tabindex onclick onkeydown onkeyup phx-click phx-capture-click phx-keydown phx-keyup) do
+        to_string(key) in ~w(class style data-variant data-surface role tabindex onclick onkeydown onkeyup phx-click phx-capture-click phx-keydown phx-keyup) do
       raise ArgumentError, "design_card does not accept caller-provided #{key}"
     end
 
@@ -36,8 +37,9 @@ defmodule NewYouWeb.Components.Design.Card do
 
     ~H"""
     <article
-      class="ds-design-card flex min-w-0 flex-col gap-design-card-content data-[variant=flat]:bg-design-surface text-design-ink font-design-sans data-[variant=flat]:shadow-design"
+      class="ds-design-card ds-surface flex min-w-0 flex-col gap-design-card-content font-design-sans data-[variant=flat]:shadow-design"
       data-variant={@variant}
+      data-surface={if @variant == "raised", do: "raised", else: "plain"}
       {@rest}
     >
       <div :if={@leading != []} class="ds-design-card-leading">{render_slot(@leading)}</div>

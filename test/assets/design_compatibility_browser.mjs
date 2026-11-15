@@ -10,6 +10,8 @@ import {verifyContentContracts,verifyContentReflow} from "./design_content_contr
 
 import {verifyBorderContracts,verifyBorderReflow} from "./design_border_contract.mjs"
 
+import {verifySurfaceContracts,verifySurfaceReflow} from "./design_surface_contract.mjs"
+
 const require=createRequire(resolve(process.env.BROWSER_TOOLS_ROOT || ".", "package.json"))
 const engine=process.env.DESIGN_BROWSER || "chrome"
 assert.ok(["chrome","firefox"].includes(engine),"DESIGN_BROWSER must explicitly select chrome or firefox")
@@ -55,6 +57,8 @@ try {
     checks+=(await page.evaluate(verifyContentReflow)).checks
     checks+=(await page.evaluate(verifyBorderContracts)).checks
     checks+=(await page.evaluate(verifyBorderReflow)).checks
+    checks+=(await page.evaluate(verifySurfaceContracts)).checks
+    checks+=(await page.evaluate(verifySurfaceReflow)).checks
   }
   const components=await page.evaluate(()=>{
     const card=document.querySelector("#contract-card-local"),s=getComputedStyle(card)

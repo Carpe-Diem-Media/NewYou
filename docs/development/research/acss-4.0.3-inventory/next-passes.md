@@ -77,6 +77,8 @@ Exit: each border has a named purpose and owner, divider spacing is predictable,
 
 ## Pass 4: complete surface and foreground pairings
 
+Implementation continuation: [opaque surface pairing notes](pass4-surfaces.md) record the finite shared boundary, complete profile roles, card/link integration, nested reset behavior, contrast thresholds and proof limits. Current execution, grants and exact-head delivery evidence remain in Plane.
+
 - [ ] Define allowed surface roles with their heading, body, muted, link and focus assignments. Use a finite component-owned `data-surface` attribute where it expresses an actual component variant.
 - [ ] Resolve dependent tokens at the consuming scope. Nested surfaces reset their own complete pairings rather than inheriting an incompatible parent foreground.
 - [ ] Measure actual foreground/background contrast for every allowed pairing and relevant state. Review lighting order, approved gradients, overlay/noise intensity and text placement together. Do not infer usable text pairings from background lightness alone.

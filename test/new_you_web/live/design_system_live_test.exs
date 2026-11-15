@@ -154,6 +154,28 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     refute has_element?(preview, "#prose-en")
   end
 
+  test "opaque pairings use shared boundaries and measured foreground roles", %{conn: conn} do
+    {:ok, view, _} = live(conn, "/dev/design-system")
+    assert has_element?(view, "nav a[href='#surface-pairings']")
+
+    for profile <- ~w(plain canvas panel raised) do
+      assert has_element?(view, "#pair-#{profile}.ds-surface[data-surface=#{profile}]")
+
+      for role <- ~w(heading body muted link link-hover focus) do
+        assert has_element?(
+                 view,
+                 "#pair-#{profile}-probe-#{role}[data-contrast-background=pair-#{profile}]"
+               )
+      end
+    end
+
+    assert has_element?(view, "#pair-local #pair-nested[data-surface=plain]")
+    assert has_element?(view, "#pair-card-plain[data-surface=plain]")
+    assert has_element?(view, "#pair-card-raised[data-surface=raised]")
+    {:ok, preview, _} = live(conn, "/dev/design-system/preview")
+    refute has_element?(preview, "#surface-pairings")
+  end
+
   test "border lab distinguishes purpose, native state and nested decorative groups", %{
     conn: conn
   } do

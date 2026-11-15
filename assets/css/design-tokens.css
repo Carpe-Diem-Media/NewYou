@@ -149,6 +149,9 @@
   --system-button-face: ButtonFace;
   --system-button-text: ButtonText;
   --system-disabled-text: GrayText;
+  --system-canvas: Canvas;
+  --system-canvas-text: CanvasText;
+  --system-link-text: LinkText;
 
   /* Candidate surfaces, used only by labelled development specimens. */
   --design-tint-strength: 12%;
@@ -270,6 +273,7 @@
 :root,
 :where(.ds-design-button),
 :where(.ds-design-card),
+:where(.ds-surface),
 :where(.ds-design-icon) {
   --design-lit-border-width: var(--border-lit-width, var(--design-border-width));
   --design-lit-border-style: var(--border-lit-style, solid);
@@ -294,6 +298,56 @@
   --action-primary-shadow: inset 0 1px 0 var(--action-primary-edge-light), var(--shadow-control);
   --action-primary-hover-shadow: inset 0 1px 0 var(--action-primary-hover-edge-light), var(--shadow-control);
   --action-primary-pressed-shadow: inset 0 1px 2px var(--action-primary-hover-edge-dark), inset 0 -1px 0 var(--action-primary-hover-edge-light);
+}
+
+/* Complete opaque profiles. Optional profile inputs stay unset; edit them here,
+   not the derived --context-* outputs. Each boundary recomputes every role. */
+:root, :where(.ds-surface[data-surface="plain"]) {
+  --context-background: var(--surface-plain-bg, var(--surface));
+  --context-heading: var(--surface-plain-heading, var(--secondary));
+  --context-body: var(--surface-plain-body, var(--secondary));
+  --context-muted: var(--surface-plain-muted, var(--ink-meta));
+  --context-link: var(--surface-plain-link, var(--secondary));
+  --context-link-hover: var(--surface-plain-link-hover, var(--secondary));
+  --context-focus: var(--surface-plain-focus, var(--primary));
+}
+:where(.ds-surface[data-surface="canvas"]) {
+  --context-background: var(--surface-canvas-bg, var(--surface-canvas));
+  --context-heading: var(--surface-canvas-heading, var(--secondary));
+  --context-body: var(--surface-canvas-body, var(--secondary));
+  --context-muted: var(--surface-canvas-muted, var(--ink-meta));
+  --context-link: var(--surface-canvas-link, var(--secondary));
+  --context-link-hover: var(--surface-canvas-link-hover, var(--secondary));
+  --context-focus: var(--surface-canvas-focus, var(--primary));
+}
+:where(.ds-surface[data-surface="panel"]) {
+  --context-background: var(--surface-panel-bg, var(--surface-panel));
+  --context-heading: var(--surface-panel-heading, var(--secondary));
+  --context-body: var(--surface-panel-body, var(--secondary));
+  --context-muted: var(--surface-panel-muted, var(--ink-meta));
+  --context-link: var(--surface-panel-link, var(--secondary));
+  --context-link-hover: var(--surface-panel-link-hover, var(--secondary));
+  --context-focus: var(--surface-panel-focus, var(--primary));
+}
+:where(.ds-surface[data-surface="raised"]) {
+  --context-background: var(--surface-raised-bg, var(--surface-raised));
+  --context-heading: var(--surface-raised-heading, var(--secondary));
+  --context-body: var(--surface-raised-body, var(--secondary));
+  --context-muted: var(--surface-raised-muted, var(--ink-meta));
+  --context-link: var(--surface-raised-link, var(--secondary));
+  --context-link-hover: var(--surface-raised-link-hover, var(--secondary));
+  --context-focus: var(--surface-raised-focus, var(--primary));
+}
+@media (forced-colors: active) {
+  :root, :where(.ds-surface[data-surface]) {
+    --context-background: var(--system-canvas);
+    --context-heading: var(--system-canvas-text);
+    --context-body: var(--system-canvas-text);
+    --context-muted: var(--system-canvas-text);
+    --context-link: var(--system-link-text);
+    --context-link-hover: var(--system-link-text);
+    --context-focus: var(--system-canvas-text);
+  }
 }
 
 /* Component relationships resolve on the consumer. Optional override inputs stay
@@ -341,6 +395,16 @@
   --divider-color: var(--secondary);
 }
 #border-divided-inner { --divider-gap: var(--space-sm); }
+/* Surface comparison inputs use existing colours and dimensions, not new values. */
+#surface-pairings .ds-pair-examples {
+  --design-grid-columns: 2;
+  --design-grid-min: var(--design-layout-narrow);
+}
+#pair-local {
+  --surface-canvas-muted: var(--secondary);
+  --surface-canvas-link: var(--primary);
+  --surface-canvas-link-hover: var(--primary-hover);
+}
 /* Labelled local guide override. Existing scale values remain the only sizes. */
 #prose-local {
   --prose-flow-space: var(--space-sm);
@@ -395,6 +459,7 @@
   :root,
   :where(.ds-design-button),
   :where(.ds-design-card),
+  :where(.ds-surface),
   :where(.ds-design-icon) {
     --surface-canvas: color-mix(in oklab, var(--secondary) var(--surface-canvas-shade), var(--canvas));
     --surface-panel: color-mix(in oklab, var(--canvas) var(--surface-panel-mix), var(--surface));

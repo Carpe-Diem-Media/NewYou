@@ -14,6 +14,7 @@ defmodule NewYouWeb.DesignSystemLive do
   import NewYouWeb.Components.Design.Link
   import NewYouWeb.DesignSystemContent
   import NewYouWeb.DesignSystemBorders
+  import NewYouWeb.DesignSystemSurfaces
   import NewYouWeb.DesignSystemContracts
   import NewYouWeb.Components.Design.Icon
   import NewYouWeb.DesignSystemLayouts

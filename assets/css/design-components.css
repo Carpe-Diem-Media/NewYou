@@ -114,7 +114,7 @@
 
   .ds-design-card[data-variant="raised"] {
     border-style: var(--design-lit-border-style);
-    background-color: var(--surface-raised);
+    background-color: var(--context-background);
     border-color: var(--edge-side);
     border-top-color: var(--edge-highlight);
     border-bottom-color: var(--edge-shade);

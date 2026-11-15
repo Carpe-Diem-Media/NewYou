@@ -19,6 +19,13 @@ test("contrast rejects invalid and out-of-range measurements", () => {
   assert.equal(contrastGrade(null), "Not measured")
 })
 
+test("focus color is assessed against its own 3:1 threshold", () => {
+  assert.equal(contrastGrade(3, "focus"), "Focus colour meets 3:1")
+  assert.equal(contrastGrade(2.99, "focus"), "Insufficient focus colour contrast")
+  assert.equal(contrastGrade(null, "focus"), "Not measured")
+  assert.equal(contrastGrade(4.49), "Large text only")
+})
+
 
 test("canvas sampling rejects invalid assignments instead of reusing the prior fill", () => {
   let fillStyle = "#fff"

@@ -12,8 +12,9 @@ export const contrastRatio = (foreground, background) => {
   return (values[0] + 0.05) / (values[1] + 0.05)
 }
 
-export const contrastGrade = ratio => {
+export const contrastGrade = (ratio, kind = "text") => {
   if (!Number.isFinite(ratio)) return "Not measured"
+  if (kind === "focus") return ratio >= 3 ? "Focus colour meets 3:1" : "Insufficient focus colour contrast"
   if (ratio >= 7) return "AAA text"
   if (ratio >= 4.5) return "AA text"
   if (ratio >= 3) return "Large text only"
@@ -90,12 +91,15 @@ export const DesignSystem = {
     })
     this.el.querySelectorAll("[data-contrast-sample]").forEach(sample => {
       const css = getComputedStyle(sample)
-      const ratio = this.colorContext && contrastRatio(
+      const target = sample.dataset.contrastBackground
+      const background = target ? this.el.querySelector(`#${CSS.escape(target)}`) : sample
+      const ground = background && getComputedStyle(background)
+      const ratio = this.colorContext && ground && ground.backgroundImage === "none" && contrastRatio(
         sampleColor(this.colorContext, css.color),
-        sampleColor(this.colorContext, css.backgroundColor)
+        sampleColor(this.colorContext, ground.backgroundColor)
       )
       const output = sample.parentElement.querySelector("[data-contrast-result]")
-      output.textContent = ratio ? `${ratio.toFixed(2)}:1 / ${contrastGrade(ratio)}` : "Not measured: use opaque colors"
+      output.textContent = ratio ? `${ratio.toFixed(2)}:1 / ${contrastGrade(ratio, sample.dataset.contrastKind)}` : "Not measured: use opaque colors"
     })
     this.el.querySelectorAll("[data-measure-target][data-measure-property]").forEach(output => {
       const target = this.el.querySelector(`#${CSS.escape(output.dataset.measureTarget)}`)

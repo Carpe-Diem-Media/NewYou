@@ -10,6 +10,7 @@
 @import "./design-layouts.css";
 @import "./design-content.css";
 @import "./design-borders.css";
+@import "./design-surfaces.css";
 @import "./design-pilot.css";
 @import "phoenix-colocated/new_you/colocated.css";
 @source "../css";
