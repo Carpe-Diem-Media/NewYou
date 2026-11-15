@@ -6,7 +6,7 @@
     "WELL-20"
   ],
   "implementation_revision": {
-    "git_sha": "1b41a01099f4977c566f98c15761a2e47249fcc8",
+    "git_sha": "6fa5fb8dad1eae3d0d9d1de3f807511736e1354b",
     "semantics": "WELL-20 proof integration only. It adds no business behavior or certification authority."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
@@ -468,7 +468,7 @@
       "id": "integration_test",
       "path": "test/new_you/proof/tb001_integration_test.exs",
       "symbol": "defmodule NewYou.Proof.TB001IntegrationTest",
-      "sha256": "14ce0046cd5ab1968a2e9e766243a03d939ab05deb2390ea19de85e2dee1e471"
+      "sha256": "cec9c7af47f5188fb4769011994efd4412e879e45e1bbd587df28c839f970b67"
     },
     {
       "id": "matrix_test",
