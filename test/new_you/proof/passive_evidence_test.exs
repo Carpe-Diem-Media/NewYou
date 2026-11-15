@@ -5,7 +5,7 @@ defmodule NewYou.Proof.PassiveEvidenceTest do
   alias NewYou.Proof.{P805, PassiveEvidence}
   alias NewYou.Identity
 
-  test "the owner snapshot detects persisted Session issuance and token consumption" do
+  test "the owner snapshot independently detects persisted Session and token issuance" do
     P805.with_fixture(fn ->
       request = P805.request()
       {:ok, registered} = Identity.register(request)
@@ -13,7 +13,9 @@ defmodule NewYou.Proof.PassiveEvidenceTest do
       before = PassiveEvidence.snapshot(registered.account_id)
       assert before == PassiveEvidence.snapshot(registered.account_id)
       assert {:ok, _} = Identity.authenticate_password(request.email, request.password)
-      refute before == PassiveEvidence.snapshot(registered.account_id)
+      after_login = PassiveEvidence.snapshot(registered.account_id)
+      refute before.sessions == after_login.sessions
+      refute before.tokens == after_login.tokens
     end)
   end
 
