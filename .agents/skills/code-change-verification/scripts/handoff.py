@@ -361,7 +361,14 @@ def focused_kind(argv):
                                 for t in targets), 'focused unittest requires only explicit repository test targets')
         return 'python-test'
     if argv[:9] == ['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'test']:
-        require(any(t.startswith('test/') and '.exs' in t for t in argv[9:]), 'focused Mix test requires a test file target')
+        targets = argv[9:]
+        test_root = (ROOT / 'test').resolve()
+        require(targets and test_root.is_relative_to(ROOT.resolve()), 'focused Mix requires repository test files')
+        for target in targets:
+            require(re.fullmatch(r'test/[^\s:]+_test\.exs(?::[1-9][0-9]*)*', target),
+                    'focused Mix requires only explicit test files and optional line numbers')
+            path = (ROOT / target.split(':', 1)[0]).resolve()
+            require(path.is_file() and path.is_relative_to(test_root), 'focused Mix target is outside repository tests')
         return 'mix-test'
     if argv[:3] == ['git', 'diff', '--check']:
         return 'check'

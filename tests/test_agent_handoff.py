@@ -294,6 +294,38 @@ class HandoffTests(unittest.TestCase):
             with self.subTest(arguments=arguments), self.assertRaises(gate.GateError):
                 gate.focused_kind(['python3', '-m', 'unittest', *arguments])
 
+    def test_focused_mix_rejects_external_paths_and_nonexecuting_options(self):
+        prefix = ['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'test']
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/'test').mkdir()
+            (root/'test/inside_test.exs').touch()
+            (root/'external_test.exs').touch()
+            (root/'test/link_test.exs').symlink_to(root/'external_test.exs')
+            def passed(_argv, **kwargs):
+                kwargs['stdout'].write('Result: 1 passed\n')
+                return SimpleNamespace(returncode=0)
+            for targets in [['test/../external_test.exs'], ['test/link_test.exs'],
+                            ['test/inside_test.exs', str(root/'external_test.exs')],
+                            ['test/inside_test.exs', '--dry-run'], ['test/inside_test.exs.bak']]:
+                with self.subTest(targets=targets), patch.object(gate, 'ROOT', root), \
+                     patch.object(gate, 'worktree', return_value=(BINDING, [])), \
+                     patch.object(gate.subprocess, 'run', side_effect=passed) as invoke, \
+                     patch('builtins.print'), self.assertRaises(gate.GateError):
+                    gate.local(root/'state.json', BINDING, [], [gate.shlex.join(prefix+targets)])
+                invoke.assert_not_called()
+                self.assertFalse((root/'state.json').exists())
+
+    def test_focused_mix_accepts_existing_repository_test_files_and_lines(self):
+        prefix = ['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'test']
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/'test/nested').mkdir(parents=True)
+            (root/'test/nested/inside_test.exs').touch()
+            with patch.object(gate, 'ROOT', root):
+                for target in ['test/nested/inside_test.exs', 'test/nested/inside_test.exs:12:24']:
+                    self.assertEqual(gate.focused_kind(prefix+[target]), 'mix-test')
+
     def test_unavailable_subscription_does_not_run_paid_review(self):
         for status in ['', 'Status: expired', 'Status: API key']:
             with patch.object(gate, 'command', return_value=status) as cmd, self.assertRaises(gate.GateError):
