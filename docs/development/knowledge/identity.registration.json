@@ -12,7 +12,7 @@
     "WELL-131"
   ],
   "implementation_revision": {
-    "git_sha": "7d3ce6c146d9608984da0dd1abcae979098b76cd",
+    "git_sha": "59f88da472f324ffa0ef5a5af1aab89e2602eeae",
     "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -684,7 +684,7 @@
       "id": "controller",
       "path": "lib/new_you_web/controllers/registration_controller.ex",
       "symbol": "def create(",
-      "sha256": "25946f3244592d6b52f09f516f3878eaa2fd2a0f3fa8973c4fc6da90bb5de3d3"
+      "sha256": "1799025a7ba59a7ebcc29193e775c5f86282ddcab18d816bedab28ae0724284c"
     },
     {
       "id": "account",
@@ -708,19 +708,19 @@
       "id": "entry_gate",
       "path": "lib/new_you_web/development_entry.ex",
       "symbol": "def enabled?",
-      "sha256": "fa0059446e7ceaa5623fd5b288237b0c4aefc2eb9a1a0d523f4135495c6f44a7"
+      "sha256": "e2ad6ede008eb55a59b552932781e3fc5bc124dff16428c16653a76d8ce18363"
     },
     {
       "id": "entry_copy",
       "path": "lib/new_you/content/entry_copy.ex",
       "symbol": "defmodule NewYou.Content.EntryCopy",
-      "sha256": "526266f011e76d1b66f53fcf9759e8a77039ca94f2314fd4c75483c90f8a9659"
+      "sha256": "6f1dff0e9fe5b12da259e90a037983cb0389706a962ecc2e854448eb28324536"
     },
     {
       "id": "legal_content",
       "path": "lib/new_you/content/registration.ex",
       "symbol": "def legal_versions",
-      "sha256": "5003c4354cd4b49181e060ca7b83ab01ea685577f1578b117df4b1c6b235140e"
+      "sha256": "247776ca5e00cadbbf92e1f83e126003548af323314fa6d48d217196b2aa6d5b"
     },
     {
       "id": "router",
