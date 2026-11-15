@@ -30,25 +30,25 @@
       "status": "modified"
     },
     {
-      "blob": "fa0dd35dd2643514b991c74fd919556fcae7d47e",
+      "blob": "3cb25d4a81e189f4d64b64b2ecaf7a82a2cd2ee1",
       "mode": "100644",
       "old_blob": "b8f66ed5e28fd682bf40de67fcf7b0748cdc3d12",
       "old_mode": "100644",
       "old_path": "DESIGN.md",
       "old_sha256": "ffb88c9e8997e997dc75f47783f8a70a919c39a6f0b62b4e656e6e84777b1aed",
       "path": "DESIGN.md",
-      "sha256": "75745a64896bb89fa253d922e8d7cfcb9f0eee5e4bdf309e2c700156eba77b11",
+      "sha256": "278f88d75d505e7fc2d112284403893d3deee9d798ea001843cb542eb8be079f",
       "status": "modified"
     },
     {
-      "blob": "6a595255ff31343ee64b9a55363e763584845bec",
+      "blob": "340039061458e378363405bd0cbbbdd2be8f5773",
       "mode": "100644",
       "old_blob": "840e633874a6f223f594b0feda3a02ecbcaad852",
       "old_mode": "100644",
       "old_path": "assets/css/app.css",
       "old_sha256": "00af014c8a6e82b87c25957e5a2d6a73069937bfb3674fbb32048f96544fa339",
       "path": "assets/css/app.css",
-      "sha256": "6418ab11cb415fce586468e9d3c8b0db29b70c78996d23416db1b8fdf620af39",
+      "sha256": "d93c2d83114e1c0f079066a24f8de049e587afe678e6d7fc97a4664ebeeeb1a6",
       "status": "modified"
     },
     {
@@ -63,14 +63,14 @@
       "status": "added"
     },
     {
-      "blob": "cbbc7a68e6984c9ab7442dafb911e445818e09e6",
+      "blob": "2cf67cce3d3731fee9b4ec4d18500e3e85b2292f",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/css/design-components.css",
-      "sha256": "8e9a0990260b6abed144fea60de4e49d298a54c826632cfa3166de4e76c692d1",
+      "sha256": "0a6fe3da9c4755bfe4da7d3ea0508bff269320060cb11118e485e80956b725cc",
       "status": "added"
     },
     {
@@ -107,6 +107,17 @@
       "status": "added"
     },
     {
+      "blob": "b5cde3da1f424751cb84d67f8a1dc639a583a919",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "assets/css/design-surfaces.css",
+      "sha256": "4454282628467a63edb2c1a52ef1c736b0e7c4ffc3c7c720baade9caf1392601",
+      "status": "added"
+    },
+    {
       "blob": "4bc2eef02a44d5c012d1e1f220288e50bd04110e",
       "mode": "100644",
       "old_blob": null,
@@ -118,14 +129,14 @@
       "status": "added"
     },
     {
-      "blob": "f5b8dc78435dd62effc888a239375f9269b97737",
+      "blob": "40de231bc1dc25a46dbc29f10d43739215d09221",
       "mode": "100644",
       "old_blob": "53acbf1c16b0dbfda02da449aae8b22155ec4ed4",
       "old_mode": "100644",
       "old_path": "assets/css/design-tokens.css",
       "old_sha256": "1ff08b553dee7f8427f22387a78aeba909c4be0165baa1b96d909b5ca42b8729",
       "path": "assets/css/design-tokens.css",
-      "sha256": "92c7ae1f64d97ec4afab5de6e04c82e97240214e815669d1d0a249067f9da3c3",
+      "sha256": "0f466df3e6b35098787da95ab68ab226e0d27793123f12b4fbb129cc3b1c4e53",
       "status": "modified"
     },
     {
@@ -162,36 +173,36 @@
       "status": "modified"
     },
     {
-      "blob": "4e9d9e175f834f05db54550f86c0281c38c85e7b",
+      "blob": "da5972f25dc5170c8f0f4967f17349240bfdd2b6",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/js/design_system.js",
-      "sha256": "871d6f35f340428ab6bb187ab8d21ddc79d40099bd9e855b744e7ee419f3ceb6",
+      "sha256": "b58c16311770d4b11f315f2cef67d1555e97d800341fda28e827ad05de9b5cd6",
       "status": "added"
     },
     {
-      "blob": "63ae07f684297cf85555d1023a272c53f02b9abd",
+      "blob": "f793cd9977f46abb44fb21f92a7d4c061c4a1d74",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "e334260237f05ab7f2b529b78a22e15e867b1c29f85347dfe8918b973e386a51",
+      "sha256": "9e54b6d0ef18c29ae4c8c372f3c7c91f93dc9818d36ff3085d866f72858d52b6",
       "status": "modified"
     },
     {
-      "blob": "862156c726824f376957e280b7c08d7e633258f3",
+      "blob": "9b20f05705916578e7add5000a499c1922befccd",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/README.md",
-      "sha256": "22478a02ebcea0f472e01161e6f2f50f039623a6a336529584fb45ecf358c70a",
+      "sha256": "44a03d0c8f4b1462b8af4e9b9dd993f453a055701751945117bc5e24ead5c7cf",
       "status": "added"
     },
     {
@@ -228,14 +239,14 @@
       "status": "added"
     },
     {
-      "blob": "079253720874ed3a283efd73aa238b3546bdd184",
+      "blob": "325c00b0fe23dfd75e400a6b10d9b3c591455e6e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/next-passes.md",
-      "sha256": "f809652b4af7f8569769e0c74908a8817297fd35f58eab0e34a071ae3536f520",
+      "sha256": "2b7ae1a255d1397e1245dd4a5312c58bcc2cf63f5fa0ff1c4e83ed71768d4310",
       "status": "added"
     },
     {
@@ -269,6 +280,17 @@
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/pass3-borders.md",
       "sha256": "8b0fdb0f23a5b013a5fc88b9b4101332079ce5dc9592f13e84ca7b4b26ef1331",
+      "status": "added"
+    },
+    {
+      "blob": "9cfe5a7ca1c83c1d549fd13de508eb7857704cbd",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/pass4-surfaces.md",
+      "sha256": "748c8cb85cc6176baa42ed24521b54b7366d75d8bde87e1ec42f2b44303c1701",
       "status": "added"
     },
     {
@@ -514,6 +536,17 @@
       "status": "added"
     },
     {
+      "blob": "929028e34535e7ecf4097e387380ebfb8e0ce78b",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/superpowers/plans/2026-11-15-surface-pairings.md",
+      "sha256": "10e13b17c430733a0ee36a7d4de02d5a67856e13b4646e0f00b501bb45e3bcdc",
+      "status": "added"
+    },
+    {
       "blob": "418a5b5696c12b7808cfff65e3f1e9a0bd397246",
       "mode": "100644",
       "old_blob": null,
@@ -558,14 +591,14 @@
       "status": "modified"
     },
     {
-      "blob": "eb00fd828c7e7488cb7ea4f9bbd76567dedf69b1",
+      "blob": "551010da455bfaef6522733b7789639201d853ec",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "bf41f785dfc95591623a88c5d2f069ae15a96569417702bd71ea229d7ba5ee2a",
+      "sha256": "6f535096ba79e98952d894ab79ac992dc9877ba51eeed6b96bc3da77d7a693d4",
       "status": "added"
     },
     {
@@ -591,14 +624,25 @@
       "status": "added"
     },
     {
-      "blob": "e2cab05ba3ece3f0b0e777355aec717d822dd2fb",
+      "blob": "60ee8c04d8fe07dc4265b8c1e25bf0b00da697ae",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/link.ex",
-      "sha256": "ddeeb2a7f5392984b42c05291a02937db09ae97efa503730acc582e81b53102a",
+      "sha256": "0dafd4611206713748e6af02907699e250f433d98ce90367f3cf47913774feb0",
+      "status": "added"
+    },
+    {
+      "blob": "31c3200945445aaedf0da66b837851ae1de5d247",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/surface.ex",
+      "sha256": "798d1db14ae6f790564f4c86f89d4d79fdd927c5cf6fdc29d78c0ebce5cfc267",
       "status": "added"
     },
     {
@@ -723,25 +767,36 @@
       "status": "added"
     },
     {
-      "blob": "22ca1ce6c6c3317ff87fcf5cd6007f9c6ec258bc",
+      "blob": "5e48940c541615fb8f19f04400c6eeff211b1a74",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
-      "sha256": "e177ddffa125a521bf67a1dc4838c5c952c098ede4c13443c78e2d5205a603c1",
+      "sha256": "bc5d764266a2901bc9d06ddf648e4971bb57b906bf091c2f4577942acce8fa1c",
       "status": "added"
     },
     {
-      "blob": "f1482c2a6c6aca046c6556a30df4a13b6b06eb6c",
+      "blob": "d4a2eb3d68551b7a8df768c63ba7020153aa77e7",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.html.heex",
-      "sha256": "bca587211e664244731339352598e3e9b330ae7a40f5bff3ed6c2c01ee492646",
+      "sha256": "8d690e6917d6c367d7db928e003e3d0d136ad0c95fd21283b18e503ce489d606",
+      "status": "added"
+    },
+    {
+      "blob": "be075fb625ab191339e8154b944e101b6edbdf21",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_surfaces.ex",
+      "sha256": "6a8ed69c03cabf5b372c75b7cdfed43f7a6562d8b651e4b4f5bef65238f2591a",
       "status": "added"
     },
     {
@@ -822,14 +877,14 @@
       "status": "added"
     },
     {
-      "blob": "8281f2980f35cb62719b51e7d48135aad8788df3",
+      "blob": "742688c9372961a0e8c8e5a439157ec0b912b2bb",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_compatibility_browser.mjs",
-      "sha256": "fb823dd98dd60d89eaefb471ea919e892d582de441a3601b15e70ee213072a42",
+      "sha256": "1b13577876fe0d37c2caa11d64f1c9d76792c22234eb97514026c7e16607f08c",
       "status": "added"
     },
     {
@@ -899,6 +954,28 @@
       "status": "added"
     },
     {
+      "blob": "3f6b0c870b9954eed1663912f1005479b75ea8ea",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_surface_contract.mjs",
+      "sha256": "9862f850593ee11eed4a5407a20f1a709bd7e17e285a7d1ed3775ce5a2687540",
+      "status": "added"
+    },
+    {
+      "blob": "f721b87d09893eb7b144f6f18409840c31757045",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_surfaces_browser.mjs",
+      "sha256": "c4f1d5b639d72ffc093f36d76b14e082d8c8aaa8c3ccac0f5469511f4e12e43f",
+      "status": "added"
+    },
+    {
       "blob": "99bc167ed2acca6c3d85b3dc88333d4ae3235b34",
       "mode": "100644",
       "old_blob": null,
@@ -910,14 +987,14 @@
       "status": "added"
     },
     {
-      "blob": "1c0f6240da0ea556ffb48c29ec2a0fb8abddc91d",
+      "blob": "541dbb0523257820befe1c3455bf2810d37da9a4",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_system_test.mjs",
-      "sha256": "9a529a7fa6a06175fe4732301db79a45fa0316a99ef14abf40ff4954caa24b7c",
+      "sha256": "670c5d7627b0a395cb73f4fcedb37e59dbd1ffcbf25b2aeda41379e1e712aeef",
       "status": "added"
     },
     {
@@ -1031,6 +1108,17 @@
       "status": "added"
     },
     {
+      "blob": "014f422c2c211106cbd76b6082850b0d634ccc82",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/new_you_web/design_surface_test.exs",
+      "sha256": "512996528bc89c0325369fa296238c9a1c422efbfeff6b270f29ef3be2e5c9c7",
+      "status": "added"
+    },
+    {
       "blob": "d8c8e09107b3bcf548418a67d4d711ef79a179b3",
       "mode": "100644",
       "old_blob": "38ece4da8846283f11e0913c9cf1062781929d11",
@@ -1042,14 +1130,14 @@
       "status": "modified"
     },
     {
-      "blob": "19fdf7e2df95f7b57b38c98820b67aba0880b063",
+      "blob": "cd65e956e4f11dc82756b47e3ecc3d42f948f69a",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "5e28bb53f53e156538feedcb65398b120748a3d4bb5a7e535e1d8c6df76b0cfa",
+      "sha256": "5efd25aeb60e3e27dd4d496e23bfbc5be5e3d46a6cd6c499e77e6ce9fe00f73e",
       "status": "added"
     },
     {
@@ -1103,13 +1191,13 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.\n\nPhase 1 ACSS research now inventories all ten requested systems: grid, auto-grid, shadows, radius, gutter, content width, breakout, icons, cards and data attributes. Source-linked notes record inputs, formulas, gated token/selector output, dependencies, NewYou coverage, proposed decisions and 26 concrete proof items. A catalog binds 74 source files and 104 locators to the supplied archive and NewYou baseline. Eight systems are proposed adaptations, component-owned attributes are retained selectively, and breakout remains deferred without a current consumer. No runtime, token or visual change is introduced by this documentation batch.\n\nPhase 2 adds a layout lab within the existing guide: fixed grids, intrinsic auto-fit/auto-fill with a live column limit, capped containers, single-owner gutters and seven-track breakout comparisons. Bounded URL-backed controls vary allocation, item count and fixed-grid remainder alignment. Four guide-only CSS inputs own the candidate dimensions; the design gate validates their units, bounds, uniqueness and integer column count. Recipes compute from local inputs, without JS sizing formulas or a production layout migration. Phase 2 notes link implementation seams, formulas, source research and remaining proof.\n\nPhase 3 completes bounded card and icon presentation contracts. Cards add explicit leading/inset/action slots and heading levels while remaining noninteractive articles. Token-sized Heroicons add decorative/named semantics and plain/boxed variants. Consumer-local formulas derive inset corner radii from outer radius, uniform border and per-axis padding. Native actions keep HTML/ARIA state ownership. The guide shows actual shared components, isolated local overrides and a pending-state comparison. Flat defaults, palette, radius tiers and the lit primary shine remain intact; no media/avatar framework, global auto-radius, inverted corners or shadow ladder is added. Mask artwork follows system text ink in forced colors, with a bounded system-ink fallback. Detailed ownership, formulas, accessibility rules and proof limits live in the Phase 3 addendum.\n\nPhase 4 migrates the actual development-gated registration template in EN/AF to the same flat card, decorative icon, text link and lit primary components. A bounded native text/email/password field helper also renders in the guide. Container and auto-fit declarations are shared by guide and application; stack/wrapping-row recipes and optional local cap/grid inputs now have a real consumer. Exact copy, transport, CSRF/operation IDs, age/legal facts, password handling, controller/Domain behavior and release gates remain intact. Only the opted-in pilot excludes legacy registration styles and uses the approved light palette under either legacy theme. The addendum records formulas, field ownership, adopted versus deferred recipes and proof limits. This does not release registration or implement the broader WELL-131 journey.\n\nPhase 5 adds contextual content/section/control spacing roles, a scoped block-flow prose recipe and shared native/decorative divider recipes. The existing guide includes EN/AF prose, nested lists and quotations, computed role readouts, semantic hr and local-override specimens. The registration pilot consumes the same recipes around unchanged safety/privacy text and legal-item groups, preserving the existing 49px separator transitions. Legal routes continue to serve byte-identical hash-checked artifacts. Palette, typography roles, card inputs and premium CTA shine remain intact. No global prose reset, builder-specific interpreter, fluid promotion, new dependency or broader participant journey is added. Detailed source findings and equations are recorded in the Phase 5 addendum.\n\nA proof-only continuation adds an explicit Chrome/Firefox compatibility runner for actual layout geometry, shared card/icon/prose/divider contracts, contextual tokens, fluid interpolation and shipped fallbacks, and EN/AF registration. The registration browser test now snapshots every original font size before applying exact 200% text sizing, preventing inherited nested links from being compounded to 400%. Application source and approved visuals remain unchanged. Native no-JavaScript proof uses separately owned Firefox profiles. The runner records the inherited Chrome Hallmark shadow-focus diagnosis and unresolved Firefox DEV reload diagnostics explicitly.\n\nThe next-pass roadmap now places endpoint-first modular typography with the existing native `progress()` engine and fallbacks ahead of the remaining contextual spacing/prose, border, surface, native form, bounded page-adoption and diagnostics passes. It records source seams, verification work and exit checks. This documentation update changes no runtime CSS or approval state.\n\nThe typography pass adds guide-only endpoint-first modular scales for body and heading families, each with separate mobile/desktop bases and ratios and six steps. It reuses the shipped progress/trigonometric/static engine, validates source inputs and derived arithmetic, and exposes separate candidate semantic Tailwind mappings. `/dev/design-system#type-scale` compares all twelve current roles with candidates, includes computed endpoints, scoped/step overrides and long EN/AF specimens. Production typography, the application preview, registration and the premium CTA remain unchanged. Detailed editing and proof contracts are in the typography pass addendum.\n\nPass 2 finishes contextual card spacing and scoped prose. Shared cards consume separate content/action gap roles at their existing 16px defaults; padding, inset radii, prose and controls retain independent owners. The guide adds native quotation figures/captions, explicit nested flow wrappers and actual shared card comparisons with long EN/AF content. Scoped caption spacing uses existing type/spacing tokens. Current production typography, legal response bytes, registration behavior and the premium CTA are preserved. No new page, parser, media/crop framework, dependency or business state is introduced. The Pass 2 addendum records source findings, formulas, cascade limits, actual consumers and the missing standalone rich-content consumer for later adoption.\n\nPass 3 defines separate decorative, native-field control, separator and lit-edge border inputs, resolved at their actual consumer with existing defaults. Local legacy width inputs remain compatible. Invalid fields double their selected control border while focus stays separate; flat/raised card inset radii subtract the actual selected border. The guide adds actual shared-component comparisons, computed widths, native thematic hr and nested decorative EN/AF groups with neutral outer frames. Native enabled/pending comparisons preserve premium CTA shine, gradients and state behavior. The Pass 3 notes specify edit points, formulas, local precedence, actual consumers and proof limits. No additional palette, shape, state runtime or legacy-wide migration is introduced.",
+    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system`. The guide renders the same token-driven buttons, links, cards, fields and icons as application consumers. Fonts, colors, typography, spacing, radii, shadows, grids, containers and viewport previews expose CSS token names and browser-computed values. Self-hosted Inter and central body/display font inputs support changing font selection in one CSS file.\n\nCanonical semantic CSS inputs feed Tailwind utilities at the consuming element. Shared lighting recomputes locally, including solid fallbacks. The approved palette, typography roles and geometry remain intact. Lit primary buttons retain directional borders, a gradient, a short upper shine above the label and natural pressed edges. Fluid typography uses endpoint-first modular scale math with the existing native progress/trigonometric/static interpolation engine. Its semantic mappings remain guide candidates pending visual adoption.\n\nReusable layout recipes cover fixed grids, intrinsic auto-fit/auto-fill, column limits, incomplete-row centering, capped containers, single-owner gutters, stacks and wrapping rows. Breakout remains a guide comparison. Cards have noninteractive article semantics and explicit leading/inset/action slots; inset radii subtract the selected border and per-axis padding. Heroicons retain decorative/named semantics and native system-color behavior. Scoped prose and divider recipes separate content, section, card and control spacing. Purpose-owned borders distinguish decorative hairlines, native control boundaries, separators and directional lighting.\n\nComplete opaque plain, canvas, panel and raised profiles provide background, heading, body, muted, link, hover and focus roles together. A color-only Phoenix surface component owns finite data-surface values. Every nested boundary recomputes all roles; shared cards own plain/raised profiles and shared links read contextual ink. The guide demonstrates local profile inputs, inherited named inputs, nested resets, long EN/AF content and measured text/focus readouts. Missing, translucent and image-bearing grounds are not scored. Decorative gradients/noise/overlays retain their existing limits.\n\nThe existing development-gated registration template consumes these same components and layout/content recipes in EN/AF. Exact copy, form transport, age/legal facts, password handling, controller/Domain behavior and release boundaries are preserved. This presentation pilot is separate from the broader WELL-131 journey. Legacy styling remains outside the bounded migration.\n\nSource-linked Automatic.css 4.0.3 research inventories all ten requested systems and records inputs, formulas, generated tokens/selectors, dependencies, source identities, adopt/adapt/defer choices and missing proof. NewYou's implementation adds no vendor runtime/code, Sass/WordPress dependency, service, Domain state, schema or migration.",
     "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-15T20:43:35.291474Z",
+    "checked_at": "2026-11-15T21:26:52Z",
     "items": [
       {
         "description_sha256": "0dc493ca6de6c09b18c612c4e99a22e8df9ec8c05068ee6352532f229e756442",
@@ -1357,7 +1445,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "b5c2c330b52118010c5e5e1ad7d4abc7684d715ee0b0226d1f3623f6dbb4673c",
+      "sha256": "328cec4e7168b75a10e305daaadc443e3f8651b628064ecfe7a0012e567eeae8",
       "status": "parsed"
     },
     {
@@ -1369,7 +1457,7 @@
       "name": "design_card",
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/card.ex",
-      "sha256": "f496eb1a01953653f1e9824232a352b72a13bc0d2436109aef430d2face46207",
+      "sha256": "6819a1c50ab0dbf3a76ad1c686b49133946893a618c3a14a419eeb56adf37221",
       "status": "parsed",
       "visibility": "public"
     },
@@ -1459,7 +1547,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/link.ex",
-      "sha256": "b36e5c5f50ebc695c06a6316e4921983a0fb811d293af1f69b20f7780dfb4a0b",
+      "sha256": "a1ddd9eacc602ab13eb1e4a751bc51e84f2bc6fed055d05b23385487ae84eefe",
       "status": "parsed"
     },
     {
@@ -1471,7 +1559,7 @@
       "name": "text_link",
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/link.ex",
-      "sha256": "c3e6bd2fc89cb0380270d1a7ed021c9615ebe78de9b7cc3fdbd6eaf508be7332",
+      "sha256": "6d1d2d2b8588aa30f341ef26690e235ebb271b65563c8ca31625e1ce513687ce",
       "status": "parsed",
       "visibility": "public"
     },
@@ -1482,6 +1570,40 @@
       "module": null,
       "name": null,
       "path": "lib/new_you_web/components/design/link.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYouWeb.Components.Design.Surface",
+      "name": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/surface.ex",
+      "sha256": "8ed4b7a54c411cb4aeafd692342d6168f6b598c0ca8bcdef315c033536c3ba76",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.Components.Design.Surface",
+      "name": "design_surface",
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/surface.ex",
+      "sha256": "1aaa1fedb42d491ca371f0130597a7ef3a010300655e63f3597f859238f03515",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/components/design/surface.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -1950,7 +2072,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
-      "sha256": "d760dd06de3c2ce599775340d5073af56ab8f986a6697ade90ef7c59af5ecda9",
+      "sha256": "1ee37dc8928a809a9b7260ccef50827a8498ebf67a252458fb46a54ae07a802f",
       "status": "parsed"
     },
     {
@@ -2025,6 +2147,40 @@
       "module": null,
       "name": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYouWeb.DesignSystemSurfaces",
+      "name": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_surfaces.ex",
+      "sha256": "34056c454800908c5c01248422ed93b471debb769f5c73afe6da48eee9cab5b8",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.DesignSystemSurfaces",
+      "name": "surface_pairings",
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_surfaces.ex",
+      "sha256": "2bdcdab3d1e77161c5a6950ad9794d4a2b5a2554a8ae152fb194413b00212fee",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/live/design_system_surfaces.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -2245,6 +2401,40 @@
     },
     {
       "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYouWeb.DesignSurfaceTest",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/new_you_web/design_surface_test.exs",
+      "sha256": "9fc86c4076bd3cc8bd7114a7494ede94b287f901f55f6a3c8ce2083f1f2ef5de",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.DesignSurfaceTest",
+      "name": "content",
+      "old_sha256": null,
+      "path": "test/new_you_web/design_surface_test.exs",
+      "sha256": "e0d1d283137ce39b82f1df508af6458a45caa2f6599c0a45f39053975f91d465",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you_web/design_surface_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
       "change": "changed",
       "kind": "module",
       "module": "NewYouWeb.DesignSystemInfrastructureTest",
@@ -2272,7 +2462,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/live/design_system_live_test.exs",
-      "sha256": "74e4d986f1e062bb38d41827a8db29b420fc39ab1171670677436f9cfa26a0b3",
+      "sha256": "afac7fa1ae5803969db7956651ae77af69ff8e3ca89f64ff9425156962a3b836",
       "status": "parsed"
     },
     {
@@ -2330,6 +2520,8 @@
     "test/assets/design_layouts_browser.mjs",
     "test/assets/design_lighting_browser.mjs",
     "test/assets/design_registration_browser.mjs",
+    "test/assets/design_surface_contract.mjs",
+    "test/assets/design_surfaces_browser.mjs",
     "test/assets/design_system_browser.mjs",
     "test/assets/design_system_test.mjs",
     "test/assets/design_token_scope_browser.mjs",
@@ -2342,6 +2534,7 @@
     "test/new_you_web/controllers/registration_controller_test.exs",
     "test/new_you_web/design_component_contracts_test.exs",
     "test/new_you_web/design_field_test.exs",
+    "test/new_you_web/design_surface_test.exs",
     "test/new_you_web/design_system_infrastructure_test.exs",
     "test/new_you_web/live/design_system_live_test.exs",
     "test/new_you_web/security/authentication_reachability_test.exs",
