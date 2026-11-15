@@ -6,7 +6,7 @@
     "WELL-20"
   ],
   "implementation_revision": {
-    "git_sha": "ff983390a64c7055faa450e3a08de0fe244df7e8",
+    "git_sha": "d288e3ae502c86a7de3d4c3cfa146fe6e00758cd",
     "semantics": "WELL-20 proof integration only. It adds no business behavior or certification authority."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
@@ -145,6 +145,15 @@
       ]
     },
     {
+      "summary": "The standalone canonical command compares each complete family against the separately maintained TB-001-linked required case/invariant inventory. Dropped or substituted declarations leave the family partial and fail preflight before callbacks run. Inventory changes require an explicit independent review diff.",
+      "source_ids": [
+        "inventory",
+        "integration",
+        "runner",
+        "inventory_negative"
+      ]
+    },
+    {
       "summary": "FullCatalog executes required callbacks in fixed order and stops after an unsatisfied invariant. Shared upstream scenarios retain their assertions; completion reaches the runner ledger only after those assertions return.",
       "source_ids": [
         "executor",
@@ -243,6 +252,15 @@
       "source_ids": [
         "fixture",
         "matrix_test"
+      ]
+    },
+    {
+      "summary": "Passive scanner checks snapshot full persisted Account, Token, Session, DeviceAssurance and RecoveryCase attributes for the fixture owner before the initial GET and after subsequent passive requests. Recovery neutrality compares all response headers, cookie attributes and session effects across known, unknown, invalid and source-unavailable outcomes; only request IDs, CSRF values and the encrypted anonymous-session cookie vary.",
+      "source_ids": [
+        "passive_evidence",
+        "web_scenarios",
+        "capability_scenarios",
+        "transport_tests"
       ]
     }
   ],
@@ -358,7 +376,8 @@
     "No new migration, Resource, service, dependency or business write was added. The persistence entry identifies a reused constraint, not an exhaustive owner schema.",
     "Final proof artifacts remain outside the checkout and must name the exact final PR head. Review actual artifacts and hosted CI independently.",
     "The current Privacy purpose is a synthetic development/test proof, not a production consent requirement.",
-    "Full applicable local gates, OCR, exact-head CI and independent Master Gate review remain separate obligations. This map does not assert those results."
+    "Full applicable local gates, OCR, exact-head CI and independent Master Gate review remain separate obligations. This map does not assert those results.",
+    "The fixed identity inventory is an engineering acceptance input linked to TB-001 sections 7-8. It is separate from callback declarations and does not create business or certification authority. Fresh independent Master Gate review must assess its semantic completeness. Submitted browser checkpoints record attempts; owning Account/Session/protected-access assertions determine success."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -372,13 +391,13 @@
       "id": "integration",
       "path": "test/support/proof/p8_19_catalog.ex",
       "symbol": "defmodule NewYou.Proof.P819Catalog",
-      "sha256": "01cc91912cded67b96dc30d648f51c1b0e3939afaba4f9c535e4cb92b848653d"
+      "sha256": "137baf43ca8559131de07abefec1d5cb77676ce740d51b68362c0d411bca91d8"
     },
     {
       "id": "runner",
       "path": "test/support/proof/runner.ex",
       "symbol": "defmodule NewYou.Proof.Runner",
-      "sha256": "d488fc71659190e25cead0b49f67d219e947cb11ef2e5197d8034a70ea846b41"
+      "sha256": "652218899f519791037eb9a1f1d01030052834d678665f2d8966ffabe48f69b6"
     },
     {
       "id": "executor",
@@ -396,7 +415,7 @@
       "id": "result",
       "path": "test/support/proof/result.ex",
       "symbol": "defmodule NewYou.Proof.Result",
-      "sha256": "51ee541e3f8952cc750e5d4a1dd8ae373368e83d46d4b0d4be9419e1fbd7f9c6"
+      "sha256": "2e6896df4879a9c1f5f17c4358c9b825143c4cb17e08e132222cc22fb0b17942"
     },
     {
       "id": "entrypoint",
@@ -414,13 +433,13 @@
       "id": "browser",
       "path": "test/support/proof/p8_19_browser.ex",
       "symbol": "defmodule NewYou.Proof.P819Browser",
-      "sha256": "429415dda8da2ab01fc0dfbf8cee5c7bf73c2054a0edb09e8b0359765f94661f"
+      "sha256": "1f4977712fe78e23d87cdb3e3da2b83941525db3114cdff85f55364c222d4c51"
     },
     {
       "id": "browser_script",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'spine'",
-      "sha256": "2a26a5ee57722e3620cd1e63ce48649074e6eb8f91db21fd305cf7305cb27f88"
+      "sha256": "2c7b146732120c86dae7f5df09b5d4176dce1472fa6b9fbc14d551573d7fcfbf"
     },
     {
       "id": "fixture",
@@ -455,20 +474,20 @@
     {
       "id": "web_scenarios",
       "path": "test/support/proof/web_scenarios.ex",
-      "symbol": "defmodule NewYou.Proof.WebScenarios",
-      "sha256": "3f25d6ac5f34b0e8c836b7d773ae1fc1040b6c787c04504df4edd2e369aff4a2"
+      "symbol": "def recovery_neutral()",
+      "sha256": "15b5a5eb8d6ec618f5b6596ee2e5206ad4466d95e9176bc9ec924ce7da7bf5cf"
     },
     {
       "id": "capability_scenarios",
       "path": "test/support/proof/capability_scenarios.ex",
-      "symbol": "defmodule NewYou.Proof.VerificationCases",
-      "sha256": "a15cae10b8df687b1bb3d75f305a4d248689e12c85f3ebce0d10e41fa4de7500"
+      "symbol": "defmodule NewYou.Proof.MagicScannerCases",
+      "sha256": "2a851980eac3769cb20e28641a35b3e96480d3a8fcc47f41f681cabcc6e6a2fe"
     },
     {
       "id": "integration_test",
       "path": "test/new_you/proof/tb001_integration_test.exs",
       "symbol": "defmodule NewYou.Proof.TB001IntegrationTest",
-      "sha256": "cec9c7af47f5188fb4769011994efd4412e879e45e1bbd587df28c839f970b67"
+      "sha256": "31eed05c2f4af1b8d3cbbea0bc55faafe53cf73f8f666931bc27d4791d55c7e7"
     },
     {
       "id": "matrix_test",
@@ -517,6 +536,30 @@
       "path": "priv/repo/migrations/20261106091916_well10_delivery.exs",
       "symbol": "defmodule NewYou.Repo.Migrations.Well10Delivery",
       "sha256": "3f0ecc89fa5b4c1f2a83c51bab811f5ba5efef1c4217d51f64aae8da80d88f5c"
+    },
+    {
+      "id": "inventory",
+      "path": "test/proof/tb001_required_cases.json",
+      "symbol": "\"contract\": \"TB-001/v0.1.3\"",
+      "sha256": "c9c374eac33c88adf56b4557ade9fdf6bdf619194372160f17a19d630954eb55"
+    },
+    {
+      "id": "inventory_negative",
+      "path": "test/proof/tb001_inventory_broken.exs",
+      "symbol": "Code.eval_file(\"test/proof/run.exs\")",
+      "sha256": "4de45018dce92e412f4b72479bffc0649de23886b5019605c7fe77f4b0475b48"
+    },
+    {
+      "id": "passive_evidence",
+      "path": "test/support/proof/passive_evidence.ex",
+      "symbol": "defmodule NewYou.Proof.PassiveEvidence",
+      "sha256": "fbcb7905b3b877405ca2d907b4dab016f48cafbbf81e905a850a7357b6902b42"
+    },
+    {
+      "id": "transport_tests",
+      "path": "test/new_you/proof/passive_evidence_test.exs",
+      "symbol": "defmodule NewYou.Proof.PassiveEvidenceTest",
+      "sha256": "4b37bd89c6a61d50b7c61a6109d048c13adf79e228ea92851a172ee4a38bef14"
     }
   ]
 }

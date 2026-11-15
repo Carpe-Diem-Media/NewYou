@@ -6,7 +6,7 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "1b41a01099f4977c566f98c15761a2e47249fcc8",
+    "git_sha": "d288e3ae502c86a7de3d4c3cfa146fe6e00758cd",
     "semantics": "WELL-18 adds an Identity-owned lookup scope and a read-only current-authority path. The map is refreshed against the committed source checkpoint; it is descriptive, not authorization or merge evidence. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -360,7 +360,7 @@
       "id": "web_scenarios",
       "path": "test/support/proof/web_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.WebScenarios",
-      "sha256": "3f25d6ac5f34b0e8c836b7d773ae1fc1040b6c787c04504df4edd2e369aff4a2"
+      "sha256": "15b5a5eb8d6ec618f5b6596ee2e5206ad4466d95e9176bc9ec924ce7da7bf5cf"
     }
   ]
 }
