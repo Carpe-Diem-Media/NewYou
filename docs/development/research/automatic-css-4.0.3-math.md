@@ -9,6 +9,8 @@ a deeper assessment of the supplied plugin and reusable mathematics. No plugin
 code, WordPress runtime or Sass dependency is adopted by this note. Examples
 below are independent expressions of ordinary mathematics and native CSS.
 
+The later [Phase 1 module inventory](acss-4.0.3-inventory/README.md) traces all ten requested systems at baseline `4967b498d7413b7530303a64b4027e139e0b6d46`. It includes a hashed source catalog, proposed adopt/adapt/defer decisions and an implementation proof plan. Its newer source-specific findings supplement the observations below.
+
 ## 1. Baseline, authority and evidence
 
 Canonical repository: `Carpe-Diem-Media/NewYou`. The working branch is

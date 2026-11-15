@@ -6,6 +6,8 @@ engineering research; existing approved values and candidate status remain in
 force. It includes an independent arithmetic reference check and the unresolved
 direct-source licensing limitation.
 
+The [Phase 1 ACSS module inventory](research/acss-4.0.3-inventory/README.md) records ten module traces, source hashes, proposed decisions and missing proof. It is research for bounded future native-CSS adaptations; it changes no current tokens or component contracts.
+
 ## Authority chain
 
 DESIGN.md
