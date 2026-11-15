@@ -355,10 +355,10 @@ def focused_kind(argv):
     """Recognize repository test commands; supplemental checks are not tests."""
     require(argv, 'empty focused command')
     if re.fullmatch(r'python(?:3(?:\.\d+)?)?', Path(argv[0]).name) and argv[1:3] == ['-m', 'unittest']:
-        targets = argv[3:]
-        explicit = any(t.startswith('tests.test_') for t in targets)
-        discovery = targets[:1] == ['discover'] and '-s' in targets and 'tests' in targets and '-p' in targets
-        require(explicit or discovery, 'focused unittest requires an explicit repository test target')
+        # Explicit targets avoid discovery overrides and mixed external suites.
+        targets = [t for t in argv[3:] if t not in ('-v', '--verbose', '-q', '--quiet')]
+        require(targets and all(re.fullmatch(r'tests\.test_[A-Za-z0-9_]+(?:\.[A-Za-z_][A-Za-z0-9_]*)*', t)
+                                for t in targets), 'focused unittest requires only explicit repository test targets')
         return 'python-test'
     if argv[:9] == ['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'test']:
         require(any(t.startswith('test/') and '.exs' in t for t in argv[9:]), 'focused Mix test requires a test file target')

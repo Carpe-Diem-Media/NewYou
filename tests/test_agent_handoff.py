@@ -254,6 +254,46 @@ class HandoffTests(unittest.TestCase):
                 gate.local(root/'state.json', BINDING, [], ['python3 -m unittest tests.test_empty -q'])
             self.assertFalse((root/'state.json').exists())
 
+    def test_external_discovery_cannot_create_local_verification_receipt(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/'tests').mkdir()
+            external = root/'external'
+            external.mkdir()
+            (external/'test_external.py').write_text(
+                'import unittest\nclass External(unittest.TestCase):\n'
+                '    def test_passes(self):\n        self.assertTrue(True)\n')
+            argv = ['python3', '-m', 'unittest', 'discover', '-s', 'tests',
+                    '-s', str(external), '-p', 'test*.py']
+            # Reproduce unittest's last-option-wins behavior with a real run.
+            run = subprocess.run(argv, cwd=root, capture_output=True, text=True)
+            self.assertEqual(run.returncode, 0)
+            self.assertIn('Ran 1 test', run.stderr)
+            def passed(_argv, **kwargs):
+                kwargs['stdout'].write(run.stderr)
+                return SimpleNamespace(returncode=0)
+            with patch.object(gate, 'ROOT', root), patch('builtins.print'), \
+                 patch.object(gate, 'worktree', return_value=(BINDING, [])), \
+                 patch.object(gate.subprocess, 'run', side_effect=passed) as invoke, \
+                 self.assertRaisesRegex(gate.GateError, 'focused'):
+                gate.local(root/'state.json', BINDING, [], [gate.shlex.join(argv)])
+            invoke.assert_not_called()
+            self.assertFalse((root/'state.json').exists())
+
+    def test_focused_unittest_accepts_only_explicit_repository_targets(self):
+        for argv in [
+            ['python3', '-m', 'unittest', 'tests.test_agent_handoff', '-q'],
+            ['python3', '-m', 'unittest', '-v', 'tests.test_agent_handoff.HandoffTests'],
+        ]:
+            self.assertEqual(gate.focused_kind(argv), 'python-test')
+        for arguments in [
+            ['tests.test_empty', 'external.test_passes'],
+            ['tests.test_agent_handoff', '-k', 'external'],
+            ['discover', '-s', 'tests', '-p', 'test*.py'],
+        ]:
+            with self.subTest(arguments=arguments), self.assertRaises(gate.GateError):
+                gate.focused_kind(['python3', '-m', 'unittest', *arguments])
+
     def test_unavailable_subscription_does_not_run_paid_review(self):
         for status in ['', 'Status: expired', 'Status: API key']:
             with patch.object(gate, 'command', return_value=status) as cmd, self.assertRaises(gate.GateError):
