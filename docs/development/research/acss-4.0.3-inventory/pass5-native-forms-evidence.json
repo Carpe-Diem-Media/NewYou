@@ -1,0 +1,465 @@
+{
+  "record_type": "bounded_saved_verification_output",
+  "task": "WELL-112 Pass 5 native forms",
+  "captured_at": "2026-11-15T22:21:32+00:00",
+  "implementation_sha": "6b03daf6207fcd2816f4b2f1e9a2e85d7f643ddf",
+  "pass_base_sha": "b7e1787ccb3ddf4f2a76bff5f6712d7ad622b2d9",
+  "documentation_head_at_capture": "4601bedf3861bfb1548eb10abbf4656747391f68",
+  "binding": "Application and test source match the implementation SHA. Later changes at capture affect documentation only. These saved local outputs are not exact-final-head hosted CI, independent runtime certification or resulting-main proof.",
+  "resource_status": "WELL-125 released TEST at 2026-11-15 21:48:46 UTC. WELL-112 has no fresh TEST or PLT grant. No Pass 5 doctor, DB-backed focused tests, canonical mix check or mix check.deep ran.",
+  "verification_status": "BLOCKED",
+  "merge_readiness": "NOT_VERIFIED_FOR_MERGE",
+  "limits": [
+    "Saved outputs and hashes are an author evidence record, not tamper-proof attestation.",
+    "Chrome baseline comparisons require the supplementary temporary before-change snapshot; portable reruns omit it.",
+    "Firefox DEV reload diagnostics remain unresolved.",
+    "Overall Hallmark certification remains open due to inherited registration gate 26a.",
+    "WebKit, true browser zoom, screen readers and Firefox media emulation remain unverified.",
+    "WELL-114 certification, branch conflicts, required exact-head CI, independent Master Gate and resulting-main proof remain open."
+  ],
+  "outputs": [
+    {
+      "check": "native_chrome",
+      "local_log": "/tmp/newyou-native-forms-browser-final.log",
+      "sha256": "e68210b7742e18e8c1eccf2d8c42272ccfb050169a85eebaa0ec658ce6c76995",
+      "saved_output": {
+        "status": "PASS",
+        "checks": 593,
+        "browser": "Chrome/155.0.8059.84",
+        "baselinesCompared": 6,
+        "posts": 0,
+        "exclusions": [
+          "WebKit",
+          "true browser zoom",
+          "screen reader"
+        ]
+      }
+    },
+    {
+      "check": "native_firefox",
+      "local_log": "/tmp/newyou-native-forms-firefox.log",
+      "sha256": "4474cf22d620703379f47af055f47f0b35833e64065b03cb0c8be60fbe10e93f",
+      "saved_output": {
+        "status": "PASS",
+        "checks": 361,
+        "browser": "firefox/160.0",
+        "baselinesCompared": 0,
+        "posts": 0,
+        "unresolvedDevReloadErrors": [
+          "Firefox can’t establish a connection to the server at ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0.",
+          "The connection to ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0 was interrupted while the page was loading.",
+          "Firefox can’t establish a connection to the server at ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0.",
+          "The connection to ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0 was interrupted while the page was loading.",
+          "Firefox can’t establish a connection to the server at ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0.",
+          "The connection to ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0 was interrupted while the page was loading.",
+          "Firefox can’t establish a connection to the server at ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0.",
+          "The connection to ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0 was interrupted while the page was loading.",
+          "Firefox can’t establish a connection to the server at ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0.",
+          "The connection to ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0 was interrupted while the page was loading.",
+          "Firefox can’t establish a connection to the server at ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0.",
+          "The connection to ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0 was interrupted while the page was loading."
+        ],
+        "exclusions": [
+          "WebKit",
+          "true browser zoom",
+          "screen reader",
+          "Firefox media emulation"
+        ]
+      }
+    },
+    {
+      "check": "compatibility_chrome",
+      "local_log": "/tmp/newyou-native-forms-compat-chrome.log",
+      "sha256": "5473a523a3e3e72c2b9e488ef28926e387be5fc2bbce225cc6236f2bf3b6833e",
+      "saved_output": {
+        "status": "PASS",
+        "checks": 19712,
+        "browser": "Chrome/155.0.8059.84",
+        "puppeteer": "25.17.0",
+        "features": {
+          "oklch": true,
+          "colorMix": true,
+          "trigonometric": true,
+          "progress": true
+        },
+        "focusDiagnostics": {
+          "en": [
+            {
+              "pageFocused": true,
+              "chain": [
+                {
+                  "tag": "DIV",
+                  "id": "tidewave-toolbar",
+                  "outline": "none",
+                  "width": "3px"
+                },
+                {
+                  "tag": "BUTTON",
+                  "id": "base-ui-_r_1_",
+                  "outline": "auto",
+                  "width": "1px"
+                }
+              ]
+            },
+            {
+              "pageFocused": true,
+              "chain": [
+                {
+                  "tag": "DIV",
+                  "id": "tidewave-toolbar",
+                  "outline": "none",
+                  "width": "3px"
+                },
+                {
+                  "tag": "BUTTON",
+                  "id": "base-ui-_r_3_",
+                  "outline": "auto",
+                  "width": "1px"
+                }
+              ]
+            },
+            {
+              "pageFocused": true,
+              "chain": [
+                {
+                  "tag": "BODY",
+                  "id": "",
+                  "outline": "none",
+                  "width": "3px"
+                }
+              ]
+            }
+          ],
+          "af": [
+            {
+              "pageFocused": true,
+              "chain": [
+                {
+                  "tag": "DIV",
+                  "id": "tidewave-toolbar",
+                  "outline": "none",
+                  "width": "3px"
+                },
+                {
+                  "tag": "BUTTON",
+                  "id": "base-ui-_r_1_",
+                  "outline": "auto",
+                  "width": "1px"
+                }
+              ]
+            },
+            {
+              "pageFocused": true,
+              "chain": [
+                {
+                  "tag": "DIV",
+                  "id": "tidewave-toolbar",
+                  "outline": "none",
+                  "width": "3px"
+                },
+                {
+                  "tag": "BUTTON",
+                  "id": "base-ui-_r_3_",
+                  "outline": "auto",
+                  "width": "1px"
+                }
+              ]
+            },
+            {
+              "pageFocused": true,
+              "chain": [
+                {
+                  "tag": "BODY",
+                  "id": "",
+                  "outline": "none",
+                  "width": "3px"
+                }
+              ]
+            }
+          ]
+        },
+        "unresolvedDevReloadErrors": [],
+        "exclusions": [
+          "media-feature emulation",
+          "WebKit",
+          "true browser zoom",
+          "screen reader"
+        ]
+      }
+    },
+    {
+      "check": "compatibility_firefox",
+      "local_log": "/tmp/newyou-native-forms-compat-firefox.log",
+      "sha256": "eb1539330874a9c71a99873a3af0df788ac3f306f87931b7ce48e47c1e993fbf",
+      "saved_output": {
+        "status": "PASS",
+        "checks": 19712,
+        "browser": "firefox/160.0",
+        "puppeteer": "25.17.0",
+        "features": {
+          "oklch": true,
+          "colorMix": true,
+          "trigonometric": true,
+          "progress": true
+        },
+        "focusDiagnostics": {
+          "en": "Not run: developer-toolbar diagnostic targets the Chrome Hallmark runtime",
+          "af": "Not run: developer-toolbar diagnostic targets the Chrome Hallmark runtime"
+        },
+        "unresolvedDevReloadErrors": [
+          "Firefox can’t establish a connection to the server at ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0.",
+          "The connection to ws://127.0.0.1:4237/phoenix/live_reload/socket/websocket?vsn=2.0.0 was interrupted while the page was loading."
+        ],
+        "exclusions": [
+          "media-feature emulation",
+          "WebKit",
+          "true browser zoom",
+          "screen reader"
+        ]
+      }
+    },
+    {
+      "check": "hallmark_guide",
+      "local_log": "/tmp/newyou-native-forms-hallmark.json",
+      "sha256": "bc535b515c0e26cb8c5931f390f2fa76751e6fba5006cba66810f7624b2a2023",
+      "saved_output": {
+        "summary": {
+          "fails": 0,
+          "reflex": 0,
+          "warns": 1,
+          "waived": 2,
+          "rejected": 0,
+          "answered": 0,
+          "dismissed": 0,
+          "notes": 1,
+          "files": 8,
+          "render": "ran"
+        },
+        "findings": [
+          {
+            "gate": "40",
+            "grade": "WARN",
+            "tier": "floor",
+            "file": "http://127.0.0.1:4237/dev/design-system",
+            "line": 1,
+            "evidence": "[1280px] contrast drops to 3.97:1 over the gradient behind button.ds-design-button.inline-flex \"Review typography\"",
+            "fix": "Check the text where the gradient is darkest or lightest; give the label its own ground"
+          },
+          {
+            "gate": "37",
+            "grade": "WAIVED",
+            "tier": "reflex",
+            "file": "assets/css/design-tokens.css",
+            "line": 558,
+            "evidence": "4 font families: inter, 400, 500, 700",
+            "fix": "Drop the extra family; three is the ceiling"
+          },
+          {
+            "gate": "39b",
+            "grade": "WAIVED",
+            "tier": "reflex",
+            "file": "http://127.0.0.1:4237/dev/design-system",
+            "line": 1,
+            "evidence": "[1440px] control height outside 32 to 52px: input.ds-design-field-input 58px, input.ds-design-field-input 58px, input.d…",
+            "fix": "Marketing controls stand 44 to 52px; app UI 32 to 40px with a 44px hit target"
+          },
+          {
+            "gate": "waive",
+            "grade": "NOTE",
+            "tier": "ledger",
+            "file": "assets/css/design-tokens.css",
+            "line": 1,
+            "evidence": "4 reflex gates waived (7b, 37, 75, 39b): that is a house style, not a s…",
+            "fix": "Lock it into a design.md so later pages inherit it instead of re-arguing it"
+          }
+        ]
+      }
+    },
+    {
+      "check": "hallmark_registration_en",
+      "local_log": "/tmp/newyou-native-forms-hallmark-en.json",
+      "sha256": "9c36cdd4512930c2be7b63ae67d870ea95de4322c9ca93c7c6fc785d5eea20dd",
+      "saved_output": {
+        "summary": {
+          "fails": 1,
+          "reflex": 0,
+          "warns": 1,
+          "waived": 4,
+          "rejected": 0,
+          "answered": 0,
+          "dismissed": 0,
+          "notes": 1,
+          "files": 3,
+          "render": "ran"
+        },
+        "findings": [
+          {
+            "gate": "26a",
+            "grade": "FAIL",
+            "tier": "floor",
+            "file": "http://127.0.0.1:4237/register?locale=en",
+            "line": 1,
+            "evidence": "[1440px] nothing shows keyboard focus on body \"Development Platfo\"",
+            "fix": "Give every control a :focus-visible ring; never remove an outline without putting one back"
+          },
+          {
+            "gate": "40",
+            "grade": "WARN",
+            "tier": "floor",
+            "file": "http://127.0.0.1:4237/register?locale=en",
+            "line": 1,
+            "evidence": "[1280px] contrast drops to 3.97:1 over the gradient behind button.ds-design-button.inline-flex \"Create account\"",
+            "fix": "Check the text where the gradient is darkest or lightest; give the label its own ground"
+          },
+          {
+            "gate": "37",
+            "grade": "WAIVED",
+            "tier": "reflex",
+            "file": "assets/css/design-tokens.css",
+            "line": 558,
+            "evidence": "4 font families: inter, 400, 500, 700",
+            "fix": "Drop the extra family; three is the ceiling"
+          },
+          {
+            "gate": "39b",
+            "grade": "WAIVED",
+            "tier": "reflex",
+            "file": "http://127.0.0.1:4237/register?locale=en",
+            "line": 1,
+            "evidence": "[1440px] control height outside 32 to 52px: input.ds-design-field-input 58px, input.ds-design-field-input 58px, input.d…",
+            "fix": "Marketing controls stand 44 to 52px; app UI 32 to 40px with a 44px hit target"
+          },
+          {
+            "gate": "49b",
+            "grade": "WAIVED",
+            "tier": "reflex",
+            "file": "http://127.0.0.1:4237/register?locale=en",
+            "line": 1,
+            "evidence": "[320px] link \"Read the Terms and Conditions (E\" wraps to 2 lines (a.ds-design-link.font-design-sans)",
+            "fix": "Shorten the label or set nowrap"
+          },
+          {
+            "gate": "49b",
+            "grade": "WAIVED",
+            "tier": "reflex",
+            "file": "http://127.0.0.1:4237/register?locale=en",
+            "line": 1,
+            "evidence": "[320px] link \"Read the Privacy Notice (English\" wraps to 2 lines (a.ds-design-link.font-design-sans)",
+            "fix": "Shorten the label or set nowrap"
+          },
+          {
+            "gate": "waive",
+            "grade": "NOTE",
+            "tier": "ledger",
+            "file": "assets/css/design-tokens.css",
+            "line": 1,
+            "evidence": "4 reflex gates waived (7b, 37, 39b, 49b): that is a house style, not a …",
+            "fix": "Lock it into a design.md so later pages inherit it instead of re-arguing it"
+          }
+        ]
+      }
+    },
+    {
+      "check": "hallmark_registration_af",
+      "local_log": "/tmp/newyou-native-forms-hallmark-af.json",
+      "sha256": "856776e2a7226e82e7ad80bcd27c165cc85dbe16ddde32d1c02caefa8b09426a",
+      "saved_output": {
+        "summary": {
+          "fails": 1,
+          "reflex": 0,
+          "warns": 1,
+          "waived": 4,
+          "rejected": 0,
+          "answered": 0,
+          "dismissed": 0,
+          "notes": 1,
+          "files": 3,
+          "render": "ran"
+        },
+        "findings": [
+          {
+            "gate": "26a",
+            "grade": "FAIL",
+            "tier": "floor",
+            "file": "http://127.0.0.1:4237/register?locale=af",
+            "line": 1,
+            "evidence": "[1440px] nothing shows keyboard focus on body \"Development Platfo\"",
+            "fix": "Give every control a :focus-visible ring; never remove an outline without putting one back"
+          },
+          {
+            "gate": "40",
+            "grade": "WARN",
+            "tier": "floor",
+            "file": "http://127.0.0.1:4237/register?locale=af",
+            "line": 1,
+            "evidence": "[1280px] contrast drops to 3.97:1 over the gradient behind button.ds-design-button.inline-flex \"Skep rekening\"",
+            "fix": "Check the text where the gradient is darkest or lightest; give the label its own ground"
+          },
+          {
+            "gate": "37",
+            "grade": "WAIVED",
+            "tier": "reflex",
+            "file": "assets/css/design-tokens.css",
+            "line": 558,
+            "evidence": "4 font families: inter, 400, 500, 700",
+            "fix": "Drop the extra family; three is the ceiling"
+          },
+          {
+            "gate": "39b",
+            "grade": "WAIVED",
+            "tier": "reflex",
+            "file": "http://127.0.0.1:4237/register?locale=af",
+            "line": 1,
+            "evidence": "[1440px] control height outside 32 to 52px: input.ds-design-field-input 58px, input.ds-design-field-input 58px, input.d…",
+            "fix": "Marketing controls stand 44 to 52px; app UI 32 to 40px with a 44px hit target"
+          },
+          {
+            "gate": "49b",
+            "grade": "WAIVED",
+            "tier": "reflex",
+            "file": "http://127.0.0.1:4237/register?locale=af",
+            "line": 1,
+            "evidence": "[320px] link \"Lees die Bepalings en Voorwaarde\" wraps to 2 lines (a.ds-design-link.font-design-sans)",
+            "fix": "Shorten the label or set nowrap"
+          },
+          {
+            "gate": "49b",
+            "grade": "WAIVED",
+            "tier": "reflex",
+            "file": "http://127.0.0.1:4237/register?locale=af",
+            "line": 1,
+            "evidence": "[320px] link \"Lees die Privaatheidsbeleid (Eng\" wraps to 2 lines (a.ds-design-link.font-design-sans)",
+            "fix": "Shorten the label or set nowrap"
+          },
+          {
+            "gate": "waive",
+            "grade": "NOTE",
+            "tier": "ledger",
+            "file": "assets/css/design-tokens.css",
+            "line": 1,
+            "evidence": "4 reflex gates waived (7b, 37, 39b, 49b): that is a house style, not a …",
+            "fix": "Lock it into a design.md so later pages inherit it instead of re-arguing it"
+          }
+        ]
+      }
+    },
+    {
+      "check": "lighting",
+      "local_log": "/tmp/newyou-native-forms-lighting.log",
+      "sha256": "bb9777fca2c082da38dc9e90475315af29b5c3834d05a9a147163228c3fcc41c",
+      "saved_output": "(node:319323) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/jcschoeman96/.t3/worktrees/NewYou/t3-0463e245-481ee4cb6a05a062/assets/js/design_system.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to /home/jcschoeman96/package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS: lighting hierarchy, native states, screenshot gradient contrast, 320px/200% text reflow, keyboard focus, token propagation and forced-colour/solid fallbacks {\"states\":[{\"interaction\":\"rest\",\"minimum\":5.32},{\"interaction\":\"hover\",\"minimum\":9.41},{\"interaction\":\"pressed\",\"minimum\":9.41}],\"wrappedEnlarged\":5.31}\n"
+    },
+    {
+      "check": "static_and_pure",
+      "local_log": "/tmp/newyou-native-forms-static.log",
+      "sha256": "d11ff9c9e98ace79a53bfa68a437194648a914a281f8aa9cb73193e35eefdfc3",
+      "saved_output": "Design-system check passed (base a3d7e2e2ac11).\narchitecture: ARC-029 Ash write boundary PASS\nRunning ExUnit with seed: 900433, max_cases: 8\n\n........\nFinished in 0.1 seconds (0.08s on load, 0.02s async, 0.00s sync)\n\nResult: 8 passed\n(node:130848) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/jcschoeman96/.t3/worktrees/NewYou/t3-0463e245-481ee4cb6a05a062/assets/js/design_system.js is not specified and it doesn't parse as CommonJS.\nReparsing as ES module because module syntax was detected. This incurs a performance overhead.\nTo eliminate this warning, add \"type\": \"module\" to /home/jcschoeman96/package.json.\n(Use `node --trace-warnings ...` to show where the warning was created)\n✔ contrast measures equal colors, black/white and a known brand pair (0.793924ms)\n✔ contrast rejects invalid and out-of-range measurements (0.175505ms)\n✔ focus color is assessed against its own 3:1 threshold (3.59203ms)\n✔ canvas sampling rejects invalid assignments instead of reusing the prior fill (0.759263ms)\n✔ canvas sampling rejects transparent colors and unavailable contexts (0.193786ms)\nℹ tests 5\nℹ suites 0\nℹ pass 5\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 55.626227\n......................................................\n----------------------------------------------------------------------\nRan 54 tests in 11.308s\n\nOK\n"
+    },
+    {
+      "check": "handoff_smoke",
+      "local_log": "/tmp/newyou-native-forms-handoff-smoke.log",
+      "sha256": "a5f24903ed169bb946c220052b97969da94675f3c3ac8bb9b6786c99854dcc4c",
+      "saved_output": "......................................................\n----------------------------------------------------------------------\nRan 54 tests in 10.484s\n\nOK\n"
+    }
+  ]
+}
