@@ -103,6 +103,17 @@
   }
 
   @media (forced-colors: active) {
+    /* Opt only the mask out of forced background replacement. Keep system ink. */
+    .ds-design-icon > .ds-design-icon-glyph {
+      color: var(--system-button-text);
+      forced-color-adjust: none;
+    }
+    @supports (forced-color-adjust: preserve-parent-color) {
+      .ds-design-icon > .ds-design-icon-glyph {
+        color: inherit;
+        forced-color-adjust: preserve-parent-color;
+      }
+    }
     .ds-design-button[data-treatment="lit"][data-variant],
     .ds-design-button[data-treatment="lit"][data-variant]:enabled:hover,
     .ds-design-button[data-treatment="lit"][data-variant]:enabled:active {

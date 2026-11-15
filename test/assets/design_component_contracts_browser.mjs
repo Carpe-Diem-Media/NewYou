@@ -142,12 +142,35 @@ const contrast = await page.evaluate(() => {
     return n.offsetHeight > 0 && s.animationName === "none" && s.transitionDuration === "0s"
   }), "reduced motion requires no animation")
   const session = await page.createCDPSession()
-  await session.send("Emulation.setEmulatedMedia", {features:[{name:"forced-colors",value:"active"}]})
+  for (const scheme of ["light","dark"]) {
+    await session.send("Emulation.setEmulatedMedia", {features:[{name:"forced-colors",value:"active"},{name:"prefers-color-scheme",value:scheme}]})
+    check(await page.evaluate(() => {
+      const n = document.querySelector("#contract-idle"), s = getComputedStyle(n)
+      const icon = getComputedStyle(document.querySelector("#contracts .ds-design-icon[data-treatment=boxed]"))
+      return matchMedia("(forced-colors:active)").matches && s.backgroundImage === "none" && s.boxShadow === "none" && parseFloat(icon.borderTopWidth) > 0
+    }), `forced ${scheme} colors retain boundaries without gradients or shadows`)
+    check(await page.evaluate(() => [...document.querySelectorAll("#contracts .ds-design-icon-glyph")].every(n => {
+      const s=getComputedStyle(n), parent=getComputedStyle(n.parentElement)
+      return s.backgroundColor === parent.color && s.backgroundColor !== parent.backgroundColor
+    })), `forced ${scheme} colors keep mask ink equal to the parent text color`)
+  }
+  // Exercise the real fallback declarations. This does not emulate an older browser.
   check(await page.evaluate(() => {
-    const n = document.querySelector("#contract-idle"), s = getComputedStyle(n)
-    const icon = getComputedStyle(document.querySelector("#contracts .ds-design-icon[data-treatment=boxed]"))
-    return matchMedia("(forced-colors:active)").matches && s.backgroundImage === "none" && s.boxShadow === "none" && parseFloat(icon.borderTopWidth) > 0
-  }), "forced colors retain boundaries without gradients or shadows")
+    let removed=0
+    const visit=owner => {
+      for (let i=owner.cssRules.length-1;i>=0;i--) {
+        const rule=owner.cssRules[i]
+        if (rule instanceof CSSSupportsRule && rule.conditionText.includes("forced-color-adjust: preserve-parent-color")) {
+          owner.deleteRule(i); removed++
+        } else if (rule.cssRules) visit(rule)
+      }
+    }
+    for (const sheet of document.styleSheets) {try {visit(sheet)} catch {}}
+    return removed>0 && [...document.querySelectorAll("#contracts .ds-design-icon-glyph")].every(n => {
+      const s=getComputedStyle(n)
+      return s.forcedColorAdjust === "none" && s.backgroundColor === s.color && s.backgroundColor !== "rgba(0, 0, 0, 0)"
+    })
+  }), "forced-color mask fallback uses system text ink")
   await session.send("Emulation.setEmulatedMedia", {features:[]})
   await page.$eval("#contracts", n => n.scrollIntoView())
   await page.screenshot({path:"/tmp/newyou-phase3-components-desktop.png"})
