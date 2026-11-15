@@ -351,12 +351,33 @@ def write_state(path, state):
     temporary.replace(path)
 
 
+def focused_kind(argv):
+    """Recognize repository test commands; supplemental checks are not tests."""
+    require(argv, 'empty focused command')
+    if re.fullmatch(r'python(?:3(?:\.\d+)?)?', Path(argv[0]).name) and argv[1:3] == ['-m', 'unittest']:
+        targets = argv[3:]
+        explicit = any(t.startswith('tests.test_') for t in targets)
+        discovery = targets[:1] == ['discover'] and '-s' in targets and 'tests' in targets and '-p' in targets
+        require(explicit or discovery, 'focused unittest requires an explicit repository test target')
+        return 'python-test'
+    if argv[:9] == ['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'test']:
+        require(any(t.startswith('test/') and '.exs' in t for t in argv[9:]), 'focused Mix test requires a test file target')
+        return 'mix-test'
+    if argv[:3] == ['git', 'diff', '--check']:
+        return 'check'
+    if (Path(argv[0]).name in ('python', 'python3')
+            and argv[1:3] == ['-m', 'tools.capability_knowledge']):
+        return 'check'
+    raise GateError('unsupported focused command; use ticket-scoped unittest or Mise/DevCore mix test')
+
+
 def local(state_path, binding, paths, focused, deep=False):
     """Invalidate old receipts first; record only observed successful local runs."""
     state_path.unlink(missing_ok=True)
     require(focused, 'at least one ticket-scoped --focused command is required')
     commands = [shlex.split(c) for c in focused]
-    require(all(c and c[0] != 'ocr' for c in commands), 'invalid focused command')
+    kinds = [focused_kind(c) for c in commands]
+    require(any(k.endswith('-test') for k in kinds), 'focused verification requires a ticket-scoped test command')
     commands.append(['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'check'])
     if deep or classify_deep_application_changes(paths):
         commands.append(['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'check.deep'])
@@ -367,7 +388,11 @@ def local(state_path, binding, paths, focused, deep=False):
         with log.open('w') as output:
             output_path_mode(log)
             process = subprocess.run(argv, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT)
-        require(process.returncode == 0, f'local verification failed; inspect {log}; stop before hosted CI/OCR')
+        require(process.returncode == 0, f'local verification failed; inspect {log}; stop before OCR/hosted CI')
+        if index < len(kinds) and kinds[index].endswith('-test'):
+            report = log.read_text()
+            pattern = r'(?m)^Ran [1-9][0-9]* tests? in ' if kinds[index] == 'python-test' else r'(?m)^Result: [1-9][0-9]* passed'
+            require(re.search(pattern, report), f'focused command reported no tests; inspect {log}')
         require(worktree()[0] == binding, 'worktree changed during local verification')
         results.append(dict(command=argv, exit_code=0, log=str(log)))
     state = dict(binding=binding, local=results)

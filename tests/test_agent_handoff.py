@@ -231,6 +231,29 @@ class HandoffTests(unittest.TestCase):
         with self.assertRaises(gate.GateError):
             gate.decode('{"status":"partial","status":"complete"}')
 
+    def test_noop_focused_command_cannot_create_local_verification_receipt(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'state.json'
+            with patch.object(gate, 'ROOT', Path(directory)), \
+                 patch.object(gate, 'worktree', return_value=(BINDING, [])), \
+                 patch.object(gate.subprocess, 'run', return_value=SimpleNamespace(returncode=0)), \
+                 patch('builtins.print'), self.assertRaisesRegex(gate.GateError, 'focused'):
+                gate.local(path, BINDING, [], ['true'])
+            self.assertFalse(path.exists())
+
+    def test_zero_exit_with_zero_test_report_is_not_regression_proof(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def empty_run(argv, **kwargs):
+                kwargs['stdout'].write('Ran 0 tests in 0.000s\nOK\n')
+                return SimpleNamespace(returncode=0)
+            with patch.object(gate, 'ROOT', root), patch('builtins.print'), \
+                 patch.object(gate, 'worktree', return_value=(BINDING, [])), \
+                 patch.object(gate.subprocess, 'run', side_effect=empty_run), \
+                 self.assertRaisesRegex(gate.GateError, 'no tests'):
+                gate.local(root/'state.json', BINDING, [], ['python3 -m unittest tests.test_empty -q'])
+            self.assertFalse((root/'state.json').exists())
+
     def test_unavailable_subscription_does_not_run_paid_review(self):
         for status in ['', 'Status: expired', 'Status: API key']:
             with patch.object(gate, 'command', return_value=status) as cmd, self.assertRaises(gate.GateError):
@@ -243,7 +266,7 @@ class HandoffTests(unittest.TestCase):
             state.write_text(json.dumps(dict(binding=BINDING, local=[dict(exit_code=0)])))
             with patch.object(gate, 'ROOT', Path(directory)), patch('builtins.print'):
                 with self.assertRaisesRegex(gate.GateError, 'local verification failed'):
-                    gate.local(state, BINDING, [], ['python3 -c "raise SystemExit(1)"'])
+                    gate.local(state, BINDING, [], ['python3 -m unittest tests.test_missing -q'])
             self.assertFalse(state.exists())
 
     def test_cli_rejects_shared_ci_before_any_tool_call(self):
