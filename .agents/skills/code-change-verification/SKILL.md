@@ -61,6 +61,8 @@ Unresolved material findings keep the PR Draft for independent triage. `finish -
 
 The helper validates explicit repository test commands, observed execution and source freshness. It cannot establish semantic relevance to a Plane ticket from a test name. Before `local`, the author must map the selected tests to the live acceptance criteria and inspect their assertions; independent Master Gate verifies that mapping. An unrelated passing test does not satisfy the focused-test obligation. Execution receipts do not certify acceptance coverage or approval.
 
+Python focused proof must include at least one passing test after subtracting skipped tests and expected failures from the reported total. All-skipped, all-expected-failure and unknown result summaries block the local receipt. Changed paths are collected with `--no-renames`, matching CI routing, so both sides of a rename select applicable local and hosted gates. OCR v1 previews can collapse a rename to its destination; when old-path coverage is missing, preview blocks before subscription calls. Do not treat that limitation as a clean scan or drop the old path to pass.
+
 The evidence directory must already be private to its owner, or be newly created with mode `0700`. An unsafe existing directory blocks before any writes. Files are created with mode `0600` before writing; unsafe existing files, symlinks and multiply linked output files are rejected without truncation. Resolve a reported permission problem deliberately before retrying; the helper does not silently change existing permissions.
 
 ## Implementation handoff review

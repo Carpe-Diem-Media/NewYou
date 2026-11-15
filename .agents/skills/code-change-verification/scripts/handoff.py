@@ -77,7 +77,7 @@ def worktree():
     binding = dict(head=head, base=base, merge_base=command('git', 'merge-base', base, head),
                    tree=command('git', 'rev-parse', 'HEAD^{tree}'))
     require(all(re.fullmatch('[0-9a-f]{40}', sha) for sha in binding.values()), 'unresolved Git identity')
-    paths = command('git', 'diff', '--name-only', '-z', f'{binding["merge_base"]}..{head}').strip('\0').split('\0')
+    paths = command('git', 'diff', '--no-renames', '--name-only', '-z', f'{binding["merge_base"]}..{head}').strip('\0').split('\0')
     return binding, [p for p in paths if p]
 
 
@@ -398,8 +398,17 @@ def local(state_path, binding, paths, focused, deep=False):
         require(process.returncode == 0, f'local verification failed; inspect {log}; stop before OCR/hosted CI')
         if index < len(kinds) and kinds[index].endswith('-test'):
             report = log.read_text()
-            pattern = r'(?m)^Ran [1-9][0-9]* tests? in ' if kinds[index] == 'python-test' else r'(?m)^Result: [1-9][0-9]* passed'
-            require(re.search(pattern, report), f'focused command reported no tests; inspect {log}')
+            if kinds[index] == 'python-test':
+                ran = re.search(r'(?m)^Ran ([1-9][0-9]*) tests? in ', report)
+                status = re.fullmatch(r'OK(?: \(([^)\n]+)\))?', report.strip().splitlines()[-1] if report.strip() else '')
+                details = status[1].split(', ') if status and status[1] else []
+                known = all(re.fullmatch(r'(?:skipped|expected failures)=[0-9]+', item) for item in details)
+                omitted = sum(int(item.split('=')[1]) for item in details) if known else 0
+                require(ran and status and known and int(ran[1]) > omitted,
+                        f'focused command reported no tests passing or unknown coverage; inspect {log}')
+            else:
+                require(re.search(r'(?m)^Result: [1-9][0-9]* passed', report),
+                        f'focused command reported no tests; inspect {log}')
         require(worktree()[0] == binding, 'worktree changed during local verification')
         results.append(dict(command=argv, exit_code=0, log=str(log)))
     state = dict(binding=binding, local=results)

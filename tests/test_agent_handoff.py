@@ -90,6 +90,61 @@ class HandoffTests(unittest.TestCase):
             self.assertEqual(set(observed), {0o600})
             self.assertEqual(json.loads(path.read_text()), dict(private='evidence'))
 
+    def test_renames_preserve_old_and_new_paths_for_local_and_ci_scope(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def git(*args):
+                return subprocess.run(['git', '-C', str(root), *args], check=True, capture_output=True, text=True).stdout.strip()
+            git('init', '-q')
+            git('config', 'user.email', 'fixture@example.invalid')
+            git('config', 'user.name', 'Fixture')
+            git('config', 'diff.renames', 'true')
+            git('remote', 'add', 'origin', 'git@github.com:Carpe-Diem-Media/NewYou.git')
+            (root/'lib').mkdir()
+            (root/'docs').mkdir()
+            (root/'lib/example.ex').write_text('defmodule Example do\n  def value, do: :ok\nend\n')
+            git('add', '.')
+            git('commit', '-qm', 'base')
+            git('update-ref', 'refs/remotes/origin/main', 'HEAD')
+            git('mv', 'lib/example.ex', 'docs/example.md')
+            git('commit', '-qm', 'rename')
+            with patch.object(gate, 'ROOT', root):
+                _, paths = gate.worktree()
+            self.assertEqual(set(paths), {'lib/example.ex', 'docs/example.md'})
+            self.assertTrue(gate.classify_deep_application_changes(paths))
+            # OCR v1 preview collapses the rename to its destination. Unknown
+            # old-path coverage must stop before subscription calls.
+            preview = dict(files=[dict(path='docs/example.md', will_review=True)],
+                           total_files=1, reviewable_count=1, excluded_count=0)
+            with self.assertRaisesRegex(gate.GateError, 'coverage'):
+                gate.validate_preview(preview, paths)
+
+    def test_all_skipped_or_expected_failure_python_tests_cannot_create_proof(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/'tests').mkdir()
+            (root/'tests/__init__.py').touch()
+            (root/'tests/test_skipped.py').write_text(
+                'import unittest\n@unittest.skip("not executed")\n'
+                'class Skipped(unittest.TestCase):\n'
+                '    def test_skipped(self): self.fail("not executed")\n')
+            result = subprocess.run(['python3', '-m', 'unittest', 'tests.test_skipped', '-q'],
+                                    cwd=root, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn('Ran 1 test', result.stderr)
+            self.assertIn('skipped=1', result.stderr)
+            for report in [result.stderr, 'Ran 1 test in 0.001s\nOK (expected failures=1)\n',
+                           'Ran 1 test in 0.001s\nOK (unknown=0)\n']:
+                def passed(_argv, **kwargs):
+                    kwargs['stdout'].write(report)
+                    return SimpleNamespace(returncode=0)
+                with self.subTest(report=report), patch.object(gate, 'ROOT', root), \
+                     patch.object(gate, 'worktree', return_value=(BINDING, [])), \
+                     patch.object(gate.subprocess, 'run', side_effect=passed), \
+                     patch('builtins.print'), self.assertRaisesRegex(gate.GateError, 'no tests'):
+                    gate.local(root/'state.json', BINDING, [], ['python3 -m unittest tests.test_skipped -q'])
+                self.assertFalse((root/'state.json').exists())
+
     def test_existing_unsafe_file_or_link_is_not_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -112,6 +167,20 @@ class HandoffTests(unittest.TestCase):
                     self.assertEqual(temporary.read_text(), 'preserve')
                     self.assertFalse(state.exists())
                     temporary.unlink()
+
+    def test_mixed_pass_and_skip_remains_valid_focused_proof(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = 'Ran 3 tests in 0.001s\nOK (skipped=1, expected failures=1)\n'
+            def passed(_argv, **kwargs):
+                kwargs['stdout'].write(report)
+                return SimpleNamespace(returncode=0)
+            with patch.object(gate, 'ROOT', root), \
+                 patch.object(gate, 'worktree', return_value=(BINDING, [])), \
+                 patch.object(gate.subprocess, 'run', side_effect=passed), patch('builtins.print'):
+                gate.local(root/'state.json', BINDING, [], ['python3 -m unittest tests.test_mixed -q'])
+            saved = json.loads((root/'state.json').read_text())
+            self.assertEqual([item['exit_code'] for item in saved['local']], [0, 0])
 
     def test_green_manifest_and_explicit_exclusions(self):
         summary = gate.validate_ocr(result(), PREVIEW, BINDING, 100000)
