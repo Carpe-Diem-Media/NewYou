@@ -117,3 +117,5 @@ Phase 3 implementation: [component contracts, token math, ownership, accessibili
 Phase 4 implementation: [actual registration pilot, adopted recipes, formulas, native state contracts and proof limits](phase4-registration.md). Registration remains development-gated; this does not promote content or certify integration.
 
 Phase 5 implementation: [contextual spacing, scoped prose, divider arithmetic and application proof](phase5-content.md). Existing values and exact legal responses remain intact.
+
+Phase 5 proof continuation: [Chrome/Firefox compatibility, exact text enlargement and Hallmark diagnosis](phase5-compatibility.md). This adds bounded evidence and preserves the unresolved delivery gates.

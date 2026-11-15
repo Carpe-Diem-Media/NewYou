@@ -142,11 +142,17 @@ try {
       check((await geometry()).fits,"actual errors fit")
       const fits=await page.evaluate(()=>{
         const nodes=[...document.querySelectorAll("main h1, main h2, main p, main a, main label, main legend, main input, main button")]
-        for(const n of nodes) {n.style.fontSize=`${parseFloat(getComputedStyle(n).fontSize)*2}px`}
+        // Read every original size before an ancestor changes an inheriting link.
+        const sizes=nodes.map(n=>[n,parseFloat(getComputedStyle(n).fontSize)])
+        for(const [n,size] of sizes) {n.style.fontSize=`${size*2}px`}
         const copy=document.querySelector(".ds-registration-safety p");copy.textContent+=" "+"LongEnglishContentLangAfrikaanseBeskrywing".repeat(10)
-        return [...document.querySelectorAll("main, article, form, label, button, .ds-design-field, .ds-field-error")].every(n=>n.scrollWidth<=n.clientWidth+1 && n.scrollHeight<=n.clientHeight+1)
+        return {
+          exact:sizes.every(([n,size])=>Math.abs(parseFloat(getComputedStyle(n).fontSize)-size*2)<.1),
+          fits:[...document.querySelectorAll("main, article, form, label, button, .ds-design-field, .ds-field-error")].every(n=>n.scrollWidth<=n.clientWidth+1 && n.scrollHeight<=n.clientHeight+1)
+        }
       })
-      check(fits,`${locale} errors/long text 200% at ${width}`)
+      check(fits.exact,`${locale} every targeted element is exactly 200%, including nested links, at ${width}`)
+      check(fits.fits,`${locale} errors/long text 200% at ${width}`)
       // Restore the actual server error response without a new POST.
       await page.evaluate(copy=>{for(const n of document.querySelectorAll("main [style]"))n.removeAttribute("style");document.querySelector(".ds-registration-safety p").textContent=copy},safetyCopy)
     }
