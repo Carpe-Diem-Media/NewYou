@@ -147,6 +147,8 @@ For each material behaviour:
 
 Include negative/failure-path tests and, where material, concurrency, idempotency, retry, rollback, authorization, and recovery tests.
 
+Map focused tests and their assertions to the live acceptance criteria. The handoff helper validates repository test commands and observed execution, not their semantic relevance to the ticket. Preserve that mapping for independent Master Gate; an unrelated passing test cannot satisfy focused proof.
+
 For defects/regressions, reproduce the failure first where technically possible.
 
 Use owning Ash interfaces for business writes. Do not create parallel ordinary Repo/raw SQL/`Ecto.Multi` business-write paths.

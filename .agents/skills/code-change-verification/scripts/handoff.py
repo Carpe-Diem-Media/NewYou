@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import re
 import shlex
+import stat
 import subprocess
 import sys
 from uuid import uuid4
@@ -257,8 +258,8 @@ def validate_reuse_preview(scanned, final, history):
 def validate_knowledge(pr_number, directory):
     metadata = api(f'pulls/{pr_number}')
     path = directory / 'pr-metadata.json'
-    path.write_text(json.dumps(metadata))
-    path.chmod(0o600)
+    with private_output(path) as output:
+        output.write(json.dumps(metadata))
     output = command('mise', 'exec', '--', 'python3', '-m', 'tools.knowledge_capture',
                      'check', '--metadata-json', str(path), timeout=180)
     require(decode(output).get('status') == 'PASS', 'final PR history validation did not pass')
@@ -346,8 +347,8 @@ def validate_findings(summary, review, head):
 
 def write_state(path, state):
     temporary = path.with_suffix('.tmp')
-    temporary.write_text(json.dumps(state, indent=2) + '\n')
-    temporary.chmod(0o600)
+    with private_output(temporary) as output:
+        output.write(json.dumps(state, indent=2) + '\n')
     temporary.replace(path)
 
 
@@ -384,7 +385,7 @@ def local(state_path, binding, paths, focused, deep=False):
     require(focused, 'at least one ticket-scoped --focused command is required')
     commands = [shlex.split(c) for c in focused]
     kinds = [focused_kind(c) for c in commands]
-    require(any(k.endswith('-test') for k in kinds), 'focused verification requires a ticket-scoped test command')
+    require(any(k.endswith('-test') for k in kinds), 'focused verification requires an explicit repository test command')
     commands.append(['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'check'])
     if deep or classify_deep_application_changes(paths):
         commands.append(['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'check.deep'])
@@ -392,8 +393,7 @@ def local(state_path, binding, paths, focused, deep=False):
     for index, argv in enumerate(commands):
         log = state_path.parent / f'local-{index}.log'
         print(f'Running {shlex.join(argv)}; log {log}', flush=True)
-        with log.open('w') as output:
-            output_path_mode(log)
+        with private_output(log) as output:
             process = subprocess.run(argv, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT)
         require(process.returncode == 0, f'local verification failed; inspect {log}; stop before OCR/hosted CI')
         if index < len(kinds) and kinds[index].endswith('-test'):
@@ -407,8 +407,22 @@ def local(state_path, binding, paths, focused, deep=False):
     return state
 
 
-def output_path_mode(path):
-    path.chmod(0o600)
+def private_output(path, *, exclusive=False):
+    """Create private files before writing; never truncate unsafe existing files."""
+    flags = os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW
+    if exclusive:
+        flags |= os.O_EXCL
+    descriptor = os.open(path, flags, 0o600)
+    try:
+        info = os.fstat(descriptor)
+        require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid()
+                and info.st_nlink == 1 and info.st_mode & 0o077 == 0,
+                'evidence file must be private, owned and have a single link')
+        os.ftruncate(descriptor, 0)
+        return os.fdopen(descriptor, 'w')
+    except BaseException:
+        os.close(descriptor)
+        raise
 
 
 def main():
@@ -439,7 +453,10 @@ def main():
             return 0
         directory = Path(command('git', 'rev-parse', '--path-format=absolute', '--git-path', 'agent-handoff'))
         directory.mkdir(mode=0o700, exist_ok=True)
-        with (directory / 'lock').open('w') as lock:
+        info = directory.lstat()
+        require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.getuid()
+                and info.st_mode & 0o077 == 0, 'handoff directory permissions are not private')
+        with private_output(directory / 'lock') as lock:
             try:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError as exc:
@@ -479,9 +496,7 @@ def main():
                 write_state(state_path, state)
                 argv = ocr_args(binding, prepared['budget'], prepared['exclude'])
                 print(f'Running {shlex.join(argv)}; result {result_path}', flush=True)
-                with result_path.open('w') as output, log_path.open('w') as errors:
-                    output_path_mode(result_path)
-                    output_path_mode(log_path)
+                with private_output(result_path, exclusive=True) as output, private_output(log_path, exclusive=True) as errors:
                     process = subprocess.run(argv, cwd=ROOT, stdout=output, stderr=errors)
                 require(process.returncode == 0, f'OCR CLI failed; inspect private result/log at {directory}')
                 require(worktree()[0] == binding, 'source changed during OCR')

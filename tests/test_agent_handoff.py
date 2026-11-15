@@ -2,7 +2,9 @@
 import copy
 import importlib.util
 import json
+import os
 from pathlib import Path
+import stat
 import subprocess
 import tempfile
 import unittest
@@ -44,6 +46,72 @@ def result():
 class HandoffTests(unittest.TestCase):
     def setUp(self):
         self.assertIsNotNone(gate, 'the local handoff gate is not implemented')
+
+    def test_insecure_existing_evidence_directory_stops_before_writes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            artifacts = root/'evidence'
+            artifacts.mkdir(mode=0o755)
+            artifacts.chmod(0o755)
+            original = json.dumps(dict(binding=BINDING, local=[dict(exit_code=0)]))
+            (artifacts/'state.json').write_text(original)
+            def command(*args, **kwargs):
+                return str(root if '--show-toplevel' in args else artifacts)
+            with patch('sys.argv', ['handoff', 'preview']), \
+                 patch.dict('os.environ', {'CI':'false', 'GITHUB_ACTIONS':'false'}), \
+                 patch.object(gate, 'worktree', return_value=(BINDING, [])), \
+                 patch.object(gate, 'command', side_effect=command), \
+                 patch.object(gate, 'prepare_preview', return_value={}) as preview, patch('sys.stderr'):
+                self.assertEqual(gate.main(), 1)
+                preview.assert_not_called()
+            self.assertEqual((artifacts/'state.json').read_text(), original)
+            self.assertFalse((artifacts/'lock').exists())
+
+    def test_state_files_are_private_before_any_write(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'state.json'
+            observed = []
+            original_open, original_fdopen = Path.open, os.fdopen
+            def inspect(handle):
+                observed.append(stat.S_IMODE(os.fstat(handle.fileno()).st_mode))
+                return handle
+            def path_open(path, mode='r', *args, **kwargs):
+                handle = original_open(path, mode, *args, **kwargs)
+                return inspect(handle) if 'w' in mode else handle
+            def fdopen(fd, *args, **kwargs):
+                return inspect(original_fdopen(fd, *args, **kwargs))
+            previous = os.umask(0o022)
+            try:
+                with patch.object(Path, 'open', path_open), patch.object(os, 'fdopen', fdopen):
+                    gate.write_state(path, dict(private='evidence'))
+            finally:
+                os.umask(previous)
+            self.assertTrue(observed)
+            self.assertEqual(set(observed), {0o600})
+            self.assertEqual(json.loads(path.read_text()), dict(private='evidence'))
+
+    def test_existing_unsafe_file_or_link_is_not_overwritten(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            state = root/'state.json'
+            temporary = state.with_suffix('.tmp')
+            target = root/'target'
+            target.write_text('preserve')
+            for kind in ['broad', 'symlink', 'hardlink']:
+                with self.subTest(kind=kind):
+                    if kind == 'broad':
+                        temporary.write_text('preserve')
+                        temporary.chmod(0o644)
+                    elif kind == 'symlink':
+                        temporary.symlink_to(target)
+                    else:
+                        target.chmod(0o600)
+                        os.link(target, temporary)
+                    with self.assertRaises((gate.GateError, OSError)):
+                        gate.write_state(state, dict(private='evidence'))
+                    self.assertEqual(temporary.read_text(), 'preserve')
+                    self.assertFalse(state.exists())
+                    temporary.unlink()
 
     def test_green_manifest_and_explicit_exclusions(self):
         summary = gate.validate_ocr(result(), PREVIEW, BINDING, 100000)
@@ -168,7 +236,7 @@ class HandoffTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             artifacts = root/'evidence'
-            artifacts.mkdir()
+            artifacts.mkdir(mode=0o700)
             state = dict(binding=BINDING, local=[dict(exit_code=0)],
                          prepared=dict(preview=PREVIEW, budget=100000, exclude=gate.HISTORY_EXCLUDE))
             (artifacts/'state.json').write_text(json.dumps(state))
@@ -408,7 +476,7 @@ class HandoffTests(unittest.TestCase):
             with self.subTest(ci=outcome), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 artifacts = root/'evidence'
-                artifacts.mkdir()
+                artifacts.mkdir(mode=0o700)
                 state = dict(binding=BINDING, local=[dict(exit_code=0)],
                              prepared=dict(preview=PREVIEW, budget=100000, exclude=gate.HISTORY_EXCLUDE),
                              ocr=dict(result=result(), command=['ocr', 'review']))
