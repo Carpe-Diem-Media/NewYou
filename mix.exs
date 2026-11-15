@@ -76,9 +76,18 @@ defmodule NewYou.MixProject do
   end
 
   defp dialyzer do
+    # Share versioned core PLTs locally; preserve the GitHub Actions cache.
+    # Prepare a missing shared core cache sequentially across worktrees.
+    core_plt_path =
+      if System.get_env("GITHUB_ACTIONS") == "true" do
+        "_build/plts"
+      else
+        Mix.Utils.mix_home()
+      end
+
     [
       plt_local_path: "_build/plts",
-      plt_core_path: "_build/plts",
+      plt_core_path: core_plt_path,
       plt_add_apps: [:mix, :ex_unit]
     ]
   end
