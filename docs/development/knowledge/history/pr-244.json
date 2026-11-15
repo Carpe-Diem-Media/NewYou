@@ -1,0 +1,97 @@
+{
+  "base_sha": "a47774b004bd016c7deaead24ba3f1061cd56367",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/244/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/244/commits",
+  "files": [
+    {
+      "blob": "e97ac34c488f1327a5fa1972ead36dce543f3ab3",
+      "mode": "100644",
+      "old_blob": "b0d02e34a7636e7fd524f28bd312ea95bb535dcc",
+      "old_mode": "100644",
+      "old_path": ".agents/skills/code-change-verification/SKILL.md",
+      "old_sha256": "3c3629aa96920204a86bc6d05448c85d86cee2f17f9939caef4018a3cb497b82",
+      "path": ".agents/skills/code-change-verification/SKILL.md",
+      "sha256": "e47328b8ef04d5e9c2a6408879e8ee84c301194ce325bf25ea787a85a6859d55",
+      "status": "modified"
+    },
+    {
+      "blob": "5a33b4b9dcba1549c2784911d398655c3e26de80",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".agents/skills/code-change-verification/scripts/handoff.py",
+      "sha256": "6c7804e8809495df3e7d4250841f7c4802c4c992b872e305463ba86c1a4659df",
+      "status": "added"
+    },
+    {
+      "blob": "965473f262afa18f2ff251472a5515f05e914beb",
+      "mode": "100644",
+      "old_blob": "b540bba47eb9f6bc62a777dc7ac9190e60e181cd",
+      "old_mode": "100644",
+      "old_path": ".agents/skills/ticket-implement/SKILL.md",
+      "old_sha256": "f534ff845ccaab37e77d6f510dab1c0c19966f3ca4dc9a449e1bf132dbf77e28",
+      "path": ".agents/skills/ticket-implement/SKILL.md",
+      "sha256": "4bec17e775ba797285d8807f07bc0c1a0af3dcf7110c477af80ad726fbae5ca3",
+      "status": "modified"
+    },
+    {
+      "blob": "5628d52f87c8d67cdcfe733db2d39218a422ae7d",
+      "mode": "100644",
+      "old_blob": "98836653a45d940942741b2d1a32483e96f0f0d7",
+      "old_mode": "100644",
+      "old_path": ".github/workflows/foundation-integrity.yml",
+      "old_sha256": "18c2b12635b5729e6778781f7d8ecb1eb23b8de4748dcf89841b2b99d25c8f30",
+      "path": ".github/workflows/foundation-integrity.yml",
+      "sha256": "80c8276fac3817c65be6392d983fab61cbd888f3b4fc57e43d6c715278bba7f7",
+      "status": "modified"
+    },
+    {
+      "blob": "d6d2885341dda89ef5c7ba64b35623cbb12ce3a4",
+      "mode": "100644",
+      "old_blob": "35542918e2b9907905a6bdecebc2890f0b45a526",
+      "old_mode": "100644",
+      "old_path": "AGENTS.md",
+      "old_sha256": "8a5ace1fe1f1bc33c6b9b57aedd49bf627821958fadc429133ba3beba97b1413",
+      "path": "AGENTS.md",
+      "sha256": "14335cce89eace3d8c9a4fcb8e514075a3d487208320aa96f60620d7e662c3e6",
+      "status": "modified"
+    },
+    {
+      "blob": "59ab0ca0711cfeae5d5038c45176eb1e47c2cd5c",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "tests/test_agent_handoff.py",
+      "sha256": "3cd56b56aae5698405de6652672ba8ce9c76b654096f2329033aaac239ffd631",
+      "status": "added"
+    },
+    {
+      "blob": "f34bdcbdbd589683ea6cec55d8aa4d16e226746e",
+      "mode": "100644",
+      "old_blob": "e1ea8b4c58c0dd64b35730830de57cbce06cf38c",
+      "old_mode": "100644",
+      "old_path": "tests/test_agent_instruction_contract.py",
+      "old_sha256": "81ae965343eb93b61dbd9b0caedbeec56e6e09ea81570f88716e4cd1b2f9f634",
+      "path": "tests/test_agent_instruction_contract.py",
+      "sha256": "2d4cd3792555c3a8a01eb366c6b121c7f57c1bc3c99a30966101205cf4b1d719",
+      "status": "modified"
+    }
+  ],
+  "migrations": [],
+  "pr": 244,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/244",
+  "range_base_sha": "a47774b004bd016c7deaead24ba3f1061cd56367",
+  "schema_version": 1,
+  "symbols": [],
+  "tests": [
+    "tests/test_agent_handoff.py",
+    "tests/test_agent_instruction_contract.py"
+  ],
+  "tickets": [
+    "WELL-125"
+  ]
+}
