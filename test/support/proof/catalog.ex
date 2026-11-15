@@ -92,7 +92,8 @@ defmodule NewYou.Proof.Catalog do
         NewYou.Proof.P812Catalog.registrations() ++
         NewYou.Proof.P811Catalog.registrations() ++
         NewYou.Proof.P813Catalog.registrations() ++
-        NewYou.Proof.P818Catalog.registrations()
+        NewYou.Proof.P818Catalog.registrations() ++
+        NewYou.Proof.P819Catalog.registrations()
 
   @spec validate_compiled_registrations(map(), [registration()]) :: :ok | {:error, [atom()]}
   def validate_compiled_registrations(manifests, registrations)
@@ -239,7 +240,7 @@ defmodule NewYou.Proof.Catalog do
 
     errors =
       coverage_registration_errors(mode, missing_families, missing_cases) ++
-        registration_identity_errors(registrations) ++
+        registration_identity_errors(registrations, business_manifests) ++
         duplicate_registration_errors(ids, registrations)
 
     %{
@@ -269,33 +270,38 @@ defmodule NewYou.Proof.Catalog do
     []
     |> maybe_add(mode == :tb001 and missing_families != [], :missing_manifest)
     |> maybe_add(mode == :tb001 and missing_families != [], :missing_family)
+    |> maybe_add(mode == :tb001 and missing_cases != [], :missing_case)
     |> maybe_add(
       mode == :harness_self_test and missing_cases != [],
       :missing_self_test_registration
     )
   end
 
-  defp registration_identity_errors(registrations) do
-    unknown_case? = Enum.any?(registrations, &registration_manifest_missing?/1)
-    unknown_invariant? = Enum.any?(registrations, &registration_invariant_invalid?/1)
+  defp registration_identity_errors(registrations, business_manifests) do
+    manifests = [{"harness", required().self_test} | Map.to_list(business_manifests)]
+
+    index =
+      for {coverage, family} <- manifests,
+          entry <- family.cases,
+          into: %{},
+          do: {{coverage, entry.case_id}, entry.invariant_id}
+
+    unknown_case? =
+      Enum.any?(registrations, fn registration ->
+        not Map.has_key?(index, {registration.coverage_id, registration.case_id})
+      end)
+
+    unknown_invariant? =
+      Enum.any?(registrations, fn registration ->
+        case Map.fetch(index, {registration.coverage_id, registration.case_id}) do
+          {:ok, invariant_id} -> registration.invariant_id != invariant_id
+          :error -> false
+        end
+      end)
 
     []
     |> maybe_add(unknown_case?, :unknown_case)
     |> maybe_add(unknown_invariant?, :unknown_invariant)
-  end
-
-  defp registration_manifest_missing?(registration) do
-    match?(
-      {:error, reason} when reason in [:unknown_coverage, :missing_manifest, :unknown_case],
-      lookup_manifest(registration.coverage_id, registration.case_id)
-    )
-  end
-
-  defp registration_invariant_invalid?(registration) do
-    case known_manifest(registration.coverage_id, registration.case_id) do
-      nil -> false
-      manifest -> registration.invariant_id != manifest.invariant_id
-    end
   end
 
   defp duplicate_registration_errors(ids, registrations) do
@@ -359,6 +365,7 @@ defmodule NewYou.Proof.Catalog do
       |> Map.merge(NewYou.Proof.P811Catalog.manifests())
       |> Map.merge(NewYou.Proof.P813Catalog.manifests())
       |> Map.merge(NewYou.Proof.P818Catalog.manifests())
+      |> NewYou.Proof.P819Catalog.manifests()
 
   defp digest(term) do
     :crypto.hash(:sha256, :erlang.term_to_binary(term, [:deterministic]))

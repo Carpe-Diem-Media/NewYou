@@ -5,12 +5,12 @@ defmodule NewYou.Proof.P812Test do
 
   @case_ids ~w(p812.reset_race p812.stale_login_race p812.interrupted_reset p812.restart)
 
-  test "bounded P8-12 cases register within the partial session and revocation family" do
+  test "bounded P8-12 cases register within the integrated session and revocation family" do
     manifests = Catalog.required().business_manifests
     registrations = Catalog.compiled_business_registrations()
     family = manifests["session_login_revocation_restart"]
 
-    assert family.scope == :partial
+    assert family.scope == :complete
 
     assert Enum.all?(@case_ids, fn case_id ->
              Enum.any?(family.cases, &(&1.case_id == case_id))

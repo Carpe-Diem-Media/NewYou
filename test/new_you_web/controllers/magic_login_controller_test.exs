@@ -1,5 +1,6 @@
 defmodule NewYouWeb.MagicLoginControllerTest do
   use ExUnit.Case, async: false
+  import NewYou.Proof.MagicScannerCases
   import Phoenix.ConnTest
   import Plug.Conn
   import ExUnit.CaptureLog
@@ -91,51 +92,7 @@ defmodule NewYouWeb.MagicLoginControllerTest do
   end
 
   test "confirmation GET, HEAD, scanner and prefetch requests remain passive" do
-    P805.with_fixture(fn ->
-      proof = magic_proof("af")
-      url = "/login/magic/confirm?" <> URI.encode_query(%{proof: proof, locale: "af"})
-      page = get(build_conn(), url)
-      [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
-      before = P805.counts()
-
-      for {method, headers} <- [
-            {:get, []},
-            {:head, []},
-            {:get, [{"purpose", "prefetch"}]},
-            {:get, [{"sec-purpose", "prefetch;prerender"}]},
-            {:get, [{"user-agent", "MailScanner/1.0 link-preview"}]}
-          ] do
-        request =
-          Enum.reduce(headers, build_conn(), fn {key, value}, conn ->
-            put_req_header(conn, key, value)
-          end)
-
-        conn = dispatch(request, @endpoint, method, url)
-        assert conn.status == 200
-
-        if method == :get do
-          assert conn.resp_body =~ NewYouWeb.MagicLoginCopy.text!("confirm.title", "af")
-          assert conn.resp_body =~ ~s(value="#{proof}")
-        end
-
-        assert before == P805.counts()
-        assert get_resp_header(conn, "cache-control") == ["no-store"]
-        assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
-        assert :ok = no_identity_session(conn)
-      end
-
-      confirmation =
-        page
-        |> recycle()
-        |> put_private(:plug_skip_csrf_protection, false)
-        |> post("/login/magic/confirm", %{
-          proof: proof,
-          locale: "af",
-          _csrf_token: csrf
-        })
-
-      assert confirmation.status == 303
-    end)
+    NewYou.Proof.MagicScannerCases.scanner()
   end
 
   test "explicit confirmation consumes the proof, renews the browser session and redirects" do
@@ -336,31 +293,5 @@ defmodule NewYouWeb.MagicLoginControllerTest do
         :telemetry.detach(handler)
       end
     end)
-  end
-
-  defp no_identity_session(conn) do
-    assert Enum.all?(Map.keys(get_session(conn)), &(&1 == "_csrf_token"))
-    :ok
-  end
-
-  defp magic_proof(locale) do
-    request = P805.request()
-    {:ok, registration} = Identity.register(request)
-    {:ok, :verified} = Identity.verify_email(registration.verification_proof)
-    operation_id = Ecto.UUID.generate()
-    P805.track_operation(operation_id)
-    :ok = Identity.request_magic_login(request.email, locale, operation_id)
-
-    token =
-      Token
-      |> Ash.Query.filter(account_id == ^registration.account_id and purpose == "magic_login")
-      |> Ash.read_one!(authorize?: false)
-
-    {:ok, {:ok, proof}} =
-      Ash.transact([NewYou.Identity.Account, Token], fn ->
-        Identity.magic_login_delivery(token.jti, request.email, locale)
-      end)
-
-    proof
   end
 end

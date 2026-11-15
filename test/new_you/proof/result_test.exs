@@ -27,7 +27,7 @@ defmodule NewYou.Proof.ResultTest do
     assert :invalid_constant in errors
   end
 
-  test "semantic validation independently rejects partial-family PASS and missing scope reason" do
+  test "semantic validation independently rejects omitted cases from a complete family" do
     manifest = Catalog.required().business_manifests["browser_spine"]
 
     entry = %{
@@ -59,12 +59,13 @@ defmodule NewYou.Proof.ResultTest do
 
     results =
       Enum.map(result["results"], fn current ->
-        if current["coverage_id"] == "browser_spine", do: entry, else: current
+        if current["coverage_id"] == "browser_spine",
+          do: Map.update!(entry, "cases", &tl/1),
+          else: current
       end)
 
     assert {:error, errors} = Result.validate(Map.put(result, "results", results), mode: :tb001)
-    assert :partial_manifest_pass in errors
-    assert :missing_partial_manifest_reason in errors
+    assert :incomplete_business_cases in errors
   end
 
   test "expect records the actual assertion and returns the observation" do
