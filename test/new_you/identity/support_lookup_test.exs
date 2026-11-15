@@ -6,63 +6,7 @@ defmodule NewYou.Identity.SupportLookupTest do
   alias NewYou.Proof.P813HoldFixture
 
   test "one current named grant returns a minimum projection for its bound Account only" do
-    P813HoldFixture.with_fixture(fn fixture ->
-      grant =
-        P813HoldFixture.grant(
-          fixture.actor,
-          fixture.target,
-          fixture.approver,
-          :identity_lookup
-        )
-
-      {:ok, :ok} = P813HoldFixture.step_up(fixture.actor, :lookup_identity)
-      target = Ash.get!(Account, fixture.target.id, authorize?: false)
-
-      assert {:ok, projection} =
-               Identity.lookup_support_identity(
-                 fixture.actor.credentials,
-                 grant.id,
-                 target.id,
-                 target.email
-               )
-
-      assert projection == %{
-               account_id: target.id,
-               account_status: target.account_status,
-               email_verified?: target.email_verified?,
-               security_posture: target.security_posture
-             }
-
-      refute Map.has_key?(projection, :email)
-      refute Map.has_key?(projection, :first_name)
-      refute Map.has_key?(projection, :surname)
-      refute Map.has_key?(projection, :credential_status)
-      refute Map.has_key?(projection, :recovery_case)
-
-      assert {:error, :support_lookup_unavailable} =
-               Identity.lookup_support_identity(
-                 fixture.actor.credentials,
-                 grant.id,
-                 fixture.approver.id,
-                 target.email
-               )
-
-      assert {:ok, :not_found} =
-               Identity.lookup_support_identity(
-                 fixture.actor.credentials,
-                 grant.id,
-                 target.id,
-                 "different-person@example.test"
-               )
-
-      assert {:ok, ^projection} =
-               Identity.lookup_support_identity(
-                 fixture.actor.credentials,
-                 grant.id,
-                 target.id,
-                 target.email
-               )
-    end)
+    NewYou.Proof.WebScenarios.support_lookup()
   end
 
   test "lookup denies missing and wrong-scope grants without an administrative bypass" do

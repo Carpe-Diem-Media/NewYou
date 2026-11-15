@@ -183,6 +183,26 @@ try {
   checks.explicit_resend = operations[0] !== resendOperation && nextOperation !== resendOperation && await hasCopy([...pendingKeys, 'identity.verification.resend.accepted_neutral'], input.locale);
   checks.locale_no_fallback = registrationLocale && pendingLocale && await noFallback(pendingKeys);
   checks.no_session = await evaluate(`!document.body.textContent.includes(${JSON.stringify(input.input.password)}) && !document.querySelector('a[href*="consume"]')`);
+  if (input.mode === 'spine') {
+    checks['spine.registration'] = true;
+    const delivered = await evaluate(`fetch('/__proof/delivery?' + new URLSearchParams({operation: ${JSON.stringify(resendOperation)}})).then(r => { if (!r.ok) throw new Error('delivery'); return r.json(); })`);
+    checks['spine.delivery'] = true;
+    const verifyUrl = `${base}/verification/confirm?${new URLSearchParams({proof: delivered.proof, locale: input.locale})}`;
+    await navigation(() => cdp('Page.navigate', {url: verifyUrl}));
+    checks.explicit_verification = await evaluate(`!!document.querySelector('form[action="/verification/confirm"] [name="_csrf_token"]')`);
+    checks['spine.verification_form'] = checks.explicit_verification;
+    await navigation(() => evaluate(`document.querySelector('form[action="/verification/confirm"]').requestSubmit()`));
+    checks['spine.verification_submitted'] = true;
+    await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
+    checks.login_form = await evaluate(`!!document.querySelector('form[action="/login"] [name="_csrf_token"]')`);
+    await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.input.email)}; document.querySelector('[name="password"]').value=${JSON.stringify(input.input.password)};`);
+    await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
+    checks.protected_access = await evaluate(`location.pathname === '/session/protected'`);
+    checks['spine.login_submitted'] = true;
+    await navigation(() => cdp('Page.reload'));
+    checks.reloaded_access = await evaluate(`location.pathname === '/session/protected' && fetch('/session/protected').then(r => r.status === 200)`);
+  }
+
   }
   await call('Target.disposeBrowserContext', { browserContextId: context.browserContextId });
 } catch (error) {

@@ -6,8 +6,8 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "a423a269debb3890a356859d195d69fb0bbd6738",
-    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification."
+    "git_sha": "3c8bcaff53d9049972ac967c85b2953f625cf4cb",
+    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -879,7 +879,8 @@
       "proves": "Real owner actions and PostgreSQL constraints.",
       "limits": "Synthetic fixtures; no released participant service.",
       "source_ids": [
-        "lifecycle_test"
+        "lifecycle_test",
+        "recovery_scenarios"
       ]
     },
     {
@@ -914,7 +915,8 @@
       "source_ids": [
         "primary_email_change_test",
         "identity",
-        "recovery"
+        "recovery",
+        "email_scenarios"
       ]
     },
     {
@@ -971,7 +973,8 @@
       "proves": "Real Phoenix transport calls owning Identity and Communications boundaries.",
       "limits": "Development switch only; no production exposure or claimant factor invented.",
       "source_ids": [
-        "browser_test"
+        "browser_test",
+        "web_scenarios"
       ]
     },
     {
@@ -1049,9 +1052,9 @@
   "proof_limitations": [
     "This descriptive map is subordinate to current routed authority and live Plane. Schema/hash validation is not semantic or independent merge review.",
     "Provider evidence uses the existing deterministic TEST adapter and synthetic Accounts only. No external email was sent; support mailbox operation and external sender/provider permission are not certified.",
-    "WELL-17 has no real email-change owner action in this source snapshot. The current Account serialization and fixture competing commit are bounded recovery-side evidence, not a cross-PR integration result.",
+    "WELL-20 reuses the existing primary-email owner action and both PostgreSQL commit-order scenarios for recovery/email-change integration. Production deployment and cross-region failure behavior remain outside this proof.",
     "WELL-111 accepts proof-backed manual positive proof and zero-factor negative proof for Phase 8. Successful lost-all-factor recovery is unimplemented and remains a pre-release obligation under WELL-115; privileged hardening remains WELL-65.",
-    "Historical PR #217 CI and Markdown handoffs are retained as historical evidence. PR #228 requires its own exact-head verification and founder review."
+    "Historical PR #217, PR #228 and Markdown handoffs remain historical evidence. The current WELL-20 candidate requires its own exact-head proof, CI and independent review."
   ],
   "follow_up_tickets": [
     "WELL-17",
@@ -1184,13 +1187,13 @@
       "id": "lifecycle_test",
       "path": "test/new_you/identity/recovery_test.exs",
       "symbol": "defmodule ",
-      "sha256": "7f88cc9620f9af2711d1d72f3c486f2d8bd53ba0ab2a7cf0e5b06c644001f74d"
+      "sha256": "ca07d3129b5f34b96c497c99e1ae77d2e74cd9be53514bb92bef0c26aa3c5f97"
     },
     {
       "id": "primary_email_change_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "primary-email apply and recovery completion serialize",
-      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
     },
     {
       "id": "manual_test",
@@ -1232,7 +1235,7 @@
       "id": "browser_test",
       "path": "test/new_you_web/controllers/recovery_controller_test.exs",
       "symbol": "defmodule ",
-      "sha256": "a30013f9fa642df59de67a35f08d97fc8dcb6ad5bd7f457db637b19f3ea36a23"
+      "sha256": "535c522a225b64ee9c3f6458181ceed531c62ca249e2062b02689fa53a8821e2"
     },
     {
       "id": "audit_test",
@@ -1305,6 +1308,24 @@
       "path": "priv/repo/migrations/20261112182053_recovery_terminal_metadata.exs",
       "symbol": "defmodule ",
       "sha256": "0684338ebe45a9aa6373db319a6a61ab753d01fbe6186ce9f1620e7c2595d42c"
+    },
+    {
+      "id": "recovery_scenarios",
+      "path": "test/support/proof/recovery_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.RecoveryScenarios",
+      "sha256": "4de5f351c522cbe596324eb74fa8a9b17e545bda3058ab45d059218ea12dfb2b"
+    },
+    {
+      "id": "email_scenarios",
+      "path": "test/support/proof/email_change_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
+      "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
+    },
+    {
+      "id": "web_scenarios",
+      "path": "test/support/proof/web_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.WebScenarios",
+      "sha256": "d33e18605b1495218a788d5e000c47977f410811a2af11cc2c480d9387df7a58"
     }
   ]
 }

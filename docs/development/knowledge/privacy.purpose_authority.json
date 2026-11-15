@@ -7,8 +7,8 @@
     "WELL-19"
   ],
   "implementation_revision": {
-    "git_sha": "309de075392ea64adeaad2e1f1446dcc8cb75de5",
-    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. The projection schema reserves a fixed production key used by the development rebuild; each test proof fixture receives a separate opaque key and cleanup deletes only that fixture\u2019s row. Production has no rebuild path or purpose for this proof. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count. WELL-19 hardening observes the tables written during each synchronous Analytics rebuild and rejects foreign NewYou commands with a bounded AST check. Persisted jobs run through Oban execution, rollback on injected failure, retry the same obligation, and complete only with owner evidence. A stale message job completes with its intent closed and no delivery attempt. Fixture cleanup retries once through its guardian and reports persistent failure; it removes only its own opaque projection key and derived executor queue. Migration rollback removes validated test-key projections before restoring the fixed-key constraint, preserving the reserved aggregate. The bounded Analytics checker rejects conflicting aliases and module receiver bindings rather than allowing a later lexical scope to hide an earlier foreign command."
+    "git_sha": "3c8bcaff53d9049972ac967c85b2953f625cf4cb",
+    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. The projection schema reserves a fixed production key used by the development rebuild; each test proof fixture receives a separate opaque key and cleanup deletes only that fixture\u2019s row. Production has no rebuild path or purpose for this proof. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count. WELL-19 hardening observes the tables written during each synchronous Analytics rebuild and rejects foreign NewYou commands with a bounded AST check. Persisted jobs run through Oban execution, rollback on injected failure, retry the same obligation, and complete only with owner evidence. A stale message job completes with its intent closed and no delivery attempt. Fixture cleanup retries once through its guardian and reports persistent failure; it removes only its own opaque projection key and derived executor queue. Migration rollback removes validated test-key projections before restoring the fixed-key constraint, preserving the reserved aggregate. The bounded Analytics checker rejects conflicting aliases and module receiver bindings rather than allowing a later lexical scope to hide an earlier foreign command. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged."
   },
   "authoritative_domain": "NewYou.Privacy",
   "collaborating_domains": [
@@ -610,7 +610,8 @@
         "reverse_order_test",
         "restart_test",
         "identity_mutation",
-        "privacy_domain"
+        "privacy_domain",
+        "email_scenarios"
       ]
     },
     {
@@ -814,7 +815,7 @@
       "id": "reconciliation_guard_test",
       "path": "test/new_you/identity/reconciliation_test.exs",
       "symbol": "unreviewed new Domain blocks apply instead of assuming its consequences",
-      "sha256": "0b8a1963b0cb2783c0648db164a8f28e583cc2b7737904547b1463a22e91a68c"
+      "sha256": "6a532cd7ccc6a3f2a584e2ae3ba926e9b4728504227e69c4a327866eca1af049"
     },
     {
       "id": "privacy_migration",
@@ -862,25 +863,25 @@
       "id": "source_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "proof-only protected mutation denies when current Privacy authority is missing",
-      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
     },
     {
       "id": "race_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "committed Privacy withdrawal wins before Identity's current mutation check",
-      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
     },
     {
       "id": "reverse_order_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "Identity mutation committed first serializes before Privacy withdrawal",
-      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
     },
     {
       "id": "restart_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "withdrawn Privacy authority remains denied after a fresh BEAM restart",
-      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
     },
     {
       "id": "restart_probe",
@@ -958,19 +959,19 @@
       "id": "p818_browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'stale_session'",
-      "sha256": "646bc1f8554c3bf6cd57517f7400aced633c3995b5411a94689335482ee4b655"
+      "sha256": "d9136a658d6295dfb612ea3dbecbac22470e1bb5f0027c220754e7164b0268e9"
     },
     {
       "id": "p818_browser_owner_interface",
       "path": "test/support/proof/p8_05_browser.ex",
       "symbol": "def run_stale_session(request, locale) do",
-      "sha256": "310167f89ab5b25c73a50859ae8fdde090c689698868614f8bcc68609fa0d3da"
+      "sha256": "9bf4be375dca7c50ba00a152ca177ba7040421d4073493a619923442de46547e"
     },
     {
       "id": "proof_catalog",
       "path": "test/support/proof/catalog.ex",
       "symbol": "def compiled_business_registrations,",
-      "sha256": "871b65e82ff8bfbba0ee30e242adf74dc91971d3b08b3946f16bba8dadd56e80"
+      "sha256": "b96321ff5293696cce9e182d57f9835eb19778c068c148ec9a13956b066734e2"
     },
     {
       "id": "privacy_snapshot_interface",
@@ -1000,7 +1001,7 @@
       "id": "p805_fixture",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defmodule NewYou.Proof.P805",
-      "sha256": "fe8b1a969232008c80b1cab073e2f727a81f41a217fb756983b93423ffcdd468"
+      "sha256": "f3a99510c4b0370607ebb2d1af09bcb2eb940c3d026b2d656d7db16e53684bed"
     },
     {
       "id": "migration_identity_test",
@@ -1025,6 +1026,12 @@
       "path": "test/tools/architecture/analytics_projection_rollback_test.exs",
       "symbol": "defmodule NewYou.Architecture.AnalyticsProjectionRollbackTest",
       "sha256": "7a4c274f494de3d83e5e301c186dd138332e8558ad752fa822bc30d4e4a3fb2f"
+    },
+    {
+      "id": "email_scenarios",
+      "path": "test/support/proof/email_change_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
+      "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
     }
   ]
 }

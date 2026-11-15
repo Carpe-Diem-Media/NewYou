@@ -1,5 +1,6 @@
 defmodule NewYou.Identity.PasswordResetLifecycleTest do
   use ExUnit.Case, async: false
+  import NewYou.Proof.ResetCases
   require Ash.Query
   import ExUnit.CaptureLog
   alias NewYou.{Identity, Communications, Audit, Repo}
@@ -105,59 +106,7 @@ defmodule NewYou.Identity.PasswordResetLifecycleTest do
   end
 
   test "expiry revocation supersession replay and wrong-purpose proofs fail closed" do
-    P805.with_fixture(fn ->
-      {request, registration} = account()
-      initial = Ash.get!(Account, registration.account_id, authorize?: false)
-
-      for disposition <- [:expired, :revoked, :superseded] do
-        {proof, bearer} = issue(request, registration)
-
-        case disposition do
-          :expired ->
-            Repo.query!(
-              "UPDATE tokens SET expires_at = now() - interval '1 second' WHERE jti = $1",
-              [proof.jti]
-            )
-
-          :revoked ->
-            Repo.query!("UPDATE tokens SET purpose = 'revocation' WHERE jti = $1", [proof.jti])
-
-          :superseded ->
-            Identity.request_password_reset(request.email, "af", operation())
-        end
-
-        assert reset(bearer) == {:error, :reset_unavailable}
-        assert delivery(proof, request.email) == {:error, :source_invalid}
-        assert Ash.get!(Account, initial.id, authorize?: false) == initial
-      end
-
-      {_, bearer} = issue(request, registration)
-
-      for password <- [nil, "", String.duplicate("a", 1025)] do
-        assert Identity.reset_password(bearer, password, operation()) ==
-                 {:error, :reset_unavailable}
-      end
-
-      assert reset(bearer <> "x") == {:error, :reset_unavailable}
-      assert reset(registration.verification_proof) == {:error, :reset_unavailable}
-      :ok = Identity.request_magic_login(request.email, "af", operation())
-
-      magic =
-        Token
-        |> Ash.Query.filter(account_id == ^initial.id and purpose == "magic_login")
-        |> Ash.read_one!(authorize?: false)
-
-      {:ok, {:ok, magic_bearer}} =
-        Ash.transact([Account, Token], fn ->
-          Identity.magic_login_delivery(magic.jti, request.email, "af")
-        end)
-
-      assert reset(magic_bearer) == {:error, :reset_unavailable}
-      assert Identity.authenticate_magic_link(bearer) == {:error, :authentication_unavailable}
-      assert Identity.verify_email(bearer) == {:error, :verification_unavailable}
-      assert {:ok, :reset} = reset(bearer)
-      assert reset(bearer) == {:error, :reset_unavailable}
-    end)
+    NewYou.Proof.ResetCases.fail_closed()
   end
 
   test "request retries retain one proof and binding, and invalid current Account state prevents use" do
@@ -501,68 +450,5 @@ defmodule NewYou.Identity.PasswordResetLifecycleTest do
                Ash.destroy(consumed, action: :expunge_expired, authorize?: false)
              )
     end)
-  end
-
-  defp reset_security_snapshot(account_id) do
-    obligation_ids = "SELECT id FROM evidence_obligations WHERE target_id = $1 OR actor_id = $1"
-
-    for {table, where, order} <- [
-          {"accounts", "id = $1", "id"},
-          {"tokens", "account_id = $1", "jti"},
-          {"sessions", "account_id = $1", "id"},
-          {"device_assurances", "account_id = $1", "id"},
-          {"registration_operations", "created_account_id = $1", "id"},
-          {"evidence_obligations", "target_id = $1 OR actor_id = $1", "id"},
-          {"evidence_records", "obligation_id IN (#{obligation_ids})", "id"},
-          {"oban_jobs",
-           "args->'primary_key'->>'id' IN (SELECT id::text FROM (#{obligation_ids}) obligations)",
-           "id"}
-        ],
-        into: %{} do
-      rows =
-        Repo.query!(
-          "SELECT row_to_json(snapshot)::text FROM #{table} snapshot WHERE #{where} ORDER BY #{order}",
-          [Ecto.UUID.dump!(account_id)]
-        ).rows
-
-      {table, :crypto.hash(:sha256, :erlang.term_to_binary(rows, [:deterministic]))}
-    end
-  end
-
-  defp reset(bearer), do: Identity.reset_password(bearer, "replacement", operation())
-
-  defp account do
-    request = P805.request()
-    {:ok, result} = Identity.register(request)
-    {:ok, :verified} = Identity.verify_email(result.verification_proof)
-    {request, result}
-  end
-
-  defp issue(request, registration) do
-    :ok = Identity.request_password_reset(request.email, "af", operation())
-    proof = current_proof(registration.account_id)
-    {:ok, bearer} = delivery(proof, request.email)
-    {proof, bearer}
-  end
-
-  defp current_proof(id),
-    do:
-      Token
-      |> Ash.Query.filter(account_id == ^id and purpose == "password_reset")
-      |> Ash.read_one!(authorize?: false)
-
-  defp delivery(proof, email, locale \\ "af") do
-    case Ash.transact([Account, Token], fn ->
-           Identity.password_reset_delivery(proof.jti, email, locale)
-         end) do
-      {:ok, result} -> result
-      _ -> {:error, :source_invalid}
-    end
-  end
-
-  defp operation do
-    id = Ecto.UUID.generate()
-    P805.track_operation(id)
-    id
   end
 end

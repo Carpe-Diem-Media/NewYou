@@ -1,10 +1,8 @@
 defmodule NewYou.Identity.MagicLoginLifecycleTest do
   use ExUnit.Case, async: false
-  require Ash.Query
+  import NewYou.Proof.MagicCases
 
-  alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.Identity
-  alias NewYou.Identity.{Account, Session, Token}
   alias NewYou.Proof.P805
 
   test "a cancelled request loses its fixture lease but a bound retry proves fresh durable issuance" do
@@ -37,44 +35,7 @@ defmodule NewYou.Identity.MagicLoginLifecycleTest do
   end
 
   test "expiry, revocation, supersession and replay fail closed" do
-    P805.with_fixture(fn ->
-      {request, registration} = verified_account()
-
-      for disposition <- [:expired, :revoked, :superseded] do
-        operation = operation()
-        proof = request_current_proof(request.email, registration.account_id, operation)
-        bearer = delivery!(proof, request.email, "af")
-
-        case disposition do
-          :expired ->
-            NewYou.Repo.query!(
-              "UPDATE tokens SET expires_at = now() - interval '1 second' WHERE jti = $1",
-              [proof.jti]
-            )
-
-          :revoked ->
-            NewYou.Repo.query!("UPDATE tokens SET purpose = 'revocation' WHERE jti = $1", [
-              proof.jti
-            ])
-
-          :superseded ->
-            request_current_proof(request.email, registration.account_id, operation())
-        end
-
-        rejected = delivery_rejected?(proof.jti, request.email, "af")
-        outcome = consume(bearer)
-        assert rejected, "invalidated delivery proof was accepted"
-        assert outcome == :denied, "invalidated magic proof created a Session"
-      end
-
-      operation = operation()
-      proof = request_current_proof(request.email, registration.account_id, operation)
-      bearer = delivery!(proof, request.email, "af")
-      first = consume(bearer)
-      replay = consume(bearer)
-      assert first == :accepted, "current magic proof did not create a Session"
-      assert replay == :denied, "consumed magic proof replay was accepted"
-    end)
+    NewYou.Proof.MagicCases.fail_closed()
   end
 
   test "delivery binds the current locale and authentication rejects wrong purpose and altered claims" do
@@ -220,129 +181,4 @@ defmodule NewYou.Identity.MagicLoginLifecycleTest do
       assert Enum.all?(cleanup, fn {_key, value} -> value == true end), "#{id} did not clean up"
     end
   end
-
-  defp verified_account do
-    request = P805.request()
-    {:ok, registration} = Identity.register(request)
-    {:ok, :verified} = Identity.verify_email(registration.verification_proof)
-    {request, registration}
-  end
-
-  defp operation do
-    id = Ecto.UUID.generate()
-    P805.track_operation(id)
-    id
-  end
-
-  defp current_proof(account_id) do
-    Token
-    |> Ash.Query.filter(account_id == ^account_id and purpose == "magic_login")
-    |> Ash.read_one!(authorize?: false)
-  end
-
-  defp no_magic_proof?(account_id) do
-    Token
-    |> Ash.Query.filter(account_id == ^account_id and not is_nil(magic_request_id))
-    |> Ash.read!(authorize?: false)
-    |> Enum.empty?()
-  end
-
-  defp current_purpose(jti) do
-    NewYou.Repo.query!("SELECT purpose FROM tokens WHERE jti = $1", [jti]).rows
-    |> case do
-      [[purpose]] -> purpose
-      _ -> nil
-    end
-  end
-
-  defp magic_proof_snapshot(jti) do
-    NewYou.Repo.query!(
-      "SELECT magic_request_id, purpose, expires_at, magic_claims, magic_account_binding, magic_locale, created_at, updated_at FROM tokens WHERE jti = $1",
-      [jti]
-    ).rows
-  end
-
-  defp token_count_for_operation(operation) do
-    P805.scalar("SELECT count(*) FROM tokens WHERE magic_request_id = $1", [
-      Ecto.UUID.dump!(operation)
-    ])
-  end
-
-  defp session_count(account_id) do
-    NewYou.Repo.query!("SELECT count(*) FROM sessions WHERE account_id = $1", [
-      Ecto.UUID.dump!(account_id)
-    ]).rows
-    |> hd()
-    |> hd()
-  end
-
-  defp delivery!(proof, destination, locale) do
-    case Ash.transact([Account, Token], fn ->
-           Identity.magic_login_delivery(proof.jti, destination, locale)
-         end) do
-      {:ok, {:ok, bearer}} when is_binary(bearer) -> bearer
-      {:ok, bearer} when is_binary(bearer) -> bearer
-      _ -> raise "expected current magic-login delivery proof"
-    end
-  end
-
-  defp request_current_proof(email, account_id, operation_id) do
-    proof =
-      Enum.reduce_while(1..3, nil, fn _, _ ->
-        # Cancellation may disconnect the borrowed lease. A neutral response is
-        # not issuance proof: reacquire, then observe this exact durable operation.
-        Sandbox.unboxed_run(NewYou.Repo, fn ->
-          :ok = Identity.request_magic_login(email, "af", operation_id)
-        end)
-
-        :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
-
-        case current_proof(account_id) do
-          %Token{magic_request_id: ^operation_id} = current -> {:halt, current}
-          _ -> {:cont, nil}
-        end
-      end)
-
-    assert match?(%Token{magic_request_id: ^operation_id}, proof),
-           "request fixture did not commit the expected current magic proof"
-
-    proof
-  end
-
-  defp delivery_rejected?(jti, destination, locale) do
-    case Ash.transact([Account, Token], fn ->
-           Identity.magic_login_delivery(jti, destination, locale)
-         end) do
-      {:ok, {:ok, bearer}} when is_binary(bearer) -> false
-      {:ok, bearer} when is_binary(bearer) -> false
-      _ -> true
-    end
-  end
-
-  defp consume(bearer) do
-    case Identity.authenticate_magic_link(bearer) do
-      {:ok, %{session_id: session_id, token: token}}
-      when is_binary(session_id) and is_binary(token) ->
-        case Ash.get(Session, session_id, authorize?: false) do
-          {:ok, %Session{}} -> :accepted
-          _ -> :denied
-        end
-
-      _ ->
-        :denied
-    end
-  end
-
-  defp alter_locale_claim(bearer) do
-    [header, payload, signature] = String.split(bearer, ".")
-    claims = payload |> Base.url_decode64!(padding: false) |> Jason.decode!()
-
-    tampered =
-      claims |> Map.put("locale", "en") |> Jason.encode!() |> Base.url_encode64(padding: false)
-
-    Enum.join([header, tampered, signature], ".")
-  end
-
-  defp value_for("email", value, _original), do: value
-  defp value_for(_column, _value, original), do: original
 end

@@ -254,7 +254,8 @@ defmodule NewYou.Proof.P805Browser do
   defp bind_durable_result(result, _input),
     do: put_in(result, ["checks", "submitted_acceptances"], false)
 
-  defp run_port(executable, script, payload) do
+  @doc false
+  def run_port(executable, script, payload) do
     port =
       Port.open({:spawn_executable, executable}, [
         :binary,
@@ -265,6 +266,12 @@ defmodule NewYou.Proof.P805Browser do
 
     Port.command(port, payload <> "\n")
     result = collect(port, "")
+
+    for key <-
+          ~w(spine.registration spine.delivery spine.verification_form spine.verification_submitted spine.login_submitted),
+        get_in(result, ["checks", key]) == true do
+      SelfTest.observe_manifest!(key, true)
+    end
 
     case result["failure"] do
       nil ->

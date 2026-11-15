@@ -1,0 +1,1516 @@
+{
+  "source": "docs/delivery/feature-contracts/fp-001/FP-001_TRACER_BULLET_CONTRACT_WORKING_v0.1.3.md",
+  "purpose": "Independent TB-001 required identities, owner callback targets and mandatory proof claims for Master Gate review; maintained separately from executable declarations",
+  "families": {
+    "audit_e1": {
+      "tb001_section": "8, mandatory family 6",
+      "cases": [
+        [
+          "p813.admission_cut",
+          "p813.admission_cut"
+        ],
+        [
+          "p813.capture_failure",
+          "p813.capture_failure"
+        ],
+        [
+          "p813.source_failure",
+          "p813.source_failure"
+        ],
+        [
+          "p813.same_attempt_race",
+          "p813.same_attempt_race"
+        ],
+        [
+          "p813.distinct_attempt_race",
+          "p813.distinct_attempt_race"
+        ],
+        [
+          "p813.restart",
+          "p813.restart"
+        ],
+        [
+          "p813.crash_after_admission",
+          "p813.crash_after_admission"
+        ],
+        [
+          "p813.crash_after_source",
+          "p813.crash_after_source"
+        ]
+      ],
+      "required_proof": "Privileged-effect admission precedes effect; failed admission blocks effect; accepted admission truth survives source failure and each distinct attempt is evidenced.",
+      "coverage_role": "mandatory_business_family",
+      "owner_obligations": []
+    },
+    "audit_e2": {
+      "tb001_section": "8, mandatory family 5",
+      "cases": [
+        [
+          "p805.audit_schedule_rollback",
+          "p805.audit_schedule_rollback"
+        ],
+        [
+          "p805.commit_rollback",
+          "p805.commit_rollback"
+        ],
+        [
+          "p811.interrupted_materialisation",
+          "p811.interrupted_materialisation"
+        ],
+        [
+          "p811.existing_assertion",
+          "p811.existing_assertion"
+        ],
+        [
+          "p811.concurrent_execution",
+          "p811.concurrent_execution"
+        ],
+        [
+          "p811.restart_backlog",
+          "p811.restart_backlog"
+        ]
+      ],
+      "required_proof": "Source transition, EvidenceObligation and initial scheduling are atomic; rollback, replay and restart preserve one restricted accepted consequence.",
+      "coverage_role": "mandatory_business_family",
+      "owner_obligations": []
+    },
+    "browser_spine": {
+      "tb001_section": "7-8",
+      "cases": [
+        [
+          "p805.browser_en",
+          "p805.browser_en"
+        ],
+        [
+          "p805.browser_af",
+          "p805.browser_af"
+        ],
+        [
+          "p819.browser_en",
+          "p819.browser_en"
+        ],
+        [
+          "p819.browser_af",
+          "p819.browser_af"
+        ]
+      ],
+      "required_proof": "Separate browser journey under sections 7-8 through real production boundaries; registration, explicit verification without login, explicit login and protected reload. This is separate coverage, not a tenth mandatory business family.",
+      "coverage_role": "browser_spine",
+      "owner_obligations": [
+        {
+          "callback": {
+            "arity": 0,
+            "function": "browser_en",
+            "module": "NewYou.Proof.P819"
+          },
+          "expected": "continuous registration PMR verification password login and Session reconstruction en",
+          "case_id": "p819.browser_en",
+          "boundary": "chromium_phoenix_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "browser_af",
+            "module": "NewYou.Proof.P819"
+          },
+          "expected": "continuous registration PMR verification password login and Session reconstruction af",
+          "case_id": "p819.browser_af",
+          "boundary": "chromium_phoenix_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        }
+      ]
+    },
+    "communications_durability_backlog_ambiguity": {
+      "tb001_section": "8, mandatory family 4",
+      "cases": [
+        [
+          "p819.comm_admission",
+          "p819.comm_admission"
+        ],
+        [
+          "p819.comm_ambiguity",
+          "p819.comm_ambiguity"
+        ],
+        [
+          "p819.comm_current_source",
+          "p819.comm_current_source"
+        ],
+        [
+          "p819.comm_ambiguity_invalidation",
+          "p819.comm_ambiguity_invalidation"
+        ],
+        [
+          "p819.comm_no_outer_transaction",
+          "p819.comm_no_outer_transaction"
+        ],
+        [
+          "p819.comm_pre_invoke_guard",
+          "p819.comm_pre_invoke_guard"
+        ],
+        [
+          "p819.comm_concurrent_execution",
+          "p819.comm_concurrent_execution"
+        ],
+        [
+          "p819.comm_scheduler",
+          "p819.comm_scheduler"
+        ],
+        [
+          "p819.comm_row_lock",
+          "p819.comm_row_lock"
+        ],
+        [
+          "p819.comm_restart",
+          "p819.comm_restart"
+        ],
+        [
+          "p819.comm_crash_after_admission",
+          "p819.comm_crash_after_admission"
+        ],
+        [
+          "p819.comm_crash_before_invoke",
+          "p819.comm_crash_before_invoke"
+        ],
+        [
+          "p819.comm_crash_after_invoke",
+          "p819.comm_crash_after_invoke"
+        ],
+        [
+          "p819.comm_recheck_eligible",
+          "p819.comm_recheck_eligible"
+        ],
+        [
+          "p819.comm_recheck_content_ineligible",
+          "p819.comm_recheck_content_ineligible"
+        ],
+        [
+          "p819.comm_recheck_capability_unavailable",
+          "p819.comm_recheck_capability_unavailable"
+        ],
+        [
+          "p819.comm_recheck_provider_unavailable",
+          "p819.comm_recheck_provider_unavailable"
+        ]
+      ],
+      "required_proof": "Durable MessageIntent authority, zero-job discovery, real executor concurrency, source re-read before committed admission, no provider I/O transaction, conservative ambiguity and restart recovery.",
+      "coverage_role": "mandatory_business_family",
+      "owner_obligations": [
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_admission_commits_before_provider_i_o_and_delivery_never_verifies_identity",
+            "module": "NewYou.Proof.DeliveryScenarios"
+          },
+          "expected": "admission commits before provider i o and delivery never verifies identity",
+          "case_id": "p819.comm_admission",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_unknown_blocks_blind_retry_and_only_authenticated_no_operation_allows_a_new_attempt",
+            "module": "NewYou.Proof.DeliveryScenarios"
+          },
+          "expected": "unknown blocks blind retry and only authenticated no operation allows a new attempt",
+          "case_id": "p819.comm_ambiguity",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_consumed_source_closes_send_authority_and_destroys_the_envelope",
+            "module": "NewYou.Proof.DeliveryScenarios"
+          },
+          "expected": "consumed source closes send authority and destroys the envelope",
+          "case_id": "p819.comm_current_source",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_source_invalidation_during_unresolved_delivery_clears_secrets_without_permitting_retry",
+            "module": "NewYou.Proof.DeliveryScenarios"
+          },
+          "expected": "source invalidation during unresolved delivery clears secrets without permitting retry",
+          "case_id": "p819.comm_ambiguity_invalidation",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_outer_transactions_cannot_encompass_provider_i_o",
+            "module": "NewYou.Proof.DeliveryScenarios"
+          },
+          "expected": "outer transactions cannot encompass provider i o",
+          "case_id": "p819.comm_no_outer_transaction",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_consumption_between_admission_and_invocation_truthfully_closes_the_uninvoked_attempt",
+            "module": "NewYou.Proof.DeliveryScenarios"
+          },
+          "expected": "consumption between admission and invocation truthfully closes the uninvoked attempt",
+          "case_id": "p819.comm_pre_invoke_guard",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_competing_real_postgresql_executors_admit_only_one_provider_operation",
+            "module": "NewYou.Proof.DeliveryRecoveryScenarios"
+          },
+          "expected": "competing real postgresql executors admit only one provider operation",
+          "case_id": "p819.comm_concurrent_execution",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.comm_concurrent_execution"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_real_ashoban_scheduler_discovers_zero_job_intent_and_recreates_deleted_and_exhausted_jobs",
+            "module": "NewYou.Proof.DeliveryRecoveryScenarios"
+          },
+          "expected": "real ashoban scheduler discovers zero job intent and recreates deleted and exhausted jobs",
+          "case_id": "p819.comm_scheduler",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_admission_contenders_wait_on_a_real_postgresql_row_lock",
+            "module": "NewYou.Proof.DeliveryRecoveryScenarios"
+          },
+          "expected": "admission contenders wait on a real postgresql row lock",
+          "case_id": "p819.comm_row_lock",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.comm_row_lock"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_fresh_beam_discovers_missing_jobs_and_preserves_accepted_ambiguity_across_another_boot",
+            "module": "NewYou.Proof.DeliveryRecoveryScenarios"
+          },
+          "expected": "fresh beam discovers missing jobs and preserves accepted ambiguity across another boot",
+          "case_id": "p819.comm_restart",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "comm_crash_after_admission",
+            "module": "NewYou.Proof.P819"
+          },
+          "expected": "process death at after_admission recovers conservatively",
+          "case_id": "p819.comm_crash_after_admission",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": "transaction.after_commit",
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "comm_crash_before_invoke",
+            "module": "NewYou.Proof.P819"
+          },
+          "expected": "process death at before_invoke recovers conservatively",
+          "case_id": "p819.comm_crash_before_invoke",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": "provider.before_invoke",
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "comm_crash_after_invoke",
+            "module": "NewYou.Proof.P819"
+          },
+          "expected": "process death at after_invoke recovers conservatively",
+          "case_id": "p819.comm_crash_after_invoke",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": "provider.after_invoke_before_persist",
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "comm_recheck_eligible",
+            "module": "NewYou.Proof.P819"
+          },
+          "expected": "pre invocation crash recovery rechecks eligible",
+          "case_id": "p819.comm_recheck_eligible",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": "transaction.after_commit",
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "comm_recheck_content_ineligible",
+            "module": "NewYou.Proof.P819"
+          },
+          "expected": "pre invocation crash recovery rechecks content_ineligible",
+          "case_id": "p819.comm_recheck_content_ineligible",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": "transaction.after_commit",
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "comm_recheck_capability_unavailable",
+            "module": "NewYou.Proof.P819"
+          },
+          "expected": "pre invocation crash recovery rechecks capability_unavailable",
+          "case_id": "p819.comm_recheck_capability_unavailable",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": "transaction.after_commit",
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "comm_recheck_provider_unavailable",
+            "module": "NewYou.Proof.P819"
+          },
+          "expected": "pre invocation crash recovery rechecks provider_unavailable",
+          "case_id": "p819.comm_recheck_provider_unavailable",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": "transaction.after_commit",
+          "race_id": null
+        }
+      ]
+    },
+    "non_enumeration_current_privacy": {
+      "tb001_section": "8, mandatory family 8",
+      "cases": [
+        [
+          "p819.privacy_missing",
+          "p819.privacy_missing"
+        ],
+        [
+          "p819.privacy_withdraw_first",
+          "p819.privacy_withdraw_first"
+        ],
+        [
+          "p819.privacy_apply_first",
+          "p819.privacy_apply_first"
+        ],
+        [
+          "p819.privacy_restart",
+          "p819.privacy_restart"
+        ],
+        [
+          "p819.privacy_unavailable",
+          "p819.privacy_unavailable"
+        ],
+        [
+          "p819.login_neutral",
+          "p819.login_neutral"
+        ],
+        [
+          "p819.recovery_neutral",
+          "p819.recovery_neutral"
+        ],
+        [
+          "p819.support_minimum",
+          "p819.support_minimum"
+        ],
+        [
+          "p819.recovery_window",
+          "p819.recovery_window"
+        ],
+        [
+          "p819.registration_neutral",
+          "p819.registration_neutral"
+        ]
+      ],
+      "required_proof": "Registration/login/recovery/support responses are non-enumerating; protected actions re-read current Privacy and Identity authority and deny stale purpose or consent state.",
+      "coverage_role": "mandatory_business_family",
+      "owner_obligations": [
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_proof_only_protected_mutation_denies_when_current_privacy_authority_is_missing",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "proof only protected mutation denies when current privacy authority is missing",
+          "case_id": "p819.privacy_missing",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_committed_privacy_withdrawal_wins_before_identity_s_current_mutation_check",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "committed privacy withdrawal wins before identity s current mutation check",
+          "case_id": "p819.privacy_withdraw_first",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.privacy_withdraw_first"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_identity_mutation_committed_first_serializes_before_privacy_withdrawal",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "identity mutation committed first serializes before privacy withdrawal",
+          "case_id": "p819.privacy_apply_first",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.privacy_apply_first"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_withdrawn_privacy_authority_remains_denied_after_a_fresh_beam_restart",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "withdrawn privacy authority remains denied after a fresh beam restart",
+          "case_id": "p819.privacy_restart",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_identity_fails_closed_when_its_current_privacy_read_is_unavailable",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "identity fails closed when its current privacy read is unavailable",
+          "case_id": "p819.privacy_unavailable",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "login_neutral",
+            "module": "NewYou.Proof.WebScenarios"
+          },
+          "expected": "login neutral",
+          "case_id": "p819.login_neutral",
+          "boundary": "phoenix_conntest_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "recovery_neutral",
+            "module": "NewYou.Proof.WebScenarios"
+          },
+          "expected": "recovery neutral",
+          "case_id": "p819.recovery_neutral",
+          "boundary": "phoenix_conntest_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "support_lookup",
+            "module": "NewYou.Proof.WebScenarios"
+          },
+          "expected": "support lookup",
+          "case_id": "p819.support_minimum",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_a_locked_known_account_cannot_extend_the_neutral_public_request_window",
+            "module": "NewYou.Proof.RecoveryScenarios"
+          },
+          "expected": "a locked known account cannot extend the neutral public request window",
+          "case_id": "p819.recovery_window",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "registration_neutral",
+            "module": "NewYou.Proof.P819"
+          },
+          "expected": "registration response remains neutral for new and existing canonical email",
+          "case_id": "p819.registration_neutral",
+          "boundary": "phoenix_conntest_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        }
+      ]
+    },
+    "proof_capability_scanner_replay_supersession": {
+      "tb001_section": "8, mandatory family 2",
+      "cases": [
+        [
+          "p807.browser_en",
+          "p807.browser_en"
+        ],
+        [
+          "p807.browser_af",
+          "p807.browser_af"
+        ],
+        [
+          "p807.consume_race",
+          "p807.consume_race"
+        ],
+        [
+          "p807.interrupted_consume",
+          "p807.interrupted_consume"
+        ],
+        [
+          "p819.recovery_scanner",
+          "p819.recovery_scanner"
+        ],
+        [
+          "p819.reset_scanner",
+          "p819.reset_scanner"
+        ],
+        [
+          "p819.email_scanner",
+          "p819.email_scanner"
+        ],
+        [
+          "p819.verification_passive",
+          "p819.verification_passive"
+        ],
+        [
+          "p819.reset_passive",
+          "p819.reset_passive"
+        ],
+        [
+          "p819.magic_passive",
+          "p819.magic_passive"
+        ],
+        [
+          "p819.verification_lifecycle",
+          "p819.verification_lifecycle"
+        ],
+        [
+          "p819.reset_lifecycle",
+          "p819.reset_lifecycle"
+        ],
+        [
+          "p819.magic_lifecycle",
+          "p819.magic_lifecycle"
+        ]
+      ],
+      "required_proof": "Passive verify/reset/recovery/new-address retrieval consumes no authority; explicit purpose-specific consume is single-use; replay, expiry, revocation and supersession fail closed.",
+      "coverage_role": "mandatory_business_family",
+      "owner_obligations": [
+        {
+          "callback": {
+            "arity": 0,
+            "function": "recovery_scanner",
+            "module": "NewYou.Proof.WebScenarios"
+          },
+          "expected": "recovery scanner",
+          "case_id": "p819.recovery_scanner",
+          "boundary": "phoenix_conntest_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "reset_browser",
+            "module": "NewYou.Proof.WebScenarios"
+          },
+          "expected": "reset browser",
+          "case_id": "p819.reset_scanner",
+          "boundary": "chromium_phoenix_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_passive_retrieval_is_inert_and_explicit_csrf_confirmation_does_not_apply_the_email",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "passive retrieval is inert and explicit csrf confirmation does not apply the email",
+          "case_id": "p819.email_scanner",
+          "boundary": "phoenix_conntest_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scanner",
+            "module": "NewYou.Proof.VerificationScannerCases"
+          },
+          "expected": "GET HEAD preview scanner and prefetch leave verification passive until explicit CSRF confirmation",
+          "case_id": "p819.verification_passive",
+          "boundary": "phoenix_conntest_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scanner",
+            "module": "NewYou.Proof.ResetScannerCases"
+          },
+          "expected": "GET HEAD preview scanner and prefetch leave reset passive until explicit CSRF confirmation",
+          "case_id": "p819.reset_passive",
+          "boundary": "phoenix_conntest_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scanner",
+            "module": "NewYou.Proof.MagicScannerCases"
+          },
+          "expected": "GET HEAD preview scanner and prefetch leave magic login passive until explicit CSRF confirmation",
+          "case_id": "p819.magic_passive",
+          "boundary": "phoenix_conntest_identity_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "fail_closed",
+            "module": "NewYou.Proof.VerificationCases"
+          },
+          "expected": "wrong purpose expiry revocation supersession and replay fail closed for verification",
+          "case_id": "p819.verification_lifecycle",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "fail_closed",
+            "module": "NewYou.Proof.ResetCases"
+          },
+          "expected": "wrong purpose expiry revocation supersession and replay fail closed for reset",
+          "case_id": "p819.reset_lifecycle",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "fail_closed",
+            "module": "NewYou.Proof.MagicCases"
+          },
+          "expected": "expiry revocation supersession and replay fail closed for magic login",
+          "case_id": "p819.magic_lifecycle",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        }
+      ]
+    },
+    "recovery_primary_email_change": {
+      "tb001_section": "8, mandatory family 7",
+      "cases": [
+        [
+          "p819.recovery_lifecycle",
+          "p819.recovery_lifecycle"
+        ],
+        [
+          "p819.recovery_rollback",
+          "p819.recovery_rollback"
+        ],
+        [
+          "p819.recovery_assurance",
+          "p819.recovery_assurance"
+        ],
+        [
+          "p819.recovery_terminal",
+          "p819.recovery_terminal"
+        ],
+        [
+          "p819.recovery_completion_rollback",
+          "p819.recovery_completion_rollback"
+        ],
+        [
+          "p819.recovery_purpose",
+          "p819.recovery_purpose"
+        ],
+        [
+          "p819.recovery_revocation",
+          "p819.recovery_revocation"
+        ],
+        [
+          "p819.recovery_secrets",
+          "p819.recovery_secrets"
+        ],
+        [
+          "p819.recovery_duplicate_request_race",
+          "p819.recovery_duplicate_request_race"
+        ],
+        [
+          "p819.recovery_assurance_race",
+          "p819.recovery_assurance_race"
+        ],
+        [
+          "p819.recovery_completion_race",
+          "p819.recovery_completion_race"
+        ],
+        [
+          "p819.recovery_stale_login_race",
+          "p819.recovery_stale_login_race"
+        ],
+        [
+          "p819.recovery_reset_vs_recovery_race",
+          "p819.recovery_reset_vs_recovery_race"
+        ],
+        [
+          "p819.recovery_interrupted_acceptance",
+          "p819.recovery_interrupted_acceptance"
+        ],
+        [
+          "p819.recovery_restart_proof",
+          "p819.recovery_restart_proof"
+        ],
+        [
+          "p819.recovery_unverified_restart_proof",
+          "p819.recovery_unverified_restart_proof"
+        ],
+        [
+          "p819.email_request",
+          "p819.email_request"
+        ],
+        [
+          "p819.email_mfa",
+          "p819.email_mfa"
+        ],
+        [
+          "p819.email_apply",
+          "p819.email_apply"
+        ],
+        [
+          "p819.email_restart",
+          "p819.email_restart"
+        ],
+        [
+          "p819.email_recovery_race",
+          "p819.email_recovery_race"
+        ],
+        [
+          "p819.email_logout_race",
+          "p819.email_logout_race"
+        ],
+        [
+          "p819.email_cancel",
+          "p819.email_cancel"
+        ],
+        [
+          "p819.email_supersession",
+          "p819.email_supersession"
+        ],
+        [
+          "p819.email_expiry",
+          "p819.email_expiry"
+        ],
+        [
+          "p819.email_hold",
+          "p819.email_hold"
+        ],
+        [
+          "p819.email_session",
+          "p819.email_session"
+        ],
+        [
+          "p819.email_notices",
+          "p819.email_notices"
+        ]
+      ],
+      "required_proof": "Identity owns recovery and primary-email state and Session/credential consequences; duplicate, replay, expiry, restart and supersession preserve old authority until apply commits.",
+      "coverage_role": "mandatory_business_family",
+      "owner_obligations": [
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_explicit_proof_acceptance_and_completion_are_separate_durable_and_replay_safe",
+            "module": "NewYou.Proof.RecoveryScenarios"
+          },
+          "expected": "explicit proof acceptance and completion are separate durable and replay safe",
+          "case_id": "p819.recovery_lifecycle",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_proof_and_assurance_rollback_together_at_the_existing_source_transaction_cut",
+            "module": "NewYou.Proof.RecoveryScenarios"
+          },
+          "expected": "proof and assurance rollback together at the existing source transaction cut",
+          "case_id": "p819.recovery_rollback",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": "transaction.before_commit",
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_duplicates_reuse_one_case_and_never_lower_the_required_assurance",
+            "module": "NewYou.Proof.RecoveryScenarios"
+          },
+          "expected": "duplicates reuse one case and never lower the required assurance",
+          "case_id": "p819.recovery_assurance",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_cancelled_expired_and_stale_security_cases_remain_terminal",
+            "module": "NewYou.Proof.RecoveryScenarios"
+          },
+          "expected": "cancelled expired and stale security cases remain terminal",
+          "case_id": "p819.recovery_terminal",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_completion_failure_rolls_back_credential_and_keeps_its_durable_e2_and_notice_absent",
+            "module": "NewYou.Proof.RecoveryScenarios"
+          },
+          "expected": "completion failure rolls back credential and keeps its durable e2 and notice absent",
+          "case_id": "p819.recovery_completion_rollback",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": "transaction.before_commit",
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_foreign_purpose_and_unauthorized_ash_access_cannot_advance_a_case",
+            "module": "NewYou.Proof.RecoveryScenarios"
+          },
+          "expected": "foreign purpose and unauthorized ash access cannot advance a case",
+          "case_id": "p819.recovery_purpose",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_revoked_proof_and_reused_credentials_fail_without_creating_authority",
+            "module": "NewYou.Proof.RecoveryScenarios"
+          },
+          "expected": "revoked proof and reused credentials fail without creating authority",
+          "case_id": "p819.recovery_revocation",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_recovery_bearer_and_replacement_input_never_enter_cases_notices_audit_or_jobs",
+            "module": "NewYou.Proof.RecoveryScenarios"
+          },
+          "expected": "recovery bearer and replacement input never enter cases notices audit or jobs",
+          "case_id": "p819.recovery_secrets",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "duplicate_request_race",
+            "module": "NewYou.Proof.P815"
+          },
+          "expected": "recovery duplicate request race",
+          "case_id": "p819.recovery_duplicate_request_race",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.recovery_duplicate_request_race"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "assurance_race",
+            "module": "NewYou.Proof.P815"
+          },
+          "expected": "recovery assurance race",
+          "case_id": "p819.recovery_assurance_race",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.recovery_assurance_race"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "completion_race",
+            "module": "NewYou.Proof.P815"
+          },
+          "expected": "recovery completion race",
+          "case_id": "p819.recovery_completion_race",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.recovery_completion_race"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "stale_login_race",
+            "module": "NewYou.Proof.P815"
+          },
+          "expected": "recovery stale login race",
+          "case_id": "p819.recovery_stale_login_race",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.recovery_stale_login_race"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "reset_vs_recovery_race",
+            "module": "NewYou.Proof.P815"
+          },
+          "expected": "recovery reset vs recovery race",
+          "case_id": "p819.recovery_reset_vs_recovery_race",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.recovery_reset_vs_recovery_race"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "interrupted_acceptance",
+            "module": "NewYou.Proof.P815"
+          },
+          "expected": "recovery interrupted acceptance",
+          "case_id": "p819.recovery_interrupted_acceptance",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": "transaction.before_commit",
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "restart_proof",
+            "module": "NewYou.Proof.P815"
+          },
+          "expected": "recovery restart proof",
+          "case_id": "p819.recovery_restart_proof",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "unverified_restart_proof",
+            "module": "NewYou.Proof.P815"
+          },
+          "expected": "recovery unverified restart proof",
+          "case_id": "p819.recovery_unverified_restart_proof",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_request_and_fresh_password_reauthentication_create_one_pending_proof_without_changing_canonical_email",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "request and fresh password reauthentication create one pending proof without changing canonical email",
+          "case_id": "p819.email_request",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_active_mfa_requires_purpose_bound_totp_step_up_before_issuing_an_email_change_proof",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "active mfa requires purpose bound totp step up before issuing an email change proof",
+          "case_id": "p819.email_mfa",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_guarded_apply_changes_the_canonical_email_and_commits_security_consequences_once",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "guarded apply changes the canonical email and commits security consequences once",
+          "case_id": "p819.email_apply",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_a_confirmed_change_resumes_and_applies_after_a_fresh_beam_restart",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "a confirmed change resumes and applies after a fresh beam restart",
+          "case_id": "p819.email_restart",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_primary_email_apply_and_recovery_completion_serialize_in_both_postgresql_commit_orders",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "primary email apply and recovery completion serialize in both postgresql commit orders",
+          "case_id": "p819.email_recovery_race",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.email_recovery_race"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_competing_session_logout_and_primary_email_apply_serialize_against_current_authority",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "competing session logout and primary email apply serialize against current authority",
+          "case_id": "p819.email_logout_race",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.email_logout_race"
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_cancellation_revokes_the_proof_and_leaves_the_canonical_address_unchanged",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "cancellation revokes the proof and leaves the canonical address unchanged",
+          "case_id": "p819.email_cancel",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_a_newer_accepted_operation_supersedes_the_old_proof_and_remains_the_only_current_operation",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "a newer accepted operation supersedes the old proof and remains the only current operation",
+          "case_id": "p819.email_supersession",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_expiry_terminalizes_the_durable_operation_and_revokes_its_proof",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "expiry terminalizes the durable operation and revokes its proof",
+          "case_id": "p819.email_expiry",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_a_current_security_hold_terminalizes_the_change_without_applying_its_target",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "a current security hold terminalizes the change without applying its target",
+          "case_id": "p819.email_hold",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_confirmed_operation_cannot_apply_after_its_originating_session_is_revoked",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "confirmed operation cannot apply after its originating session is revoked",
+          "case_id": "p819.email_session",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_development_only_email_change_intents_remain_held_and_never_reach_a_provider",
+            "module": "NewYou.Proof.EmailChangeScenarios"
+          },
+          "expected": "development only email change intents remain held and never reach a provider",
+          "case_id": "p819.email_notices",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        }
+      ]
+    },
+    "registration_pmr_reconciliation": {
+      "tb001_section": "8, mandatory family 1",
+      "cases": [
+        [
+          "p805.accepted",
+          "p805.accepted"
+        ],
+        [
+          "p805.rejected",
+          "p805.rejected"
+        ],
+        [
+          "p805.envelope_rollback",
+          "p805.envelope_rollback"
+        ],
+        [
+          "p805.rollback_account",
+          "p805.rollback_account"
+        ],
+        [
+          "p805.rollback_token",
+          "p805.rollback_token"
+        ],
+        [
+          "p805.rollback_intent",
+          "p805.rollback_intent"
+        ],
+        [
+          "p805.rollback_nonce",
+          "p805.rollback_nonce"
+        ],
+        [
+          "p805.rollback_obligation",
+          "p805.rollback_obligation"
+        ],
+        [
+          "p805.rollback_operation",
+          "p805.rollback_operation"
+        ],
+        [
+          "p805.replay_neutrality",
+          "p805.replay_neutrality"
+        ],
+        [
+          "p805.pmr_collision",
+          "p805.pmr_collision"
+        ],
+        [
+          "p805.retired_pmr",
+          "p805.retired_pmr"
+        ],
+        [
+          "p805.same_email_race",
+          "p805.same_email_race"
+        ],
+        [
+          "p805.canonical_email_race",
+          "p805.canonical_email_race"
+        ],
+        [
+          "p805.same_operation_race",
+          "p805.same_operation_race"
+        ],
+        [
+          "p805.pmr_collision_race",
+          "p805.pmr_collision_race"
+        ],
+        [
+          "p805.post_commit_recovery",
+          "p805.post_commit_recovery"
+        ],
+        [
+          "p805.resend",
+          "p805.resend"
+        ],
+        [
+          "p805.resend_binding",
+          "p805.resend_binding"
+        ],
+        [
+          "p819.reconciliation_apply",
+          "p819.reconciliation_apply"
+        ],
+        [
+          "p819.reconciliation_authorization",
+          "p819.reconciliation_authorization"
+        ],
+        [
+          "p819.reconciliation_pair_grants",
+          "p819.reconciliation_pair_grants"
+        ],
+        [
+          "p819.reconciliation_current_grants",
+          "p819.reconciliation_current_grants"
+        ],
+        [
+          "p819.reconciliation_history",
+          "p819.reconciliation_history"
+        ],
+        [
+          "p819.reconciliation_retirement",
+          "p819.reconciliation_retirement"
+        ],
+        [
+          "p819.reconciliation_restart",
+          "p819.reconciliation_restart"
+        ],
+        [
+          "p819.reconciliation_pmr_race",
+          "p819.reconciliation_pmr_race"
+        ]
+      ],
+      "required_proof": "Atomic registration acceptance, idempotent retry, real email/PMR contention, Identity-owned reconciliation and permanent PMR retirement.",
+      "coverage_role": "mandatory_business_family",
+      "owner_obligations": [
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_scoped_detection_verified_review_and_apply_preserve_history_and_retire_the_losing_pmr",
+            "module": "NewYou.Proof.ReconciliationScenarios"
+          },
+          "expected": "scoped detection verified review and apply preserve history and retire the losing pmr",
+          "case_id": "p819.reconciliation_apply",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_detection_and_demographic_similarity_cannot_substitute_for_current_verified_control",
+            "module": "NewYou.Proof.ReconciliationScenarios"
+          },
+          "expected": "detection and demographic similarity cannot substitute for current verified control",
+          "case_id": "p819.reconciliation_authorization",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_loser_only_and_survivor_only_grants_cannot_authorize_the_pair",
+            "module": "NewYou.Proof.ReconciliationScenarios"
+          },
+          "expected": "loser only and survivor only grants cannot authorize the pair",
+          "case_id": "p819.reconciliation_pair_grants",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_apply_requires_both_current_target_grants_before_admitting_e1",
+            "module": "NewYou.Proof.ReconciliationScenarios"
+          },
+          "expected": "apply requires both current target grants before admitting e1",
+          "case_id": "p819.reconciliation_current_grants",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_owner_policies_preserve_pending_message_and_audit_provenance_while_current_delivery_fails_closed",
+            "module": "NewYou.Proof.ReconciliationScenarios"
+          },
+          "expected": "owner policies preserve pending message and audit provenance while current delivery fails closed",
+          "case_id": "p819.reconciliation_history",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_retired_pmr_and_applied_provenance_cannot_be_revived_or_rewritten",
+            "module": "NewYou.Proof.ReconciliationScenarios"
+          },
+          "expected": "retired pmr and applied provenance cannot be revived or rewritten",
+          "case_id": "p819.reconciliation_retirement",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_expired_approval_denies_retries_and_a_fresh_beam_reconstructs_re_review_recovery",
+            "module": "NewYou.Proof.ReconciliationScenarios"
+          },
+          "expected": "expired approval denies retries and a fresh beam reconstructs re review recovery",
+          "case_id": "p819.reconciliation_restart",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": null
+        },
+        {
+          "callback": {
+            "arity": 0,
+            "function": "scenario_concurrent_registration_cannot_allocate_a_pmr_being_retired_by_reconciliation",
+            "module": "NewYou.Proof.ReconciliationScenarios"
+          },
+          "expected": "concurrent registration cannot allocate a pmr being retired by reconciliation",
+          "case_id": "p819.reconciliation_pmr_race",
+          "boundary": "owning_ash_postgresql",
+          "cut_point": null,
+          "race_id": "p819.reconciliation_pmr_race"
+        }
+      ]
+    },
+    "session_login_revocation_restart": {
+      "tb001_section": "8, mandatory family 3",
+      "cases": [
+        [
+          "p809.reconnect",
+          "p809.reconnect"
+        ],
+        [
+          "p809.interrupted_issue",
+          "p809.interrupted_issue"
+        ],
+        [
+          "p809.hold_race",
+          "p809.hold_race"
+        ],
+        [
+          "p809.beam_restart",
+          "p809.beam_restart"
+        ],
+        [
+          "p809.browser_en",
+          "p809.browser_en"
+        ],
+        [
+          "p809.browser_af",
+          "p809.browser_af"
+        ],
+        [
+          "p809.magic_consume_race",
+          "p809.magic_consume_race"
+        ],
+        [
+          "p809.magic_issue_consume_race",
+          "p809.magic_issue_consume_race"
+        ],
+        [
+          "p809.magic_restart",
+          "p809.magic_restart"
+        ],
+        [
+          "p812.reset_race",
+          "p812.reset_race"
+        ],
+        [
+          "p812.stale_login_race",
+          "p812.stale_login_race"
+        ],
+        [
+          "p812.interrupted_reset",
+          "p812.interrupted_reset"
+        ],
+        [
+          "p812.restart",
+          "p812.restart"
+        ]
+      ],
+      "required_proof": "One Identity Session model for password and magic login; verification does not log in; current Session/credential/security checks and durable revocation survive restart.",
+      "coverage_role": "mandatory_business_family",
+      "owner_obligations": []
+    },
+    "source_authority_bypass_negatives": {
+      "tb001_section": "8, mandatory family 9",
+      "cases": [
+        [
+          "p818.provider_observation",
+          "identity.provider_evidence_cannot_transition_source"
+        ],
+        [
+          "p818.stale_browser_authority",
+          "identity.revocation_and_supersession_are_current_authority"
+        ],
+        [
+          "p818.audit_evidence_non_authority",
+          "identity.audit_evidence_cannot_transition_source"
+        ],
+        [
+          "p818.executor_state_non_authority",
+          "communications_and_audit_source_resources_required"
+        ],
+        [
+          "p818.signals_coordination_non_authority",
+          "identity.pubsub_claim_is_not_verification"
+        ],
+        [
+          "p818.analytics_projection",
+          "privacy.current_suppression_and_analytics_derived_only"
+        ],
+        [
+          "p818.arc_029_enforcement",
+          "architecture.arc_029_owner_ash_write_boundary"
+        ]
+      ],
+      "required_proof": "Architecture rejects ordinary Repo/Ecto/raw-SQL business writes; derived browser/provider/Audit/Analytics/executor/Signals state cannot impersonate source authority.",
+      "coverage_role": "mandatory_business_family",
+      "owner_obligations": []
+    }
+  },
+  "contract": "TB-001/v0.1.3",
+  "source_sha256": "79a2cd1c458ddd8fba35158b6283d454ae39cbd604a2161c8d663d0e01137b47",
+  "maintenance": "Never regenerate this inventory when executable declarations change. Changes to required identities, owner module/function/arity, expected proof, boundary, cut or race require an explicit reviewed inventory diff. The existing case identity set remains unchanged.",
+  "review_context": "Callback and mandatory metadata binding submitted in response to independent WELL-20 finding 59429404-cdd7-422d-b466-1af660434e03. This static candidate extends the accepted identity inventory and requires fresh independent Master Gate review; it does not assert approval or certify Phase 8."
+}

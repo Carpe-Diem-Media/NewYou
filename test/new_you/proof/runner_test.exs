@@ -443,19 +443,23 @@ defmodule NewYou.Proof.RunnerTest do
     end
   end
 
-  test "full evaluator exposes every unavailable family alongside owned P8-05 cases" do
-    {results, cleanup} = Runner.execute_full_catalog(Catalog.required().business_manifests, [])
-    result = Runner.evaluate_full(Catalog.required().business_manifests, [], true, cleanup)
+  test "full evaluator exposes every missing manifest and callback" do
+    missing_families =
+      ~w(communications_durability_backlog_ambiguity recovery_primary_email_change non_enumeration_current_privacy)
+
+    manifests = Map.drop(Catalog.required().business_manifests, missing_families)
+    {results, cleanup} = Runner.execute_full_catalog(manifests, [])
+    result = Runner.evaluate_full(manifests, [], true, cleanup)
     assert Enum.map(results, & &1["coverage_id"]) == Catalog.coverage_inventory()
     assert Enum.all?(results, &(&1["verdict"] == "FAIL"))
 
     unavailable =
       Enum.reject(
         results,
-        &Map.has_key?(Catalog.required().business_manifests, &1["coverage_id"])
+        &Map.has_key?(manifests, &1["coverage_id"])
       )
 
-    assert length(unavailable) == 3
+    assert Enum.sort(Enum.map(unavailable, & &1["coverage_id"])) == Enum.sort(missing_families)
 
     assert Enum.all?(
              unavailable,

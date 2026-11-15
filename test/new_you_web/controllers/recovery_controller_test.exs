@@ -167,48 +167,7 @@ defmodule NewYouWeb.RecoveryControllerTest do
   end
 
   test "scanner GET HEAD preview and prefetch cannot consume or advance recovery" do
-    P805.with_fixture(fn ->
-      request = P805.request()
-      {:ok, registered} = Identity.register(request)
-      {:ok, :verified} = Identity.verify_email(registered.verification_proof)
-      id = Ecto.UUID.generate()
-      P805.track_operation(id)
-      :ok = Identity.request_recovery(request.email, "af", id)
-
-      recovery =
-        NewYou.Identity.RecoveryCase
-        |> Ash.Query.filter(account_id == ^registered.account_id)
-        |> Ash.read_one!(authorize?: false)
-
-      {:ok, {:ok, bearer}} =
-        Ash.transact([Account, Token], fn ->
-          Identity.recovery_delivery(recovery.proof_jti, request.email, "af")
-        end)
-
-      url = "/recovery/confirm?locale=af&proof=" <> URI.encode_www_form(bearer)
-
-      for {method, header, value} <- [
-            {:get, "purpose", "prefetch"},
-            {:head, "user-agent", "scanner"},
-            {:get, "sec-purpose", "prefetch;preview"}
-          ] do
-        conn = build_conn() |> put_req_header(header, value) |> dispatch(method, url)
-        assert conn.status == 200
-        assert get_resp_header(conn, "cache-control") == ["no-store"]
-      end
-
-      assert Ash.get!(Token, recovery.proof_jti, authorize?: false).purpose == "recovery"
-
-      assert Ash.get!(NewYou.Identity.RecoveryCase, recovery.id, authorize?: false).version ==
-               recovery.version
-
-      denied =
-        build_conn()
-        |> put_private(:plug_skip_csrf_protection, false)
-        |> post("/recovery/confirm", %{proof: bearer, operation_id: Ecto.UUID.generate()})
-
-      assert denied.status == 403
-    end)
+    NewYou.Proof.WebScenarios.recovery_scanner()
   end
 
   test "recovery proof transport redacts endpoint and router telemetry" do
@@ -244,32 +203,8 @@ defmodule NewYouWeb.RecoveryControllerTest do
   end
 
   test "known unknown and malformed public requests share a neutral result" do
-    P805.with_fixture(fn ->
-      request = P805.request()
-      {:ok, registered} = Identity.register(request)
-      {:ok, :verified} = Identity.verify_email(registered.verification_proof)
-
-      unverified = P805.request()
-      {:ok, other} = Identity.register(unverified)
-      before_account = Ash.get!(Account, other.account_id, authorize?: false)
-
-      responses =
-        for email <- [request.email, unverified.email, "unknown@example.test", "invalid", nil] do
-          id = Ecto.UUID.generate()
-          P805.track_operation(id)
-          conn = post(build_conn(), "/recovery", %{email: email, locale: "af", operation_id: id})
-          assert conn.status == 200
-          conn.resp_body
-        end
-
-      assert length(Enum.uniq(responses)) == 1
-
-      assert Ash.get!(Account, other.account_id, authorize?: false) == before_account
-    end)
+    NewYou.Proof.WebScenarios.recovery_neutral()
   end
-
-  defp dispatch(conn, :get, url), do: get(conn, url)
-  defp dispatch(conn, :head, url), do: head(conn, url)
 
   defp field(page, name) do
     [_, value] = Regex.run(~r/name="#{name}"[^>]*value="([^"]+)"/, page.resp_body)
