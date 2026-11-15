@@ -1079,9 +1079,9 @@
   "proof_limitations": [
     "This descriptive map is subordinate to current routed authority and live Plane. Schema/hash validation is not semantic or independent merge review.",
     "Provider evidence uses the existing deterministic TEST adapter and synthetic Accounts only. No external email was sent; support mailbox operation and external sender/provider permission are not certified.",
-    "WELL-17 has no real email-change owner action in this source snapshot. The current Account serialization and fixture competing commit are bounded recovery-side evidence, not a cross-PR integration result.",
+    "WELL-20 reuses the existing primary-email owner action and both PostgreSQL commit-order scenarios for recovery/email-change integration. Production deployment and cross-region failure behavior remain outside this proof.",
     "WELL-111 accepts proof-backed manual positive proof and zero-factor negative proof for Phase 8. Successful lost-all-factor recovery is unimplemented and remains a pre-release obligation under WELL-115; privileged hardening remains WELL-65.",
-    "Historical PR #217 CI and Markdown handoffs are retained as historical evidence. PR #228 requires its own exact-head verification and founder review."
+    "Historical PR #217, PR #228 and Markdown handoffs remain historical evidence. The current WELL-20 candidate requires its own exact-head proof, CI and independent review."
   ],
   "follow_up_tickets": [
     "WELL-17",
