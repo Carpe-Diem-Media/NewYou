@@ -6,8 +6,8 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "a423a269debb3890a356859d195d69fb0bbd6738",
-    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification."
+    "git_sha": "1b41a01099f4977c566f98c15761a2e47249fcc8",
+    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -879,7 +879,10 @@
       "proves": "Real owner actions and PostgreSQL constraints.",
       "limits": "Synthetic fixtures; no released participant service.",
       "source_ids": [
-        "lifecycle_test"
+        "lifecycle_test",
+        "recovery_scenarios",
+        "email_scenarios",
+        "web_scenarios"
       ]
     },
     {
@@ -890,7 +893,10 @@
       "proves": "Proof-backed higher-assurance positive and unsupported-factor negative paths.",
       "limits": "Does not implement future lost-all-factor verification.",
       "source_ids": [
-        "manual_test"
+        "manual_test",
+        "recovery_scenarios",
+        "email_scenarios",
+        "web_scenarios"
       ]
     },
     {
@@ -901,7 +907,10 @@
       "proves": "Owner-side serialization and restart from durable truth.",
       "limits": "This recovery-specific legacy test still uses a fixture email competitor; the real owner-interface integration is covered by the WELL-17 test below.",
       "source_ids": [
-        "concurrency_test"
+        "concurrency_test",
+        "recovery_scenarios",
+        "email_scenarios",
+        "web_scenarios"
       ]
     },
     {
@@ -914,7 +923,10 @@
       "source_ids": [
         "primary_email_change_test",
         "identity",
-        "recovery"
+        "recovery",
+        "recovery_scenarios",
+        "email_scenarios",
+        "web_scenarios"
       ]
     },
     {
@@ -926,7 +938,10 @@
       "proves": "Actual Communications executor, DeliveryAttempt fencing and deterministic P8-04 provider non-authority.",
       "limits": "No external email, mailbox reachability, production or provider permission.",
       "source_ids": [
-        "delivery_test"
+        "delivery_test",
+        "recovery_scenarios",
+        "email_scenarios",
+        "web_scenarios"
       ]
     },
     {
@@ -937,7 +952,10 @@
       "proves": "Immutable notice source survives later mutable credential authority.",
       "limits": "A source guard alone cannot admit a provider.",
       "source_ids": [
-        "source_test"
+        "source_test",
+        "recovery_scenarios",
+        "email_scenarios",
+        "web_scenarios"
       ]
     },
     {
@@ -948,7 +966,10 @@
       "proves": "Must-not-lose source handoff and conflicting retry denial.",
       "limits": "No delivery with unavailable content.",
       "source_ids": [
-        "held_test"
+        "held_test",
+        "recovery_scenarios",
+        "email_scenarios",
+        "web_scenarios"
       ]
     },
     {
@@ -959,7 +980,10 @@
       "proves": "Current pinned approval and immutable bytes fail closed.",
       "limits": "Owner provenance comes from WELL-110; this reader grants no sender authority.",
       "source_ids": [
-        "content_test"
+        "content_test",
+        "recovery_scenarios",
+        "email_scenarios",
+        "web_scenarios"
       ]
     },
     {
@@ -971,7 +995,10 @@
       "proves": "Real Phoenix transport calls owning Identity and Communications boundaries.",
       "limits": "Development switch only; no production exposure or claimant factor invented.",
       "source_ids": [
-        "browser_test"
+        "browser_test",
+        "recovery_scenarios",
+        "email_scenarios",
+        "web_scenarios"
       ]
     },
     {
@@ -982,7 +1009,10 @@
       "proves": "Audit evidence does not execute or authorize Identity recovery.",
       "limits": "Central evidence is derived from owner source outcomes.",
       "source_ids": [
-        "audit_test"
+        "audit_test",
+        "recovery_scenarios",
+        "email_scenarios",
+        "web_scenarios"
       ]
     }
   ],
@@ -1184,13 +1214,13 @@
       "id": "lifecycle_test",
       "path": "test/new_you/identity/recovery_test.exs",
       "symbol": "defmodule ",
-      "sha256": "7f88cc9620f9af2711d1d72f3c486f2d8bd53ba0ab2a7cf0e5b06c644001f74d"
+      "sha256": "ca07d3129b5f34b96c497c99e1ae77d2e74cd9be53514bb92bef0c26aa3c5f97"
     },
     {
       "id": "primary_email_change_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "primary-email apply and recovery completion serialize",
-      "sha256": "e3aed6392a5c2ea866d0d3e18ba1ffe1927c3152b527220bc08a087a4fabcf2f"
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
     },
     {
       "id": "manual_test",
@@ -1232,7 +1262,7 @@
       "id": "browser_test",
       "path": "test/new_you_web/controllers/recovery_controller_test.exs",
       "symbol": "defmodule ",
-      "sha256": "a30013f9fa642df59de67a35f08d97fc8dcb6ad5bd7f457db637b19f3ea36a23"
+      "sha256": "535c522a225b64ee9c3f6458181ceed531c62ca249e2062b02689fa53a8821e2"
     },
     {
       "id": "audit_test",
@@ -1305,6 +1335,24 @@
       "path": "priv/repo/migrations/20261112182053_recovery_terminal_metadata.exs",
       "symbol": "defmodule ",
       "sha256": "0684338ebe45a9aa6373db319a6a61ab753d01fbe6186ce9f1620e7c2595d42c"
+    },
+    {
+      "id": "recovery_scenarios",
+      "path": "test/support/proof/recovery_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.RecoveryScenarios",
+      "sha256": "4de5f351c522cbe596324eb74fa8a9b17e545bda3058ab45d059218ea12dfb2b"
+    },
+    {
+      "id": "email_scenarios",
+      "path": "test/support/proof/email_change_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
+      "sha256": "af09a88f3f743e7e0ae877e14a6d472f1177fc5cbfeceb185ba3fd8ea5c10e5c"
+    },
+    {
+      "id": "web_scenarios",
+      "path": "test/support/proof/web_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.WebScenarios",
+      "sha256": "3f25d6ac5f34b0e8c836b7d773ae1fc1040b6c787c04504df4edd2e369aff4a2"
     }
   ]
 }
