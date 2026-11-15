@@ -1,0 +1,458 @@
+{
+  "version_id": "NEWYOU-WELL134-C01-LOGIN-PROTECTED-EN-AF-V0.1",
+  "status": "development_approved",
+  "allowed_contexts": [
+    "local development",
+    "automated tests",
+    "development environments",
+    "bounded WELL-134"
+  ],
+  "prohibited_contexts": [
+    "production",
+    "public release",
+    "paid pilot",
+    "real participants",
+    "publication"
+  ],
+  "approval": {
+    "comment_id": "5071ff0e-21e4-406c-9c69-0a3e1f6cf498",
+    "canonical_payload_sha256": "43ee2ad61accfed40aceaa8fcb035c01282210a3ac69f5949df6c913419ccc5b",
+    "source_artifact": "docs/development/fixtures/well134-c01-owner-approval.json",
+    "source_artifact_sha256": "6e6c592112ee9f1dcbd4fabe7595218a74d941afce2e5aa491a3ea78cce1a6f2"
+  },
+  "serialization_note": "The canonical payload digest is the owner-recorded source identity. This derived JSON preserves the exact source-table strings with separate UTF-8 byte counts and digests; it does not claim the unavailable original payload serialization.",
+  "entries": {
+    "identity.login.title": {
+      "en": {
+        "text": "Log in to your account",
+        "bytes": 22,
+        "sha256": "62f1fe13998f7f84911fa050880b9a852810d9ac8e24bc019e13cc0197fbd0a1"
+      },
+      "af": {
+        "text": "Meld aan by jou rekening",
+        "bytes": 24,
+        "sha256": "fd7f0e1ca02aa9de0a4b54e0e1647ff9a6f33b6b9f4770729afafa23e3777093"
+      }
+    },
+    "identity.login.intro": {
+      "en": {
+        "text": "Enter your email address and password to continue.",
+        "bytes": 50,
+        "sha256": "66419237602d5af0aa67ee9b6f0dfe6eaa510cfa3eb65be4ec4cde6dfb4f25b9"
+      },
+      "af": {
+        "text": "Voer jou e-posadres en wagwoord in om voort te gaan.",
+        "bytes": 52,
+        "sha256": "ef586a7b8562a18e21fc316d2f3695b98921785486f54ec1181e8cec9f6bdead"
+      }
+    },
+    "identity.login.email.label": {
+      "en": {
+        "text": "Email address",
+        "bytes": 13,
+        "sha256": "f2488fd4ef4adbc6ac61300083f2c33980e48bb4bbf3c540ad760d61fc36f420"
+      },
+      "af": {
+        "text": "E-posadres",
+        "bytes": 10,
+        "sha256": "34870301420d88ae63ced4c24bee08ed1d682682c6086ed333ed04b81940c8d0"
+      }
+    },
+    "identity.login.password.label": {
+      "en": {
+        "text": "Password",
+        "bytes": 8,
+        "sha256": "e7cf3ef4f17c3999a94f2c6f612e8a888e5b1026878e4e19398b23bd38ec221a"
+      },
+      "af": {
+        "text": "Wagwoord",
+        "bytes": 8,
+        "sha256": "40f7daf845876c9b76ba09f2b0f26244c55294875a08661699a7b2e1537bcc3d"
+      }
+    },
+    "identity.login.submit": {
+      "en": {
+        "text": "Log in",
+        "bytes": 6,
+        "sha256": "c189840cf7e2d6f6fdeefde1ac59dfdf50bb75642eb569b4e38a5614d6f12ac2"
+      },
+      "af": {
+        "text": "Meld aan",
+        "bytes": 8,
+        "sha256": "69a8b09db2f59e0bd846273e36db485337fad31cb1ca7169388cd4515727753f"
+      }
+    },
+    "identity.login.processing": {
+      "en": {
+        "text": "Signing you in…",
+        "bytes": 17,
+        "sha256": "afc99407f77734577b97d8fddbbb16a7336c0e5d70e12f1f6cc5d8892221cf20"
+      },
+      "af": {
+        "text": "Besig om jou aan te meld…",
+        "bytes": 27,
+        "sha256": "8e2239a3634cf3764da13ccd4ebfe2072e071c29a645e77c3abc39f161296ff0"
+      }
+    },
+    "shared.form.show_password": {
+      "en": {
+        "text": "Show password",
+        "bytes": 13,
+        "sha256": "6aeaa6a53d09dcad071fdda6280b1e7c42aa164cd0514304ff162e7da440ffaa"
+      },
+      "af": {
+        "text": "Wys wagwoord",
+        "bytes": 12,
+        "sha256": "1067fc076213a7314b02fde8ecc493eb97ad638c1f566cd0cd2013973f2a2fcc"
+      }
+    },
+    "shared.form.hide_password": {
+      "en": {
+        "text": "Hide password",
+        "bytes": 13,
+        "sha256": "a60a56c584b3b05b1a95076a36edbab7131a447910cf21124efcb35f769502df"
+      },
+      "af": {
+        "text": "Versteek wagwoord",
+        "bytes": 17,
+        "sha256": "197ab257bee595ca88c9c51cff5bffd0c2c0a503255d6ff6f0503f8c18abb79c"
+      }
+    },
+    "identity.login.magic.option": {
+      "en": {
+        "text": "Sign in with an email link",
+        "bytes": 26,
+        "sha256": "3d13a40b3f4ff7e15afe1e312aca19c914112b818de9a166b230f757685df101"
+      },
+      "af": {
+        "text": "Meld aan met ’n e-posskakel",
+        "bytes": 29,
+        "sha256": "acc4ef48bb7dcdfb10c64e6111aea065b4bc20d0beafec41eded3b58cdc2628d"
+      }
+    },
+    "identity.login.create_account": {
+      "en": {
+        "text": "Create account",
+        "bytes": 14,
+        "sha256": "798ca2ce18bf2038bc13aaa33ebfe6db7020df5b4bba40f68e21462a9207db3d"
+      },
+      "af": {
+        "text": "Skep rekening",
+        "bytes": 13,
+        "sha256": "09cacf2e32f0ab1a9112e4cc5dfa2f4e82e0d08cfda0818ef23e1b1efbedf5ec"
+      }
+    },
+    "identity.login.credential_failure": {
+      "en": {
+        "text": "We couldn't sign you in. Check your details and try again.",
+        "bytes": 58,
+        "sha256": "09fa5dfbd4b967188b2490646fa04dea08e709bac62ee828fd1ddb7014c61dac"
+      },
+      "af": {
+        "text": "Ons kon jou nie aanmeld nie. Gaan jou besonderhede na en probeer weer.",
+        "bytes": 70,
+        "sha256": "91c8d9616c3de954674c8ec034282ac3e68e234dda9710529abacc73ca521786"
+      }
+    },
+    "identity.login.unavailable": {
+      "en": {
+        "text": "Sign-in isn't available right now. Please try again later.",
+        "bytes": 58,
+        "sha256": "e492fbc47bf008d4fff98a357a73c27cbd543db90f3a14d31f3b70104bf984dc"
+      },
+      "af": {
+        "text": "Aanmelding is tans nie beskikbaar nie. Probeer asseblief later weer.",
+        "bytes": 68,
+        "sha256": "0185854cddab0f19f767497d669cb4a5168a123c8f8b6af9f053108d2266988c"
+      }
+    },
+    "identity.login.session_expired": {
+      "en": {
+        "text": "Your session is no longer available. Please log in again.",
+        "bytes": 57,
+        "sha256": "0c7420be61d51b3d7d6f26565f1e7efce7e2aca10144522d63fcd54e4eb1d41a"
+      },
+      "af": {
+        "text": "Jou sessie is nie meer beskikbaar nie. Meld asseblief weer aan.",
+        "bytes": 63,
+        "sha256": "07ed399e1edff735247ae942a3eab3f2052c86e40d49162eb95baccb661e24e9"
+      }
+    },
+    "identity.login.reauthenticate.action": {
+      "en": {
+        "text": "Log in again",
+        "bytes": 12,
+        "sha256": "f8fea550fe42e6892c9f000face6cb0db032c3fe886a9a299523b311fdcb1338"
+      },
+      "af": {
+        "text": "Meld weer aan",
+        "bytes": 13,
+        "sha256": "a4bb56b7a7009ba6f2e0aa909c14eb8e1da6c8769a58d6eb8a10c7fcac1cca50"
+      }
+    },
+    "identity.magic.request.title": {
+      "en": {
+        "text": "Sign in with an email link",
+        "bytes": 26,
+        "sha256": "3d13a40b3f4ff7e15afe1e312aca19c914112b818de9a166b230f757685df101"
+      },
+      "af": {
+        "text": "Meld aan met ’n e-posskakel",
+        "bytes": 29,
+        "sha256": "acc4ef48bb7dcdfb10c64e6111aea065b4bc20d0beafec41eded3b58cdc2628d"
+      }
+    },
+    "identity.magic.request.body": {
+      "en": {
+        "text": "Enter your email address to request a sign-in link.",
+        "bytes": 51,
+        "sha256": "50c7eecc1ca18802a384e364d225b0e866ae89717d13b18dbb04a03c60980a30"
+      },
+      "af": {
+        "text": "Voer jou e-posadres in om ’n aanmeldskakel aan te vra.",
+        "bytes": 56,
+        "sha256": "b5f3a7142b443375598033db8a68931263144673304536b508705cbe52b9b67f"
+      }
+    },
+    "identity.magic.request.action": {
+      "en": {
+        "text": "Send sign-in link",
+        "bytes": 17,
+        "sha256": "b1402b67ed131633936dae04d75655198e0b2511ee91c515df2d86b89ea36387"
+      },
+      "af": {
+        "text": "Stuur aanmeldskakel",
+        "bytes": 19,
+        "sha256": "8c936839010b939c47f02216c1f50f619a462dc0a58e16bc7c613bff928e3406"
+      }
+    },
+    "identity.magic.request.result.title": {
+      "en": {
+        "text": "Check your email",
+        "bytes": 16,
+        "sha256": "7732287944e204a9b51ad6c271126f3e0140974f66936e21caed22f0d9c792fd"
+      },
+      "af": {
+        "text": "Gaan jou e-pos na",
+        "bytes": 17,
+        "sha256": "cd360e7684225c59df6ae28f953a2ba56b79315b52041bd307867487bb66c043"
+      }
+    },
+    "identity.magic.request.result.body": {
+      "en": {
+        "text": "If this address can receive a sign-in link, please check your email. Delivery may take a little while.",
+        "bytes": 102,
+        "sha256": "72948e3145f7b76fa7d4740bb8d7c3a8e5fd5beac482b0b394b442cb35cd65b9"
+      },
+      "af": {
+        "text": "As ’n aanmeldskakel na hierdie adres gestuur kan word, gaan jou e-pos na. Dit kan ’n rukkie neem.",
+        "bytes": 101,
+        "sha256": "c9177ba51fa60a248fdc2058f2878c87336a1d42e5839eb10c3792c81daa8ee2"
+      }
+    },
+    "identity.magic.confirm.title": {
+      "en": {
+        "text": "Confirm sign-in",
+        "bytes": 15,
+        "sha256": "f2e77970c8d0002ece34dbca989b635bd187ae91ed7b77e33caa433bd8091076"
+      },
+      "af": {
+        "text": "Bevestig aanmelding",
+        "bytes": 19,
+        "sha256": "8aefcb14013ac7f0a9151ee7a3b60c950198bb2573c9779d5a010fc8e56fd772"
+      }
+    },
+    "identity.magic.confirm.body": {
+      "en": {
+        "text": "Only continue if you requested this link. If the link is still valid, confirming it will sign you in.",
+        "bytes": 101,
+        "sha256": "65626b5602310c860e3f5984a7886342d4e41fc521b360bb18f9b9313764111e"
+      },
+      "af": {
+        "text": "Gaan net voort as jy self hierdie skakel aangevra het. As die skakel nog geldig is, sal bevestiging jou aanmeld.",
+        "bytes": 112,
+        "sha256": "55137489de10fbd438c824b915b709491b758d001682c6da05f038063d132c03"
+      }
+    },
+    "identity.magic.confirm.action": {
+      "en": {
+        "text": "Confirm and sign in",
+        "bytes": 19,
+        "sha256": "dc7d14141684f5c3b6fb3861ab09c0faeaffe3a100f29ffd9de74c0a3cbeafee"
+      },
+      "af": {
+        "text": "Bevestig en meld aan",
+        "bytes": 20,
+        "sha256": "30d09fc914b05554e42dd5b1915875fc37240e27a96ff52974ea44214fa84663"
+      }
+    },
+    "identity.magic.confirm.unavailable.title": {
+      "en": {
+        "text": "This sign-in link is unavailable.",
+        "bytes": 33,
+        "sha256": "4b398abbe72f4beca0497e94358356f9632e5c32b8989ca40d3b7204a1c0175c"
+      },
+      "af": {
+        "text": "Hierdie aanmeldskakel is nie beskikbaar nie.",
+        "bytes": 44,
+        "sha256": "5cfec312ca0f8a1f8ee243a10abad06b951dcca29547c9961f5d2be5b6df627a"
+      }
+    },
+    "identity.magic.confirm.unavailable.body": {
+      "en": {
+        "text": "The link can't be used. Request a new sign-in link to try again.",
+        "bytes": 64,
+        "sha256": "b7327438d7eaa8011d81c04041f93c9bc2dfb1addbfdb6f03a08a1c12fff9219"
+      },
+      "af": {
+        "text": "Die skakel kan nie gebruik word nie. Vra ’n nuwe aanmeldskakel aan om weer te probeer.",
+        "bytes": 88,
+        "sha256": "912adb76169d9f4e89a672d76a74d82a125e3a4ab0e2e871dde98adf10151dc6"
+      }
+    },
+    "identity.magic.confirm.unavailable.retry": {
+      "en": {
+        "text": "Request a new link",
+        "bytes": 18,
+        "sha256": "6e14e7d721d75a60f4ade62668dddc8cb78f430f45e58d9e6cff620b1515f8ff"
+      },
+      "af": {
+        "text": "Vra ’n nuwe skakel aan",
+        "bytes": 24,
+        "sha256": "00e9c6e718a717fb720a519cf921819c0188c51f8e02b15df16415863e8f8aea"
+      }
+    },
+    "identity.session.protected.title": {
+      "en": {
+        "text": "Your account",
+        "bytes": 12,
+        "sha256": "dbb5f6371b6a2a677f09c24d17fdc581132a41881a818469a92b58588e8764bc"
+      },
+      "af": {
+        "text": "Jou rekening",
+        "bytes": 12,
+        "sha256": "91acf464f895cd9b080be0125e1cbdfed68943fe2f774129b2be60e91a05d156"
+      }
+    },
+    "identity.session.protected.status": {
+      "en": {
+        "text": "You're signed in.",
+        "bytes": 17,
+        "sha256": "e86d2b270d67dc960432bbcba8267e0964293fe2c7613f39eb92cc4b5f3167a1"
+      },
+      "af": {
+        "text": "Jy is aangemeld.",
+        "bytes": 16,
+        "sha256": "bb87122199159b490b4bca8e717d4a2e573d425be4b939eadbcd7e79eba8e6d6"
+      }
+    },
+    "identity.session.protected.body": {
+      "en": {
+        "text": "You can access your account here. Other features aren't available yet.",
+        "bytes": 70,
+        "sha256": "f1ebee9ea8e522f61126f5c215141c9392298e5a2fcb3ca4765bc632c57c0a0d"
+      },
+      "af": {
+        "text": "Jy kan hier toegang tot jou rekening kry. Ander funksies is nog nie beskikbaar nie.",
+        "bytes": 83,
+        "sha256": "234060c66a19079d0a4cc306c1969a7aeca969d3e4c84e789f8fea1d58d26839"
+      }
+    },
+    "shared.navigation.logout": {
+      "en": {
+        "text": "Log out",
+        "bytes": 7,
+        "sha256": "49616145514e9abf1fc47d631fccccff2ed974cc260d38848181a07e0fa9972f"
+      },
+      "af": {
+        "text": "Meld af",
+        "bytes": 7,
+        "sha256": "fb6cdfbc369e34d285d9de6bdc1874b75acdeb5e281cff904ed10b513b53cee1"
+      }
+    },
+    "identity.session.reauthentication_required": {
+      "en": {
+        "text": "You need to log in to continue.",
+        "bytes": 31,
+        "sha256": "21cc1dd8bc09b325c1a85891ee510388af2abb44a793fa4ad653b706f15b795a"
+      },
+      "af": {
+        "text": "Meld aan om voort te gaan.",
+        "bytes": 26,
+        "sha256": "abd1867041c83dcbb5d59d4bc349015e89dd98d5de0edb1fe86ba0a1d250d755"
+      }
+    },
+    "identity.session.protected.unavailable": {
+      "en": {
+        "text": "This page isn't available right now. Please try again later.",
+        "bytes": 60,
+        "sha256": "949b9e2aa0ca44c9f56beda71f0b33c44eba2c8f6307c462bc076448b50ef5ab"
+      },
+      "af": {
+        "text": "Hierdie bladsy is tans nie beskikbaar nie. Probeer asseblief later weer.",
+        "bytes": 72,
+        "sha256": "f0547cba7c8938f21dd9e7886f66c5b3be15072154e090e6c3fc23728937b163"
+      }
+    },
+    "identity.session.logout.processing": {
+      "en": {
+        "text": "Signing you out…",
+        "bytes": 18,
+        "sha256": "7d2e71d27419738ef7fcc3765275728aa2b0b20c8467148b017772bcf4a22f2a"
+      },
+      "af": {
+        "text": "Besig om jou af te meld…",
+        "bytes": 26,
+        "sha256": "9d62b08a771e70ffbc3c48b33a3af1494c3e7555890c2d0d2fcd0881e8367a8a"
+      }
+    },
+    "identity.session.logout.confirmed.title": {
+      "en": {
+        "text": "You've logged out.",
+        "bytes": 18,
+        "sha256": "5059a6f348512ba32a785cb61516c7a3dc53a450f458d4265faaeb41056f2b06"
+      },
+      "af": {
+        "text": "Jy is afgemeld.",
+        "bytes": 15,
+        "sha256": "9f279f3f1c683483ea80a0c4721a166ae55de043fbd443f03c7b22453593c0d4"
+      }
+    },
+    "identity.session.logout.confirmed.body": {
+      "en": {
+        "text": "You've logged out of this session. To use your account again, log in.",
+        "bytes": 69,
+        "sha256": "d16e1de6e0e86842bbbe4c63b208b1781a8b043c7f154b0c2bc6cb120d8357e7"
+      },
+      "af": {
+        "text": "Jy is by hierdie sessie afgemeld. Meld weer aan om jou rekening te gebruik.",
+        "bytes": 75,
+        "sha256": "80d416b218c9034f320493ca5658f62373e0a8e3d96d34bad8741a09cf6711c5"
+      }
+    },
+    "identity.session.logout.uncertain.body": {
+      "en": {
+        "text": "We couldn't confirm that you were logged out. This session may still be active. Please try again.",
+        "bytes": 97,
+        "sha256": "b4252cb3ce2bcadb37fb68b893131ef306fcc29cc80a6b81bc0e048e76d77efd"
+      },
+      "af": {
+        "text": "Ons kon nie bevestig dat jy afgemeld is nie. Hierdie sessie kan steeds aktief wees. Probeer asseblief weer.",
+        "bytes": 107,
+        "sha256": "97f518eab047bd5c63cceed33a194c20b0841c5ca89865a76b22ab42bc9acd79"
+      }
+    },
+    "identity.session.logout.retry": {
+      "en": {
+        "text": "Try logging out again",
+        "bytes": 21,
+        "sha256": "4c317e261de743035a7543b99ce389635a39cdc577d7a70459cad97a60922aec"
+      },
+      "af": {
+        "text": "Probeer weer afmeld",
+        "bytes": 19,
+        "sha256": "e1fca750b7fb2880cfbed15ef52c1dce89397a6ad909562e9deb931360b55cdc"
+      }
+    }
+  }
+}

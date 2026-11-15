@@ -12,8 +12,8 @@
     "WELL-131"
   ],
   "implementation_revision": {
-    "git_sha": "d43913e9ef802da4cdc40d5b91c869962296ab4c",
-    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata."
+    "git_sha": "63274439676ef18db0be25f2b50f613408f1187d",
+    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -787,13 +787,13 @@
       "id": "boundary",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "defmodule",
-      "sha256": "ff5cd556c7a495abd3e67aa80f9c6c1795e12077f066841071b5698234437c77"
+      "sha256": "dba784a2fa960cd3f0cb01f1b9ea195e20818d5d47b430b91173adf3a348c47c"
     },
     {
       "id": "telemetry",
       "path": "lib/new_you_web/privacy_telemetry.ex",
       "symbol": "defmodule",
-      "sha256": "cd83d334f5ebe206913816903ee266dc733f1e3843f97da390255613bb405dab"
+      "sha256": "d002278f8536002bfde7b08b3b88270a7180723110206854b432d2fce65b11b0"
     }
   ]
 }
