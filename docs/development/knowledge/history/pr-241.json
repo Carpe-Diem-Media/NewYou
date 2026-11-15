@@ -15,58 +15,58 @@
       "status": "modified"
     },
     {
-      "blob": "18cd0b3b9b78909fcb6f819af6f1827ff6939b6d",
+      "blob": "bd9b82330ac6d538569dd4e951258026ff97ecf1",
       "mode": "100644",
       "old_blob": "6c461b509d86b670e379440f0623fbed771e9054",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.recovery.json",
       "old_sha256": "b8aada4e70aecaa7bc07657499cdee778b2adec6a5aa7cd51df0a8f30977dd51",
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "a2eb723a037609a528a361300ef7911ca44eda80a8bcf5fe7d44442896887743",
+      "sha256": "23f6f56a43f1c480d8f572aadcf46d50d3cb03d7cb57195f88828f446bfd7e70",
       "status": "modified"
     },
     {
-      "blob": "aacf5997626cd7fa4c3729ab5ecffe15c34ce3c9",
+      "blob": "d0d14cd20f31173f14844434e923a9cc485a8f59",
       "mode": "100644",
       "old_blob": "a90d93c65d4ac97a46981a91ff314282b876e0b2",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.support_lookup.json",
       "old_sha256": "e28055bbbb55502ad7841507a17c238f723e0b5af7b7836c9f8530c5b9a9f114",
       "path": "docs/development/knowledge/identity.support_lookup.json",
-      "sha256": "75a947ae2dbf45de10ad7f5ab02f871a2a31c08afbdfd4b19f5ea661d97923b4",
+      "sha256": "5f86b894ae8c4be632b7400942eb042061e7f145ab9faef41815766347b5c72b",
       "status": "modified"
     },
     {
-      "blob": "8d0c90e99fbdbeb5730ec9dd3ffee8c9ce27527e",
+      "blob": "f0c2615fa23e079680cbc6b33ba7de865c0be305",
       "mode": "100644",
       "old_blob": "08f28004b76f1edabde0078a7f5895f4bc736752",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
       "old_sha256": "b70e328957f94941a47daa77ce50be1a7788ea34f65661c64fa7e0e47d21a285",
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "c4388284bad558a16c94a9757efa1625d463bc3ea478ce1f106afd8b2ea808d5",
+      "sha256": "0f67a27ae283cc06b3f2f87ffddbf403f9258d020312f1f5d96cefb72bfc1ae4",
       "status": "modified"
     },
     {
-      "blob": "cf650d50cdbf71d69240cc0e7c78807d8c104374",
+      "blob": "8753661c48b81631676e06987aad3bc94a4e875e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/proof.tb001.json",
-      "sha256": "466fae41e067cc71b5ef00f347efe3467f7ec57fb3be87771d66def092a7767f",
+      "sha256": "c27d1f2fbf99c1673764df64d4fbc62260e7f34082a38a52a3e523a37422bff8",
       "status": "added"
     },
     {
-      "blob": "84102590fd51007b2e2aba41f0d15115595dcfc7",
+      "blob": "aa92b3dc313c8ed87442f26a2970f516c75b4c63",
       "mode": "100644",
       "old_blob": "1f3962474fc8630b1746db4a04f1fe402c579129",
       "old_mode": "100644",
       "old_path": "mix.exs",
       "old_sha256": "b149d64a9921fa46f34eeb784130a66ce8915a4e1af06dd41ded30288e0eb3bb",
       "path": "mix.exs",
-      "sha256": "f4b8b4de6d038ebe1ec4b2d48ac24e5be614f40e8823fe83c840e172ebe58c40",
+      "sha256": "189f3688b5ec8d1771cc05e00cefdb08e97e8dd234a8dd181815774542ad16b8",
       "status": "modified"
     },
     {
@@ -202,14 +202,25 @@
       "status": "modified"
     },
     {
-      "blob": "ca77ec4519c615f39b9fb255575a1729c15e9982",
+      "blob": "f86e091e8cc11b8afb9a568aeead440ee8ee5baf",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/new_you/proof/passive_evidence_test.exs",
+      "sha256": "87e0bc29b8d703e643f0e83328f636277f6d9276237abdd351f4aa87d9f1744a",
+      "status": "added"
+    },
+    {
+      "blob": "cff383b7a859ecfe1d243ee45874a08503be4b63",
       "mode": "100644",
       "old_blob": "e1397f429edf76949f5a861c0c03f1bccf647034",
       "old_mode": "100644",
       "old_path": "test/new_you/proof/result_test.exs",
       "old_sha256": "5eb6d90bc2709e7774caae3f49f5955e1ea28f792e11a6e5f284260435609a1f",
       "path": "test/new_you/proof/result_test.exs",
-      "sha256": "bf76597945b14190171bb09a386f5ea4e3727fb3e6cee9b6e2bc5810f13f102f",
+      "sha256": "c06408c3a1a577e8794a1812db8a1b0031977e630f5e90bc6cb322dcc1f0d376",
       "status": "modified"
     },
     {
@@ -224,14 +235,14 @@
       "status": "modified"
     },
     {
-      "blob": "256e8fb4da00b5b47b5926d18ded2a867d4a2f2a",
+      "blob": "84c751ae57e2e62f6806427b76b51f7b939507a6",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/proof/tb001_integration_test.exs",
-      "sha256": "cec9c7af47f5188fb4769011994efd4412e879e45e1bbd587df28c839f970b67",
+      "sha256": "3db2ddf3cabc23e6de97f996fb023b03ee5153d6c9a561793d1701c9b73e939d",
       "status": "added"
     },
     {
@@ -290,14 +301,14 @@
       "status": "modified"
     },
     {
-      "blob": "16fceb631db51ddfba9a7326672e25e6c71fe1b3",
+      "blob": "91b5de4c05de69e27dc3ac6d589c47a4175d4b88",
       "mode": "100644",
       "old_blob": "4c732e9fb70fcaab63630e700047cfdb988ecc31",
       "old_mode": "100644",
       "old_path": "test/proof/p8_05_browser.mjs",
       "old_sha256": "646bc1f8554c3bf6cd57517f7400aced633c3995b5411a94689335482ee4b655",
       "path": "test/proof/p8_05_browser.mjs",
-      "sha256": "2a26a5ee57722e3620cd1e63ce48649074e6eb8f91db21fd305cf7305cb27f88",
+      "sha256": "2c7b146732120c86dae7f5df09b5d4176dce1472fa6b9fbc14d551573d7fcfbf",
       "status": "modified"
     },
     {
@@ -312,14 +323,36 @@
       "status": "added"
     },
     {
-      "blob": "0562c6974c21ed47860e4d63e32dadd02147e9e0",
+      "blob": "68c23fca19c40bcdf523e094fb2f3c36510d2cee",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/proof/tb001_inventory_broken.exs",
+      "sha256": "0cab8012881a80f6dbaf794d0fc066d1c93ebda984cc1af53fbc29f1bbd7fb62",
+      "status": "added"
+    },
+    {
+      "blob": "27b5676e210d4c3f333caf4014d0332fe1385620",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/proof/tb001_required_cases.json",
+      "sha256": "c9c374eac33c88adf56b4557ade9fdf6bdf619194372160f17a19d630954eb55",
+      "status": "added"
+    },
+    {
+      "blob": "22be4fc3e8db0b18692e9f89f56a183696c1bef5",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/capability_scenarios.ex",
-      "sha256": "a15cae10b8df687b1bb3d75f305a4d248689e12c85f3ebce0d10e41fa4de7500",
+      "sha256": "2a851980eac3769cb20e28641a35b3e96480d3a8fcc47f41f681cabcc6e6a2fe",
       "status": "added"
     },
     {
@@ -378,14 +411,14 @@
       "status": "modified"
     },
     {
-      "blob": "9bc159f7d17d1d11fa524969d1e09037593ecf6f",
+      "blob": "eef90966fef974e267cca0e270b890cf9c17db51",
       "mode": "100644",
       "old_blob": "1651a28a5186cfb96366f4c73bffde26d5c460cd",
       "old_mode": "100644",
       "old_path": "test/support/proof/p8_05_browser.ex",
       "old_sha256": "310167f89ab5b25c73a50859ae8fdde090c689698868614f8bcc68609fa0d3da",
       "path": "test/support/proof/p8_05_browser.ex",
-      "sha256": "50bde342d80b19dd9c77b04373f2c552bb962982c1b8ff1d0c54269cbc5bae96",
+      "sha256": "9bf4be375dca7c50ba00a152ca177ba7040421d4073493a619923442de46547e",
       "status": "modified"
     },
     {
@@ -400,25 +433,36 @@
       "status": "added"
     },
     {
-      "blob": "8f454b0253dc9297ab1fb318beee72d7cdba2c7d",
+      "blob": "c2671fa2437bf18648b750c7d1fb81444f321845",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_19_browser.ex",
-      "sha256": "429415dda8da2ab01fc0dfbf8cee5c7bf73c2054a0edb09e8b0359765f94661f",
+      "sha256": "1cb2adbf1c2abe3cd30553aec82dcd7c2b10527805a0316c9d9be5560b562bec",
       "status": "added"
     },
     {
-      "blob": "76dea0f9bf18d78c0ab954ca4d6d6e710b688fb0",
+      "blob": "e192f0444405f1926b1b1ad6dc5d98bb4d5c7858",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_19_catalog.ex",
-      "sha256": "01cc91912cded67b96dc30d648f51c1b0e3939afaba4f9c535e4cb92b848653d",
+      "sha256": "b52d872ce4669f12b5b7f0a58d44c2dda763c3669d2c341c0aeb8c9ae6130761",
+      "status": "added"
+    },
+    {
+      "blob": "b1fe51481037444fd2579cee26fe543451c1d840",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/support/proof/passive_evidence.ex",
+      "sha256": "fbcb7905b3b877405ca2d907b4dab016f48cafbbf81e905a850a7357b6902b42",
       "status": "added"
     },
     {
@@ -444,14 +488,36 @@
       "status": "added"
     },
     {
-      "blob": "a25574ce70c75ed3697c578cbd8d9a1e1bfdb25b",
+      "blob": "8da6dd2d3de452df2b812867755861ffe5e4cb41",
+      "mode": "100644",
+      "old_blob": "82d6df013df258fc9d053f27f0b409143b457191",
+      "old_mode": "100644",
+      "old_path": "test/support/proof/result.ex",
+      "old_sha256": "51ee541e3f8952cc750e5d4a1dd8ae373368e83d46d4b0d4be9419e1fbd7f9c6",
+      "path": "test/support/proof/result.ex",
+      "sha256": "2e6896df4879a9c1f5f17c4358c9b825143c4cb17e08e132222cc22fb0b17942",
+      "status": "modified"
+    },
+    {
+      "blob": "d365d098bcc792cf928aaae2174951327df36871",
+      "mode": "100644",
+      "old_blob": "21dfb83b7a8e4d3e776941cbf14b7bd231f3887f",
+      "old_mode": "100644",
+      "old_path": "test/support/proof/runner.ex",
+      "old_sha256": "d488fc71659190e25cead0b49f67d219e947cb11ef2e5197d8034a70ea846b41",
+      "path": "test/support/proof/runner.ex",
+      "sha256": "652218899f519791037eb9a1f1d01030052834d678665f2d8966ffabe48f69b6",
+      "status": "modified"
+    },
+    {
+      "blob": "2b92f44a81b6c6c7fea2ac3bd5a4452f23c6566c",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/web_scenarios.ex",
-      "sha256": "3f25d6ac5f34b0e8c836b7d773ae1fc1040b6c787c04504df4edd2e369aff4a2",
+      "sha256": "c90158d7f9115a4096052db9d9ebe18176600b9cd41574e59e223aae952d58aa",
       "status": "added"
     }
   ],
@@ -469,7 +535,7 @@
       "name": null,
       "old_sha256": "a6dabd6da97686c008a4fb5f404dd94d8af0c285b07ad91628d55584ce8f430e",
       "path": "mix.exs",
-      "sha256": "128bd392b22de59b361568ee3873e55fd66e6226713aea1d329193a95c8fa7f2",
+      "sha256": "227065bd24dbd6d587e885aface268da5a520c5a525bff976de58eca9ca1a6c6",
       "status": "parsed"
     },
     {
@@ -481,7 +547,7 @@
       "name": "project",
       "old_sha256": "54f57fa015a48d5eef79e8ebe14dc370d6e2b8f311ddac820761692dcd131229",
       "path": "mix.exs",
-      "sha256": "4e6cbd44bb8cba08b980de53642d6c194c76410b5830276c4640c27400228b44",
+      "sha256": "4c1c0bc722ef7be7eef57166c9fa5fb778159dd8b7031cb893937e06ac42b212",
       "status": "parsed",
       "visibility": "public"
     },
@@ -1828,14 +1894,61 @@
     },
     {
       "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYou.Proof.PassiveEvidenceTest",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/new_you/proof/passive_evidence_test.exs",
+      "sha256": "06683997b8cb15e27abcb338b950bc117ad9bf9627c82cb3231b6d67d45582a1",
+      "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.PassiveEvidenceTest",
+      "name": "response",
+      "old_sha256": null,
+      "path": "test/new_you/proof/passive_evidence_test.exs",
+      "sha256": "e31c19f396fedc1959c9ac8789d159d994c25c71f9603ed7596a4ea1223fb115",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/proof/passive_evidence_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
       "change": "changed",
       "kind": "module",
       "module": "NewYou.Proof.ResultTest",
       "name": null,
       "old_sha256": "c055402247e2edb8827ee1f07f4c88f93ecddd5e05190b5b0bb5e5a5192b538d",
       "path": "test/new_you/proof/result_test.exs",
-      "sha256": "86ba4e17c9460ceb1aa471569d94a8e1f02c2ae7bc6d60d47e5b3af1a54c5f52",
+      "sha256": "5bff8bf407289bd3843e231d5646a847a19bf3c2d8ebe91b1767abe55f4b6155",
       "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.ResultTest",
+      "name": "complete_full_result",
+      "old_sha256": null,
+      "path": "test/new_you/proof/result_test.exs",
+      "sha256": "4747aa7dc431472119f654e3a6e15e598af57d288b891850369d76444c701e1d",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": null,
@@ -1876,7 +1989,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/proof/tb001_integration_test.exs",
-      "sha256": "34634f98a71d5a1b70bed368dc0345082cc2f76a90905717d4744ee840c7e5b7",
+      "sha256": "ad4cf0d5ba29062998b2fffcfc9814fb2ba77cdf4e3a4094150bf3be87e0970d",
       "status": "parsed"
     },
     {
@@ -2110,6 +2223,16 @@
     },
     {
       "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/proof/tb001_inventory_broken.exs",
+      "reason": "top-level expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
       "change": "added",
       "kind": "module",
       "module": "NewYou.Proof.MagicCases",
@@ -2127,7 +2250,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/capability_scenarios.ex",
-      "sha256": "79da63755b2a1c6afd7f5931a32f9d9ea3422f002f95522015d8a4382390a467",
+      "sha256": "7c675bac9d31986a967e548bfb03a11bda0baab23e64953efff88f81a5013969",
       "status": "parsed"
     },
     {
@@ -2149,7 +2272,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/capability_scenarios.ex",
-      "sha256": "398c3ccd4aafe608f0e9b061ac7c7027bc3fe0fa374b8726801046460566fa4e",
+      "sha256": "6bbb723e91a408eb3dd47a489f17660f7c1b5a22212dd8358ed11b49be6af3d9",
       "status": "parsed"
     },
     {
@@ -2171,7 +2294,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/capability_scenarios.ex",
-      "sha256": "ab32bce77dd477cef750ffc3158fe422f7b5e30f62040f0fc661818ad05143ec",
+      "sha256": "9aa5d125d912dddafee409f9b386b07c664c704591fa373eb57a90119e9abda3",
       "status": "parsed"
     },
     {
@@ -2430,7 +2553,7 @@
       "name": "scanner_fixture",
       "old_sha256": null,
       "path": "test/support/proof/capability_scenarios.ex",
-      "sha256": "f6e03559d41a40a601fa383e579e8f3f2e5557c087bd946b933a90c8fabfa6ad",
+      "sha256": "b3f278cf4da5645fbdafebf1f2b29e9e1401afa9b7c8bac6bb693b0d3a9404e9",
       "status": "parsed",
       "visibility": "private"
     },
@@ -2612,7 +2735,7 @@
       "name": "scanner_fixture",
       "old_sha256": null,
       "path": "test/support/proof/capability_scenarios.ex",
-      "sha256": "5ab0dedc543345c286a803b4a063baf63d1d634a85df3304fab64b9c401b35dd",
+      "sha256": "f824a5d93727369edc1001a3bec105e813a315dbc4529eee532786aedcc9dc15",
       "status": "parsed",
       "visibility": "private"
     },
@@ -2742,7 +2865,7 @@
       "name": "scanner_fixture",
       "old_sha256": null,
       "path": "test/support/proof/capability_scenarios.ex",
-      "sha256": "0c31c1fdec346de14daa559afbc9cf755ffa16c2fc428f30b14d87f4422ef60c",
+      "sha256": "067e1c99c9fcf4a8ffa5d46d8331611dc2af78a4e588e38207101df7d2130b65",
       "status": "parsed",
       "visibility": "private"
     },
@@ -4117,7 +4240,7 @@
       "name": null,
       "old_sha256": "28bb37d452fd7b6d53b593de63647787f49f0d9da268357fa60db40d7804614b",
       "path": "test/support/proof/p8_05_browser.ex",
-      "sha256": "fd217509800906808ae1a507e245bf8e01159ea39977b29184e336bb33ec8bee",
+      "sha256": "b2a2c486a3dc40199ce54a7f3fa883f377215724453aa28995c5fc591a45959c",
       "status": "parsed"
     },
     {
@@ -4142,7 +4265,7 @@
       "name": "run_port",
       "old_sha256": null,
       "path": "test/support/proof/p8_05_browser.ex",
-      "sha256": "9a97e1674e020df332a0562f0685108b03a8ad370bd92ceef2566c0e2650a7bb",
+      "sha256": "d6e656344754cff4d887a22083c114f8af6cd23de6f6435d58bd737a9c43db24",
       "status": "parsed",
       "visibility": "public"
     },
@@ -4315,7 +4438,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_19_browser.ex",
-      "sha256": "e76c51ca9bffcb3ad9531200ed85ff40293c28d485404c4cfffb82658dcefacb",
+      "sha256": "3534ab59c8f95b2039ea81e33cf23f3f3a260bdc6ce842ee4e21dcfdbb68ab2b",
       "status": "parsed"
     },
     {
@@ -4338,7 +4461,7 @@
       "name": "run",
       "old_sha256": null,
       "path": "test/support/proof/p8_19_browser.ex",
-      "sha256": "492b8d123251e99c1d30a53721c2415820fe2728aa31d1a9211bae6a9d1b331e",
+      "sha256": "cee248bb99f3fd214e1f097058721e086ac6121b7b655433626f259a0cab8e11",
       "status": "parsed",
       "visibility": "public"
     },
@@ -4399,8 +4522,21 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_19_catalog.ex",
-      "sha256": "0ad64d6bfe1cded29bd14a5b90c93411897c36db646a40bf4e7ea9721d59a945",
+      "sha256": "24eb414efe990d2ca5f5b28586e7b1f33b71e70deb966b4a94c7c67809d73434",
       "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P819Catalog",
+      "name": "authority_bound?",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_19_catalog.ex",
+      "sha256": "be99e28d0569594c094cc291c7b37c4a2ffb0e14b4b94a8ab3f48971d67a6c6b",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": 2,
@@ -4437,7 +4573,7 @@
       "name": "manifests",
       "old_sha256": null,
       "path": "test/support/proof/p8_19_catalog.ex",
-      "sha256": "9c9a7977ee8d01bcc55085c31046d7cc8f23bde49d575064eb9396a560245da9",
+      "sha256": "0a4e5f539e765427c084c6eac565bf3bb64fd011156b53f75c2315e847df4dd6",
       "status": "parsed",
       "visibility": "public"
     },
@@ -4461,6 +4597,118 @@
       "module": null,
       "name": null,
       "path": "test/support/proof/p8_19_catalog.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYou.Proof.PassiveEvidence",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/support/proof/passive_evidence.ex",
+      "sha256": "7f2df3b9c68bb8d105156ba46ea2cc030e097e3590899b6dc904786e67860756",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.PassiveEvidence",
+      "name": "assert_response!",
+      "old_sha256": null,
+      "path": "test/support/proof/passive_evidence.ex",
+      "sha256": "b52d5499a3e1d268a7534fdabaf2af8e29b44eb3dbf693c4dd895f00720e8222",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.PassiveEvidence",
+      "name": "assert_unchanged!",
+      "old_sha256": null,
+      "path": "test/support/proof/passive_evidence.ex",
+      "sha256": "00f515c29a8ec948200b5d89560fb58dd1755da201bec5fccfa96389b836931e",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.PassiveEvidence",
+      "name": "digest",
+      "old_sha256": null,
+      "path": "test/support/proof/passive_evidence.ex",
+      "sha256": "db8895e3ee2bf7df4d150c2346da64dd1a0a2eef78f3e82dc7640387d175e4a0",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.PassiveEvidence",
+      "name": "public_response",
+      "old_sha256": null,
+      "path": "test/support/proof/passive_evidence.ex",
+      "sha256": "afd216f9402029b1372f272c2c564224cf4bcf4ae92750df3198c3c46af192f2",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.PassiveEvidence",
+      "name": "scoped_digest",
+      "old_sha256": null,
+      "path": "test/support/proof/passive_evidence.ex",
+      "sha256": "6468394fe533386d332ad5ae111cc84de175a39a55c0cdaa163a9a1c685db38f",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.PassiveEvidence",
+      "name": "session_cookie",
+      "old_sha256": null,
+      "path": "test/support/proof/passive_evidence.ex",
+      "sha256": "e7f13d87ed8647f90ab2f931e8589af84a4947583aa2070d6d0799d188f9829f",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.PassiveEvidence",
+      "name": "snapshot",
+      "old_sha256": null,
+      "path": "test/support/proof/passive_evidence.ex",
+      "sha256": "a7720ec16edea5bda0ad52c0613cb0d1ba8fc90abeb9eb80c263a88626268825",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/support/proof/passive_evidence.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -5015,13 +5263,81 @@
     },
     {
       "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Proof.Result",
+      "name": null,
+      "old_sha256": "67413eb14141fa3a2725abffd4cc7b4ece3886d00a8262e336112b05df73648c",
+      "path": "test/support/proof/result.ex",
+      "sha256": "2a6f283a31da71bd1de0e0bd6f91df00eb9472e9edaeb11e3420dec1c164aaa1",
+      "status": "parsed"
+    },
+    {
+      "arity": 3,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.Result",
+      "name": "validate_case_verdict_fields",
+      "old_sha256": "e197bce6815ab6596294ca8b0e74fb3d086f9f98f1e88d2da7b5c2178d349961",
+      "path": "test/support/proof/result.ex",
+      "sha256": "516df0a2996ad9ffce6cea413605676dde6111afd3cc1cff8ea2cc79cf1c05f4",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/support/proof/result.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Proof.Runner",
+      "name": null,
+      "old_sha256": "717769bbe49b9b8a78e0e8830e50737c3b0afb8c13f33f79a04b29123fde9880",
+      "path": "test/support/proof/runner.ex",
+      "sha256": "50a55da5259fb03439635d418a38d22f9756103772b12fadb1d29d061e225e78",
+      "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.Runner",
+      "name": "run_full_catalog",
+      "old_sha256": "514fab94c722b67a4a465342e08a0b770b28f44b75e9f530c8df2203c9cffa37",
+      "path": "test/support/proof/runner.ex",
+      "sha256": "ba162001dce72b2a13ff5cd1939f95cda4d737bee42b7c74657de9d9e4ff7377",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/support/proof/runner.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
       "change": "added",
       "kind": "module",
       "module": "NewYou.Proof.WebScenarios",
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/web_scenarios.ex",
-      "sha256": "2942afa909c59684de6ade2e9dc410e59d9412595d4abfba29a4e3b7bf573ff5",
+      "sha256": "799f0c28685a94ff7d300e97119d175767b1c589061a7f52e6ee3f7ff1223b60",
       "status": "parsed"
     },
     {
@@ -5085,9 +5401,22 @@
       "name": "recovery_neutral",
       "old_sha256": null,
       "path": "test/support/proof/web_scenarios.ex",
-      "sha256": "0c7d93a0b7dcf118d50d4c5d47e9944ee5995f040b21c69ebd9c5ba8d6144e1d",
+      "sha256": "88878e5429b23c6dfa6b3835c88de4126aa8a5f9bc681a2be104a54dc43095b0",
       "status": "parsed",
       "visibility": "public"
+    },
+    {
+      "arity": 4,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.WebScenarios",
+      "name": "recovery_request",
+      "old_sha256": null,
+      "path": "test/support/proof/web_scenarios.ex",
+      "sha256": "b6c61665245747a3355120e834914c91c64e8a23e72a3e23f07adbbac5b5fa66",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": 0,
@@ -5098,7 +5427,7 @@
       "name": "recovery_scanner",
       "old_sha256": null,
       "path": "test/support/proof/web_scenarios.ex",
-      "sha256": "0eed962a1a28a6bc33a5376ecc94427f61d5882248f5b5f8b3c0b55f72ff94e6",
+      "sha256": "fa376c05fd1f2b2ffb2f2a83b621196eb1849c9c5633998ba7ac9968dda23b97",
       "status": "parsed",
       "visibility": "public"
     },
@@ -5165,6 +5494,7 @@
     "test/new_you/proof/catalog_test.exs",
     "test/new_you/proof/p8_05_test.exs",
     "test/new_you/proof/p8_12_test.exs",
+    "test/new_you/proof/passive_evidence_test.exs",
     "test/new_you/proof/result_test.exs",
     "test/new_you/proof/runner_test.exs",
     "test/new_you/proof/tb001_integration_test.exs",
@@ -5175,6 +5505,8 @@
     "test/new_you_web/controllers/recovery_controller_test.exs",
     "test/proof/p8_05_browser.mjs",
     "test/proof/tb001_broken.exs",
+    "test/proof/tb001_inventory_broken.exs",
+    "test/proof/tb001_required_cases.json",
     "test/support/proof/capability_scenarios.ex",
     "test/support/proof/catalog.ex",
     "test/support/proof/delivery_recovery_scenarios.ex",
@@ -5185,8 +5517,11 @@
     "test/support/proof/p8_19.ex",
     "test/support/proof/p8_19_browser.ex",
     "test/support/proof/p8_19_catalog.ex",
+    "test/support/proof/passive_evidence.ex",
     "test/support/proof/reconciliation_scenarios.ex",
     "test/support/proof/recovery_scenarios.ex",
+    "test/support/proof/result.ex",
+    "test/support/proof/runner.ex",
     "test/support/proof/web_scenarios.ex"
   ],
   "tickets": [
