@@ -1,5 +1,5 @@
 {
-  "base_sha": "a47774b004bd016c7deaead24ba3f1061cd56367",
+  "base_sha": "f004ac7dd79d135019af3965933d7cd0a4c71dd0",
   "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/245/checks",
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/245/commits",
   "files": [
@@ -26,14 +26,36 @@
       "status": "added"
     },
     {
-      "blob": "109d52e5a9e4b548fba1cf272b8e1fee7c47626e",
+      "blob": "dfd8899a0b9e230684064b0e766201bfb09066c8",
+      "mode": "100644",
+      "old_blob": "f8554052508aee0e3c352945100ecea87aa15090",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/identity.recovery.json",
+      "old_sha256": "f332b5e3709e5dba64dbc3d5cff71c8b323195f73e50187483565a0e5db76e2a",
+      "path": "docs/development/knowledge/identity.recovery.json",
+      "sha256": "148c94c87e8a3b3f21022a0b8e5bccf838518d3bc79f2520b549e35ae296c97d",
+      "status": "modified"
+    },
+    {
+      "blob": "6f40d68e6332d1e067902d0bb5c2130b9b082c5f",
+      "mode": "100644",
+      "old_blob": "3d8fe73eca6a04634e5db8a7c37e01045a1c65aa",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/identity.registration.json",
+      "old_sha256": "75e58e9eb12098455129ed55997eb6baff5dc9ca86c6e5d6d6ed461d481e18db",
+      "path": "docs/development/knowledge/identity.registration.json",
+      "sha256": "19c82435528f5bac49ce795e25f2016583f0d399ea0725daec9d9cf767775f72",
+      "status": "modified"
+    },
+    {
+      "blob": "217863b43475f3defc9e0fc0cd63724d436a648a",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/identity.sign_in.json",
-      "sha256": "12975d058540d7106d4f84e4a669d092d3112461260f373e72ff225e4b81fd3e",
+      "sha256": "456af3034553e30c49b0949ad9d8b3110834d7d339661b6718375e9163a227f1",
       "status": "added"
     },
     {
@@ -224,6 +246,17 @@
       "status": "modified"
     },
     {
+      "blob": "4e356be38f506a74829cc354c6b5d5aaf6cea058",
+      "mode": "100644",
+      "old_blob": "41695ad75cfea0554eeac8370d9a41c7b15a1688",
+      "old_mode": "100644",
+      "old_path": "lib/new_you_web/endpoint.ex",
+      "old_sha256": "6f2b03b65c3a3207731bba3c73f961f2f2770f33d4c50dda1aba6df70f82303d",
+      "path": "lib/new_you_web/endpoint.ex",
+      "sha256": "874d6f005f6323293adb2c7279a0d5e78b75d1d88ae0c1b3ed976184a9224655",
+      "status": "modified"
+    },
+    {
       "blob": "3b2a6e87b994a08fe22423e2938cc3dad4e83023",
       "mode": "100644",
       "old_blob": "279fcebd486d62cab716a071b89b3bca8e6ebfcc",
@@ -232,6 +265,28 @@
       "old_sha256": "26bdd93e500d88755ba8a660c17e8badb3cb6480ad0acaf40cb5445c09d264ac",
       "path": "lib/new_you_web/magic_login_copy.ex",
       "sha256": "b90f58cf640b05e091ed47c9cb4e530a08136c0e32c3134e5490e855dce4f72d",
+      "status": "modified"
+    },
+    {
+      "blob": "ecdea33334c2fe73f25886bb65c0a694b9f34ec8",
+      "mode": "100644",
+      "old_blob": "e169a113f8f1627381421bea72be1ac91d251c8d",
+      "old_mode": "100644",
+      "old_path": "lib/new_you_web/privacy_telemetry.ex",
+      "old_sha256": "cd83d334f5ebe206913816903ee266dc733f1e3843f97da390255613bb405dab",
+      "path": "lib/new_you_web/privacy_telemetry.ex",
+      "sha256": "d002278f8536002bfde7b08b3b88270a7180723110206854b432d2fce65b11b0",
+      "status": "modified"
+    },
+    {
+      "blob": "bac068ca1c521d9a010ebf7fef1c1d3db96549f3",
+      "mode": "100644",
+      "old_blob": "791762ac201e0ae610c170f41c4bcd738cff34ba",
+      "old_mode": "100644",
+      "old_path": "lib/new_you_web/registration_boundary.ex",
+      "old_sha256": "ff5cd556c7a495abd3e67aa80f9c6c1795e12077f066841071b5698234437c77",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "sha256": "dba784a2fa960cd3f0cb01f1b9ea195e20818d5d47b430b91173adf3a348c47c",
       "status": "modified"
     },
     {
@@ -266,6 +321,17 @@
       "path": "test/new_you_web/controllers/magic_login_controller_test.exs",
       "sha256": "c40347b2adcacce62bac7a2162ce4530351d4af3de0ae9a4c17055b50c7da4c3",
       "status": "modified"
+    },
+    {
+      "blob": "5730f5763453180a008141b8351499235c70c698",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "53b16f110f5821e069f05e073d324475185c7dcd551e0cb8f8d4f06bc4a9ca32",
+      "status": "added"
     },
     {
       "blob": "534910ac5116f0e29c757e616eb09df8e8728b09",
@@ -326,7 +392,7 @@
   "migrations": [],
   "pr": 245,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/245",
-  "range_base_sha": "a47774b004bd016c7deaead24ba3f1061cd56367",
+  "range_base_sha": "f004ac7dd79d135019af3965933d7cd0a4c71dd0",
   "schema_version": 1,
   "symbols": [
     {
@@ -667,6 +733,27 @@
       "arity": null,
       "change": "changed",
       "kind": "module",
+      "module": "NewYouWeb.Endpoint",
+      "name": null,
+      "old_sha256": "0cc35396b5eeb94930510db950e5ca6b8c3bd92ff6177826c4a4d113046fa2df",
+      "path": "lib/new_you_web/endpoint.ex",
+      "sha256": "f2d49dd95aeab3384902c44611cf2ac43b7675c89ed6b816b2519e3ea7970e6e",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/endpoint.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
       "module": "NewYouWeb.MagicLoginCopy",
       "name": null,
       "old_sha256": "f547db1213efeeff3d397aa657f5ee5d1754beef2328294bbb6f3ce822e25723",
@@ -694,6 +781,126 @@
       "module": null,
       "name": null,
       "path": "lib/new_you_web/magic_login_copy.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYouWeb.PrivacyTelemetry",
+      "name": null,
+      "old_sha256": "ef851a6c7a362167c3ddb5fadda7092229b67af4ebe259b98d6684efe68052b4",
+      "path": "lib/new_you_web/privacy_telemetry.ex",
+      "sha256": "f99d06c6fdcb288ee06ab46412a2f9e452f17f6950f805ee2e11ce6fd4868309",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "changed",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.PrivacyTelemetry",
+      "name": "call",
+      "old_sha256": "0ac811f4d21cc75ea534205ac8d15da3f34440e1cd704374e47d8816e3b2bc83",
+      "path": "lib/new_you_web/privacy_telemetry.ex",
+      "sha256": "41312e01f6f6d8d44ebb5c093c8f047e2c4b64741c8094a7acf62b3c3b89c440",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 1,
+      "change": "removed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PrivacyTelemetry",
+      "name": "sensitive_browser_path?",
+      "old_sha256": "53c696ce64ce1e45321168a6729d50fce83fd86adbd61d2ae3c2a3cb2f258d9b",
+      "path": "lib/new_you_web/privacy_telemetry.ex",
+      "sha256": null,
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "removed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PrivacyTelemetry",
+      "name": "telemetry_conn",
+      "old_sha256": "10561326b98d49d441ee6160d1a54a36102a4b4e683b4768dde58c8d0bc27930",
+      "path": "lib/new_you_web/privacy_telemetry.ex",
+      "sha256": null,
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/privacy_telemetry.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYouWeb.RegistrationBoundary",
+      "name": null,
+      "old_sha256": "9437f1bc6373446f4b8c7621353ac7158569f7d441c19f6f2eb87e30b37f6dd5",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "sha256": "9008ac824cd72a49cfed09d4532bf28bedad9f018d482642b64ec64d7ae9d541",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "changed",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.RegistrationBoundary",
+      "name": "call",
+      "old_sha256": "72a0a1ffade5134c5ecbbbd7805f956595d4620bb9a04ed6e4566979ec856f3b",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "sha256": "63bbb06c13f0a89dccb32ec6b6c46088833b79064d9ab200f969073f333c5d3a",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.RegistrationBoundary",
+      "name": "dispatch",
+      "old_sha256": null,
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "sha256": "07303d789b2e00a68534df61b7e479b65bc8bb8ec5b47ef818faa6a6c438ce98",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "removed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.RegistrationBoundary",
+      "name": "sensitive_browser_path?",
+      "old_sha256": "774f7c089ef8cc17b44e2eeb8ba987d00caf955bdcf9cd129f6c8c7358ba67ec",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "sha256": null,
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/registration_boundary.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -774,6 +981,79 @@
       "arity": null,
       "change": "added",
       "kind": "module",
+      "module": "NewYouWeb.PrivacyTelemetryTest",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "f779f4408c9612c4974cdaa39b3bfa93f1f5aaefbd08f434f1f83160fc3762e0",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PrivacyTelemetryTest",
+      "name": "attach",
+      "old_sha256": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "aad53d31b7c95db13e38b91cd7b9f4cb9980e861ae66c141ec7320d62ef858a8",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 4,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.PrivacyTelemetryTest",
+      "name": "observe",
+      "old_sha256": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "048c4d20b53878b55d98e9eb3a3a55996a54f2d1b1ab043239acefcf9852150e",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PrivacyTelemetryTest",
+      "name": "observed_events",
+      "old_sha256": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "05de901d5325fe45c5a77eaa409ce2ccc6569810fc27f4bbcae25ef5134f6115",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PrivacyTelemetryTest",
+      "name": "observed_events",
+      "old_sha256": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "05de901d5325fe45c5a77eaa409ce2ccc6569810fc27f4bbcae25ef5134f6115",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
       "module": "NewYouWeb.SignInJourneyTest",
       "name": null,
       "old_sha256": null,
@@ -847,6 +1127,7 @@
   "tests": [
     "test/new_you/content/sign_in_copy_test.exs",
     "test/new_you_web/controllers/magic_login_controller_test.exs",
+    "test/new_you_web/privacy_telemetry_test.exs",
     "test/new_you_web/sign_in_journey_test.exs",
     "test/proof/p8_05_browser.mjs",
     "test/proof/self_test.exs",
