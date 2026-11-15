@@ -100,10 +100,11 @@
           required
         />
 
-        <fieldset class="ds-design-field ds-registration-wide">
-          <legend class="font-design-medium">
-            {copy("identity.registration.preferred_language.label", @locale)}
-          </legend>
+        <.design_fieldset
+          id="preferred-language"
+          legend={copy("identity.registration.preferred_language.label", @locale)}
+          help={copy("identity.registration.preferred_language.help", @locale)}
+        >
           <p class="text-design-ink">
             {if @locale == "af",
               do: copy("shared.language.afrikaans", @locale),
@@ -115,40 +116,16 @@
             value={@locale}
             aria-describedby="preferred-language-help"
           />
-          <p id="preferred-language-help" class="ds-note-text">
-            {copy("identity.registration.preferred_language.help", @locale)}
-          </p>
-        </fieldset>
+        </.design_fieldset>
 
-        <div class="ds-design-field ds-registration-wide">
-          <label
-            for="registration-age"
-            class="ds-registration-check"
-          >
-            <input
-              id="registration-age"
-              type="checkbox"
-              name="registration[confirmed_age_18]"
-              value="true"
-              checked={Map.get(@values, "confirmed_age_18") == "true"}
-              required
-              aria-required="true"
-              aria-invalid={if @errors["confirmed_age_18"], do: "true"}
-              aria-describedby={if @errors["confirmed_age_18"], do: "registration-age-error"}
-              class="ds-registration-checkbox"
-            />
-            <span>{copy("identity.registration.age_confirmation", @locale)}</span>
-          </label>
-          <%= if @errors["confirmed_age_18"] do %>
-            <p
-              id="registration-age-error"
-              role="alert"
-              class="ds-field-error"
-            >
-              {copy(@errors["confirmed_age_18"], @locale)}
-            </p>
-          <% end %>
-        </div>
+        <.design_checkbox
+          id="registration-age"
+          name="registration[confirmed_age_18]"
+          label={copy("identity.registration.age_confirmation", @locale)}
+          error={@errors["confirmed_age_18"] && copy(@errors["confirmed_age_18"], @locale)}
+          checked={Map.get(@values, "confirmed_age_18") == "true"}
+          required
+        />
 
         <div class="ds-registration-legal ds-registration-wide ds-stack">
           <p class="ds-note-text">
@@ -156,42 +133,20 @@
           </p>
 
           <div id="registration-legal-items" class="ds-divided">
-            <div class="ds-design-field">
-              <div class="ds-row">
-                <label
-                  for="registration-terms"
-                  class="ds-registration-check"
-                >
-                  <input
-                    id="registration-terms"
-                    type="checkbox"
-                    name="registration[terms_accepted]"
-                    value="true"
-                    checked={Map.get(@values, "terms_accepted") == "true"}
-                    required
-                    aria-required="true"
-                    aria-invalid={if @errors["terms_accepted"], do: "true"}
-                    aria-describedby={
-                      if @errors["terms_accepted"], do: "registration-terms-error"
-                    }
-                    class="ds-registration-checkbox"
-                  />
-                  <span>{copy("identity.registration.terms_acceptance", @locale)}</span>
-                </label>
+            <.design_checkbox
+              id="registration-terms"
+              name="registration[terms_accepted]"
+              label={copy("identity.registration.terms_acceptance", @locale)}
+              error={@errors["terms_accepted"] && copy(@errors["terms_accepted"], @locale)}
+              checked={Map.get(@values, "terms_accepted") == "true"}
+              required
+            >
+              <:actions>
                 <.text_link href="/legal/terms">
                   {copy("identity.registration.terms_link", @locale)}
                 </.text_link>
-              </div>
-              <%= if @errors["terms_accepted"] do %>
-                <p
-                  id="registration-terms-error"
-                  role="alert"
-                  class="ds-field-error"
-                >
-                  {copy(@errors["terms_accepted"], @locale)}
-                </p>
-              <% end %>
-            </div>
+              </:actions>
+            </.design_checkbox>
 
             <div class="ds-stack">
               <div id="registration-privacy-copy" class="ds-prose">
@@ -204,35 +159,14 @@
                   </.text_link>
                 </p>
               </div>
-              <label
-                for="registration-privacy"
-                class="ds-registration-check"
-              >
-                <input
-                  id="registration-privacy"
-                  type="checkbox"
-                  name="registration[privacy_accepted]"
-                  value="true"
-                  checked={Map.get(@values, "privacy_accepted") == "true"}
-                  required
-                  aria-required="true"
-                  aria-invalid={if @errors["privacy_accepted"], do: "true"}
-                  aria-describedby={
-                    if @errors["privacy_accepted"], do: "registration-privacy-error"
-                  }
-                  class="ds-registration-checkbox"
-                />
-                <span>{copy("identity.registration.privacy_acceptance", @locale)}</span>
-              </label>
-              <%= if @errors["privacy_accepted"] do %>
-                <p
-                  id="registration-privacy-error"
-                  role="alert"
-                  class="ds-field-error"
-                >
-                  {copy(@errors["privacy_accepted"], @locale)}
-                </p>
-              <% end %>
+              <.design_checkbox
+                id="registration-privacy"
+                name="registration[privacy_accepted]"
+                label={copy("identity.registration.privacy_acceptance", @locale)}
+                error={@errors["privacy_accepted"] && copy(@errors["privacy_accepted"], @locale)}
+                checked={Map.get(@values, "privacy_accepted") == "true"}
+                required
+              />
             </div>
           </div>
         </div>

@@ -17,9 +17,7 @@
 .ds-registration-form > :is(fieldset, .ds-registration-wide, .ds-registration-submit) { grid-column: 1 / -1; min-inline-size: 0; }
 .ds-registration-form legend { @apply font-design-medium; }
 .ds-registration-form .ds-note-text { @apply text-design-body-xs leading-design-body-xs; }
-.ds-registration-check { @apply flex items-start gap-design-md py-design-sm; min-block-size: var(--space-button-height); }
-.ds-registration-check > input { @apply mt-design-xxs size-design-base shrink-0; accent-color: var(--primary); }
-.ds-registration-check > input:focus-visible { @apply outline-2 outline-offset-2 outline-design-primary; }
+.ds-registration-form > .ds-design-choice { grid-column: 1 / -1; }
 .ds-registration-legal { @apply border-y border-design-hairline py-design-lg; }
 .ds-registration-submit { display: flex; min-inline-size: 0; }
 .ds-registration-submit > button { max-inline-size: 100%; }

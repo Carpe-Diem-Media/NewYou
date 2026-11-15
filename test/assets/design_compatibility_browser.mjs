@@ -11,6 +11,7 @@ import {verifyContentContracts,verifyContentReflow} from "./design_content_contr
 import {verifyBorderContracts,verifyBorderReflow} from "./design_border_contract.mjs"
 
 import {verifySurfaceContracts,verifySurfaceReflow} from "./design_surface_contract.mjs"
+import {verifyNativeFormContracts,verifyNativeFormReflow} from "./design_native_form_contract.mjs"
 
 const require=createRequire(resolve(process.env.BROWSER_TOOLS_ROOT || ".", "package.json"))
 const engine=process.env.DESIGN_BROWSER || "chrome"
@@ -59,6 +60,8 @@ try {
     checks+=(await page.evaluate(verifyBorderReflow)).checks
     checks+=(await page.evaluate(verifySurfaceContracts)).checks
     checks+=(await page.evaluate(verifySurfaceReflow)).checks
+    checks+=(await page.evaluate(verifyNativeFormContracts)).checks
+    checks+=(await page.evaluate(verifyNativeFormReflow)).checks
   }
   const components=await page.evaluate(()=>{
     const card=document.querySelector("#contract-card-local"),s=getComputedStyle(card)

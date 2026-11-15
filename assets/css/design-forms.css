@@ -1,0 +1,9 @@
+/* Hallmark · theme: locked DESIGN.md · shape: app screen · genre: modern-minimal · scope: app · signature: shared native form states · v2.0.0 */
+/* Critique: actual native controls retain their browser behavior, while shared labels and descriptions reflow with existing tokens. */
+.ds-form-examples { @apply mt-design-xl; }
+.ds-form-example { @apply p-design-lg; min-inline-size: 0; border: var(--border-decorative); border-radius: var(--radius); }
+.ds-form-example :where(p, label, legend, output) { min-inline-size: 0; overflow-wrap: anywhere; }
+.ds-form-example > .ds-design-fieldset { inline-size: 100%; }
+.ds-form-readouts > div { @apply flex flex-wrap justify-between gap-design-control; }
+.ds-form-readouts :where(dt, dd) { min-inline-size: 0; overflow-wrap: anywhere; }
+#native-forms .ds-note { max-inline-size: var(--measure); }

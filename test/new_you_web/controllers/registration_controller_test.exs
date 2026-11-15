@@ -213,6 +213,43 @@ defmodule NewYouWeb.RegistrationControllerTest do
       end
     end
 
+    test "the pilot consumes shared native choices without hidden fallback values", %{conn: conn} do
+      for locale <- ~w(en af) do
+        dom =
+          conn
+          |> get("/register?locale=#{locale}")
+          |> html_response(200)
+          |> LazyHTML.from_document()
+
+        assert LazyHTML.query(dom, "fieldset#preferred-language.ds-design-fieldset")
+               |> LazyHTML.attribute("aria-describedby") == ["preferred-language-help"]
+
+        for {id, field} <- [
+              {"age", "confirmed_age_18"},
+              {"terms", "terms_accepted"},
+              {"privacy", "privacy_accepted"}
+            ] do
+          input =
+            LazyHTML.query(
+              dom,
+              "#registration-#{id}-field.ds-design-choice label[for=registration-#{id}] > input.ds-design-checkbox"
+            )
+
+          assert LazyHTML.attribute(input, "name") == ["registration[#{field}]"]
+          assert LazyHTML.attribute(input, "value") == ["true"]
+          assert LazyHTML.attribute(input, "required") != []
+
+          assert LazyHTML.query(dom, "input[type=hidden][name='registration[#{field}]']")
+                 |> Enum.count() == 0
+        end
+
+        assert LazyHTML.query(dom, "#registration-terms-field > .ds-row > a[href='/legal/terms']")
+               |> Enum.count() == 1
+
+        assert LazyHTML.query(dom, "#registration-terms-field label a") |> Enum.count() == 0
+      end
+    end
+
     test "the content pilot preserves exact explanatory text and legal links", %{conn: conn} do
       for locale <- ~w(en af) do
         dom =

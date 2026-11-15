@@ -129,3 +129,5 @@ Next pass 2: [contextual card spacing and scoped prose](pass2-content.md) docume
 Next pass 3: [border purposes and divider ownership](pass3-borders.md) documents optional purpose inputs, selected-border inset math, nested divider frames, native states, contrast and bounded browser proof. Current delivery state remains in Plane.
 
 Next pass 4: [complete opaque surface pairings](pass4-surfaces.md) documents finite component-owned profiles, complete local foreground resets, shared card/link consumers, text/focus contrast, decoration limits and proof.
+
+Next pass 5: [shared native form contracts](pass5-native-forms.md) documents consumer-led checkbox/fieldset/help extraction, native state and submission rules, field/choice spacing, exact copy preservation, focused ACSS form findings and proof.

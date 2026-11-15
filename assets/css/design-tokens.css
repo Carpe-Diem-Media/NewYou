@@ -377,6 +377,21 @@
 }
 
 /* Optional content inputs resolve locally; they have no root alias defaults. */
+:where(.ds-design-field) {
+  --design-field-gap: var(--field-gap, var(--space-sm));
+}
+:where(.ds-design-choice) {
+  --design-choice-gap: var(--choice-gap, var(--design-field-gap));
+  --design-choice-label-weight: var(--choice-label-weight, var(--weight-regular));
+}
+#registration-age-field { --choice-label-weight: var(--weight-medium); }
+#registration-privacy-field { --choice-gap: var(--content-gap); }
+#forms-local { --field-gap: var(--space-base); --choice-gap: var(--space-md); }
+#native-forms .ds-form-examples {
+  --design-grid-columns: 2;
+  --design-grid-min: var(--design-layout-narrow);
+}
+
 :where(.ds-prose) {
   --design-prose-flow: var(--prose-flow-space, var(--content-gap));
   --design-prose-heading-gap: max(var(--design-prose-flow), var(--prose-heading-space, var(--space-xl)));

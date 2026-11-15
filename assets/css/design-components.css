@@ -3,8 +3,23 @@
 /* Hallmark · waive 39b · DESIGN.md locks 58px native input height · registration retains the approved field geometry and enlarged touch area */
 
 @layer components {
-  .ds-design-field { @apply grid content-start gap-design-sm; min-inline-size: 0; }
+  .ds-design-field { @apply grid content-start; gap: var(--design-field-gap); min-inline-size: 0; }
   .ds-design-field > label { @apply text-design-body-xs leading-design-body-xs font-design-medium; }
+  .ds-design-fieldset > legend { min-inline-size: 0; max-inline-size: 100%; overflow-wrap: anywhere; }
+  .ds-field-help { @apply text-design-body-xs leading-design-body-xs; }
+  .ds-design-choice { gap: var(--design-choice-gap); }
+  .ds-design-check {
+    @apply flex items-start gap-design-md py-design-sm;
+    min-block-size: var(--space-button-height);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+    font-weight: var(--design-choice-label-weight);
+  }
+  .ds-design-check > span { min-inline-size: 0; }
+  .ds-design-choice > .ds-row > .ds-design-check:only-child { inline-size: 100%; }
+  .ds-design-check > input { @apply mt-design-xxs size-design-base shrink-0; accent-color: var(--primary); }
+  .ds-design-check > input:focus-visible { @apply outline-2 outline-offset-2 outline-design-primary; }
   .ds-design-field-input {
     @apply min-h-design-input-height px-design-base py-design-md rounded-design-sm text-design-body-xs leading-design-body-xs bg-design-surface text-design-ink-strong;
     box-sizing: border-box;

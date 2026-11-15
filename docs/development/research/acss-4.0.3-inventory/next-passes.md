@@ -90,6 +90,8 @@ Exit: every adopted surface provides a visually approved, measured set of foregr
 
 ## Pass 5: extend native form components from real consumers
 
+Implementation continuation: [native form notes](pass5-native-forms.md) record the actual registration/guide helpers, state and description ownership, field/choice inputs, ACSS source decisions and proof. Execution and shared-resource windows remain in Plane.
+
 - [ ] Extract the registration pilot's repeated checkbox, fieldset and associated help/error patterns into shared semantic components without changing copy or validation behavior.
 - [ ] Add radio, select or textarea contracts only when an actual consumer needs them. Keep native interaction semantics and caller-supplied localized content.
 - [ ] Cover labels, descriptions, grouped choices, invalid/disabled/loading behavior, error association and an error summary where the consuming form requires it. Preserve control dimensions and focus during LiveView updates.

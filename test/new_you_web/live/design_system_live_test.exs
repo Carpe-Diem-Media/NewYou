@@ -154,6 +154,27 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     refute has_element?(preview, "#prose-en")
   end
 
+  test "native form lab renders actual shared controls and native group states", %{conn: conn} do
+    {:ok, view, _} = live(conn, "/dev/design-system")
+    assert has_element?(view, "nav a[href='#native-forms']")
+    assert has_element?(view, "#forms-ready.ds-design-fieldset > legend#forms-ready-legend")
+    assert has_element?(view, "#forms-choice.ds-design-checkbox[type=checkbox][required]")
+    assert has_element?(view, "#forms-choice-checked[checked]")
+
+    assert has_element?(
+             view,
+             "#forms-choice-invalid[aria-describedby='forms-choice-invalid-help forms-choice-invalid-error']"
+           )
+
+    assert has_element?(view, "#forms-choice-invalid-error[role=alert]")
+    assert has_element?(view, "fieldset#forms-busy[disabled][aria-busy=true]")
+    refute has_element?(view, "#forms-busy-choice[disabled]")
+    assert has_element?(view, "#forms-email[aria-describedby=forms-email-help]")
+    assert has_element?(view, "output[data-measure-target=forms-local-choice-field]")
+    {:ok, preview, _} = live(conn, "/dev/design-system/preview")
+    refute has_element?(preview, "#native-forms")
+  end
+
   test "opaque pairings use shared boundaries and measured foreground roles", %{conn: conn} do
     {:ok, view, _} = live(conn, "/dev/design-system")
     assert has_element?(view, "nav a[href='#surface-pairings']")
