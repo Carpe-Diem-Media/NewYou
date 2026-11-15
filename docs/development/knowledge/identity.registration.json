@@ -12,8 +12,8 @@
     "WELL-131"
   ],
   "implementation_revision": {
-    "git_sha": "59f88da472f324ffa0ef5a5af1aab89e2602eeae",
-    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged."
+    "git_sha": "d43913e9ef802da4cdc40d5b91c869962296ab4c",
+    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -441,7 +441,7 @@
       ]
     },
     {
-      "summary": "Missing, mismatched, withdrawn or superseded legal artifacts deny presentation and new acceptance. Existing durable retries and recovery remain owner-controlled; no new business state, migration, cache, provider or background worker is introduced.",
+      "summary": "Missing, mismatched, withdrawn or superseded legal artifacts deny presentation and new acceptance. Both context-policy lists must exactly match the owner-approved development allowlist and production/public/pilot/real-participant prohibitions, independent of order; extra or missing contexts, overlap, duplicates and malformed metadata fail closed. Existing durable retries and recovery remain owner-controlled; no new business state, migration, cache, provider or background worker is introduced.",
       "source_ids": [
         "legal_content",
         "identity",
@@ -503,7 +503,8 @@
     {
       "path": "test/new_you/content/registration_test.exs",
       "cases": [
-        "Exact development pair/documents; configuration mismatch; unknown document; withdrawn, superseded, missing supersession, wrong context, participant-effective entry and changed bytes."
+        "Exact development pair/documents; configuration mismatch; unknown document; withdrawn, superseded, missing supersession, wrong context, participant-effective entry and changed bytes.",
+        "Both pinned Terms and Privacy policies accept reordered lists and reject extra allowed/prohibited contexts, every removed allowed/prohibited context, overlap, missing or malformed metadata and duplicate entries."
       ],
       "proves": "Current bounded legal eligibility accepts only the pinned development evidence.",
       "limits": "Pure negative manifest cases do not manufacture release approvals or edit canonical artifacts.",
@@ -720,7 +721,7 @@
       "id": "legal_content",
       "path": "lib/new_you/content/registration.ex",
       "symbol": "def legal_versions",
-      "sha256": "247776ca5e00cadbbf92e1f83e126003548af323314fa6d48d217196b2aa6d5b"
+      "sha256": "5551966426eb9f0787275772acedbbe545b2e4e4edff4be3939178ef1f17ccb6"
     },
     {
       "id": "router",
@@ -762,7 +763,7 @@
       "id": "legal_test",
       "path": "test/new_you/content/registration_test.exs",
       "symbol": "defmodule",
-      "sha256": "f8c938542139a0615c2bd8ba9052559401e237f79cee0882bf96e43cc274ff9b"
+      "sha256": "ed841f1b5df3f48609ab43452ca919a7ee7a1109b83355f7d8abc72cbb6dffe1"
     },
     {
       "id": "scanner_test",
