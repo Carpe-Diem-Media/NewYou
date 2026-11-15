@@ -79,7 +79,7 @@ defmodule NewYou.Proof.DeliveryScenarios do
       {:ok, registration} = Identity.register(P805.request())
       [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
       assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
-      Process.put(:p810_provider, fn _, _ -> flunk("stale source invoked provider") end)
+      Process.put(:p810_provider, &stale_source_provider/2)
       assert {:ok, :source_invalid} = Communications.execute(intent.id)
       assert [] == Ash.read!(Communications.DeliveryAttempt, authorize?: false)
       assert [] == Ash.read!(Communications.ProtectedEnvelope, authorize?: false)
@@ -131,7 +131,7 @@ defmodule NewYou.Proof.DeliveryScenarios do
   defp scenario_consumption_between_admission_and_invocation_truthfully_closes_the_uninvoked_attempt_fixture() do
     {:ok, registration} = Identity.register(P805.request())
     [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
-    Process.put(:p810_provider, fn _, _ -> flunk("consumed proof submitted") end)
+    Process.put(:p810_provider, &consumed_proof_provider/2)
 
     Process.put(NewYou.Proof.DeliverySeam, fn point ->
       if point == :after_admission do
@@ -145,4 +145,10 @@ defmodule NewYou.Proof.DeliveryScenarios do
     assert attempt.invocation_started_at == nil
     refute attempt.active
   end
+
+  @spec stale_source_provider(term(), term()) :: no_return()
+  defp stale_source_provider(_, _), do: flunk("stale source invoked provider")
+
+  @spec consumed_proof_provider(term(), term()) :: no_return()
+  defp consumed_proof_provider(_, _), do: flunk("consumed proof submitted")
 end

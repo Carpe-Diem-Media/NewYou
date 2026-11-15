@@ -187,7 +187,7 @@ defmodule NewYou.Proof.EmailChangeScenarios do
         |> Ash.Query.filter(source_operation_id == ^operation_id)
         |> Ash.read_one!(authorize?: false)
 
-      Process.put(:p810_provider, fn _, _ -> flunk("email-change intent reached the provider") end)
+      Process.put(:p810_provider, &held_email_change_provider/2)
 
       try do
         assert {:ok, :held} = NewYou.Communications.execute(intent.id)
@@ -1681,4 +1681,7 @@ defmodule NewYou.Proof.EmailChangeScenarios do
   def current_account(id) do
     Ash.get!(Account, id, authorize?: false)
   end
+
+  @spec held_email_change_provider(term(), term()) :: no_return()
+  defp held_email_change_provider(_, _), do: flunk("email-change intent reached the provider")
 end

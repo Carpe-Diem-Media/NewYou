@@ -195,7 +195,7 @@ defmodule NewYou.Proof.ReconciliationScenarios do
       {:ok, approved} = approve(f)
       {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
       assert {:ok, _} = Identity.apply_reconciliation(apply_request(f, approved))
-      Process.put(:p810_provider, fn _, _ -> flunk("retired Identity invoked provider") end)
+      Process.put(:p810_provider, &retired_identity_provider/2)
 
       try do
         Enum.each(intents, fn intent ->
@@ -611,4 +611,7 @@ defmodule NewYou.Proof.ReconciliationScenarios do
     |> Ash.Query.filter(^[{String.to_existing_atom(field), value}])
     |> Ash.read!(authorize?: false)
   end
+
+  @spec retired_identity_provider(term(), term()) :: no_return()
+  defp retired_identity_provider(_, _), do: flunk("retired Identity invoked provider")
 end

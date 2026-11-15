@@ -234,7 +234,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
     else
       assert recovered.provider_observation == :unknown
       assert recovered.active
-      Process.put(:p810_provider, fn _, _ -> flunk("unsafe retry") end)
+      Process.put(:p810_provider, &unsafe_retry_provider/2)
       assert {:ok, :waiting} = Communications.execute(intent.id)
       assert length(Ash.read!(Communications.DeliveryAttempt, authorize?: false)) == 1
     end
@@ -428,4 +428,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
         :ok
     end
   end
+
+  @spec unsafe_retry_provider(term(), term()) :: no_return()
+  defp unsafe_retry_provider(_, _), do: flunk("unsafe retry")
 end
