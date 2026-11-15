@@ -6,7 +6,7 @@
     "WELL-20"
   ],
   "implementation_revision": {
-    "git_sha": "67782d2c66570ee45ed7ccd686d8f3934798f291",
+    "git_sha": "280207d0708c3914f1f280ce2e438b5da20738e4",
     "semantics": "WELL-20 proof integration only. It adds no business behavior or certification authority."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
@@ -433,7 +433,7 @@
       "id": "browser",
       "path": "test/support/proof/p8_19_browser.ex",
       "symbol": "defmodule NewYou.Proof.P819Browser",
-      "sha256": "1f4977712fe78e23d87cdb3e3da2b83941525db3114cdff85f55364c222d4c51"
+      "sha256": "1cb2adbf1c2abe3cd30553aec82dcd7c2b10527805a0316c9d9be5560b562bec"
     },
     {
       "id": "browser_script",
