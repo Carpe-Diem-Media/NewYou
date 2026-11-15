@@ -151,25 +151,25 @@
       "status": "added"
     },
     {
-      "blob": "781183b611ee677e7ffa6cce9f7a158565a5ce2b",
+      "blob": "30941b97a72d573ff205b091f11b41948c93a94b",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "13f111f61777a823bb3ebfdefc677a520b7d9d6a3b8361991b989927da44ed61",
+      "sha256": "cb309e450ad31ed4e35faa724c0da85252cf38b07af6d67e086e212848fd7574",
       "status": "modified"
     },
     {
-      "blob": "d7d0641be54b50dd47c911f26b6c56e880bc9e05",
+      "blob": "bc5fb9a5dcdca9fc7cfb7801f845ed68209c444a",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/README.md",
-      "sha256": "69ae096db2a1e8ef28a37486c53a1979cb99828bc5f555f0e8b53b2839432d37",
+      "sha256": "8a1e039f8284f835f3f8f7c0b4e12375a13a22347b8d56a60432b3a9697071ef",
       "status": "added"
     },
     {
@@ -236,6 +236,17 @@
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/phase4-registration.md",
       "sha256": "7254ff8eaa9bc3c3d3bbef595c549a885b6d6f723e4af9be5e1e40597df1fc85",
+      "status": "added"
+    },
+    {
+      "blob": "29371c92a3f0d5db43b9dce4208077c03e795652",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/phase5-compatibility.md",
+      "sha256": "1b5808b203eb4f72a4581bf57ab24155bf394d575ef5dfbb50312e12ef88e7ce",
       "status": "added"
     },
     {
@@ -357,6 +368,17 @@
       "old_sha256": null,
       "path": "docs/superpowers/plans/2026-11-13-token-hardening.md",
       "sha256": "a74b5e22325ee88168c58db5c31c4fb7a341030f1712a0f7f0e8666672b92e09",
+      "status": "added"
+    },
+    {
+      "blob": "44e00b3f1dca1a4994566d483471ed2bf403abda",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/superpowers/plans/2026-11-15-browser-compatibility.md",
+      "sha256": "917769b72777ba13da76e5d14a514826ad72ead1225579069536e3d132635177",
       "status": "added"
     },
     {
@@ -657,6 +679,17 @@
       "status": "added"
     },
     {
+      "blob": "b9840f4446c0217502d4d9768a9134eb65c3694d",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_compatibility_browser.mjs",
+      "sha256": "161860a2889d3371bf7a1957865ed8c6795ab80a720b9787df7113e51f29ec59",
+      "status": "added"
+    },
+    {
       "blob": "55dc0fa010cb740674589e19f76460f84b66e9ea",
       "mode": "100644",
       "old_blob": null,
@@ -701,14 +734,14 @@
       "status": "added"
     },
     {
-      "blob": "f26293623e7cf1fcf1677772fc6707ba4c3774d7",
+      "blob": "a2f56b3b9a86d80f75155a2f5bf66f83c6049bdc",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_registration_browser.mjs",
-      "sha256": "7382cddd42a3eebe59149b0829cbd5671f592195a433e4c15c76b2159c08b0f3",
+      "sha256": "030224290b4a148734f04e9cf3b2dfa21da1ca2069b59878513c1f9133087f86",
       "status": "added"
     },
     {
@@ -905,16 +938,16 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.\n\nPhase 1 ACSS research now inventories all ten requested systems: grid, auto-grid, shadows, radius, gutter, content width, breakout, icons, cards and data attributes. Source-linked notes record inputs, formulas, gated token/selector output, dependencies, NewYou coverage, proposed decisions and 26 concrete proof items. A catalog binds 74 source files and 104 locators to the supplied archive and NewYou baseline. Eight systems are proposed adaptations, component-owned attributes are retained selectively, and breakout remains deferred without a current consumer. No runtime, token or visual change is introduced by this documentation batch.\n\nPhase 2 adds a layout lab within the existing guide: fixed grids, intrinsic auto-fit/auto-fill with a live column limit, capped containers, single-owner gutters and seven-track breakout comparisons. Bounded URL-backed controls vary allocation, item count and fixed-grid remainder alignment. Four guide-only CSS inputs own the candidate dimensions; the design gate validates their units, bounds, uniqueness and integer column count. Recipes compute from local inputs, without JS sizing formulas or a production layout migration. Phase 2 notes link implementation seams, formulas, source research and remaining proof.\n\nPhase 3 completes bounded card and icon presentation contracts. Cards add explicit leading/inset/action slots and heading levels while remaining noninteractive articles. Token-sized Heroicons add decorative/named semantics and plain/boxed variants. Consumer-local formulas derive inset corner radii from outer radius, uniform border and per-axis padding. Native actions keep HTML/ARIA state ownership. The guide shows actual shared components, isolated local overrides and a pending-state comparison. Flat defaults, palette, radius tiers and the lit primary shine remain intact; no media/avatar framework, global auto-radius, inverted corners or shadow ladder is added. Mask artwork follows system text ink in forced colors, with a bounded system-ink fallback. Detailed ownership, formulas, accessibility rules and proof limits live in the Phase 3 addendum.\n\nPhase 4 migrates the actual development-gated registration template in EN/AF to the same flat card, decorative icon, text link and lit primary components. A bounded native text/email/password field helper also renders in the guide. Container and auto-fit declarations are shared by guide and application; stack/wrapping-row recipes and optional local cap/grid inputs now have a real consumer. Exact copy, transport, CSRF/operation IDs, age/legal facts, password handling, controller/Domain behavior and release gates remain intact. Only the opted-in pilot excludes legacy registration styles and uses the approved light palette under either legacy theme. The addendum records formulas, field ownership, adopted versus deferred recipes and proof limits. This does not release registration or implement the broader WELL-131 journey.\n\nPhase 5 adds contextual content/section/control spacing roles, a scoped block-flow prose recipe and shared native/decorative divider recipes. The existing guide includes EN/AF prose, nested lists and quotations, computed role readouts, semantic hr and local-override specimens. The registration pilot consumes the same recipes around unchanged safety/privacy text and legal-item groups, preserving the existing 49px separator transitions. Legal routes continue to serve byte-identical hash-checked artifacts. Palette, typography roles, card inputs and premium CTA shine remain intact. No global prose reset, builder-specific interpreter, fluid promotion, new dependency or broader participant journey is added. Detailed source findings and equations are recorded in the Phase 5 addendum.",
+    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.\n\nPhase 1 ACSS research now inventories all ten requested systems: grid, auto-grid, shadows, radius, gutter, content width, breakout, icons, cards and data attributes. Source-linked notes record inputs, formulas, gated token/selector output, dependencies, NewYou coverage, proposed decisions and 26 concrete proof items. A catalog binds 74 source files and 104 locators to the supplied archive and NewYou baseline. Eight systems are proposed adaptations, component-owned attributes are retained selectively, and breakout remains deferred without a current consumer. No runtime, token or visual change is introduced by this documentation batch.\n\nPhase 2 adds a layout lab within the existing guide: fixed grids, intrinsic auto-fit/auto-fill with a live column limit, capped containers, single-owner gutters and seven-track breakout comparisons. Bounded URL-backed controls vary allocation, item count and fixed-grid remainder alignment. Four guide-only CSS inputs own the candidate dimensions; the design gate validates their units, bounds, uniqueness and integer column count. Recipes compute from local inputs, without JS sizing formulas or a production layout migration. Phase 2 notes link implementation seams, formulas, source research and remaining proof.\n\nPhase 3 completes bounded card and icon presentation contracts. Cards add explicit leading/inset/action slots and heading levels while remaining noninteractive articles. Token-sized Heroicons add decorative/named semantics and plain/boxed variants. Consumer-local formulas derive inset corner radii from outer radius, uniform border and per-axis padding. Native actions keep HTML/ARIA state ownership. The guide shows actual shared components, isolated local overrides and a pending-state comparison. Flat defaults, palette, radius tiers and the lit primary shine remain intact; no media/avatar framework, global auto-radius, inverted corners or shadow ladder is added. Mask artwork follows system text ink in forced colors, with a bounded system-ink fallback. Detailed ownership, formulas, accessibility rules and proof limits live in the Phase 3 addendum.\n\nPhase 4 migrates the actual development-gated registration template in EN/AF to the same flat card, decorative icon, text link and lit primary components. A bounded native text/email/password field helper also renders in the guide. Container and auto-fit declarations are shared by guide and application; stack/wrapping-row recipes and optional local cap/grid inputs now have a real consumer. Exact copy, transport, CSRF/operation IDs, age/legal facts, password handling, controller/Domain behavior and release gates remain intact. Only the opted-in pilot excludes legacy registration styles and uses the approved light palette under either legacy theme. The addendum records formulas, field ownership, adopted versus deferred recipes and proof limits. This does not release registration or implement the broader WELL-131 journey.\n\nPhase 5 adds contextual content/section/control spacing roles, a scoped block-flow prose recipe and shared native/decorative divider recipes. The existing guide includes EN/AF prose, nested lists and quotations, computed role readouts, semantic hr and local-override specimens. The registration pilot consumes the same recipes around unchanged safety/privacy text and legal-item groups, preserving the existing 49px separator transitions. Legal routes continue to serve byte-identical hash-checked artifacts. Palette, typography roles, card inputs and premium CTA shine remain intact. No global prose reset, builder-specific interpreter, fluid promotion, new dependency or broader participant journey is added. Detailed source findings and equations are recorded in the Phase 5 addendum.\n\nA proof-only continuation adds an explicit Chrome/Firefox compatibility runner for actual layout geometry, shared card/icon/prose/divider contracts, contextual tokens, fluid interpolation and shipped fallbacks, and EN/AF registration. The registration browser test now snapshots every original font size before applying exact 200% text sizing, preventing inherited nested links from being compounded to 400%. Application source and approved visuals remain unchanged. Native no-JavaScript proof uses separately owned Firefox profiles. The runner records the inherited Chrome Hallmark shadow-focus diagnosis and unresolved Firefox DEV reload diagnostics explicitly.",
     "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-15T16:10:49Z",
+    "checked_at": "2026-11-15T16:41:48Z",
     "items": [
       {
-        "description_sha256": "37e40677ccfc39b60b5e720efb6483fcc3575d647c09ff296a9e8faedd4a3e32",
+        "description_sha256": "0dc493ca6de6c09b18c612c4e99a22e8df9ec8c05068ee6352532f229e756442",
         "id": "d0ba230b-4191-404f-a4b2-372078817db8",
         "identifier": "WELL-112",
         "name": "Build a token-driven LiveView design-system guide",
@@ -923,13 +956,13 @@
         "state": "In Progress"
       },
       {
-        "description_sha256": "a308daee3f160220c0ca4c28f204d42e5e3249d31edba82561f4f57a4e764f6c",
+        "description_sha256": "963725a49f3f0ae0e55af6a63cac7a4385f7bcf18165dc72c15265e08d38a542",
         "id": "e2276621-9382-4a65-972d-a9b83aa785ce",
         "identifier": "WELL-131",
         "name": "FP-001 first slice: bilingual public entry to verified individual Account",
         "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
         "sequence_id": 131,
-        "state": "Changes Requested"
+        "state": "Done"
       }
     ],
     "source": "connected-plane",
@@ -2042,6 +2075,7 @@
     }
   ],
   "tests": [
+    "test/assets/design_compatibility_browser.mjs",
     "test/assets/design_component_contracts_browser.mjs",
     "test/assets/design_content_browser.mjs",
     "test/assets/design_layouts_browser.mjs",
