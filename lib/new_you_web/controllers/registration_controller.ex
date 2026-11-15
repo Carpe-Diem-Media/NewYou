@@ -240,11 +240,13 @@ defmodule NewYouWeb.RegistrationController do
   end
 
   defp development_browser_enabled? do
-    @development_environment and
+    :erlang.andalso(
+      @development_environment,
       (NewYouWeb.DevelopmentEntry.enabled?() or
          Application.get_env(:new_you, :p8_05_browser_development_fixtures, false) == true) and
-      NewYou.Content.EntryCopy.available?() and
-      match?({:ok, _}, NewYou.Content.Registration.legal_versions())
+        NewYou.Content.EntryCopy.available?() and
+        match?({:ok, _}, NewYou.Content.Registration.legal_versions())
+    )
   end
 
   defp not_found(conn), do: send_resp(conn, 404, "")

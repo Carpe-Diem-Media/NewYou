@@ -61,7 +61,8 @@ defmodule NewYou.Content.EntryCopy do
   # Paths come only from the pinned module-attribute inventory above. No request,
   # registry entry or runtime setting can select a file to read.
   def available? do
-    @development_build and
+    :erlang.andalso(
+      @development_build,
       Enum.all?(
         Map.put(
           @composition_sources,
@@ -75,6 +76,7 @@ defmodule NewYou.Content.EntryCopy do
           end
         end
       )
+    )
   end
 
   @doc "Reads one approved semantic key and exact locale, without fallback or new wording."

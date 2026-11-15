@@ -45,7 +45,10 @@ defmodule NewYou.Content.Registration do
           {:ok, %{terms_version_id: String.t(), privacy_version_id: String.t()}}
           | {:error, :content_ineligible}
   def legal_versions do
-    if @development_environment and configured_versions_match?() and eligible_documents?() do
+    if :erlang.andalso(
+         @development_environment,
+         configured_versions_match?() and eligible_documents?()
+       ) do
       {:ok, configured_versions()}
     else
       {:error, :content_ineligible}
@@ -75,7 +78,7 @@ defmodule NewYou.Content.Registration do
   @spec legal_baseline_valid?(atom(), map(), binary()) :: boolean()
   def legal_baseline_valid?(document, entry, body)
       when document in [:terms, :privacy] and is_map(entry) and is_binary(body) do
-    if @development_environment and configured_versions_match?() do
+    if :erlang.andalso(@development_environment, configured_versions_match?()) do
       spec = Map.fetch!(@specs, document)
       manifest_entry_valid?(entry, spec) and artifact_valid?(body, spec)
     else

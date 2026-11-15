@@ -12,9 +12,11 @@ defmodule NewYouWeb.DevelopmentEntry do
   @doc "Returns whether the normal development entry has its exact eligible content."
   @spec enabled?() :: boolean()
   def enabled? do
-    @development_build and
+    :erlang.andalso(
+      @development_build,
       Application.get_env(:new_you, :fp001_development_entry, false) == true and
-      NewYou.Content.EntryCopy.available?() and
-      match?({:ok, _}, NewYou.Content.Registration.legal_versions())
+        NewYou.Content.EntryCopy.available?() and
+        match?({:ok, _}, NewYou.Content.Registration.legal_versions())
+    )
   end
 end
