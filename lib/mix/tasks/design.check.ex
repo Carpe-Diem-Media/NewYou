@@ -39,6 +39,10 @@ defmodule Mix.Tasks.Design.Check do
   @fluid_sizes for role <- ~w(display body space gutter),
                    edge <- ~w(min max),
                    do: "--fluid-#{role}-#{edge}"
+  @type_inputs for family <- ~w(body heading),
+                   edge <- ~w(min max),
+                   {kind, unit, rule} <- [{"base", "rem", :positive}, {"ratio", "", :scale_ratio}],
+                   do: {"--type-#{family}-#{kind}-#{edge}", unit, rule}
   @raw_value ~r/(?:#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla|oklch|oklab)\s*\(|\b(?:black|white|red|green|blue|orange|purple)\b|(?:^|\s)-?\d+(?:\.\d+)?(?:px|rem|em|vw|vh|%)\b|^\d+(?:\.\d+)?$)/i
   @media_width ~r/(@(?:media|container)\b[^{}]*\b(?:min-width|max-width)\s*:[^{}]*|@(?:media|container)\b[^{}]*\bwidth\s*(?:>=|<=|>|<)[^{}]*)/is
   @style_attribute ~r/(?<![\w:-])style\s*=\s*(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\{)/is
@@ -159,6 +163,7 @@ defmodule Mix.Tasks.Design.Check do
     rules =
       [{"--fluid-vmin", "rem", :positive}, {"--fluid-vmax", "rem", :positive}] ++
         Enum.map(@fluid_sizes, &{&1, "rem", :non_negative}) ++
+        @type_inputs ++
         Enum.map(@mix_inputs, &{"--#{&1}", "%", {:range, 0, 100}}) ++
         [
           {"--design-noise-opacity", "", {:range, 0, 1}},
@@ -168,7 +173,12 @@ defmodule Mix.Tasks.Design.Check do
           {"--design-layout-content-ratio", "", :positive_ratio}
         ]
 
-    errors = Enum.flat_map(rules, &numeric_input_errors(&1, declarations))
+    errors =
+      Enum.flat_map(rules, &numeric_input_errors(&1, declarations)) ++
+        Enum.flat_map(
+          for(family <- ~w(body heading), edge <- ~w(min max), do: {family, edge}),
+          fn {family, edge} -> type_endpoint_errors(declarations, family, edge) end
+        )
 
     with {:ok, lower} <- numeric_input(declarations["--fluid-vmin"], "rem"),
          {:ok, upper} <- numeric_input(declarations["--fluid-vmax"], "rem"),
@@ -177,6 +187,29 @@ defmodule Mix.Tasks.Design.Check do
     else
       _ -> errors
     end
+  end
+
+  defp type_endpoint_errors(declarations, family, edge) do
+    with {:ok, base} <- numeric_input(declarations["--type-#{family}-base-#{edge}"], "rem"),
+         {:ok, ratio} <- numeric_input(declarations["--type-#{family}-ratio-#{edge}"], ""),
+         true <- base > 0 and ratio >= 1 do
+      sizes = [
+        base / ratio / ratio,
+        base / ratio,
+        base,
+        base * ratio,
+        base * ratio * ratio,
+        base * ratio * ratio * ratio
+      ]
+
+      if Enum.all?(sizes, &(&1 > 0)),
+        do: [],
+        else: ["derived type #{family}/#{edge} endpoints must stay finite and positive"]
+    else
+      _ -> []
+    end
+  rescue
+    ArithmeticError -> ["derived type #{family}/#{edge} endpoints must stay finite and positive"]
   end
 
   defp numeric_input_errors({name, unit, constraint}, declarations) do
@@ -203,6 +236,7 @@ defmodule Mix.Tasks.Design.Check do
   defp numeric_input(_values, _unit), do: :error
   defp numeric_in_range?(value, :positive), do: value > 0
   defp numeric_in_range?(value, :non_negative), do: value >= 0
+  defp numeric_in_range?(value, :scale_ratio), do: value >= 1
   defp numeric_in_range?(value, :positive_ratio), do: value > 0 and value <= 1
 
   defp numeric_in_range?(value, {:integer_range, lower, upper}),

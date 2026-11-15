@@ -43,6 +43,23 @@ def luminance(rgb):
     return sum(weight * linear(channel) for weight, channel in zip((0.2126, 0.7152, 0.0722), rgb))
 
 
+def modular_endpoints(mobile_base, desktop_base, mobile_ratio, desktop_ratio, step,
+                      *, mobile_override=None, desktop_override=None):
+    """Independent endpoint-first reference for the six candidate type steps."""
+    if (any(not finite_number(v) or v <= 0 for v in (mobile_base, desktop_base))
+            or any(not finite_number(v) or v < 1 for v in (mobile_ratio, desktop_ratio))
+            or type(step) is not int or not -2 <= step <= 3):
+        raise ValueError("Positive bases, ratios >= 1 and a supported integer step are required")
+    try:
+        mobile = mobile_base * mobile_ratio ** step if mobile_override is None else mobile_override
+        desktop = desktop_base * desktop_ratio ** step if desktop_override is None else desktop_override
+    except (OverflowError, ZeroDivisionError) as error:
+        raise ValueError("Finite positive derived endpoints are required") from error
+    if any(not finite_number(v) or v <= 0 for v in (mobile, desktop)):
+        raise ValueError("Finite positive derived endpoints are required")
+    return mobile, desktop
+
+
 def contrast(a, b):
     first, second = sorted((luminance(a), luminance(b)))
     return (second + 0.05) / (first + 0.05)
@@ -108,6 +125,31 @@ def run():
     for step in range(-2, 5):
         for width, expected in ((480, 16 * 1.2 ** step), (1200, 18 * 1.333 ** step)):
             close(interpolate(width, 480, 1200, 16 * 1.2 ** step, 18 * 1.333 ** step), expected)
+
+    for base_min, base_max in ((1, 1.125), (1.5, 1.6875)):
+        for step in range(-2, 4):
+            mobile, desktop = modular_endpoints(base_min, base_max, 1.2, 1.333, step)
+            close(mobile, base_min * 1.2 ** step)
+            close(desktop, base_max * 1.333 ** step)
+            for root in (16, 32):
+                lower, upper = 30 * root, 75 * root
+                for width, expected in ((lower - 1, mobile), (lower, mobile),
+                                        ((lower + upper) / 2, (mobile + desktop) / 2),
+                                        (upper, desktop), (upper + 1, desktop)):
+                    close(interpolate(width, lower, upper, mobile * root, desktop * root), expected * root)
+            fixed = modular_endpoints(base_min, base_max, 1.2, 1.333, step,
+                                      mobile_override=2, desktop_override=2)
+            close(interpolate(840, 480, 1200, *fixed), 2)
+            reverse = modular_endpoints(base_min, base_max, 1.2, 1.333, step,
+                                        mobile_override=3, desktop_override=1)
+            close(interpolate(840, 480, 1200, *reverse), 2)
+
+    for arguments in ((0, 1, 1.2, 1.333, 0), (1, -1, 1.2, 1.333, 0),
+                      (1, 1, 0.99, 1.333, 0), (1, 1, 1.2, float("inf"), 0),
+                      (1, 1, 1.2, 1.333, True), (1, 1, 1.2, 1.333, 4),
+                      (1e300, 1, 1e200, 1.333, 3), (1e-300, 1, 1e200, 1.333, -2)):
+        rejects(lambda arguments=arguments: modular_endpoints(*arguments))
+    rejects(lambda: modular_endpoints(1, 1, 1.2, 1.333, 0, desktop_override=float("nan")))
 
     # A changed root scales both rem endpoints and the rem viewport boundaries.
     # At the same CSS viewport, it does not necessarily scale the result proportionally.

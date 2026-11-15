@@ -114,6 +114,54 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
     end
   end
 
+  test "modular scale inputs require unique bases and bounded arithmetic rather than arbitrary CSS" do
+    css = File.read!("assets/css/design-tokens.css")
+
+    for family <- ~w(body heading), edge <- ~w(min max) do
+      base = "--type-#{family}-base-#{edge}"
+      ratio = "--type-#{family}-ratio-#{edge}"
+
+      for {name, values} <- [
+            {base, ["0rem", "-1rem", "16px", "NaN", "var(--unknown)"]},
+            {ratio, ["0", "-1", "0.99", "1rem", "NaN", "1e9999"]}
+          ] do
+        for value <- values do
+          invalid = Regex.replace(~r/#{Regex.escape(name)}:[^;]+;/, css, "#{name}: #{value};")
+
+          assert Enum.any?(Check.token_numeric_violations(invalid), &String.contains?(&1, name)),
+                 name
+        end
+
+        [declaration] = Regex.run(~r/#{Regex.escape(name)}:[^;]+;/, css)
+
+        for invalid <- [String.replace(css, declaration, ""), css <> "\n" <> declaration] do
+          assert Enum.any?(Check.token_numeric_violations(invalid), &String.contains?(&1, name)),
+                 name
+        end
+      end
+
+      overflow = Regex.replace(~r/#{Regex.escape(ratio)}:[^;]+;/, css, "#{ratio}: 1e200;")
+
+      assert Enum.any?(
+               Check.token_numeric_violations(overflow),
+               &String.contains?(&1, "derived type")
+             )
+
+      underflow =
+        css
+        |> then(&Regex.replace(~r/#{Regex.escape(base)}:[^;]+;/, &1, "#{base}: 1e-300rem;"))
+        |> then(&Regex.replace(~r/#{Regex.escape(ratio)}:[^;]+;/, &1, "#{ratio}: 1e20;"))
+
+      assert Enum.any?(
+               Check.token_numeric_violations(underflow),
+               &String.contains?(&1, "derived type")
+             )
+
+      equal = Regex.replace(~r/#{Regex.escape(ratio)}:[^;]+;/, css, "#{ratio}: 1;")
+      assert [] = Check.token_numeric_violations(equal)
+    end
+  end
+
   test "lit treatments and raised cards are bounded opt-ins with native semantics" do
     for component <- [&Button.primary_button/1, &Button.secondary_button/1] do
       html =

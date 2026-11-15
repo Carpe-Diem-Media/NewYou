@@ -17,6 +17,7 @@ defmodule NewYouWeb.DesignSystemLive do
   import NewYouWeb.Components.Design.Icon
   import NewYouWeb.DesignSystemLayouts
   import NewYouWeb.DesignSystemComponents
+  import NewYouWeb.DesignSystemTypography
 
   @counts ~w(1 2 3 4 5 6 7 8 9)
   @alignments ~w(start center)

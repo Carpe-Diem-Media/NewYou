@@ -121,3 +121,5 @@ Phase 5 implementation: [contextual spacing, scoped prose, divider arithmetic an
 Phase 5 proof continuation: [Chrome/Firefox compatibility, exact text enlargement and Hallmark diagnosis](phase5-compatibility.md). This adds bounded evidence and preserves the unresolved delivery gates.
 
 Next-run sequencing: [design-system next-pass roadmap](next-passes.md). Start with endpoint-first modular typography using the existing native `progress()` engine and fallbacks, then finish content/component contracts and bounded consumer adoption. This planning note does not change the earlier phase numbering or promote candidate visual values.
+
+Next pass 1: [candidate modular typography](pass1-typography.md) documents the new guide scale, independent mobile/desktop endpoints, scope and step overrides, semantic comparisons, validation and proof limits. Production type roles remain unchanged pending review and bounded adoption.

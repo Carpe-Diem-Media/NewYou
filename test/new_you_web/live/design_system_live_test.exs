@@ -129,6 +129,41 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     refute has_element?(preview, "#content")
   end
 
+  test "modular typography candidates expose scale math and semantic comparisons without adoption",
+       %{conn: conn} do
+    {:ok, view, _} = live(conn, "/dev/design-system")
+    assert has_element?(view, "nav a[href='#type-scale']", "Type scaling")
+    assert has_element?(view, "section#type-scale[data-status=candidate]")
+
+    for family <- ~w(body heading), step <- ~w(xs s m l xl xxl) do
+      for edge <- ~w(min current max) do
+        id = "scale-#{family}-#{step}-#{edge}"
+        assert has_element?(view, "##{id}.ds-scale-probe[aria-hidden=true]")
+
+        assert has_element?(
+                 view,
+                 "output[data-measure-target='#{id}'][data-measure-property=font-size]"
+               )
+      end
+    end
+
+    for role <-
+          ~w(display-xl display-lg display-md display-sm heading-md heading-sm body-lg body-md body-sm body-xs button-md caption) do
+      assert has_element?(view, "#type-scale [data-role='#{role}'] .ds-scale-current")
+      assert has_element?(view, "#type-scale [data-role='#{role}'] .ds-scale-candidate")
+    end
+
+    for locale <- ~w(en af) do
+      assert has_element?(view, "article#type-reading-#{locale}.ds-prose[lang=#{locale}]")
+      assert has_element?(view, "#type-reading-#{locale} ul li ul li")
+    end
+
+    assert has_element?(view, "#type-scale-local.ds-type-scope")
+    refute has_element?(view, "#type-scale form, #type-scale input")
+    {:ok, preview, _} = live(conn, "/dev/design-system/preview")
+    refute has_element?(preview, "#type-scale")
+  end
+
   test "grid choices are bounded and survive reload through query parameters", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/dev/design-system")
 

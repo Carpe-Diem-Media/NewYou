@@ -162,6 +162,16 @@
   --design-noise-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 128 128'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='17' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cpath d='M0 0h128v128H0z' filter='url(%23grain)'/%3E%3C/svg%3E");
   --design-treatment-height: 10rem;
 
+  /* Guide-only modular comparison inputs; production typography above is unchanged. */
+  --type-body-base-min: 1rem;
+  --type-body-base-max: 1.125rem;
+  --type-body-ratio-min: 1.2;
+  --type-body-ratio-max: 1.333;
+  --type-heading-base-min: 1.5rem;
+  --type-heading-base-max: 1.6875rem;
+  --type-heading-ratio-min: 1.2;
+  --type-heading-ratio-max: 1.333;
+
   /* Reference candidates. Fixed application typography and spacing remain unchanged. */
   --fluid-vmin: 30rem;
   --fluid-vmax: 75rem;
@@ -180,6 +190,64 @@
   --fluid-space: calc(var(--fluid-space-min) + var(--fluid) * (var(--fluid-space-max) - var(--fluid-space-min)));
   --fluid-gutter: calc(var(--fluid-gutter-min) + var(--fluid) * (var(--fluid-gutter-max) - var(--fluid-gutter-min)));
 
+}
+
+/* Rebind derived candidates only at explicit typography scope boundaries. */
+:root,
+:where(.ds-type-scope) {
+  --type-body-xs-min: var(--design-type-body-xs-min, calc(var(--type-body-base-min) / var(--type-body-ratio-min) / var(--type-body-ratio-min)));
+  --type-body-xs-max: var(--design-type-body-xs-max, calc(var(--type-body-base-max) / var(--type-body-ratio-max) / var(--type-body-ratio-max)));
+  --type-body-xs: calc(var(--type-body-xs-min) + var(--fluid) * (var(--type-body-xs-max) - var(--type-body-xs-min)));
+  --type-body-s-min: var(--design-type-body-s-min, calc(var(--type-body-base-min) / var(--type-body-ratio-min)));
+  --type-body-s-max: var(--design-type-body-s-max, calc(var(--type-body-base-max) / var(--type-body-ratio-max)));
+  --type-body-s: calc(var(--type-body-s-min) + var(--fluid) * (var(--type-body-s-max) - var(--type-body-s-min)));
+  --type-body-m-min: var(--design-type-body-m-min, var(--type-body-base-min));
+  --type-body-m-max: var(--design-type-body-m-max, var(--type-body-base-max));
+  --type-body-m: calc(var(--type-body-m-min) + var(--fluid) * (var(--type-body-m-max) - var(--type-body-m-min)));
+  --type-body-l-min: var(--design-type-body-l-min, calc(var(--type-body-base-min) * var(--type-body-ratio-min)));
+  --type-body-l-max: var(--design-type-body-l-max, calc(var(--type-body-base-max) * var(--type-body-ratio-max)));
+  --type-body-l: calc(var(--type-body-l-min) + var(--fluid) * (var(--type-body-l-max) - var(--type-body-l-min)));
+  --type-body-xl-min: var(--design-type-body-xl-min, calc(var(--type-body-base-min) * var(--type-body-ratio-min) * var(--type-body-ratio-min)));
+  --type-body-xl-max: var(--design-type-body-xl-max, calc(var(--type-body-base-max) * var(--type-body-ratio-max) * var(--type-body-ratio-max)));
+  --type-body-xl: calc(var(--type-body-xl-min) + var(--fluid) * (var(--type-body-xl-max) - var(--type-body-xl-min)));
+  --type-body-xxl-min: var(--design-type-body-xxl-min, calc(var(--type-body-base-min) * var(--type-body-ratio-min) * var(--type-body-ratio-min) * var(--type-body-ratio-min)));
+  --type-body-xxl-max: var(--design-type-body-xxl-max, calc(var(--type-body-base-max) * var(--type-body-ratio-max) * var(--type-body-ratio-max) * var(--type-body-ratio-max)));
+  --type-body-xxl: calc(var(--type-body-xxl-min) + var(--fluid) * (var(--type-body-xxl-max) - var(--type-body-xxl-min)));
+  --type-heading-xs-min: var(--design-type-heading-xs-min, calc(var(--type-heading-base-min) / var(--type-heading-ratio-min) / var(--type-heading-ratio-min)));
+  --type-heading-xs-max: var(--design-type-heading-xs-max, calc(var(--type-heading-base-max) / var(--type-heading-ratio-max) / var(--type-heading-ratio-max)));
+  --type-heading-xs: calc(var(--type-heading-xs-min) + var(--fluid) * (var(--type-heading-xs-max) - var(--type-heading-xs-min)));
+  --type-heading-s-min: var(--design-type-heading-s-min, calc(var(--type-heading-base-min) / var(--type-heading-ratio-min)));
+  --type-heading-s-max: var(--design-type-heading-s-max, calc(var(--type-heading-base-max) / var(--type-heading-ratio-max)));
+  --type-heading-s: calc(var(--type-heading-s-min) + var(--fluid) * (var(--type-heading-s-max) - var(--type-heading-s-min)));
+  --type-heading-m-min: var(--design-type-heading-m-min, var(--type-heading-base-min));
+  --type-heading-m-max: var(--design-type-heading-m-max, var(--type-heading-base-max));
+  --type-heading-m: calc(var(--type-heading-m-min) + var(--fluid) * (var(--type-heading-m-max) - var(--type-heading-m-min)));
+  --type-heading-l-min: var(--design-type-heading-l-min, calc(var(--type-heading-base-min) * var(--type-heading-ratio-min)));
+  --type-heading-l-max: var(--design-type-heading-l-max, calc(var(--type-heading-base-max) * var(--type-heading-ratio-max)));
+  --type-heading-l: calc(var(--type-heading-l-min) + var(--fluid) * (var(--type-heading-l-max) - var(--type-heading-l-min)));
+  --type-heading-xl-min: var(--design-type-heading-xl-min, calc(var(--type-heading-base-min) * var(--type-heading-ratio-min) * var(--type-heading-ratio-min)));
+  --type-heading-xl-max: var(--design-type-heading-xl-max, calc(var(--type-heading-base-max) * var(--type-heading-ratio-max) * var(--type-heading-ratio-max)));
+  --type-heading-xl: calc(var(--type-heading-xl-min) + var(--fluid) * (var(--type-heading-xl-max) - var(--type-heading-xl-min)));
+  --type-heading-xxl-min: var(--design-type-heading-xxl-min, calc(var(--type-heading-base-min) * var(--type-heading-ratio-min) * var(--type-heading-ratio-min) * var(--type-heading-ratio-min)));
+  --type-heading-xxl-max: var(--design-type-heading-xxl-max, calc(var(--type-heading-base-max) * var(--type-heading-ratio-max) * var(--type-heading-ratio-max) * var(--type-heading-ratio-max)));
+  --type-heading-xxl: calc(var(--type-heading-xxl-min) + var(--fluid) * (var(--type-heading-xxl-max) - var(--type-heading-xxl-min)));
+  --type-candidate-display-xl: var(--type-heading-xxl);
+  --type-candidate-display-lg: var(--type-heading-xl);
+  --type-candidate-display-md: var(--type-heading-l);
+  --type-candidate-display-sm: var(--type-heading-m);
+  --type-candidate-heading-md: var(--type-heading-m);
+  --type-candidate-heading-sm: var(--type-heading-s);
+  --type-candidate-body-lg: max(var(--text-body-xs), var(--type-body-l));
+  --type-candidate-body-md: max(var(--text-body-xs), var(--type-body-m));
+  --type-candidate-body-sm: max(var(--text-body-xs), var(--type-body-m));
+  --type-candidate-body-xs: max(var(--text-body-xs), var(--type-body-m));
+  --type-candidate-button-md: var(--text-button-md);
+  --type-candidate-caption: var(--text-caption);
+}
+
+/* This isolated specimen demonstrates an endpoint override, not an adopted value. */
+.ds-type-scope[data-type-example="local"] {
+  --design-type-heading-xxl-max: var(--text-display-md);
 }
 
 /* Shared lighting relationships resolve against each root or component's inputs. */
@@ -333,6 +401,18 @@
 }
 
 @theme static inline {
+  --text-design-candidate-display-xl: var(--type-candidate-display-xl);
+  --text-design-candidate-display-lg: var(--type-candidate-display-lg);
+  --text-design-candidate-display-md: var(--type-candidate-display-md);
+  --text-design-candidate-display-sm: var(--type-candidate-display-sm);
+  --text-design-candidate-heading-md: var(--type-candidate-heading-md);
+  --text-design-candidate-heading-sm: var(--type-candidate-heading-sm);
+  --text-design-candidate-body-lg: var(--type-candidate-body-lg);
+  --text-design-candidate-body-md: var(--type-candidate-body-md);
+  --text-design-candidate-body-sm: var(--type-candidate-body-sm);
+  --text-design-candidate-body-xs: var(--type-candidate-body-xs);
+  --text-design-candidate-button-md: var(--type-candidate-button-md);
+  --text-design-candidate-caption: var(--type-candidate-caption);
   --spacing-design-icon-glyph: var(--design-icon-glyph-size);
   --background-image-design-wash: var(--design-gradient-soft);
   --color-design-primary: var(--primary);

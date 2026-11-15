@@ -17,6 +17,8 @@ The inspected source is `53cc276e86ba1ebf64e0f05ce55d4851c411573d` on draft [PR 
 
 Goal: make scale relationships inspectable and adjustable in one CSS source, then review their visual results before production adoption.
 
+Implementation continuation: [candidate typography notes](pass1-typography.md) record the guide mechanisms and observed proof. The checklist below remains the pass contract; current execution/verification state belongs in Plane. Candidate values have not been promoted into production.
+
 ### Mathematics and token ownership
 
 Use the endpoint-first model documented in [the typography research](../automatic-css-4.0.3-math.md#3-modular-typography-choose-the-interpolation-model-explicitly):
