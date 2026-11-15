@@ -590,10 +590,7 @@
         "privacy_event_migration",
         "event_completeness_test",
         "grant_race_test",
-        "initial_state_test",
-        "email_scenarios",
-        "reconciliation_scenarios",
-        "integration"
+        "initial_state_test"
       ]
     },
     {
@@ -614,9 +611,7 @@
         "restart_test",
         "identity_mutation",
         "privacy_domain",
-        "email_scenarios",
-        "reconciliation_scenarios",
-        "integration"
+        "email_scenarios"
       ]
     },
     {
@@ -654,10 +649,7 @@
         "proof_catalog",
         "p805_fixture",
         "migration_identity_test",
-        "analytics_revision_guard_migration",
-        "email_scenarios",
-        "reconciliation_scenarios",
-        "integration"
+        "analytics_revision_guard_migration"
       ]
     },
     {
@@ -671,10 +663,7 @@
       "limits": "Deterministic failure hooks exercise TEST-only cleanup; tests are serialized because the fixture restores application environment.",
       "source_ids": [
         "p805_fixture",
-        "fixture_recovery_test",
-        "email_scenarios",
-        "reconciliation_scenarios",
-        "integration"
+        "fixture_recovery_test"
       ]
     },
     {
@@ -686,10 +675,7 @@
       "limits": "Uses the actual migration runner in an isolated TEST schema; it does not roll back shared databases.",
       "source_ids": [
         "analytics_fixture_scope_migration",
-        "analytics_rollback_test",
-        "email_scenarios",
-        "reconciliation_scenarios",
-        "integration"
+        "analytics_rollback_test"
       ]
     }
   ],
@@ -1046,18 +1032,6 @@
       "path": "test/support/proof/email_change_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
       "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
-    },
-    {
-      "id": "reconciliation_scenarios",
-      "path": "test/support/proof/reconciliation_scenarios.ex",
-      "symbol": "defmodule NewYou.Proof.ReconciliationScenarios",
-      "sha256": "4868cc6e35f16ac9f6d40fbc47f20541db1727e965eddb57b5f03c88a0b6a7b5"
-    },
-    {
-      "id": "integration",
-      "path": "test/support/proof/p8_19_catalog.ex",
-      "symbol": "defmodule NewYou.Proof.P819Catalog",
-      "sha256": "01cc91912cded67b96dc30d648f51c1b0e3939afaba4f9c535e4cb92b848653d"
     }
   ]
 }

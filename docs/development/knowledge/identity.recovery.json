@@ -880,9 +880,7 @@
       "limits": "Synthetic fixtures; no released participant service.",
       "source_ids": [
         "lifecycle_test",
-        "recovery_scenarios",
-        "email_scenarios",
-        "web_scenarios"
+        "recovery_scenarios"
       ]
     },
     {
@@ -893,10 +891,7 @@
       "proves": "Proof-backed higher-assurance positive and unsupported-factor negative paths.",
       "limits": "Does not implement future lost-all-factor verification.",
       "source_ids": [
-        "manual_test",
-        "recovery_scenarios",
-        "email_scenarios",
-        "web_scenarios"
+        "manual_test"
       ]
     },
     {
@@ -907,10 +902,7 @@
       "proves": "Owner-side serialization and restart from durable truth.",
       "limits": "This recovery-specific legacy test still uses a fixture email competitor; the real owner-interface integration is covered by the WELL-17 test below.",
       "source_ids": [
-        "concurrency_test",
-        "recovery_scenarios",
-        "email_scenarios",
-        "web_scenarios"
+        "concurrency_test"
       ]
     },
     {
@@ -924,9 +916,7 @@
         "primary_email_change_test",
         "identity",
         "recovery",
-        "recovery_scenarios",
-        "email_scenarios",
-        "web_scenarios"
+        "email_scenarios"
       ]
     },
     {
@@ -938,10 +928,7 @@
       "proves": "Actual Communications executor, DeliveryAttempt fencing and deterministic P8-04 provider non-authority.",
       "limits": "No external email, mailbox reachability, production or provider permission.",
       "source_ids": [
-        "delivery_test",
-        "recovery_scenarios",
-        "email_scenarios",
-        "web_scenarios"
+        "delivery_test"
       ]
     },
     {
@@ -952,10 +939,7 @@
       "proves": "Immutable notice source survives later mutable credential authority.",
       "limits": "A source guard alone cannot admit a provider.",
       "source_ids": [
-        "source_test",
-        "recovery_scenarios",
-        "email_scenarios",
-        "web_scenarios"
+        "source_test"
       ]
     },
     {
@@ -966,10 +950,7 @@
       "proves": "Must-not-lose source handoff and conflicting retry denial.",
       "limits": "No delivery with unavailable content.",
       "source_ids": [
-        "held_test",
-        "recovery_scenarios",
-        "email_scenarios",
-        "web_scenarios"
+        "held_test"
       ]
     },
     {
@@ -980,10 +961,7 @@
       "proves": "Current pinned approval and immutable bytes fail closed.",
       "limits": "Owner provenance comes from WELL-110; this reader grants no sender authority.",
       "source_ids": [
-        "content_test",
-        "recovery_scenarios",
-        "email_scenarios",
-        "web_scenarios"
+        "content_test"
       ]
     },
     {
@@ -996,8 +974,6 @@
       "limits": "Development switch only; no production exposure or claimant factor invented.",
       "source_ids": [
         "browser_test",
-        "recovery_scenarios",
-        "email_scenarios",
         "web_scenarios"
       ]
     },
@@ -1009,10 +985,7 @@
       "proves": "Audit evidence does not execute or authorize Identity recovery.",
       "limits": "Central evidence is derived from owner source outcomes.",
       "source_ids": [
-        "audit_test",
-        "recovery_scenarios",
-        "email_scenarios",
-        "web_scenarios"
+        "audit_test"
       ]
     }
   ],

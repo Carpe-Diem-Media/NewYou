@@ -1248,8 +1248,7 @@
       "proves": "Existing Communications disposition boundary keeps email-change messages held and prevents provider delivery.",
       "limits": "Provider delivery remains disabled and no production participant is contacted.",
       "source_ids": [
-        "disposition_test",
-        "email_scenarios"
+        "disposition_test"
       ]
     },
     {
@@ -1260,8 +1259,7 @@
       "proves": "Existing web security boundary allows the new confirmation route without exposing private Account actions.",
       "limits": "Route coverage does not enable production or live participant delivery.",
       "source_ids": [
-        "reachability_test",
-        "email_scenarios"
+        "reachability_test"
       ]
     },
     {
