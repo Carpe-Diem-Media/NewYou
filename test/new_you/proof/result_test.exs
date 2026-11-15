@@ -28,44 +28,18 @@ defmodule NewYou.Proof.ResultTest do
   end
 
   test "semantic validation independently rejects omitted cases from a complete family" do
-    manifest = Catalog.required().business_manifests["browser_spine"]
-
-    entry = %{
-      "coverage_id" => "browser_spine",
-      "manifest_sha256" => manifest.digest,
-      "required_case_ids" => Enum.map(manifest.cases, & &1.case_id),
-      "status" => "completed",
-      "verdict" => "PASS",
-      "reason_codes" => [],
-      "cases" =>
-        Enum.map(manifest.cases, fn case_data ->
-          case_data
-          |> Map.drop([:coverage_id, :digest])
-          |> Map.merge(%{
-            status: "completed",
-            verdict: "PASS",
-            observations: [],
-            assertions_executed: length(case_data.assertion_ids),
-            duration_ms: 0,
-            timeout_override_reason: Map.get(case_data, :timeout_override_reason),
-            reason_codes: []
-          })
-          |> Jason.encode!()
-          |> Jason.decode!()
-        end)
-    }
-
-    result = unavailable_full_result()
+    result = complete_full_result()
+    assert :ok = Result.validate(result, mode: :tb001)
 
     results =
       Enum.map(result["results"], fn current ->
         if current["coverage_id"] == "browser_spine",
-          do: Map.update!(entry, "cases", &tl/1),
+          do: Map.update!(current, "cases", &tl/1),
           else: current
       end)
 
     assert {:error, errors} = Result.validate(Map.put(result, "results", results), mode: :tb001)
-    assert :incomplete_business_cases in errors
+    assert errors == [:incomplete_business_cases]
   end
 
   test "expect records the actual assertion and returns the observation" do
@@ -561,6 +535,43 @@ defmodule NewYou.Proof.ResultTest do
              Keyword.put(test_config, :url, "redacted"),
              test_server
            )
+  end
+
+  defp complete_full_result do
+    results =
+      Enum.map(Catalog.coverage_inventory(), fn family ->
+        manifest = Catalog.required().business_manifests[family]
+
+        cases =
+          Enum.map(manifest.cases, fn entry ->
+            entry
+            |> Map.take(
+              ~w(case_id invariant_id boundary cut_point race_id expected assertion_ids timeout_ms timeout_override_reason)a
+            )
+            |> Map.merge(%{
+              status: "completed",
+              verdict: "PASS",
+              observations: [],
+              assertions_executed: length(entry.assertion_ids),
+              duration_ms: 0,
+              reason_codes: []
+            })
+            |> Jason.encode!()
+            |> Jason.decode!()
+          end)
+
+        %{
+          "coverage_id" => family,
+          "manifest_sha256" => manifest.digest,
+          "required_case_ids" => Enum.map(manifest.cases, & &1.case_id),
+          "status" => "completed",
+          "verdict" => "PASS",
+          "reason_codes" => [],
+          "cases" => cases
+        }
+      end)
+
+    Map.put(unavailable_full_result(), "results", results)
   end
 
   defp unavailable_full_result do

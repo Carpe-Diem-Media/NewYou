@@ -10,6 +10,11 @@ defmodule NewYou.Proof.P819Catalog do
   """
   alias NewYou.Proof.SelfTest
 
+  # This inventory is reviewed separately from the executable @obligations.
+  # Never derive or regenerate it when changing a callback declaration.
+  @external_resource Path.expand("../../proof/tb001_required_cases.json", __DIR__)
+  @required_inventory @external_resource |> File.read!() |> Jason.decode!()
+
   @upstream_cases %{
     "audit_e1" =>
       ~w(p813.admission_cut p813.capture_failure p813.source_failure p813.same_attempt_race p813.distinct_attempt_race p813.restart p813.crash_after_admission p813.crash_after_source),
@@ -302,17 +307,21 @@ defmodule NewYou.Proof.P819Catalog do
     Map.new(NewYou.Proof.Catalog.coverage_inventory(), fn family ->
       prior = get_in(upstream, [family, :cases]) || []
       expected_prior = Map.get(@upstream_cases, family, [])
+      all_cases = prior ++ Map.get(additions, family, [])
+      identities = Enum.map(all_cases, &[&1.case_id, &1.invariant_id])
+      required = @required_inventory["families"][family]["cases"]
 
       scope =
-        if Enum.sort(Enum.map(prior, & &1.case_id)) == Enum.sort(expected_prior),
-          do: :complete,
-          else: :partial
+        if Enum.sort(Enum.map(prior, & &1.case_id)) == Enum.sort(expected_prior) and
+             Enum.sort(identities) == Enum.sort(required),
+           do: :complete,
+           else: :partial
 
       manifest = %{
         coverage_id: family,
-        version: "tb001.p8-19.1",
+        version: "tb001.p8-19.2",
         scope: scope,
-        cases: prior ++ Map.get(additions, family, [])
+        cases: all_cases
       }
 
       digest =

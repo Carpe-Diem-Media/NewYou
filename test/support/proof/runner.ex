@@ -234,7 +234,10 @@ defmodule NewYou.Proof.Runner do
   defp run_full_catalog do
     manifests = Catalog.required().business_manifests
     registrations = Catalog.compiled_business_registrations()
-    execute_full_catalog(manifests, registrations)
+
+    if Enum.all?(manifests, fn {_, manifest} -> manifest.scope == :complete end),
+      do: execute_full_catalog(manifests, registrations),
+      else: invalid_registration_catalog(manifests)
   end
 
   defp evaluate_full_family(coverage_id, manifest, observations) do

@@ -3,6 +3,83 @@ defmodule NewYou.Proof.TB001IntegrationTest do
 
   alias NewYou.Proof.Catalog
 
+  @tag timeout: 120_000
+  test "standalone canonical acceptance rejects removed and substituted obligations" do
+    for mutation <- ["drop", "substitute"] do
+      output = Path.join(System.tmp_dir!(), "tb001-inventory-#{Ecto.UUID.generate()}.json")
+      on_exit(fn -> File.rm(output) end)
+
+      {stdout, status} =
+        System.cmd(
+          System.find_executable("mix"),
+          ["run", "test/proof/tb001_inventory_broken.exs", mutation, output],
+          env: [{"MIX_ENV", "test"}, {"ERL_FLAGS", "+S 2:2"}],
+          stderr_to_stdout: true
+        )
+
+      assert status in [1, 2], stdout
+      artifact = output |> File.read!() |> Jason.decode!()
+      assert artifact["mode"] == "tb001"
+      assert artifact["overall_verdict"] == "FAIL"
+
+      family =
+        Enum.find(artifact["results"], &(&1["coverage_id"] == "registration_pmr_reconciliation"))
+
+      assert family["verdict"] == "FAIL"
+      assert "manifest.partial" in family["reason_codes"]
+      assert "registration.invalid" in family["reason_codes"]
+      assert Enum.all?(family["cases"], &(&1["assertions_executed"] == 0))
+      # A fresh unmodified validator also rejects the mutated declaration's
+      # digest and required IDs, independently of its nonzero command outcome.
+      assert {:error, errors} = NewYou.Proof.Result.validate(artifact, mode: :tb001)
+      assert :invalid_business_required_cases in errors
+      assert :invalid_business_manifest_digest in errors
+    end
+  end
+
+  @tag :inventory_identity
+  test "deleting or substituting a declared P8-19 obligation leaves its family partial" do
+    source = File.read!("test/support/proof/p8_19_catalog.ex")
+    previous = Code.compiler_options(ignore_module_conflict: true)
+
+    try do
+      for mutation <- [:drop, :substitute] do
+        ast = Code.string_to_quoted!(source)
+
+        damaged =
+          Macro.prewalk(ast, fn
+            {:@, meta, [{:obligations, attribute_meta, [[first | rest]]}]} ->
+              obligations =
+                case mutation do
+                  :drop ->
+                    rest
+
+                  :substitute ->
+                    [
+                      Macro.prewalk(first, fn
+                        "p819.reconciliation_apply" -> "p819.unreviewed_substitution"
+                        value -> value
+                      end)
+                      | rest
+                    ]
+                end
+
+              {:@, meta, [{:obligations, attribute_meta, [obligations]}]}
+
+            node ->
+              node
+          end)
+
+        Code.compile_quoted(damaged, Path.expand("test/support/proof/p8_19_catalog.ex"))
+        manifest = Catalog.required().business_manifests["registration_pmr_reconciliation"]
+        assert manifest.scope == :partial, "#{mutation} must fail independent inventory"
+      end
+    after
+      Code.compile_string(source, Path.expand("test/support/proof/p8_19_catalog.ex"))
+      Code.compiler_options(previous)
+    end
+  end
+
   test "loss of reviewed upstream coverage leaves the affected family partial" do
     upstream =
       NewYou.Proof.P805Catalog.manifests()
@@ -57,6 +134,19 @@ defmodule NewYou.Proof.TB001IntegrationTest do
   test "the reviewed TB-001 catalog compiles every required family and callback" do
     manifests = Catalog.required().business_manifests
     registrations = Catalog.compiled_business_registrations()
+    inventory = File.read!("test/proof/tb001_required_cases.json") |> Jason.decode!()
+
+    assert inventory["contract"] == "TB-001/v0.1.3"
+
+    assert inventory["source_sha256"] ==
+             Base.encode16(:crypto.hash(:sha256, File.read!(inventory["source"])), case: :lower)
+
+    assert Enum.sort(Map.keys(inventory["families"])) == Enum.sort(Catalog.coverage_inventory())
+
+    for {family, manifest} <- manifests do
+      assert Enum.sort(Enum.map(manifest.cases, &[&1.case_id, &1.invariant_id])) ==
+               Enum.sort(inventory["families"][family]["cases"])
+    end
 
     assert Enum.sort(Map.keys(manifests)) == Enum.sort(Catalog.coverage_inventory())
     assert Enum.all?(manifests, fn {_, manifest} -> manifest.scope == :complete end)

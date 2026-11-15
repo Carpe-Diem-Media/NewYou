@@ -192,13 +192,13 @@ try {
     checks['spine.verification_form'] = true;
     checks.explicit_verification = await evaluate(`!!document.querySelector('form[action="/verification/confirm"] [name="_csrf_token"]')`);
     await navigation(() => evaluate(`document.querySelector('form[action="/verification/confirm"]').requestSubmit()`));
-    checks['spine.verified'] = true;
+    checks['spine.verification_submitted'] = true;
     await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
     checks.login_form = await evaluate(`!!document.querySelector('form[action="/login"] [name="_csrf_token"]')`);
     await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.input.email)}; document.querySelector('[name="password"]').value=${JSON.stringify(input.input.password)};`);
     await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
     checks.protected_access = await evaluate(`location.pathname === '/session/protected'`);
-    checks['spine.login'] = true;
+    checks['spine.login_submitted'] = true;
     await navigation(() => cdp('Page.reload'));
     checks.reloaded_access = await evaluate(`location.pathname === '/session/protected' && fetch('/session/protected').then(r => r.status === 200)`);
   }

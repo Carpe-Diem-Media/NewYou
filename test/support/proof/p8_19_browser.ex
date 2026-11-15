@@ -60,10 +60,9 @@ defmodule NewYou.Proof.P819Browser do
         assert P805.scalar("SELECT count(*) FROM sessions WHERE account_id = $1", [
                  Ecto.UUID.dump!(account.id)
                ]) == 1
-
-        SelfTest.cleanup_manifest!(workers_stopped: true)
       after
         Supervisor.stop(server)
+        SelfTest.cleanup_manifest!(workers_stopped: not Process.alive?(server))
       end
     end)
   end

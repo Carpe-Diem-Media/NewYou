@@ -865,7 +865,7 @@ defmodule NewYou.Proof.Result do
       :missing_case_failure_reason
     )
     |> maybe_error(
-      (manifest && verdict == "FAIL") and
+      not is_nil(manifest) and verdict == "FAIL" and
         (not is_list(assertion_ids) or not Enum.all?(assertion_ids, &(&1 in assertion_manifest))),
       :unapproved_assertions
     )

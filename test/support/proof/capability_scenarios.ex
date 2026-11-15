@@ -394,7 +394,7 @@ defmodule NewYou.Proof.VerificationScannerCases do
   import Phoenix.ConnTest
   import Plug.Conn
   alias NewYou.Identity
-  alias NewYou.Proof.P805
+  alias NewYou.Proof.{P805, PassiveEvidence}
   @endpoint NewYouWeb.Endpoint
   def scanner() do
     for locale <- ["en", "af"] do
@@ -405,6 +405,7 @@ defmodule NewYou.Proof.VerificationScannerCases do
   defp scanner_fixture(locale) do
     {:ok, registration} = Identity.register(P805.request())
     before = P805.counts()
+    owner_before = PassiveEvidence.snapshot(registration.account_id)
 
     url =
       "/verification/confirm?" <>
@@ -423,6 +424,8 @@ defmodule NewYou.Proof.VerificationScannerCases do
       conn = dispatch(request, @endpoint, method, url)
       assert conn.status == 200
       assert before == P805.counts()
+      assert :ok = PassiveEvidence.assert_unchanged!(registration.account_id, owner_before)
+      assert :ok = PassiveEvidence.assert_response!(conn)
       refute account(registration).email_verified?
       assert :ok = no_login(conn)
       assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
@@ -430,6 +433,8 @@ defmodule NewYou.Proof.VerificationScannerCases do
     end
 
     page = get(build_conn(), url)
+    assert :ok = PassiveEvidence.assert_unchanged!(registration.account_id, owner_before)
+    assert :ok = PassiveEvidence.assert_response!(page)
     [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
 
     missing =
@@ -454,6 +459,7 @@ defmodule NewYou.Proof.VerificationScannerCases do
     assert account(registration).email_verified?
     refute confirmed.resp_body =~ registration.verification_proof
     assert :ok = no_login(confirmed)
+    assert PassiveEvidence.snapshot(registration.account_id).sessions == owner_before.sessions
     assert before == P805.counts()
   end
 
@@ -474,7 +480,7 @@ defmodule NewYou.Proof.ResetScannerCases do
   import Plug.Conn
   alias NewYou.Identity
   alias NewYou.Identity.{Account, Token}
-  alias NewYou.Proof.P805
+  alias NewYou.Proof.{P805, PassiveEvidence}
   require Ash.Query
   @endpoint NewYouWeb.Endpoint
   def scanner() do
@@ -514,9 +520,12 @@ defmodule NewYou.Proof.ResetScannerCases do
       assert get_resp_header(response, "cache-control") == ["no-store"]
       assert get_resp_header(response, "referrer-policy") == ["no-referrer"]
       assert snapshot(registration.account_id) == before
+      assert :ok = PassiveEvidence.assert_response!(response)
     end
 
     page = get(build_conn(), url)
+    assert snapshot(registration.account_id) == before
+    assert :ok = PassiveEvidence.assert_response!(page)
     csrf = field(page, "_csrf_token")
     operation = field(page, "operation_id")
     P805.track_operation(operation)
@@ -585,7 +594,7 @@ defmodule NewYou.Proof.MagicScannerCases do
   import Phoenix.ConnTest
   import Plug.Conn
   alias NewYou.Identity
-  alias NewYou.Proof.P805
+  alias NewYou.Proof.{P805, PassiveEvidence}
   alias NewYou.Identity.Token
   require Ash.Query
   @endpoint NewYouWeb.Endpoint
@@ -596,9 +605,13 @@ defmodule NewYou.Proof.MagicScannerCases do
   defp scanner_fixture() do
     proof = magic_proof("af")
     url = "/login/magic/confirm?" <> URI.encode_query(%{proof: proof, locale: "af"})
+    {:ok, claims} = Joken.peek_claims(proof)
+    account_id = Ash.get!(Token, claims["jti"], authorize?: false).account_id
+    before = PassiveEvidence.snapshot(account_id)
     page = get(build_conn(), url)
+    assert :ok = PassiveEvidence.assert_response!(page)
+    assert :ok = PassiveEvidence.assert_unchanged!(account_id, before)
     [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
-    before = P805.counts()
 
     for {method, headers} <- [
           get: [],
@@ -620,7 +633,8 @@ defmodule NewYou.Proof.MagicScannerCases do
         assert conn.resp_body =~ ~s(value="#{proof}")
       end
 
-      assert before == P805.counts()
+      assert :ok = PassiveEvidence.assert_unchanged!(account_id, before)
+      assert :ok = PassiveEvidence.assert_response!(conn)
       assert get_resp_header(conn, "cache-control") == ["no-store"]
       assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
       assert :ok = no_identity_session(conn)

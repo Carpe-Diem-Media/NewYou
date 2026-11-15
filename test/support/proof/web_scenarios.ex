@@ -6,7 +6,7 @@ defmodule NewYou.Proof.WebScenarios do
   require Ash.Query
   alias NewYou.Identity
   alias NewYou.Identity.{Account, Token}
-  alias NewYou.Proof.{P805, P813HoldFixture}
+  alias NewYou.Proof.{P805, P813HoldFixture, PassiveEvidence}
   @endpoint NewYouWeb.Endpoint
   def recovery_scanner() do
     P805.with_fixture(fn ->
@@ -29,14 +29,17 @@ defmodule NewYou.Proof.WebScenarios do
 
       url = "/recovery/confirm?locale=af&proof=" <> URI.encode_www_form(bearer)
 
+      before = PassiveEvidence.snapshot(registered.account_id)
+
       for {method, header, value} <- [
+            {:get, "user-agent", "participant"},
             {:get, "purpose", "prefetch"},
             {:head, "user-agent", "scanner"},
             {:get, "sec-purpose", "prefetch;preview"}
           ] do
         conn = build_conn() |> put_req_header(header, value) |> dispatch(method, url)
-        assert conn.status == 200
-        assert get_resp_header(conn, "cache-control") == ["no-store"]
+        assert :ok = PassiveEvidence.assert_response!(conn)
+        assert :ok = PassiveEvidence.assert_unchanged!(registered.account_id, before)
       end
 
       assert Ash.get!(Token, recovery.proof_jti, authorize?: false).purpose == "recovery"
@@ -50,6 +53,7 @@ defmodule NewYou.Proof.WebScenarios do
         |> post("/recovery/confirm", %{proof: bearer, operation_id: Ecto.UUID.generate()})
 
       assert denied.status == 403
+      assert :ok = PassiveEvidence.assert_unchanged!(registered.account_id, before)
     end)
   end
 
@@ -61,14 +65,53 @@ defmodule NewYou.Proof.WebScenarios do
       unverified = P805.request()
       {:ok, other} = Identity.register(unverified)
       before_account = Ash.get!(Account, other.account_id, authorize?: false)
+      before_sessions = PassiveEvidence.snapshot(registered.account_id).sessions
+      other_sessions = PassiveEvidence.snapshot(other.account_id).sessions
 
       responses =
-        for email <- [request.email, unverified.email, "unknown@example.test", "invalid", nil] do
+        for {kind, email} <- [
+              {:unavailable, request.email},
+              {:known, request.email},
+              {:unverified, unverified.email},
+              {:unknown, "unknown@example.test"},
+              {:invalid, "invalid"},
+              {:invalid, nil}
+            ] do
           id = Ecto.UUID.generate()
           P805.track_operation(id)
-          conn = post(build_conn(), "/recovery", %{email: email, locale: "af", operation_id: id})
+          before_owner = PassiveEvidence.snapshot(registered.account_id)
+
+          if kind == :unavailable do
+            Process.put(
+              NewYou.Proof.RegistrationSeam,
+              {:observe,
+               fn ->
+                 Process.put({__MODULE__, :unavailable_observed}, true)
+                 raise "synthetic recovery source unavailable"
+               end}
+            )
+          end
+
+          conn =
+            try do
+              post(build_conn(), "/recovery", %{email: email, locale: "af", operation_id: id})
+            after
+              Process.delete(NewYou.Proof.RegistrationSeam)
+            end
+
+          if kind == :unavailable do
+            assert Process.delete({__MODULE__, :unavailable_observed}) == true
+            assert :ok = PassiveEvidence.assert_unchanged!(registered.account_id, before_owner)
+          end
+
           assert conn.status == 200
-          conn.resp_body
+          assert get_resp_header(conn, "cache-control") == ["no-store"]
+          assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
+          refute get_session(conn, :identity_session_id)
+          refute get_session(conn, :identity_token)
+          assert PassiveEvidence.snapshot(registered.account_id).sessions == before_sessions
+          assert PassiveEvidence.snapshot(other.account_id).sessions == other_sessions
+          PassiveEvidence.public_response(conn)
         end
 
       assert length(Enum.uniq(responses)) == 1

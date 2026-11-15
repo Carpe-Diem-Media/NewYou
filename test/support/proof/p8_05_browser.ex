@@ -268,7 +268,7 @@ defmodule NewYou.Proof.P805Browser do
     result = collect(port, "")
 
     for key <-
-          ~w(spine.registration spine.delivery spine.verification_form spine.verified spine.login),
+          ~w(spine.registration spine.delivery spine.verification_form spine.verification_submitted spine.login_submitted),
         get_in(result, ["checks", key]) == true do
       SelfTest.observe_manifest!(key, true)
     end
