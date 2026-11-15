@@ -118,25 +118,91 @@
       "status": "added"
     },
     {
-      "blob": "0d48618b115a010880c1fe39e9784e9d577332e3",
+      "blob": "5db311a50f246b1a86b96d0d26003e314142b54c",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "9acad35c7a4700f1b69a9791dac7686a3e79f38c5ba4a60984111a7fa8f8b58b",
+      "sha256": "b5bfa3c75e2fc5ec5a4503f8538def5ef430c05002a73669d0d5415c4a107955",
       "status": "modified"
     },
     {
-      "blob": "608b09fc008d6d789cc9ecbf9a5247ad8567c1cb",
+      "blob": "76c46ba8b2bc1834ddde1669b38c3afc01e4076c",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/README.md",
+      "sha256": "b3d006351c3ce2e0f9b0ae0d72cc66bb5bafc53434c8e47086734d4ecb2fbf74",
+      "status": "added"
+    },
+    {
+      "blob": "f1d0d126c21aa017fe9fd68b92455511f3ae2752",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/components.md",
+      "sha256": "35c58c12b8dd5dca8e395b394ace272a6d91c104ac318b8993e7860002fa4adc",
+      "status": "added"
+    },
+    {
+      "blob": "4fec7f16e0771b2212cf4ede6f1aae0e5893c840",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/inventory.json",
+      "sha256": "5aa1d70ac4e1c81b3a6a2b591aa89c8080573cf58f280b3e6f6937cc12a29613",
+      "status": "added"
+    },
+    {
+      "blob": "f9918f1a84a3551d7b02232e4af0e43367b5316a",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/layout.md",
+      "sha256": "c4d190c920f99b97e5a97c265b752bea387940977f87bba13cda17c071e56dca",
+      "status": "added"
+    },
+    {
+      "blob": "bd5c50715342a44934277c834fc724cbcf976039",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/proof-plan.md",
+      "sha256": "bbb7a866993fa3172faadce06ce1c665e8be23ff81d7245a8149cd31a1a93b10",
+      "status": "added"
+    },
+    {
+      "blob": "c4f5f358eba98f6e680da7228f2b80cb1d9c6757",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/shape.md",
+      "sha256": "08f23f60ea73d012d2a0e83a64f4337cbd3ab07358bb586329fde86ffbcb5847",
+      "status": "added"
+    },
+    {
+      "blob": "2dc2646dc88b95aaee2db2dab82842aa78e77650",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/automatic-css-4.0.3-math.md",
-      "sha256": "e7692f567654672744dd30f268f9eb8b2f814e59d70ff5a7b25e283376dc4f66",
+      "sha256": "40db698818e9cfa63ec37d98ac28451f21b8b39bec2566364e54095f4e7d0a94",
       "status": "added"
     },
     {
@@ -564,13 +630,13 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.",
+    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.\n\nPhase 1 ACSS research now inventories all ten requested systems: grid, auto-grid, shadows, radius, gutter, content width, breakout, icons, cards and data attributes. Source-linked notes record inputs, formulas, gated token/selector output, dependencies, NewYou coverage, proposed decisions and 26 concrete proof items. A catalog binds 74 source files and 104 locators to the supplied archive and NewYou baseline. Eight systems are proposed adaptations, component-owned attributes are retained selectively, and breakout remains deferred without a current consumer. No runtime, token or visual change is introduced by this documentation batch.",
     "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-14T20:38:10.435287Z",
+    "checked_at": "2026-11-15T11:29:58.492Z",
     "items": [
       {
         "description_sha256": "37e40677ccfc39b60b5e720efb6483fcc3575d647c09ff296a9e8faedd4a3e32",
