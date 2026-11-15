@@ -124,6 +124,64 @@ defmodule NewYouWeb.DesignSystemLiveTest do
     refute has_element?(preview, "iframe")
   end
 
+  test "layout foundations render candidate recipes and bounded allocation controls", %{
+    conn: conn
+  } do
+    {:ok, view, _html} =
+      live(conn, "/dev/design-system?count=7&alignment=center&allocation=narrow")
+
+    assert has_element?(view, "#layout-lab[data-allocation=narrow]")
+    assert has_element?(view, "#layout-allocation option[value=narrow][selected]")
+    assert has_element?(view, "#layout-fixed[data-alignment=center] > :nth-child(7)")
+    assert has_element?(view, "#layout-auto-fit > :nth-child(7)")
+    assert has_element?(view, "#layout-auto-fill > :nth-child(7)")
+    assert has_element?(view, "#layout-container .ds-layout-nested")
+
+    for zone <- ~w(content feature feature-max full full-safe) do
+      assert has_element?(view, "#layout-breakout > [data-zone='#{zone}']")
+    end
+
+    assert has_element?(view, "#layout-lab", "Candidate")
+    assert has_element?(view, "#layout-lab [data-measure-target=layout-auto-fit]")
+
+    view
+    |> form("#layout-controls", %{
+      "layout" => %{"count" => "4", "alignment" => "start", "allocation" => "full"}
+    })
+    |> render_change()
+
+    assert_patch(view, "/dev/design-system?alignment=start&count=4&viewport=auto")
+    assert has_element?(view, "#layout-lab[data-allocation=full]")
+    refute has_element?(view, "#layout-auto-fit > :nth-child(5)")
+  end
+
+  test "allocation survives guide patches and malformed layout inputs stay bounded", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/dev/design-system?allocation=narrow")
+    render_click(view, "viewport", %{"viewport" => "phone"})
+
+    assert_patch(
+      view,
+      "/dev/design-system?alignment=start&allocation=narrow&count=5&viewport=phone"
+    )
+
+    assert has_element?(view, "#layout-lab[data-allocation=narrow]")
+
+    render_change(view, "layout", %{
+      "layout" => %{"allocation" => %{}, "count" => ["9"], "alignment" => "bad"}
+    })
+
+    assert_patch(view, "/dev/design-system?alignment=start&count=5&viewport=phone")
+    assert has_element?(view, "#layout-lab[data-allocation=full]")
+    render_change(view, "layout", %{"layout" => "bad"})
+    render_change(view, "layout", %{})
+    assert has_element?(view, "#layout-lab[data-allocation=full]")
+
+    {:ok, invalid, _html} = live(conn, "/dev/design-system?allocation=external")
+    assert has_element?(invalid, "#layout-lab[data-allocation=full]")
+    {:ok, preview, _html} = live(conn, "/dev/design-system/preview")
+    refute has_element?(preview, "#layout-lab")
+  end
+
   test "the production router excludes both guide routes" do
     source = File.read!("lib/new_you_web/router.ex")
 

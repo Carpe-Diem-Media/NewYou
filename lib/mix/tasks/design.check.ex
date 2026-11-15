@@ -160,7 +160,13 @@ defmodule Mix.Tasks.Design.Check do
       [{"--fluid-vmin", "rem", :positive}, {"--fluid-vmax", "rem", :positive}] ++
         Enum.map(@fluid_sizes, &{&1, "rem", :non_negative}) ++
         Enum.map(@mix_inputs, &{"--#{&1}", "%", {:range, 0, 100}}) ++
-        [{"--design-noise-opacity", "", {:range, 0, 1}}]
+        [
+          {"--design-noise-opacity", "", {:range, 0, 1}},
+          {"--design-layout-min", "rem", :positive},
+          {"--design-layout-narrow", "rem", :positive},
+          {"--design-layout-columns", "", {:integer_range, 1, 12}},
+          {"--design-layout-content-ratio", "", :positive_ratio}
+        ]
 
     errors = Enum.flat_map(rules, &numeric_input_errors(&1, declarations))
 
@@ -197,6 +203,11 @@ defmodule Mix.Tasks.Design.Check do
   defp numeric_input(_values, _unit), do: :error
   defp numeric_in_range?(value, :positive), do: value > 0
   defp numeric_in_range?(value, :non_negative), do: value >= 0
+  defp numeric_in_range?(value, :positive_ratio), do: value > 0 and value <= 1
+
+  defp numeric_in_range?(value, {:integer_range, lower, upper}),
+    do: value >= lower and value <= upper and trunc(value) == value
+
   defp numeric_in_range?(value, {:range, lower, upper}), do: value >= lower and value <= upper
 
   defp scan(path, source) do

@@ -12,10 +12,12 @@ defmodule NewYouWeb.DesignSystemLive do
   import NewYouWeb.Components.Design.Button, only: [primary_button: 1, secondary_button: 1]
   import NewYouWeb.Components.Design.Card
   import NewYouWeb.Components.Design.Link
+  import NewYouWeb.DesignSystemLayouts
   import NewYouWeb.DesignSystemComponents
 
   @counts ~w(1 2 3 4 5 6 7 8 9)
   @alignments ~w(start center)
+  @allocations ~w(full narrow)
   @viewports ~w(auto phone tablet desktop wide)
 
   @impl true
@@ -33,6 +35,7 @@ defmodule NewYouWeb.DesignSystemLive do
        card_count: String.to_integer(count),
        alignment: choice(params["alignment"], @alignments, "start"),
        viewport: choice(params["viewport"], @viewports, "auto"),
+       allocation: choice(params["allocation"], @allocations, "full"),
        counts: @counts,
        preview?: socket.assigns.live_action == :preview
      )}
@@ -46,18 +49,29 @@ defmodule NewYouWeb.DesignSystemLive do
     )
   end
 
+  def handle_event("layout", %{"layout" => values}, socket) when is_map(values) do
+    patch_choices(socket,
+      count: choice(values["count"], @counts, "5"),
+      alignment: choice(values["alignment"], @alignments, "start"),
+      allocation: choice(values["allocation"], @allocations, "full")
+    )
+  end
+
   def handle_event("viewport", %{"viewport" => value}, socket) do
     patch_choices(socket, viewport: choice(value, @viewports, "auto"))
   end
 
+  def handle_event("layout", _params, socket), do: {:noreply, socket}
   def handle_event("grid", _params, socket), do: {:noreply, socket}
   def handle_event("viewport", _params, socket), do: {:noreply, socket}
 
   defp patch_choices(socket, updates) do
     choices =
       socket.assigns
-      |> Map.take([:count, :alignment, :viewport])
+      |> Map.take([:count, :alignment, :viewport, :allocation])
       |> Map.merge(Map.new(updates))
+
+    choices = if choices.allocation == "full", do: Map.delete(choices, :allocation), else: choices
 
     {:noreply, push_patch(socket, to: ~p"/dev/design-system?#{choices}", replace: true)}
   end

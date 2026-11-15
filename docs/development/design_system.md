@@ -8,6 +8,8 @@ direct-source licensing limitation.
 
 The [Phase 1 ACSS module inventory](research/acss-4.0.3-inventory/README.md) records ten module traces, source hashes, proposed decisions and missing proof. It is research for bounded future native-CSS adaptations; it changes no current tokens or component contracts.
 
+The [Phase 2 layout foundations](research/acss-4.0.3-inventory/phase2-layouts.md) document the allocated-space lab, four candidate inputs, intrinsic fitting, container/gutter ownership, breakout geometry and repeatable verification.
+
 ## Authority chain
 
 DESIGN.md

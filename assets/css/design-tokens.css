@@ -118,6 +118,12 @@
   --design-preview-scale: 1;
   --design-border-width: 1px;
 
+  /* Guide-only layout candidates. Production composition keeps its current values. */
+  --design-layout-min: 12rem;
+  --design-layout-columns: 3;
+  --design-layout-narrow: 18rem;
+  --design-layout-content-ratio: 0.5;
+
   /* Overhead lighting candidates. Solid fallbacks preserve usable controls. */
   --surface-canvas-shade: 4%;
   --surface-panel-mix: 50%;

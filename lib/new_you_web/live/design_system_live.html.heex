@@ -178,6 +178,16 @@
             <h2 id="layout-title">Layout & responsiveness</h2>
             <p>Real viewports. The same stylesheet. Resize freely between the presets.</p>
           </div>
+          <.layout_foundations
+            count={@count}
+            card_count={@card_count}
+            counts={@counts}
+            alignment={@alignment}
+            allocation={@allocation}
+          />
+          <h3 class="text-design-heading-sm font-design-medium mt-design-2xl mb-design-base">
+            Viewport preview
+          </h3>
           <dl class="ds-layout-tokens">
             <div>
               <dt>Content width</dt><dd><.token_value name="--content-width" /></dd>

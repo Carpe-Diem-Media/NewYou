@@ -39,6 +39,36 @@ defmodule NewYouWeb.DesignSystemInfrastructureTest do
     end
   end
 
+  test "layout candidate inputs reject invalid dimensions, ratios and fractional column counts" do
+    css = File.read!("assets/css/design-tokens.css")
+
+    for {name, value} <- [
+          {"--design-layout-min", "0rem"},
+          {"--design-layout-narrow", "-1rem"},
+          {"--design-layout-columns", "3.5"},
+          {"--design-layout-columns", "0"},
+          {"--design-layout-columns", "13"},
+          {"--design-layout-content-ratio", "0"},
+          {"--design-layout-content-ratio", "1.1"}
+        ] do
+      invalid = Regex.replace(~r/#{Regex.escape(name)}:[^;]+;/, css, "#{name}: #{value};")
+      assert Enum.any?(Check.token_numeric_violations(invalid), &String.contains?(&1, name)), name
+    end
+  end
+
+  test "every layout candidate has exactly one literal source declaration" do
+    css = File.read!("assets/css/design-tokens.css")
+
+    for name <-
+          ~w(--design-layout-min --design-layout-narrow --design-layout-columns --design-layout-content-ratio) do
+      [declaration] = Regex.run(~r/#{Regex.escape(name)}:[^;]+;/, css)
+      missing = String.replace(css, declaration, "")
+      duplicate = css <> "\n" <> declaration
+      assert Enum.any?(Check.token_numeric_violations(missing), &String.contains?(&1, name))
+      assert Enum.any?(Check.token_numeric_violations(duplicate), &String.contains?(&1, name))
+    end
+  end
+
   test "numeric token gate rejects invalid or ambiguous editable inputs" do
     css = File.read!("assets/css/design-tokens.css")
 

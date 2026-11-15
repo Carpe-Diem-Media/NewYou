@@ -4,6 +4,8 @@ Phase 1 research, 2026-11-15. Work item WELL-112. This is the entry point for th
 
 The source baseline is NewYou `4967b498d7413b7530303a64b4027e139e0b6d46` on PR [#227](https://github.com/Carpe-Diem-Media/NewYou/pull/227). No production CSS, token values, components, fonts or dependencies change in this phase. Decisions below concern which mechanisms are worth retaining or adapting. They do not approve visual values or promote candidates into production.
 
+The later [Phase 2 layout implementation notes](phase2-layouts.md) describe guide specimens and their proof. They supplement this source inventory; the catalog below remains tied to its recorded Phase 1 baseline.
+
 ## Scope and decisions
 
 Each trace records inputs and defaults, feature gates, formulas, declared token/selector output, dependencies, current NewYou coverage, implementation seams and missing proof. `adopt` means keep an existing narrow pattern; `adapt` means use a relationship through native CSS and existing components; `defer` means the source inventory is complete but there is no current implementation need.
