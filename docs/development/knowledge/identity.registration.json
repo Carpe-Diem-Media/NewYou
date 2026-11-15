@@ -1,18 +1,19 @@
 {
   "schema_version": 1,
   "capability_id": "identity.registration",
-  "purpose": "Accept registration transactionally and return a neutral verification-pending result without authenticating a browser session.",
+  "purpose": "Bounded development public EN/AF entry, atomic individual Account registration and explicit protected email verification without creating a Session.",
   "implementing_tickets": [
     "WELL-6",
     "WELL-18",
     "WELL-48",
     "WELL-49",
     "WELL-50",
-    "WELL-96"
+    "WELL-96",
+    "WELL-131"
   ],
   "implementation_revision": {
-    "git_sha": "f151b2916bddc0a080f0b1d911dac64a88e664af",
-    "semantics": "Registration behavior remains unchanged. WELL-18 strengthens real HTTP evidence that a new Account and canonical duplicate render the same neutral public result class; no Account-existence result is added."
+    "git_sha": "7d3ce6c146d9608984da0dd1abcae979098b76cd",
+    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -32,6 +33,15 @@
       "source_ids": [
         "audit",
         "accept"
+      ]
+    },
+    {
+      "domain": "NewYou.Content",
+      "interface": "Registration.legal_versions/0, legal_document/1 and EntryCopy.text!/3",
+      "ownership": "Exact development legal identifiers, immutable artifacts and owner-approved bilingual subset. Readers grant no public release approval or production eligibility.",
+      "source_ids": [
+        "legal_content",
+        "entry_copy"
       ]
     }
   ],
@@ -86,7 +96,7 @@
       "visibility": "supported",
       "arguments": [
         "Atom-keyed map: operation_id UUIDv4, first_name, surname, email, password, preferred_language (en/af atom or string), confirmed_age_18? true, terms_version_id, privacy_version_id.",
-        "Nonblank names, nonempty password, accepted canonical mailbox and exact configured development legal versions are required."
+        "Nonblank names, nonempty password, accepted canonical mailbox and exact currently eligible Content-owned development legal versions are required. Identity rechecks eligibility inside acceptance."
       ],
       "returns": [
         "{:ok, %RegistrationResult{status: :verification_pending, account_id: UUID | nil, verification_proof: token | nil}}",
@@ -106,6 +116,92 @@
         "accept",
         "operation",
         "controller"
+      ]
+    },
+    {
+      "module": "NewYou.Content.Registration",
+      "function": "legal_versions",
+      "arity": 0,
+      "visibility": "supported",
+      "returns": [
+        "{:ok, %{terms_version_id: binary, privacy_version_id: binary}} or {:error, :content_ineligible}"
+      ],
+      "side_effects": [
+        "Read only. Revalidates exact configured version pair, current manifest applicability/withdrawal/supersession/context and both pinned artifact bytes."
+      ],
+      "caller_constraints": [
+        "Development/test compilation only; production denies even with matching runtime settings. No participant-approved legal successor is supplied here."
+      ],
+      "source_ids": [
+        "legal_content"
+      ],
+      "arguments": []
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "verify_email",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Transient purpose-bound verification bearer, supplied by explicit participant POST only."
+      ],
+      "returns": [
+        "{:ok, :verified} or {:error, :verification_unavailable}"
+      ],
+      "side_effects": [
+        "Existing Identity action consumes the current proof and verifies the Account once under database locks. No Session."
+      ],
+      "caller_constraints": [
+        "GET/HEAD/prefetch never call this interface. Reuse current stored-proof, purpose, expiry, Account/security and revocation guards."
+      ],
+      "source_ids": [
+        "identity",
+        "verification_controller",
+        "verification_test"
+      ]
+    },
+    {
+      "module": "NewYou.Content.Registration",
+      "function": "legal_document",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "One of the fixed document atoms :terms or :privacy."
+      ],
+      "returns": [
+        "{:ok, exact_english_html} or {:error, :content_ineligible}"
+      ],
+      "side_effects": [
+        "Reads only fixed source artifacts and the current eligibility manifest. No publication or acceptance mutation."
+      ],
+      "caller_constraints": [
+        "Development/test compilation and the exact configured legal pair are required; callers cannot supply a path or approve release."
+      ],
+      "source_ids": [
+        "legal_content"
+      ]
+    },
+    {
+      "module": "NewYou.Content.EntryCopy",
+      "function": "text!",
+      "arity": 3,
+      "visibility": "supported",
+      "arguments": [
+        "Semantic key in the 48-key owner-approved UI subset.",
+        "Exact en/af locale as string or atom.",
+        "Map containing only configured platform_name replacement, when the key needs it."
+      ],
+      "returns": [
+        "Exact selected locale string with configured token substitution; raises on unavailable artifact, key, locale or token."
+      ],
+      "side_effects": [
+        "Reads pinned artifact bytes to recheck eligibility; no durable write or publication."
+      ],
+      "caller_constraints": [
+        "No fallback, no new governed wording, no production or real-participant eligibility. The web CopyRegistry is a thin adapter."
+      ],
+      "source_ids": [
+        "entry_copy"
       ]
     }
   ],
@@ -149,6 +245,17 @@
   ],
   "request_flow": [
     {
+      "summary": "GET / and /register share the existing registration composition. Explicit development enablement plus current exact copy/legal eligibility admit the normal journey; old proof browser flags are unnecessary. Endpoint telemetry still redacts sensitive paths.",
+      "source_ids": [
+        "router",
+        "entry_gate",
+        "entry_copy",
+        "legal_content",
+        "boundary",
+        "telemetry"
+      ]
+    },
+    {
       "summary": "RegistrationController.create/2 validates browser input, then calls Identity.register/1; response is neutral and creates no session.",
       "source_ids": [
         "controller",
@@ -175,6 +282,15 @@
       "source_ids": [
         "accept",
         "controller"
+      ]
+    },
+    {
+      "summary": "Neutral pending keeps its locale on public-entry links and explicit resend. Communications delivers the protected proof through its owner. Passive confirmation renders exact temporary EN/AF copy; explicit CSRF POST calls Identity.verify_email/1 and renders verified or common unavailable without authenticating.",
+      "source_ids": [
+        "pending",
+        "verification_controller",
+        "verification_copy",
+        "journey"
       ]
     }
   ],
@@ -259,6 +375,15 @@
         "controller",
         "identity"
       ]
+    },
+    {
+      "summary": "The reader exposes only the 48 UI keys in the two approved compositions and checks pinned registry/composition bytes on use. Legal artifacts remain DEVELOPMENT_ONLY_CURRENT, NOT_LEGALLY_APPROVED and not participant-effective. Runtime flags cannot promote a production build.",
+      "source_ids": [
+        "entry_copy",
+        "legal_content",
+        "entry_gate",
+        "verification_copy"
+      ]
     }
   ],
   "concurrency": [
@@ -314,6 +439,14 @@
         "identity",
         "operation"
       ]
+    },
+    {
+      "summary": "Missing, mismatched, withdrawn or superseded legal artifacts deny presentation and new acceptance. Existing durable retries and recovery remain owner-controlled; no new business state, migration, cache, provider or background worker is introduced.",
+      "source_ids": [
+        "legal_content",
+        "identity",
+        "entry_gate"
+      ]
     }
   ],
   "tests": [
@@ -351,6 +484,58 @@
         "public_response_test",
         "controller",
         "identity"
+      ]
+    },
+    {
+      "path": "test/new_you_web/entry_journey_test.exs",
+      "cases": [
+        "Ordinary English and Afrikaans entry with legacy browser flags disabled; actual language links, invalid registration, legal artifact bytes, neutral pending/resend, protected TEST message, explicit confirmation, safe replay, locale return, no Session and denied protected access.",
+        "Persisted versions, age, acceptance locale/time, canonical PMR, verified Account, unique mailbox and scoped Audit E2 obligation.",
+        "Loaded stylesheet, keyboard focus, labels, reduced motion and widths 320/375/768/1280/1920."
+      ],
+      "proves": "Normal product HTTP/browser integration and owning durable state, separate from the TB-001 Catalog callback.",
+      "limits": "Chromium evergreen automation and synthetic protected TEST delivery only. No live provider, public approval, all-browser certification or sign-in journey.",
+      "source_ids": [
+        "journey_test",
+        "journey"
+      ]
+    },
+    {
+      "path": "test/new_you/content/registration_test.exs",
+      "cases": [
+        "Exact development pair/documents; configuration mismatch; unknown document; withdrawn, superseded, missing supersession, wrong context, participant-effective entry and changed bytes."
+      ],
+      "proves": "Current bounded legal eligibility accepts only the pinned development evidence.",
+      "limits": "Pure negative manifest cases do not manufacture release approvals or edit canonical artifacts.",
+      "source_ids": [
+        "legal_test",
+        "legal_content"
+      ]
+    },
+    {
+      "path": "test/new_you_web/controllers/page_controller_test.exs",
+      "cases": [
+        "Root EN/AF exact visible copy, legacy flags disabled, unsupported locale/disabled gate, unapproved candidate key refusal and safe telemetry/cache/referrer headers."
+      ],
+      "proves": "Normal entry admission and approved subset boundary.",
+      "limits": "Root rendering creates no Account.",
+      "source_ids": [
+        "entry_test",
+        "entry_gate",
+        "entry_copy"
+      ]
+    },
+    {
+      "path": "test/new_you_web/controllers/email_verification_controller_test.exs",
+      "cases": [
+        "Scanner/passive GET/HEAD, real CSRF forms, proof privacy, wrong/invalid/currently denied proof and no implicit Session."
+      ],
+      "proves": "Reused explicit verification web boundary.",
+      "limits": "Existing owner races and restart coverage remain in Identity and TB-001 suites.",
+      "source_ids": [
+        "scanner_test",
+        "verification_controller",
+        "verification_test"
       ]
     }
   ],
@@ -416,15 +601,24 @@
   "proof_limitations": [
     "Descriptive source snapshot, subordinate to current governance and live Plane.",
     "Schema/path/hash checks cannot establish the semantic truth of prose or declarations. Independent Master Gate must review claims against exact source/tests.",
-    "The historical P8-05 Markdown describes an older implementation snapshot; downstream Communications execution now has its own p8-10 handoff. This record covers registration acceptance only."
+    "The historical P8-05 Markdown describes an older implementation snapshot. This record maps the bounded entry, registration and verification integration; deeper Communications execution remains in the existing P8-10 and TB-001 source-linked evidence.",
+    "WELL-131 is bounded software development. R-01 content/legal approval, R-02 OQ-035/OQ-036 delivery/abuse decisions and R-03 release/full FP-001 assessment remain open. No real-participant activation, production legal acceptance or launch email channel is delivered.",
+    "Cold start: inspect current routers and WELL-131, then router/boundary -> DevelopmentEntry -> Content readers -> RegistrationController -> Identity.register/1 -> existing acceptance transaction; follow pending -> Communications -> EmailVerificationController -> Identity.verify_email/1. Run the ordinary entry test and owner/proof regression suites.",
+    "No new durable lifecycle or schema. Existing operation bound/tombstoned states, Account verification/PMR invariants, transaction lock order and restart recovery remain as documented above and in proof.tb001.",
+    "WELL-109 locale regression uses exact rendered text rather than serialized HTML or short substring matching. New durable assertions filter fixture identifiers before Ash hydration; shared TEST risks remain tracked by WELL-114."
   ],
-  "follow_up_tickets": [],
+  "follow_up_tickets": [
+    "WELL-45",
+    "WELL-21",
+    "WELL-114",
+    "WELL-112"
+  ],
   "sources": [
     {
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def register(request)",
-      "sha256": "a2c6b0114d3e64f29a3b1d5daefba76220c162b0429c1317b66987e061dab6aa"
+      "sha256": "2ccafe5ad95aff2ef46b468e11debc580a402625daddd5b133b6684553399137"
     },
     {
       "id": "accept",
@@ -490,7 +684,7 @@
       "id": "controller",
       "path": "lib/new_you_web/controllers/registration_controller.ex",
       "symbol": "def create(",
-      "sha256": "c540f81db7a41ed299a22bb404fb6af2e37813f3813390981e517480bddb1e66"
+      "sha256": "25946f3244592d6b52f09f516f3878eaa2fd2a0f3fa8973c4fc6da90bb5de3d3"
     },
     {
       "id": "account",
@@ -508,7 +702,97 @@
       "id": "public_response_test",
       "path": "test/new_you_web/controllers/registration_controller_test.exs",
       "symbol": "duplicate canonical email receives the same neutral pending outcome",
-      "sha256": "6b760b947197d6e34b2fd88853c66a9421854b49d292884da85d08f6423a317c"
+      "sha256": "7df9f2049022cf2a7480aba757f7ea6dd6ef7d49a930980fe39c14c8c06c7fef"
+    },
+    {
+      "id": "entry_gate",
+      "path": "lib/new_you_web/development_entry.ex",
+      "symbol": "def enabled?",
+      "sha256": "fa0059446e7ceaa5623fd5b288237b0c4aefc2eb9a1a0d523f4135495c6f44a7"
+    },
+    {
+      "id": "entry_copy",
+      "path": "lib/new_you/content/entry_copy.ex",
+      "symbol": "defmodule NewYou.Content.EntryCopy",
+      "sha256": "526266f011e76d1b66f53fcf9759e8a77039ca94f2314fd4c75483c90f8a9659"
+    },
+    {
+      "id": "legal_content",
+      "path": "lib/new_you/content/registration.ex",
+      "symbol": "def legal_versions",
+      "sha256": "5003c4354cd4b49181e060ca7b83ab01ea685577f1578b117df4b1c6b235140e"
+    },
+    {
+      "id": "router",
+      "path": "lib/new_you_web/router.ex",
+      "symbol": "get \"/\", RegistrationController, :new",
+      "sha256": "61a829e8080bba8451843308b8b038e3f80755b729786551b7d6762533dc2160"
+    },
+    {
+      "id": "verification_controller",
+      "path": "lib/new_you_web/controllers/email_verification_controller.ex",
+      "symbol": "def confirm",
+      "sha256": "a33ce05d1ddb68184d29ee8085ee99a28b3c56d8fe65ad8bfc034777f1e53a43"
+    },
+    {
+      "id": "verification_copy",
+      "path": "lib/new_you_web/verification_copy.ex",
+      "symbol": "def enabled?",
+      "sha256": "7773c6cfb76be25d39c49d320a313a0834c651046edfd34cbf02758228cd6854"
+    },
+    {
+      "id": "journey_test",
+      "path": "test/new_you_web/entry_journey_test.exs",
+      "symbol": "defmodule",
+      "sha256": "0ebd4b82809bce772c964f6fe66cbf1975095117cc5cb586eafeaff5490c4b94"
+    },
+    {
+      "id": "journey",
+      "path": "test/support/entry_journey.ex",
+      "symbol": "def run(locale)",
+      "sha256": "6bde56db6d8ecf562c911b9ea3955426e93070af7c1417d083a51d0a652eaa62"
+    },
+    {
+      "id": "entry_test",
+      "path": "test/new_you_web/controllers/page_controller_test.exs",
+      "symbol": "defmodule",
+      "sha256": "41b0770ae3f5004aa4d8f12fb7a63cf82233222268cfec0395f372abfa5344a9"
+    },
+    {
+      "id": "legal_test",
+      "path": "test/new_you/content/registration_test.exs",
+      "symbol": "defmodule",
+      "sha256": "f8c938542139a0615c2bd8ba9052559401e237f79cee0882bf96e43cc274ff9b"
+    },
+    {
+      "id": "scanner_test",
+      "path": "test/new_you_web/controllers/email_verification_controller_test.exs",
+      "symbol": "defmodule",
+      "sha256": "173c51e26d4b94f7eb7b12704dbfc2940c5b8cd6960272793d99c18d939fac9e"
+    },
+    {
+      "id": "verification_test",
+      "path": "test/new_you/identity/email_verification_test.exs",
+      "symbol": "defmodule",
+      "sha256": "2b9b471f800d31d7dc807a46627bcdf7d12c90292b87472fd44e7c9154f73ccc"
+    },
+    {
+      "id": "pending",
+      "path": "lib/new_you_web/controllers/registration_html/pending.html.heex",
+      "symbol": "identity.verification.pending.home",
+      "sha256": "328c845a759aacb21e9f7d1402ba2ba9b38e8c7d542e7639fcd2fb8cd73fdbad"
+    },
+    {
+      "id": "boundary",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "symbol": "defmodule",
+      "sha256": "ff5cd556c7a495abd3e67aa80f9c6c1795e12077f066841071b5698234437c77"
+    },
+    {
+      "id": "telemetry",
+      "path": "lib/new_you_web/privacy_telemetry.ex",
+      "symbol": "defmodule",
+      "sha256": "cd83d334f5ebe206913816903ee266dc733f1e3843f97da390255613bb405dab"
     }
   ]
 }

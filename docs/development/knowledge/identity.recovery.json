@@ -6,8 +6,8 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "3c8bcaff53d9049972ac967c85b2953f625cf4cb",
-    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged."
+    "git_sha": "7d3ce6c146d9608984da0dd1abcae979098b76cd",
+    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1067,7 +1067,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def request_recovery",
-      "sha256": "a2c6b0114d3e64f29a3b1d5daefba76220c162b0429c1317b66987e061dab6aa"
+      "sha256": "2ccafe5ad95aff2ef46b468e11debc580a402625daddd5b133b6684553399137"
     },
     {
       "id": "recovery",
@@ -1175,7 +1175,7 @@
       "id": "secrecy",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "/recovery",
-      "sha256": "00be346cd8557df423856c9fbf6ec33328cc1eca8a8f76c309ff6d139d18453b"
+      "sha256": "ff5cd556c7a495abd3e67aa80f9c6c1795e12077f066841071b5698234437c77"
     },
     {
       "id": "concurrent_helper",
