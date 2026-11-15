@@ -52,14 +52,14 @@
       "status": "modified"
     },
     {
-      "blob": "aa02fe4bafb4b65535bd767fdc2faf98cf3a0e5b",
+      "blob": "e2fddf7fce9a2643d2bae79821d5ecd5e0d4f2ee",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/css/design-components.css",
-      "sha256": "a628ca4195a041ddcf74bbb495ded3f31a29b01910bffde3bf7a70d76fd81c76",
+      "sha256": "39aeb864f9449afebd5abc27751bb3f47b94faafdbd07928252f9686b56be488",
       "status": "added"
     },
     {
@@ -195,14 +195,14 @@
       "status": "added"
     },
     {
-      "blob": "530523bccbcaa8a5fc9ab91627f4318c5c31e31b",
+      "blob": "cde3fb64502cba417955898995811cea4f5fc66e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/phase3-components.md",
-      "sha256": "2ed0e150e5b210673c8b21dab4e5ac596d91d313d796e6f1a6e6583a23d061d6",
+      "sha256": "56003912ee9b290ad5b003b6e08565c4e45017ec2e863af07a68b10e8fa25689",
       "status": "added"
     },
     {
@@ -547,14 +547,14 @@
       "status": "added"
     },
     {
-      "blob": "56e54e7138f5681d94a3e0a7972ac1d3f89a3aae",
+      "blob": "55dc0fa010cb740674589e19f76460f84b66e9ea",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_component_contracts_browser.mjs",
-      "sha256": "2c7afcc31f744a78945b5396e4b7d6aaecffe56259535efce41184e53b6a751a",
+      "sha256": "b27bf6a2c3e64733de248f0bd6526dac9f9ef6309d9cdb556a5df7b81021224d",
       "status": "added"
     },
     {
@@ -751,7 +751,7 @@
       "login": "JC-Agents"
     },
     "kind": "attributed_intent",
-    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.\n\nPhase 1 ACSS research now inventories all ten requested systems: grid, auto-grid, shadows, radius, gutter, content width, breakout, icons, cards and data attributes. Source-linked notes record inputs, formulas, gated token/selector output, dependencies, NewYou coverage, proposed decisions and 26 concrete proof items. A catalog binds 74 source files and 104 locators to the supplied archive and NewYou baseline. Eight systems are proposed adaptations, component-owned attributes are retained selectively, and breakout remains deferred without a current consumer. No runtime, token or visual change is introduced by this documentation batch.\n\nPhase 2 adds a layout lab within the existing guide: fixed grids, intrinsic auto-fit/auto-fill with a live column limit, capped containers, single-owner gutters and seven-track breakout comparisons. Bounded URL-backed controls vary allocation, item count and fixed-grid remainder alignment. Four guide-only CSS inputs own the candidate dimensions; the design gate validates their units, bounds, uniqueness and integer column count. Recipes compute from local inputs, without JS sizing formulas or a production layout migration. Phase 2 notes link implementation seams, formulas, source research and remaining proof.\n\nPhase 3 completes bounded card and icon presentation contracts. Cards add explicit leading/inset/action slots and heading levels while remaining noninteractive articles. Token-sized Heroicons add decorative/named semantics and plain/boxed variants. Consumer-local formulas derive inset corner radii from outer radius, uniform border and per-axis padding. Native actions keep HTML/ARIA state ownership. The guide shows actual shared components, isolated local overrides and a pending-state comparison. Flat defaults, palette, radius tiers and the lit primary shine remain intact; no media/avatar framework, global auto-radius, inverted corners or shadow ladder is added. Detailed ownership, formulas, accessibility rules and proof limits live in the Phase 3 addendum.",
+    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system` using the same token-driven buttons, links and cards as application consumers. It covers fonts, colours, spacing, responsive grids, viewport previews, colour relationships, and candidate lighting and fluid treatments. Self-hosted Inter and central body/display font tokens support changing font selection in one CSS file.\n\nApproved production defaults remain intact. Lit CTA buttons and raised cards are explicit shared-component options. Directional borders, gradients and short downward shadows derive from canonical inputs. The Lit Primary has a static 14% upper highlight that reaches the brand colour after a token-controlled 12px band, followed by its shaded base. Keeping the bright band above the label preserves contrast for wrapped and enlarged text. The guide's main button examples and responsive preview use the lit treatment. Lighting & depth retains the labelled flat comparison. Visual Tailwind utilities read semantic inputs at the consuming element, and shared lighting recalculates locally, including solid fallbacks. Breakpoints remain compile-time settings.\n\nThe design gate validates literal fluid bounds/endpoints, mixing percentages and noise opacity. It rejects missing/duplicate inputs, invalid units, out-of-range values and overflow. Decreasing size endpoints remain valid. This is a bounded source-input check, not a general CSS parser or runtime-override validator.\n\nAutomatic.css research notes explain the source formulas and independent implementation choices. No plugin source, Sass/WordPress dependency or new infrastructure is introduced. Fluid sizing remains a candidate rather than a global typography migration.\n\nPhase 1 ACSS research now inventories all ten requested systems: grid, auto-grid, shadows, radius, gutter, content width, breakout, icons, cards and data attributes. Source-linked notes record inputs, formulas, gated token/selector output, dependencies, NewYou coverage, proposed decisions and 26 concrete proof items. A catalog binds 74 source files and 104 locators to the supplied archive and NewYou baseline. Eight systems are proposed adaptations, component-owned attributes are retained selectively, and breakout remains deferred without a current consumer. No runtime, token or visual change is introduced by this documentation batch.\n\nPhase 2 adds a layout lab within the existing guide: fixed grids, intrinsic auto-fit/auto-fill with a live column limit, capped containers, single-owner gutters and seven-track breakout comparisons. Bounded URL-backed controls vary allocation, item count and fixed-grid remainder alignment. Four guide-only CSS inputs own the candidate dimensions; the design gate validates their units, bounds, uniqueness and integer column count. Recipes compute from local inputs, without JS sizing formulas or a production layout migration. Phase 2 notes link implementation seams, formulas, source research and remaining proof.\n\nPhase 3 completes bounded card and icon presentation contracts. Cards add explicit leading/inset/action slots and heading levels while remaining noninteractive articles. Token-sized Heroicons add decorative/named semantics and plain/boxed variants. Consumer-local formulas derive inset corner radii from outer radius, uniform border and per-axis padding. Native actions keep HTML/ARIA state ownership. The guide shows actual shared components, isolated local overrides and a pending-state comparison. Flat defaults, palette, radius tiers and the lit primary shine remain intact; no media/avatar framework, global auto-radius, inverted corners or shadow ladder is added. Mask artwork follows system text ink in forced colors, with a bounded system-ink fallback. Detailed ownership, formulas, accessibility rules and proof limits live in the Phase 3 addendum.",
     "title": "WELL-112: Add live token-driven design guide and shared components",
     "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
   },
