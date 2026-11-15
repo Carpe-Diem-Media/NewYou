@@ -30,8 +30,6 @@ defmodule NewYou.Identity do
   @verifier_provider "AshAuthentication.Argon2Provider"
   @verifier_version "argon2_elixir-4.1.3"
   @verification_token_lifetime {24, :hours}
-  @development_terms_id "NEWYOU-TERMS-EN-DEV-2026-10-27-001"
-  @development_privacy_id "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
 
   resources do
     resource Account
@@ -1098,22 +1096,13 @@ defmodule NewYou.Identity do
   defp language(_), do: {:error, :invalid_registration}
 
   defp legal_versions(request) do
-    terms = Map.get(request, :terms_version_id)
-    privacy = Map.get(request, :privacy_version_id)
-
-    if allowed_development_legal_versions?() and terms == @development_terms_id and
-         privacy == @development_privacy_id do
-      {:ok, terms, privacy}
+    with {:ok, versions} <- NewYou.Content.Registration.legal_versions(),
+         true <- Map.get(request, :terms_version_id) == versions.terms_version_id,
+         true <- Map.get(request, :privacy_version_id) == versions.privacy_version_id do
+      {:ok, versions.terms_version_id, versions.privacy_version_id}
     else
-      {:error, :invalid_registration}
+      _ -> {:error, :invalid_registration}
     end
-  end
-
-  defp allowed_development_legal_versions? do
-    Application.get_env(:new_you, :identity_registration_legal_versions) == %{
-      terms_version_id: @development_terms_id,
-      privacy_version_id: @development_privacy_id
-    }
   end
 
   defp password_matches?(%RegistrationOperation{} = operation, password) do

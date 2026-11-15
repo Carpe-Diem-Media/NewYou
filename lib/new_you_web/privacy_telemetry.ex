@@ -3,6 +3,7 @@ defmodule NewYouWeb.PrivacyTelemetry do
 
   @behaviour Plug
   @sensitive_browser_paths [
+    "/",
     "/register",
     "/verification",
     "/login",

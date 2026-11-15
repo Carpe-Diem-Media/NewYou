@@ -111,7 +111,7 @@ defmodule NewYouWeb.Security.AuthenticationReachabilityTest do
 
     assert routes ==
              Enum.sort([
-               {:get, "/", NewYouWeb.PageController, :home},
+               {:get, "/", NewYouWeb.RegistrationController, :new},
                {:get, "/register", NewYouWeb.RegistrationController, :new},
                {:post, "/register", NewYouWeb.RegistrationController, :create},
                {:post, "/verification/resend", NewYouWeb.RegistrationController, :resend},

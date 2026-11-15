@@ -6,38 +6,14 @@ defmodule NewYouWeb.RegistrationController do
 
   @locales ~w(en af)
   @development_environment Mix.env() in [:dev, :test]
-  @terms_version_id "NEWYOU-TERMS-EN-DEV-2026-10-27-001"
-  @privacy_version_id "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
-  @terms_path Path.expand(
-                "../../../docs/delivery/content-evidence/content_media/legal_baselines/NEWYOU-TERMS-EN-DEV-BASELINE-2026-10-27-001.html",
-                __DIR__
-              )
-  @privacy_path Path.expand(
-                  "../../../docs/delivery/content-evidence/content_media/legal_baselines/NEWYOU-PRIVACY-EN-DEV-BASELINE-2026-10-27-001.html",
-                  __DIR__
-                )
-  @legal_manifest_path Path.expand(
-                         "../../../docs/delivery/content-evidence/content_media/LEGAL_BASELINE_CONTENT_MANIFEST_v0.1.0.json",
-                         __DIR__
-                       )
-  @legal_baseline_specs %{
-    terms: %{
-      version_id: @terms_version_id,
-      document_type: "terms",
-      artifact_path:
-        "docs/delivery/content-evidence/content_media/legal_baselines/NEWYOU-TERMS-EN-DEV-BASELINE-2026-10-27-001.html",
-      source_content_sha256: "8d54af7ac0c2a68d3d100cca987551877f4f89ca231ae95254cd1903a2eca062",
-      artifact_sha256: "6feb2d016f30e889c08995990a863429db0034af49fc6b6bd3467b90cda03937"
-    },
-    privacy: %{
-      version_id: @privacy_version_id,
-      document_type: "privacy",
-      artifact_path:
-        "docs/delivery/content-evidence/content_media/legal_baselines/NEWYOU-PRIVACY-EN-DEV-BASELINE-2026-10-27-001.html",
-      source_content_sha256: "21aecdf9fafe95f513de2ce04a266e8e7726efb406aabae0bbd4d0e19f6ba333",
-      artifact_sha256: "ac603377eaafce20bf5e425f64cfc97fbc855b20bd66deca481401f0f6efd43e"
-    }
-  }
+
+  plug :put_entry_headers
+
+  defp put_entry_headers(conn, _opts) do
+    conn
+    |> put_resp_header("cache-control", "no-store")
+    |> put_resp_header("referrer-policy", "no-referrer")
+  end
 
   def new(conn, %{"locale" => locale}) when locale in @locales do
     if development_browser_enabled?() do
@@ -89,46 +65,7 @@ defmodule NewYouWeb.RegistrationController do
   def privacy(conn, _params), do: send_legal_baseline(conn, :privacy)
 
   @doc false
-  def legal_baseline_valid?(baseline, entry, body)
-      when is_map(entry) and is_binary(body) do
-    case Map.fetch(@legal_baseline_specs, baseline) do
-      {:ok, spec} ->
-        legal_manifest_entry_valid?(entry, spec) and legal_artifact_valid?(body, spec)
-
-      :error ->
-        false
-    end
-  end
-
-  def legal_baseline_valid?(_, _, _), do: false
-
-  defp legal_manifest_entry_valid?(entry, spec) do
-    Enum.all?(
-      [
-        {"content_version_id", spec.version_id},
-        {"artifact_path", spec.artifact_path},
-        {"document_type", spec.document_type},
-        {"document_locale", "en"},
-        {"exact_content_sha256", spec.source_content_sha256},
-        {"applicability_status", "DEVELOPMENT_ONLY_CURRENT"},
-        {"effective_for_participants", false},
-        {"approval_state", "NOT_LEGALLY_APPROVED"}
-      ],
-      fn {key, value} -> entry[key] == value end
-    )
-  end
-
-  defp legal_artifact_valid?(body, spec) do
-    Enum.all?(
-      [
-        {"newyou-content-version-id", spec.version_id},
-        {"newyou-document-type", spec.document_type},
-        {"newyou-document-locale", "en"},
-        {"newyou-content-sha256", spec.source_content_sha256}
-      ],
-      fn {name, value} -> html_meta_content(body, name) == value end
-    ) and artifact_sha256(body) == spec.artifact_sha256
-  end
+  defdelegate legal_baseline_valid?(baseline, entry, body), to: NewYou.Content.Registration
 
   defp create_registration(conn, params, locale) do
     errors = registration_errors(params)
@@ -186,6 +123,8 @@ defmodule NewYouWeb.RegistrationController do
   end
 
   defp registration_request(params, locale) do
+    {:ok, legal_versions} = NewYou.Content.Registration.legal_versions()
+
     %{
       operation_id: Map.get(params, "operation_id"),
       first_name: Map.get(params, "first_name"),
@@ -194,8 +133,8 @@ defmodule NewYouWeb.RegistrationController do
       password: Map.get(params, "password"),
       preferred_language: locale,
       confirmed_age_18?: Map.get(params, "confirmed_age_18") == "true",
-      terms_version_id: @terms_version_id,
-      privacy_version_id: @privacy_version_id
+      terms_version_id: legal_versions.terms_version_id,
+      privacy_version_id: legal_versions.privacy_version_id
     }
   end
 
@@ -285,14 +224,14 @@ defmodule NewYouWeb.RegistrationController do
 
   defp send_legal_baseline(conn, baseline) do
     if development_browser_enabled?() do
-      case legal_baseline_content(baseline) do
+      case NewYou.Content.Registration.legal_document(baseline) do
         {:ok, body} ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "text/html; charset=utf-8")
           |> Plug.Conn.put_resp_header("cache-control", "no-store")
           |> Plug.Conn.resp(200, body)
 
-        :error ->
+        {:error, :content_ineligible} ->
           not_found(conn)
       end
     else
@@ -300,39 +239,12 @@ defmodule NewYouWeb.RegistrationController do
     end
   end
 
-  defp legal_baseline_content(baseline) do
-    with {:ok, spec} <- Map.fetch(@legal_baseline_specs, baseline),
-         {:ok, manifest} <- File.read(@legal_manifest_path),
-         {:ok, %{"versions" => versions}} <- Jason.decode(manifest),
-         [entry] <- Enum.filter(versions, &(&1["content_version_id"] == spec.version_id)),
-         {:ok, body} <- legal_artifact_body(baseline),
-         true <- legal_baseline_valid?(baseline, entry, body) do
-      {:ok, body}
-    else
-      _ -> :error
-    end
-  end
-
-  defp legal_artifact_body(:terms), do: File.read(@terms_path)
-  defp legal_artifact_body(:privacy), do: File.read(@privacy_path)
-
-  defp html_meta_content(body, name) do
-    pattern = ~r/<meta name="#{Regex.escape(name)}" content="([^"]+)">/
-
-    case Regex.run(pattern, body, capture: :all_but_first) do
-      [content] -> content
-      _ -> nil
-    end
-  end
-
-  defp artifact_sha256(body),
-    do: Base.encode16(:crypto.hash(:sha256, body), case: :lower)
-
   defp development_browser_enabled? do
-    :erlang.andalso(
-      @development_environment,
-      Application.get_env(:new_you, :p8_05_browser_development_fixtures, false) == true
-    )
+    @development_environment and
+      (NewYouWeb.DevelopmentEntry.enabled?() or
+         Application.get_env(:new_you, :p8_05_browser_development_fixtures, false) == true) and
+      NewYou.Content.EntryCopy.available?() and
+      match?({:ok, _}, NewYou.Content.Registration.legal_versions())
   end
 
   defp not_found(conn), do: send_resp(conn, 404, "")

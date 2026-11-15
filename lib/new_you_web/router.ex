@@ -22,7 +22,7 @@ defmodule NewYouWeb.Router do
   scope "/", NewYouWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    get "/", RegistrationController, :new, log: false
     get "/register", RegistrationController, :new
     post "/register", RegistrationController, :create, log: false
     post "/verification/resend", RegistrationController, :resend, log: false
