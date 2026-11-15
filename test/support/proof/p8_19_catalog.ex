@@ -5,6 +5,8 @@ defmodule NewYou.Proof.P819Catalog do
   The fixed mapping below closes the partial upstream manifests. Shared scenario
   callbacks retain their original assertions. Their single ledger assertion is
   recorded only after every assertion in that named scenario returns normally.
+  The independent inventory binds each added case to its owner module/function
+  and required proof claims before the runner accepts any callback for execution.
   A raised assertion, timeout or incomplete cleanup cannot record completion.
   This module owns engineering evidence only, never business or certification authority.
   """
@@ -314,6 +316,7 @@ defmodule NewYou.Proof.P819Catalog do
 
       scope =
         if authority_bound?() and
+             owner_obligations_bound?(family, Map.get(additions, family, [])) and
              Enum.sort(Enum.map(prior, & &1.case_id)) == Enum.sort(expected_prior) and
              Enum.sort(identities) == Enum.sort(required),
            do: :complete,
@@ -321,7 +324,7 @@ defmodule NewYou.Proof.P819Catalog do
 
       manifest = %{
         coverage_id: family,
-        version: "tb001.p8-19.2",
+        version: "tb001.p8-19.3",
         scope: scope,
         cases: all_cases
       }
@@ -332,6 +335,30 @@ defmodule NewYou.Proof.P819Catalog do
 
       {family, Map.put(manifest, :digest, digest)}
     end)
+  end
+
+  # This comparison is deliberately independent of the executable declaration.
+  # A stable case ID alone cannot establish that its reviewed owner probe ran.
+  defp owner_obligations_bound?(family, cases) do
+    targets =
+      for {^family, id, module, function, _, _, _} <- @obligations, into: %{} do
+        {id, %{"module" => inspect(module), "function" => Atom.to_string(function), "arity" => 0}}
+      end
+
+    declared =
+      for entry <- cases do
+        %{
+          "case_id" => entry.case_id,
+          "callback" => Map.get(targets, entry.case_id),
+          "boundary" => entry.boundary,
+          "cut_point" => entry.cut_point,
+          "race_id" => entry.race_id,
+          "expected" => entry.expected
+        }
+      end
+
+    required = get_in(@required_inventory, ["families", family, "owner_obligations"])
+    is_list(required) and Enum.sort(declared) == Enum.sort(required)
   end
 
   defp authority_bound? do

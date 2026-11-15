@@ -93,6 +93,21 @@ defmodule NewYou.Proof.WebScenarios do
 
       assert length(Enum.uniq(responses)) == 1
       assert Ash.get!(Account, other.account_id, authorize?: false) == before_account
+
+      held =
+        NewYou.Identity.RecoveryCase
+        |> Ash.Query.filter(account_id == ^other.account_id)
+        |> Ash.read_one!(authorize?: false)
+
+      assert held.state == :held_manual_review
+      assert is_nil(held.proof_jti)
+
+      assert [] =
+               Token
+               |> Ash.Query.filter(
+                 account_id == ^other.account_id and not is_nil(recovery_case_id)
+               )
+               |> Ash.read!(authorize?: false)
     end)
   end
 

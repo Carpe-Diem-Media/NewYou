@@ -189,8 +189,8 @@ try {
     checks['spine.delivery'] = true;
     const verifyUrl = `${base}/verification/confirm?${new URLSearchParams({proof: delivered.proof, locale: input.locale})}`;
     await navigation(() => cdp('Page.navigate', {url: verifyUrl}));
-    checks['spine.verification_form'] = true;
     checks.explicit_verification = await evaluate(`!!document.querySelector('form[action="/verification/confirm"] [name="_csrf_token"]')`);
+    checks['spine.verification_form'] = checks.explicit_verification;
     await navigation(() => evaluate(`document.querySelector('form[action="/verification/confirm"]').requestSubmit()`));
     checks['spine.verification_submitted'] = true;
     await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));

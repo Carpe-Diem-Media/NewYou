@@ -4,8 +4,8 @@ defmodule NewYou.Proof.TB001IntegrationTest do
   alias NewYou.Proof.Catalog
 
   @tag timeout: 120_000
-  test "standalone canonical acceptance rejects removed and substituted obligations" do
-    for mutation <- ["drop", "substitute", "authority"] do
+  test "standalone canonical acceptance rejects identity target authority and mandatory claim drift" do
+    for mutation <- ["drop", "substitute", "authority", "callback", "boundary", "cut", "race"] do
       output = Path.join(System.tmp_dir!(), "tb001-inventory-#{Ecto.UUID.generate()}.json")
       on_exit(fn -> File.rm(output) end)
 
@@ -22,18 +22,106 @@ defmodule NewYou.Proof.TB001IntegrationTest do
       assert artifact["mode"] == "tb001"
       assert artifact["overall_verdict"] == "FAIL"
 
-      family =
-        Enum.find(artifact["results"], &(&1["coverage_id"] == "registration_pmr_reconciliation"))
+      family_id =
+        if mutation == "cut",
+          do: "communications_durability_backlog_ambiguity",
+          else: "registration_pmr_reconciliation"
+
+      family = Enum.find(artifact["results"], &(&1["coverage_id"] == family_id))
 
       assert family["verdict"] == "FAIL"
       assert "manifest.partial" in family["reason_codes"]
       assert "registration.invalid" in family["reason_codes"]
-      assert Enum.all?(family["cases"], &(&1["assertions_executed"] == 0))
+
+      if mutation == "callback" do
+        required = Enum.find(family["cases"], &(&1["case_id"] == "p819.reconciliation_apply"))
+        assert required["invariant_id"] == "p819.reconciliation_apply"
+        assert required["status"] == "not_run"
+        assert required["assertion_ids"] == []
+        assert required["observations"] == []
+      end
+
+      assert Enum.all?(artifact["results"], fn entry ->
+               Enum.all?(entry["cases"], &(&1["assertions_executed"] == 0))
+             end)
+
       # A fresh unmodified validator also rejects the mutated declaration's
       # digest and required IDs, independently of its nonzero command outcome.
       assert {:error, errors} = NewYou.Proof.Result.validate(artifact, mode: :tb001)
       assert :invalid_business_manifest_digest in errors
-      if mutation != "authority", do: assert(:invalid_business_required_cases in errors)
+
+      if mutation in ["drop", "substitute"],
+        do: assert(:invalid_business_required_cases in errors)
+    end
+  end
+
+  @tag :inventory_identity
+  test "callback target and mandatory boundary cut and race claims are independently bound" do
+    source = File.read!("test/support/proof/p8_19_catalog.ex")
+    previous = Code.compiler_options(ignore_module_conflict: true)
+
+    # This unrelated zero-arity callback returns normally and performs no proof.
+    assert is_binary(NewYou.platform_name())
+
+    try do
+      for mutation <- [:callback, :boundary, :cut, :race, :manifest_cut, :manifest_race] do
+        damaged =
+          source
+          |> Code.string_to_quoted!()
+          |> Macro.prewalk(fn
+            {:@, meta, [{:obligations, attribute_meta, [[{:{}, tuple_meta, fields} | rest]]}]} ->
+              fields =
+                case mutation do
+                  :callback ->
+                    fields
+                    |> List.replace_at(2, quote(do: NewYou))
+                    |> List.replace_at(3, :platform_name)
+
+                  :cut ->
+                    List.replace_at(fields, 5, "transaction.after_commit")
+
+                  :race ->
+                    List.replace_at(fields, 6, "unreviewed.race")
+
+                  _ ->
+                    fields
+                end
+
+              {:@, meta, [{:obligations, attribute_meta, [[{:{}, tuple_meta, fields} | rest]]}]}
+
+            "owning_ash_postgresql" when mutation == :boundary ->
+              "phoenix_conntest_identity_postgresql"
+
+            {:cut_point, value} when mutation == :manifest_cut ->
+              {:cut_point, quote(do: unquote(value) && nil)}
+
+            {:race_id, value} when mutation == :manifest_race ->
+              {:race_id, quote(do: unquote(value) && nil)}
+
+            node ->
+              node
+          end)
+
+        Code.compile_quoted(damaged, Path.expand("test/support/proof/p8_19_catalog.ex"))
+        manifests = Catalog.required().business_manifests
+        manifest = manifests["registration_pmr_reconciliation"]
+
+        assert {"p819.reconciliation_apply", "p819.reconciliation_apply"} in Enum.map(
+                 manifest.cases,
+                 &{&1.case_id, &1.invariant_id}
+               )
+
+        family =
+          if mutation == :manifest_cut,
+            do: "communications_durability_backlog_ambiguity",
+            else: "registration_pmr_reconciliation"
+
+        assert manifests[family].scope == :partial,
+               "#{mutation} must fail independent obligation binding"
+      end
+    after
+      Code.compile_string(source, Path.expand("test/support/proof/p8_19_catalog.ex"))
+      Code.compiler_options(previous)
     end
   end
 
@@ -154,6 +242,21 @@ defmodule NewYou.Proof.TB001IntegrationTest do
     for {family, manifest} <- manifests do
       assert Enum.sort(Enum.map(manifest.cases, &[&1.case_id, &1.invariant_id])) ==
                Enum.sort(inventory["families"][family]["cases"])
+
+      for pin <- inventory["families"][family]["owner_obligations"] do
+        target = pin["callback"]
+        module = Module.safe_concat([target["module"]])
+        assert Code.ensure_loaded?(module)
+
+        assert function_exported?(
+                 module,
+                 String.to_existing_atom(target["function"]),
+                 target["arity"]
+               )
+
+        entry = Enum.find(manifest.cases, &(&1.case_id == pin["case_id"]))
+        assert entry.source == "TB-001 section 8; #{target["module"]}.#{target["function"]}/0"
+      end
     end
 
     assert Enum.sort(Map.keys(manifests)) == Enum.sort(Catalog.coverage_inventory())

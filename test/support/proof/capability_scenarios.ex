@@ -80,7 +80,7 @@ defmodule NewYou.Proof.ResetCases do
   import ExUnit.Assertions
   require Ash.Query
   alias NewYou.{Identity, Repo}
-  alias NewYou.Identity.{Account, Token, Session}
+  alias NewYou.Identity.{Account, Token}
   alias NewYou.Proof.P805
 
   def fail_closed() do

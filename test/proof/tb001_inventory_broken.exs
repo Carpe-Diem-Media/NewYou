@@ -2,7 +2,7 @@
 # independent inventory, then invoke the ordinary standalone canonical script.
 [mutation, output] = System.argv()
 true = Mix.env() == :test
-true = mutation in ["drop", "substitute", "authority"]
+true = mutation in ["drop", "substitute", "authority", "callback", "boundary", "cut", "race"]
 path = Path.expand("test/support/proof/p8_19_catalog.ex")
 
 damaged =
@@ -16,19 +16,48 @@ damaged =
 
     {:@, meta, [{:obligations, attribute_meta, [[first | rest]]}]} when mutation != "authority" ->
       obligations =
-        if mutation == "drop" do
-          rest
-        else
-          replacement =
-            Macro.prewalk(first, fn
-              "p819.reconciliation_apply" -> "p819.unreviewed_substitution"
-              node -> node
+        case mutation do
+          "drop" ->
+            rest
+
+          "substitute" ->
+            replacement =
+              Macro.prewalk(first, fn
+                "p819.reconciliation_apply" -> "p819.unreviewed_substitution"
+                node -> node
+              end)
+
+            [replacement | rest]
+
+          "callback" ->
+            {:{}, tuple_meta, fields} = first
+            # A real, harmless, normally returning application function. The
+            # family/case/invariant and expected proof claim stay unchanged.
+            true = is_binary(NewYou.platform_name())
+
+            fields =
+              fields
+              |> List.replace_at(2, quote(do: NewYou))
+              |> List.replace_at(3, :platform_name)
+
+            [{:{}, tuple_meta, fields} | rest]
+
+          metadata when metadata in ["cut", "race"] ->
+            # Remove a real required cut/race, preserving the owner callback.
+            index = if metadata == "cut", do: 5, else: 6
+
+            Enum.map([first | rest], fn {:{}, tuple_meta, fields} ->
+              {:{}, tuple_meta, List.replace_at(fields, index, nil)}
             end)
 
-          [replacement | rest]
+          "boundary" ->
+            [first | rest]
         end
 
       {:@, meta, [{:obligations, attribute_meta, [obligations]}]}
+
+    "owning_ash_postgresql" when mutation == "boundary" ->
+      "phoenix_conntest_identity_postgresql"
 
     node ->
       node

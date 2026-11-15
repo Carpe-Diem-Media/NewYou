@@ -42,6 +42,30 @@ defmodule NewYou.Proof.ResultTest do
     assert errors == [:incomplete_business_cases]
   end
 
+  test "a failed case absent from the manifest returns validation errors without raising" do
+    result = self_test_result(Catalog.required().self_test.digest)
+    assert :ok = Result.validate(result, mode: :harness_self_test)
+    [entry] = result["results"]
+    [first | remaining] = entry["cases"]
+
+    unknown = %{
+      first
+      | "case_id" => "unreviewed.case",
+        "invariant_id" => "unreviewed.case",
+        "verdict" => "FAIL",
+        "reason_codes" => ["assertion.failed"],
+        "assertion_ids" => [],
+        "assertions_executed" => 0
+    }
+
+    changed = %{entry | "cases" => [unknown | remaining], "verdict" => "FAIL"}
+
+    assert {:error, errors} =
+             Result.validate(%{result | "results" => [changed]}, mode: :harness_self_test)
+
+    assert :incomplete_self_test_manifest in errors
+  end
+
   test "expect records the actual assertion and returns the observation" do
     scenario = Scenario.start()
     :ok = Scenario.require_assertions(scenario, "case.one", ["case.one.verified"])
