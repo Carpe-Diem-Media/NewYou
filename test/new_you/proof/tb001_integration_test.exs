@@ -25,8 +25,12 @@ defmodule NewYou.Proof.TB001IntegrationTest do
     output = Path.join(System.tmp_dir!(), "tb001-broken-#{Ecto.UUID.generate()}.json")
     on_exit(fn -> File.rm(output) end)
 
+    # Inherit the parent's selected runtime and TEST environment, as restart
+    # probes do. Hosted setup-beam runners do not require a workstation CLI.
+    executable = System.find_executable("mix") || raise "mix unavailable"
+
     {stdout, status} =
-      System.cmd("mise", ["exec", "--", "mix", "run", "test/proof/tb001_broken.exs", output],
+      System.cmd(executable, ["run", "test/proof/tb001_broken.exs", output],
         env: [{"MIX_ENV", "test"}, {"ERL_FLAGS", "+S 2:2"}],
         stderr_to_stdout: true
       )
