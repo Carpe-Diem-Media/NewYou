@@ -1,5 +1,5 @@
 /* Hallmark · theme: locked DESIGN.md · shape: app screen · genre: modern-minimal · scope: app · signature: allocated-space specimens · v2.0.0 */
-/* Critique: actual grids expose fitting and gutter ownership without adding a production layout API. */
+/* Critique: actual grids expose fitting and gutter ownership with shared recipes for the registration pilot. */
 
 .ds-layout-lab { @apply min-w-0 mt-design-2xl; }
 .ds-layout-lab h3 { @apply text-design-heading-sm font-design-medium mb-design-base; }
@@ -16,24 +16,28 @@
 .ds-layout-cell > span { @apply text-design-button-md font-design-medium; }
 .ds-layout-cell > p { @apply text-design-button-md; }
 .ds-layout-cell img { display: block; max-inline-size: 100%; block-size: auto; }
+.ds-auto-grid,
 .ds-layout-auto {
   display: grid;
   min-inline-size: 0;
   gap: var(--grid-gap);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(var(--design-layout-min), calc((100% - (var(--design-layout-columns) - 1) * var(--grid-gap)) / var(--design-layout-columns)))), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(var(--design-grid-min, var(--design-layout-min)), calc((100% - (var(--design-grid-columns, var(--design-layout-columns)) - 1) * var(--grid-gap)) / var(--design-grid-columns, var(--design-layout-columns))))), 1fr));
 }
 .ds-layout-auto[data-flow="fill"] {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(var(--design-layout-min), calc((100% - (var(--design-layout-columns) - 1) * var(--grid-gap)) / var(--design-layout-columns)))), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(var(--design-grid-min, var(--design-layout-min)), calc((100% - (var(--design-grid-columns, var(--design-layout-columns)) - 1) * var(--grid-gap)) / var(--design-grid-columns, var(--design-layout-columns))))), 1fr));
 }
 .ds-layout-container-stage { background-color: var(--hairline); }
+.ds-container,
 .ds-layout-container {
   box-sizing: border-box;
   inline-size: 100%;
-  max-inline-size: calc(var(--content-width) * var(--design-layout-content-ratio));
+  max-inline-size: var(--design-container-max, var(--content-width));
   @apply mx-auto;
   padding-inline: min(var(--gutter), 50%);
-  background-color: var(--canvas);
 }
+.ds-layout-container { background-color: var(--canvas); }
+.ds-stack { display: flex; flex-direction: column; min-inline-size: 0; gap: var(--space-lg); }
+.ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-base); min-inline-size: 0; }
 .ds-layout-nested { @apply py-design-base bg-design-surface; min-inline-size: 0; overflow-wrap: anywhere; }
 .ds-layout-nested > p { @apply px-design-sm; }
 .ds-layout-breakout {

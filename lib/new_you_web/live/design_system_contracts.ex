@@ -1,7 +1,7 @@
 defmodule NewYouWeb.DesignSystemContracts do
   @moduledoc "Component contract comparisons for the development guide, using the shared components."
   use Phoenix.Component
-  import NewYouWeb.Components.Design.{Button, Card, Icon, Link}
+  import NewYouWeb.Components.Design.{Button, Card, Field, Icon, Link}
 
   def component_contracts(assigns) do
     ~H"""
@@ -87,6 +87,28 @@ defmodule NewYouWeb.DesignSystemContracts do
       <p class="ds-note">
         Pending keeps the same label and dimensions. The caller owns the real request and status message. Native disabled blocks activation; aria-busy alone does not.
       </p>
+      <h3 class="text-design-heading-sm font-design-medium mt-design-xl mb-design-base">
+        Registration field recipe
+      </h3>
+      <div class="ds-auto-grid">
+        <.design_field
+          id="contract-field-default"
+          name="specimen[name]"
+          label="Name"
+          autocomplete="off"
+        />
+        <.design_field
+          id="contract-field-error"
+          name="specimen[email]"
+          type="email"
+          label="Email address"
+          error="Enter an email address."
+          autocomplete="off"
+        />
+      </div>
+      <p class="ds-note">
+        These are the same fields used by the registration pilot. The caller supplies localized labels and errors; native attributes carry state.
+      </p>
       <details class="ds-code-details">
         <summary>Contract and accessibility rules</summary>
         <ul class="list-disc pl-design-lg space-y-design-sm">
@@ -108,7 +130,7 @@ defmodule NewYouWeb.DesignSystemContracts do
         </ul>
       </details>
       <p class="ds-note">
-        Candidate presentation contracts for review. Existing production defaults and palette remain unchanged.
+        Registration uses the shared flat card, field, text link and lit primary recipes. Other presentation specimens remain candidates. The pilot keeps its existing development gate.
       </p>
     </section>
     """

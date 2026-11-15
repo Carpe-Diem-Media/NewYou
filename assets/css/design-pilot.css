@@ -1,0 +1,29 @@
+/* Hallmark · theme: locked DESIGN.md · shape: app screen · genre: modern-minimal · scope: app · signature: actual bilingual registration · v2.0.0 */
+/* Critique: preserve launch, safety and form reading order while adopting the shared light tokens and intrinsic layouts. */
+/* Hallmark · waive 49b · exact legal link text must remain readable at 320px · registration links wrap to preserve governed copy and avoid horizontal overflow */
+.ds-production-page { @apply min-h-svh bg-design-canvas text-design-ink font-design-sans text-design-body-xs leading-design-body-xs; color-scheme: light; }
+.ds-production-page :where(h1, h2, h3, p, label, legend, a) { min-inline-size: 0; overflow-wrap: anywhere; }
+.ds-production-page :where(h1, h2) { text-wrap: balance; }
+.ds-production-page :where(p) { max-inline-size: var(--measure); }
+.ds-production-page ::selection { color: var(--on-primary); background: var(--primary); }
+.ds-registration-header { @apply py-design-lg border-b border-design-hairline; justify-content: space-between; }
+.ds-registration-header > p { @apply text-design-body-sm font-design-bold; }
+.ds-registration-header a { @apply inline-flex items-center min-h-design-button-height; }
+.ds-registration-header a[aria-current="page"] { @apply font-design-bold; text-decoration-thickness: var(--design-border-width); }
+.ds-registration-content { @apply py-design-2xl; }
+.ds-registration-heading { @apply text-design-display-sm font-design-bold leading-design-display-sm tracking-design-display-sm; }
+.ds-registration-intro > p { @apply text-design-body-sm leading-design-body-sm; align-self: end; }
+.ds-registration-safety { @apply border-t border-design-hairline pt-design-lg; }
+.ds-registration-form { @apply mt-design-lg; }
+.ds-registration-form > :is(fieldset, .ds-registration-wide, .ds-registration-submit) { grid-column: 1 / -1; min-inline-size: 0; }
+.ds-registration-form legend { @apply font-design-medium; }
+.ds-registration-form .ds-note-text { @apply text-design-body-xs leading-design-body-xs; }
+.ds-registration-check { @apply flex items-start gap-design-md py-design-sm; min-block-size: var(--space-button-height); }
+.ds-registration-check > input { @apply mt-design-xxs size-design-base shrink-0; accent-color: var(--primary); }
+.ds-registration-check > input:focus-visible { @apply outline-2 outline-offset-2 outline-design-primary; }
+.ds-registration-legal { @apply border-y border-design-hairline py-design-lg; }
+.ds-registration-submit { display: flex; min-inline-size: 0; }
+.ds-registration-submit > button { max-inline-size: 100%; }
+@media (min-width: theme(--breakpoint-design-desktop)) {
+  .ds-registration-heading { @apply text-design-display-md leading-design-display-md tracking-design-display-md; }
+}

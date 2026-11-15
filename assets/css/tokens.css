@@ -66,44 +66,44 @@ body {
   overflow-x: clip;
 }
 
-.registration-page {
+.registration-page:not([data-design-pilot]) {
   color-scheme: light;
   color: var(--ny-copy);
   font-family: var(--ny-font-body);
 }
 
-:root[data-theme="dark"] .registration-page {
+:root[data-theme="dark"] .registration-page:not([data-design-pilot]) {
   color-scheme: dark;
 }
 
-.registration-page :focus-visible {
+.registration-page:not([data-design-pilot]) :focus-visible {
   outline: 2px solid var(--ny-focus);
   outline-offset: 2px;
 }
 
-.registration-page a:active {
+.registration-page:not([data-design-pilot]) a:active {
   color: var(--ny-accent-strong);
 }
 
-.registration-page button:active {
+.registration-page:not([data-design-pilot]) button:active {
   background-color: var(--ny-accent-strong);
 }
 
-.registration-page :is(h1, h2) {
+.registration-page:not([data-design-pilot]) :is(h1, h2) {
   text-wrap: balance;
 }
 
-.registration-page ::selection {
+.registration-page:not([data-design-pilot]) ::selection {
   color: var(--ny-accent-ink);
   background-color: var(--ny-accent);
 }
 
-.registration-page :where(input:not([type="checkbox"]), textarea) {
+.registration-page:not([data-design-pilot]) :where(input:not([type="checkbox"]), textarea) {
   caret-color: var(--ny-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .registration-page {
+  .registration-page:not([data-design-pilot]) {
     scroll-behavior: auto;
   }
 }

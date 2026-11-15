@@ -92,6 +92,14 @@ defmodule NewYouWeb.DesignSystemLiveTest do
            )
 
     assert has_element?(view, "#contract-busy[aria-busy=true][disabled]")
+    assert has_element?(view, "#contract-field-default.ds-design-field-input[type=text]")
+
+    assert has_element?(
+             view,
+             "#contract-field-error[aria-invalid=true][aria-describedby=contract-field-error-error]"
+           )
+
+    assert has_element?(view, "#contract-field-error-error[role=alert]")
     refute has_element?(view, "#contracts article[tabindex]")
     refute has_element?(view, "#contracts [data-disabled], #contracts [data-loading]")
     {:ok, preview, _} = live(conn, "/dev/design-system/preview")

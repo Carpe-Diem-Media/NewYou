@@ -11,6 +11,7 @@ defmodule NewYouWeb.Components.Design.Card do
   attr :title, :string, required: true
   attr :variant, :string, default: "flat", values: ~w(flat raised)
   attr :heading_level, :integer, default: 3, values: [2, 3, 4, 5, 6]
+  attr :heading_id, :string, default: nil
   attr :rest, :global
   slot :leading
   slot :inset
@@ -39,6 +40,7 @@ defmodule NewYouWeb.Components.Design.Card do
       <div :if={@leading != []} class="ds-design-card-leading">{render_slot(@leading)}</div>
       <.dynamic_tag
         tag_name={@heading_tag}
+        id={@heading_id}
         class="text-design-heading-sm font-design-bold leading-design-heading-sm tracking-design-heading-sm"
       >
         {@title}

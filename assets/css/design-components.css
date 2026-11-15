@@ -1,7 +1,24 @@
 /* Hallmark · theme: locked DESIGN.md · shape: component · genre: modern-minimal · scope: component · surface: absolute · v2.0.0 */
 /* Critique: opt-in overhead lighting adds depth through fine edges and short shadows; flat defaults remain available. */
+/* Hallmark · waive 39b · DESIGN.md locks 58px native input height · registration retains the approved field geometry and enlarged touch area */
 
 @layer components {
+  .ds-design-field { @apply grid content-start gap-design-sm; min-inline-size: 0; }
+  .ds-design-field > label { @apply text-design-body-xs leading-design-body-xs font-design-medium; }
+  .ds-design-field-input {
+    @apply min-h-design-input-height px-design-base py-design-md rounded-design-sm text-design-body-xs leading-design-body-xs bg-design-surface text-design-ink-strong;
+    box-sizing: border-box;
+    min-inline-size: 0;
+    inline-size: 100%;
+    font-family: var(--font-body);
+    border: var(--design-border-width) solid var(--ink-meta);
+    caret-color: var(--primary);
+  }
+  .ds-design-field-input[aria-invalid="true"] { border-width: calc(2 * var(--design-border-width)); }
+  .ds-design-field-input:focus-visible { @apply outline-2 outline-offset-2 outline-design-primary; }
+  .ds-design-field-input:disabled { cursor: not-allowed; }
+  .ds-field-error { @apply pl-design-sm text-design-body-xs leading-design-body-xs font-design-medium text-design-ink; border-inline-start: calc(2 * var(--design-border-width)) solid var(--secondary); }
+
   .ds-design-card {
     border-radius: var(--radius);
     border-width: var(--design-border-width);

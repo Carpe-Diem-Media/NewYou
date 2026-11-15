@@ -1,7 +1,7 @@
 /* Hallmark · theme: locked DESIGN.md · shape: app screen · genre: modern-minimal · scope: app · surface: absolute · v2.0.0 */
 /* Critique: the reference shows live tokens and reusable components within NewYou's existing design. */
 /* Hallmark · waive 7b · DESIGN.md locks the exact black and white swatches · the reference tokens keep NewYou's approved palette values */
-/* Hallmark · waive 37 · numeric weight tokens are not extra font families · the project retains its approved Inter fallback */
+/* Hallmark · waive 37 · numeric weight tokens are not extra font families · the Development Platform registration and design guide retain the approved Inter family */
 /* Executable token values mapped from DESIGN.md. Edit here; canonical Tailwind consumers share these values. */
 :root {
   /* Brand source values are authored once; semantic roles retain their existing names. */
@@ -105,6 +105,7 @@
   --space-input-height: 58px;
   --box-shadow: none;
   --content-width: 1280px;
+  --measure: 65ch;
   --gutter: var(--space-lg);
   --grid-gap: var(--space-lg);
   --design-content-width: var(--content-width);
@@ -225,6 +226,15 @@
   --radius: var(--radius-xl);
   --design-card-padding-inline: var(--space-base);
   --design-card-padding-block: var(--space-md);
+}
+
+/* The guide and actual page consume the same container/grid recipes. */
+.ds-layout-container {
+  --design-container-max: calc(var(--content-width) * var(--design-layout-content-ratio));
+}
+.ds-registration-intro,
+.ds-registration-form {
+  --design-grid-columns: 2;
 }
 
 /* Identity conversion preserves exact brand colors without rounded OKLCH constants. */

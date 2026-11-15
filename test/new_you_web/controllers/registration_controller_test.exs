@@ -12,7 +12,6 @@ defmodule NewYouWeb.RegistrationControllerTest do
                         "../../../docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
                         __DIR__
                       )
-  @design_tokens_path Path.expand("../../../assets/css/tokens.css", __DIR__)
   @copy_registry @copy_registry_path |> File.read!() |> Jason.decode!()
   @terms_path Path.expand(
                 "../../../docs/delivery/content-evidence/content_media/legal_baselines/NEWYOU-TERMS-EN-DEV-BASELINE-2026-10-27-001.html",
@@ -167,51 +166,65 @@ defmodule NewYouWeb.RegistrationControllerTest do
       assert html =~ ~r/<h1\b[^>]*id="launch-heading"/
     end
 
-    test "uses NewYou tokens for responsive headings, focus, selection, and reduced motion", %{
+    test "the pilot uses canonical components while preserving native registration semantics", %{
       conn: conn
     } do
-      tokens = File.read!(@design_tokens_path)
-
-      assert tokens =~ "--ny-paper:"
-      assert tokens =~ "--ny-focus:"
-      assert tokens =~ "overflow-x: clip"
-      assert tokens =~ ".registration-page :focus-visible"
-      assert tokens =~ ".registration-page a:active"
-      assert tokens =~ ".registration-page button:active"
-      assert tokens =~ "outline: 2px solid var(--ny-focus)"
-      assert tokens =~ "text-wrap: balance"
-      assert tokens =~ "::selection"
-      assert tokens =~ "caret-color: var(--ny-accent)"
-      assert tokens =~ "@media (prefers-reduced-motion: reduce)"
-
-      for locale <- ["en", "af"] do
+      for locale <- ~w(en af) do
         html = conn |> get("/register?locale=#{locale}") |> html_response(200)
-        assert html =~ ~r/<h1\b[^>]*id="launch-heading"/
-        assert html =~ "disabled:bg-ny-muted"
-        assert html =~ "disabled:text-ny-paper"
-        assert html =~ "disabled:cursor-not-allowed"
-        refute html =~ "disabled:opacity-60"
+        dom = LazyHTML.from_document(html)
+
+        assert LazyHTML.query(
+                 dom,
+                 "main.registration-page[data-design-pilot=registration] .ds-container"
+               )
+               |> LazyHTML.to_html() != ""
+
+        assert LazyHTML.query(
+                 dom,
+                 "article#registration[data-variant=flat] > h2#registration-heading"
+               )
+               |> LazyHTML.text()
+               |> String.trim() == expected_copy("identity.registration.title", locale)
+
+        assert LazyHTML.query(dom, "#registration-form input.ds-design-field-input")
+               |> LazyHTML.attribute("id")
+               |> Enum.sort() ==
+                 ~w(registration-email registration-first-name registration-password registration-surname)
+
+        assert LazyHTML.query(
+                 dom,
+                 "#registration-submit[type=submit][data-treatment=lit][data-variant=primary]"
+               )
+               |> LazyHTML.text()
+               |> String.trim() == expected_copy("identity.registration.submit", locale)
+
+        assert LazyHTML.query(dom, "#registration .ds-design-icon[aria-hidden=true]")
+               |> LazyHTML.to_html() != ""
+
+        assert LazyHTML.query(dom, "input[name='_csrf_token']") |> LazyHTML.attribute("value") !=
+                 []
+
+        assert LazyHTML.query(dom, "input[name='registration[operation_id]']")
+               |> LazyHTML.attribute("value") != []
+
+        assert LazyHTML.query(dom, "input[type=password]") |> LazyHTML.attribute("value") == []
+        refute html =~ "bg-ny-"
+        refute html =~ "lg:grid-cols-12"
       end
     end
 
-    test "keeps the launch and safety copy before a full-width registration section at desktop sizes",
+    test "keeps exact launch and safety content before the full-width canonical registration card",
          %{conn: conn} do
-      for locale <- ["en", "af"] do
+      for locale <- ~w(en af) do
         html = conn |> get("/register?locale=#{locale}") |> html_response(200)
         {page_index, _} = :binary.match(html, "registration-page")
         page_content = binary_part(html, page_index, byte_size(html) - page_index)
 
-        safety_copy = expected_copy("public.entry.safety.body", locale)
-        registration_copy = expected_copy("identity.registration.title", locale)
+        assert :binary.match(page_content, expected_copy("public.entry.safety.body", locale)) <
+                 :binary.match(page_content, expected_copy("identity.registration.title", locale))
 
-        assert :binary.match(page_content, safety_copy) <
-                 :binary.match(page_content, registration_copy)
-
-        assert html =~ "lg:col-span-12"
-        refute html =~ "lg:col-start-6 lg:row-span-2"
-        assert html =~ "lg:grid-cols-12"
-        assert html =~ "min-w-0"
-        assert html =~ "break-words"
+        assert html =~ "ds-registration-intro ds-auto-grid"
+        assert html =~ "ds-registration-form ds-auto-grid"
       end
     end
 
