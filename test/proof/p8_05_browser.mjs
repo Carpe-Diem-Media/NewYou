@@ -134,14 +134,34 @@ try {
     }
     checks.focus = await evaluate(`document.activeElement.id === 'email' && document.activeElement.matches(':focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2 && !!document.querySelector('label[for="email"]') && !!document.querySelector('label[for="password"]')`);
     checks.responsive = true;
+    checks.text_resize = true;
     await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
     checks.reduced_motion = await evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0`);
     checks.stylesheet_loaded = await evaluate(`document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
     for (const width of [320, 375, 768, 1280, 1920]) {
       await cdp('Emulation.setDeviceMetricsOverride', {width, height: 900, deviceScaleFactor: 1, mobile: width < 768});
       checks.responsive = checks.responsive && await evaluate(`document.documentElement.scrollWidth <= innerWidth && document.querySelector('button').getBoundingClientRect().width > 0`);
+      const resized = await evaluate(`(async () => {
+        const nodes = [...document.querySelectorAll('h1,p,a,button,input:not([type="hidden"]),label')];
+        const original = nodes.map(el => ({el, style: el.getAttribute('style'), size: parseFloat(getComputedStyle(el).fontSize), height: parseFloat(getComputedStyle(el).lineHeight)}));
+        try {
+          for (const {el, size, height} of original) {
+            el.style.fontSize = (size * 2) + 'px';
+            if (Number.isFinite(height)) el.style.lineHeight = (height * 2) + 'px';
+          }
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          return nodes.length > 0 && document.documentElement.scrollWidth <= innerWidth && nodes.every(el => {
+            const rect = el.getBoundingClientRect();
+            return rect.width === 0 || (rect.left >= -0.5 && rect.right <= innerWidth + 0.5 && el.scrollWidth <= el.clientWidth + 1);
+          });
+        } finally {
+          for (const {el, style} of original) {
+            if (style === null) el.removeAttribute('style'); else el.setAttribute('style', style);
+          }
+        }
+      })()`);
+      checks.text_resize = checks.text_resize && resized;
     }
-    checks.text_resize = await evaluate(`(() => { document.documentElement.style.fontSize = '200%'; const fits = document.documentElement.scrollWidth <= innerWidth; document.documentElement.style.fontSize = ''; return fits; })()`);
     await passwordSubmit('incorrect-test-password');
     checks.invalid_correction = await evaluate(`document.querySelector('#sign-in-error')?.textContent.trim() === ${literal('identity.login.credential_failure')} && document.querySelector('#password').value === ''`);
     await passwordSubmit(input.input.password);

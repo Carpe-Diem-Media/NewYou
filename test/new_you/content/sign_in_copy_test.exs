@@ -3,6 +3,124 @@ defmodule NewYou.Content.SignInCopyTest do
 
   alias NewYou.Content.SignInCopy
 
+  @moduletag :tmp_dir
+
+  setup %{tmp_dir: root} do
+    fixture_dir = Path.join(root, "docs/development/fixtures")
+    File.mkdir_p!(fixture_dir)
+
+    for name <- ~w(well134-c01-v0.1.json well134-c01-owner-approval.json) do
+      File.cp!(Path.join("docs/development/fixtures", name), Path.join(fixture_dir, name))
+    end
+
+    module = Module.concat(__MODULE__, "Isolated#{System.unique_integer([:positive])}")
+
+    source =
+      "lib/new_you/content/sign_in_copy.ex"
+      |> File.read!()
+      |> String.replace(
+        "defmodule NewYou.Content.SignInCopy do",
+        "defmodule #{inspect(module)} do"
+      )
+
+    on_exit(fn ->
+      :code.purge(module)
+      :code.delete(module)
+    end)
+
+    {:ok,
+     module: module,
+     source: source,
+     source_path: Path.join(root, "lib/new_you/content/sign_in_copy.ex"),
+     artifact: Path.join(fixture_dir, "well134-c01-v0.1.json"),
+     approval: Path.join(fixture_dir, "well134-c01-owner-approval.json")}
+  end
+
+  test "modified compile-time text cannot become eligible after the approved file is restored",
+       ctx do
+    approved = File.read!(ctx.artifact)
+
+    changed =
+      approved
+      |> Jason.decode!()
+      |> put_in(["entries", "identity.login.title", "en", "text"], "UNAPPROVED COMPILED TEXT")
+      |> Jason.encode!()
+
+    File.write!(ctx.artifact, changed)
+
+    result =
+      try do
+        Code.compile_string(ctx.source, ctx.source_path)
+        :compiled
+      rescue
+        error in ArgumentError -> {:rejected, Exception.message(error)}
+      after
+        File.write!(ctx.artifact, approved)
+      end
+
+    assert File.read!(ctx.artifact) == approved
+
+    case result do
+      :compiled ->
+        refute ctx.module.available?()
+        assert_raise ArgumentError, fn -> ctx.module.text!("identity.login.title", "en") end
+
+      {:rejected, message} ->
+        assert message == "WELL-134 compile-time copy is not the pinned owner-approved version"
+        refute Code.ensure_loaded?(ctx.module)
+    end
+  end
+
+  test "modified approval bytes are rejected before embedding text", ctx do
+    File.write!(ctx.approval, File.read!(ctx.approval) <> "\n")
+
+    assert_raise ArgumentError,
+                 "WELL-134 compile-time copy is not the pinned owner-approved version",
+                 fn -> Code.compile_string(ctx.source, ctx.source_path) end
+
+    refute Code.ensure_loaded?(ctx.module)
+  end
+
+  test "approved compiled text retains current-source eligibility without fallback", ctx do
+    Code.compile_string(ctx.source, ctx.source_path)
+    assert ctx.module.available?()
+    assert ctx.module.text!("identity.login.title", "en") == "Log in to your account"
+    assert ctx.module.text!("identity.login.title", "af") == "Meld aan by jou rekening"
+    assert_raise KeyError, fn -> ctx.module.text!("missing.key", "en") end
+    assert_raise ArgumentError, fn -> ctx.module.text!("identity.login.title", "nl") end
+
+    for path <- [ctx.artifact, ctx.approval], change <- [:missing, :changed, :withdrawn] do
+      approved = File.read!(path)
+
+      try do
+        case change do
+          :missing ->
+            File.rm!(path)
+
+          :changed ->
+            File.write!(path, approved <> "\n")
+
+          :withdrawn ->
+            File.write!(
+              path,
+              path
+              |> File.read!()
+              |> Jason.decode!()
+              |> Map.put("status", "withdrawn")
+              |> Jason.encode!()
+            )
+        end
+
+        refute ctx.module.available?()
+        assert_raise ArgumentError, fn -> ctx.module.text!("identity.login.title", "en") end
+      after
+        File.write!(path, approved)
+      end
+
+      assert ctx.module.available?()
+    end
+  end
+
   test "only the exact owner-approved bilingual development version is eligible" do
     assert SignInCopy.available?()
     assert SignInCopy.text!("identity.login.title", "en") == "Log in to your account"

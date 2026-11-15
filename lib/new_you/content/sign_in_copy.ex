@@ -6,7 +6,8 @@ defmodule NewYou.Content.SignInCopy do
   original version and canonical payload digest. The derived artifact pins the
   literal source-table strings and each locale's bytes/digest separately. It
   grants no runtime role, authentication, publication or participant-release
-  authority. Changed, withdrawn or missing artifacts stop new consumption.
+  authority. Both pinned files are verified before text is embedded; changed,
+  withdrawn or missing runtime artifacts stop new consumption.
   """
 
   @development_build Mix.env() in [:dev, :test]
@@ -19,7 +20,20 @@ defmodule NewYou.Content.SignInCopy do
   @external_resource @source
   @digest "4d442f4f7ad861e6d23feb3a23c421889b2f5516bb32963949389759f3d35f6c"
   @source_digest "6e6c592112ee9f1dcbd4fabe7595218a74d941afce2e5aa491a3ea78cce1a6f2"
-  @artifact @path |> File.read!() |> Jason.decode!()
+  # Decode the same bytes whose digest was checked, never a second file read.
+  artifact_bytes = File.read!(@path)
+  source_bytes = File.read!(@source)
+
+  unless Enum.all?(
+           [{artifact_bytes, @digest}, {source_bytes, @source_digest}],
+           fn {bytes, digest} ->
+             Base.encode16(:crypto.hash(:sha256, bytes), case: :lower) == digest
+           end
+         ) do
+    raise ArgumentError, "WELL-134 compile-time copy is not the pinned owner-approved version"
+  end
+
+  @artifact Jason.decode!(artifact_bytes)
   @entries Map.fetch!(@artifact, "entries")
 
   @doc "Checks the current immutable artifacts and the compile-time development boundary."
@@ -27,8 +41,7 @@ defmodule NewYou.Content.SignInCopy do
   def available? do
     :erlang.andalso(
       @development_build,
-      current_file?(@path, @digest) and
-        current_file?(@source, @source_digest) and valid_artifact?(@artifact)
+      current_file?(@path, @digest) and current_file?(@source, @source_digest)
     )
   end
 
