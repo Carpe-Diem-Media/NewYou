@@ -1,6 +1,8 @@
-# Elixir + Ash + Phoenix Code Transparency Standard
+# Elixir + Ash + Phoenix code transparency reference
 
-This reference defines the detailed standard used by the `elixir-ash-code-transparency` skill.
+This is a subordinate technical reference for the `elixir-ash-code-transparency` skill, not a canonical NewYou Engineering Standard or a source of Product, Architecture, Domain, security or lifecycle authority. NewYou's authority hierarchy, `AGENTS.md`, routed Engineering Standards, installed Ash dependencies and actual code take precedence over guidance and examples here. Actual code establishes implemented behaviour; it does not override approved business authority.
+
+All Elixir, Phoenix and Ash examples below are illustrative excerpts. `MyApp`, Orders, payment and ticket concepts describe hypothetical interfaces, not actual NewYou business interfaces or approved business rules. Snippets omit surrounding setup and enforcement; verify the real code, dependencies and authority before adapting them.
 
 Its purpose is not "maximum documentation." Its purpose is **accurate, discoverable, non-duplicative contracts**.
 
@@ -24,28 +26,9 @@ A codebase is agent-friendly when a capable engineer or coding agent can answer 
 
 ## 1. Authority and Conflict Resolution
 
-First obey the repository's own instruction hierarchy and declared sources of truth.
+Follow the repository's instruction hierarchy and current authority routers. This reference introduces no alternative authority order.
 
-For code-transparency work, use this default reasoning order unless the repository explicitly defines another:
-
-1. approved architecture/domain contracts and invariants
-2. executable/declarative domain definitions
-   - Ash Domains
-   - Ash Resources
-   - actions
-   - validations
-   - changes
-   - policies
-   - state machines
-   - identities
-   - code interfaces
-3. behaviour/callback contracts
-4. public application interfaces
-5. typespecs
-6. module/function documentation
-7. tests as evidence of intended behaviour
-8. implementation
-9. implementation comments
+Establish the implemented contract by inspecting Ash Domains, Resources, actions, validations, changes, policies, state machines, identities and code interfaces alongside behaviour callbacks, public interfaces, all implementation clauses, callers and tests. Compare typespecs, documentation and comments with that evidence; their existence does not make them authoritative over actual behaviour.
 
 This is **not** permission to blindly rewrite implementation to match an old document.
 
@@ -54,7 +37,7 @@ If two authorities disagree:
 1. identify the discrepancy;
 2. determine whether one source is stale;
 3. inspect callers, tests, migration history, ADRs/contracts, and framework definitions as relevant;
-4. fix the correct source and every dependent representation that is now stale;
+4. correct stale representations within the task's authority and scope; escalate any business-authority conflict under `AGENTS.md` rather than inventing a rule or amending governance during an ordinary audit;
 5. report the conflict.
 
 Never silently choose the easiest interpretation.
@@ -844,7 +827,7 @@ Before editing:
 4. locate the target Domain/Resource/interface/module;
 5. locate tests and direct callers.
 
-For Ash-version-sensitive behaviour, use the **installed dependency/source or current authoritative Ash documentation**. Do not assume an old Ash 2.x/early-3.x pattern remains current.
+For Ash-version-sensitive behaviour, use the **installed dependency/source or version-matched official Ash documentation**. Do not assume an old Ash 2.x/early-3.x pattern or the latest online documentation matches the pinned version.
 
 ---
 
@@ -892,41 +875,19 @@ If prose exposes a real requirement that is not enforced anywhere, do **not** si
 
 ## 32. Phase D — Verify
 
-Use repository-defined checks first.
-
-Typical checks, only when configured/applicable:
-
-```bash
-mix format --check-formatted
-mix compile --warnings-as-errors
-mix test
-mix dialyzer
-mix credo --strict
-mix docs
-mix ash.codegen --check
-```
-
-Additional targeted checks may include:
-
-```bash
-mix test path/to/relevant_test.exs
-mix ash.manifest.dump
-mix ash.signals
-```
-
-Rules:
-
-- Do not install Dialyzer/Credo/ExDoc merely because this standard mentions them.
-- Do not run destructive code generation without understanding repository policy.
-- If `mix ash.codegen --check` is supported, prefer check mode in verification rather than silently generating changes.
-- If a command is unavailable, report "not configured/not available"; do not call it passed.
-- Run the repository's full required gate before a merge recommendation.
+1. Identify the changed contract and actual executable consumers. Determine which focused instruction, documentation, type, DSL or behavioural checks can detect a discrepancy in that contract. Non-executable documentation does not acquire a database-test requirement merely because it contains code examples.
+2. During the transparency audit, run only necessary focused checks using the repository's pinned runtime and execution profiles. Report exact commands and observed outcomes. An unavailable check is a verification gap, never a passing result.
+3. Delegate applicable canonical broad gates, OCR, exact-head CI and handoff requirements to `AGENTS.md`, the existing `code-change-verification` workflow and any verification helper actually authorised by that workflow. Do not assume a helper proposed on another branch is available. Loading this skill must not independently trigger `mix check`, `mix check.deep`, a full test suite, OCR or CI, or create a second CI or TDD pipeline.
+4. Reuse existing evidence only while its relevant source, scope, environment and inputs remain unchanged and the owning workflow permits reuse. When an input changes, invalidate and refresh the affected proof. A changed PR head still requires exact-head hosted CI and independent review under the existing workflow.
+5. Before using version-sensitive Ash tasks or flags, verify them against `mix.exs`, `mix.lock` and installed dependency source or version-matched official documentation. Introspection is optional supporting evidence when relevant, not another unconditional verification gate.
+6. Never install tools or run destructive code generation merely to satisfy these examples. Inspect a task's behaviour and repository policy before invoking it; use a supported non-writing check mode only when it is needed and authorised.
+7. Preserve every applicable final check. Avoid duplicate execution by sharing valid evidence through the owning workflow, never by weakening its obligations.
 
 ---
 
-## 33. Required Audit Report Shape
+## 33. Audit findings in the existing handoff
 
-Report:
+Record the following findings proportionately in the existing ticket/PR handoff. Do not create a duplicate audit dossier or a competing handoff format:
 
 ### Scope
 
@@ -1002,9 +963,9 @@ Stop and investigate when you see:
 
 ---
 
-## 36. One Complete Example
+## 36. Illustrative contract excerpts
 
-The following demonstrates the intended separation of contracts.
+The following excerpts demonstrate separation of contracts, not a complete application. The cancellation validation, authorization, state change and side effects are deliberately omitted. The descriptions are illustrative and do not prove enforcement.
 
 ```elixir
 defmodule MyApp.Orders.Order do
@@ -1042,10 +1003,6 @@ defmodule MyApp.Orders.Order do
       # Real project-specific validations/changes belong here.
     end
   end
-
-  code_interface do
-    define :cancel, args: [:reason]
-  end
 end
 ```
 
@@ -1053,6 +1010,8 @@ The surrounding application/domain module can then explain ownership rather than
 
 ```elixir
 defmodule MyApp.Orders do
+  use Ash.Domain
+
   @moduledoc """
   Public interface to the Orders domain.
 
@@ -1060,6 +1019,12 @@ defmodule MyApp.Orders do
   Web modules may adapt input and render outcomes, but must not reproduce
   transition or authorization rules.
   """
+
+  resources do
+    resource MyApp.Orders.Order do
+      define :cancel, action: :cancel, args: [:reason]
+    end
+  end
 end
 ```
 

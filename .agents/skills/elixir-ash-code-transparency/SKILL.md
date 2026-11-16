@@ -56,7 +56,7 @@ needed to verify the current change.
 
 Do not independently invoke broad engineering
 gates such as `mix check`, `mix check.deep`,
-the full test suite or CI merely because this
+the full test suite, OCR or CI merely because this
 skill was loaded.
 
 Reuse valid existing evidence where permitted.
@@ -64,6 +64,3 @@ The owning verification workflow runs all
 applicable final gates on the stable candidate.
 
 This skill does not waive any required check.
-```
-
-Do not add tools to the project merely to satisfy this list.
