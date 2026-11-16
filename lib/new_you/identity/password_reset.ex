@@ -25,13 +25,18 @@ defmodule NewYou.Identity.PasswordReset do
     makes an unchanged retry harmless. Request success never authenticates.
     """
     @spec request(term(), term(), term()) :: :ok
-    def request(email, locale, operation_id) do
+    def request(email, locale, operation_id), do: request(email, locale, operation_id, :p8_12)
+
+    @doc "Uses only the selected development Content scope. Unknown contexts remain neutral without issuance."
+    @spec request(term(), term(), term(), :p8_12 | :well136) :: :ok
+    def request(email, locale, operation_id, context) do
       started = System.monotonic_time(:millisecond)
       deadline = started + @request_work_timeout_ms
       response_at = started + @request_response_floor_ms
 
       try do
-        callback = request_callback(fn -> request_transaction(email, locale, operation_id) end)
+        callback =
+          request_callback(fn -> request_transaction(email, locale, operation_id, context) end)
 
         task =
           Task.Supervisor.async_nolink(
@@ -75,15 +80,15 @@ defmodule NewYou.Identity.PasswordReset do
 
     defp remaining(deadline), do: max(deadline - System.monotonic_time(:millisecond), 0)
 
-    defp request_transaction(email, locale, operation_id) do
+    defp request_transaction(email, locale, operation_id, context) do
       Ash.transact(
         [Account, Token, MessageIntent, DeliveryAttempt],
         fn ->
-          with true <- locale in ["en", "af"],
+          with true <- context in [:p8_12, :well136] and locale in ["en", "af"],
                {:ok, operation_id} <- Ecto.UUID.cast(operation_id),
                {:ok, email} <- Email.canonicalize(email),
                {:ok, %Account{} = account} <- find_account(email) do
-            issue_locked(account.id, email, locale, operation_id)
+            issue_locked(account.id, email, locale, operation_id, context)
           else
             _ -> :ok
           end
@@ -99,12 +104,12 @@ defmodule NewYou.Identity.PasswordReset do
       defp request_callback(callback), do: callback
     end
 
-    defp issue_locked(id, email, locale, operation_id) do
+    defp issue_locked(id, email, locale, operation_id, context) do
       with {:ok, account} <- lock_account(id),
            true <- eligible?(account) and account.email == email,
            {:ok, prior} <- by_request(operation_id) do
         case prior do
-          nil -> issue_new(account, locale, operation_id)
+          nil -> issue_new(account, locale, operation_id, context)
           %Token{} -> :ok
         end
       else
@@ -112,7 +117,7 @@ defmodule NewYou.Identity.PasswordReset do
       end
     end
 
-    defp issue_new(account, locale, operation_id) do
+    defp issue_new(account, locale, operation_id, context) do
       with {:ok, previous} <- current_proofs(account.id),
            :ok <- supersede(previous),
            {:ok, bearer, claims} <-
@@ -145,7 +150,7 @@ defmodule NewYou.Identity.PasswordReset do
                source_reference: proof.jti,
                role: :password_reset,
                source_purpose: "password_reset",
-               render_schema: "password-reset-well136-v1",
+               render_schema: render_schema(context),
                destination: account.email,
                destination_provenance: "identity_password_reset_issuance",
                destination_authorized_at: proof.created_at,
@@ -157,6 +162,9 @@ defmodule NewYou.Identity.PasswordReset do
         _ -> {:error, :reset_unavailable}
       end
     end
+
+    defp render_schema(:p8_12), do: "password-reset-v1"
+    defp render_schema(:well136), do: "password-reset-well136-v1"
 
     @spec delivery(String.t(), String.t(), String.t()) ::
             {:ok, binary()} | {:error, :source_invalid | :capability_unavailable}
@@ -464,6 +472,9 @@ defmodule NewYou.Identity.PasswordReset do
   else
     @spec request(term(), term(), term()) :: :ok
     def request(_email, _locale, _operation_id), do: :ok
+
+    @spec request(term(), term(), term(), :p8_12 | :well136) :: :ok
+    def request(_email, _locale, _operation_id, _context), do: :ok
 
     @spec delivery(String.t(), String.t(), String.t()) :: {:error, :source_invalid}
     def delivery(_reference, _destination, _locale), do: {:error, :source_invalid}

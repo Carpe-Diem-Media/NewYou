@@ -28,12 +28,15 @@ defmodule NewYou.Proof.RegistrationSeam do
     end
   end
 
-  @doc "Carry only the TEST checkpoint into a bounded request worker."
+  @doc "Carry the TEST checkpoint and isolated password-reset evidence into a bounded request worker."
   def inherit(callback) when is_function(callback, 0) do
     checkpoint = Process.get(__MODULE__)
+    content_key = {NewYou.Content.PasswordResetMessage, :evidence_root}
+    content_root = Process.get(content_key)
 
     fn ->
       Process.put(__MODULE__, checkpoint)
+      if is_binary(content_root), do: Process.put(content_key, content_root)
       callback.()
     end
   end

@@ -73,7 +73,7 @@ defmodule NewYou.Identity.PasswordResetTest do
         |> Ash.read_one!(authorize?: false)
 
       assert intent.role == :password_reset
-      assert intent.render_schema == "password-reset-well136-v1"
+      assert intent.render_schema == "password-reset-v1"
 
       assert intent.translation_version_id ==
                "NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2"
@@ -150,7 +150,7 @@ defmodule NewYou.Identity.PasswordResetTest do
   test "queued WELL-136 delivery rechecks withdrawal and can safely retry after evidence recovery" do
     P805.with_fixture(fn ->
       {request, registration} = account()
-      :ok = request_reset(request.email, "af", operation())
+      :ok = Identity.request_password_reset(request.email, "af", operation(), :well136)
       proof = current_proof(registration.account_id)
 
       intent =

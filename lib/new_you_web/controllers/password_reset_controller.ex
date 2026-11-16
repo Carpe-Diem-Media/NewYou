@@ -13,7 +13,7 @@ defmodule NewYouWeb.PasswordResetController do
   plug :require_proof_environment
 
   def new(conn, %{"locale" => locale}) when locale in ["en", "af"] do
-    if email_available?(locale),
+    if email_available?(locale, conn.assigns.password_reset_context),
       do: render_page(conn, :request, locale, %{operation_id: Ecto.UUID.generate()}),
       else: unavailable(conn, locale)
   end
@@ -22,9 +22,15 @@ defmodule NewYouWeb.PasswordResetController do
 
   def request(conn, %{"locale" => locale, "email" => email, "operation_id" => operation_id})
       when locale in ["en", "af"] and is_binary(email) and is_binary(operation_id) do
-    if email_available?(locale) do
+    if email_available?(locale, conn.assigns.password_reset_context) do
       if valid_operation_id?(operation_id),
-        do: safely_request_password_reset(email, locale, operation_id)
+        do:
+          safely_request_password_reset(
+            email,
+            locale,
+            operation_id,
+            conn.assigns.password_reset_context
+          )
 
       render_page(conn, :request_result, locale, %{})
     else
@@ -80,24 +86,40 @@ defmodule NewYouWeb.PasswordResetController do
   def confirm(conn, _params), do: not_found(conn)
 
   defp require_proof_environment(conn, _opts) do
-    if :erlang.andalso(
-         @development_environment,
-         :erlang.andalso(
-           @verification_development_fixtures == true,
-           NewYou.Content.PasswordResetBrowserCopy.available?() and
-             (NewYouWeb.DevelopmentEntry.enabled?() or
-                Application.get_env(:new_you, :p8_12_browser_development_fixtures) == true)
-         )
-       ) do
-      conn
+    context =
+      if :erlang.andalso(
+           @development_environment,
+           :erlang.andalso(
+             @verification_development_fixtures == true,
+             NewYou.Content.PasswordResetBrowserCopy.available?()
+           )
+         ),
+         do: entry_context()
+
+    if context in [:p8_12, :well136] do
+      assign(conn, :password_reset_context, context)
     else
       conn |> not_found() |> halt()
     end
   end
 
+  # Ordinary entry takes precedence. Its missing eligibility must never turn
+  # an ordinary request into a historical P8-12 consumption.
+  defp entry_context do
+    if Application.get_env(:new_you, :fp001_development_entry) == true do
+      if NewYouWeb.DevelopmentEntry.enabled?(), do: :well136
+    else
+      if Application.get_env(:new_you, :p8_12_browser_development_fixtures) == true,
+        do: :p8_12
+    end
+  end
+
   defp valid_operation_id?(operation_id), do: match?({:ok, _}, Ecto.UUID.cast(operation_id))
 
-  defp email_available?(locale),
+  defp email_available?(locale, :p8_12),
+    do: match?({:ok, _}, NewYou.Content.PasswordResetMessage.binding(locale))
+
+  defp email_available?(locale, :well136),
     do: match?({:ok, _}, NewYou.Content.PasswordResetMessage.binding(locale, :well136))
 
   defp unavailable(conn, locale),
@@ -109,8 +131,8 @@ defmodule NewYouWeb.PasswordResetController do
 
   defp proof_locale?(_, _), do: false
 
-  defp safely_request_password_reset(email, locale, operation_id) do
-    Identity.request_password_reset(email, locale, operation_id)
+  defp safely_request_password_reset(email, locale, operation_id, context) do
+    Identity.request_password_reset(email, locale, operation_id, context)
   rescue
     _ -> :unavailable
   catch
