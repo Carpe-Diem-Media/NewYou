@@ -191,25 +191,25 @@
       "status": "added"
     },
     {
-      "blob": "a6d57df4d41756358c3bf2bc0f03e7b5a0fc94bb",
+      "blob": "6881116423225da0c682b2e57fea47decf7ac80d",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "4c7ab8cbf119ce62e2f22b8182289a7f72eddcf2d2c9a9f8d33f07b181b27ceb",
+      "sha256": "d94cd07e779b39a3e6c70f5b801282ca9a6173f57b2ebd8347df0174b61cba2b",
       "status": "modified"
     },
     {
-      "blob": "cce892693eae3c1fe81313cb4f6577c54d32051d",
+      "blob": "cc00790b6df6aa12afee43cf0c35132f2bf79e85",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/design_system_coverage.md",
-      "sha256": "6c4fb7f0160d6335322bc77a874e5eab3cf822c28bf1186cab439974efd2fc1a",
+      "sha256": "17ac300a6ed025b9f0723ead9a72f88179e3a6f7460402f8cf318f11ea056015",
       "status": "added"
     },
     {
@@ -477,25 +477,25 @@
       "status": "added"
     },
     {
-      "blob": "5ecf3c4ae8f0961a1ada99cb3ea3c0a434abbe2a",
+      "blob": "cb78abf0bb30b4c8ae973a2ae1c393591791cb01",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/quality-gate-diagnosis-evidence.json",
-      "sha256": "38bd155e696115e09ced5c294048bb34e03882c883efd56c7e4f64a605cabba3",
+      "sha256": "da180b3a3b7aa1d6850906843291d1e82d3e59d1797fe6c51bcebeff0062cb3b",
       "status": "added"
     },
     {
-      "blob": "6003d29236d897819837e536032d6a8b116c1a35",
+      "blob": "cf18e7e6ca777d776326883e03385f0c934bc42f",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/quality-gate-diagnosis.md",
-      "sha256": "33403a0b35851e98fde9c97e6a5cd3bee1faf87c832c2a2ea30216fd0c0b3508",
+      "sha256": "d874c052feac34b2922312ac72efe0626e95735fb2d99a873160b021f38353d6",
       "status": "added"
     },
     {
