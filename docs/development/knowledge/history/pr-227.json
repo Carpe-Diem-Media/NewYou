@@ -305,25 +305,25 @@
       "status": "added"
     },
     {
-      "blob": "f4acc24129fee7e4dd113d94702d3929eb46a5db",
+      "blob": "57e7d44b37f8340d8723c304129586ec2cf357f5",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/pass5-native-forms-evidence.json",
-      "sha256": "e04c185871f3184eeb6fb8d08ec7fbfc79471114a61f9ca0202dc62db156d177",
+      "sha256": "fdae63a0717f78a6eae6bcba73e7a97062e7f871cc261c042526c37d718d5e43",
       "status": "added"
     },
     {
-      "blob": "3f312e2276d6ee8a8b8153957725fcb8d3b2e076",
+      "blob": "f7c22f1bae94c9d4e5cc89953940451b44d96f80",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/pass5-native-forms.md",
-      "sha256": "ed4fe2741d1f4d84a2159a814016c134011b81b94ef19d0221a91ab8da4f2518",
+      "sha256": "f0dd0d0ecf819cf5e559feb74f1e94317bc6e82bc8e45da4d0482493d442c5f9",
       "status": "added"
     },
     {
@@ -558,14 +558,14 @@
       "status": "added"
     },
     {
-      "blob": "c0e7f782ec9d5c42c66d305c4e13fe04f3d64936",
+      "blob": "fcc221bfac15044e09264e0f121878c70c50e64b",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/superpowers/plans/2026-11-15-native-form-contracts.md",
-      "sha256": "000847eb8d99e751a0b847781b99ec48c15a3937f52ead7c0b9351cd982bd802",
+      "sha256": "64e44ce400669a771080a0efc9cc98fc1e9e79d78db237facfb9bf5ad1e7210c",
       "status": "added"
     },
     {
@@ -1285,7 +1285,7 @@
   },
   "migrations": [],
   "plane": {
-    "checked_at": "2026-11-15T22:20:01Z",
+    "checked_at": "2026-11-16T05:00:19Z",
     "items": [
       {
         "description_sha256": "0dc493ca6de6c09b18c612c4e99a22e8df9ec8c05068ee6352532f229e756442",
