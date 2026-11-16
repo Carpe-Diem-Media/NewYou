@@ -120,3 +120,83 @@ in the repair, based on regression and browser evidence; complete current-base
 application behavior remains unproved. Reaching at least 8/10 requires owning
 Content corrections, passing canonical/deep/OCR and exact-head review evidence.
 Merge readiness is NOT_VERIFIED_FOR_MERGE.
+
+## DEV migrations and resumed proof on 16 November
+
+The owner authorized the pending DEV migrations. Eight existing forward
+migrations, from `20261113181815` through `20261114183535`, applied successfully.
+They create the integrated Privacy/Analytics structures and guards; no migration
+was authored for this UI task. The T3 restart subsequently stopped the server
+and verification process and removed their temporary logs. The interrupted
+canonical run has no claimed result. Fresh inspection through
+`mise exec -- devcore-project run dev -- mix ecto.migrations` found **58 up and
+0 down**, so migrations were not reapplied. DEV was restarted on port 4237.
+Both guide routes returned HTTP 200, and the full guide browser runner passed
+against the normal DEV endpoint.
+
+Normal DEV adds Phoenix's `/phoenix/live_reload/socket/websocket` alongside the
+guide transport. The browser regression initially failed because its assertion
+treated every socket as an application socket. Commit `8bf0dca` requires the
+dedicated guide socket to be present and exempts only that exact live-reload
+path from the subsequent application-socket check. `/live` and every other
+unexpected path still fail. The corrected runner passed. A bounded independent
+source review found no actionable issue. Application transport code and approved
+button styling did not change in this correction.
+
+Integrated main advanced to `d47d1b5ed10658b173a070a0df43a337b240b254`, containing
+PR #248's WELL-137 Content compatibility correction. Normal merge
+`95d733bb8069a77d5ec7a58edc3c8e10ef36d9e8` imports those sources and tests
+unchanged. The sole conflict was the descriptive recovery map; it retains both
+the WELL-112 guide-boundary note and the incoming WELL-137 lineage/test evidence.
+A bounded independent comparison against both parents confirmed that result.
+No Content guard or immutable approval was relaxed by WELL-112.
+
+Fresh proof on `95d733b`, with Mise's Elixir 1.20.5, Erlang 29.1.2 and Node 26.2.0:
+
+- The 12-file focused run passed **150/150**, seed **90857**, in 8.6 seconds.
+  It includes the three corrected Content readers, guide, privacy, shared forms,
+  reachability and registration tests.
+- Canonical `mix check` completed with **811/887 passed, 76 failed**, seed
+  **251294**, in 480.0 seconds. Its pre-test checks passed. The failing modules
+  and exact commands are in the evidence JSON. This is not a green full gate.
+- `mix check.deep` passed with zero errors and zero skips. Assets build, nine
+  Node tests, 72 Python tests and seven capability-map validations passed.
+- Chrome 155.0.8059.84 passed the guide and lighting regressions on DEV. Painted
+  CTA-label contrast remains 5.32:1 at rest, 9.41:1 on hover/press and 5.31:1 with
+  wrapped enlarged text. The premium gradient, directional borders and shadows
+  remain intact.
+- The guide's nine-file Hallmark render has zero FAIL/open REFLEX, one retained
+  gradient-endpoint WARN and two existing waivers. EN and AF registration app
+  renders each reproduce the inherited gate 26a FAIL on `body` after the DEV
+  toolbar, one WARN and four existing waivers. No waiver or lint rule changed.
+
+The canonical failure was diagnosed before any repeat. A temporary sanitized
+test found **three message intents before and after** the unchanged admission
+scenario. Its own fixture raises `MatchError` at
+`test/support/proof/delivery_scenarios.ex:10`, which expects a singleton from a
+global read. The diagnostic reports counts, exception class and source locations
+without record values. It preserves the three preexisting rows. Their ownership
+and relationship to the interrupted run are unproven. Business sources and
+`test/new_you` are byte-identical to integrated main. The observed failures belong
+to the existing WELL-114 fixture-reconciliation boundary, recorded in comment
+`6b763c9e-cb04-4cfb-ba35-0203c3d403d9`. No reset, manual cleanup or source workaround
+was performed, and the broad gate was not repeated on these unchanged inputs.
+
+The `resumed_current_main` object in the evidence JSON records commands, fresh
+log digests, the diagnostic and restart limits. Earlier checkpoint facts remain
+historical. The owner's later instruction removes routine TEST booking; it does
+not authorize destructive operations or waive required checks. OCR remains
+unrun because applicable local gates fail. Current-source Firefox/WebKit,
+independent exact-head review and resulting-main proof remain unverified.
+
+Author assessment of the six reconciliation-plan criteria remains **3/6 PASS**.
+Criteria 4 and 5 fail overall canonical and registration-quality proof; criterion
+6 is not complete for independent delivery. **Implementation Score: 5/10**, capped
+by the required failures. The underlying rubric is requirements 3/4,
+verification 2/3, correctness/risk 1.5/2 and handoff 0.5/1. **Confidence: 90%** in
+the bounded guide/migration result, with retained-row provenance and full-app
+verification unresolved. **Verification Status: BLOCKED** for overall delivery.
+To reach at least 8/10, resolve the WELL-114 fixture/proof obligation and inherited
+registration quality gap, pass the canonical gate, then complete OCR and fresh
+exact-head CI/review. The owner-approved WELL-114 continuation exception remains
+open. Keep PR #227 Draft and NOT_VERIFIED_FOR_MERGE.

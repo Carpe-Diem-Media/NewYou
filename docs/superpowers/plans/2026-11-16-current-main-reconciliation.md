@@ -1,5 +1,12 @@
 # Current-main reconciliation and bounded adoption
 
+The later owner instruction removes routine shared TEST booking/release. Earlier
+reservation requirements below are historical. The latest observed proof and
+remaining gates are recorded in the
+[resumed reconciliation checkpoint](../../development/research/acss-4.0.3-inventory/guide-route-reconciliation.md#dev-migrations-and-resumed-proof-on-16-november)
+against implementation `95d733bb8069a77d5ec7a58edc3c8e10ef36d9e8` and integrated
+main `d47d1b5ed10658b173a070a0df43a337b240b254`.
+
 Continue WELL-112 / draft PR #227 under the owner's approved sequence. Starting head is `17a451ffe05ca0a0aea3cabaac840300fe97b080`; target integrated main is `d1001ee3c935337676fe61f855d1004e080bc143`. The existing worktree is isolated and clean before this plan. Preserve history with a normal main-into-feature merge; do not rewrite history, force-push or merge the PR into main.
 
 ## Bounded criteria

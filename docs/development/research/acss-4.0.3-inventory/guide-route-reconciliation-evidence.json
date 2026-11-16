@@ -90,5 +90,163 @@
     "Inherited full-site Hallmark gap is not closed by this guide-only TEST runtime check",
     "Exact-head hosted CI and independent review pending"
   ],
-  "verification_status": "BLOCKED"
+  "verification_status": "BLOCKED",
+  "checkpoint_note": "Original a2fd190 evidence is historical. The resumed_current_main checkpoint below records current source, normal DEV migration state and fresh outcomes. Earlier /tmp logs were lost during the restart.",
+  "resumed_current_main": {
+    "implementation_sha": "95d733bb8069a77d5ec7a58edc3c8e10ef36d9e8",
+    "integrated_base": "d47d1b5ed10658b173a070a0df43a337b240b254",
+    "restart_recovery": {
+      "previous_command_result": "Interrupted canonical result unknown; process and previous /tmp log absent after restart",
+      "duplicate_mutation_avoidance": "Fresh DEV migration inspection showed 58 up / 0 down. No second forward migration, reset or manual cleanup.",
+      "dev_url": "http://127.0.0.1:4237/dev/design-system"
+    },
+    "pre_restart_observations": {
+      "migrations": "Eight existing DEV migrations applied successfully; original local log was lost in restart.",
+      "focused": "150/150, seed 931911, 9.2 seconds on this implementation SHA; original local log was lost in restart.",
+      "reviews": [
+        "Bounded source review of browser socket assertion: no actionable findings.",
+        "Bounded comparison of both merge parents: incoming Content sources/tests match integrated main exactly; only descriptive recovery map conflict combined."
+      ]
+    },
+    "limits": [
+      "Guide-only checks do not close inherited registration DEV-tool Hallmark gate 26a.",
+      "WELL-114 independent post-merge certification remains open under existing owner-approved continuation.",
+      "No OCR scan before all applicable local gates pass.",
+      "No merge, release or completion claim."
+    ],
+    "canonical": {
+      "outcome": "FAIL",
+      "passed": 811,
+      "total": 887,
+      "failed": 76,
+      "seed": 251294,
+      "seconds": 480.0
+    },
+    "checks": [
+      {
+        "kind": "doctor",
+        "command": "mise exec -- devcore-project doctor",
+        "observed_outcome": "PASS DEV and TEST allocation/authentication",
+        "private_log": "/tmp/newyou-guide-resumed-doctor.log",
+        "log_sha256": "4c3374eb5fc598ebe1b81384e868792bef5e1423b85c1e62488db756729e2c9d"
+      },
+      {
+        "kind": "dev_migrations",
+        "command": "NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run dev -- mix ecto.migrations",
+        "observed_outcome": "58 up; 0 down. Existing migration effects persisted after restart; no second migrate.",
+        "private_log": "/tmp/newyou-dev-migrations-resumed.log",
+        "log_sha256": "a201bec63719c7c2b35b679df2495715e1b78be3f5377cfe4377a99a11940736"
+      },
+      {
+        "kind": "canonical",
+        "command": "DESIGN_SYSTEM_BASE_SHA=d47d1b5ed10658b173a070a0df43a337b240b254 NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check",
+        "observed_outcome": "FAIL: 811/887 passed; 76 failed; seed 251294; 480.0 seconds. Pre-test stages passed.",
+        "private_log": "/tmp/newyou-guide-resumed-check.log",
+        "log_sha256": "3668628aae07980d43870a5bff7fd63ab65f3d9d729c351c69a43bb48fbbf47b"
+      },
+      {
+        "kind": "deep",
+        "command": "NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check.deep",
+        "observed_outcome": "PASS: 0 errors, 0 skips; Dialyzer 14.77 seconds.",
+        "private_log": "/tmp/newyou-guide-resumed-deep.log",
+        "log_sha256": "750cfc1d52171c2b643ca5606e49677c3bb508427253fc6d29bfd578a6d63388"
+      },
+      {
+        "kind": "focused",
+        "command": "NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix test test/new_you_web/design_component_contracts_test.exs test/new_you_web/design_field_test.exs test/new_you_web/design_native_form_test.exs test/new_you_web/design_surface_test.exs test/new_you_web/design_system_infrastructure_test.exs test/new_you_web/live/design_system_live_test.exs test/new_you_web/privacy_telemetry_test.exs test/new_you_web/security/authentication_reachability_test.exs test/new_you_web/controllers/registration_controller_test.exs test/new_you/content/magic_login_message_test.exs test/new_you/content/password_reset_message_test.exs test/new_you/content/recovery_message_test.exs",
+        "observed_outcome": "PASS: 150/150; seed 90857; 8.6 seconds. Expected forged-CSRF diagnostic retained.",
+        "private_log": "/tmp/newyou-guide-resumed-focused.log",
+        "log_sha256": "88bc3c5d92ab02a9b7a970f67a2a9f239c88a0acb7420f0df1c5b9fc5597e261"
+      },
+      {
+        "kind": "fixture_diagnostic",
+        "command": "NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix test /tmp/newyou-guide-fixture-diagnostic_test.exs",
+        "observed_outcome": "Expected counter-evidence: 0/1; seed 111685. Three intents before and after own fixture. MatchError at unchanged delivery_scenarios.ex:10. No record values printed.",
+        "private_log": "/tmp/newyou-guide-resumed-fixture-diagnostic.log",
+        "log_sha256": "34af47f3c88174e2387d19241894d1fa087c3c53a345d73eef838050d9baf900"
+      },
+      {
+        "kind": "assets",
+        "command": "NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run dev -- mix assets.build",
+        "observed_outcome": "PASS",
+        "private_log": "/tmp/newyou-guide-resumed-assets.log",
+        "log_sha256": "1ef0ce0f825f0b284d9981c9fdbae7bd87e94b651779941c97109a39bcff423d"
+      },
+      {
+        "kind": "python",
+        "command": "mise exec -- python3 -m unittest tests.test_capability_knowledge tests.test_foundation_lane_routing tests.test_foundation_smoke",
+        "observed_outcome": "PASS: 72/72; 15.814 seconds.",
+        "private_log": "/tmp/newyou-guide-resumed-python.log",
+        "log_sha256": "c4b8139b9c45abb5451f3ac02dc10faa94ffaf9359531570f831ec46c2342f3c"
+      },
+      {
+        "kind": "node",
+        "command": "mise exec -- node --test test/assets/design_system_test.mjs test/assets/design_border_contract.mjs test/assets/design_content_contract.mjs test/assets/design_native_form_contract.mjs test/assets/design_surface_contract.mjs",
+        "observed_outcome": "PASS: 9 tests; no failures/skips.",
+        "private_log": "/tmp/newyou-guide-resumed-node.log",
+        "log_sha256": "938828228786d80dd0f6081377013b9acb357c4c6e61a1e4c680946accfbe8f6"
+      },
+      {
+        "kind": "browser",
+        "command": "BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4237 mise exec -- node test/assets/design_system_browser.mjs",
+        "observed_outcome": "PASS actual DEV sessionless websocket, Identity cookie preservation, URL cleanup, responsive/token/fluid/focus/reduced-motion assertions and no page errors.",
+        "private_log": "/tmp/newyou-guide-resumed-browser.log",
+        "log_sha256": "91814a8a7c2c816fc8d4756c5aa55be41f63b9db033c2ed0b46065e7b3696a13"
+      },
+      {
+        "kind": "lighting",
+        "command": "BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4237 mise exec -- node test/assets/design_lighting_browser.mjs",
+        "observed_outcome": "PASS: painted label minima 5.32 rest, 9.41 hover/press, 5.31 wrapped/enlarged; external module-type warning retained.",
+        "private_log": "/tmp/newyou-guide-resumed-lighting.log",
+        "log_sha256": "a673b174704a1ba260667753f58dcc8fe3aed96bce9dcf9ab462ae15db6a1c9a"
+      },
+      {
+        "kind": "hallmark_guide",
+        "command": "mise exec -- node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-components.css assets/css/design-system.css assets/css/design-layouts.css assets/css/design-content.css assets/css/design-borders.css assets/css/design-surfaces.css assets/css/design-typography.css assets/css/design-forms.css --url http://127.0.0.1:4237/dev/design-system --scope component --json",
+        "observed_outcome": "0 FAIL; 0 open REFLEX; 1 WARN; 2 existing waivers; 0 rejected; render ran.",
+        "private_log": "/tmp/newyou-guide-resumed-hallmark.json",
+        "log_sha256": "74187722472cea79f9ea511e65a8f70f419f21d861c34c87c2a947d5f555edc2"
+      },
+      {
+        "kind": "hallmark_registration_en",
+        "command": "mise exec -- node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-components.css assets/css/design-pilot.css --scope app --genre modern-minimal --url 'http://127.0.0.1:4237/register?locale=en' --json",
+        "observed_outcome": "FAIL: inherited gate 26a on body after DEV toolbar; 0 open REFLEX; 1 WARN; 4 existing waivers; 0 rejected; render ran.",
+        "private_log": "/tmp/newyou-guide-resumed-registration-app-en.json",
+        "log_sha256": "a285a58036a0d3c0b275747fc7aed62878c294b6b75b67164d2f9e2f95d2e4c0"
+      },
+      {
+        "kind": "hallmark_registration_af",
+        "command": "mise exec -- node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-components.css assets/css/design-pilot.css --scope app --genre modern-minimal --url 'http://127.0.0.1:4237/register?locale=af' --json",
+        "observed_outcome": "FAIL: inherited gate 26a on body after DEV toolbar; 0 open REFLEX; 1 WARN; 4 existing waivers; 0 rejected; render ran.",
+        "private_log": "/tmp/newyou-guide-resumed-registration-app-af.json",
+        "log_sha256": "991db0053f05cb25c35ddbadf7b6cf1688e3fec3425a83769edb094ef11f9934"
+      }
+    ],
+    "toolchain": {
+      "elixir": "1.20.5-otp-29",
+      "erlang": "29.1.2 / OTP 29",
+      "node": "26.2.0",
+      "chrome": "155.0.8059.84",
+      "external_puppeteer_core": "25.17.0"
+    },
+    "failing_modules": {
+      "NewYou.Proof.P805Test": 1,
+      "NewYou.Identity.EmailVerificationTest": 1,
+      "NewYou.Identity.PasswordSessionTest": 1,
+      "NewYou.Communications.DeliveryEvidenceTest": 35,
+      "NewYou.Communications.DeliveryTest": 6,
+      "NewYou.Communications.DeliveryRecoveryTest": 11,
+      "NewYou.Identity.RegistrationPrimitivesTest": 21
+    },
+    "tracker_evidence": {
+      "WELL-114_comment": "6b763c9e-cb04-4cfb-ba35-0203c3d403d9"
+    },
+    "not_run": [
+      "Repeated canonical gate on unchanged failing inputs",
+      "OCR: blocked by applicable local gates; no exemption or scan findings claimed",
+      "Current-source Firefox/WebKit proof",
+      "Independent exact-head and resulting-main certification"
+    ],
+    "verification_status": "BLOCKED"
+  }
 }
