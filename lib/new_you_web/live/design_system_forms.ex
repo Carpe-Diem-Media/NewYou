@@ -92,6 +92,110 @@ defmodule NewYouWeb.DesignSystemForms do
           </.design_fieldset>
         </div>
       </div>
+      <section id="floating-labels" aria-labelledby="floating-labels-title" class="mt-design-xl">
+        <div class="ds-section-heading">
+          <h3 id="floating-labels-title">Floating labels</h3>
+          <p>
+            Guide-only variant. Focus a field, enter a value, then leave it to compare label positions.
+          </p>
+        </div>
+        <div class="ds-form-examples ds-auto-grid">
+          <div class="ds-form-example">
+            <.design_fieldset
+              id="floating-en"
+              legend="English"
+              help="Empty labels rest inside. Filled labels stay raised."
+            >
+              <.design_field
+                id="floating-name"
+                name="floating[name]"
+                label="Full name"
+                label_placement="floating"
+                autocomplete="name"
+              />
+              <.design_field
+                id="floating-email"
+                name="floating[email]"
+                label="Email address"
+                type="email"
+                label_placement="floating"
+                autocomplete="email"
+                value="example@example.com"
+                help="The label remains visible after focus leaves."
+              />
+              <.design_field
+                id="floating-password"
+                name="floating[password]"
+                label="Password"
+                type="password"
+                label_placement="floating"
+                autocomplete="new-password"
+                help="Passwords are never rendered back from server values."
+              />
+            </.design_fieldset>
+          </div>
+          <div class="ds-form-example" lang="af">
+            <.design_fieldset
+              id="floating-af"
+              legend="Afrikaans"
+              help="Lang etikette behou hul eie plek bo die waarde."
+            >
+              <.design_field
+                id="floating-long"
+                name="floating[long]"
+                label="Volledige naam soos jy dit op jou rekening wil sien"
+                label_placement="floating"
+                value="Voorbeeldnaam"
+              />
+              <.design_field
+                id="floating-error"
+                name="floating[error]"
+                label="E-posadres"
+                type="email"
+                label_placement="floating"
+                help="Hierdie is slegs 'n voorbeeld in die stylgids."
+                error="Voer 'n geldige e-posadres in."
+                required
+              />
+              <.design_field
+                id="floating-readonly"
+                name="floating[readonly]"
+                label="Leesalleen-voorbeeld"
+                label_placement="floating"
+                value="Bestaande waarde"
+                readonly
+              />
+            </.design_fieldset>
+          </div>
+          <div class="ds-form-example">
+            <.design_fieldset id="floating-disabled" legend="Disabled group" disabled aria-busy="true">
+              <.design_field
+                id="floating-disabled-empty"
+                name="floating[disabled_empty]"
+                label="Empty disabled field"
+                label_placement="floating"
+              />
+              <.design_field
+                id="floating-disabled-filled"
+                name="floating[disabled_filled]"
+                label="Filled disabled field"
+                label_placement="floating"
+                value="Existing value"
+              />
+            </.design_fieldset>
+          </div>
+        </div>
+        <p class="ds-note mt-design-lg">
+          Use <code>label_placement="floating"</code>
+          on the shared field component. Stacked labels
+          remain the default. Edit <code>--field-label-size</code>, <code>--field-padding-inline</code>,
+          <code>--field-padding-block</code>
+          and <code>--field-label-duration</code>
+          in canonical CSS.
+          Labels remain real labels; the blank placeholder only supplies an empty-value cue.
+          Long labels grow the control. Reduced motion removes label transitions.
+        </p>
+      </section>
       <dl class="ds-form-readouts mt-design-lg">
         <div>
           <dt><code>--field-gap</code> local fieldset</dt><dd>

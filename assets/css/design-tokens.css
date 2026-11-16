@@ -380,6 +380,14 @@
 :where(.ds-design-field) {
   --design-field-gap: var(--field-gap, var(--space-sm));
 }
+/* Floating controls reserve a real label row. Optional inputs resolve locally. */
+:where(.ds-floating-control) {
+  --design-field-padding-inline: var(--field-padding-inline, var(--space-base));
+  --design-field-padding-block: var(--field-padding-block, var(--space-sm));
+  --design-field-label-scale: tan(atan2(var(--field-label-size, var(--text-caption)), var(--text-body-xs)));
+  --design-field-label-offset: 0.5lh;
+  --design-field-label-duration: var(--field-label-duration, 160ms);
+}
 :where(.ds-design-choice) {
   --design-choice-gap: var(--choice-gap, var(--design-field-gap));
   --design-choice-label-weight: var(--choice-label-weight, var(--weight-regular));

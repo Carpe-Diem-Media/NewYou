@@ -598,3 +598,19 @@ Owner-requested border/divider continuation separates decorative, field-control,
 Owner-requested surface continuation adds complete opaque color profiles for the existing plain, canvas, panel and raised backgrounds. Each boundary recomputes heading/body/muted/link/hover/focus roles from canonical profile inputs. Shared cards own plain/raised boundaries and retain their approved appearance; controls keep their own semantic fills. Nested surfaces reset resolved outputs. Guide comparisons do not approve new values, text over decorative treatments, a dark scheme or participant release.
 
 Owner-requested native-form continuation extracts the existing checkbox/fieldset treatment into shared components. Native appearance, label hit area, accent and focus remain tied to the existing inputs. Optional field/choice gap and choice-label weight inputs resolve at each consumer; the pilot retains its existing age-label weight and privacy-error stack spacing. Help/error associations add no validation or business state. No new palette, type, geometry or participant-release values are approved.
+
+
+### Owner-approved floating-label field specimens, 2026-11-16
+
+WELL-112 adds an opt-in `label_placement="floating"` to shared text/email/password
+fields and the development guide. Stacked fields retain their default markup and
+appearance. The floating variant keeps its real label inside an uninterrupted
+control border. Its in-flow label/value rows allow growth beyond the existing
+58px minimum for long labels and enlarged text. Empty/unfocused labels move down
+by half their line height; focus, values and autofill raise the label. The raised
+scale derives from existing caption/body sizes using tan/atan2. Unsupported
+transforms retain a readable in-flow label. Padding aliases reuse 16px inline
+and 8px block spacing. Local inputs are `--field-padding-inline`,
+`--field-padding-block`, `--field-label-size` and `--field-label-duration`,
+with 160ms as the canonical default duration. Reduced motion removes transitions.
+No palette, radius, lighting, CTA, validation, copy or production-form migration.

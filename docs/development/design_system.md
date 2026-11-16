@@ -701,3 +701,57 @@ record exact commands, telemetry/origin/production tests, runtime limits and
 unresolved current-main Content eligibility failures. The existing sign-in
 capability map also links this shared privacy boundary. These records do not
 certify the whole PR or close WELL-114.
+
+
+## Opt-in floating labels
+
+The shared `Field.design_field/1` accepts `label_placement="floating"` for text,
+email and password inputs. Review `/dev/design-system#floating-labels` before
+adopting it on a production page. Existing callers retain stacked labels.
+The component projects its variant as `data-label-placement="floating"`; callers
+do not supply visual classes or mirror native value/focus state into attributes.
+
+A real wrapping label owns a label span and the native input. It provides the
+whole control's click target and uninterrupted border. Separate in-flow rows
+reserve space for the label and value, so long EN/AF labels grow beyond the
+existing 58px minimum instead of overlapping. The label moves down by half its
+line height only while empty and unfocused. Focus, nonempty values and autofill
+raise it. Clearing and blurring restores rest. Native values restored without
+input events still update the CSS state. Password values remain omitted from
+server-rendered markup. Help/error associations and caller event bindings remain
+unchanged. The blank placeholder is component-owned and is not the accessible
+name; conflicting floating placeholders and unsupported variants are rejected.
+
+Edit these optional inputs in `assets/css/design-tokens.css`, locally or globally:
+
+- `--field-padding-inline`, default existing `--space-base`.
+- `--field-padding-block`, default existing `--space-sm`.
+- `--field-label-size`, default existing `--text-caption`. Use a positive size no
+  larger than `--text-body-xs`; the scale derives with `tan(atan2(label, body))`.
+- `--field-label-duration`, default 160ms. Reduced motion disables transitions.
+
+Without supported transform math or relational selectors, the in-flow label
+remains readable above the value. The inner input retains its normal focus ring
+when relational selectors are unavailable. Supported browsers place the focus
+ring around the full label/control boundary. No new colour, radius, shadow,
+validation or transport behaviour is introduced. Select/textarea adoption and
+production migration remain separate decisions.
+
+Permanent proof is `test/assets/design_floating_fields_browser.mjs`. It blocks
+POST, covers native click/Tab, fill/blur/clear, password omission, required/error
+associations, readonly/fieldset-disabled states, local token propagation,
+320/390/744/1440 widths, doubled text, LiveView patch/reconnect and no-script use.
+Chromium additionally exercises native CDP Autofill and reduced motion. Firefox
+160 uses a separate disposable profile with `javascript.enabled=false` because
+BiDi scripting toggling is unsupported. Firefox autofill and WebKit are not
+certified by this proof.
+
+Observed browser runs passed 61 checks on Chrome 155 and 59 on Firefox 160, with
+zero POSTs and zero product page errors. Chromium native autofill produces two
+external Tidewave toolbar TypeErrors. The unchanged stacked `#forms-email`
+control reproduces the same errors at `tidewave.ai/tc/assets/toolbar-*.js`.
+The test reports this exact external signature separately and still rejects all
+unrecognized errors. It does not suppress toolbar scripts or alter their code.
+Component/contract/token tests passed 48/48 through an explicit ExUnit runner
+using `mix run --no-start`, without application or Repo startup. These focused
+results do not certify the entire PR's mandatory gates or integration.

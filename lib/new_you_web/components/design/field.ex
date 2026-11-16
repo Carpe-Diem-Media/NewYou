@@ -12,6 +12,7 @@ defmodule NewYouWeb.Components.Design.Field do
   attr :label, :string, required: true
   attr :type, :string, default: "text", values: ~w(text email password)
   attr :value, :any, default: nil
+  attr :label_placement, :string, default: "stacked", values: ~w(stacked floating)
   attr :help, :string, default: nil
   attr :error, :string, default: nil
   attr :required, :boolean, default: false
@@ -19,10 +20,24 @@ defmodule NewYouWeb.Components.Design.Field do
   attr :autofocus, :boolean, default: false
   attr :rest, :global, include: ~w(autocomplete minlength maxlength inputmode pattern readonly)
 
-  @doc "Renders a labelled native field with optional associated help and error text."
+  @doc """
+  Renders a labelled native field with optional associated help and error text.
+  `label_placement="floating"` opts into an inside label driven by native focus,
+  value and autofill state. Its blank placeholder is component-owned. Stacked
+  fields remain the default; password values are never rendered back.
+  """
   def design_field(assigns) do
     unless assigns.type in ~w(text email password) do
       raise ArgumentError, "unsupported design_field type"
+    end
+
+    unless assigns.label_placement in ~w(stacked floating) do
+      raise ArgumentError, "unsupported design_field label placement"
+    end
+
+    if assigns.label_placement == "floating" and
+         Enum.any?(Map.keys(assigns.rest), &(to_string(&1) == "placeholder")) do
+      raise ArgumentError, "floating design_field owns its placeholder"
     end
 
     for key <- Map.keys(assigns.rest),
@@ -31,25 +46,39 @@ defmodule NewYouWeb.Components.Design.Field do
     end
 
     ~H"""
-    <div class="ds-design-field">
-      <label for={@id}>{@label}</label>
-      <input
-        id={@id}
-        name={@name}
-        type={@type}
-        value={if @type != "password", do: @value}
-        required={@required}
-        disabled={@disabled}
-        autofocus={@autofocus}
-        aria-required={@required && "true"}
-        aria-invalid={@error && "true"}
-        aria-describedby={description_ids(@id, @help, @error)}
-        class="ds-design-field-input"
-        {@rest}
-      />
+    <div
+      class="ds-design-field"
+      data-label-placement={if @label_placement == "floating", do: "floating"}
+    >
+      <label :if={@label_placement == "stacked"} for={@id}>{@label}</label>
+      <label :if={@label_placement == "floating"} for={@id} class="ds-floating-control">
+        <span class="ds-floating-label">{@label}</span>
+        <.native_field_input {assigns} />
+      </label>
+      <.native_field_input :if={@label_placement == "stacked"} {assigns} />
       <p :if={@help} id={"#{@id}-help"} class="ds-field-help">{@help}</p>
       <p :if={@error} id={"#{@id}-error"} role="alert" class="ds-field-error">{@error}</p>
     </div>
+    """
+  end
+
+  defp native_field_input(assigns) do
+    ~H"""
+    <input
+      id={@id}
+      name={@name}
+      type={@type}
+      value={if @type != "password", do: @value}
+      required={@required}
+      disabled={@disabled}
+      autofocus={@autofocus}
+      placeholder={if @label_placement == "floating", do: " "}
+      aria-required={@required && "true"}
+      aria-invalid={@error && "true"}
+      aria-describedby={description_ids(@id, @help, @error)}
+      class="ds-design-field-input"
+      {@rest}
+    />
     """
   end
 

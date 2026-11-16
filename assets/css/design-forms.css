@@ -1,4 +1,5 @@
 /* Hallmark · theme: locked DESIGN.md · shape: app screen · genre: modern-minimal · scope: app · signature: shared native form states · v2.0.0 */
+/* Hallmark · waive 26b · native text fields use edit/focus/disabled states, not a pressed-button appearance · the guide retains the shared field interaction contract */
 /* Critique: actual native controls retain their browser behavior, while shared labels and descriptions reflow with existing tokens. */
 .ds-form-examples { @apply mt-design-xl; }
 .ds-form-example { @apply p-design-lg; min-inline-size: 0; border: var(--border-decorative); border-radius: var(--radius); }
@@ -7,3 +8,50 @@
 .ds-form-readouts > div { @apply flex flex-wrap justify-between gap-design-control; }
 .ds-form-readouts :where(dt, dd) { min-inline-size: 0; overflow-wrap: anywhere; }
 #native-forms .ds-note { max-inline-size: var(--measure); }
+
+/* In-flow rows allow long labels to grow the control without covering its value. */
+.ds-design-field > .ds-floating-control {
+  display: grid;
+  align-content: center;
+  min-inline-size: 0;
+  min-block-size: var(--space-input-height);
+  padding-block: var(--design-field-padding-block);
+  padding-inline: var(--design-field-padding-inline);
+  border: var(--border-control);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: text;
+}
+.ds-floating-label {
+  display: block;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  transform-origin: top left;
+  transform: scale(var(--design-field-label-scale));
+  transition: transform var(--design-field-label-duration) ease-out;
+}
+.ds-floating-control > .ds-design-field-input {
+  min-block-size: 1lh;
+  block-size: 1lh;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+@supports selector(:has(input:focus-visible)) {
+  .ds-floating-control:has(> input:focus-visible) { @apply outline-2 outline-offset-2 outline-design-primary; }
+  .ds-floating-control > input:focus-visible { outline: none; }
+}
+.ds-floating-control:has(> input[aria-invalid="true"]) { border-width: var(--design-control-invalid-width); }
+.ds-floating-control:has(> input:disabled) { cursor: not-allowed; }
+.ds-floating-control:not(:focus-within):has(> input:placeholder-shown) > .ds-floating-label {
+  transform: translateY(var(--design-field-label-offset));
+}
+/* Keep the value lane clear even when a browser autofills an otherwise empty cue. */
+.ds-floating-control:has(> input:autofill) > .ds-floating-label { transform: scale(var(--design-field-label-scale)); }
+.ds-floating-control:has(> input:-webkit-autofill) > .ds-floating-label { transform: scale(var(--design-field-label-scale)); }
+@media (prefers-reduced-motion: reduce) {
+  .ds-floating-label { transition: none; }
+}
+
+#floating-labels .ds-note { min-inline-size: 0; overflow-wrap: anywhere; }

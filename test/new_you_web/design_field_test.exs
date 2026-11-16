@@ -87,6 +87,92 @@ defmodule NewYouWeb.DesignFieldTest do
     end
   end
 
+  test "floating fields own their real label, empty cue and native associations" do
+    for type <- ~w(text email password) do
+      html =
+        render_component(&Field.design_field/1, %{
+          id: "floating",
+          name: "example[value]",
+          label: "Long field label",
+          type: type,
+          value: "Retained",
+          label_placement: "floating",
+          help: "Useful help",
+          error: "Example error",
+          required: true,
+          readonly: true
+        })
+
+      dom = LazyHTML.from_fragment(html)
+
+      assert LazyHTML.query(dom, "label.ds-floating-control[for=floating] > .ds-floating-label")
+             |> LazyHTML.text()
+             |> String.trim() == "Long field label"
+
+      input = LazyHTML.query(dom, "label.ds-floating-control > input#floating")
+      assert LazyHTML.attribute(input, "placeholder") == [" "]
+      assert LazyHTML.attribute(input, "aria-describedby") == ["floating-help floating-error"]
+      assert LazyHTML.attribute(input, "readonly") != []
+
+      assert LazyHTML.attribute(input, "value") ==
+               if(type == "password", do: [], else: ["Retained"])
+
+      assert length(Regex.scan(~r/<input\b/, html)) == 1
+    end
+  end
+
+  test "floating placement is finite and cannot lose its component-owned empty cue" do
+    for placement <- ["unknown", nil] do
+      assert_raise ArgumentError, fn ->
+        render_component(&Field.design_field/1, %{
+          id: "field",
+          name: "field",
+          label: "Name",
+          label_placement: placement
+        })
+      end
+    end
+
+    for key <- [:placeholder, "placeholder"] do
+      assert_raise ArgumentError, fn ->
+        render_component(&Field.design_field/1, %{
+          id: "field",
+          name: "field",
+          label: "Name",
+          label_placement: "floating",
+          rest: %{key => "Example"}
+        })
+      end
+    end
+
+    html =
+      render_component(&Field.design_field/1, %{id: "default", name: "default", label: "Name"})
+
+    refute html =~ "ds-floating-control"
+    refute html =~ "placeholder="
+  end
+
+  test "the guide renders the exact shared floating variant and native state examples" do
+    html = render_component(&NewYouWeb.DesignSystemForms.native_forms/1, %{})
+    dom = LazyHTML.from_fragment(html)
+
+    for id <-
+          ~w(floating-name floating-email floating-password floating-long floating-error floating-readonly floating-disabled-empty floating-disabled-filled) do
+      assert LazyHTML.attribute(
+               LazyHTML.query(dom, "label.ds-floating-control > input##{id}"),
+               "placeholder"
+             ) == [" "]
+    end
+
+    assert LazyHTML.attribute(LazyHTML.query(dom, "#floating-password"), "value") == []
+    assert LazyHTML.attribute(LazyHTML.query(dom, "#floating-disabled"), "disabled") != []
+    assert LazyHTML.attribute(LazyHTML.query(dom, "#floating-readonly"), "readonly") != []
+
+    assert LazyHTML.attribute(LazyHTML.query(dom, "#floating-error"), "aria-describedby") == [
+             "floating-error-help floating-error-error"
+           ]
+  end
+
   test "card can name a real section through its heading id" do
     html =
       render_component(&Card.design_card/1, %{
