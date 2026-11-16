@@ -182,3 +182,76 @@ checks still apply. WELL-112's application/UI gates remain separate obligations.
 The focused result is not LOCAL_VERIFIED: canonical integration, OCR, exact-head
 CI, independent review and resulting-main certification remain outstanding.
 Do not import the patch as already approved or mark WELL-114 Done.
+
+
+## Canonical overlap diagnosis and controlled retry
+
+The first canonical attempt on clean head
+`96a84555598caa8f5db99a4672e49ad17e2cf1d8` exited 2: 826/831 passed,
+five failed, seed 813027, in 592.4 seconds. It began while the observed
+WELL-136 command was PLT-only, bypassing the combined advisory lock. WELL-136
+subsequently ran 22 affected owner/controller/P812 tests during that canonical
+command. Local logs confirm the overlap. A process snapshot did not prevent a
+later conflicting command; it was insufficient coordination.
+
+The five failures were two P807 cases failing their trailing no-new-consequences
+assertion after their named business assertions passed, and three delivery
+evidence cases returning `registration_unavailable` during fixture registration.
+P805's observation deliberately includes new otherwise-unattributed consequences,
+and P812 installs temporary global insert-failure triggers. These are concrete
+interference mechanisms; the exact trigger timing was not independently traced.
+No assertion, owner behaviour or source was changed to obtain a passing result.
+
+After both commands exited, the same-source, same-seed diagnostic command passed
+47/47 in 8.1 seconds, exit 0:
+
+```sh
+flock -n /tmp/newyou-shared-test-plt.lock env ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix test test/new_you/identity/email_verification_test.exs test/new_you/communications/delivery_evidence_test.exs --seed 813027
+```
+
+Only after that diagnosis, one controlled canonical retry held the same advisory
+lock for the entire command and passed **831/831**, seed **813027**, in
+**547.2 seconds**, exit **0**, on unchanged clean head `96a8455`:
+
+```sh
+flock -n /tmp/newyou-shared-test-plt.lock env ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check --seed 813027
+```
+
+The actual wrapper also ran DevCore doctor and read-only Repo fingerprint
+observations before and after that canonical command under the same lock.
+Doctor passed. Mise resolved Elixir 1.20.5-otp-29, Erlang 29.1.2 / OTP29 and
+Node 26.2.0. The canonical gate includes formatting, warnings-as-errors compile,
+design-system, architecture, usage-rule, strict Credo, Sobelow and the full tests.
+No conflicting TEST command remained in the observed process inventory.
+The command-scoped lock released automatically after the final observation;
+a nonblocking probe then confirmed it free. No standing lease or manual
+permission/release-message requirement was introduced.
+
+Private before/after SELECT aggregates matched complete row fingerprints and
+counts for 12 of 14 observed tables, including retained message intents,
+Accounts, Tokens, Sessions, operations, envelopes, obligations, jobs, grants and
+Privacy rows. The two differences were expected retention-sensitive tables:
+nonce reservations increased from 4863 to 4914 and permanent PMR reservations
+from 94086 to 94967. `EnvelopeNonce` explicitly outlives cleared envelopes;
+P805 cleanup preserves permanent PMRs, whose migration forbids update/delete
+and truncate. No manual reconciliation was performed. Aggregate snapshots do
+not prove individual preexisting nonce membership in a growing set; do not
+claim all 14 tables were byte-identical or that retained-row authorship is known.
+
+An optional psql observation wrapper initially exited before starting canonical
+because DevCore supplies TEST_DATABASE_* configuration rather than libpq PG*
+variables. It made no DB connection. The corrected observation uses
+`mise exec -- devcore-project run test -- mix run --no-start` with the existing
+configured Repo, starts no application and runs only SELECT aggregates. No
+credentials or rows were printed. Fingerprints remain private.
+
+The failed log, diagnostic pass and controlled pass remain distinct evidence:
+
+- `/tmp/newyou-well114-canonical.log`, SHA-256 `90e45ab49a13ccb119210172aa52264f6cb9fc6ed0fa26877d6f9e55480f19b7`.
+- `/tmp/newyou-well114-canonical-targeted.log`, SHA-256 `07a1545fe8f3431910e81107676114543266930ece64decba93fb9bfe9edda5f`.
+- `/tmp/newyou-well114-quiet-canonical.log`, SHA-256 `8d84417fb79346acf741bf908ee47cb4bfd350ec6b33cfa2ab091b74fa7b8a55`.
+
+This proves the local canonical gate for these executable inputs, not OCR,
+exact-final-head hosted CI, independent Master Gate, integration or resulting-main
+certification. Those delivery obligations remain open. WELL-112's separate
+Hallmark/tooling and delivery gaps are unchanged.
