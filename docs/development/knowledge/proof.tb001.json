@@ -5,11 +5,12 @@
   "implementing_tickets": [
     "WELL-20",
     "WELL-131",
-    "WELL-134"
+    "WELL-134",
+    "WELL-114"
   ],
   "implementation_revision": {
     "git_sha": "cb106a9f493f5712e4a9c9f0ead355feb9a8e668",
-    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification."
+    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
   "collaborating_domains": [
@@ -341,6 +342,19 @@
         "integration",
         "fixture"
       ]
+    },
+    {
+      "path": "test/new_you/proof/fixture_observation_test.exs",
+      "cases": [
+        "observations exclude other operations and retain every same-fixture attempt",
+        "an unsupported foreign enum is excluded before hydration and restored by rollback"
+      ],
+      "proves": "Finite fixture-level query scoping before hydration, foreign-operation exclusion, all six observation resources, multiple same-fixture delivery attempts, negative unsupported-enum decoding and transactional constraint restoration.",
+      "limits": "Does not certify the complete catalog, runtime maintenance wrappers, canonical gates or retained-row provenance.",
+      "source_ids": [
+        "fixture_observation_test",
+        "fixture"
+      ]
     }
   ],
   "safe_extensions": [
@@ -386,7 +400,9 @@
     "Full applicable local gates, OCR, exact-head CI and independent Master Gate review remain separate obligations. This map does not assert those results.",
     "The static identity, owner callback-target and mandatory-claim inventory is linked to TB-001 sections 7-8. It remains separate from executable declarations and creates no business or certification authority. Fresh independent Master Gate review must assess semantic completeness and scenario source. The aggregate ledger marker does not enumerate underlying assertions or protect against arbitrary edits inside an owner scenario. Browser verification_form records the observed CSRF form; owning Account/Session/protected-access assertions determine success.",
     "The WELL-131 ordinary entry mode has separate ExUnit acceptance and is not a new TB-001 inventory case. Existing spine/login modes and the fixed mandatory Catalog inventory remain intact. Production-exclusion now also checks the normal development entry, copy and legal gates with fixture flags set.",
-    "WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh."
+    "WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh.",
+    "WELL-114 source checkpoint 145c2be adds fixture-isolation regression coverage and assertion-preserving test corrections. See docs/superpowers/plans/2026-11-16-retained-fixture-observations.md for observed commands, test limits and current resource handling. Full applicable gates, OCR, exact-head CI and independent post-merge certification remain required. The original all-job privacy secret scan remains intentionally broad to detect incorrectly addressed leakage. The seven-file focused run passed 111/111, seed 985650. Canonical on clean 96a8455 passed 831/831, seed 813027, in 547.2 seconds under a command-scoped lock, after preserving and diagnosing a five-failure overlapping attempt and a same-seed 47/47 targeted pass. The focused plan records exact commands, fingerprints and limits. OCR, exact-final-head hosted CI and independent resulting-main certification remain separate requirements. Global maintenance tests use native Ecto sandbox checkout/checkin with signature restoration, rather than an outer Repo transaction that can be aborted by expected Ash denials.",
+    "Current-base WELL-114 proof: clean 9f4b8fd1975e0b1f67b12463e01156529ce7d57b incorporates main 2736a9c6925c8c126cbba007f404b2e38ec2080d with identical executable correction. Canonical passed 831/831, seed 813027, in 508.2 seconds; content compatibility passed 34/34 and routing/knowledge/smoke checks passed 71/71. Private per-row digest multisets preserve all preexisting rows across 15 tables, including membership in growing nonce and PMR sets, with no unexpected additions. DeliveryAttempt baseline was empty; permanent synthetic own/foreign coverage is separate. The focused plan records exact commands, hashes, observed counts, review limits and lost historical raw logs. Fresh OCR, final-head CI and independent integration/resulting-main certification remain separate requirements."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -454,13 +470,13 @@
       "id": "fixture",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defmodule NewYou.Proof.P805",
-      "sha256": "f3a99510c4b0370607ebb2d1af09bcb2eb940c3d026b2d656d7db16e53684bed"
+      "sha256": "93c5ef3cb8197382b533cba4d270189e44f8a43b34176a108dd2414b7ac89e67"
     },
     {
       "id": "delivery_scenarios",
       "path": "test/support/proof/delivery_recovery_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.DeliveryRecoveryScenarios",
-      "sha256": "e14ac0b0d6f0234d3753d6b160d4825074882e86682fbbd288936ba8dd6ef407"
+      "sha256": "3ce8e0d282add9c2f7b7b8f803b572224568148ac3d2826f14fe191ed0fda48f"
     },
     {
       "id": "recovery_scenarios",
@@ -569,6 +585,12 @@
       "path": "test/new_you/proof/passive_evidence_test.exs",
       "symbol": "defmodule NewYou.Proof.PassiveEvidenceTest",
       "sha256": "87e0bc29b8d703e643f0e83328f636277f6d9276237abdd351f4aa87d9f1744a"
+    },
+    {
+      "id": "fixture_observation_test",
+      "path": "test/new_you/proof/fixture_observation_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureObservationTest",
+      "sha256": "6a2608cbe5e0c9d7ac54f9783156af823040d16b5f63c81ccdbffc22a4cfae51"
     }
   ]
 }
