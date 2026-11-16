@@ -244,6 +244,14 @@
       "sha256": "db49143d725bc09a16ca31490e438370377393632ebba5850ded318e67a381ef",
       "contract_type": "content_evidence",
       "status": "OWNER_APPROVED_BOUNDED_NONPRODUCTION_BROWSER_COPY; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_VERIFICATION_RESULT_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_VERIFICATION_RESULT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_VERIFICATION_RESULT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "2c190d41d962b371807f1dfa31c3b60d5e18ba15f71a4356384897cf70f4a297",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_BROWSER_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; RUNTIME_RELEASE_NOT_AUTHORIZED"
     }
   ]
 }
