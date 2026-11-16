@@ -1,10 +1,6 @@
 {
-  "base_sha": "a3d7e2e2ac11c3b7ecdd6610e40e1328c226b216",
+  "base_sha": "d1001ee3c935337676fe61f855d1004e080bc143",
   "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227/checks",
-  "ci": {
-    "source": "external GitHub checks",
-    "status": "unknown"
-  },
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227/commits",
   "files": [
     {
@@ -173,14 +169,14 @@
       "status": "modified"
     },
     {
-      "blob": "9d7c4684861cac53674e482878058feb36181305",
+      "blob": "e97bafbecc6453b3623c0d1007f5ed404cd57dc9",
       "mode": "100644",
       "old_blob": "29b413d8108d09050c395d49f87dc9b24f5d5967",
       "old_mode": "100644",
       "old_path": "assets/js/app.js",
       "old_sha256": "48e85264a666c6fef7adff5658c60362097d000e384dc5eafcd7223e8985caa0",
       "path": "assets/js/app.js",
-      "sha256": "4b5a1c9680b579aec9d655e53f2a077ed5234c9d991949e7d58f36ef132bbc45",
+      "sha256": "e5e3f610089f752ed100f44d432ee85039381d36a352941b60a17e051ae0fe17",
       "status": "modified"
     },
     {
@@ -195,14 +191,69 @@
       "status": "added"
     },
     {
-      "blob": "46cb37aab2d03ca799f52bf497c60273f99e0c04",
+      "blob": "e2bd85ebf19b913fe8bbdbb32f1bfe22042c06db",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "74be1441e6b60482dd443bc863bbc1c072fae997865fe7632d3254857b0a1a26",
+      "sha256": "3d8ec192434b75046ec6c48981aa86698cd779f30f54b51618efe684a4015b7c",
+      "status": "modified"
+    },
+    {
+      "blob": "0654a604971d4dff28220bdc36a1c0bdad7fe642",
+      "mode": "100644",
+      "old_blob": "6dc3caf67974abb254d82cbb973d338db3ed5069",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/identity.primary_email_change.json",
+      "old_sha256": "054a16cf4a4ca2247f7ac8d0015bb65bda5b4b434e80a01a079e6f659a8c1c4d",
+      "path": "docs/development/knowledge/identity.primary_email_change.json",
+      "sha256": "b8689de11a15d079772ad3e4c0b708606fe3b6ffb99cb48a096efc9c1e593584",
+      "status": "modified"
+    },
+    {
+      "blob": "c0bdac212b98437e3261efb233a1b0f9ed694721",
+      "mode": "100644",
+      "old_blob": "dfd8899a0b9e230684064b0e766201bfb09066c8",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/identity.recovery.json",
+      "old_sha256": "148c94c87e8a3b3f21022a0b8e5bccf838518d3bc79f2520b549e35ae296c97d",
+      "path": "docs/development/knowledge/identity.recovery.json",
+      "sha256": "a8914b13e2cb5ef0dbe389823ab3aa1b474fd1e459cf7c3a0119ab247cfa4c7f",
+      "status": "modified"
+    },
+    {
+      "blob": "45467e02ca99df1b35a407879f0bba0a5502c320",
+      "mode": "100644",
+      "old_blob": "6f40d68e6332d1e067902d0bb5c2130b9b082c5f",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/identity.registration.json",
+      "old_sha256": "19c82435528f5bac49ce795e25f2016583f0d399ea0725daec9d9cf767775f72",
+      "path": "docs/development/knowledge/identity.registration.json",
+      "sha256": "f2ee0b40860f5d471501b14d9c170eb5fe1986c4b05bfafadbe0c418d1bc5c26",
+      "status": "modified"
+    },
+    {
+      "blob": "988397ce30d0da21fd3e382d427d85b55c221968",
+      "mode": "100644",
+      "old_blob": "bbb63aed776adb475c7fcd6c451779353420162d",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/identity.sign_in.json",
+      "old_sha256": "228f2e85771fce2e2f698e2451f96f7e93ed9d466e03139e381e0772187e11d1",
+      "path": "docs/development/knowledge/identity.sign_in.json",
+      "sha256": "ef54a6d80b6d9013c7a365564a9d15324a5e97ffd393709062ef1efe99d234c5",
+      "status": "modified"
+    },
+    {
+      "blob": "1c87b71442232c64361d6b70fcedac1ec74463ac",
+      "mode": "100644",
+      "old_blob": "8e1b6969eb1093ea80adcf2642fe1ada8d9c6767",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/proof.tb001.json",
+      "old_sha256": "d7b1f8bdeaff5c4d81d9c1179327d522753f575c6e310c2119138c0690804be1",
+      "path": "docs/development/knowledge/proof.tb001.json",
+      "sha256": "e5704b7bc4436ec21cadc1c740142ee0b7b05d28c544f247ab06522477df1090",
       "status": "modified"
     },
     {
@@ -225,6 +276,28 @@
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/components.md",
       "sha256": "35c58c12b8dd5dca8e395b394ace272a6d91c104ac318b8993e7860002fa4adc",
+      "status": "added"
+    },
+    {
+      "blob": "4ac3418e6bcf47b41b327ae9dffb11d2fa937ef7",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/guide-route-reconciliation-evidence.json",
+      "sha256": "8cd52041c4b25ce775df3f5b4d1ff4e4e0fc1eab7359a8c979b8ca22870fcf06",
+      "status": "added"
+    },
+    {
+      "blob": "fb5b5319a50e57d9127fcde3e13ce027820917a9",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/guide-route-reconciliation.md",
+      "sha256": "7eff1de5a844a85db7c37c7edf7cb159ff8e4b3e644d5a1ed10242a42f822cb3",
       "status": "added"
     },
     {
@@ -602,6 +675,17 @@
       "status": "added"
     },
     {
+      "blob": "055fd814eba29d875ca34a0acbdd81d79d8b04eb",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/superpowers/plans/2026-11-16-current-main-reconciliation.md",
+      "sha256": "3aa83e6b1abe031dbdb3a1476823f952368cabd7144df2ca4f14a8e1990dffdc",
+      "status": "added"
+    },
+    {
       "blob": "3cdb0c79318be8415ec340392a14739300b236ae",
       "mode": "100644",
       "old_blob": null,
@@ -701,14 +785,14 @@
       "status": "modified"
     },
     {
-      "blob": "2fac97e66e061397c49af3dde1572cbdc60c358c",
+      "blob": "4ba166c07e1cbf636bc8514cd78444f473e86f93",
       "mode": "100644",
-      "old_blob": "211f1059a4afd2f2b91aec5897d26cd85a87f319",
+      "old_blob": "86a3626e76f28cc58c82926470b202499858528b",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/controllers/magic_login_controller.ex",
-      "old_sha256": "79889fd2b46d67a72ceb0be301d5e65caccc2775bc1f90a66e5b3efc299679fa",
+      "old_sha256": "6cb93ce722fb097782a865ace833ff801a08c16501507668ba7a25e6d0364dcf",
       "path": "lib/new_you_web/controllers/magic_login_controller.ex",
-      "sha256": "16c0c90c9f986718c63435e78c43dfeb6cbc6186092e9c4baab058b50593d99f",
+      "sha256": "d600871376cb9e47fa5ccd161bfed12531debf6457de13efaba6f0ed107bb335",
       "status": "modified"
     },
     {
@@ -723,14 +807,14 @@
       "status": "modified"
     },
     {
-      "blob": "a1c297543b6d24d0a489d2439c3398f8f00ab323",
+      "blob": "5283b50ddc8ac31893895b2548a0136730c073f6",
       "mode": "100644",
-      "old_blob": "160ea0f0f7144ed48b863e571dc6751d0784802c",
+      "old_blob": "9441bebf7ec5772bf95d0ebfdae8a0809443e3e9",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/controllers/password_session_controller.ex",
-      "old_sha256": "41a860de8624e1e1ed4c53a2d57dc2b8c1f9633c0991684757fb5acfddc252bb",
+      "old_sha256": "3aa682e16e48322a5f1dc65d50e2fd2c0e7729a6517b65b1e4dac38ca8a54e88",
       "path": "lib/new_you_web/controllers/password_session_controller.ex",
-      "sha256": "4ceb6efcc8b8fe85fc5904a8a80b4ddeb8e8175a973c1f9085042ace651c92aa",
+      "sha256": "fc280380f919d6afc19dae79577b65e08d3d8bb3c4f3edc4685404b4fdbeca70",
       "status": "modified"
     },
     {
@@ -745,14 +829,36 @@
       "status": "modified"
     },
     {
-      "blob": "4ff15bc65c31ecb0feeb5412e71e987043f4fa0f",
+      "blob": "654b7e08562469f3bdd1c7a672d930cf72e25bd9",
       "mode": "100644",
-      "old_blob": "f9ca9a44606fb0f3339bd1ac3afcce2be5e0cdad",
+      "old_blob": "443935c2a05a5e75d01895238bdee9e6071adada",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/controllers/registration_html/new.html.heex",
-      "old_sha256": "72169956025e6b78200c35222ac2646ac95ef6c3a628956f213377e6a2405981",
+      "old_sha256": "77fba0e1ea28aeddc51e9b334ea3733f4c493442b5d4425200466853cee31811",
       "path": "lib/new_you_web/controllers/registration_html/new.html.heex",
-      "sha256": "d6f631b75f2c12b3998916328d6fb8f38654280fd57d3f0299da68ffc97686a1",
+      "sha256": "3f61e8e5a361e845765860149b947a2a2953fc2854bfb39eb9717c1964da14fe",
+      "status": "modified"
+    },
+    {
+      "blob": "1d313eba25f6e72a2e0edc5c15fa5aba18aac83a",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/design_system_boundary.ex",
+      "sha256": "b42ce70f4534ef399ce64688cac7fc1a1f36f0f4031db0a124bab6f29ac6320c",
+      "status": "added"
+    },
+    {
+      "blob": "6b90a7f46daca538c56432f23ba57c21bd813437",
+      "mode": "100644",
+      "old_blob": "4e356be38f506a74829cc354c6b5d5aaf6cea058",
+      "old_mode": "100644",
+      "old_path": "lib/new_you_web/endpoint.ex",
+      "old_sha256": "874d6f005f6323293adb2c7279a0d5e78b75d1d88ae0c1b3ed976184a9224655",
+      "path": "lib/new_you_web/endpoint.ex",
+      "sha256": "28f5b007b9841067c90adce5f2ba8a35dc3a3bac0f7de252b4a732fea0cb5e17",
       "status": "modified"
     },
     {
@@ -822,25 +928,25 @@
       "status": "added"
     },
     {
-      "blob": "31035b75ed6257cd761611e985968fe7b7827cd8",
+      "blob": "734008268b9e2f1ae025becd5eff0fd244dc9ee3",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
-      "sha256": "c34143c86d91e96e86af33f06473b3c393437d91de5ba353b90de612f498f3e9",
+      "sha256": "63f774160639b26956b4f599a0fd82496148be3ad3b7d3537ed3028714b3aa5f",
       "status": "added"
     },
     {
-      "blob": "d1f9d1eaa04c699b86f7ec97952b856e8f2b1996",
+      "blob": "27f279e00d456f44f9ff5f14f80dd3e6aac5927a",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.html.heex",
-      "sha256": "940b3372c30613227e51f52f15d4f9af57e3e458a767aa1a4ac8164f814fe73b",
+      "sha256": "e19b0289c7385fcdfda2966dc395fc3c47ff9683e06276475c678422234cc738",
       "status": "added"
     },
     {
@@ -866,14 +972,25 @@
       "status": "added"
     },
     {
-      "blob": "7a2f22d0783fe25138cde8ea57b6955d8b618c77",
+      "blob": "f9656f1ffc2b5d869c722b0340625c9ae69dd584",
       "mode": "100644",
-      "old_blob": "edcf9037a69506eb8d6e100e1b0df16d7c1d5669",
+      "old_blob": "bac068ca1c521d9a010ebf7fef1c1d3db96549f3",
+      "old_mode": "100644",
+      "old_path": "lib/new_you_web/registration_boundary.ex",
+      "old_sha256": "dba784a2fa960cd3f0cb01f1b9ea195e20818d5d47b430b91173adf3a348c47c",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "sha256": "d2f0230bd21a84ecfc2566e92c0ff75e58f7d3cb62ec0176b1a9e162b0527254",
+      "status": "modified"
+    },
+    {
+      "blob": "d3feda900fa99bfa9bf3f4f96f046a6fa41f526d",
+      "mode": "100644",
+      "old_blob": "789443d750cac7352443fe98fa95a687d0399ff2",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/router.ex",
-      "old_sha256": "bb93b57ae3b8c6ecc41c5a3e21d70f551b6ae3c4bdd09e7c54bac79566cc2af1",
+      "old_sha256": "61a829e8080bba8451843308b8b038e3f80755b729786551b7d6762533dc2160",
       "path": "lib/new_you_web/router.ex",
-      "sha256": "3f07eab02f007446e7270e24ad72c5442000d1e221ce992b82663e97b1f3f90b",
+      "sha256": "a08e890d4f49151edcd36ed69fd884ce07cf3f06b89b15438d164ecc95697485",
       "status": "modified"
     },
     {
@@ -1053,14 +1170,14 @@
       "status": "added"
     },
     {
-      "blob": "99bc167ed2acca6c3d85b3dc88333d4ae3235b34",
+      "blob": "d27268a11293d0826e7dc5bc001f3430f446ed64",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_system_browser.mjs",
-      "sha256": "0a1c1a7c3bd74532dad6a213c0bc67e983b52d17c5dc3c9c88bd481d941c1b55",
+      "sha256": "b56ec5660fc3a623f5a7984526450f26e0e50ac2646fdcba01cbb941b7601502",
       "status": "added"
     },
     {
@@ -1108,58 +1225,47 @@
       "status": "added"
     },
     {
-      "blob": "63fb9a28287ee2b7e073e4a9453995c8d3efbc3c",
+      "blob": "918697ba0a879a20dfd9767b3e5c45f626300246",
       "mode": "100644",
-      "old_blob": "8e5f61b1e6f65c5b2db048e1c92f52ab136494fe",
-      "old_mode": "100644",
-      "old_path": "test/new_you_web/controllers/email_verification_controller_test.exs",
-      "old_sha256": "ba2329001a6f138ab9fa1fb7c97950eb8248f4a138f55a1bd238ab98e4610f5b",
-      "path": "test/new_you_web/controllers/email_verification_controller_test.exs",
-      "sha256": "ceecc69117ce8d712516f63657fe21f8a6521bf199e147921c7ef85db489f69f",
-      "status": "modified"
-    },
-    {
-      "blob": "2926a1b3a95d398efa96f2988c88968c2fcddc5a",
-      "mode": "100644",
-      "old_blob": "89ea268bbe2998b25531879aceab134e4b5dde74",
+      "old_blob": "071ef2282b1da518e036c08f007f026786046e84",
       "old_mode": "100644",
       "old_path": "test/new_you_web/controllers/magic_login_controller_test.exs",
-      "old_sha256": "064aeff8b3c78b565ba12593cb26db99d371733721b8e7f70510ee465f055fe6",
+      "old_sha256": "c40347b2adcacce62bac7a2162ce4530351d4af3de0ae9a4c17055b50c7da4c3",
       "path": "test/new_you_web/controllers/magic_login_controller_test.exs",
-      "sha256": "cfeebf98bdb678caa30058169fdb6efc0b080b7ed3cc18fcb552216211dacbc3",
+      "sha256": "4604dcc44e86b1c4110d730a06571f798f49579c239db3e2192c753e6b12ce40",
       "status": "modified"
     },
     {
-      "blob": "350b6ba9abd1dc0042ae7c8b937023a1bcc406c9",
+      "blob": "8dde98c8acdec4720f98b4d2e9615288ff6404fd",
       "mode": "100644",
-      "old_blob": "b0a5d81c848ce30cad33ce81f730489afaf88808",
+      "old_blob": "26dbc5468a2b005fe8aeefca30dceee65d1bce77",
       "old_mode": "100644",
       "old_path": "test/new_you_web/controllers/password_reset_controller_test.exs",
-      "old_sha256": "b128a6872efd4dc4a23b5d96843667f799d6ffafdb1f62969a6b5758511db8a4",
+      "old_sha256": "e09ecb0a0bd4eaf877e02e310ed6e21ab374b60adb91ea934950071f3011fc96",
       "path": "test/new_you_web/controllers/password_reset_controller_test.exs",
-      "sha256": "3bb0309be4de81d05e4c35326ac8569a441aa8b9e0900570f0663b574a9392ca",
+      "sha256": "cc3ff468c57ef1abcf685158a4058559d92f4a81451d7420ecdf66bbfdf4b298",
       "status": "modified"
     },
     {
-      "blob": "5b19f262e252c14726d7370a722bbb3920fbac34",
+      "blob": "b76821ab956b0e05dc5e74759e198dc6d77b669a",
       "mode": "100644",
-      "old_blob": "31dc072c59c595bc1f759ae4d69f50edc0748240",
+      "old_blob": "c01e672cc430e1dea06f3d95facf748fb1bd5e6e",
       "old_mode": "100644",
       "old_path": "test/new_you_web/controllers/password_session_controller_test.exs",
-      "old_sha256": "9f319f6bd6912c49b95dfa4c90ec7e3a9d494395a0b90fa3a14ace5e5f6f8f6c",
+      "old_sha256": "28ad7b98da1c95d9cecdd637e93fa0d139ea5531656dff8e0115a7f422d4e442",
       "path": "test/new_you_web/controllers/password_session_controller_test.exs",
-      "sha256": "53e0a76a6d0731d8d2d1898a2914058b1c75a896c863741b3bb9d604b9356656",
+      "sha256": "b5b3d488e20ee0141b759f6e03ab549cf1b1c7f3e14902219bf978731bbf21f8",
       "status": "modified"
     },
     {
-      "blob": "3bc697f52c854164948a1003c7807caeb681d03c",
+      "blob": "6b801a2fae106ffca4664a9a769162586da3b2be",
       "mode": "100644",
-      "old_blob": "acf6b3f194bfbd10ef8a1e72a108f4bb17576d71",
+      "old_blob": "b8c25cbce19a9a2c04932957bf8067c8b7839cd0",
       "old_mode": "100644",
       "old_path": "test/new_you_web/controllers/registration_controller_test.exs",
-      "old_sha256": "b157f5e2707e6053fdb522a2e88864760fd9e2726045e086ec04acac68998f26",
+      "old_sha256": "7df9f2049022cf2a7480aba757f7ea6dd6ef7d49a930980fe39c14c8c06c7fef",
       "path": "test/new_you_web/controllers/registration_controller_test.exs",
-      "sha256": "ad7748981ee6563822e1aeed9a509660f276b0be3153e6bb99abb68bf86f74b1",
+      "sha256": "932b75fff6dff9ac96202deff7d19c32e1b9e8058a31d1cc3fc48b771a0b0bda",
       "status": "modified"
     },
     {
@@ -1229,89 +1335,76 @@
       "status": "added"
     },
     {
-      "blob": "62a6e01dea4f4693713327a438a412298e934594",
+      "blob": "90ab11ef768bd2ecc7385b90f3c9838eda98a0bc",
       "mode": "100644",
-      "old_blob": "75d93e1d0e9cf7a405121fcd629a4319f648a4b6",
+      "old_blob": "5730f5763453180a008141b8351499235c70c698",
+      "old_mode": "100644",
+      "old_path": "test/new_you_web/privacy_telemetry_test.exs",
+      "old_sha256": "53b16f110f5821e069f05e073d324475185c7dcd551e0cb8f8d4f06bc4a9ca32",
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "3806af345f2a4cdb9f25275de5dbf989f8f6ebd98f6ae53030f4c09a0e25caf0",
+      "status": "modified"
+    },
+    {
+      "blob": "8171aa83309a0c4173ad252e6df080e641816966",
+      "mode": "100644",
+      "old_blob": "4cf7ef3ac012fc0fae7f133e531ddc7297097f33",
       "old_mode": "100644",
       "old_path": "test/new_you_web/security/authentication_reachability_test.exs",
-      "old_sha256": "04816b578e60ebfe2c80dd23dd10d534af0b511277fe47d3274428bc22c96828",
+      "old_sha256": "21c74afa306dc808ae97614fd1ef9cfe077f5b66e9cccebaf25979d6d4fe0498",
       "path": "test/new_you_web/security/authentication_reachability_test.exs",
-      "sha256": "55ad05e4acce3d5347793a50f136705469e692d19378788ff1075da2804dd2a1",
+      "sha256": "3c145eefac36f061b25f9c742fd4de5a6a4e6f087d2efd8e2803a0f17b2dd33b",
       "status": "modified"
     },
     {
-      "blob": "2301aeada4ebe27e1c0753a3249c1a7b679fbf97",
+      "blob": "237d4eec1086e26a4fb2e5c6c18082cee5d0d347",
       "mode": "100644",
-      "old_blob": "fe95acb6ee085025294b0c7d9d164787c7a79ec3",
+      "old_blob": "b945fee91a53921956a5ce6b3e5a51da7658c731",
+      "old_mode": "100644",
+      "old_path": "test/support/proof/capability_scenarios.ex",
+      "old_sha256": "8a4a1553d9006b3a72db0c38451498a921b89a28232181743dc05a4b5f795c17",
+      "path": "test/support/proof/capability_scenarios.ex",
+      "sha256": "10407b6e0d9042989d2b05b686f586918902a82f5a2708a43c1dc909d8df4372",
+      "status": "modified"
+    },
+    {
+      "blob": "3782e970726267d2e4b7b641ee68c0cd354d6d0e",
+      "mode": "100644",
+      "old_blob": "82045dcfa8cde64d63643b9d2dcc592107b6af31",
       "old_mode": "100644",
       "old_path": "tests/test_foundation_lane_routing.py",
-      "old_sha256": "7ca0c6cab28a6074d5e1feac12602fcc6c14703d7f25f7829c60654df07bb018",
+      "old_sha256": "27d7098cdc8c645b6e9944eb336501d468930ccc46593ddd85e9cf0bfb2c0e51",
       "path": "tests/test_foundation_lane_routing.py",
-      "sha256": "2c0ea1e372145b1bddd62a488871ac96205d01d3230795fac6d1d0e5a9cfcdf8",
+      "sha256": "fe43b571bce92abdd171fb210ee491993deee38500233be904db448d22cf3226",
       "status": "modified"
     },
     {
-      "blob": "f45fa0ffc62587ce7e5f91716b26dd7cfd8c42c6",
+      "blob": "cc6aeccd0ef097d1a23e19a970acd9cb4688d3a0",
       "mode": "100644",
-      "old_blob": "696466d68e7ee3ec406706b657ee132fce59ca67",
+      "old_blob": "5bc85bbb60d012445999f54035c41c671f04f198",
       "old_mode": "100644",
       "old_path": "tests/test_foundation_smoke.py",
-      "old_sha256": "b2588b88fdbe7af2e52366e9f67237f049202b8193970dbc6b21ddec771b6ffd",
+      "old_sha256": "2efdf4e68f130a9cb4e0d497e375f84a4eee7e65fe104ff08aa4d739c68c48ee",
       "path": "tests/test_foundation_smoke.py",
-      "sha256": "5c6fc5fddc214553606030a9e16333e54aa1f722e9b2b08a97d06dfcab2bcad2",
+      "sha256": "aa4146c8c44835961a35dd80574c23326ff6daa35cbc4f050ad4953dd402fca1",
       "status": "modified"
     },
     {
-      "blob": "232a6406ec66db3a43f2c994402c9e7b0b50c1d7",
+      "blob": "d1ebd1b68973416b26ba4061dc3acd2bbbd1e4ee",
       "mode": "100644",
-      "old_blob": "8d468282dc9dbbc1fe0038bcb85435b270075272",
+      "old_blob": "f4316bf92f321868fc2e0449ef954588c615981a",
       "old_mode": "100644",
       "old_path": "tools/foundation_integrity_routing.py",
-      "old_sha256": "7c142d6976c62bdb436882d62ff5966fa311e995a08dbc3d0452cfe5a64d4cf8",
+      "old_sha256": "d166c5a0897ff1562fac5a999b9450a2c6df1ef8dc82dd195a80ea14cadf2cfb",
       "path": "tools/foundation_integrity_routing.py",
-      "sha256": "ccbfa4f514fe6c563d2d9a5e4aeb3dcb58847c230a169cc60fcb8c07b46a206e",
+      "sha256": "a3bb2d4b6aa3624eff4c17213d0d628fa6d8adbd4b549b7251714c2e1c4d4e0f",
       "status": "modified"
     }
   ],
-  "intent": {
-    "author": {
-      "id": 355419376,
-      "login": "JC-Agents"
-    },
-    "kind": "attributed_intent",
-    "summary": "WELL-112 adds a development-only LiveView design guide at `/dev/design-system`. The guide renders the same token-driven buttons, links, cards, fields and icons as application consumers. Fonts, colors, typography, spacing, radii, shadows, grids, containers and viewport previews expose CSS token names and browser-computed values. Self-hosted Inter and central body/display font inputs support changing font selection in one CSS file.\n\nCanonical semantic CSS inputs feed Tailwind utilities at the consuming element. Shared lighting recomputes locally, including solid fallbacks. The approved palette, typography roles and geometry remain intact. Lit primary buttons retain directional borders, a gradient, a short upper shine above the label and natural pressed edges. Fluid typography uses endpoint-first modular scale math with the existing native progress/trigonometric/static interpolation engine. Its semantic mappings remain guide candidates pending visual adoption.\n\nReusable layout recipes cover fixed grids, intrinsic auto-fit/auto-fill, column limits, incomplete-row centering, capped containers, single-owner gutters, stacks and wrapping rows. Breakout remains a guide comparison. Cards have noninteractive article semantics and explicit leading/inset/action slots; inset radii subtract the selected border and per-axis padding. Heroicons retain decorative/named semantics and native system-color behavior. Scoped prose and divider recipes separate content, section, card and control spacing. Purpose-owned borders distinguish decorative hairlines, native control boundaries, separators and directional lighting.\n\nComplete opaque plain, canvas, panel and raised profiles provide background, heading, body, muted, link, hover and focus roles together. A color-only Phoenix surface component owns finite data-surface values. Every nested boundary recomputes all roles; shared cards own plain/raised profiles and shared links read contextual ink. The guide demonstrates local profile inputs, inherited named inputs, nested resets, long EN/AF content and measured text/focus readouts. Missing, translucent and image-bearing grounds are not scored. Decorative gradients/noise/overlays retain their existing limits.\n\nShared native checkbox and fieldset contracts now serve registration and the guide's native-form lab. Text fields support associated help. Native checked/required/disabled behavior, deterministic help/error associations and local field/choice spacing share one component and CSS owner. Related actions remain outside checkbox labels; unchecked values remain omitted.\n\nThe existing development-gated registration template consumes these same components and layout/content recipes in EN/AF. Exact copy, form transport, age/legal facts, password handling, controller/Domain behavior and release boundaries are preserved. This presentation pilot is separate from the broader WELL-131 journey. Legacy styling remains outside the bounded migration.\n\nSource-linked Automatic.css 4.0.3 research inventories all ten requested systems and records inputs, formulas, generated tokens/selectors, dependencies, source identities, adopt/adapt/defer choices and missing proof. NewYou's implementation adds no vendor runtime/code, Sass/WordPress dependency, service, Domain state, schema or migration.",
-    "title": "WELL-112: Add live token-driven design guide and shared components",
-    "url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227"
-  },
   "migrations": [],
-  "plane": {
-    "checked_at": "2026-11-16T05:00:19Z",
-    "items": [
-      {
-        "description_sha256": "0dc493ca6de6c09b18c612c4e99a22e8df9ec8c05068ee6352532f229e756442",
-        "id": "d0ba230b-4191-404f-a4b2-372078817db8",
-        "identifier": "WELL-112",
-        "name": "Build a token-driven LiveView design-system guide",
-        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
-        "sequence_id": 112,
-        "state": "In Progress"
-      },
-      {
-        "description_sha256": "963725a49f3f0ae0e55af6a63cac7a4385f7bcf18165dc72c15265e08d38a542",
-        "id": "e2276621-9382-4a65-972d-a9b83aa785ce",
-        "identifier": "WELL-131",
-        "name": "FP-001 first slice: bilingual public entry to verified individual Account",
-        "project_id": "846031af-971b-4f08-92c3-7f008522a5ac",
-        "sequence_id": 131,
-        "state": "Done"
-      }
-    ],
-    "source": "connected-plane",
-    "status": "agent_verified"
-  },
   "pr": 227,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227",
-  "range_base_sha": "a3d7e2e2ac11c3b7ecdd6610e40e1328c226b216",
+  "range_base_sha": "d1001ee3c935337676fe61f855d1004e080bc143",
   "schema_version": 1,
   "symbols": [
     {
@@ -1813,9 +1906,9 @@
       "kind": "module",
       "module": "NewYouWeb.MagicLoginController",
       "name": null,
-      "old_sha256": "a8f244266855cd7d2f6f79c9dee87c4e9a3a57091ae42f61e989cd0936999861",
+      "old_sha256": "d56e1636a7af72d5ed4b8442b93e5936d10d952fa4bd26fa4ff5024b81ed2c31",
       "path": "lib/new_you_web/controllers/magic_login_controller.ex",
-      "sha256": "336792d2825af243512c81d42bd1a22ec6c87fda5707272724edd395ded99b16",
+      "sha256": "26bdca767a92c8715d5e0d090559d75633e5cd0123d2c0c237a67ef5372e19c4",
       "status": "parsed"
     },
     {
@@ -1881,21 +1974,21 @@
       "kind": "module",
       "module": "NewYouWeb.PasswordSessionController",
       "name": null,
-      "old_sha256": "258413ed6d0e1e78d008129b68d55bd37b180f106e73974fd98594e98aa4b3bf",
+      "old_sha256": "00cc3e12c7819ede11357272b55d5f328e4a332d9f2d0bd928f95fa08ba1afd7",
       "path": "lib/new_you_web/controllers/password_session_controller.ex",
-      "sha256": "4b2c5762468657eb71f94aed5dca00c019d71e1ebd7253b2513fa7f7533683b0",
+      "sha256": "462aded6d6968f8bfab923667639463f3054eb24862c855fd793dbc7ba35bf9f",
       "status": "parsed"
     },
     {
-      "arity": 3,
+      "arity": 4,
       "change": "changed",
       "declaration": "defp",
       "kind": "function",
       "module": "NewYouWeb.PasswordSessionController",
-      "name": "page",
-      "old_sha256": "39e48184fd379cbbbd4cfebcf4aab25506c63ee5e60c5a1aa70ab2baa870de14",
+      "name": "render_page",
+      "old_sha256": "4e11fbf175f6279cdcd80f817fe68019fd49a94de6b0f97ae90e072b10a0340c",
       "path": "lib/new_you_web/controllers/password_session_controller.ex",
-      "sha256": "2c50b58419cce863f31d6d0af1fd66064f25cfc23703cd36baf64997b320112b",
+      "sha256": "dd6c71bea78bf1f8d7a31fd139c72d4725e024582c0f905df1f7f09bd2f34cd0",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1927,6 +2020,61 @@
       "module": null,
       "name": null,
       "path": "lib/new_you_web/controllers/registration_html.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYouWeb.DesignSystemBoundary",
+      "name": null,
+      "old_sha256": null,
+      "path": "lib/new_you_web/design_system_boundary.ex",
+      "sha256": "94f89631bfd9401ee59e951edf5498a4caac2a8d762bf4c03ab078230b00989e",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.DesignSystemBoundary",
+      "name": "render",
+      "old_sha256": null,
+      "path": "lib/new_you_web/design_system_boundary.ex",
+      "sha256": "55de7f7fa6e270b8ec00d8f9c331ceef97b95261937792f2628fef8c707a4019",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/design_system_boundary.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYouWeb.Endpoint",
+      "name": null,
+      "old_sha256": "f2d49dd95aeab3384902c44611cf2ac43b7675c89ed6b816b2519e3ea7970e6e",
+      "path": "lib/new_you_web/endpoint.ex",
+      "sha256": "ec7541fc788872041bffdb174f5268d001b135e33134c5bc87093b27cfc5cbd4",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you_web/endpoint.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -2272,7 +2420,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
-      "sha256": "9b2d45c847281ce6c5f895c717d2d24eeaaddde41415749c7b55374e148bf036",
+      "sha256": "8bbbeefddeb197b12611afcb00501dcf6992f7796219dadeda26ffb8f9c65b94",
       "status": "parsed"
     },
     {
@@ -2285,6 +2433,32 @@
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
       "sha256": "8f8a034bc8ad9a9808a8d1f8de38346f5adb0bc1ccaa2ee0e0911b11de79e32e",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYouWeb.DesignSystemLive",
+      "name": "display_params",
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_live.ex",
+      "sha256": "77151dad98a4d8e008f016c8f4cb9d275731fccea6c4cb9f1e2dd0ecb80b5997",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.DesignSystemLive",
+      "name": "display_url",
+      "old_sha256": null,
+      "path": "lib/new_you_web/live/design_system_live.ex",
+      "sha256": "6974a640dab13694d47f1139da1100b9ce758844587e593060f0ff1c56481c06",
       "status": "parsed",
       "visibility": "private"
     },
@@ -2310,7 +2484,7 @@
       "name": "handle_params",
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_live.ex",
-      "sha256": "acd2d3bac9847c4f2290e1d5e03cb6312f83c8e893372b15fe97304194f0a9dd",
+      "sha256": "b328aebba53d64467c6ceb9b519cbfe6fcdf23176dc42775a7e9a39b006671c1",
       "status": "parsed",
       "visibility": "public"
     },
@@ -2422,11 +2596,11 @@
       "arity": null,
       "change": "changed",
       "kind": "module",
-      "module": "NewYouWeb.Router",
+      "module": "NewYouWeb.RegistrationBoundary",
       "name": null,
-      "old_sha256": "37b239bbd06418a987f709f2676a9daeec0ef17d38850126aed786cad8cc1de2",
-      "path": "lib/new_you_web/router.ex",
-      "sha256": "c2b808c6c0a4e1cd2634bb4fec57bfdefbeeb7a04340aafa6b0c0df520640064",
+      "old_sha256": "9008ac824cd72a49cfed09d4532bf28bedad9f018d482642b64ec64d7ae9d541",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "sha256": "1ba9c3dda9ac3728e2b38aabf0e0e3e92c9d441848c732fc4db62b89dbe8b5b9",
       "status": "parsed"
     },
     {
@@ -2435,7 +2609,7 @@
       "kind": "unknown",
       "module": null,
       "name": null,
-      "path": "lib/new_you_web/router.ex",
+      "path": "lib/new_you_web/registration_boundary.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -2443,11 +2617,11 @@
       "arity": null,
       "change": "changed",
       "kind": "module",
-      "module": "NewYouWeb.EmailVerificationControllerTest",
+      "module": "NewYouWeb.Router",
       "name": null,
-      "old_sha256": "4ddc8f09d26f8251ad81e740d360405c227031df19771f554dd6d7a34c9eafc9",
-      "path": "test/new_you_web/controllers/email_verification_controller_test.exs",
-      "sha256": "17ddb8c5759e2f2323cb935ce31840dd656f49f261f0ea1abba85f964358d8a3",
+      "old_sha256": "3cdbeb382af22c9cde5ac6d74a84b0d059b812527d81eab6219f21f40d25a6cc",
+      "path": "lib/new_you_web/router.ex",
+      "sha256": "7891f4c6e033ced9c100c255c81701c71ef5e088b1d8d74e69581eacfe2d994c",
       "status": "parsed"
     },
     {
@@ -2456,7 +2630,7 @@
       "kind": "unknown",
       "module": null,
       "name": null,
-      "path": "test/new_you_web/controllers/email_verification_controller_test.exs",
+      "path": "lib/new_you_web/router.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -2466,9 +2640,9 @@
       "kind": "module",
       "module": "NewYouWeb.MagicLoginControllerTest",
       "name": null,
-      "old_sha256": "2068ed708bdedbfdde990fcb88f3972108539b8641df0d9dda3fb93928f8eec4",
+      "old_sha256": "aad707a5507ddee89d0055fc71a4a8a4f49a3c9fac622bb7e172820d8ff1268e",
       "path": "test/new_you_web/controllers/magic_login_controller_test.exs",
-      "sha256": "c08e3103dcb8e4086035f0b1f6a2db40e308b76e951c43a0f91bfda9bca1d49f",
+      "sha256": "b4cc0ddbde604c0cd626076a0705133ce1800b013da76fb12cbddc0edafb2d23",
       "status": "parsed"
     },
     {
@@ -2487,9 +2661,9 @@
       "kind": "module",
       "module": "NewYouWeb.PasswordResetControllerTest",
       "name": null,
-      "old_sha256": "f7757bffb155952eabe301c1a9e988d9e99c1a738ca0768d93cb5efbfb5d1ef9",
+      "old_sha256": "56c6802d9253c231abb2ed70ceb5428e250ead2773494ba85e6cf06def16d007",
       "path": "test/new_you_web/controllers/password_reset_controller_test.exs",
-      "sha256": "aa0fa9c2ce9baf40a8aeaf82bca679e1e2f8c5972f75237ede7e85e203451b22",
+      "sha256": "8d561e4a116cf66e1bdc1c46f6398a850a438f1950ade271ad08df31853e5e3c",
       "status": "parsed"
     },
     {
@@ -2508,9 +2682,9 @@
       "kind": "module",
       "module": "NewYouWeb.PasswordSessionControllerTest",
       "name": null,
-      "old_sha256": "b005af0558f9db13a70047bb115f64c58776b467c36047b804945e10fb1b9c88",
+      "old_sha256": "c9c64208a19408c710a317f64545077cbbaf950bb28bdb18052b95aad6b283e8",
       "path": "test/new_you_web/controllers/password_session_controller_test.exs",
-      "sha256": "6977a05b1ede0d83e2437faacf3bd0d5ef5ac3cd45c4cff449a4573c9f404766",
+      "sha256": "3c1f7ca853032d9e9aa4bbe309330750689944d469799dcc2158ca09548ab3d6",
       "status": "parsed"
     },
     {
@@ -2529,9 +2703,9 @@
       "kind": "module",
       "module": "NewYouWeb.RegistrationControllerTest",
       "name": null,
-      "old_sha256": "8197345e6c2bb471275d39974ec53f92ccfb6577f82ebef41b817c1978c0adbb",
+      "old_sha256": "a3e8b883f831546c840d3ac2cb060b6aca8f79f25a82284b7c8ea47fabbd2310",
       "path": "test/new_you_web/controllers/registration_controller_test.exs",
-      "sha256": "b90d4adb624d407f7cba750a7e25505bd51ed456c09a4336f7b922a03e704350",
+      "sha256": "5bcb1ed9e092d3ccb7cf3aa5c0a632c561779f67691a12421c8f4368b53fba50",
       "status": "parsed"
     },
     {
@@ -2713,11 +2887,71 @@
       "arity": null,
       "change": "changed",
       "kind": "module",
+      "module": "NewYouWeb.PrivacyTelemetryTest",
+      "name": null,
+      "old_sha256": "f779f4408c9612c4974cdaa39b3bfa93f1f5aaefbd08f434f1f83160fc3762e0",
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "9ece12fa3db5835d6559a0078238eb8d976939946b27106904ff302225091ad7",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PrivacyTelemetryTest",
+      "name": "assert_guide_metadata",
+      "old_sha256": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "f74620b330dece167d843b89d0d1009aa790deffbd171436d0984cb6656016cb",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PrivacyTelemetryTest",
+      "name": "observed_metadata",
+      "old_sha256": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "f6830361d4f693d61043c68704927f00eb74e2d5ddca7cec0e7c3e7caeb20674",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PrivacyTelemetryTest",
+      "name": "observed_metadata",
+      "old_sha256": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "sha256": "f6830361d4f693d61043c68704927f00eb74e2d5ddca7cec0e7c3e7caeb20674",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
       "module": "NewYouWeb.Security.AuthenticationReachabilityTest",
       "name": null,
-      "old_sha256": "b097988c7283f41604f16d86d81008cb1f0e7f9cd82784c2f1097e28af948b3a",
+      "old_sha256": "833bdeaaa0bfc293a81b922028ffa8f5dffe027ca2b337d142e977e9fb4fe265",
       "path": "test/new_you_web/security/authentication_reachability_test.exs",
-      "sha256": "eb45b10d6caed66e868047b529ecc601ed6ce93b70f416e6dc9c846ce12a9470",
+      "sha256": "d914825c014a04ae9a4c70da4e966b3b3860d39092406093502e7996619c7523",
       "status": "parsed"
     },
     {
@@ -2727,6 +2961,40 @@
       "module": null,
       "name": null,
       "path": "test/new_you_web/security/authentication_reachability_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Proof.VerificationScannerCases",
+      "name": null,
+      "old_sha256": "9aa5d125d912dddafee409f9b386b07c664c704591fa373eb57a90119e9abda3",
+      "path": "test/support/proof/capability_scenarios.ex",
+      "sha256": "246dfc784a9eb744e717e712c7f7701579bcd2aa7a4f358836c0ab383a241db6",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.VerificationScannerCases",
+      "name": "scanner_fixture",
+      "old_sha256": "067e1c99c9fcf4a8ffa5d46d8331611dc2af78a4e588e38207101df7d2130b65",
+      "path": "test/support/proof/capability_scenarios.ex",
+      "sha256": "4f2b871219e399579a39e9a766b91bdc55af57d2e74d1c0233e5a309a5e8a59c",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/support/proof/capability_scenarios.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     }
@@ -2750,7 +3018,6 @@
     "test/assets/design_token_scope_browser.mjs",
     "test/assets/design_type_scale_browser.mjs",
     "test/assets/design_typography_browser.mjs",
-    "test/new_you_web/controllers/email_verification_controller_test.exs",
     "test/new_you_web/controllers/magic_login_controller_test.exs",
     "test/new_you_web/controllers/password_reset_controller_test.exs",
     "test/new_you_web/controllers/password_session_controller_test.exs",
@@ -2761,12 +3028,13 @@
     "test/new_you_web/design_surface_test.exs",
     "test/new_you_web/design_system_infrastructure_test.exs",
     "test/new_you_web/live/design_system_live_test.exs",
+    "test/new_you_web/privacy_telemetry_test.exs",
     "test/new_you_web/security/authentication_reachability_test.exs",
+    "test/support/proof/capability_scenarios.ex",
     "tests/test_foundation_lane_routing.py",
     "tests/test_foundation_smoke.py"
   ],
   "tickets": [
-    "WELL-112",
-    "WELL-131"
+    "WELL-112"
   ]
 }
