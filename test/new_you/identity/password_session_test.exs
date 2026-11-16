@@ -135,40 +135,38 @@ defmodule NewYou.Identity.PasswordSessionTest do
 
       # The maintenance action is global. Roll back its whole effect after
       # proving fixture token deletion and retained Session history.
-      assert {:error, :token_cleanup_test_rolled_back} =
-               NewYou.Repo.transaction(fn ->
-                 assert :ok =
-                          AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
+      with_rolled_back_maintenance(fn ->
+        assert :ok =
+                 AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
 
-                 assert :ok =
-                          AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
+        assert :ok =
+                 AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
 
-                 for {credentials, original} <- credentials do
-                   retained =
-                     Ash.get!(Identity.Session, credentials.session_id, authorize?: false)
+        for {credentials, original} <- credentials do
+          retained =
+            Ash.get!(Identity.Session, credentials.session_id, authorize?: false)
 
-                   assert retained.state == original.state
-                   assert retained.token_jti == original.token_jti
-                   assert retained.created_at == original.created_at
+          assert retained.state == original.state
+          assert retained.token_jti == original.token_jti
+          assert retained.created_at == original.created_at
 
-                   assert is_nil(
-                            Ash.get!(Identity.Token, original.token_jti,
-                              authorize?: false,
-                              not_found_error?: false
-                            )
-                          )
+          assert is_nil(
+                   Ash.get!(Identity.Token, original.token_jti,
+                     authorize?: false,
+                     not_found_error?: false
+                   )
+                 )
 
-                   assert {:error, :authentication_unavailable} =
-                            Identity.authorize_session(credentials)
-                 end
+          assert {:error, :authentication_unavailable} =
+                   Identity.authorize_session(credentials)
+        end
 
-                 assert {:ok, fresh} =
-                          Identity.authenticate_password(request.email, request.password)
+        assert {:ok, fresh} =
+                 Identity.authenticate_password(request.email, request.password)
 
-                 assert {:ok, %{account_id: id}} = Identity.authorize_session(fresh)
-                 assert id == registration.account_id
-                 NewYou.Repo.rollback(:token_cleanup_test_rolled_back)
-               end)
+        assert {:ok, %{account_id: id}} = Identity.authorize_session(fresh)
+        assert id == registration.account_id
+      end)
 
       assert session_signature() == before_sessions
       assert token_signature() == before_tokens
@@ -471,36 +469,32 @@ defmodule NewYou.Identity.PasswordSessionTest do
 
       # Reconciliation is intentionally global and bounded to 100 rows per call.
       # Exercise its actual batches, then roll back all changes to retained rows.
-      assert {:error, :expiry_test_rolled_back} =
-               NewYou.Repo.transaction(fn ->
-                 due =
-                   P805.scalar(
-                     "SELECT count(*) FROM sessions WHERE state = 'active' AND (expires_at <= now() OR idle_expires_at <= now())"
-                   )
+      with_rolled_back_maintenance(fn ->
+        due =
+          P805.scalar(
+            "SELECT count(*) FROM sessions WHERE state = 'active' AND (expires_at <= now() OR idle_expires_at <= now())"
+          )
 
-                 assert due >= 2
+        assert due >= 2
 
-                 for batch <- 0..div(due - 1, 100) do
-                   expected = min(due - batch * 100, 100)
-                   assert {:ok, ^expected} = Identity.expire_due_sessions()
-                 end
+        for batch <- 0..div(due - 1, 100) do
+          expected = min(due - batch * 100, 100)
+          assert {:ok, ^expected} = Identity.expire_due_sessions()
+        end
 
-                 assert {:ok, 0} = Identity.expire_due_sessions()
+        assert {:ok, 0} = Identity.expire_due_sessions()
 
-                 assert Ash.get!(Identity.Session, credentials.session_id, authorize?: false).state ==
-                          :expired
+        assert Ash.get!(Identity.Session, credentials.session_id, authorize?: false).state ==
+                 :expired
 
-                 assert Ash.get!(Identity.Session, foreign_credentials.session_id,
-                          authorize?: false
-                        ).state == :expired
+        assert Ash.get!(Identity.Session, foreign_credentials.session_id, authorize?: false).state ==
+                 :expired
 
-                 assert P805.scalar(
-                          "SELECT count(*) FROM sessions WHERE account_id = $1 AND state = 'expired'",
-                          [Ecto.UUID.dump!(registration.account_id)]
-                        ) == 1
-
-                 NewYou.Repo.rollback(:expiry_test_rolled_back)
-               end)
+        assert P805.scalar(
+                 "SELECT count(*) FROM sessions WHERE account_id = $1 AND state = 'expired'",
+                 [Ecto.UUID.dump!(registration.account_id)]
+               ) == 1
+      end)
 
       assert session_signature() == before
 
@@ -510,6 +504,21 @@ defmodule NewYou.Identity.PasswordSessionTest do
       assert Ash.get!(Identity.Session, foreign_credentials.session_id, authorize?: false).state ==
                :active
     end)
+  end
+
+  # Use Ecto's sandbox transaction rather than nesting an outer Repo transaction.
+  # Ash denials roll back their own savepoint without aborting the whole proof.
+  defp with_rolled_back_maintenance(callback) do
+    sandbox = Ecto.Adapters.SQL.Sandbox
+    :ok = sandbox.checkin(NewYou.Repo)
+    :ok = sandbox.checkout(NewYou.Repo)
+
+    try do
+      callback.()
+    after
+      :ok = sandbox.checkin(NewYou.Repo)
+      :ok = sandbox.checkout(NewYou.Repo, sandbox: false)
+    end
   end
 
   defp token_signature do

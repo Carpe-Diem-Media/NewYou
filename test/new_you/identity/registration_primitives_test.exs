@@ -462,8 +462,8 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
     expired_at = operations |> Enum.map(& &1.expires_at) |> Enum.max(DateTime)
     Application.put_env(:new_you, :identity_clock, fn -> DateTime.add(expired_at, 1, :second) end)
 
-    assert {:ok, 2} = NewYou.Identity.expire_registration_operations()
-    assert {:ok, 0} = NewYou.Identity.expire_registration_operations()
+    assert {:ok, 2} = expire_fixture_operations()
+    assert {:ok, 0} = expire_fixture_operations()
 
     operations = records("RegistrationOperation")
 
@@ -498,7 +498,7 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
     expired_at = DateTime.add(bound.expires_at, 1, :second)
     Application.put_env(:new_you, :identity_clock, fn -> expired_at end)
 
-    assert {:ok, 1} = NewYou.Identity.expire_registration_operations()
+    assert {:ok, 1} = expire_fixture_operations()
     [operation] = records("RegistrationOperation")
     assert operation.state == :tombstoned
     assert_tombstoned(operation)
@@ -778,6 +778,30 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
       {:error, _} ->
         :ok
     end
+  end
+
+  # This module already uses DataCase: global maintenance changes are rolled
+  # back, while exact owner batch counts and every fixture transition stay checked.
+  defp expire_fixture_operations do
+    now = Application.fetch_env!(:new_you, :identity_clock).()
+    before = Enum.count(records("RegistrationOperation"), &(&1.state == :tombstoned))
+
+    due =
+      NewYou.Proof.P805.scalar(
+        "SELECT count(*) FROM registration_operations WHERE state = 'bound' AND expires_at <= $1::timestamptz",
+        [now]
+      )
+
+    if due > 0 do
+      for batch <- 0..div(due - 1, 100) do
+        expected = min(due - batch * 100, 100)
+        assert {:ok, ^expected} = NewYou.Identity.expire_registration_operations()
+      end
+    end
+
+    assert {:ok, 0} = NewYou.Identity.expire_registration_operations()
+    after_count = Enum.count(records("RegistrationOperation"), &(&1.state == :tombstoned))
+    {:ok, after_count - before}
   end
 
   defp records(name) do
