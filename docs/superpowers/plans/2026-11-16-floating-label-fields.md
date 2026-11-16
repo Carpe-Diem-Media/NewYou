@@ -1,6 +1,6 @@
 # Floating-label field implementation plan
 
-> Execute within WELL-112 using the existing shared field and guide. The owner approved this design and requested implementation. Continue source work under the recorded WELL-114 exception; do not infer integration or completion authority.
+> Execute within WELL-112 using the existing shared field and guide. The owner approved this design and requested implementation. WELL-114 is independently integrated in main f72cf63. That resolves the earlier dependency exception; it does not certify WELL-112 or authorize its integration.
 
 **Goal:** Add opt-in floating labels inside native text, email and password controls, with canonical tokens and development-guide examples.
 
@@ -23,10 +23,10 @@
 - [x] Extend `lib/new_you_web/components/design/field.ex`; append scoped CSS to `assets/css/design-forms.css`; define local-resolving roles in `assets/css/design-tokens.css` and record the approved extension in `DESIGN.md`.
 - [x] Extend `lib/new_you_web/live/design_system_forms.ex` with `#floating-labels` specimens and usage guidance. Add focused render assertions.
 - [x] Add `test/assets/design_floating_fields_browser.mjs` for actual focus/fill/blur/clear, autofill, long-label reflow, 200 percent text, reduced motion, no script and LiveView patch/reconnect. Block POST requests. Recheck unchanged registration focus.
-- [ ] Run formatting, focused ExUnit, design enforcement and assets build. Run supported Hallmark static/render checks against affected CSS/guide, distinguishing inherited findings. Request bounded source review, fix introduced issues, document exact proof and residual gaps in the existing handoff.
+- [x] Run formatting, focused ExUnit, design enforcement and assets build. Run supported Hallmark static/render checks against affected CSS/guide, distinguishing inherited findings. Request bounded source review, fix introduced issues, document exact proof and residual gaps in the existing handoff.
 
 ## Proof commands
 
 Use pinned Mise and DevCore profiles. Component-only ExUnit may run through `mix run --no-start` with an explicit ExUnit runner to avoid application/DB startup. Run the browser script with the existing `BROWSER_TOOLS_ROOT` and DEV guide at port 4237. No new dependencies or DB preparation.
 
-The final full gate, deep gate, OCR and current-head hosted CI remain delivery requirements. Do not repeat a known inherited failing broad suite solely to rediscover WELL-114. A source implementation is not certified delivery while that dependency and the recorded Hallmark/tooling gap remain open.
+The final full gate, deep gate, OCR and current-head hosted CI remain delivery requirements. Do not repeat a known inherited failing broad suite solely to rediscover WELL-114. A source implementation is not certified delivery while the recorded Hallmark/tooling gap remains open. The checklist records executed work, not passing delivery certification.

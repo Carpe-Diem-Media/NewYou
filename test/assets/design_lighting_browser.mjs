@@ -154,13 +154,23 @@ try {
   })
   assert.equal(changed, true, "gradient follows live source token")
 
-  await page.emulateMediaFeatures([{name: "forced-colors", value: "active"}])
+  // Puppeteer's media-feature allowlist omits forced-colors. Chrome supports it
+  // through CDP; assert the actual browser mode before exercising the fallback.
+  const mediaSession = await page.createCDPSession()
+  await mediaSession.send("Emulation.setEmulatedMedia", {
+    features: [{name: "forced-colors", value: "active"}]
+  })
+  assert.equal(await page.evaluate(() => matchMedia("(forced-colors: active)").matches), true)
   await button.hover()
   await page.mouse.down()
   assert.equal((await state()).gradient, "none", "forced colours remove gradient even while pressed")
   assert.equal((await state()).shadow, "none")
   await page.mouse.up()
-  await page.emulateMediaFeatures([{name: "forced-colors", value: "none"}, {name: "prefers-reduced-motion", value: "reduce"}])
+  await mediaSession.send("Emulation.setEmulatedMedia", {
+    features: [{name: "forced-colors", value: "none"}, {name: "prefers-reduced-motion", value: "reduce"}]
+  })
+  assert.equal(await page.evaluate(() => matchMedia("(forced-colors: active)").matches), false)
+  assert.equal(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches), true)
   const removedMixing = await page.evaluate(() => {
     const remove = container => {
       let count = 0

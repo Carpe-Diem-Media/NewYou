@@ -790,3 +790,81 @@ three source-map merge conflicts preserve both the UI contracts and the
 fixture-isolation proof, with exact merged-source hashes. This does not reuse
 WELL-114's passing suite as guide-branch proof. Complete guide gates, OCR,
 current-head CI and independent review remain separate delivery requirements.
+
+
+The refreshed full guide browser regression also passed its actual socket,
+cookie, responsive grid/iframe, token/fluid readout, contrast refresh, keyboard
+and reduced-motion assertions. Registration's permanent keyboard runner passed
+458 checks across EN/AF at 320, 744 and 1440px, with zero POSTs. It checks the full
+product Tab inventory, forward/reverse visible rings, negative controls and the
+DEV/document boundary. It does not certify screen readers, focus contrast or
+submission states. Fresh supported Hallmark EN and AF registration renders each
+still report gate 26a on the DEV-toolbar/body boundary, one existing gradient
+WARN and four existing REFLEX waivers. Product keyboard proof does not silently
+close that finding.
+
+The lighting runner initially failed at `page.emulateMediaFeatures` because the
+installed Puppeteer 25 allowlist rejects `forced-colors`. Its assertions before
+that call passed. The test now calls Chrome's supported
+`Emulation.setEmulatedMedia` protocol directly, then asserts `matchMedia` reports
+the requested forced-colors/reduced-motion state before inspecting the CSS. The
+full corrected runner passed forced-color and solid fallbacks, lighting and
+native states, reflow, focus and token propagation. Painted white-label contrast
+minima were 5.32:1 at rest, 9.41:1 on hover/press and 5.31:1 with enlarged wrapped
+text. No application CSS or dependency changed to repair this test-tool issue.
+The existing external Node module-type warning remains reported.
+
+Additional standalone checks passed nine Node contract tests and 62 Python
+routing/smoke tests. These do not replace the full engineering gates, OCR,
+current-head CI or independent review.
+
+
+Final engineering proof for the floating-label extension used committed source
+`1a814383474692a6836e464f42e65a600ee3a9bb`, incorporating main `f72cf63`.
+Under one command-scoped advisory lock, DevCore doctor passed, followed by:
+
+- `ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check --seed 813027`:
+  892/892 passed in 550.5 seconds. Formatting, warnings-as-errors compilation,
+  design enforcement, architecture, generated usage rules, Credo and Sobelow
+  passed before ExUnit.
+- `ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check.deep`:
+  zero errors, zero skips, passed in 14.13 seconds.
+- Read-only before/after row-fingerprint comparisons preserved every pre-existing
+  row across 15 tables. The only additions were 51 envelope nonces and 881 PMR
+  reservations. No reset, cleanup or manual retained-row mutation occurred. Raw
+  row fingerprints remain private and are not published.
+
+The command lock was acquired at 2026-11-16 20:05:09 UTC and released when both
+checks exited successfully. Runtime resolution was recorded with `mise current`
+and `mise exec -- elixir --version`: Elixir 1.20.5, Erlang 29.1.2 / OTP 29 and
+Node 26.2.0. The later lighting-runner correction changes only a standalone
+browser proof, independently reviewed without an actionable finding. No
+application, asset, configuration, ExUnit or canonical-gate inputs changed after
+this passing gate. Descriptive proof and generated history do not reuse this
+result as exact-head hosted CI.
+
+Private proof log SHA-256 digests:
+
+- `newyou-well112-floating-check.log`: `16e509a9ab59724a3e7e5e123e2f8846a6b16bc7b6c9ced616275004a6ce3013`.
+
+- `newyou-well112-floating-deep.log`: `a1d5727d88bd344e7426e454eaa04ff8b7cdba6998d6736a5b45ff1846d7103c`.
+
+- `newyou-well112-floating-preservation.log`: `1ec49e8056c006bc944376fdd386a693afa121027ab6b354f1d1cae2a3fa2e53`.
+
+- `newyou-floating-browser.log`: `271d46db8891620b26bdf664e1ea2c0842d1fe9a0eb248bb125d27ca515ef260`.
+
+- `newyou-floating-firefox.log`: `96c312b923d25712d680e39b511eb33390cde3edcc11c1da30d76803874c0fc7`.
+
+- `newyou-floating-registration-focus.log`: `5528fc5d889f0f862498d58e535cc30f42232241b37aa868dcb247bd2256b2a5`.
+
+- `newyou-floating-design_lighting_browser-fixed.log`: `d18decb5152c00887fc1f3ad416144a6fd2aad735a34bea7e7ccb154870b4845`.
+
+- `newyou-floating-hallmark-guide.json`: `3ce6f9ac83285a9fd9ebda16d1e69cded71c02f9dbd70abdb131eaa6cbd21ccd`.
+
+
+The bounded extension has observed proof for native state transitions,
+accessibility associations, token/responsive behavior and guide documentation.
+Its final delivery criterion remains blocked by the mandatory Hallmark findings,
+followed by OCR, exact-head CI and independent Master Gate. WELL-112 remains in
+progress and PR #227 remains Draft. No merge or Done claim follows from passing
+engineering checks.
