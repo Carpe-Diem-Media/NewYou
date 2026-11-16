@@ -5,6 +5,15 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
   @privacy_id "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
 
   setup do
+    Process.put({__MODULE__, :case_suffix}, Ecto.UUID.generate())
+    Process.put({__MODULE__, :operations}, [])
+    Process.put({__MODULE__, :emails}, [])
+
+    Process.put(
+      {__MODULE__, :email},
+      "Alice+campaign.Example+#{Ecto.UUID.generate()}@example.com"
+    )
+
     previous_keys = Application.get_env(:new_you, :identity_registration_binding_keys)
     previous_token_signing_secret = Application.get_env(:new_you, :identity_token_signing_secret)
     previous_communications_keyring = Application.get_env(:new_you, :communications_keyring)
@@ -134,9 +143,17 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
   end
 
   test "distinct local-part case remains distinct in PostgreSQL canonical identity" do
-    assert {:ok, _} = register(%{valid_request() | email: "Alice@example.com"})
+    assert {:ok, _} =
+             register(%{
+               valid_request()
+               | email: "Alice+#{Process.get({__MODULE__, :case_suffix})}@example.com"
+             })
 
-    lowercase_request = %{valid_request() | email: "alice@example.com"}
+    lowercase_request = %{
+      valid_request()
+      | email: "alice+#{Process.get({__MODULE__, :case_suffix})}@example.com"
+    }
+
     assert {:ok, _} = register(lowercase_request)
 
     assert resource_count("Account") == 2
@@ -201,7 +218,7 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
 
     assert account.first_name == request.first_name
     assert account.surname == request.surname
-    assert account.email == "Alice+campaign.Example@example.com"
+    assert account.email == Process.get({__MODULE__, :email})
     assert account.preferred_language == :af
     assert account.confirmed_age_18?
     assert account.terms_version_id == @terms_id
@@ -445,8 +462,8 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
     expired_at = operations |> Enum.map(& &1.expires_at) |> Enum.max(DateTime)
     Application.put_env(:new_you, :identity_clock, fn -> DateTime.add(expired_at, 1, :second) end)
 
-    assert {:ok, 2} = NewYou.Identity.expire_registration_operations()
-    assert {:ok, 0} = NewYou.Identity.expire_registration_operations()
+    assert {:ok, 2} = expire_fixture_operations()
+    assert {:ok, 0} = expire_fixture_operations()
 
     operations = records("RegistrationOperation")
 
@@ -481,7 +498,7 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
     expired_at = DateTime.add(bound.expires_at, 1, :second)
     Application.put_env(:new_you, :identity_clock, fn -> expired_at end)
 
-    assert {:ok, 1} = NewYou.Identity.expire_registration_operations()
+    assert {:ok, 1} = expire_fixture_operations()
     [operation] = records("RegistrationOperation")
     assert operation.state == :tombstoned
     assert_tombstoned(operation)
@@ -602,7 +619,11 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
 
     for _ <- 1..1, do: assert_receive(:pmr_candidate_generated)
 
-    second = %{valid_request() | email: "second@example.com"}
+    second = %{
+      valid_request()
+      | email: "second+#{Process.get({__MODULE__, :case_suffix})}@example.com"
+    }
+
     assert {:error, _} = register(second)
 
     for _ <- 1..5, do: assert_receive(:pmr_candidate_generated)
@@ -654,7 +675,11 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
       {:ok, candidate}
     end)
 
-    second = %{valid_request() | email: "second@example.com"}
+    second = %{
+      valid_request()
+      | email: "second+#{Process.get({__MODULE__, :case_suffix})}@example.com"
+    }
+
     assert {:error, :registration_unavailable} = register(second)
 
     for _ <- 1..5, do: assert_receive(:pmr_candidate_generated)
@@ -699,17 +724,23 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
   end
 
   defp valid_request do
-    %{
+    request = %{
       operation_id: Ecto.UUID.generate(),
       first_name: "Alice",
       surname: "Example",
-      email: " \tAlice+campaign.Example@EXAMPLE.COM\t ",
+      email:
+        " \t" <>
+          String.replace(Process.get({__MODULE__, :email}), "@example.com", "@EXAMPLE.COM") <>
+          "\t ",
       password: Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
       preferred_language: :af,
       confirmed_age_18?: true,
       terms_version_id: @terms_id,
       privacy_version_id: @privacy_id
     }
+
+    track_request(request)
+    request
   end
 
   defp email_canonicalize(value), do: NewYou.Identity.Email.canonicalize(value)
@@ -720,11 +751,63 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
 
   defp pmr_generate, do: NewYou.Identity.PMR.generate()
 
-  defp register(request), do: NewYou.Identity.register(request)
+  defp register(request) do
+    track_request(request)
+    NewYou.Identity.register(request)
+  end
+
+  defp track_request(request) do
+    case Ecto.UUID.cast(Map.get(request, :operation_id)) do
+      {:ok, id} ->
+        Process.put(
+          {__MODULE__, :operations},
+          Enum.uniq([id | Process.get({__MODULE__, :operations}, [])])
+        )
+
+      :error ->
+        :ok
+    end
+
+    case email_canonicalize(Map.get(request, :email)) do
+      {:ok, email} ->
+        Process.put(
+          {__MODULE__, :emails},
+          Enum.uniq([email | Process.get({__MODULE__, :emails}, [])])
+        )
+
+      {:error, _} ->
+        :ok
+    end
+  end
+
+  # This module already uses DataCase: global maintenance changes are rolled
+  # back, while exact owner batch counts and every fixture transition stay checked.
+  defp expire_fixture_operations do
+    now = Application.fetch_env!(:new_you, :identity_clock).()
+    before = Enum.count(records("RegistrationOperation"), &(&1.state == :tombstoned))
+
+    due =
+      NewYou.Proof.P805.scalar(
+        "SELECT count(*) FROM registration_operations WHERE state = 'bound' AND expires_at <= $1::timestamptz",
+        [now]
+      )
+
+    if due > 0 do
+      for batch <- 0..div(due - 1, 100) do
+        expected = min(due - batch * 100, 100)
+        assert {:ok, ^expected} = NewYou.Identity.expire_registration_operations()
+      end
+    end
+
+    assert {:ok, 0} = NewYou.Identity.expire_registration_operations()
+    after_count = Enum.count(records("RegistrationOperation"), &(&1.state == :tombstoned))
+    {:ok, after_count - before}
+  end
 
   defp records(name) do
     resource = Module.concat(NewYou.Identity, name)
-    Ash.read!(resource, authorize?: false)
+    context = {Process.get({__MODULE__, :operations}, []), Process.get({__MODULE__, :emails}, [])}
+    NewYou.Proof.P805.read(resource, NewYou.Identity, context)
   end
 
   defp resource_count(name), do: length(records(name))
@@ -763,7 +846,7 @@ defmodule NewYou.Identity.RegistrationPrimitivesTest do
       %{
         first_name: request.first_name,
         surname: request.surname,
-        email: "Alice+campaign.Example@example.com",
+        email: Process.get({__MODULE__, :email}),
         preferred_language: request.preferred_language,
         confirmed_age_18?: true,
         terms_version_id: request.terms_version_id,
