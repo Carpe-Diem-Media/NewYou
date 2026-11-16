@@ -93,14 +93,15 @@ defmodule NewYouWeb.PasswordResetController do
   def confirm(conn, _params), do: not_found(conn)
 
   defp require_proof_environment(conn, _opts) do
-    context =
-      if :erlang.andalso(
-           @development_environment,
-           @verification_development_fixtures == true
-         ),
-         do: entry_context()
+    context = entry_context()
 
-    if context in [:p8_12, :well136] do
+    if :erlang.andalso(
+         @development_environment,
+         :erlang.andalso(
+           @verification_development_fixtures == true,
+           context in [:p8_12, :well136]
+         )
+       ) do
       assign(conn, :password_reset_context, context)
     else
       conn |> not_found() |> halt()
