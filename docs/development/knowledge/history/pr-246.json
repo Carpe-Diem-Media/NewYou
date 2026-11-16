@@ -1,0 +1,50 @@
+{
+  "base_sha": "79fa504a58bbe9bc350627a03cc61d9e614c1142",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/246/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/246/commits",
+  "files": [
+    {
+      "blob": "62f15d419e20684a01077f8d78bd61f50587d193",
+      "mode": "100644",
+      "old_blob": "feb53ba7788d91fd1b00adf1fcf4e119646cf1ad",
+      "old_mode": "100644",
+      "old_path": null,
+      "old_sha256": "b01bc5f2464fc5a6b8ce0a0631eb6cc7b81a4491f70794abdcf24d118cf9717f",
+      "path": "docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+      "sha256": "33ef54c274530f881804c2e8f3d7382a7c43f29528b4aba294be7a9a6931e443",
+      "status": "modified"
+    },
+    {
+      "blob": "c082ca69fa1b2c716b75353281c53c870d018330",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/product/00_PLATFORM_v1.18.0.md",
+      "sha256": "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f",
+      "status": "added"
+    },
+    {
+      "blob": "1fbedad7e214e6bcb1687959785b6391a2eae0af",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/governance/product/01_DECISIONS_v1.18.0.md",
+      "sha256": "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0",
+      "status": "added"
+    }
+  ],
+  "migrations": [],
+  "pr": 246,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/246",
+  "range_base_sha": "79fa504a58bbe9bc350627a03cc61d9e614c1142",
+  "schema_version": 1,
+  "symbols": [],
+  "tests": [],
+  "tickets": [
+    "WELL-136"
+  ]
+}
