@@ -6,7 +6,8 @@
   "proof_script_sha256": "df926ea30a18361d72277e5bd81d58076c30df95550545dec4c4082a480d91df",
   "installed_linter": {
     "version": "2.0.0",
-    "path": "/home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint-render.mjs",
+    "workstation_locator": "/home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint-render.mjs",
+    "locator_scope": "External workstation installation, not a checked-in repository file reference",
     "sha256": "3af79afa100a9804f248ade24d5128cea4fde1ef6d1a279f1dd935bfe6dc41cd",
     "modified": false
   },

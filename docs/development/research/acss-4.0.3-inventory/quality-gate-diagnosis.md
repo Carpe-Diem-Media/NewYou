@@ -102,6 +102,22 @@ Master Gate remains required. OCR remains outstanding under the existing local
 checks-before-OCR rule until the mandatory quality disposition is resolved.
 Passing CI does not silently clear either finding.
 
+## CI evidence-locator correction
+
+Hosted run 43954286122 on `903cb15` passed application check/deep and the Hex
+audit, but four Smoke assertions rejected the external installed-tool location
+under JSON's reserved repository-reference key `path`. The evidence record now
+uses `workstation_locator` with an explicit external scope, retaining its actual
+location and tool hash. No repository-reference validation or exemption changed.
+
+The existing `test_smoke_passes_both_current_routers` reproduced RED, then passed
+after the correction. All 17 Foundation Smoke tests and 79 routing/capability/
+knowledge-capture tests pass, plus the 77-assertion current authority smoke audit
+and seven map validations. This corrects the evidence schema only; application,
+browser-proof and installed-tool inputs remain unchanged. New-head hosted proof
+and generated PR history still bind separately. The earlier lightweight link/
+hash checks did not cover this reserved-key contract and were insufficient.
+
 ## Verification scope
 
 The only executable change here is the standalone floating-field browser runner.
