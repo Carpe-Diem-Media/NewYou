@@ -1,61 +1,61 @@
 {
-  "base_sha": "a30d8b3c112b61b6b867c12e1cc4c14e8a17cbd2",
+  "base_sha": "2736a9c6925c8c126cbba007f404b2e38ec2080d",
   "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/251/checks",
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/251/commits",
   "files": [
     {
-      "blob": "6374620d58715c2189e6c88ea3730d067b1e7b27",
+      "blob": "c0f7ca97a2a5946e480d03592ab1cc6234d96a96",
       "mode": "100644",
       "old_blob": "6f40d68e6332d1e067902d0bb5c2130b9b082c5f",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.registration.json",
       "old_sha256": "19c82435528f5bac49ce795e25f2016583f0d399ea0725daec9d9cf767775f72",
       "path": "docs/development/knowledge/identity.registration.json",
-      "sha256": "f1ed7b36a70019858ae92ee1141978b45aea02c590dbe7916669fd0b42cf0ba8",
+      "sha256": "490b17d82d06702fa653661bdbdbe7e9ef4db3d0831f5e6e3a62d9650dec36fc",
       "status": "modified"
     },
     {
-      "blob": "72ac529614e901176210e7158c82b949f53b2138",
+      "blob": "d1a5cdd08f1ce18ff92dcbd86dde5a9520ed1848",
       "mode": "100644",
       "old_blob": "bbb63aed776adb475c7fcd6c451779353420162d",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.sign_in.json",
       "old_sha256": "228f2e85771fce2e2f698e2451f96f7e93ed9d466e03139e381e0772187e11d1",
       "path": "docs/development/knowledge/identity.sign_in.json",
-      "sha256": "e8b0c6608e8cc48960c03514d4bc81f4e54f84c4471249df747645fece656688",
+      "sha256": "a50cab92291c3fad1ce58ba9e4714bab42aba6d78ddbd6b3e203ebeed52c1a37",
       "status": "modified"
     },
     {
-      "blob": "76ee9e055a971a3cc8fba811761fba42d7b0ef02",
+      "blob": "e9f34776ba14b8941509dc3fedb352a1d1d4ec44",
       "mode": "100644",
       "old_blob": "6da96b09e0ee46682b83d2d9859c52336f5c0f8e",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
       "old_sha256": "d8eb1691085e70144461036d15a18410375c85ca448e8153a19a56c1dbba6c79",
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "610167271f6a842105207931a60d56d18c2be5588cf8a635b106d0e5c9b8f9e6",
+      "sha256": "f355c1aca3c731d6b0938177d9212e54daf61496eb6efe05ab15264a67490f9e",
       "status": "modified"
     },
     {
-      "blob": "e9a45903e518edc2f3a4664a547cef917283ca6e",
+      "blob": "edd670ea7e0808e3100a91194866b1a382ff3090",
       "mode": "100644",
       "old_blob": "8e1b6969eb1093ea80adcf2642fe1ada8d9c6767",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/proof.tb001.json",
       "old_sha256": "d7b1f8bdeaff5c4d81d9c1179327d522753f575c6e310c2119138c0690804be1",
       "path": "docs/development/knowledge/proof.tb001.json",
-      "sha256": "bb5b8cd1fcd0a68c465ae591fbffae1e6327c115634ae733621fea9406aa6ec1",
+      "sha256": "252171d0dd2d0abac3bdcbab47ca7bc0f718cdb9b05f0bc7121117d48b417b9d",
       "status": "modified"
     },
     {
-      "blob": "b2ba09731dac388be9dcb7b948383cf6587ae52d",
+      "blob": "8476e7ede64417f1ea63f7555ca59ad922c9f741",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/superpowers/plans/2026-11-16-retained-fixture-observations.md",
-      "sha256": "ade0fce10a485e791d5cab76ce139f953c68ef6840c12c9f3e4e6aa298f69cdd",
+      "sha256": "bf0f16f30a95c27771b45c66ce89cb08cab12e4a0bdfb7e5ee7bc745721762d3",
       "status": "added"
     },
     {
@@ -150,7 +150,7 @@
   "migrations": [],
   "pr": 251,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/251",
-  "range_base_sha": "a30d8b3c112b61b6b867c12e1cc4c14e8a17cbd2",
+  "range_base_sha": "2736a9c6925c8c126cbba007f404b2e38ec2080d",
   "schema_version": 1,
   "symbols": [
     {
