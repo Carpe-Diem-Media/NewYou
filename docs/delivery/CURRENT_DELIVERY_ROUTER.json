@@ -260,6 +260,14 @@
       "sha256": "271b6374820b7864adb682b11a4935fad7974fb0222089c00c671f789ee2fbc6",
       "contract_type": "content_evidence",
       "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_NONPRODUCTION_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "ab99de6d15cf0deaa11edd9a45643c7c44708138f8abd9f92ffa0b3bf280e966",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
     }
   ]
 }
