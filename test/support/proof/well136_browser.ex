@@ -26,55 +26,57 @@ defmodule NewYou.Proof.Well136Browser do
       reference = make_ref()
 
       with_browser_fixture(registration.account_id, reference, fn port ->
-        payload =
-          Jason.encode!(%{
-            mode: "ordinary_reset",
-            port: port,
-            locale: locale,
-            email: request.email,
-            password: request.password,
-            replacement: "ordinary browser replacement"
-          })
-
-        result =
-          P805Browser.run_port(
-            System.find_executable("node"),
-            Path.expand("../../proof/p8_05_browser.mjs", __DIR__),
-            payload
-          )
-
-        assert result["cleanup"] == true
-        Enum.each(result["operations"], &P805.track_operation/1)
-
-        for {key, value} <- result["checks"],
-            do:
-              assert(
-                value == true,
-                "WELL-136 browser check failed: #{key}; resize #{inspect(result["checks"]["resize_diagnostics"])}"
-              )
-
-        assert map_size(result["checks"]) >= 20
-
-        consumed =
-          Token
-          |> Ash.Query.filter(
-            account_id == ^registration.account_id and purpose == "password_reset_consumed"
-          )
-          |> Ash.read!(authorize?: false)
-
-        assert length(consumed) == 1
-
-        sessions =
-          Session
-          |> Ash.Query.filter(account_id == ^registration.account_id)
-          |> Ash.read!(authorize?: false)
-
-        assert Enum.count(sessions, &(&1.state == :revoked)) == 1
-        assert Enum.count(sessions, &(&1.state == :active)) == 1
-        account = Ash.get!(Account, registration.account_id, authorize?: false)
-        assert account.credential_version == 2
+        assert_browser_journey(locale, request, registration.account_id, port)
       end)
     end)
+  end
+
+  defp assert_browser_journey(locale, request, account_id, port) do
+    payload =
+      Jason.encode!(%{
+        mode: "ordinary_reset",
+        port: port,
+        locale: locale,
+        email: request.email,
+        password: request.password,
+        replacement: "ordinary browser replacement"
+      })
+
+    result =
+      P805Browser.run_port(
+        System.find_executable("node"),
+        Path.expand("../../proof/p8_05_browser.mjs", __DIR__),
+        payload
+      )
+
+    assert result["cleanup"] == true
+    Enum.each(result["operations"], &P805.track_operation/1)
+
+    for {key, value} <- result["checks"],
+        do:
+          assert(
+            value == true,
+            "WELL-136 browser check failed: #{key}; resize #{inspect(result["checks"]["resize_diagnostics"])}"
+          )
+
+    assert map_size(result["checks"]) >= 20
+
+    consumed =
+      Token
+      |> Ash.Query.filter(account_id == ^account_id and purpose == "password_reset_consumed")
+      |> Ash.read!(authorize?: false)
+
+    assert length(consumed) == 1
+
+    sessions =
+      Session
+      |> Ash.Query.filter(account_id == ^account_id)
+      |> Ash.read!(authorize?: false)
+
+    assert Enum.count(sessions, &(&1.state == :revoked)) == 1
+    assert Enum.count(sessions, &(&1.state == :active)) == 1
+    account = Ash.get!(Account, account_id, authorize?: false)
+    assert account.credential_version == 2
   end
 
   defp with_browser_fixture(account_id, reference, callback) do
