@@ -6,8 +6,8 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "63274439676ef18db0be25f2b50f613408f1187d",
-    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged."
+    "git_sha": "de65aac61c28e279c4731a90f87055e8e3fd4b29",
+    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -956,7 +956,8 @@
     {
       "path": "test/new_you/content/recovery_message_test.exs",
       "cases": [
-        "Four exact versions, unknown locales, altered bindings, withdrawn packet, corrupted approvals/authority, paired locale and symlink rejection."
+        "Four exact versions, unknown locales, altered bindings, withdrawn packet, corrupted approvals/authority, paired locale and symlink rejection.",
+        "Current v1.18 routing accepts approved content and changed v1.17 predecessor fails closed."
       ],
       "proves": "Current pinned approval and immutable bytes fail closed.",
       "limits": "Owner provenance comes from WELL-110; this reader grants no sender authority.",
@@ -1139,7 +1140,7 @@
       "id": "content",
       "path": "lib/new_you/content/recovery_message.ex",
       "symbol": "defmodule NewYou.Content.RecoveryMessage",
-      "sha256": "8c8a4046d305467fbfeafb7b42f06f53e4ffc1b8238b21b6b4bd72ba5bf96d0a"
+      "sha256": "434c0e6fd92837b3df07af3a9b872e50739fdbdab4c993afda291d413cdadae3"
     },
     {
       "id": "audit",
@@ -1229,7 +1230,7 @@
       "id": "content_test",
       "path": "test/new_you/content/recovery_message_test.exs",
       "symbol": "defmodule ",
-      "sha256": "e77e3eae26a18de29ad8b11302041234f95d6bd33f4c6b1c34e983c8a47ab9ee"
+      "sha256": "b150a101893d1c2cc637285c5a68ab6fd00e7513b5d0725ad10a9c2730cfa037"
     },
     {
       "id": "browser_test",
