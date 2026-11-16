@@ -1,0 +1,8 @@
+interface:
+  display_name: "Implement Ready Ticket"
+  short_description: "Implement a Ready Plane ticket"
+  default_prompt: "Use $ticket-implement to implement the selected NewYou Plane ticket."
+policy:
+  products:
+    - CODEX
+  allow_implicit_invocation: true
