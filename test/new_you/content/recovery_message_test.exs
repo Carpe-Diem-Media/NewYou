@@ -14,6 +14,15 @@ defmodule NewYou.Content.RecoveryMessageTest do
     {:ok, root: root}
   end
 
+  test "current v1.18 authority accepts approved content and rejects changed v1.17 lineage", %{
+    root: root
+  } do
+    assert {:ok, _} = RecoveryMessage.binding(:account_recovery, "en")
+    path = Path.join(root, "docs/governance/product/00_PLATFORM_v1.17.0.md")
+    File.write!(path, File.read!(path) <> "\n")
+    assert {:error, :content_ineligible} = RecoveryMessage.binding(:account_recovery, "en")
+  end
+
   test "both roles bind all exact approved EN and AF immutable versions" do
     for {role, stem} <- [
           {:account_recovery, "PROOF-MESSAGE"},

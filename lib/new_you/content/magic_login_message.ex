@@ -129,7 +129,7 @@ defmodule NewYou.Content.MagicLoginMessage do
       }
     ]
 
-    @current_successor_authority [
+    @v1_17_successor_authority [
       %{
         "document_id" => "PLATFORM_PRODUCT_LAW",
         "canonical_filename" => "00_PLATFORM_v1.17.0.md",
@@ -159,6 +159,28 @@ defmodule NewYou.Content.MagicLoginMessage do
           "5859094922ada891cdca887cf140d457991fa0fe5fcc76ea34ff4dd32ad8a8b1"
       }
     ]
+
+    @current_successor_authority Enum.map(@v1_17_successor_authority, fn authority ->
+                                   {path, sha} =
+                                     case authority["document_id"] do
+                                       "PLATFORM_PRODUCT_LAW" ->
+                                         {"docs/governance/product/00_PLATFORM_v1.18.0.md",
+                                          "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f"}
+
+                                       "PRODUCT_DECISIONS" ->
+                                         {"docs/governance/product/01_DECISIONS_v1.18.0.md",
+                                          "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0"}
+                                     end
+
+                                   Map.merge(authority, %{
+                                     "canonical_filename" => Path.basename(path),
+                                     "repository_path" => path,
+                                     "sha256" => sha,
+                                     "semver" => "1.18.0",
+                                     "predecessor_path" => authority["repository_path"],
+                                     "predecessor_sha256" => authority["sha256"]
+                                   })
+                                 end)
 
     @spec binding(String.t()) :: {:ok, map()} | {:error, :content_ineligible}
     def binding(locale) when is_binary(locale) do
@@ -335,7 +357,10 @@ defmodule NewYou.Content.MagicLoginMessage do
     end
 
     defp current_successor_authority_matches?(root, router) do
-      Enum.all?(@prior_successor_authority, &successor_lineage_matches?(root, &1)) and
+      Enum.all?(
+        @prior_successor_authority ++ @v1_17_successor_authority,
+        &successor_lineage_matches?(root, &1)
+      ) and
         Enum.all?(@current_successor_authority, &promoted_authority_matches?(root, router, &1))
     end
 
@@ -391,7 +416,8 @@ defmodule NewYou.Content.MagicLoginMessage do
                  %{
                    "1.15.0" => "**SemVer transition:** `v1.14.0 → v1.15.0`",
                    "1.16.0" => "**SemVer transition:** `v1.15.0 → v1.16.0`",
-                   "1.17.0" => "**SemVer transition:** `v1.16.0 → v1.17.0`"
+                   "1.17.0" => "**SemVer transition:** `v1.16.0 → v1.17.0`",
+                   "1.18.0" => "**SemVer transition:** `v1.17.0 → v1.18.0`"
                  },
                  authority["semver"]
                )
@@ -443,6 +469,8 @@ defmodule NewYou.Content.MagicLoginMessage do
                 "docs/governance/product/01_DECISIONS_v1.16.0.md",
                 "docs/governance/product/00_PLATFORM_v1.17.0.md",
                 "docs/governance/product/01_DECISIONS_v1.17.0.md",
+                "docs/governance/product/00_PLATFORM_v1.18.0.md",
+                "docs/governance/product/01_DECISIONS_v1.18.0.md",
                 "docs/delivery/content-evidence/content_media/email_change_messages/PRODUCT_CLASSIFICATION_PROPOSAL_v1.md",
                 "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
                 "docs/delivery/content-evidence/content_media/magic_login_messages/WELL-12-candidate-comment.json",
