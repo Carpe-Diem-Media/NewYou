@@ -1,5 +1,5 @@
 {
-  "base_sha": "d47d1b5ed10658b173a070a0df43a337b240b254",
+  "base_sha": "f72cf637453408896a5037dcb2f8d37f0d29e3af",
   "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227/checks",
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227/commits",
   "files": [
@@ -26,14 +26,14 @@
       "status": "modified"
     },
     {
-      "blob": "1f0fb32e1010c6408cccc20140ca2d2ba980118a",
+      "blob": "e868e2d4c642a613a86b89784a44f68e604dbbfe",
       "mode": "100644",
       "old_blob": "b8f66ed5e28fd682bf40de67fcf7b0748cdc3d12",
       "old_mode": "100644",
       "old_path": "DESIGN.md",
       "old_sha256": "ffb88c9e8997e997dc75f47783f8a70a919c39a6f0b62b4e656e6e84777b1aed",
       "path": "DESIGN.md",
-      "sha256": "9ed1f770d03f30a1bafc62b8d8b76ef440035d761b27c16756fc3ad56214b516",
+      "sha256": "738b7ba0500fee827a5da08f4c54baea36e2123448a58126e7f958f677ed123d",
       "status": "modified"
     },
     {
@@ -81,14 +81,14 @@
       "status": "added"
     },
     {
-      "blob": "bfe063ceafb2ef7658947d64b05c3df9c49573d3",
+      "blob": "4e51e090a393b7701cdcf5f3b32abed1993fffa9",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/css/design-forms.css",
-      "sha256": "429f0c86fb7280ec330952d54e2031e6b28244de4218b0dc183f2730047ecccc",
+      "sha256": "b538577acf55ec2cacaffb7f5aefadf05ebf866174c7cdcf75e6b63144e55951",
       "status": "added"
     },
     {
@@ -136,14 +136,14 @@
       "status": "added"
     },
     {
-      "blob": "3193a24f9cd20287b8c45169514571fe77faa8ea",
+      "blob": "7b9c900887e94ee421150752d4058f3ad809fb3d",
       "mode": "100644",
       "old_blob": "53acbf1c16b0dbfda02da449aae8b22155ec4ed4",
       "old_mode": "100644",
       "old_path": "assets/css/design-tokens.css",
       "old_sha256": "1ff08b553dee7f8427f22387a78aeba909c4be0165baa1b96d909b5ca42b8729",
       "path": "assets/css/design-tokens.css",
-      "sha256": "794a825e29849c42a489471a07265b6026adbbb68f3edefabce7a659ed7a92a3",
+      "sha256": "b438b2423a9d5463c5443fc7129a2a8028fbb227c366f556232f89508f0e69fb",
       "status": "modified"
     },
     {
@@ -191,14 +191,14 @@
       "status": "added"
     },
     {
-      "blob": "e2bd85ebf19b913fe8bbdbb32f1bfe22042c06db",
+      "blob": "81b7ed2dc27522fb776d2fbbea1bad0feefab37d",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "3d8ec192434b75046ec6c48981aa86698cd779f30f54b51618efe684a4015b7c",
+      "sha256": "a38ec014b60c33cda09eb5243379ff3bcf15cce33e93d976888d7d1cc8d0679d",
       "status": "modified"
     },
     {
@@ -224,36 +224,36 @@
       "status": "modified"
     },
     {
-      "blob": "45467e02ca99df1b35a407879f0bba0a5502c320",
+      "blob": "48f58ebf122ac8b7241d9d10dd3ad75dd7315859",
       "mode": "100644",
-      "old_blob": "6f40d68e6332d1e067902d0bb5c2130b9b082c5f",
+      "old_blob": "c0f7ca97a2a5946e480d03592ab1cc6234d96a96",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.registration.json",
-      "old_sha256": "19c82435528f5bac49ce795e25f2016583f0d399ea0725daec9d9cf767775f72",
+      "old_sha256": "490b17d82d06702fa653661bdbdbe7e9ef4db3d0831f5e6e3a62d9650dec36fc",
       "path": "docs/development/knowledge/identity.registration.json",
-      "sha256": "f2ee0b40860f5d471501b14d9c170eb5fe1986c4b05bfafadbe0c418d1bc5c26",
+      "sha256": "4c47ddf4b304c707ce4773311968dcb2530449f8725c16424618a8a62bc9668b",
       "status": "modified"
     },
     {
-      "blob": "988397ce30d0da21fd3e382d427d85b55c221968",
+      "blob": "bd6e8c851abbfb4e97e99d91f5fcc1cc562eed6a",
       "mode": "100644",
-      "old_blob": "bbb63aed776adb475c7fcd6c451779353420162d",
+      "old_blob": "d1a5cdd08f1ce18ff92dcbd86dde5a9520ed1848",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.sign_in.json",
-      "old_sha256": "228f2e85771fce2e2f698e2451f96f7e93ed9d466e03139e381e0772187e11d1",
+      "old_sha256": "a50cab92291c3fad1ce58ba9e4714bab42aba6d78ddbd6b3e203ebeed52c1a37",
       "path": "docs/development/knowledge/identity.sign_in.json",
-      "sha256": "ef54a6d80b6d9013c7a365564a9d15324a5e97ffd393709062ef1efe99d234c5",
+      "sha256": "057742e1982848ecc0176bd0e9e42dfb81a4f8bf790e6c97e6a6250445b30a9c",
       "status": "modified"
     },
     {
-      "blob": "1c87b71442232c64361d6b70fcedac1ec74463ac",
+      "blob": "0efdf5b7ce13f6506af19f58b044b97cf7cdc44f",
       "mode": "100644",
-      "old_blob": "8e1b6969eb1093ea80adcf2642fe1ada8d9c6767",
+      "old_blob": "edd670ea7e0808e3100a91194866b1a382ff3090",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/proof.tb001.json",
-      "old_sha256": "d7b1f8bdeaff5c4d81d9c1179327d522753f575c6e310c2119138c0690804be1",
+      "old_sha256": "252171d0dd2d0abac3bdcbab47ca7bc0f718cdb9b05f0bc7121117d48b417b9d",
       "path": "docs/development/knowledge/proof.tb001.json",
-      "sha256": "e5704b7bc4436ec21cadc1c740142ee0b7b05d28c544f247ab06522477df1090",
+      "sha256": "56b39ff83b2afa367aa95104cb40abd683c8392ecea927d995b03d3f2b44ccff",
       "status": "modified"
     },
     {
@@ -279,25 +279,25 @@
       "status": "added"
     },
     {
-      "blob": "3a6c5c68628043abd12b0f397fd2bd37aea8225c",
+      "blob": "13d4c00eea43f7006409b3ccbe252ea36b4b08a3",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/guide-route-reconciliation-evidence.json",
-      "sha256": "a8abb0dca626a258863703e3d2e40ecb1934ece06e84aeffe557b0cc5fd50e9e",
+      "sha256": "9e40985d37da8131ea2c54396e31a2c2995ded31c78b56c624170d76f3945e4f",
       "status": "added"
     },
     {
-      "blob": "3024184b2afb342d7be7ebead61fea585e924787",
+      "blob": "c4b5fda5f6ce70689dfb408a166be049959e6e07",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/guide-route-reconciliation.md",
-      "sha256": "1893c4cd090bc53f9a134c57b927bfe69503965660bf5a054348c9e24a96d849",
+      "sha256": "26fdd8c1537ea77856cda0c54390c5a7435e3472fbffb760956cc19d920aeb37",
       "status": "added"
     },
     {
@@ -686,6 +686,17 @@
       "status": "added"
     },
     {
+      "blob": "9c61b504c1ca3a206fb58ef43eb559f31c83b138",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/superpowers/plans/2026-11-16-floating-label-fields.md",
+      "sha256": "491186e76be0c920120eed3808ba94b3232f4b0d375128ab23f80bfec85c1290",
+      "status": "added"
+    },
+    {
       "blob": "3cdb0c79318be8415ec340392a14739300b236ae",
       "mode": "100644",
       "old_blob": null,
@@ -730,14 +741,14 @@
       "status": "added"
     },
     {
-      "blob": "4e74a2d536c43494b69cfc858e8f81589a8b2427",
+      "blob": "8a789ebaae75c568982e025b978b1e7c85e237fe",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/field.ex",
-      "sha256": "31b9ffe75767fc67e93219958f897fdf34f462105cd6833c695b98754bce4845",
+      "sha256": "08f49c451dcfae7182524aef0140c1ef3a21946b4455b667d39a51dbcc2ba439",
       "status": "added"
     },
     {
@@ -906,14 +917,14 @@
       "status": "added"
     },
     {
-      "blob": "063a0470f41d30f04c5d020aaaeeafba8617c7df",
+      "blob": "92c56c7e5f1df2b08990e87f918c8e0bdde25687",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_forms.ex",
-      "sha256": "6c3f17d7f3c75d6a8cb17aa0f09f9695461c0ae05c8f9ffa5feeca20405f4026",
+      "sha256": "d88d5d5719afa16f44bcec948b12bdd9ffeddf5c37067cc3e156aeabd83a8782",
       "status": "added"
     },
     {
@@ -1093,6 +1104,17 @@
       "status": "added"
     },
     {
+      "blob": "baf89e04395d5b3082f007b4032a11fae7d57a69",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_floating_fields_browser.mjs",
+      "sha256": "bdd6a23a14ace055c47e1ac5cdf993cceda8a860a6950393450a373a96fed7b7",
+      "status": "added"
+    },
+    {
       "blob": "3f4b54ae97a6b3a3b2d768c2ef4ba5d73755e3bd",
       "mode": "100644",
       "old_blob": null,
@@ -1104,14 +1126,14 @@
       "status": "added"
     },
     {
-      "blob": "db54aa1e8f599f8b3591140bfeb507a8cf7e76ec",
+      "blob": "a372be66ef97706537538c32b5f48ff35683afb2",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_lighting_browser.mjs",
-      "sha256": "d3665ad3bcb11db889122b79067d697e3a2284a1af5ac2c6b7a02fdc5e7bfc35",
+      "sha256": "340cd0d6821c8575ce74aed5d79ce67d6d5ac2438b16f8c39fc766e0314f2855",
       "status": "added"
     },
     {
@@ -1145,6 +1167,17 @@
       "old_sha256": null,
       "path": "test/assets/design_registration_browser.mjs",
       "sha256": "030224290b4a148734f04e9cf3b2dfa21da1ca2069b59878513c1f9133087f86",
+      "status": "added"
+    },
+    {
+      "blob": "8722544e739a80a26b7b6bbacf8d2f57537927c1",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_registration_focus_browser.mjs",
+      "sha256": "8df284266486056f33e682c2f7adcfee9636a9ea1f35052d323e5e2db4fcc6a7",
       "status": "added"
     },
     {
@@ -1280,14 +1313,14 @@
       "status": "added"
     },
     {
-      "blob": "0b88c07a318c64767578ca868656999d52d521a5",
+      "blob": "7c8b3f040c4f06ecb3a6e69b6bd3bd6c56ac3eab",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/design_field_test.exs",
-      "sha256": "7e666fa5a5f84e8687b6194d6be38646abd93d43b5b572ac1188231d7cc8f133",
+      "sha256": "e599a44f41de3ff9b48db2f2da66a5cbe2f1e761b3fb4635e8a05f31961eb207",
       "status": "added"
     },
     {
@@ -1404,7 +1437,7 @@
   "migrations": [],
   "pr": 227,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/227",
-  "range_base_sha": "d47d1b5ed10658b173a070a0df43a337b240b254",
+  "range_base_sha": "f72cf637453408896a5037dcb2f8d37f0d29e3af",
   "schema_version": 1,
   "symbols": [
     {
@@ -1660,7 +1693,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/field.ex",
-      "sha256": "d977e52d2bee22732233c381b85b494eb7631a775f11b3f5f05534260d490cc5",
+      "sha256": "0f0e98b55f60a426ff057c0b9b04a19a96c834093653213a5fcb986fca42533b",
       "status": "parsed"
     },
     {
@@ -1724,7 +1757,7 @@
       "name": "design_field",
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/field.ex",
-      "sha256": "7358c6cb58c0e88bdc808c0c62667e6e8ce05ff6b0ea173a4ce8d3234f01d17b",
+      "sha256": "0e3a1ff59ec2201a04d0b8d64e34e1a2e3ce307d9242553e6c54f492487576aa",
       "status": "parsed",
       "visibility": "public"
     },
@@ -1751,6 +1784,19 @@
       "old_sha256": null,
       "path": "lib/new_you_web/components/design/field.ex",
       "sha256": "eb9e14b304deab8320907524041d50b76058086843009c97275916968eb82d4b",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.Components.Design.Field",
+      "name": "native_field_input",
+      "old_sha256": null,
+      "path": "lib/new_you_web/components/design/field.ex",
+      "sha256": "e0d6987b1e0df0f350f417efaac46a97ea053b3a5ed1aa67ca29680ea8d8b9b9",
       "status": "parsed",
       "visibility": "private"
     },
@@ -2326,7 +2372,7 @@
       "name": null,
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_forms.ex",
-      "sha256": "a30ada30897b8710271609b64f75ce3a636cd49469363c17d09450fae11b3c2c",
+      "sha256": "983d36da0545be87aad41825a89be8ba11e63f5236e3f113893f622c579308cb",
       "status": "parsed"
     },
     {
@@ -2338,7 +2384,7 @@
       "name": "native_forms",
       "old_sha256": null,
       "path": "lib/new_you_web/live/design_system_forms.ex",
-      "sha256": "b8fd9e6d17a6dcd64c05e2547611e373a60ec9dc13825e284885dd7f073ac3d4",
+      "sha256": "de12be8844770aafa7d353a3afc57179312998bd7cab1442e1deabdd6856b25b",
       "status": "parsed",
       "visibility": "public"
     },
@@ -2760,7 +2806,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/design_field_test.exs",
-      "sha256": "35e8c3ff55ab2a7f28348d1932629488a1025a63359469c71c70c21e07641930",
+      "sha256": "2abdaec6e497f54a70b7d1a48b10e3dc6656b6867102ad097ec06ebc3e048e44",
       "status": "parsed"
     },
     {
@@ -3006,11 +3052,13 @@
     "test/assets/design_component_contracts_browser.mjs",
     "test/assets/design_content_browser.mjs",
     "test/assets/design_content_contract.mjs",
+    "test/assets/design_floating_fields_browser.mjs",
     "test/assets/design_layouts_browser.mjs",
     "test/assets/design_lighting_browser.mjs",
     "test/assets/design_native_form_contract.mjs",
     "test/assets/design_native_forms_browser.mjs",
     "test/assets/design_registration_browser.mjs",
+    "test/assets/design_registration_focus_browser.mjs",
     "test/assets/design_surface_contract.mjs",
     "test/assets/design_surfaces_browser.mjs",
     "test/assets/design_system_browser.mjs",
