@@ -248,5 +248,60 @@
       "Independent exact-head and resulting-main certification"
     ],
     "verification_status": "BLOCKED"
+  },
+  "registration_focus_followup": {
+    "task": "WELL-112",
+    "task_type": "TESTING",
+    "assessment_role": "Author self-assessment",
+    "application_head": "cb0f4bf8133c6b4767cbc060630c9379ec6901dd",
+    "runtime": "normal existing DEV http://127.0.0.1:4237",
+    "command": "BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4237 mise exec -- node test/assets/design_registration_focus_browser.mjs",
+    "runner": "test/assets/design_registration_focus_browser.mjs",
+    "runner_sha256": "8df284266486056f33e682c2f7adcfee9636a9ea1f35052d323e5e2db4fcc6a7",
+    "private_log": "/tmp/newyou-registration-focus-regression.log",
+    "log_sha256": "5528fc5d889f0f862498d58e535cc30f42232241b37aa868dcb247bd2256b2a5",
+    "observed_outcome": "PASS: 458 checks; 13 product tab stops, forward/reverse traversal for EN/AF at 320/744/1440; missing and transparent ring negative controls; zero POSTs and page errors.",
+    "browser": "Chrome/155.0.8059.84",
+    "node": "26.2.0",
+    "initial_failed_attempt": "AF/744 reached the first product link after the toolbar instead of body. Corrected runner accepts either native exit path. No application change.",
+    "source_review": "Bounded read-only explorer review identified absent immediate negative-control baseline and transparent-outline rejection. Both corrected before passing run; no merge certification.",
+    "hallmark_diagnosis": "focusRing checks document.activeElement and substitutes a parent for a small shadow host; the actual Tidewave active shadow buttons have native visible outlines. Diagnosis does not close gate 26a.",
+    "mandatory_gaps": [
+      "Existing canonical failure under WELL-114",
+      "Inherited Hallmark gate 26a",
+      "OCR after applicable local gates pass",
+      "Fresh exact-head CI and independent review",
+      "Independent resulting-main certification"
+    ],
+    "exclusions": [
+      "Hallmark gate closure",
+      "Painted focus contrast and clipping",
+      "Firefox",
+      "WebKit",
+      "Screen reader",
+      "Submission states"
+    ],
+    "documentation_impact": "Proof-only update. No new capability or Domain semantics; semantic capability-map change exempt.",
+    "shared_resources": "No TEST or PLT command. WELL-136 holds the coordinated advisory lock session.",
+    "supplemental_static_checks": [
+      {
+        "command": "mise exec -- node --check test/assets/design_registration_focus_browser.mjs",
+        "observed_outcome": "PASS"
+      },
+      {
+        "command": "mise exec -- node --test test/assets/design_system_test.mjs test/assets/design_border_contract.mjs test/assets/design_content_contract.mjs test/assets/design_native_form_contract.mjs test/assets/design_surface_contract.mjs",
+        "observed_outcome": "PASS: 9 tests, zero failures/skips; inherited external MODULE_TYPELESS_PACKAGE_JSON warning retained."
+      },
+      {
+        "command": "mise exec -- python3 -m unittest tests.test_capability_knowledge tests.test_foundation_lane_routing tests.test_foundation_smoke",
+        "observed_outcome": "PASS: 72 tests, 17.525 seconds.",
+        "private_log": "/tmp/newyou-registration-focus-python.log",
+        "log_sha256": "00ffe47e7971cfb7b3b77edd09aa4027f3c2c563cd0b19dad438d5f50d794bc6"
+      },
+      {
+        "command": "git diff --check",
+        "observed_outcome": "PASS"
+      }
+    ]
   }
 }

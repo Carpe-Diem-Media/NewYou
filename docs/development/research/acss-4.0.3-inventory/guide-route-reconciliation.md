@@ -200,3 +200,65 @@ To reach at least 8/10, resolve the WELL-114 fixture/proof obligation and inheri
 registration quality gap, pass the canonical gate, then complete OCR and fresh
 exact-head CI/review. The owner-approved WELL-114 continuation exception remains
 open. Keep PR #227 Draft and NOT_VERIFIED_FOR_MERGE.
+
+## Registration keyboard follow-up on 16 November
+
+The new [registration focus runner](../../../../test/assets/design_registration_focus_browser.mjs)
+passed **458 checks** against unchanged application head
+`cb0f4bf8133c6b4767cbc060630c9379ec6901dd` on normal DEV port 4237, using
+Chrome 155.0.8059.84 and Mise Node 26.2.0. Command:
+
+```sh
+BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4237 mise exec -- node test/assets/design_registration_focus_browser.mjs
+```
+
+At 320, 744 and 1440 CSS pixels in both EN and AF, the complete product inventory
+contains 13 tab stops. Actual forward and reverse keyboard traversal matches the
+template order. Every product stop has `:focus-visible`, positive dimensions and
+an outline at least 2px wide with alpha at least 0.5. This checks outline presence
+and opacity, not painted contrast or clipping. Negative controls first verify a
+passing baseline, then independently remove or make the outline transparent on
+a link, text input, checkbox and CTA. Each mutation fails the ring predicate;
+restoring the original inline style restores a pass. Zero POSTs and zero page
+errors were observed. The premium CTA and all application source are unchanged.
+
+After the CTA, the normal DEV endpoint exposes two Tidewave shadow-root buttons.
+The runner follows `shadowRoot.activeElement` and records their own visible
+1px native outlines. The next stop is either the document boundary or the first
+product link. An initial test incorrectly required a `body` stop in every case;
+AF at 744px returned directly to the first link. The corrected test accepts both
+native exit paths and still fails a bounded traversal that cannot leave the
+post-submit controls. Its first failed attempt is test-harness counter-evidence,
+not evidence of an application focus trap.
+
+Installed Hallmark `scripts/sloplint-render.mjs` function `focusRing()` starts
+with `document.activeElement`. When that element is a shadow host smaller than
+4px, it substitutes a label or parent before checking the outline. The recorded
+`body` finding is consistent with that substitution at the Tidewave boundary.
+The fresh shadow-descendant trace supports this diagnosis. It does not establish
+that every Hallmark focus condition passes. The installed skill, toolbar and
+lint rules are untouched. No body outline, hidden toolbar or new waiver was
+added. The inherited gate 26a failure remains open pending an approved tooling
+correction or explicit owner waiver. Firefox, WebKit, screen readers, submission
+states and focus-contrast measurement are not certified by this runner.
+
+A bounded independent source review identified missing pre-mutation assertions
+and transparent-outline rejection in the first runner draft; both were added
+before the observed passing run. This is test/proof work with no new capability
+or Domain contract, so no semantic capability-map change is required. The
+evidence JSON records the test and log digests. The current application-wide
+assessment remains BLOCKED by the separately recorded WELL-114 and Hallmark
+obligations. This focused result is not independent merge or post-merge proof.
+
+The existing Node command passed nine tests, with its inherited external
+module-type warning retained. The focused Python routing/smoke/knowledge command
+passed 72 tests in 17.525 seconds; capability validation passed seven maps.
+`node --check` and `git diff --check` passed. Exact commands are in the evidence
+JSON. No DB-backed or PLT command was run during WELL-136's coordinated session.
+The next executable WELL-114 step is the focused RED test in its separate
+corrective worktree after that session ends. The fixture helper is not yet
+implemented, and its new tests have not run. Do not infer fixture repair from
+this keyboard result. The six-criterion reconciliation assessment above remains
+3/6 PASS, with criteria 4 and 5 FAIL and 6 NOT_DONE; overall score remains capped
+at 5/10. Closing those failures and obtaining fresh review are still required
+to reach at least 8/10.
