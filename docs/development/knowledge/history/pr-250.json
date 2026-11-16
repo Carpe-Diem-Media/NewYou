@@ -48,25 +48,25 @@
       "status": "added"
     },
     {
-      "blob": "e1376301c04ae94ab231217fbe674ecfae7cde02",
+      "blob": "aa8fe7a23f035632218991c8ff5621422b492304",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/identity.password_reset.json",
-      "sha256": "32fd276807010fd7e098594b3b086acd569df40c7188f68508fd8c7e4b191ada",
+      "sha256": "15f3c2c78c16b6983a39d56626fd5faf88d8abc6160ac8349c8ab2f0a61099d8",
       "status": "added"
     },
     {
-      "blob": "894dc0960cf18bd8ce9b3727481d2cec99d4d54d",
+      "blob": "7e182769fe91ecf9af68a62e734afe58ca80dd42",
       "mode": "100644",
       "old_blob": "6dc3caf67974abb254d82cbb973d338db3ed5069",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.primary_email_change.json",
       "old_sha256": "054a16cf4a4ca2247f7ac8d0015bb65bda5b4b434e80a01a079e6f659a8c1c4d",
       "path": "docs/development/knowledge/identity.primary_email_change.json",
-      "sha256": "20d02cf0c20a49be55c7ff32ba94c37779bb795f9fed6d21e5aafb733d7a0c9a",
+      "sha256": "441cdccec3b1bf99568a3d979eb37049034b8e715045906d8afe029f656ce12c",
       "status": "modified"
     },
     {
@@ -92,14 +92,14 @@
       "status": "modified"
     },
     {
-      "blob": "3d4fdf49b54ca1f560ecf2e90cf3390764fa64c6",
+      "blob": "4c2cc9bd37981864a58a6aee5e2f43d9749491d3",
       "mode": "100644",
       "old_blob": "bbb63aed776adb475c7fcd6c451779353420162d",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.sign_in.json",
       "old_sha256": "228f2e85771fce2e2f698e2451f96f7e93ed9d466e03139e381e0772187e11d1",
       "path": "docs/development/knowledge/identity.sign_in.json",
-      "sha256": "ca70ff19ad110ad14ae3c75c035511678ae72a7a8d1649fe90a435a2d735cd58",
+      "sha256": "204dc76065c24a01c4fffc65f6d07b3f80263d1bb4bd2a3500babb9e23b91ec1",
       "status": "modified"
     },
     {
@@ -114,25 +114,25 @@
       "status": "modified"
     },
     {
-      "blob": "ffeef7fda7e43d2ab30ca78f294ab91d2361ad89",
+      "blob": "5544bda80351e6d85eca9bccb71ed2756d419ec0",
       "mode": "100644",
       "old_blob": "6da96b09e0ee46682b83d2d9859c52336f5c0f8e",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
       "old_sha256": "d8eb1691085e70144461036d15a18410375c85ca448e8153a19a56c1dbba6c79",
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "e3c5f9a9e2932632b191952fb715b1afcb58990f2c5bc346a2790405b715feb4",
+      "sha256": "81006e5bb3156592f53857580dcb88e1f6041c6712fcba9e61d05446c96f3520",
       "status": "modified"
     },
     {
-      "blob": "78d88571f66103f64073b370fc7d1a2f0392c533",
+      "blob": "d5d7f89d7e7f439d0e94049973fc470332152411",
       "mode": "100644",
       "old_blob": "8e1b6969eb1093ea80adcf2642fe1ada8d9c6767",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/proof.tb001.json",
       "old_sha256": "d7b1f8bdeaff5c4d81d9c1179327d522753f575c6e310c2119138c0690804be1",
       "path": "docs/development/knowledge/proof.tb001.json",
-      "sha256": "f377a4627467cec4ac22c1ca8b63592a89513ff2206fdd2422a1933c5a20df39",
+      "sha256": "e8a5068c4e8e78294b6d2f7d5ae83906296c3ec69f28f1a5e73bcb9a607fed51",
       "status": "modified"
     },
     {
@@ -213,14 +213,14 @@
       "status": "modified"
     },
     {
-      "blob": "053476e5fbe48284b3695d4dce8cc90f0a84f0ad",
+      "blob": "0366dcf6f28bafac19e43dc4d5c5ed34ab68db0f",
       "mode": "100644",
       "old_blob": "e524eb29d9a23b99af61c885eb4cd14c752ed13f",
       "old_mode": "100644",
       "old_path": "lib/new_you/identity/password_reset.ex",
       "old_sha256": "464342751261e0c0e6ee37e265eb4ce50b6b1265982dfaa82599d9e1ded2b473",
       "path": "lib/new_you/identity/password_reset.ex",
-      "sha256": "8167d7b95aea0b04b5fdd6ef14abeb9eacfc772ea7ec1e6e6c1e151fbe92eca7",
+      "sha256": "09a2391d70fca9b9824e614425a1133c395a5160ed3571c71b09e16de737296e",
       "status": "modified"
     },
     {
@@ -422,14 +422,14 @@
       "status": "added"
     },
     {
-      "blob": "3f4148adeee155bba75388cc38a0227709bfa7a0",
+      "blob": "2c3985ffa4b619f5d674eef6ea26cb88c08214bc",
       "mode": "100644",
       "old_blob": "90548235d52d0a4b571059d769ebba86b8422adc",
       "old_mode": "100644",
       "old_path": "test/proof/p8_05_browser.mjs",
       "old_sha256": "0738d5c69e0651dffb3b7ec0fef7f422eca3b2843f9d3415c71619528995a52b",
       "path": "test/proof/p8_05_browser.mjs",
-      "sha256": "ec8d63e4b4b8c40a3dd1856ea6ebd2db75763c3ccc710eb427e6713d2a803377",
+      "sha256": "406a409429247925ccdb9fab1838bf036d8833a11b30c113ae0255ea7f01851d",
       "status": "modified"
     },
     {
@@ -829,7 +829,7 @@
       "name": null,
       "old_sha256": "e2383e3a66afb4c62f0564237a57d491144687bb5eee2e0bbb0dc00bea4e29d7",
       "path": "lib/new_you/identity/password_reset.ex",
-      "sha256": "c46321fe4f5e444a4873e0d921f91a819402b8210fd11b3913b5b7e14dc4433a",
+      "sha256": "8497b2d06355aa6f196b371bfbe5d762d5472cb56ed907e88150dcb743f7833d",
       "status": "parsed"
     },
     {
