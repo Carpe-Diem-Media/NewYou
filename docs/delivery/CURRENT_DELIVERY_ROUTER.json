@@ -198,6 +198,14 @@
       "status": "DEVELOPMENT_ONLY_APPROVED; RUNTIME_RELEASE_PROHIBITED"
     },
     {
+      "document_id": "PASSWORD_RESET_MESSAGE_WELL136_PHASE9_DEVELOPMENT_EVIDENCE",
+      "canonical_filename": "PASSWORD_RESET_MESSAGE_WELL136_PHASE9_ELIGIBILITY_v0.3.0.json",
+      "repository_path": "docs/delivery/content-evidence/content_media/password_reset_messages/PASSWORD_RESET_MESSAGE_WELL136_PHASE9_ELIGIBILITY_v0.3.0.json",
+      "sha256": "87bdc153557071a73bb46c17498e6cc4ee6255fa9fb92a70bf8a891e7e0d1c05",
+      "contract_type": "content_evidence",
+      "status": "BOUNDED_WELL136_NONPRODUCTION_SCOPE; RUNTIME_RELEASE_PROHIBITED"
+    },
+    {
       "document_id": "RECOVERY_MESSAGE_CANDIDATE_EVIDENCE",
       "canonical_filename": "RECOVERY_MESSAGE_CANDIDATE_EVIDENCE_PACKET_v0.1.0.json",
       "repository_path": "docs/delivery/content-evidence/content_media/recovery_messages/RECOVERY_MESSAGE_CANDIDATE_EVIDENCE_PACKET_v0.1.0.json",
