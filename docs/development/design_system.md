@@ -905,3 +905,12 @@ owner/project disposition before the alternate evidence path satisfies the
 mandatory check. OCR and exact-head independent review remain outstanding.
 There is no whole-PR OCR exemption. Local 892-test/deep proof remains tied to its
 recorded, unchanged application inputs; new-head hosted CI remains separate.
+
+
+The owner explicitly accepted the documented alternate border/focus evidence for
+these two installed detector limitations on 2026-11-16. Keep their FAIL reports
+and the scoped exception; do not describe Hallmark as passing. Other quality
+checks, current-head CI, OCR and independent Master Gate remain mandatory. This
+is not approval of a new visual value, production adoption or integration.
+The [diagnosis](research/acss-4.0.3-inventory/quality-gate-diagnosis.md) records the
+scope and the corrected external-tool locator used by the evidence schema.

@@ -95,12 +95,14 @@ element before falling back from a zero-height host. Such changes belong to the
 installed tool's owner or an approved supported version. This ticket does not
 patch that installation or publish to an external repository.
 
-Keep both automated findings recorded. There is no Floor waiver or
-Hallmark-verified completion claim. Acceptance of this explicit alternate
-evidence path requires owner/project disposition; exact-head independent
-Master Gate remains required. OCR remains outstanding under the existing local
-checks-before-OCR rule until the mandatory quality disposition is resolved.
-Passing CI does not silently clear either finding.
+The owner explicitly accepted the measured border-contrast and shadow-aware
+focus checks as alternate evidence for these two detector limitations on
+2026-11-16. Both automated FAILs remain recorded; there is no Hallmark-green or
+Hallmark-verified completion claim. The exception covers only this documented
+unchanged UI and these two reports. It does not waive other quality requirements,
+current-head CI, OCR or independent Master Gate, and is not merge authorization.
+Changed UI inputs require fresh applicable proof. This explicit disposition
+removes the former prerequisite to OCR; passing CI alone did not do so.
 
 ## CI evidence-locator correction
 

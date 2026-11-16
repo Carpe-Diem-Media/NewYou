@@ -172,9 +172,11 @@ for exact head `86461db`. Later changes need their own applicable proof and CI;
 these results are not a current-main or future-head certification.
 
 WELL-114 is independently integrated in main `f72cf637453408896a5037dcb2f8d37f0d29e3af`.
-That closes the former dependency gap. The remaining delivery findings are the
-supported Hallmark guide edge check and registration DEV-toolbar focus check,
-followed by OCR and independent exact-head Master Gate. See the
+That closes the former dependency gap. The owner explicitly accepted measured
+alternate evidence for the two documented Hallmark detector limitations. Keep
+the original FAIL reports and this scoped exception; it is not a passing linter
+result or merge authorization. Remaining delivery work includes OCR, current-head
+CI and independent exact-head Master Gate. See the
 [quality diagnosis](research/acss-4.0.3-inventory/quality-gate-diagnosis.md).
 No author score, source index or passing engineering suite closes those findings.
 
