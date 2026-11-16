@@ -101,6 +101,8 @@ Documentation impact: these presentation helpers change no Domain capability, du
 
 ## Source-bound proof checkpoint
 
+This historical checkpoint precedes the fresh resource grant. The later coordinated gates and assessment are recorded below.
+
 Implementation source is `6b03daf6207fcd2816f4b2f1e9a2e85d7f643ddf`, with the complete 22-file pass delta reviewed against `b7e1787ccb3ddf4f2a76bff5f6712d7ad622b2d9`. The following checks used that application/test source. Later proof/history edits must remain documentation-only; they do not turn these results into exact-final-head hosted CI or a canonical result.
 
 The [saved evidence record](pass5-native-forms-evidence.json) retains the relevant browser, static and Hallmark outputs with local log SHA-256 identities. It preserves diagnostics and failures as well as passing results. This is an author evidence record, not a tamper-proof attestation or independent runtime rerun. The final bounded handoff review compared these counts and limits with the local logs and found no factual mismatch. It requested durable output retention, which this record supplies. That review did not run tests or certify merge.
@@ -136,3 +138,38 @@ WELL-125 explicitly released TEST at 2026-11-15 21:48:46 UTC. WELL-112 has no fr
 Assessment: IMPLEMENTATION / WELL-112 Pass 5, author self-assessment. Local plan criteria 1-5 PASS through the source, pure regressions and browser proof above. Criterion 6 is UNVERIFIED overall: available static/browser checks and bounded source review passed, but fresh focused/canonical/deep gates and final PR handoff are pending at this checkpoint. No criterion is declared failed by an introduced implementation defect. Delivery remains BLOCKED by the inherited mandatory Hallmark/dependency gaps, with conflicts, exact-head CI, independent Master Gate and resulting-main proof open separately.
 
 Requirements 4/4 + observed verification 1/3 + correctness 2/2 + handoff 1/1 give raw 8/10, capped at Implementation Score 5/10 for the confirmed delivery blockers. The two verification points are withheld for unrun required DB-backed/deep gates and missing exact-head CI/overall Hallmark proof. Confidence is 85% for this bounded extraction, supported by two-engine browser and pure regression evidence; integration and the unrun full suite are the main uncertainties. Verification Status is BLOCKED for delivery, and merge readiness is NOT_VERIFIED_FOR_MERGE. To reach 8+/10, first obtain the fresh resource grant and pass focused/canonical/deep gates, then resolve WELL-114 certification and Hallmark disposition, reconcile the base and obtain required exact-head CI and independent integration proof. These are conditional next actions, not awarded results.
+
+## Coordinated final-source gates
+
+The owner replied `Continue` to the concrete reservation request after WELL-125's release. Fresh live WELL-112/125/134 comments were checked before activation; no newer competing reservation was recorded. TEST activated at **2026-11-16 04:49:31 UTC**, with the separate PLT/deep window reserved for sequential use. The actual verified checkout was `1df96b077feec7a51bb040d172d8b948cf9cfcc7`. Its application and test files match implementation `6b03daf6207fcd2816f4b2f1e9a2e85d7f643ddf`; the intervening commits change documentation/history only. Main remained `79fa504a58bbe9bc350627a03cc61d9e614c1142`. These are branch checks, not integrated-main certification.
+
+Observed results on that immutable checkout:
+
+- DevCore doctor exited 0, confirming the allocated DEV/TEST endpoints and authentication. No activation repair, reset, manual cleanup or role change was needed.
+- Focused component, LiveView, infrastructure, field, surface, native-form and registration controller tests exited 0 with **101/101 passing**, seed `257882`, in 2.1 seconds. This runs the previously unverified new LiveView/controller assertions. One invalid-CSRF rejection was logged; no focused test failed.
+- One canonical `mix check` exited 0 with **676/676 passing**, seed `97904`, in 327.4 seconds of ExUnit time and 330.096 seconds wall time. It ran from 04:50:16 to 04:55:46 UTC. The alias includes format, warnings-as-errors compilation, design/architecture, usage-rule sync, strict Credo, Sobelow and tests. Its log retains 25 error-level diagnostics and zero ExUnit failure headings. Exit 0 is not an error-free runtime claim.
+- TEST was explicitly released at **04:56:05 UTC**. The separate PLT/deep window activated then. `mix check.deep` ran from 04:56:08 to 04:56:21 UTC and exited 0 with zero errors, zero skipped and zero unnecessary skips. Dialyzer reports 11.97 seconds; command wall time is 12.605 seconds. Its required PLT was up to date; this does not certify other worktrees' shared core caches.
+- PLT/deep was explicitly released at **04:56:36 UTC**. No WELL-112 DB-backed command, Dialyzer or shared PLT preparation remains running or reserved. Future use requires fresh coordination. Remaining proof, PR/history and review work uses neither resource.
+
+Exact commands:
+
+```sh
+mise exec -- devcore-project doctor
+NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix test test/new_you_web/design_component_contracts_test.exs test/new_you_web/live/design_system_live_test.exs test/new_you_web/design_system_infrastructure_test.exs test/new_you_web/design_field_test.exs test/new_you_web/design_surface_test.exs test/new_you_web/design_native_form_test.exs test/new_you_web/controllers/registration_controller_test.exs
+NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check
+NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check.deep
+```
+
+The evidence JSON's `final_gate_verification` retains command receipts, safe output summaries, complete local log hashes and coordination-comment IDs. The full canonical log stays local because request/connection diagnostics can contain internal fixture details. Saved summaries omit no failing-test result; the actual failure-heading count is zero. The original pre-grant evidence remains dated and separate. No result from WELL-125 or Pass 4 is reused as proof for these changed files.
+
+TEST activation was recorded on WELL-112/125/134 as `8280ad2e-f68d-4eb1-9d0a-efaa4993da3e`, `b4ddaaeb-80a3-4698-a9e2-fc5208fa1e41` and `642a4a70-f54f-4380-909b-6004415e5121`. TEST release/deep activation comments are `b03b2962-dc7a-4a1b-838b-1ed9ce068413`, `7b9c075e-b899-4859-a638-5b2408c024e0` and `6957544f-2811-49b0-98d9-85f21f6f4347`. Final PLT releases are `7a69f322-c6e6-41ed-baa2-487b8cbbcfc8`, `a30ee2eb-259f-4dfb-a683-f1c2e3b45cd1` and `ce68603f-4c21-4512-ab06-5c20daeb568c`. These records preserve the resource lifecycle independently of the PR.
+
+## Assessment after the local gates
+
+IMPLEMENTATION / WELL-112 Pass 5, author self-assessment. Criteria 1-5 in the bounded plan retain their source/pure/browser proof. Criterion 6 now has the focused/canonical/deep results above, in addition to assets/static checks, supported Hallmark execution and bounded source/evidence review. Final publication/history reconciliation remains pending at this documentation checkpoint. Require fresh final-head PR/Plane evidence before treating that step as complete. The six local pass criteria do not promise resolution of the explicitly excluded integration blockers.
+
+The fresh bounded evidence reviewer found no mismatch in commands, source binding, exit codes, counts, timings, hashes or release order. They identified premature wording about publication reconciliation; it is qualified above until the actual push/history check and Plane record exist. The review inspected saved outputs and source only, with no runtime rerun, live resource audit or Master Gate certification. Later publication status belongs in Plane and the PR rather than another source change.
+
+Requirements 4/4 + observed verification 2/3 + correctness 2/2 + handoff 1/1 give raw 9/10, capped at **Implementation Score 5/10** for the inherited required-check/dependency blockers. Confidence is **90%** for the bounded implementation, supported by the fresh full-suite/deep results and prior two-engine browser proof. Integration, excluded engines/assistive technology and inherited DEV diagnostics remain uncertain. **Verification Status: BLOCKED** for delivery; **NOT_VERIFIED_FOR_MERGE**.
+
+The remaining verification point is withheld for missing reconciled exact-head hosted CI and overall Hallmark certification. Reaching 8+/10 requires independent WELL-114 certification and Hallmark disposition, branch/base reconciliation, then fresh required CI and independent Master Gate/resulting-main proof. Those actions remain with their responsible owners and are not awarded as planned points. No application/test change, merge, participant activation, Done transition or resulting-main certification occurs in this proof update.
