@@ -1,0 +1,94 @@
+{
+  "base_sha": "f72cf637453408896a5037dcb2f8d37f0d29e3af",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/260/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/260/commits",
+  "files": [
+    {
+      "blob": "0a7725eaa6e31d33597e84509d3c54ce15cf08c2",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".agents/skills/elixir-ash-code-transparency/SKILL.md",
+      "sha256": "7c93d9db7fd8c74584210d822744db317c408de089464ebd10dde92f4b321ba6",
+      "status": "added"
+    },
+    {
+      "blob": "72a5f0726248dc9d25148850ac19beaf9e0b75a7",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".agents/skills/elixir-ash-code-transparency/references/standards.md",
+      "sha256": "951aaee8f6f769ad2d0837b61af299bab35f2d3962a7fb43ceb24c93fb1dcef7",
+      "status": "added"
+    },
+    {
+      "blob": "f9e541cb71144bb2dd3d97a0fc8adbee8de3fd57",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".agents/skills/tdd/SKILL.md",
+      "sha256": "fbd7e1b0ccd91e8ac082b24bf1f39f7a76fc4115ac1eb976d6750c86931f9ed0",
+      "status": "added"
+    },
+    {
+      "blob": "2f491839ce8394fc59aa1d8e058b438ac51fbcac",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".agents/skills/tdd/agents/openai.yaml",
+      "sha256": "a20782ba6d19d3448227b4617c3a90143b591c815df5cabb4f3003c892826d92",
+      "status": "added"
+    },
+    {
+      "blob": "b3a06fc8a870493cdc0ca7ffb892233a7515d139",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".agents/skills/tdd/mocking.md",
+      "sha256": "ae74914ce3fe918527b0b7da7c2bd522750667e101104ea4e484164995517fe0",
+      "status": "added"
+    },
+    {
+      "blob": "e97bdfd0d79e2c08cdabd625ff2f286c3b5ef29a",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".agents/skills/tdd/tests.md",
+      "sha256": "b984d4d27b42e6c8358610a630b451bf22a5557349b9a32a30b88b33f60bba20",
+      "status": "added"
+    },
+    {
+      "blob": "9be876973304b62518553c379c499e120f049f98",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".agents/skills/ticket-implement/agents/openai.yaml",
+      "sha256": "1be90c150d3efd876114e1788055f48eef7f979d1d7ed7d633179e2e80a105c9",
+      "status": "added"
+    }
+  ],
+  "migrations": [],
+  "pr": 260,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/260",
+  "range_base_sha": "f72cf637453408896a5037dcb2f8d37f0d29e3af",
+  "schema_version": 1,
+  "symbols": [],
+  "tests": [],
+  "tickets": [
+    "WELL-140"
+  ]
+}
