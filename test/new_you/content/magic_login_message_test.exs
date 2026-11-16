@@ -22,6 +22,15 @@ defmodule NewYou.Content.MagicLoginMessageTest do
     {:ok, root: root}
   end
 
+  test "current v1.18 authority accepts approved content and rejects changed v1.17 lineage", %{
+    root: root
+  } do
+    assert {:ok, _} = MagicLoginMessage.binding("en")
+    path = Path.join(root, "docs/governance/product/00_PLATFORM_v1.17.0.md")
+    File.write!(path, File.read!(path) <> "\n")
+    assert {:error, :content_ineligible} = MagicLoginMessage.binding("en")
+  end
+
   test "returns exact approved bindings and artifact bytes for EN and AF" do
     for locale <- ["en", "af"] do
       assert {:ok, binding} = MagicLoginMessage.binding(locale)
