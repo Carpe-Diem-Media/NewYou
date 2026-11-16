@@ -1,5 +1,9 @@
 # Automatic.css 4.0.3 module inventory
 
+For later implementation and adoption, use the [current coverage index](../../design_system_coverage.md).
+This catalog preserves its Phase 1 baseline, including historical dependency
+statements; it is not the current delivery-status ledger.
+
 Phase 1 research, 2026-11-15. Work item WELL-112. This is the entry point for the ten requested module traces and the proposed NewYou implementation decisions. It supplements the earlier [mathematics research](../automatic-css-4.0.3-math.md); it does not replace its historical evidence.
 
 The source baseline is NewYou `4967b498d7413b7530303a64b4027e139e0b6d46` on PR [#227](https://github.com/Carpe-Diem-Media/NewYou/pull/227). No production CSS, token values, components, fonts or dependencies change in this phase. Decisions below concern which mechanisms are worth retaining or adapting. They do not approve visual values or promote candidates into production.

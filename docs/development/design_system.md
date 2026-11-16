@@ -1,5 +1,9 @@
 # Design-system development
 
+Start with the [current implementation coverage index](design_system_coverage.md)
+for actual consumers, guide candidates, deferred ACSS work and delivery limits.
+The sections below preserve the source/proof history of each implementation pass.
+
 Source-linked mathematical research and proposed implementation rules are in
 [Automatic.css 4.0.3 mathematics](research/automatic-css-4.0.3-math.md). This is
 engineering research; existing approved values and candidate status remain in
@@ -868,3 +872,36 @@ Its final delivery criterion remains blocked by the mandatory Hallmark findings,
 followed by OCR, exact-head CI and independent Master Gate. WELL-112 remains in
 progress and PR #227 remains Draft. No merge or Done claim follows from passing
 engineering checks.
+
+
+## Coverage index and quality-proof correction
+
+The [current index](design_system_coverage.md) reconciles all ten requested ACSS
+systems with actual NewYou consumers, guide-only adoption candidates and deferred
+work. Registration's application template is still development-gated. Historical
+research/roadmap checkpoints remain intact and now direct readers to that index.
+No typography, fluid gutter, floating-label or decorative candidate is promoted
+by this documentation pass.
+
+The [quality diagnosis](research/acss-4.0.3-inventory/quality-gate-diagnosis.md)
+records the installed Hallmark ancestor-height cutoff and shadow-host fallback.
+Independent source review caught that the earlier boundary test compared a field
+border with its inside fill, without proving outside contrast. The permanent
+runner now measures all four opaque borders against the actual opaque outside
+surface, refuses unsupported painting contexts and includes RED/GREEN negative
+controls for invisible boundaries and translucent-border refusal. It passes
+100 Chromium and 98 Firefox checks, with minimum outside-edge ratio 5.7263:1.
+The safe [evidence JSON](research/acss-4.0.3-inventory/quality-gate-diagnosis-evidence.json)
+retains exact commands, script/tool/log hashes, measured geometry and exclusions.
+
+A native-Tab probe shows the registration finding occurs when the installed
+linter substitutes BODY for Tidewave's zero-height shadow host. The actual focused
+shadow buttons have native focus outlines. Existing full product keyboard proof
+remains separate from toolbar outline-contrast certification.
+
+These corrections add evidence without changing application CSS or installed
+lint. Both automated Hallmark findings remain recorded and need explicit
+owner/project disposition before the alternate evidence path satisfies the
+mandatory check. OCR and exact-head independent review remain outstanding.
+There is no whole-PR OCR exemption. Local 892-test/deep proof remains tied to its
+recorded, unchanged application inputs; new-head hosted CI remains separate.

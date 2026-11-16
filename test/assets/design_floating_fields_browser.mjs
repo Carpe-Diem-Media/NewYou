@@ -8,7 +8,7 @@ const base=process.env.DESIGN_SYSTEM_URL || 'http://127.0.0.1:4237'
 const engine=process.env.DESIGN_BROWSER || 'chrome'
 assert.ok(['chrome','firefox'].includes(engine))
 let browser,profile,checks=0
-const posts=[],errors=[]
+const posts=[],errors=[],boundaries=[]
 const check=(ok,message)=>{assert.ok(ok,message);checks++}
 const state=id=>{
   const input=document.getElementById(id),frame=input.closest('.ds-floating-control')
@@ -17,11 +17,35 @@ const state=id=>{
   const transform=new DOMMatrixReadOnly(s.transform)
   const canvas=document.createElement('canvas');canvas.width=canvas.height=1
   const painter=canvas.getContext('2d')
-  const lum=color=>{painter.clearRect(0,0,1,1);painter.fillStyle=color;painter.fillRect(0,0,1,1);const c=[...painter.getImageData(0,0,1,1).data].slice(0,3).map(c=>{c/=255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4});return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+  const rgba=color=>{painter.clearRect(0,0,1,1);painter.fillStyle=color;painter.fillRect(0,0,1,1);return [...painter.getImageData(0,0,1,1).data].map(c=>c/255)}
+  const luminance=rgb=>{const c=rgb.slice(0,3).map(c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+  const lum=color=>luminance(rgba(color))
   const fs=getComputedStyle(frame),light=lum(fs.backgroundColor),edge=lum(fs.borderTopColor),ink=lum(s.color)
   const ratio=(a,b)=>(Math.max(a,b)+.05)/(Math.min(a,b)+.05)
+  // Only score opaque, solid surroundings. Do not invent a backdrop for image,
+  // translucent, filtered or opacity-bearing ancestors that need pixel proof.
+  let outside=null,outsideSupported=true
+  for(let node=frame;node;node=node.parentElement){
+    const cs=getComputedStyle(node)
+    if(parseFloat(cs.opacity)!==1 || cs.filter!=='none' || cs.mixBlendMode!=='normal' || (cs.backdropFilter && cs.backdropFilter!=='none'))outsideSupported=false
+    if(node!==frame && !outside){
+      if(cs.backgroundImage!=='none')outsideSupported=false
+      const color=rgba(cs.backgroundColor)
+      if(color[3]===1)outside=color
+      else if(color[3]>0)outsideSupported=false
+    }
+  }
+  const outsideEdges=outside && outsideSupported?['Top','Right','Bottom','Left'].map(side=>{
+    if(parseFloat(fs[`border${side}Width`])<1 || fs[`border${side}Style`]!=='solid')return 0
+    const edge=rgba(fs[`border${side}Color`])
+    // Alpha border paint also depends on background-clip beneath the border.
+    // This solid-border contract refuses that case instead of guessing it.
+    if(edge[3]!==1){outsideSupported=false;return 0}
+    return ratio(luminance(edge),luminance(outside))
+  }):null
   return {input:r(input),frame:r(frame),label:r(label),scale:transform.a,offset:transform.f,
     edgeContrast:ratio(light,edge),labelContrast:ratio(light,ink),borderWidth:parseFloat(fs.borderTopWidth),
+    outsideEdgeContrast:outsideEdges && outsideSupported?Math.min(...outsideEdges):null,outsideBackground:outside,outsideSupported:!!outsideEdges && outsideSupported,
     value:input.value,disabled:input.matches(':disabled'),readonly:input.readOnly,
     outline:getComputedStyle(frame).outlineWidth,outlineStyle:getComputedStyle(frame).outlineStyle,
     focused:input===document.activeElement,focusVisible:input.matches(':focus-visible'),
@@ -54,6 +78,28 @@ try {
   check(rest.edgeContrast>=3 && rest.borderWidth>=1,'the actual full control boundary has measured contrast and a visible border')
   check(rest.labelContrast>=4.5,'the resting label has measured text contrast')
   check(rest.name==='Full name' && rest.placeholder===' ','real label supplies the name')
+  // A border can contrast with its inside fill while disappearing outside.
+  // Prove the outside measurement rejects that defect, then restore the DOM.
+  const oldBackground=await page.$eval('#floating-name',n=>{
+    const frame=n.closest('.ds-floating-control'),parent=frame.parentElement
+    const old=parent.getAttribute('style')
+    parent.style.backgroundColor=getComputedStyle(frame).borderTopColor
+    return old
+  })
+  try {
+    const weak=await page.evaluate(state,'floating-name')
+    check(weak.edgeContrast>=3 && weak.outsideEdgeContrast<1.01,'outside-edge measurement rejects a boundary invisible against its surroundings')
+  } finally {
+    await page.$eval('#floating-name',(n,old)=>{const p=n.closest('.ds-floating-control').parentElement;old===null?p.removeAttribute('style'):p.setAttribute('style',old)},oldBackground)
+  }
+  check((await page.evaluate(state,'floating-name')).outsideEdgeContrast>=3,'restored boundary contrasts with its actual surroundings')
+  const oldBorder=await page.$eval('#floating-name',n=>{const f=n.closest('label'),old=f.getAttribute('style');f.style.borderTopColor='transparent';return old})
+  try {
+    const unsupported=await page.evaluate(state,'floating-name')
+    check(!unsupported.outsideSupported && unsupported.outsideEdgeContrast===null,'translucent border paint is explicitly unscored')
+  } finally {
+    await page.$eval('#floating-name',(n,old)=>{const f=n.closest('label');old===null?f.removeAttribute('style'):f.setAttribute('style',old)},oldBorder)
+  }
   // Clicking the actual label text focuses the native input across its full control.
   await page.click('label[for=floating-name] .ds-floating-label')
   await settle(page)
@@ -96,6 +142,11 @@ try {
   for(const width of [320,390,744,1440]) {
     await page.setViewport({width,height:1000});await settle(page)
     check(await page.evaluate(fits),`all floating fields fit at ${width}`)
+    for(const id of ['floating-name','floating-email','floating-password','floating-long','floating-error','floating-readonly','floating-disabled-empty','floating-disabled-filled']){
+      const actual=await page.evaluate(state,id)
+      check(actual.outsideSupported && actual.outsideEdgeContrast>=3,`${id} full boundary contrasts with the outside surface at ${width}`)
+      boundaries.push({id,width,contrast:actual.outsideEdgeContrast,background:actual.outsideBackground,inputHeight:actual.input.height,wrapperHeight:actual.frame.height,hallmarkCanReachWrapper:actual.frame.height<=actual.input.height+48})
+    }
     for(const id of ['floating-email','floating-long','floating-readonly','floating-disabled-filled'])check(raised(await page.evaluate(state,id)),`${id} value and label do not overlap at ${width}`)
     await page.evaluate(()=>{
       window.floatingSizes=[...document.querySelectorAll('#floating-labels span,#floating-labels input,#floating-labels p,#floating-labels legend')]
@@ -104,6 +155,9 @@ try {
     })
     await settle(page)
     check(await page.evaluate(fits),`200 percent text fits at ${width}`)
+    const enlarged=await page.evaluate(state,'floating-long')
+    check(enlarged.outsideSupported && enlarged.outsideEdgeContrast>=3,`long label boundary contrasts outside with 200 percent text at ${width}`)
+    boundaries.push({id:'floating-long',width,textScale:2,contrast:enlarged.outsideEdgeContrast,background:enlarged.outsideBackground,inputHeight:enlarged.input.height,wrapperHeight:enlarged.frame.height,hallmarkCanReachWrapper:enlarged.frame.height<=enlarged.input.height+48})
     for(const id of ['floating-email','floating-long'])check(raised(await page.evaluate(state,id)),`enlarged ${id} label stays above value at ${width}`)
     await page.evaluate(()=>{for(const[n,s]of window.floatingSizes)s===null?n.removeAttribute('style'):n.setAttribute('style',s);delete window.floatingSizes})
   }
@@ -156,5 +210,5 @@ try {
   const productErrors=errors.filter(s=>!toolbarError(s))
   check(productErrors.length===0,`no product browser errors: ${productErrors.join(', ')}`)
   check(posts.length===0,'no POST or form submission')
-  console.log(JSON.stringify({status:'PASS',checks,browser:await browser.version(),nativeAutofill:engine==='chrome',posts:posts.length,productPageErrors:productErrors.length,devToolbarErrors:errors.filter(toolbarError).length}))
+  console.log(JSON.stringify({status:'PASS',checks,browser:await browser.version(),nativeAutofill:engine==='chrome',posts:posts.length,productPageErrors:productErrors.length,devToolbarErrors:errors.filter(toolbarError).length,boundaries}))
 } finally {if(browser)await browser.close();if(profile)await rm(profile,{recursive:true,force:true})}

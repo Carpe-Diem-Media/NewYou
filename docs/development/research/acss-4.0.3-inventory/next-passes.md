@@ -1,5 +1,11 @@
 # Design-system next-pass roadmap
 
+The [current coverage index](../../design_system_coverage.md) reconciles these
+pass contracts with later code and actual consumers. Unchecked boxes below
+are the original contracts, not proof that every item is still unimplemented.
+Historical WELL-114 and shared-TEST status statements describe their recorded
+checkpoints; current delivery state belongs in Plane and the source-linked index.
+
 Updated 2026-11-15 for WELL-112. This incorporates the owner's request to combine modular typography scaling with native `progress()` and preserves the remaining content, component and adoption work discussed in this thread. It is an engineering planning note, not the governing product Roadmap, a release approval or an implementation-completion record. Plane remains the live execution ledger.
 
 ## Baseline and constraints
