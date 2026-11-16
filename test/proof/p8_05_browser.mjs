@@ -3,7 +3,7 @@
 // leave this process. Only fixed facts, allow-listed error codes and opaque
 // operation IDs are returned.
 import { boundedProtocol, createBrowserContext, completeNavigation, settleBrowserExit, settleContextLoss, protocolError, boundedFailureCode } from './browser_protocol.mjs';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
@@ -246,7 +246,7 @@ try {
     checks.keyboard_focus = await evaluate(`document.activeElement.id === 'email' && document.activeElement.matches(':focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
     checks.csrf = await evaluate(`fetch('/password/reset', {method:'POST', headers:{'content-type':'application/x-www-form-urlencoded'}, body:new URLSearchParams({locale:${JSON.stringify(input.locale)}, email:${JSON.stringify(input.email)}, operation_id:crypto.randomUUID()})}).then(r=>r.status===403)`);
     let neutral;
-    for (const email of ['unknown-ordinary@example.test', input.email]) {
+    for (const email of [`unknown-${randomUUID()}@example.test`, input.email]) {
       if (neutral) await navigation(() => cdp('Page.navigate', {url:`${base}/password/reset?locale=${input.locale}`}));
       operations.push(await evaluate(`document.querySelector('[name="operation_id"]').value`));
       await evaluate(`document.querySelector('#email').value=${JSON.stringify(email)}`);

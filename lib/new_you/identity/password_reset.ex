@@ -222,7 +222,6 @@ defmodule NewYou.Identity.PasswordReset do
         {:ok, {:ok, outcome}} when outcome in [:reset, :already_reset] -> {:ok, outcome}
         {:ok, outcome} when outcome in [:reset, :already_reset] -> {:ok, outcome}
         {:ok, {:error, :reset_unavailable}} -> {:error, :reset_unavailable}
-        {:error, :reset_unavailable} -> {:error, :reset_unavailable}
         {:error, %Ash.Error.Invalid{}} -> {:error, :reset_unavailable}
         _ -> {:error, :reset_uncertain}
       end
