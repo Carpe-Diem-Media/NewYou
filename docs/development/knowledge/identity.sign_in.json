@@ -6,7 +6,7 @@
     "WELL-134"
   ],
   "implementation_revision": {
-    "git_sha": "ea0d51946b881ce79c8f7a2986a7ca5be380f065",
+    "git_sha": "9d9fb7bd0209ad4806d98c99860fcd52033e9ed8",
     "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
   },
   "authoritative_domain": "Identity",
@@ -833,7 +833,7 @@
       "id": "browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'signin'",
-      "sha256": "ec8d63e4b4b8c40a3dd1856ea6ebd2db75763c3ccc710eb427e6713d2a803377"
+      "sha256": "406a409429247925ccdb9fab1838bf036d8833a11b30c113ae0255ea7f01851d"
     },
     {
       "id": "password_test",
