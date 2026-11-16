@@ -4,20 +4,46 @@ defmodule NewYouWeb.OrdinaryPasswordResetTest do
   @endpoint NewYouWeb.Endpoint
 
   setup do
-    keys = [:fp001_development_entry, :p8_12_browser_development_fixtures]
-    previous = Map.new(keys, &{&1, Application.get_env(:new_you, &1)})
+    keys = [
+      :fp001_development_entry,
+      :p8_08_browser_development_fixtures,
+      :p8_12_browser_development_fixtures
+    ]
+
+    previous = Map.new(keys, &{&1, Application.fetch_env(:new_you, &1)})
     Application.put_env(:new_you, :fp001_development_entry, true)
     Application.put_env(:new_you, :p8_12_browser_development_fixtures, false)
 
     on_exit(fn ->
-      Enum.each(previous, fn {key, value} ->
-        if is_nil(value),
-          do: Application.delete_env(:new_you, key),
-          else: Application.put_env(:new_you, key, value)
+      Enum.each(previous, fn
+        {key, {:ok, value}} -> Application.put_env(:new_you, key, value)
+        {key, :error} -> Application.delete_env(:new_you, key)
       end)
     end)
 
     :ok
+  end
+
+  test "historical-only login does not consume WELL-136 forgot-password copy" do
+    Application.put_env(:new_you, :p8_08_browser_development_fixtures, true)
+    Application.put_env(:new_you, :p8_12_browser_development_fixtures, true)
+    assert NewYou.Content.PasswordResetBrowserCopy.available?()
+
+    for ordinary <- [false, nil, :absent],
+        {locale, link} <- [{"en", "Forgot your password?"}, {"af", "Wagwoord vergeet?"}] do
+      if ordinary == :absent,
+        do: Application.delete_env(:new_you, :fp001_development_entry),
+        else: Application.put_env(:new_you, :fp001_development_entry, ordinary)
+
+      login = get(build_conn(), "/login?locale=#{locale}")
+      assert login.status == 200
+      assert String.contains?(login.resp_body, link) == false
+      assert String.contains?(login.resp_body, "/password/reset?locale=#{locale}") == false
+
+      historical = get(build_conn(), "/password/reset?locale=#{locale}")
+      assert historical.status == 200
+      assert historical.resp_body =~ "password-reset-request"
+    end
   end
 
   test "real login exposes the approved reset journey with legacy flags off" do
