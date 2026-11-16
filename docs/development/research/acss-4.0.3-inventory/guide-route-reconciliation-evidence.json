@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "task": "WELL-112",
+  "implementation_sha": "a2fd19007ad855c5d098f84197f33be0afd31d6d",
+  "integrated_base": "d1001ee3c935337676fe61f855d1004e080bc143",
+  "record_kind": "Author-observed evidence; not independent attestation",
+  "runtime": "Temporary loopback TEST-backed endpoint on port 4238. Normal DEV has pending upstream migrations and returns HTTP 503.",
+  "checks": [
+    {
+      "kind": "focused",
+      "command": "NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix test test/new_you_web/design_component_contracts_test.exs test/new_you_web/design_field_test.exs test/new_you_web/design_native_form_test.exs test/new_you_web/design_surface_test.exs test/new_you_web/design_system_infrastructure_test.exs test/new_you_web/live/design_system_live_test.exs test/new_you_web/privacy_telemetry_test.exs test/new_you_web/security/authentication_reachability_test.exs test/new_you_web/controllers/registration_controller_test.exs",
+      "observed_outcome": "116/116 passed; seed 708015; 2.6 seconds",
+      "private_log": "/tmp/newyou-guide-isolation-design-tests.log",
+      "log_sha256": "c037dd04c69ed0c973ff4a8e85ff13261229fa64ddac549d58be80f5b6330c1a"
+    },
+    {
+      "kind": "static",
+      "command": "DESIGN_SYSTEM_BASE_SHA=d1001ee3c935337676fe61f855d1004e080bc143 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix do format --check-formatted + compile --warnings-as-errors + design.check + check.architecture + usage_rules.sync --check + credo --strict + sobelow --exit --skip --private --strict --router lib/new_you_web/router.ex",
+      "observed_outcome": "All named stages exited 0; existing quoted lockfile key warnings retained",
+      "private_log": "/tmp/newyou-guide-isolation-static.log",
+      "log_sha256": "17162262d4e0f328b1de619bd501cbdc4052ddb78af0937d1f3e94eae9f706e5"
+    },
+    {
+      "kind": "assets",
+      "command": "NEW_YOU_PORT=4237 ERL_FLAGS='+S 4:4' mise exec -- devcore-project run dev -- mix assets.build",
+      "observed_outcome": "Passed",
+      "private_log": "/tmp/newyou-guide-isolation-assets.log",
+      "log_sha256": "1fc72490ad04b3303f23762868a3971d8456e3e7676a9ac06a46e9842f9b0bb6"
+    },
+    {
+      "kind": "python",
+      "command": "mise exec -- python3 -m unittest tests.test_capability_knowledge tests.test_foundation_lane_routing tests.test_foundation_smoke",
+      "observed_outcome": "72/72 passed",
+      "private_log": "/tmp/newyou-guide-isolation-python.log",
+      "log_sha256": "a1bcdd8f77e2264ee7e50e7d40431f7e756f7c1aeb81a4dfe26a72774bc7a24c"
+    },
+    {
+      "kind": "node",
+      "command": "mise exec -- node --test test/assets/design_system_test.mjs",
+      "observed_outcome": "5/5 passed",
+      "private_log": "/tmp/newyou-guide-isolation-node.log",
+      "log_sha256": "761cd9e0f02fbb481428b535087152c0ec3a0a54f2fd53b05d2772bebbdce8fd"
+    },
+    {
+      "kind": "browser",
+      "command": "BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4238 mise exec -- node test/assets/design_system_browser.mjs",
+      "observed_outcome": "Passed real websocket, cookie preservation, URL cleanup, responsive/token/focus/reduced-motion regression; no browser errors",
+      "private_log": "/tmp/newyou-guide-isolation-browser.log",
+      "log_sha256": "91814a8a7c2c816fc8d4756c5aa55be41f63b9db033c2ed0b46065e7b3696a13"
+    },
+    {
+      "kind": "lighting",
+      "command": "BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools DESIGN_SYSTEM_URL=http://127.0.0.1:4238 mise exec -- node test/assets/design_lighting_browser.mjs",
+      "observed_outcome": "Passed; painted label minima 5.32 rest, 9.41 hover/press, 5.31 wrapped enlarged; external Node module-type warning retained",
+      "private_log": "/tmp/newyou-guide-isolation-lighting.log",
+      "log_sha256": "5f19f3bb6be52fd48654629c2391106eb9243a4336ed0478a0e8f24a757966cb"
+    },
+    {
+      "kind": "hallmark",
+      "command": "mise exec -- node /home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint.mjs assets/css/design-tokens.css assets/css/design-components.css assets/css/design-system.css assets/css/design-layouts.css assets/css/design-content.css assets/css/design-borders.css assets/css/design-surfaces.css assets/css/design-typography.css assets/css/design-forms.css --url http://127.0.0.1:4238/dev/design-system --scope component --json",
+      "observed_outcome": "0 FAIL; 0 open REFLEX; 1 WARN; 2 existing waivers; 0 rejected; 1 note; render ran",
+      "private_log": "/tmp/newyou-guide-isolation-hallmark.json",
+      "log_sha256": "ae49320265ee883acf16f25f5785e42f0300b03b9d9976e011f055131ba308f7"
+    }
+  ],
+  "capability_validation": {
+    "command": "mise exec -- python3 -m tools.capability_knowledge",
+    "outcome": "PASS, 7 maps; schema and exact locators only"
+  },
+  "red_regression": {
+    "log": "/tmp/newyou-guide-isolation-red.log",
+    "sha256": "425d274357ec7823f6297d9c1e7d184ec7669bb7db9d04bf3d74c2e786cdbe41",
+    "outcome": "4/7 passed; seed 189794; guide HTTP 404 twice and missing dedicated socket"
+  },
+  "independent_source_review": {
+    "compared_range": "8de042a..a2fd190",
+    "result": "No actionable source finding within bounded scope",
+    "limits": "Read-only source review; no runtime/DB commands; not Master Gate"
+  },
+  "not_run": [
+    "Complete canonical mix check after guide repair: unchanged current-main Content failures remain under WELL-138/WELL-136",
+    "mix check.deep and PLT preparation",
+    "Required OCR, pending applicable local gates",
+    "Current-source Firefox/WebKit proof",
+    "Independent exact-head/resulting-main certification"
+  ],
+  "known_gaps": [
+    "WELL-114 independent post-merge certification remains open under owner-approved UI continuation exception",
+    "Normal DEV pending upstream migrations; no DEV migration/reset/cleanup performed",
+    "Inherited full-site Hallmark gap is not closed by this guide-only TEST runtime check",
+    "Exact-head hosted CI and independent review pending"
+  ],
+  "verification_status": "BLOCKED"
+}

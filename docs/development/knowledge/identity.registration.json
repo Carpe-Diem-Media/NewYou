@@ -9,11 +9,12 @@
     "WELL-49",
     "WELL-50",
     "WELL-96",
-    "WELL-131"
+    "WELL-131",
+    "WELL-112"
   ],
   "implementation_revision": {
-    "git_sha": "63274439676ef18db0be25f2b50f613408f1187d",
-    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged."
+    "git_sha": "a2fd19007ad855c5d098f84197f33be0afd31d6d",
+    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 retains the registration and verification owner interfaces and exact semantic copy while using the shared native controls and approved font policy. The shared router/boundary also declares an isolated DEV-only design guide; no registration transaction, eligibility rule or Account lifecycle is changed."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -606,7 +607,8 @@
     "WELL-131 is bounded software development. R-01 content/legal approval, R-02 OQ-035/OQ-036 delivery/abuse decisions and R-03 release/full FP-001 assessment remain open. No real-participant activation, production legal acceptance or launch email channel is delivered.",
     "Cold start: inspect current routers and WELL-131, then router/boundary -> DevelopmentEntry -> Content readers -> RegistrationController -> Identity.register/1 -> existing acceptance transaction; follow pending -> Communications -> EmailVerificationController -> Identity.verify_email/1. Run the ordinary entry test and owner/proof regression suites.",
     "No new durable lifecycle or schema. Existing operation bound/tombstoned states, Account verification/PMR invariants, transaction lock order and restart recovery remain as documented above and in proof.tb001.",
-    "WELL-109 locale regression uses exact rendered text rather than serialized HTML or short substring matching. New durable assertions filter fixture identifiers before Ash hydration; shared TEST risks remain tracked by WELL-114."
+    "WELL-109 locale regression uses exact rendered text rather than serialized HTML or short substring matching. New durable assertions filter fixture identifiers before Ash hydration; shared TEST risks remain tracked by WELL-114.",
+    "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations."
   ],
   "follow_up_tickets": [
     "WELL-45",
@@ -703,7 +705,7 @@
       "id": "public_response_test",
       "path": "test/new_you_web/controllers/registration_controller_test.exs",
       "symbol": "duplicate canonical email receives the same neutral pending outcome",
-      "sha256": "7df9f2049022cf2a7480aba757f7ea6dd6ef7d49a930980fe39c14c8c06c7fef"
+      "sha256": "932b75fff6dff9ac96202deff7d19c32e1b9e8058a31d1cc3fc48b771a0b0bda"
     },
     {
       "id": "entry_gate",
@@ -727,13 +729,13 @@
       "id": "router",
       "path": "lib/new_you_web/router.ex",
       "symbol": "get \"/\", RegistrationController, :new",
-      "sha256": "61a829e8080bba8451843308b8b038e3f80755b729786551b7d6762533dc2160"
+      "sha256": "a08e890d4f49151edcd36ed69fd884ce07cf3f06b89b15438d164ecc95697485"
     },
     {
       "id": "verification_controller",
       "path": "lib/new_you_web/controllers/email_verification_controller.ex",
       "symbol": "def confirm",
-      "sha256": "a33ce05d1ddb68184d29ee8085ee99a28b3c56d8fe65ad8bfc034777f1e53a43"
+      "sha256": "146e5d25ea2adcf2faadba9bee3287f9836de89fb0d9fb4340d586c3fd082bad"
     },
     {
       "id": "verification_copy",
@@ -787,7 +789,7 @@
       "id": "boundary",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "defmodule",
-      "sha256": "dba784a2fa960cd3f0cb01f1b9ea195e20818d5d47b430b91173adf3a348c47c"
+      "sha256": "d2f0230bd21a84ecfc2566e92c0ff75e58f7d3cb62ec0176b1a9e162b0527254"
     },
     {
       "id": "telemetry",

@@ -3,11 +3,12 @@
   "capability_id": "identity.sign_in",
   "purpose": "WELL-134 bounded FP-001 EN/AF development sign-in and current-session protected access. This source map grants no release or review approval.",
   "implementing_tickets": [
-    "WELL-134"
+    "WELL-134",
+    "WELL-112"
   ],
   "implementation_revision": {
-    "git_sha": "aa53cc48220d7cb15091c5f5899a18b487290f90",
-    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles."
+    "git_sha": "a2fd19007ad855c5d098f84197f33be0afd31d6d",
+    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged."
   },
   "authoritative_domain": "Identity",
   "collaborating_domains": [
@@ -476,6 +477,15 @@
         "boundary",
         "endpoint"
       ]
+    },
+    {
+      "summary": "The DEV/test design guide renders on a fresh request projection with no Identity session, headers, cookies or endpoint secret. Its separate LiveView transport reads no session and enforces connection-origin checks. It grants no sign-in or protected-access capability. Reassess transport isolation before routing another LiveView.",
+      "source_ids": [
+        "design_reference_boundary",
+        "endpoint",
+        "boundary",
+        "browser_telemetry_test"
+      ]
     }
   ],
   "concurrency": [
@@ -686,7 +696,8 @@
     "Hallmark REFLEX 39b x8 is waived because DESIGN.md explicitly requires 58px input height. Generated dependency/token CSS REFLEX 7b x6, 22 x5, 24b x2 belongs to unchanged compatibility/design styles. F1 x5 preserves exact approved apostrophes, F23 x20 is non-public authentication metadata, and unchanged CSS warnings 10b x2/F7 x1 are recorded. Balanced heads removed both F26 stub warnings.",
     "Browser tests assert real Tab focus with visible outline, labels, styles loaded, reduced-motion state, responsive widths 320/375/768/1280/1920 and 200% text resize. Hallmark render contrast checks report no page-level contrast failure; source review preserves shared tokens. No redesign or theme run was invoked.",
     "Current-session logout only. Remaining FP-001 Q.2 session controls, recovery/email-change/support/reconciliation product journeys, OQ-035 abuse thresholds, OQ-036 real channel/retry proof and participant content/legal eligibility remain release obligations. Existing owner capabilities do not grant participant UI or release access.",
-    "Permanent ordinary EN/AF browser proof doubles computed text sizes and numeric line heights at widths 320/375/768/1280/1920, checks horizontal document and text/control fit, then restores original inline styles. This runs on the login state; the earlier 20-state resize supplement remains separate evidence, not permanent all-state coverage."
+    "Permanent ordinary EN/AF browser proof doubles computed text sizes and numeric line heights at widths 320/375/768/1280/1920, checks horizontal document and text/control fit, then restores original inline styles. This runs on the login state; the earlier 20-state resize supplement remains separate evidence, not permanent all-state coverage.",
+    "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations."
   ],
   "follow_up_tickets": [
     "WELL-21",
@@ -737,25 +748,25 @@
       "id": "password_web",
       "path": "lib/new_you_web/controllers/password_session_controller.ex",
       "symbol": "def protected",
-      "sha256": "3aa682e16e48322a5f1dc65d50e2fd2c0e7729a6517b65b1e4dac38ca8a54e88"
+      "sha256": "fc280380f919d6afc19dae79577b65e08d3d8bb3c4f3edc4685404b4fdbeca70"
     },
     {
       "id": "magic_web",
       "path": "lib/new_you_web/controllers/magic_login_controller.ex",
       "symbol": "def confirm",
-      "sha256": "6cb93ce722fb097782a865ace833ff801a08c16501507668ba7a25e6d0364dcf"
+      "sha256": "d600871376cb9e47fa5ccd161bfed12531debf6457de13efaba6f0ed107bb335"
     },
     {
       "id": "boundary",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "defp dispatch_browser_request",
-      "sha256": "dba784a2fa960cd3f0cb01f1b9ea195e20818d5d47b430b91173adf3a348c47c"
+      "sha256": "d2f0230bd21a84ecfc2566e92c0ff75e58f7d3cb62ec0176b1a9e162b0527254"
     },
     {
       "id": "endpoint",
       "path": "lib/new_you_web/endpoint.ex",
       "symbol": "Plug.Session",
-      "sha256": "874d6f005f6323293adb2c7279a0d5e78b75d1d88ae0c1b3ed976184a9224655"
+      "sha256": "28f5b007b9841067c90adce5f2ba8a35dc3a3bac0f7de252b4a732fea0cb5e17"
     },
     {
       "id": "copy",
@@ -845,7 +856,7 @@
       "id": "password_web_test",
       "path": "test/new_you_web/controllers/password_session_controller_test.exs",
       "symbol": "known wrong-password and unknown-account",
-      "sha256": "28ad7b98da1c95d9cecdd637e93fa0d139ea5531656dff8e0115a7f422d4e442"
+      "sha256": "b5b3d488e20ee0141b759f6e03ab549cf1b1c7f3e14902219bf978731bbf21f8"
     },
     {
       "id": "magic_test",
@@ -857,7 +868,7 @@
       "id": "magic_web_test",
       "path": "test/new_you_web/controllers/magic_login_controller_test.exs",
       "symbol": "defmodule",
-      "sha256": "c40347b2adcacce62bac7a2162ce4530351d4af3de0ae9a4c17055b50c7da4c3"
+      "sha256": "4604dcc44e86b1c4110d730a06571f798f49579c239db3e2192c753e6b12ce40"
     },
     {
       "id": "privacy_test",
@@ -917,7 +928,13 @@
       "id": "browser_telemetry_test",
       "path": "test/new_you_web/privacy_telemetry_test.exs",
       "symbol": "defmodule NewYouWeb.PrivacyTelemetryTest",
-      "sha256": "53b16f110f5821e069f05e073d324475185c7dcd551e0cb8f8d4f06bc4a9ca32"
+      "sha256": "3806af345f2a4cdb9f25275de5dbf989f8f6ebd98f6ae53030f4c09a0e25caf0"
+    },
+    {
+      "id": "design_reference_boundary",
+      "path": "lib/new_you_web/design_system_boundary.ex",
+      "symbol": "def render(",
+      "sha256": "b42ce70f4534ef399ce64688cac7fc1a1f36f0f4031db0a124bab6f29ac6320c"
     }
   ]
 }

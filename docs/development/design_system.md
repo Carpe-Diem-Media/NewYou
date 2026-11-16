@@ -673,3 +673,31 @@ The [Pass 4 source/proof notes](research/acss-4.0.3-inventory/pass4-surfaces.md)
 `/dev/design-system#native-forms` uses the same `Field.design_checkbox/1`, `design_fieldset/1` and optional text-field help as the registration pilot. Native checked/required/disabled state owns behavior. Caller-localized labels and help/error text get deterministic associations; related actions stay outside labels. Unchecked boxes have no hidden companion value. Native fieldset disabling reaches descendant controls; caller `aria-busy` supplies only a projection of its operation.
 
 Optional `--field-gap`, `--choice-gap` and `--choice-label-weight` inputs resolve at each consumer in canonical CSS. Defaults retain existing sizes; the age-label weight and privacy-error gap preserve their former markup's treatment. The [Pass 5 notes](research/acss-4.0.3-inventory/pass5-native-forms.md) record APIs, native submission math, ACSS source findings, selectors, copy/geometry preservation and proof limits. Radio/select/textarea/error-summary adoption awaits an actual consumer need. No validation, transport, governed copy, premium CTA or release behavior changes.
+
+## Sessionless guide routing
+
+The endpoint's browser boundary dispatches only reviewed paths. The two DEV/test
+guide paths use [DesignSystemBoundary](../../lib/new_you_web/design_system_boundary.ex)
+instead of a general Router fallback. LiveView renders from a fresh connection
+containing route metadata and validated display choices. Original headers,
+cookies, private assigns, the Identity session and endpoint secret never enter
+that rendering connection. The original connection sends the HTML response and
+retains its cookie behavior.
+
+The guide alone connects to `/dev/design-system/live`. Both transports request
+empty connect-info and enforce `check_origin: :conn`, including in DEV. This is
+a sessionless display tool protected by connection-origin checks and signed
+LiveView tokens; it does not perform session-backed CSRF validation or obtain
+business authority. Production compiles neither the dispatch clauses nor the
+dedicated socket. The ordinary `/live` socket retains its existing configuration.
+
+The guide DOM exposes its canonical display URL. The browser removes unknown or
+invalid display parameters before connecting. Grid changes and live patches
+remain bounded by the same choices. A regression guard requires reviewing the
+sessionless transport before another LiveView is added to the router.
+
+The [reconciliation proof notes](research/acss-4.0.3-inventory/guide-route-reconciliation.md)
+record exact commands, telemetry/origin/production tests, runtime limits and
+unresolved current-main Content eligibility failures. The existing sign-in
+capability map also links this shared privacy boundary. These records do not
+certify the whole PR or close WELL-114.

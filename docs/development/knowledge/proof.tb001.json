@@ -5,11 +5,12 @@
   "implementing_tickets": [
     "WELL-20",
     "WELL-131",
-    "WELL-134"
+    "WELL-134",
+    "WELL-112"
   ],
   "implementation_revision": {
-    "git_sha": "aa53cc48220d7cb15091c5f5899a18b487290f90",
-    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh."
+    "git_sha": "a2fd19007ad855c5d098f84197f33be0afd31d6d",
+    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-112 reconciles the stronger current-main scanner scenario and adds the self-hosted-font CSP assertion in its existing shared helper. Scenario owner-state checks and the fixed TB-001 inventory remain unchanged. Source/hash refresh is not a fresh TB-001 certification."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
   "collaborating_domains": [
@@ -386,7 +387,8 @@
     "Full applicable local gates, OCR, exact-head CI and independent Master Gate review remain separate obligations. This map does not assert those results.",
     "The static identity, owner callback-target and mandatory-claim inventory is linked to TB-001 sections 7-8. It remains separate from executable declarations and creates no business or certification authority. Fresh independent Master Gate review must assess semantic completeness and scenario source. The aggregate ledger marker does not enumerate underlying assertions or protect against arbitrary edits inside an owner scenario. Browser verification_form records the observed CSRF form; owning Account/Session/protected-access assertions determine success.",
     "The WELL-131 ordinary entry mode has separate ExUnit acceptance and is not a new TB-001 inventory case. Existing spine/login modes and the fixed mandatory Catalog inventory remain intact. Production-exclusion now also checks the normal development entry, copy and legal gates with fixture flags set.",
-    "WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh."
+    "WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh.",
+    "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -490,7 +492,7 @@
       "id": "capability_scenarios",
       "path": "test/support/proof/capability_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.MagicScannerCases",
-      "sha256": "8a4a1553d9006b3a72db0c38451498a921b89a28232181743dc05a4b5f795c17"
+      "sha256": "10407b6e0d9042989d2b05b686f586918902a82f5a2708a43c1dc909d8df4372"
     },
     {
       "id": "integration_test",

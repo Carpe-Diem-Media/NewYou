@@ -142,3 +142,14 @@ CI evidence. A score of at least 8 remains conditional on those observed results
 none is awarded now. Merge readiness is NOT_VERIFIED_FOR_MERGE. WELL-114's
 independent certification and the inherited Hallmark finding remain separate
 open obligations.
+
+## Later guide repair
+
+The guide dispatch/privacy gap above is corrected in application source
+`a2fd19007ad855c5d098f84197f33be0afd31d6d`. The [source/proof addendum](../../development/research/acss-4.0.3-inventory/guide-route-reconciliation.md)
+records the sessionless HTTP and LiveView implementation, green focused/browser
+checks and remaining overall gates. Earlier failing attempts and assessments
+above remain historical evidence. The owner has since removed routine TEST
+booking/release requirements. No new reservation is required to continue
+authorized checks through DevCore; unrelated scope and destructive operations
+still require their applicable authority.
