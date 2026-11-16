@@ -12,6 +12,7 @@ defmodule NewYou.Content.PasswordResetBrowserCopyTest do
     for {key, entry} <- artifact["entries"], locale <- ["en", "af"] do
       text = PasswordResetBrowserCopy.text!(key, locale)
       assert text == entry[locale]["text"]
+      assert NewYouWeb.PasswordResetCopy.text!(key, locale, :well136) == text
       assert byte_size(text) == entry[locale]["bytes"]
       assert Base.encode16(:crypto.hash(:sha256, text), case: :lower) == entry[locale]["sha256"]
     end

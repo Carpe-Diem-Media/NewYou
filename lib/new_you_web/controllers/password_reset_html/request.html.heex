@@ -1,5 +1,5 @@
 <.auth_shell
-  title={Copy.text!("request.title", @locale)}
+  title={Copy.text!("request.title", @locale, :well136)}
   locale={@locale}
   locale_path="/password/reset"
   heading_id="password-reset-heading"
@@ -7,7 +7,7 @@
   <script defer src={~p"/assets/js/password_reset.js"}>
   </script>
   <p id="reset-instructions" class="max-w-prose text-design-body-sm leading-design-body-sm">
-    {Copy.text!("request.body", @locale)}
+    {Copy.text!("request.body", @locale, :well136)}
   </p>
   <.form
     for={%{}}
@@ -15,14 +15,15 @@
     method="post"
     id="password-reset-request"
     data-reset-form
-    data-processing={Copy.text!("identity.password_reset.request.processing", @locale)}
+    data-processing={Copy.text!("identity.password_reset.request.processing", @locale, :well136)}
     class="grid w-full max-w-prose gap-design-base justify-items-start"
   >
     <input type="hidden" name="locale" value={@locale} />
     <input type="hidden" name="operation_id" value={@operation_id} />
     <label class="text-design-body-sm font-design-bold" for="email">{Copy.text!(
       "identity.login.email.label",
-      @locale
+      @locale,
+      :well136
     )}</label>
     <input
       class="min-h-design-input-height h-auto w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm leading-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
@@ -34,10 +35,10 @@
       maxlength="320"
       aria-describedby="reset-instructions"
     />
-    <.primary_button type="submit" adaptive>{Copy.text!("request.action", @locale)}</.primary_button>
+    <.primary_button type="submit" adaptive>{Copy.text!("request.action", @locale, :well136)}</.primary_button>
   </.form>
   <a
     href={"/login?locale=#{@locale}"}
     class="min-h-11 w-fit content-center text-design-body-xs leading-design-body-xs text-design-ink underline decoration-design-primary underline-offset-4 hover:text-design-primary active:text-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
-  >{Copy.text!("identity.password_reset.navigation.back_to_login", @locale)}</a>
+  >{Copy.text!("identity.password_reset.navigation.back_to_login", @locale, :well136)}</a>
 </.auth_shell>

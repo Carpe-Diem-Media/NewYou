@@ -6,6 +6,7 @@ defmodule NewYouWeb.PasswordResetContentContextTest do
   alias NewYou.{Communications, Identity}
   alias NewYou.Communications.MessageIntent
   alias NewYou.Content.PasswordResetMessage, as: Content
+  alias NewYou.Content.PasswordResetBrowserCopy, as: BrowserCopy
   alias NewYou.Identity.{Account, Token}
   alias NewYou.Proof.{P805, RegistrationSeam}
 
@@ -19,6 +20,7 @@ defmodule NewYouWeb.PasswordResetContentContextTest do
     File.mkdir_p!(root)
     File.cp_r!("docs", Path.join(root, "docs"))
     Process.put({Content, :evidence_root}, root)
+    Process.put({BrowserCopy, :evidence_root}, root)
     previous = Application.fetch_env(:new_you, :fp001_development_entry)
 
     on_exit(fn ->
@@ -31,6 +33,216 @@ defmodule NewYouWeb.PasswordResetContentContextTest do
     end)
 
     {:ok, root: root}
+  end
+
+  test "historical browser copy and mutation remain independent of missing or corrupt C-02", %{
+    root: root
+  } do
+    for file <- ["well136-c02-v0.1.json", "well136-c02-owner-approval.json"] do
+      path = Path.join([root, "docs/development/fixtures", file])
+      original = File.read!(path)
+
+      for state <- [:missing, :corrupt], locale <- ["en", "af"] do
+        invalidate(path, original, state)
+
+        P805.with_fixture(fn ->
+          Application.put_env(:new_you, :fp001_development_entry, false)
+          Application.put_env(:new_you, :p8_12_browser_development_fixtures, true)
+          {request, account} = account()
+          assert {:ok, _} = Content.binding(locale)
+          page = get(build_conn(), "/password/reset?locale=#{locale}")
+          assert page.status == 200
+
+          legacy_action =
+            if locale == "en", do: "Request reset link", else: "Vra wagwoordskakel aan"
+
+          assert page.resp_body =~ legacy_action
+          operation = operation()
+
+          result =
+            post(recycle(page), "/password/reset", %{
+              locale: locale,
+              email: request.email,
+              operation_id: operation,
+              context: "well136"
+            })
+
+          assert result.status == 200
+
+          legacy_body =
+            if locale == "en",
+              do:
+                "If the address can receive a reset link, it will arrive shortly. You can close this page.",
+              else:
+                "As die adres ’n wagwoordskakel kan ontvang, sal dit binnekort aankom. Jy kan hierdie bladsy toemaak."
+
+          assert result.resp_body =~ legacy_body
+          assert intent(operation).render_schema == "password-reset-v1"
+          token = proof(account.id)
+
+          {:ok, {:ok, bearer}} =
+            Ash.transact([Account, Token], fn ->
+              Identity.password_reset_delivery(token.jti, request.email, locale)
+            end)
+
+          for method <- [:get, :head] do
+            passive =
+              Phoenix.ConnTest.dispatch(
+                build_conn(),
+                @endpoint,
+                method,
+                "/password/reset/confirm?locale=#{locale}&proof=#{URI.encode_www_form(bearer)}"
+              )
+
+            assert passive.status == 200
+            assert proof(account.id) == token
+            assert Ash.get!(Account, account.id, authorize?: false) == account
+            assert session_count(account.id) == 0
+          end
+
+          confirmation =
+            post(build_conn(), "/password/reset/confirm", %{
+              locale: locale,
+              proof: bearer,
+              password: "historical replacement password",
+              operation_id: operation()
+            })
+
+          assert confirmation.status == 200
+
+          legacy_success =
+            if locale == "en",
+              do: "Sign in again with your new password.",
+              else: "Meld weer met jou nuwe wagwoord aan."
+
+          assert confirmation.resp_body =~ legacy_success
+          assert proof(account.id) == nil
+
+          assert Ash.get!(Account, account.id, authorize?: false).credential_version ==
+                   account.credential_version + 1
+
+          assert session_count(account.id) == 0
+        end)
+
+        File.write!(path, original)
+      end
+    end
+  end
+
+  test "ordinary browser cannot fall back when C-02 is missing or corrupt", %{root: root} do
+    for file <- ["well136-c02-v0.1.json", "well136-c02-owner-approval.json"] do
+      path = Path.join([root, "docs/development/fixtures", file])
+      original = File.read!(path)
+
+      for state <- [:missing, :corrupt], locale <- ["en", "af"] do
+        invalidate(path, original, state)
+
+        P805.with_fixture(fn ->
+          Application.put_env(:new_you, :fp001_development_entry, true)
+          Application.put_env(:new_you, :p8_12_browser_development_fixtures, true)
+          {request, account} = account()
+          assert :ok = Identity.request_password_reset(request.email, locale, operation())
+          token = proof(account.id)
+
+          {:ok, {:ok, bearer}} =
+            Ash.transact([Account, Token], fn ->
+              Identity.password_reset_delivery(token.jti, request.email, locale)
+            end)
+
+          assert {:ok, _} = Content.binding(locale)
+          assert {:ok, _} = Content.binding(locale, :well136)
+          operation = operation()
+
+          for method <- [:get, :head] do
+            assert Phoenix.ConnTest.dispatch(
+                     build_conn(),
+                     @endpoint,
+                     method,
+                     "/password/reset?locale=#{locale}"
+                   ).status == 404
+
+            assert Phoenix.ConnTest.dispatch(
+                     build_conn(),
+                     @endpoint,
+                     method,
+                     "/password/reset/confirm?locale=#{locale}&proof=#{URI.encode_www_form(bearer)}"
+                   ).status == 404
+          end
+
+          assert post(build_conn(), "/password/reset", %{
+                   locale: locale,
+                   email: request.email,
+                   operation_id: operation,
+                   context: "p8_12"
+                 }).status == 404
+
+          assert post(build_conn(), "/password/reset/confirm", %{
+                   locale: locale,
+                   proof: bearer,
+                   password: "unauthorized replacement",
+                   operation_id: operation(),
+                   context: "p8_12"
+                 }).status == 404
+
+          assert intent(operation) == nil
+          assert proof(account.id) == token
+          assert Ash.get!(Account, account.id, authorize?: false) == account
+          assert session_count(account.id) == 0
+        end)
+
+        File.write!(path, original)
+      end
+    end
+  end
+
+  test "historical unavailable and uncertain responses never borrow C-02 wording", %{root: root} do
+    File.rm!(Path.join(root, "docs/development/fixtures/well136-c02-v0.1.json"))
+    historical_path = packet_path(root, @historical_packet)
+    original = File.read!(historical_path)
+
+    P805.with_fixture(fn ->
+      Application.put_env(:new_you, :fp001_development_entry, false)
+      Application.put_env(:new_you, :p8_12_browser_development_fixtures, true)
+      {request, account} = account()
+
+      for locale <- ["en", "af"] do
+        File.rm!(historical_path)
+        unavailable = get(build_conn(), "/password/reset?locale=#{locale}")
+        assert unavailable.status == 503
+        assert unavailable.resp_body == ""
+        File.write!(historical_path, original)
+        assert :ok = Identity.request_password_reset(request.email, locale, operation())
+        token = proof(account.id)
+
+        {:ok, {:ok, bearer}} =
+          Ash.transact([Account, Token], fn ->
+            Identity.password_reset_delivery(token.jti, request.email, locale)
+          end)
+
+        Process.put(
+          RegistrationSeam,
+          {:observe, fn -> raise "synthetic historical reset interruption" end}
+        )
+
+        try do
+          uncertain =
+            post(build_conn(), "/password/reset/confirm", %{
+              locale: locale,
+              proof: bearer,
+              password: "uncertain historical replacement",
+              operation_id: operation()
+            })
+
+          assert uncertain.status == 503
+          assert uncertain.resp_body == ""
+          assert proof(account.id) == token
+          assert Ash.get!(Account, account.id, authorize?: false) == account
+          assert session_count(account.id) == 0
+        after
+          Process.delete(RegistrationSeam)
+        end
+      end
+    end)
   end
 
   test "historical fresh issuance and delivery do not require Phase-9 applicability", %{

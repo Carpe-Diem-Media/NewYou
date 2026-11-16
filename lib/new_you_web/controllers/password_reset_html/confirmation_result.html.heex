@@ -1,19 +1,19 @@
 <.auth_shell
-  title={Copy.text!(@result_title, @locale)}
+  title={Copy.text!(@result_title, @locale, :well136)}
   locale={@locale}
   heading_id="password-reset-heading"
 >
   <p role="status" class="max-w-prose text-design-body-sm leading-design-body-sm">
-    {Copy.text!(@result_body, @locale)}
+    {Copy.text!(@result_body, @locale, :well136)}
   </p>
   <a
     :if={!@completed?}
     href={"/password/reset?locale=#{@locale}"}
     class="min-h-11 w-fit content-center text-design-body-xs leading-design-body-xs text-design-ink underline decoration-design-primary underline-offset-4 hover:text-design-primary active:text-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
-  >{Copy.text!("identity.password_reset.request.again.action", @locale)}</a>
+  >{Copy.text!("identity.password_reset.request.again.action", @locale, :well136)}</a>
   <a
     :if={@completed? or @uncertain?}
     href={"/login?locale=#{@locale}"}
     class="min-h-11 w-fit content-center text-design-body-xs leading-design-body-xs text-design-ink underline decoration-design-primary underline-offset-4 hover:text-design-primary active:text-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
-  >{Copy.text!("identity.login.submit", @locale)}</a>
+  >{Copy.text!("identity.login.submit", @locale, :well136)}</a>
 </.auth_shell>

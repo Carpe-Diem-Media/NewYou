@@ -7,98 +7,112 @@ defmodule NewYou.Proof.Well136Browser do
   alias NewYou.Proof.{P805, P805Browser}
 
   def run(locale) do
-    previous = Application.get_env(:new_you, :fp001_development_entry)
+    P805.with_fixture(fn ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
 
-    try do
-      P805.with_fixture(fn ->
-        Application.put_env(:new_you, :fp001_development_entry, true)
+      for key <- [
+            :p8_05_browser_development_fixtures,
+            :p8_07_browser_development_fixtures,
+            :p8_08_browser_development_fixtures,
+            :p8_09_browser_development_fixtures,
+            :p8_12_browser_development_fixtures
+          ] do
+        Application.put_env(:new_you, key, false)
+      end
 
-        for key <- [
-              :p8_05_browser_development_fixtures,
-              :p8_07_browser_development_fixtures,
-              :p8_08_browser_development_fixtures,
-              :p8_09_browser_development_fixtures,
-              :p8_12_browser_development_fixtures
-            ] do
-          Application.put_env(:new_you, key, false)
-        end
+      request = P805.request(%{preferred_language: String.to_existing_atom(locale)})
+      {:ok, registration} = Identity.register(request)
+      {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+      reference = make_ref()
 
-        request = P805.request(%{preferred_language: String.to_existing_atom(locale)})
-        {:ok, registration} = Identity.register(request)
-        {:ok, :verified} = Identity.verify_email(registration.verification_proof)
-        reference = make_ref()
-        evidence_root = Path.join(System.tmp_dir!(), "well136-browser-#{Ecto.UUID.generate()}")
-        File.mkdir_p!(evidence_root)
-        File.cp_r!("docs", Path.join(evidence_root, "docs"))
+      with_browser_fixture(registration.account_id, reference, fn port ->
+        payload =
+          Jason.encode!(%{
+            mode: "ordinary_reset",
+            port: port,
+            locale: locale,
+            email: request.email,
+            password: request.password,
+            replacement: "ordinary browser replacement"
+          })
 
-        {:ok, server} =
-          Bandit.start_link(
-            plug:
-              {__MODULE__.Endpoint, {self(), reference, registration.account_id, evidence_root}},
-            ip: {127, 0, 0, 1},
-            port: 0
+        result =
+          P805Browser.run_port(
+            System.find_executable("node"),
+            Path.expand("../../proof/p8_05_browser.mjs", __DIR__),
+            payload
           )
 
-        {:ok, {_, port}} = ThousandIsland.listener_info(server)
+        assert result["cleanup"] == true
+        Enum.each(result["operations"], &P805.track_operation/1)
 
-        try do
-          payload =
-            Jason.encode!(%{
-              mode: "ordinary_reset",
-              port: port,
-              locale: locale,
-              email: request.email,
-              password: request.password,
-              replacement: "ordinary browser replacement"
-            })
+        for {key, value} <- result["checks"],
+            do:
+              assert(
+                value == true,
+                "WELL-136 browser check failed: #{key}; resize #{inspect(result["checks"]["resize_diagnostics"])}"
+              )
 
-          result =
-            P805Browser.run_port(
-              System.find_executable("node"),
-              Path.expand("../../proof/p8_05_browser.mjs", __DIR__),
-              payload
-            )
+        assert map_size(result["checks"]) >= 20
 
-          assert result["cleanup"] == true
-          Enum.each(result["operations"], &P805.track_operation/1)
+        consumed =
+          Token
+          |> Ash.Query.filter(
+            account_id == ^registration.account_id and purpose == "password_reset_consumed"
+          )
+          |> Ash.read!(authorize?: false)
 
-          for {key, value} <- result["checks"],
-              do:
-                assert(
-                  value == true,
-                  "WELL-136 browser check failed: #{key}; resize #{inspect(result["checks"]["resize_diagnostics"])}"
-                )
+        assert length(consumed) == 1
 
-          assert map_size(result["checks"]) >= 20
+        sessions =
+          Session
+          |> Ash.Query.filter(account_id == ^registration.account_id)
+          |> Ash.read!(authorize?: false)
 
-          consumed =
-            Token
-            |> Ash.Query.filter(
-              account_id == ^registration.account_id and purpose == "password_reset_consumed"
-            )
-            |> Ash.read!(authorize?: false)
-
-          assert length(consumed) == 1
-
-          sessions =
-            Session
-            |> Ash.Query.filter(account_id == ^registration.account_id)
-            |> Ash.read!(authorize?: false)
-
-          assert Enum.count(sessions, &(&1.state == :revoked)) == 1
-          assert Enum.count(sessions, &(&1.state == :active)) == 1
-          account = Ash.get!(Account, registration.account_id, authorize?: false)
-          assert account.credential_version == 2
-        after
-          Supervisor.stop(server)
-          File.rm_rf!(evidence_root)
-          drain_operations(reference)
-        end
+        assert Enum.count(sessions, &(&1.state == :revoked)) == 1
+        assert Enum.count(sessions, &(&1.state == :active)) == 1
+        account = Ash.get!(Account, registration.account_id, authorize?: false)
+        assert account.credential_version == 2
       end)
+    end)
+  end
+
+  defp with_browser_fixture(account_id, reference, callback) do
+    evidence_root = Path.join(System.tmp_dir!(), "well136-browser-#{Ecto.UUID.generate()}")
+    # Atomic creation establishes ownership; never remove an existing directory.
+    File.mkdir!(evidence_root)
+
+    try do
+      setup_checkpoint(:evidence_directory_created, evidence_root)
+      File.cp_r!("docs", Path.join(evidence_root, "docs"))
+      with_server(account_id, reference, evidence_root, callback)
     after
-      if is_nil(previous),
-        do: Application.delete_env(:new_you, :fp001_development_entry),
-        else: Application.put_env(:new_you, :fp001_development_entry, previous)
+      File.rm_rf!(evidence_root)
+      drain_operations(reference)
+    end
+  end
+
+  defp with_server(account_id, reference, evidence_root, callback) do
+    {:ok, server} =
+      Bandit.start_link(
+        plug: {__MODULE__.Endpoint, {self(), reference, account_id, evidence_root}},
+        ip: {127, 0, 0, 1},
+        port: 0
+      )
+
+    try do
+      setup_checkpoint(:server_started, server)
+      {:ok, {_, port}} = ThousandIsland.listener_info(server)
+      callback.(port)
+    after
+      if Process.alive?(server), do: Supervisor.stop(server)
+    end
+  end
+
+  defp setup_checkpoint(stage, value) do
+    case Process.get({__MODULE__, :setup_checkpoint}) do
+      callback when is_function(callback, 2) -> callback.(stage, value)
+      _ -> :ok
     end
   end
 

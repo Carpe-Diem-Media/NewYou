@@ -3,6 +3,13 @@ defmodule NewYouWeb.PasswordResetController do
 
   alias NewYou.Identity
 
+  @historical_templates %{
+    request: :request_p8_12,
+    request_result: :request_result_p8_12,
+    confirmation: :confirmation_p8_12,
+    confirmation_result: :confirmation_result_p8_12
+  }
+
   @development_environment Mix.env() in [:dev, :test]
   @verification_development_fixtures Application.compile_env(
                                        :new_you,
@@ -89,10 +96,7 @@ defmodule NewYouWeb.PasswordResetController do
     context =
       if :erlang.andalso(
            @development_environment,
-           :erlang.andalso(
-             @verification_development_fixtures == true,
-             NewYou.Content.PasswordResetBrowserCopy.available?()
-           )
+           @verification_development_fixtures == true
          ),
          do: entry_context()
 
@@ -107,7 +111,9 @@ defmodule NewYouWeb.PasswordResetController do
   # an ordinary request into a historical P8-12 consumption.
   defp entry_context do
     if Application.get_env(:new_you, :fp001_development_entry) == true do
-      if NewYouWeb.DevelopmentEntry.enabled?(), do: :well136
+      if NewYouWeb.DevelopmentEntry.enabled?() and
+           NewYou.Content.PasswordResetBrowserCopy.available?(),
+         do: :well136
     else
       if Application.get_env(:new_you, :p8_12_browser_development_fixtures) == true,
         do: :p8_12
@@ -140,7 +146,24 @@ defmodule NewYouWeb.PasswordResetController do
   end
 
   defp render_page(conn, template, locale, assigns) do
+    context = conn.assigns.password_reset_context
+
+    if context == :p8_12 and
+         (template == :service_unavailable or Map.get(assigns, :uncertain?, false)) do
+      # No approved historical copy describes an ambiguous result or unavailable
+      # service. Return a status without borrowing WELL-136-only wording or
+      # presenting an unconfirmed outcome as a confirmed failure.
+      conn |> security_headers() |> send_resp(503, "")
+    else
+      render_context_page(conn, template, locale, assigns, context)
+    end
+  end
+
+  defp render_context_page(conn, template, locale, assigns, context) do
     assigns = if template == :confirmation_result, do: result_copy(assigns), else: assigns
+
+    template =
+      if context == :p8_12, do: Map.fetch!(@historical_templates, template), else: template
 
     conn
     |> security_headers()

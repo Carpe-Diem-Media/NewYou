@@ -66,9 +66,25 @@ defmodule NewYou.Content.PasswordResetBrowserCopy do
   # Both paths are fixed module attributes, never supplied by a request.
   # sobelow_skip ["Traversal.FileModule"]
   defp current_file?(path, expected) do
-    case File.read(path) do
-      {:ok, bytes} -> Base.encode16(:crypto.hash(:sha256, bytes), case: :lower) == expected
+    with path when is_binary(path) <- current_path(path),
+         {:ok, bytes} <- File.read(path) do
+      Base.encode16(:crypto.hash(:sha256, bytes), case: :lower) == expected
+    else
       _ -> false
     end
+  end
+
+  if Mix.env() == :test do
+    @repo_root Path.expand("../../..", __DIR__)
+    # Mirrors the email reader's isolated TEST evidence scope. DEV and PROD
+    # always use the fixed pinned paths; no request can select an evidence root.
+    defp current_path(path) do
+      case Process.get({__MODULE__, :evidence_root}, @repo_root) do
+        root when is_binary(root) -> Path.join(root, Path.relative_to(path, @repo_root))
+        _ -> nil
+      end
+    end
+  else
+    defp current_path(path), do: path
   end
 end
