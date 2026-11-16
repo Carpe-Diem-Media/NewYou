@@ -1,0 +1,490 @@
+{
+  "packet_id": "FP001_PARTICIPANT_ACCOUNT_SETTINGS_OVERVIEW_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY",
+  "prepared_on": "2026-11-16",
+  "repository": "Carpe-Diem-Media/NewYou",
+  "verified_main_sha": "82136a38fa487bfa1eb8b3e8edfbae6c73fbe11a",
+  "purpose": "Proposed NewYou participant Account Settings overview EN/AF content; an aggregation/navigation layer over already governed Account, language and security journeys.",
+  "scope": "PARTICIPANT_SETTINGS_LANDING_AND_CURRENT_AUTHORITY_STATES_ONLY",
+  "content_owner": "Content & Media",
+  "business_truth_owners": {
+    "account_sessions_security": "Identity & Access",
+    "privacy_and_data_rights": "Privacy & Consent",
+    "content_versions": "Content & Media"
+  },
+  "class": "B; security-sensitive statements require Identity review before release",
+  "approval": {
+    "owner_exact_byte_review": true,
+    "en_review": true,
+    "af_review": true,
+    "development_eligible_after_canonical_integration": true,
+    "production_eligible": false,
+    "implementation_permission": false,
+    "decision_date": "2026-11-16",
+    "decision": "Owner approved the full EN/AF Account Settings copy and explicitly authorised opening a PR, with one Afrikaans correction: Gaan na \"Hulp\" as jy hulp met jou rekening of toegang nodig het.",
+    "approver": "one accountable content owner; not multiple independent reviewers",
+    "release_boundary": "Actual runtime, publication, production, real-participant/pilot and specialist security/privacy/legal permissions remain separately gated."
+  },
+  "source_authority": [
+    "docs/governance/product/00_PLATFORM_v1.18.0.md §7.3, §§21J.2–21J.8",
+    "docs/governance/roadmap/05_ROADMAP_v1.2.5.md FP-001",
+    "docs/governance/supporting/FRONTEND_EXPERIENCE_SYSTEM_v1.0.1.md §§3.2, 5.7",
+    "docs/delivery/feature-contracts/fp-001/FP-001_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md",
+    "docs/delivery/content-evidence/copy/COPY_INVENTORY.md; GOVERNANCE.md; GLOSSARY.md; STYLE_GUIDE.md",
+    "docs/delivery/content-evidence/copy/evidence/FP001_PROFILE_AND_LANGUAGE_BROWSER_COPY_APPROVED_v0.1.1.json",
+    "docs/delivery/content-evidence/copy/evidence/FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json",
+    "docs/delivery/content-evidence/copy/evidence/FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED_v0.1.1.json"
+  ],
+  "copy_items": [
+    {
+      "key": "participant.settings.overview.title",
+      "en": {
+        "text": "Your settings",
+        "sha256": "7760b0238e109bda7a376b196abc8984c871174630aa22aaa803db24a9864f93"
+      },
+      "af": {
+        "text": "Jou instellings",
+        "sha256": "2d9ab73f248d81989dbdb861de0cb5e7c0521300e03512c82fe9b811b11fe236"
+      }
+    },
+    {
+      "key": "participant.settings.overview.body",
+      "en": {
+        "text": "Manage your account details, language and security in one place.",
+        "sha256": "b4d2ef68b5b3092814778a5df8c27d0d95e45e747eac218af8de2158c6a39474"
+      },
+      "af": {
+        "text": "Bestuur jou rekeningbesonderhede, taal en sekuriteit op een plek.",
+        "sha256": "00c7adbf7eda3acc91e948b71b7b2ad873dd154a3f9d55dfe0ae9908e594bec2"
+      }
+    },
+    {
+      "key": "participant.settings.account.title",
+      "en": {
+        "text": "Account details",
+        "sha256": "17be95e1a1884ebc8904a38b6a754f0bcbe59e3563e6e811b2a3f68b36cf1c76"
+      },
+      "af": {
+        "text": "Rekeningbesonderhede",
+        "sha256": "dbaa732858a1bb7dd86ee7840351d6840ecb551a067b49d3734e09b287348852"
+      }
+    },
+    {
+      "key": "participant.settings.account.body",
+      "en": {
+        "text": "View your personal details and email address.",
+        "sha256": "48b8d932e9a9b623cf83a7f715ddaf857eba40c42ee271ce34b8e2b4f9e11ec6"
+      },
+      "af": {
+        "text": "Bekyk jou persoonlike besonderhede en e-posadres.",
+        "sha256": "ff62d475057450a83a09eace0c914533f12e7494d2274bbef36ebf9423c84a78"
+      }
+    },
+    {
+      "key": "participant.settings.account.action",
+      "en": {
+        "text": "View account details",
+        "sha256": "a4afb472cfc12c5aaf2af61884603b70881ef3bf8d9ba650e8349361f1b3e9df"
+      },
+      "af": {
+        "text": "Bekyk rekeningbesonderhede",
+        "sha256": "c6c3a1a4a4ffc327b9c2efde2c2cecc976ec7ae73330f03a4ca4dcd84517b64b"
+      }
+    },
+    {
+      "key": "participant.settings.language.body",
+      "en": {
+        "text": "Choose the language you use for menus and account settings.",
+        "sha256": "ccaf338edfe5eb2a5d2aa481defa6ee71f7d9877a1a79fcf4ab6da1128579741"
+      },
+      "af": {
+        "text": "Kies die taal wat jy vir kieslyste en rekeninginstellings gebruik.",
+        "sha256": "46604f52a9f96630f674f5c9c027bc6e8b91a0dcf38e0b0d5391c77a8f0a02e6"
+      }
+    },
+    {
+      "key": "participant.settings.language.action",
+      "en": {
+        "text": "Open language preferences",
+        "sha256": "157afa31f9394b6f2e33f95d562a7b1d7059a2ef82c3be1b83ccd0d0b08d100a"
+      },
+      "af": {
+        "text": "Maak taalvoorkeure oop",
+        "sha256": "34578e9017d6c6fd572caa5d6b9a4329b04a558a5951da2e474ab230860be7c5"
+      }
+    },
+    {
+      "key": "participant.settings.security.title",
+      "en": {
+        "text": "Account security",
+        "sha256": "1d85c11e14444f61ffecab13bae85c0dd268ef28771b56307d30f7a9f0242b4e"
+      },
+      "af": {
+        "text": "Rekeningsekuriteit",
+        "sha256": "c7636f25f84447f54fc434de7967839b127c0d36c65964db74921ebf9cee8929"
+      }
+    },
+    {
+      "key": "participant.settings.security.body",
+      "en": {
+        "text": "Review how you sign in and manage access to your account.",
+        "sha256": "b41fa26b2673a887bb3e13421520b988a1a59d0d990120a7aa36fd328ca4eab7"
+      },
+      "af": {
+        "text": "Gaan jou aanmeldopsies en rekeningtoegang na.",
+        "sha256": "db1d630d9b5bf762a4e796da8c1825c1f9240d7baff050d3407fc10bba345e46"
+      }
+    },
+    {
+      "key": "participant.settings.security.password.title",
+      "en": {
+        "text": "Password and sign-in",
+        "sha256": "2ec08ced3660169cfcd84f7ead9bffe5e9d8906dd65bbd78e728e05cc99573f6"
+      },
+      "af": {
+        "text": "Wagwoord en aanmelding",
+        "sha256": "669a8390e8a8e8305ec9474c0084a391fce0433d9a1a5d85ad154e37b9c7db63"
+      }
+    },
+    {
+      "key": "participant.settings.security.password.body",
+      "en": {
+        "text": "Find available ways to sign in or reset your password.",
+        "sha256": "0f9b5336bee1958c56fe3137e813656109695ff9ed28661f671b0db268292aa2"
+      },
+      "af": {
+        "text": "Vind beskikbare maniere om aan te meld of jou wagwoord te herstel.",
+        "sha256": "3ee791247423f85d78dac35104f082619680e9467f4a8794387159f4e8c34865"
+      }
+    },
+    {
+      "key": "participant.settings.security.step_up.notice",
+      "en": {
+        "text": "Some security changes require you to confirm your identity again.",
+        "sha256": "2198b3adf3019bbe4e6762532f8ebc0120dbd738759ae16e52b80d0f9c77c097"
+      },
+      "af": {
+        "text": "Vir sekere sekuriteitsveranderinge moet jy weer jou identiteit bevestig.",
+        "sha256": "294c6f9e46cafbf1caf38a231e2b595fca26ae34d7516ccb15b023b40cc88df6"
+      }
+    },
+    {
+      "key": "participant.settings.privacy.title",
+      "en": {
+        "text": "Privacy and data",
+        "sha256": "67feeaf550e339d6a78302537b7118d3c280ec038d9d4832f94b2e68257f4420"
+      },
+      "af": {
+        "text": "Privaatheid en data",
+        "sha256": "338f30dc329b99f65aca42eb6b67aa0cf1bb1ecbf0b92f168326247c9788546d"
+      }
+    },
+    {
+      "key": "participant.settings.privacy.body",
+      "en": {
+        "text": "Find information about privacy choices and requests involving your personal data.",
+        "sha256": "53472ea3b533a0bc590e9398fa187698509eea3ab5764cb711c9a89cced1eb1d"
+      },
+      "af": {
+        "text": "Kry inligting oor privaatheidskeuses en versoeke wat jou persoonlike data raak.",
+        "sha256": "0b83ef4ce64d74f290b04072be58e1e662d4775da3847c54ba74705801f85601"
+      }
+    },
+    {
+      "key": "participant.settings.support.title",
+      "en": {
+        "text": "Need help?",
+        "sha256": "c225cdfb755fdf38a95e4a782b2a393d9da2b93406e3e45d4797817d788be394"
+      },
+      "af": {
+        "text": "Het jy hulp nodig?",
+        "sha256": "7b82f4c36401c50cde7e7164aa9866031887ed87ad2cb41dbed213ea16a0006a"
+      }
+    },
+    {
+      "key": "participant.settings.support.body",
+      "en": {
+        "text": "For help with your account or access, visit Help.",
+        "sha256": "ab28f9c4ef14e3aa9b8bfa266cbd64c6ad9047d186b218bcace1df02e49ee6d9"
+      },
+      "af": {
+        "text": "Gaan na \"Hulp\" as jy hulp met jou rekening of toegang nodig het.",
+        "sha256": "3ee774807e587f0ebe4cb446925f324e273cb3536339bafdac5ea06800bc4ac2"
+      }
+    },
+    {
+      "key": "participant.settings.support.action",
+      "en": {
+        "text": "Open Help",
+        "sha256": "30dd758a353be3d08bd1366cf8702333d643ad3f241527a63939bf2b66850cf4"
+      },
+      "af": {
+        "text": "Maak Hulp oop",
+        "sha256": "0955ef66b92623fa9091063d6d921475a46f85c910d5ffdbd3228aa5a3359778"
+      }
+    },
+    {
+      "key": "participant.settings.load.processing",
+      "en": {
+        "text": "Loading your settings…",
+        "sha256": "d8136cd72482f9dbbc04bfd179c12b124ed7b01125570eaec60e58851d1cb15f"
+      },
+      "af": {
+        "text": "Besig om jou instellings te laai…",
+        "sha256": "9435e98c832a7a4aabd9cfb7736090bbc88e0a8fcf350e24ac4b288e74eea9fc"
+      }
+    },
+    {
+      "key": "participant.settings.load.unavailable.title",
+      "en": {
+        "text": "Settings unavailable",
+        "sha256": "ba1edae9117345dead37d4129a30416b6b82dd619d3f1c8bfeb7403d2ef133d0"
+      },
+      "af": {
+        "text": "Instellings nie beskikbaar nie",
+        "sha256": "fa1c553701bebbe53419eae75b8f7e1ad5f31773e7759db09247f584caf8eeec"
+      }
+    },
+    {
+      "key": "participant.settings.load.unavailable.body",
+      "en": {
+        "text": "We can’t load your current settings. Please try again.",
+        "sha256": "f81a8ba511262fd25bf0c76e07f48d322e45d309be2d310d9dce96351d26842e"
+      },
+      "af": {
+        "text": "Ons kan nie jou huidige instellings laai nie. Probeer asseblief weer.",
+        "sha256": "df01266ac26b263a6c0b585491a9ee169409ea17673dac1f9b6aeb56f8c97a1c"
+      }
+    },
+    {
+      "key": "participant.settings.load.uncertain",
+      "en": {
+        "text": "We can’t confirm which settings are currently available. Refresh before making changes.",
+        "sha256": "3e9850318a48911e5ee66fc3629b43fd794e65ca5572dc49d511532146dd46f2"
+      },
+      "af": {
+        "text": "Ons kan nie bevestig watter instellings tans beskikbaar is nie. Herlaai voordat jy veranderinge maak.",
+        "sha256": "b14fe4fa623491c0736f15ed338da67c958a7005bab9c024d0ca5e6991c683d5"
+      }
+    },
+    {
+      "key": "participant.settings.load.stale.title",
+      "en": {
+        "text": "Your account settings have changed",
+        "sha256": "7db67d9dbb9eedc6775fd1e812344fb470b4c93caf1d351a8b073642e1b3d7aa"
+      },
+      "af": {
+        "text": "Jou rekeninginstellings het verander",
+        "sha256": "1462844a97fcea6268103e733db9c29d2338a386f67cdff62cf3e98b62989c4b"
+      }
+    },
+    {
+      "key": "participant.settings.load.stale.body",
+      "en": {
+        "text": "Some details have changed since you opened this page. Refresh to see the latest information.",
+        "sha256": "c4d9659d1100e45cd74309eddc15b0fd2c2a3072a92df008eb9f0389a6ac2fd8"
+      },
+      "af": {
+        "text": "Sommige besonderhede het verander sedert jy hierdie bladsy oopgemaak het. Herlaai om die jongste inligting te sien.",
+        "sha256": "c592f3578d92aeea168af339618ec12f4f4012ece4b4248013e3c8e05c128c37"
+      }
+    },
+    {
+      "key": "participant.settings.load.refresh.action",
+      "en": {
+        "text": "Refresh settings",
+        "sha256": "65dbd60c4f86df0fb212feddc9b6b18745e215be3a93c42add6fe27c3159e9be"
+      },
+      "af": {
+        "text": "Herlaai instellings",
+        "sha256": "cc580d918db76ea0a648b29fb281d047f4c8ffdf74e4acee26cb0530dbac67f7"
+      }
+    },
+    {
+      "key": "participant.settings.access.reauth.title",
+      "en": {
+        "text": "Sign in again",
+        "sha256": "51fbe1dc8a7319b7974fb540f157a3ea3edaa985b8f1d970cec9406a20122dc2"
+      },
+      "af": {
+        "text": "Meld weer aan",
+        "sha256": "a4bb56b7a7009ba6f2e0aa909c14eb8e1da6c8769a58d6eb8a10c7fcac1cca50"
+      }
+    },
+    {
+      "key": "participant.settings.access.reauth.body",
+      "en": {
+        "text": "Your sign-in is no longer valid. Sign in again to view these settings.",
+        "sha256": "e14cd48a52f984aba4d2c37e9ea65d86e1677375d5044e098d8a0bf8d9cd08ab"
+      },
+      "af": {
+        "text": "Jou aanmelding is nie meer geldig nie. Meld weer aan om hierdie instellings te sien.",
+        "sha256": "746a01e988d69cf2b4f38a879a3b19f671e9af63a745e1ed1be69ca63d298ad1"
+      }
+    },
+    {
+      "key": "participant.settings.access.reauth.action",
+      "en": {
+        "text": "Go to sign-in",
+        "sha256": "d20727e4a53dec886c27ca59fd8b0598f7260dc380ca563fc95ec41348e57bf5"
+      },
+      "af": {
+        "text": "Gaan na aanmelding",
+        "sha256": "1c9c877b04e262ad26dcb6e2bca310bd929ef4e1dbaca3d276d1d2d7724b36a0"
+      }
+    },
+    {
+      "key": "participant.settings.access.restricted.title",
+      "en": {
+        "text": "Some settings are unavailable",
+        "sha256": "869c1da325507d527c2a862befa72d67bf494278dc2f25b9b09d1c8fd6d575ce"
+      },
+      "af": {
+        "text": "Sommige instellings is nie beskikbaar nie",
+        "sha256": "3a36985be02f4ee26cc50e8c102fb932ab78f61ae752f296d949ce217b43673b"
+      }
+    },
+    {
+      "key": "participant.settings.access.restricted.body",
+      "en": {
+        "text": "Only settings currently available to your account are shown.",
+        "sha256": "202992e7fa60ebac7a6cf3e6841c1b14d35b38911c5035b36f7bbbe07b0ab321"
+      },
+      "af": {
+        "text": "Net instellings wat tans vir jou rekening beskikbaar is, word gewys.",
+        "sha256": "843261eccba3491344db6da0bbe6789b9b4b0397f3ca8db00a41deedcc11f75e"
+      }
+    }
+  ],
+  "reuse_existing_keys": [
+    {
+      "key": "shared.navigation.settings",
+      "source": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "shared.navigation.profile",
+      "source": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "shared.navigation.login",
+      "source": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "shared.navigation.help",
+      "source": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "shared.action.retry",
+      "source": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "participant.profile.overview.title",
+      "source": "FP001_PROFILE_AND_LANGUAGE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "participant.profile.email_change.help",
+      "source": "FP001_PROFILE_AND_LANGUAGE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "participant.language.page.title",
+      "source": "FP001_PROFILE_AND_LANGUAGE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "participant.language.content.help",
+      "source": "FP001_PROFILE_AND_LANGUAGE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "identity.mfa.settings.title",
+      "source": "FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "identity.mfa.settings.body",
+      "source": "FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "identity.sessions.page.title",
+      "source": "FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "identity.sessions.page.body",
+      "source": "FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "identity.trusted_devices.page.title",
+      "source": "FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "modify_existing_approval": false
+    },
+    {
+      "key": "identity.trusted_devices.page.body",
+      "source": "FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "modify_existing_approval": false
+    }
+  ],
+  "visibility_guards": [
+    "Only render navigation for available and currently authorised Account/Privacy features; future surface text is not an implementation grant.",
+    "A Profile view does not itself permit canonical-email change; use separate guarded Identity workflow.",
+    "Step-up and session/device controls require current Identity authority; browser labels do not grant permission.",
+    "Privacy information is not new consent, legal approval or evidence of implemented data-rights actions.",
+    "If source authority is unavailable, show an honest unavailable/retry state; do not invent a successful account/security outcome.",
+    "No silent EN/AF fallback on required security/identity surfaces; no publication or pilot grant."
+  ],
+  "presentation_lifecycle": {
+    "states": [
+      "loading",
+      "ready",
+      "stale",
+      "unavailable",
+      "reauth_required",
+      "restricted"
+    ],
+    "initial": "loading",
+    "guards": {
+      "loading_to_ready": "only after current authorised read/projection",
+      "ready_to_stale": "underlying projection changed or freshness invalidated",
+      "loading_or_ready_to_unavailable": "source read cannot confirm eligible settings",
+      "any_to_reauth_required": "session no longer authorises this page",
+      "ready_to_restricted": "current ownership policy limits a subset of sections",
+      "stale_to_ready": "fresh successful authorised read only"
+    },
+    "side_effects": "No business writes. Navigation only sends user intent to owning routes; no reconstructed frontend state is business authority.",
+    "terminal_for_current_view": [
+      "reauth_required"
+    ],
+    "idempotency": "Repeated render/refresh does not create new business consequences.",
+    "failure_and_recovery": "Refresh/retry must re-read authoritative permissions and display a truthful outcome."
+  },
+  "explicitly_excluded": [
+    "MFA enrollment and disable copy (already approved elsewhere)",
+    "session/device action copy (already approved elsewhere)",
+    "Profile field editing and language save copy (already approved elsewhere)",
+    "terms/privacy legal body or consent text",
+    "generic data deletion/export request workflows",
+    "marketing/notification preferences implementation",
+    "password-change action promise before a scoped owner route exists",
+    "live participant UI implementation, release and production authorisation"
+  ],
+  "source_candidate": {
+    "version": "0.1.0",
+    "filename": "FP001_PARTICIPANT_ACCOUNT_SETTINGS_OVERVIEW_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+    "sha256": "b3b9cc8adea982e8049d4c8be31e463fa345e61bd21fecc61e0fef51d72f3983",
+    "approved_copy_items": 29,
+    "approved_locale_strings": 58,
+    "locale_strings_changed": 1,
+    "locale_strings_unchanged": 57,
+    "existing_semantic_keys_reused_unchanged": 15
+  }
+}

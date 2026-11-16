@@ -18,7 +18,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
     test "#{mode} source cannot reopen after #{outcome} evidence" do
       P805.with_fixture(fn ->
         {:ok, registration} = Identity.register(P805.request())
-        [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+        [intent] = P805.read(Communications.MessageIntent, Communications)
         initial = if unquote(outcome) == :bounced_or_failed, do: :accepted, else: :unknown
         Process.put(:p810_provider, fn _, _ -> initial end)
         assert {:ok, :processed} = Communications.execute(intent.id)
@@ -53,7 +53,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
     test "#{mode} ineligibility holds dispatch after #{outcome} evidence" do
       P805.with_fixture(fn ->
         {:ok, _} = Identity.register(P805.request())
-        [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+        [intent] = P805.read(Communications.MessageIntent, Communications)
         initial = if unquote(outcome) == :bounced_or_failed, do: :accepted, else: :unknown
         Process.put(:p810_provider, fn _, _ -> initial end)
         assert {:ok, :processed} = Communications.execute(intent.id)
@@ -87,7 +87,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "contradiction preserves source-invalid closure and cannot affect another intent" do
     P805.with_fixture(fn ->
       {:ok, registration} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       Process.put(:p810_provider, fn _, _ -> :accepted end)
       assert {:ok, :processed} = Communications.execute(intent.id)
       [attempt] = attempts()
@@ -100,7 +100,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
 
       other =
         Enum.find(
-          Ash.read!(Communications.MessageIntent, authorize?: false),
+          P805.read(Communications.MessageIntent, Communications),
           &(&1.id != intent.id)
         )
 
@@ -138,7 +138,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "accepted stays pending; duplicate and reordered observations never regress delivery" do
     P805.with_fixture(fn ->
       {:ok, registration} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       Process.put(:p810_provider, fn _, _ -> :accepted end)
       assert {:ok, :processed} = Communications.execute(intent.id)
       [attempt] = attempts()
@@ -161,7 +161,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "repeated conclusive reconciliation with different event references is idempotent" do
     P805.with_fixture(fn ->
       {:ok, _} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       Process.put(:p810_provider, fn _, _ -> :unknown end)
       assert {:ok, :processed} = Communications.execute(intent.id)
       [attempt] = attempts()
@@ -178,7 +178,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
     test "repeated older #{terminal} evidence preserves newer accepted ambiguity" do
       P805.with_fixture(fn ->
         {:ok, _} = Identity.register(P805.request())
-        [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+        [intent] = P805.read(Communications.MessageIntent, Communications)
 
         initial =
           if unquote(terminal) == :confirmed_no_operation, do: :unknown, else: unquote(terminal)
@@ -223,7 +223,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "late contradictory old-attempt evidence stops newer work and remains visible" do
     P805.with_fixture(fn ->
       {:ok, _} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       Process.put(:p810_provider, fn _, _ -> :unknown end)
       assert {:ok, :processed} = Communications.execute(intent.id)
       [older] = attempts()
@@ -260,7 +260,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
       second_request = P805.request()
       {:ok, _} = Identity.register(first_request)
       {:ok, _} = Identity.register(second_request)
-      intents = Ash.read!(Communications.MessageIntent, authorize?: false)
+      intents = P805.read(Communications.MessageIntent, Communications)
       first = Enum.find(intents, &(&1.source_operation_id == first_request.operation_id))
       second = Enum.find(intents, &(&1.source_operation_id == second_request.operation_id))
       Process.put(:p810_provider, fn _, _ -> :delivered end)
@@ -290,7 +290,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "delivery-observed closure retains legitimate conflict handling after proof consumption" do
     P805.with_fixture(fn ->
       {:ok, registration} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       Process.put(:p810_provider, fn _, _ -> :delivered end)
       assert {:ok, :processed} = Communications.execute(intent.id)
       [attempt] = attempts()
@@ -313,7 +313,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "safe provider rejections and failures allow guarded new identities with immutable provenance" do
     P805.with_fixture(fn ->
       {:ok, _} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
 
       for outcome <- [:rejected_before_submission, :bounced_or_failed, :delivered] do
         Process.put(:p810_provider, fn _, _ -> outcome end)
@@ -343,7 +343,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
 
         [intent] =
           Enum.filter(
-            Ash.read!(Communications.MessageIntent, authorize?: false),
+            P805.read(Communications.MessageIntent, Communications),
             &(&1.source_operation_id == request.operation_id)
           )
 
@@ -394,7 +394,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "purpose, content, locale and render provenance mismatches fail closed before admission" do
     P805.with_fixture(fn ->
       {:ok, _} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       Process.put(:p810_provider, fn _, _ -> flunk("invalid binding submitted") end)
 
       for {column, value} <- [
@@ -436,7 +436,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "ordinary callers cannot read capabilities or mutate attempts or invoke the worker action" do
     P805.with_fixture(fn ->
       {:ok, _} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       Process.put(:p810_provider, fn _, _ -> :accepted end)
       assert {:ok, :processed} = Communications.execute(intent.id)
       [attempt] = attempts()
@@ -463,7 +463,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "provider exceptions and accidental payload inspection do not expose secrets" do
     P805.with_fixture(fn ->
       {:ok, registration} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
 
       Process.put(:p810_provider, fn _, payload ->
         Process.put(:p810_payload_inspection, inspect(payload))
@@ -492,7 +492,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "PostgreSQL refuses a second unresolved admission even without executor serialization" do
     P805.with_fixture(fn ->
       {:ok, _} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       Process.put(:p810_provider, fn _, _ -> :accepted end)
       assert {:ok, :processed} = Communications.execute(intent.id)
       [attempt] = attempts()
@@ -525,7 +525,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
   test "delivery telemetry and ordinary persistence exclude the protected bearer and body" do
     P805.with_fixture(fn ->
       {:ok, registration} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       handler = "p810-privacy-" <> Ash.UUID.generate()
 
       events =
@@ -551,6 +551,8 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
             [Ecto.UUID.dump!(intent.id)]
           )
 
+        # Intentionally search every job for this fixture's unique secret. A leak
+        # into a wrongly addressed job must still fail this privacy assertion.
         data = inspect({observations, rows, Repo.all(Oban.Job)})
         refute String.contains?(data, registration.verification_proof)
         refute String.contains?(data, Process.delete(:p810_rendered))
@@ -629,7 +631,7 @@ defmodule NewYou.Communications.DeliveryEvidenceTest do
     assert {:ok, :recorded} = Communications.reconcile(attempt.id, outcome, reference, signature)
   end
 
-  defp attempts, do: Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+  defp attempts, do: P805.read(Communications.DeliveryAttempt, Communications)
 
   defp disposition(intent),
     do: Ash.get!(Communications.MessageIntent, intent.id, authorize?: false).dispatch_disposition

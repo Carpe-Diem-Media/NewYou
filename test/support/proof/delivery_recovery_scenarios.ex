@@ -1,6 +1,7 @@
 defmodule NewYou.Proof.DeliveryRecoveryScenarios do
   @moduledoc false
   import ExUnit.Assertions
+  import Ecto.Query, only: [from: 2]
   alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.{Communications, Identity, Repo}
   alias NewYou.Proof.{CutPoints, DeliverySeam, P805, Provider, Scenario}
@@ -15,7 +16,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
 
   defp scenario_competing_real_postgresql_executors_admit_only_one_provider_operation_fixture() do
     {:ok, _} = Identity.register(P805.request())
-    [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+    [intent] = P805.read(Communications.MessageIntent, Communications)
     parent = self()
 
     tasks =
@@ -27,7 +28,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
     assert Enum.all?(results, &match?({:ok, _}, &1))
     submissions = drain_submissions([])
     assert length(submissions) <= 1
-    attempts = Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+    attempts = P805.read(Communications.DeliveryAttempt, Communications)
     assert Enum.count(attempts, & &1.active) <= 1
     assert Enum.count(attempts, &(not is_nil(&1.invocation_started_at))) == length(submissions)
 
@@ -40,7 +41,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
   def scenario_real_ashoban_scheduler_discovers_zero_job_intent_and_recreates_deleted_and_exhausted_jobs() do
     P805.with_fixture(fn ->
       {:ok, _} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       trigger = AshOban.Info.oban_trigger(Communications.MessageIntent, :delivery)
       assert jobs(intent) == []
       assert :ok = trigger.scheduler.perform(%Oban.Job{args: %{}})
@@ -65,7 +66,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
         assert :ok == trigger.worker.perform(job)
       end
 
-      assert length(Ash.read!(Communications.DeliveryAttempt, authorize?: false)) == 1
+      assert length(P805.read(Communications.DeliveryAttempt, Communications)) == 1
     end)
   after
     Process.delete(:p810_provider)
@@ -79,7 +80,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
 
   defp scenario_admission_contenders_wait_on_a_real_postgresql_row_lock_fixture() do
     {:ok, _} = Identity.register(P805.request())
-    [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+    [intent] = P805.read(Communications.MessageIntent, Communications)
     parent = self()
     first = Task.async(fn -> execute_lock_holder(intent, parent) end)
     assert_receive {:locked, holder, backend_a, transaction_a}, 2000
@@ -99,10 +100,10 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
   def scenario_fresh_beam_discovers_missing_jobs_and_preserves_accepted_ambiguity_across_another_boot() do
     P805.with_fixture(fn ->
       {:ok, _} = Identity.register(P805.request())
-      [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+      [intent] = P805.read(Communications.MessageIntent, Communications)
       assert jobs(intent) == []
       assert restart(intent.id)
-      [attempt] = Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+      [attempt] = P805.read(Communications.DeliveryAttempt, Communications)
       assert attempt.provider_observation == :accepted
 
       for job <- jobs(intent) do
@@ -110,7 +111,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
       end
 
       assert restart(intent.id)
-      assert [same] = Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+      assert [same] = P805.read(Communications.DeliveryAttempt, Communications)
       assert same.id == attempt.id
       assert same.provider_observation == :accepted
 
@@ -184,7 +185,11 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
   end
 
   def jobs(intent) do
-    Enum.filter(Repo.all(Oban.Job), &(&1.args["primary_key"] == %{"id" => intent.id}))
+    primary_key = %{"id" => intent.id}
+
+    Repo.all(
+      from job in Oban.Job, where: fragment("?->'primary_key' = ?::jsonb", job.args, ^primary_key)
+    )
   end
 
   def drain_submissions(acc) do
@@ -203,7 +208,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
 
   defp process_death_fixture(cut_at, cut) do
     {:ok, _} = Identity.register(P805.request())
-    [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+    [intent] = P805.read(Communications.MessageIntent, Communications)
     scenario = Scenario.start()
     :ok = Provider.configure(scenario, %{"proof-operation" => [submit: :accepted]})
     :ok = CutPoints.arm(scenario, cut, :executor, :terminate)
@@ -215,7 +220,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
 
     assert_receive {:DOWN, ^monitor, :process, ^pid, :proof_terminated}, 10000
     assert :ok = CutPoints.verify_consumed(scenario)
-    [admitted] = Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+    [admitted] = P805.read(Communications.DeliveryAttempt, Communications)
     assert admitted.admission == :admitted
 
     if cut_at == :after_admission do
@@ -230,13 +235,13 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
       assert recovered.invocation_started_at == nil
       Process.put(:p810_provider, fn _, _ -> :delivered end)
       assert {:ok, :processed} = Communications.execute(intent.id)
-      assert length(Ash.read!(Communications.DeliveryAttempt, authorize?: false)) == 2
+      assert length(P805.read(Communications.DeliveryAttempt, Communications)) == 2
     else
       assert recovered.provider_observation == :unknown
       assert recovered.active
       Process.put(:p810_provider, &unsafe_retry_provider/2)
       assert {:ok, :waiting} = Communications.execute(intent.id)
-      assert length(Ash.read!(Communications.DeliveryAttempt, authorize?: false)) == 1
+      assert length(P805.read(Communications.DeliveryAttempt, Communications)) == 1
     end
 
     assert :ok = Scenario.stop(scenario)
@@ -250,7 +255,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
 
   defp pre_invocation_recheck_fixture(prerequisite) do
     {:ok, _} = Identity.register(P805.request())
-    [intent] = Ash.read!(Communications.MessageIntent, authorize?: false)
+    [intent] = P805.read(Communications.MessageIntent, Communications)
     scenario = Scenario.start()
     parent = self()
     reference = make_ref()
@@ -280,7 +285,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
 
       assert_receive {:DOWN, ^monitor, :process, ^pid, :proof_terminated}, 10000
       assert :ok = CutPoints.verify_consumed(scenario)
-      [admitted] = Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+      [admitted] = P805.read(Communications.DeliveryAttempt, Communications)
       assert admitted.active and admitted.invocation_started_at == nil
 
       Process.put(:p810_provider, fn attempt, _ ->
@@ -307,7 +312,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
       assert recovered.locale == admitted.locale
       assert recovered.render_digest == admitted.render_digest
       refute_receive {^reference, :submitted, _}
-      assert [recovered] == Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+      assert [recovered] == P805.read(Communications.DeliveryAttempt, Communications)
       current = Ash.get!(Communications.MessageIntent, intent.id, authorize?: false)
 
       expected_disposition =
@@ -332,7 +337,7 @@ defmodule NewYou.Proof.DeliveryRecoveryScenarios do
         assert current.dispatch_disposition == :held
         assert {:ok, :held} = Communications.execute(intent.id)
         refute_receive {^reference, :submitted, _}
-        assert [recovered] == Ash.read!(Communications.DeliveryAttempt, authorize?: false)
+        assert [recovered] == P805.read(Communications.DeliveryAttempt, Communications)
       end
     after
       assert :ok = Scenario.stop(scenario)

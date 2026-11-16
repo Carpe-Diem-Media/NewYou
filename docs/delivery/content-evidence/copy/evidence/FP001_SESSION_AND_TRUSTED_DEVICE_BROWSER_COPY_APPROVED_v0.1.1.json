@@ -1,0 +1,671 @@
+{
+  "packet_id": "FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_NONPRODUCTION_BROWSER_COPY_AWAITING_CANONICAL_INTEGRATION",
+  "prepared_on": "2026-11-16",
+  "baseline_main_sha": "d35e7ecaff85fda7fe1e8a2155929538e33718f0",
+  "scope": "Future bounded non-production session-management and separately eligible trusted-device browser copy; no implementation dispatch.",
+  "governing_references": [
+    "Product 00_PLATFORM_v1.18.0.md §21J.5 Sessions",
+    "Product 00_PLATFORM_v1.18.0.md §21J.6 Trusted devices",
+    "Decisions 01_DECISIONS_v1.18.0.md DEC-248 / DEC-249",
+    "Identity JIT v0.3.0 D.4 Session and D.5 Device Assurance",
+    "Frontend Experience System v1.0.1 §5.7",
+    "Copy STYLE_GUIDE.md / GOVERNANCE.md"
+  ],
+  "classes": {
+    "sessions": "A (identity/security-sensitive)",
+    "trusted_devices": "A (identity/security-sensitive)"
+  },
+  "current_eligibility": {
+    "owner_approved": true,
+    "exact_copy_locked": true,
+    "effective_only_after_canonical_integration": true,
+    "applicable_only_in_dependency_cleared_future_plane_ready_slice": true,
+    "production_approved": false,
+    "browser_implementation_authorized": false,
+    "email_sending_authorized": false,
+    "real_participants_authorized": false,
+    "runtime_content_role_granted": false
+  },
+  "copy_items": [
+    {
+      "key": "identity.sessions.page.title",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Where you're signed in",
+        "sha256": "3b923485c69b4063bcd55400ef796c094465345b3c57f856d12f10d0a1d789ab"
+      },
+      "af": {
+        "text": "Waar jy aangemeld is",
+        "sha256": "8ef147701573eca70e66615f3ef710c8c6819c8917e56b571b1e1f7e5fc7df2c"
+      }
+    },
+    {
+      "key": "identity.sessions.page.body",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Review your active sign-in sessions and sign out of any you no longer want to use.",
+        "sha256": "32eb8f569cb1c7535f9b7f54d7e5835324073aac252b5e198307c8d5c72fc5d7"
+      },
+      "af": {
+        "text": "Gaan jou aktiewe aanmeldsessies na en meld enige sessie af wat jy nie meer wil gebruik nie.",
+        "sha256": "1ea36973a4c9d86821317af746369eca97142d1bf799fda12383d3d3132f5f18"
+      }
+    },
+    {
+      "key": "identity.sessions.active.title",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Active sessions",
+        "sha256": "61ad990902e7bc3283e690b745691ca7f951434b6e6b3e7329d19f6ee02fac27"
+      },
+      "af": {
+        "text": "Aktiewe sessies",
+        "sha256": "3e439b045c7da532f7653fff9a610ead619694dffa8dcc8a83bae6c035de9975"
+      }
+    },
+    {
+      "key": "identity.sessions.active.empty",
+      "family": "identity.sessions",
+      "en": {
+        "text": "You have no active sessions to show.",
+        "sha256": "5a83247cbb885f513e01f6da65525a5937a55a8feb1dd89790982b49481f0b50"
+      },
+      "af": {
+        "text": "Daar is geen aktiewe sessies om te wys nie.",
+        "sha256": "f2e18b81ed11e0b94e44ed20a90f4094dff6916a5c5bad4b627eeb58eebc7806"
+      }
+    },
+    {
+      "key": "identity.sessions.active.loading",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Loading your sessions…",
+        "sha256": "d5cf8f9aed89c0d2bcb4e1973a00a9b811a5fc2fcae5b5d6f2af08d9fa2bd879"
+      },
+      "af": {
+        "text": "Besig om jou sessies te laai…",
+        "sha256": "bed464faadcd9619151c0c1725fe4af6a135763300c5553b5784f440cca84153"
+      }
+    },
+    {
+      "key": "identity.sessions.active.unavailable",
+      "family": "identity.sessions",
+      "en": {
+        "text": "We couldn't load your sessions. Try again.",
+        "sha256": "ed59bb4bbd9e835c13d958b9d7cd8e273b56bcf50c44c1c9cf4c1c9dc563180c"
+      },
+      "af": {
+        "text": "Ons kon nie jou sessies laai nie. Probeer weer.",
+        "sha256": "ebd3b1296816b65d42e7091945d9db3a52d33592bd31598f4dd05180b3a19492"
+      }
+    },
+    {
+      "key": "identity.sessions.active.refresh.action",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Refresh sessions",
+        "sha256": "8bbcdf8b054d1e28d4c75d44f82ea19125f30abf25602732dbe8ba3ea61e4458"
+      },
+      "af": {
+        "text": "Verfris sessies",
+        "sha256": "26f78024d4316288356038f6eb9ccbd9eb9b1e563e2cc273ba167c7eec03e247"
+      }
+    },
+    {
+      "key": "identity.sessions.item.current.label",
+      "family": "identity.sessions",
+      "en": {
+        "text": "This session",
+        "sha256": "6da6530a0728728ec3b9b78da3e40519cb602c7f6e1d5017b49a4c2170e2c07a"
+      },
+      "af": {
+        "text": "Hierdie sessie",
+        "sha256": "ad9677a676747a2001223f4f7a4e4bec019f467a53bbdf08200ba918170d8092"
+      }
+    },
+    {
+      "key": "identity.sessions.item.other.label",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Another session",
+        "sha256": "cc0abe00e27cbc9f5b1661cbae718a49d3932a69e9791b1f7706786583acc6c8"
+      },
+      "af": {
+        "text": "Nog ’n sessie",
+        "sha256": "73f1fa07737031246894a72b28683384dd5f082e9d8ba191d5ae8da615a5381e"
+      }
+    },
+    {
+      "key": "identity.sessions.item.created.label",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Signed in",
+        "sha256": "ca566c8968e7e881d55617e7caaf0c126924ab1cb64ca80edb2f37ef386492d8"
+      },
+      "af": {
+        "text": "Aangemeld",
+        "sha256": "e5ede9c54639a018166fdd53e89276ecf183dd078826eb0d8cd0b13e38068414"
+      }
+    },
+    {
+      "key": "identity.sessions.item.last_seen.label",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Last active",
+        "sha256": "bcdf701c4dfbaee3a2162f9b9affd87a23a13426c391f95e964d983851b58a05"
+      },
+      "af": {
+        "text": "Laas aktief",
+        "sha256": "9cec874cbfc1eea72eccfd72d1d705cfe014af964c557aa30d0e708a7a43fe04"
+      }
+    },
+    {
+      "key": "identity.sessions.item.details_unavailable",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Session details unavailable",
+        "sha256": "209a72cda11472fa0ad9a61823aad34463f0ce706a4d43dda5fc096bcd234528"
+      },
+      "af": {
+        "text": "Sessiebesonderhede nie beskikbaar nie",
+        "sha256": "e4a7feade1d80f829f2c1b9fdca3698cf8e6b982cdd4a85c8c024a7173990f76"
+      }
+    },
+    {
+      "key": "identity.sessions.revoke.action",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Sign out this session",
+        "sha256": "95f66a9d400d1ce20080d50e62ab12a88fb99340e579e1b237a81fdf8a158ccf"
+      },
+      "af": {
+        "text": "Meld hierdie sessie af",
+        "sha256": "54009c3871051bfc28dcdf81884a225f982f09d0fa231df32078dfc0f91eeb39"
+      }
+    },
+    {
+      "key": "identity.sessions.revoke.confirm.title",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Sign out this session?",
+        "sha256": "8eaf7102931af22a914812f3fb80ecbc5d5cca6c46d0976479a341498400c4db"
+      },
+      "af": {
+        "text": "Meld hierdie sessie af?",
+        "sha256": "18e9ecbdbf9334bbc908d3c1eb3ec2340712b12b88bcaebd532e0db0da442cf1"
+      }
+    },
+    {
+      "key": "identity.sessions.revoke.confirm.body",
+      "family": "identity.sessions",
+      "en": {
+        "text": "This will end the selected session. Any browser using it will need to sign in again.",
+        "sha256": "eaebc8df0e16170c35080e38d5dd74ef0699871bb6ea4a44ead601b6ca5ed99d"
+      },
+      "af": {
+        "text": "Dit sal die gekose sessie beëindig. Enige blaaier wat dit gebruik, sal weer moet aanmeld.",
+        "sha256": "852f7b3b62d5906d62fd37964202338d22e6170777763d88376920cc7bbe174b"
+      }
+    },
+    {
+      "key": "identity.sessions.revoke.confirm.action",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Sign out session",
+        "sha256": "f30a332b9a31b5e69da582b6cb5038eda7524770afbccc6976b1dfff6762d269"
+      },
+      "af": {
+        "text": "Meld sessie af",
+        "sha256": "46c0376a72008c64122ffc4d36fee89bdd358eda7af456ba9d1cff813231512d"
+      }
+    },
+    {
+      "key": "identity.sessions.revoke.processing",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Signing out this session…",
+        "sha256": "22f47c3888dda939d905c03f267b29095bca2feffbd808687df0279db6006e11"
+      },
+      "af": {
+        "text": "Besig om hierdie sessie af te meld…",
+        "sha256": "049a46d7f4bd78dfdd9350a6ed6d95b679fcffff197f6e8f152b1c055453ce0b"
+      }
+    },
+    {
+      "key": "identity.sessions.revoke.completed",
+      "family": "identity.sessions",
+      "en": {
+        "text": "This session has been signed out.",
+        "sha256": "63a3ebd70b2fb68122183c5730c98a7eb178c53acfff7698de010b23369a688f"
+      },
+      "af": {
+        "text": "Hierdie sessie is afgemeld.",
+        "sha256": "95e9be67bfbd76ffbb7d23a07b4c8410df32834e7fd9ff3b5f21c868668e47f4"
+      }
+    },
+    {
+      "key": "identity.sessions.revoke.already_ended",
+      "family": "identity.sessions",
+      "en": {
+        "text": "This session is no longer active.",
+        "sha256": "fbc82a27b8c68f8db3f890ace675cdd961bf97b0de5bd658d3cb95047e860ab0"
+      },
+      "af": {
+        "text": "Hierdie sessie is nie meer aktief nie.",
+        "sha256": "726c8fda2f47d2691619ee10852eab593159d4513fc4454c15a72bcccabc6e76"
+      }
+    },
+    {
+      "key": "identity.sessions.revoke.failed",
+      "family": "identity.sessions",
+      "en": {
+        "text": "We couldn't sign out this session. Refresh the list and try again.",
+        "sha256": "c2b026025f8a02c22aa382ff89ab2cface7c5633abe2a79ac9ffc97c7026b0ef"
+      },
+      "af": {
+        "text": "Ons kon nie hierdie sessie afmeld nie. Verfris die lys en probeer weer.",
+        "sha256": "505f8785a78f6a365438c7f4e2d91c3dea577d39924e66f2072e0426f86b6cb0"
+      }
+    },
+    {
+      "key": "identity.sessions.revoke.uncertain",
+      "family": "identity.sessions",
+      "en": {
+        "text": "We couldn't confirm whether this session was signed out. Refresh the list to check.",
+        "sha256": "8b819af7f7b24dcc73b96f753451695fee7fde41ffa85f531ff4bcf38023ecdc"
+      },
+      "af": {
+        "text": "Ons kon nie bevestig of hierdie sessie afgemeld is nie. Verfris die lys om dit na te gaan.",
+        "sha256": "4604b25fcc9cb1e5ca0e347072ba23db64dd9b4059337a54844b5b6cdee238fb"
+      }
+    },
+    {
+      "key": "identity.sessions.revoke.stale",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Your sessions have changed. Refresh the list before continuing.",
+        "sha256": "394ad8e7ad1eb41a339e8d5faeb5666ff5aa948a9c932461293573560c7e329b"
+      },
+      "af": {
+        "text": "Jou sessies het verander. Verfris die lys voordat jy voortgaan.",
+        "sha256": "856aac94f2f67deafc009f3da107d4e79a4d11be69eefef834ccc36a2b56356a"
+      }
+    },
+    {
+      "key": "identity.sessions.all.action",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Sign out all devices",
+        "sha256": "643afe46e3abbb48422e59c5805a0278b2ff469dbc3fb15e461431462e2326ad"
+      },
+      "af": {
+        "text": "Meld op alle toestelle af",
+        "sha256": "6fb2420ffe093447fdc05ebf5dda8711b045e6d20ca9f9072874657e9165dbbb"
+      }
+    },
+    {
+      "key": "identity.sessions.all.confirm.title",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Sign out on all devices?",
+        "sha256": "d10e68161b85c757a2eb8c7ba86bd90dfc8b2a97855f2b428f4481708c4b0308"
+      },
+      "af": {
+        "text": "Meld op alle toestelle af?",
+        "sha256": "7eb4e18cd9809f021cd1de9ccc0cd624afbab3aee0a3b4eae2f2ced14463708b"
+      }
+    },
+    {
+      "key": "identity.sessions.all.confirm.body",
+      "family": "identity.sessions",
+      "en": {
+        "text": "This will end all active sessions on your account, including this one. You'll need to sign in again to continue.",
+        "sha256": "726b265324e8f254e8567fed4d3a20a73e51a54f3577bdb395b6bafb29ee7bd2"
+      },
+      "af": {
+        "text": "Dit sal alle aktiewe sessies op jou rekening beëindig, insluitend hierdie een. Jy sal weer moet aanmeld om voort te gaan.",
+        "sha256": "187f5a4f53d4a239ecc52cc772a75ea32c74bef0da451b17bd71d5017524344c"
+      }
+    },
+    {
+      "key": "identity.sessions.all.processing",
+      "family": "identity.sessions",
+      "en": {
+        "text": "Signing out on all devices…",
+        "sha256": "74cb2b02e233366b9ed77babdef5252fa51dc1be25ca0e6104e6d0ad1de7e4f5"
+      },
+      "af": {
+        "text": "Besig om op alle toestelle af te meld…",
+        "sha256": "f3d32a38da65ef364b1a081c464401b9a1b20c36285c93af9d4b7dd8e51deaaf"
+      }
+    },
+    {
+      "key": "identity.sessions.all.completed",
+      "family": "identity.sessions",
+      "en": {
+        "text": "All sessions have been signed out.",
+        "sha256": "31ad73f7098cc947f316bd4a940e197f77c4e15a7b37f7a87505d435a7334b84"
+      },
+      "af": {
+        "text": "Alle sessies is afgemeld.",
+        "sha256": "3a8132e075ea1477ff6669cdcd9bbe1853ca3d179617d083c8c7a19f7660681f"
+      }
+    },
+    {
+      "key": "identity.sessions.all.failed",
+      "family": "identity.sessions",
+      "en": {
+        "text": "We couldn't sign out all sessions. Sign in again to check, or try again.",
+        "sha256": "75a829e7d5b26965f1f63a0a0d74583e12ebf77991bb008b5d523369ca7cda3e"
+      },
+      "af": {
+        "text": "Ons kon nie alle sessies afmeld nie. Meld weer aan om dit na te gaan, of probeer weer.",
+        "sha256": "393f1e8e9a0d0f3bc4a291e79bf625ab719f4ed286760f66c107ca108e025741"
+      }
+    },
+    {
+      "key": "identity.sessions.all.uncertain",
+      "family": "identity.sessions",
+      "en": {
+        "text": "We couldn't confirm whether all sessions ended. Sign in again and check your sessions.",
+        "sha256": "67bb3f4dadf007b14b1f61aa72186100938fde65ecd829455ee45a12ec648663"
+      },
+      "af": {
+        "text": "Ons kon nie bevestig of alle sessies beëindig is nie. Meld weer aan en gaan jou sessies na.",
+        "sha256": "ca78e44ab37199f853e1844f9f202676805b3cf07c47d5e09cbc77e2f62d118a"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.page.title",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "Trusted devices",
+        "sha256": "7d9892730da9e31e2b7dbc0c7940a8805d0ee9793ad36b8cafc2c3d37492755e"
+      },
+      "af": {
+        "text": "Vertroude toestelle",
+        "sha256": "a8ae241be7bfa381404d60034dfd731baffb8eb19b4afb5faaf1892be8054bc2"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.page.body",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "Review devices you've chosen to trust. Trust does not replace additional security checks for sensitive actions.",
+        "sha256": "5a8c0e44ace486de7dc71a6c26b52b7cdad2e9f69bb70ace458431d3d71f5984"
+      },
+      "af": {
+        "text": "Gaan die toestelle na wat jy gekies het om te vertrou. Vertroue vervang nie bykomende sekuriteitskontroles vir sensitiewe handelinge nie.",
+        "sha256": "3c5100660a893bdd329a45eac8cd412f3a56b62315de0b9242ac559f09972dfc"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.active.empty",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "You haven't marked any devices as trusted.",
+        "sha256": "ea51bbdf032388ef0200116ba14bc18650e0df7c0a20a759a6b3336f459865a5"
+      },
+      "af": {
+        "text": "Jy het nog geen toestelle as vertroud gemerk nie.",
+        "sha256": "db8bd1f864d2dd46ef2be5f8973261da7393ceb14ef3e821434431487465bca3"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.consent.title",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "Trust this device?",
+        "sha256": "e304bd4debbb492b93bb15bd10b7cd38bd8bddc93dcaf8dec29cc784611f3db7"
+      },
+      "af": {
+        "text": "Vertrou hierdie toestel?",
+        "sha256": "4611acf49b9780fe46ed85c1402ee3894793f0e50d7a58eb54e7452b12e58805"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.consent.body",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "Choose this only on a device you control. You can remove trust later. Sensitive actions may still require extra verification.",
+        "sha256": "7d9edec71cc377e82a75430a2c494a612d44b4e453a19112a3c03e94e3df92dc"
+      },
+      "af": {
+        "text": "Kies dit net op ’n toestel waaroor jy beheer het. Jy kan die vertroue later verwyder. Sensitiewe handelinge kan steeds ekstra verifikasie vereis.",
+        "sha256": "70cd86dcce651cd11db91a4ebd08a2107d1e398597fc94ddec9279d25073115c"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.consent.action",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "Trust this device",
+        "sha256": "4c30a20c4efc8012f754d0fa8d36583760d2f81da414913103f327eb5615f3bd"
+      },
+      "af": {
+        "text": "Vertrou hierdie toestel",
+        "sha256": "24b9e03c2422d587042adfe5b923e059e2244e72089889908e42b80007fb1851"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.consent.failed",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "We couldn't mark this device as trusted. Try again.",
+        "sha256": "9debc617e0c5fbf12d767342758bb4ab845896e8602099276e860be0c669f685"
+      },
+      "af": {
+        "text": "Ons kon nie hierdie toestel as vertroud merk nie. Probeer weer.",
+        "sha256": "6bf586226b6fbd5d7f4bc48a5cfa78afb12e423b1f86a6f2ce1246c141cb0a2a"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.consent.uncertain",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "We couldn't confirm whether this device was trusted. Check your trusted-device list.",
+        "sha256": "d5089b5006033a555ce67bc6218294927aa05efcb9beda8dc408730733186f20"
+      },
+      "af": {
+        "text": "Ons kon nie bevestig of hierdie toestel as vertroud gemerk is nie. Gaan jou lys van vertroude toestelle na.",
+        "sha256": "2f3c4e8567e328543b8979ffa72e99a06b855b1b7fd2f64f5d33e8ff3618cf32"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.item.name.label",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "Device name",
+        "sha256": "155106be1173d7573d45e29f95a38e17bc3ce399535654f159ef4dd5a99e33ba"
+      },
+      "af": {
+        "text": "Toestelnaam",
+        "sha256": "3d250f186005a594f08867cc7c96ff882864428f5f6c8718f2331ea6255eba14"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.item.name.action",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "Save device name",
+        "sha256": "6f13f1907146cf8d39843c82a85c71d60dd4a8b824ecfe5bf66584a93b561751"
+      },
+      "af": {
+        "text": "Stoor toestelnaam",
+        "sha256": "e485330ba5571729a23a2cb6ae5a3ebee032478c125a47214ad04c099a790e99"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.item.name.failed",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "We couldn't save the device name. Try again.",
+        "sha256": "92ce8ec0f6e38d9512d28c208681236d407e93c5aef5fcd486ddb75847c1d667"
+      },
+      "af": {
+        "text": "Ons kon nie die toestelnaam stoor nie. Probeer weer.",
+        "sha256": "a58aa9f8c953ea52e1406f40956a779b1a668d2cfd4aa709a8a07c732a49f299"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.revoke.action",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "Remove trust",
+        "sha256": "663e1a5bd52f367eefd33ae1b26e1447a84f32d5cc264d5db57d0da14804942a"
+      },
+      "af": {
+        "text": "Verwyder vertroue",
+        "sha256": "38c53ef6f2fc3f03906384a89752f25b8963da0e709a649c6bc70ed9fe05f110"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.revoke.confirm.title",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "Remove trust from this device?",
+        "sha256": "e6143636fc5c2b10c8b080bf1fe9f15ff2b8dd0690365caddc479fab2a3b3699"
+      },
+      "af": {
+        "text": "Verwyder vertroue vir hierdie toestel?",
+        "sha256": "fd39455541687dca1172ca97dece76ef6c40e85e928ef2aba3c8356fd35d0b48"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.revoke.confirm.body",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "This removes trusted status. It does not necessarily sign the device out.",
+        "sha256": "90baf28ed3a3edabd6b6bfe86dec29c506b06e4220963672ceabfc386eca25db"
+      },
+      "af": {
+        "text": "Dit verwyder die toestel se vertroude status. Dit meld nie noodwendig die toestel af nie.",
+        "sha256": "7739618c4ff0136e972f804da94ac1e32e6c61cfb2d8d45285d4a2211931105c"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.revoke.completed",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "Trust removed from this device.",
+        "sha256": "4e9e96d4f0e7cdf7f34c559e858a373c1b4e77901c5f9f91053dfd28535f340f"
+      },
+      "af": {
+        "text": "Vertroue vir hierdie toestel is verwyder.",
+        "sha256": "11206a1d6302d5267dc8ce4a926b98e6d650499572de62675d412044c45a9856"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.revoke.already_ended",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "This device is no longer trusted.",
+        "sha256": "0c50fa9516c355ae54d6c760090d647a27a1cbed237cff84c20a6ad3238615d5"
+      },
+      "af": {
+        "text": "Hierdie toestel word nie meer vertrou nie.",
+        "sha256": "2df0ca1e4d773958192792dc24e2ae4175ce7b4c0ab50d15ee8f103c224bf7d7"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.revoke.failed",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "We couldn't remove trust. Try again.",
+        "sha256": "90c2ad2ce77ef9eb7c6c6c64386ce76a400e2138fdbfc0e9632b07393d483622"
+      },
+      "af": {
+        "text": "Ons kon nie die vertroue verwyder nie. Probeer weer.",
+        "sha256": "bf35abd787761d5578c34eba0a3d0b1ab98eeb3e13a15b2e0e1a95d08fb5f2c2"
+      }
+    },
+    {
+      "key": "identity.trusted_devices.revoke.uncertain",
+      "family": "identity.trusted_devices",
+      "en": {
+        "text": "We couldn't confirm whether trust was removed. Refresh the list before trying again.",
+        "sha256": "91a8125f64a5e016719ee3da012bacb0862916186480109b71d00515017d001d"
+      },
+      "af": {
+        "text": "Ons kon nie bevestig of die vertroue verwyder is nie. Verfris die lys voordat jy weer probeer.",
+        "sha256": "3cc1de7b9c27359e85a9ec2218dd04a252a1b3946a67ad0f20a5e2c0d964e6e2"
+      }
+    }
+  ],
+  "reuse_existing_registry_keys": [
+    {
+      "key": "shared.action.cancel",
+      "status": "CANDIDATE, not approved",
+      "usage": "Dialog cancel actions: do not duplicate its translation"
+    },
+    {
+      "key": "shared.action.retry",
+      "status": "CANDIDATE, not approved",
+      "usage": "Generic retry action"
+    },
+    {
+      "key": "identity.login.session_expired",
+      "status": "DRAFT STUB, not approved",
+      "usage": "Session expiry on sign-in: do not mint a semantically duplicate key"
+    }
+  ],
+  "source_candidate": {
+    "filename": "FP001_SESSION_AND_TRUSTED_DEVICE_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+    "version": "0.1.0",
+    "sha256": "a696d3a780ef64d843bbfd30830291d2d89a801679c378a246eece0d3ed91aee",
+    "preserved_unchanged": true
+  },
+  "approval_evidence": {
+    "owner_decision": "APPROVED_AS_IS",
+    "source": "2026-11-16 owner message in originating conversation: 'Approved as is. Open PR'",
+    "human_attribution": "One accountable owner decision; no independent multiple-reviewer claim",
+    "scope": "Exact 29 session and 18 trusted-device EN/AF copy keys for future bounded non-production use after canonical integration, subject to separate Plane Ready implementation authority",
+    "does_not_amend_product_law": true,
+    "does_not_approve_execution_or_release": true
+  },
+  "copy_integrity": {
+    "session_keys": 29,
+    "trusted_device_keys": 18,
+    "total_semantic_keys": 47,
+    "locale_strings": 94,
+    "text_differences_from_candidate": 0,
+    "individual_string_sha256_retained": true,
+    "canonical_consumption_requires_exact_router_digest": true
+  },
+  "lifecycle": {
+    "intended_nonproduction_version_state_after_integration": "development_approved",
+    "states": [
+      "draft",
+      "candidate",
+      "development_approved",
+      "production_approved",
+      "superseded",
+      "withdrawn"
+    ],
+    "guards": [
+      "Pin exact EN/AF bytes and locale digests",
+      "Use only current approved scope and verified Plane readiness",
+      "No silent locale fallback",
+      "No changed, withdrawn, or superseded bytes may be newly consumed"
+    ],
+    "side_effects": [
+      "Copy-approval evidence only; no Identity Session or DeviceAssurance effect",
+      "No content publication or runtime permissions"
+    ],
+    "terminal_for_new_consumption": [
+      "superseded",
+      "withdrawn"
+    ],
+    "retry_and_conflicts": "Same version/hash/decision is idempotent. Conflicting decisions or changed bytes require reconciliation or a separately approved successor; never last-write-wins."
+  },
+  "integration_boundaries": [
+    "Identity alone owns Session and DeviceAssurance states, guards and effects.",
+    "Session revocation and removal of device trust remain separate business actions.",
+    "Success messages require confirmed authoritative outcomes; stale or uncertain outcomes stay distinct.",
+    "The approved copy cannot activate a feature, grant role/permission, or bypass high-risk step-up.",
+    "No production, public, paid pilot, real-participant or external-provider eligibility.",
+    "No modification of Product, Decision, Architecture, Domain or Roadmap law."
+  ]
+}
