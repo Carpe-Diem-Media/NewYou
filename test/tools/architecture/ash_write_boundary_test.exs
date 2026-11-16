@@ -286,6 +286,85 @@ defmodule NewYou.Architecture.AshWriteBoundaryTest do
     end
   end
 
+  describe "Analytics command direction" do
+    @analytics_path "lib/new_you/analytics.ex"
+
+    test "direct calls to another Domain command fail" do
+      source = "defmodule NewYou.Analytics do; def run(x), do: NewYou.Identity.register(x); end"
+      assert [:analytics_foreign_command] == rules(source, @analytics_path)
+    end
+
+    test "aliased and imported foreign commands fail" do
+      for source <- [
+            "defmodule NewYou.Analytics do; alias NewYou.Identity, as: IdentityOwner; def run(x), do: IdentityOwner.register(x); end",
+            "defmodule NewYou.Analytics do; import NewYou.Identity, only: [register: 1]; def run(x), do: register(x); end"
+          ] do
+        assert [:analytics_foreign_command] == rules(source, @analytics_path)
+      end
+    end
+
+    test "module-valued local and attribute receivers fail" do
+      for source <- [
+            "defmodule NewYou.Analytics do; def run(x) do; owner = NewYou.Identity; owner.register(x); end; end",
+            "defmodule NewYou.Analytics do; @owner NewYou.Identity; def run(x), do: @owner.register(x); end"
+          ] do
+        assert [:analytics_foreign_command] == rules(source, @analytics_path)
+      end
+    end
+
+    test "foreign Ash mutation in Analytics fails" do
+      source =
+        "defmodule NewYou.Analytics do; def run(x), do: Ash.create!(NewYou.Identity.User, x); end"
+
+      assert [:analytics_foreign_ash_write] == rules(source, @analytics_path)
+    end
+
+    test "later module bindings cannot hide earlier foreign commands" do
+      for source <- [
+            "defmodule NewYou.Analytics do; def bad(attrs) do; owner = NewYou.Identity; owner.register(attrs); end; def good do; owner = NewYou.Analytics; owner.rebuild_p817_privacy_projection(); end; end",
+            "defmodule NewYou.Analytics do; @owner NewYou.Identity; def bad(attrs), do: @owner.register(attrs); @owner NewYou.Analytics; def good, do: @owner.rebuild_p817_privacy_projection(); end",
+            "defmodule NewYou.Analytics do; def bad(attrs) do; alias NewYou.Identity, as: Owner; Owner.register(attrs); end; def good do; alias NewYou.Analytics, as: Owner; Owner.rebuild_p817_privacy_projection(); end; end"
+          ] do
+        assert :analytics_foreign_command in rules(source, @analytics_path)
+      end
+    end
+
+    test "captured and applied foreign commands fail" do
+      for expression <- [
+            "(&NewYou.Identity.register/1).(attrs)",
+            "apply(NewYou.Identity, :register, [attrs])",
+            "Kernel.apply(NewYou.Identity, :register, [attrs])",
+            ":erlang.apply(NewYou.Identity, :register, [attrs])",
+            "import NewYou.Identity, only: [register: 1]; command = &register/1; command.(attrs)"
+          ] do
+        source = "defmodule NewYou.Analytics do; def run(attrs) do; #{expression}; end; end"
+        assert :analytics_foreign_command in rules(source, @analytics_path), expression
+      end
+    end
+
+    test "the permitted Privacy read has exactly the approved arity" do
+      source =
+        "defmodule NewYou.Analytics do; def run(x), do: NewYou.Privacy.current_p817_proof_purpose_snapshot(x); end"
+
+      assert [:analytics_foreign_command] == rules(source, @analytics_path)
+    end
+
+    test "Privacy proof snapshot read and Analytics-owned commands pass" do
+      source = """
+      defmodule NewYou.Analytics do
+        alias NewYou.Privacy, as: PrivacyOwner
+        def rebuild(x) do
+          PrivacyOwner.current_p817_proof_purpose_snapshot()
+          NewYou.Analytics.rebuild_p817_privacy_projection()
+          NewYou.Analytics.P817PrivacyProjection.read(x)
+        end
+      end
+      """
+
+      assert [] == rules(source, @analytics_path)
+    end
+  end
+
   describe "positive fixtures: legitimate use that must PASS" do
     test "Ash domain action passes" do
       source = """

@@ -11,6 +11,8 @@ defmodule NewYou.Architecture.AshWriteBoundary do
     * `:ecto_multi_write` - a persisting `Ecto.Multi` operation or callback
     * `:parallel_ecto_schema` - `use Ecto.Schema`, a second business model beside Ash resources
     * `:outer_layer_ash_write` - a generic Ash mutation in web or worker code
+    * `:analytics_foreign_command` - Analytics calls another NewYou module outside its approved Privacy read
+    * `:analytics_foreign_ash_write` - Analytics mutates a foreign or dynamically selected Resource
     * `:parse_error` - a file in scope that cannot be parsed, failing closed
 
   Ordinary reads, owning application Ash actions, Sandbox configuration, migrations and the Repo
@@ -169,6 +171,7 @@ defmodule NewYou.Architecture.AshWriteBoundary do
         imports = collect_imports(ast, aliases)
         repo_variables = collect_repo_variables(ast, aliases)
         repo_attributes = collect_repo_attributes(ast, aliases)
+        analytics_violations = analytics_violations(ast, path)
 
         context =
           if String.starts_with?(path, "lib/new_you_web/"),
@@ -189,7 +192,7 @@ defmodule NewYou.Architecture.AshWriteBoundary do
              ) ++ acc}
           end)
 
-        violations
+        (violations ++ analytics_violations)
         |> Enum.reverse()
         |> Enum.uniq()
 
@@ -205,6 +208,261 @@ defmodule NewYou.Architecture.AshWriteBoundary do
           )
         ]
     end
+  end
+
+  defp analytics_violations(ast, path) do
+    if analytics_file?(path) do
+      aliases = collect_analytics_aliases(ast)
+      imports = collect_imports(ast, aliases)
+      variables = collect_module_variables(ast, aliases)
+      attributes = collect_module_attributes(ast, aliases)
+
+      {_, violations} =
+        Macro.prewalk(ast, [], fn
+          {{:., meta, [receiver, function]}, _, args} = node, acc
+          when is_atom(function) and is_list(args) ->
+            module = analytics_receiver(receiver, aliases, variables, attributes)
+
+            found =
+              analytics_call_violation(
+                module,
+                function,
+                args,
+                Keyword.get(meta, :line, 0),
+                path,
+                aliases
+              )
+
+            {node, found ++ acc}
+
+          {:&, meta, [{:/, _, [{function, _, context}, arity]}]} = node, acc
+          when is_atom(function) and is_atom(context) and is_integer(arity) ->
+            found =
+              analytics_import_violations(
+                imports,
+                function,
+                List.duplicate(nil, arity),
+                meta,
+                path,
+                aliases
+              )
+
+            {node, found ++ acc}
+
+          {:apply, meta, args} = node, acc when length(args) == 3 ->
+            found =
+              analytics_call_violation(
+                [:Kernel],
+                :apply,
+                args,
+                Keyword.get(meta, :line, 0),
+                path,
+                aliases
+              )
+
+            {node, found ++ acc}
+
+          {function, meta, args} = node, acc when is_atom(function) and is_list(args) ->
+            found = analytics_import_violations(imports, function, args, meta, path, aliases)
+
+            {node, found ++ acc}
+
+          node, acc ->
+            {node, acc}
+        end)
+
+      Enum.reverse(violations)
+    else
+      []
+    end
+  end
+
+  # Different lexical scopes may reuse a name. Reject ambiguous module bindings
+  # instead of letting the last binding hide an earlier foreign command.
+  defp collect_analytics_aliases(ast) do
+    {_, aliases} =
+      Macro.prewalk(ast, %{}, fn
+        {:alias, _, _} = node, acc ->
+          merged =
+            Map.merge(acc, collect_aliases(node), fn _name, left, right ->
+              consistent_analytics_binding(left, right)
+            end)
+
+          {node, merged}
+
+        node, acc ->
+          {node, acc}
+      end)
+
+    aliases
+  end
+
+  defp consistent_analytics_binding(module, module), do: module
+  defp consistent_analytics_binding(_left, _right), do: [:AmbiguousAnalyticsReceiver]
+
+  defp remember_analytics_binding(bindings, name, module),
+    do: Map.update(bindings, name, module, &consistent_analytics_binding(&1, module))
+
+  defp analytics_import_violations(imports, function, args, meta, path, aliases) do
+    imports
+    |> Enum.filter(&imported_function?(&1, function, length(args)))
+    |> Enum.flat_map(
+      &analytics_call_violation(
+        &1.module,
+        function,
+        args,
+        Keyword.get(meta, :line, 0),
+        path,
+        aliases
+      )
+    )
+  end
+
+  defp analytics_call_violation(
+         module,
+         :apply,
+         [receiver, function, args],
+         line,
+         path,
+         aliases
+       )
+       when module in [[:Kernel], [:erlang]] and is_atom(function) and is_list(args) do
+    case analytics_receiver(receiver, aliases, %{}, %{}) do
+      nil ->
+        [
+          violation(
+            path,
+            line,
+            :analytics_foreign_command,
+            "Analytics apply target must be statically owned or an approved read"
+          )
+        ]
+
+      module ->
+        analytics_call_violation(module, function, args, line, path, aliases)
+    end
+  end
+
+  defp analytics_call_violation(module, :apply, _args, line, path, _aliases)
+       when module in [[:Kernel], [:erlang]],
+       do: [
+         violation(
+           path,
+           line,
+           :analytics_foreign_command,
+           "Analytics apply target must be statically owned or an approved read"
+         )
+       ]
+
+  defp analytics_call_violation(
+         [:AmbiguousAnalyticsReceiver | _],
+         _function,
+         _args,
+         line,
+         path,
+         _aliases
+       ),
+       do: [
+         violation(
+           path,
+           line,
+           :analytics_foreign_command,
+           "Analytics receiver bindings must resolve to one module; ambiguous aliases or assignments require explicit calls"
+         )
+       ]
+
+  defp analytics_call_violation([:NewYou | _] = module, function, args, line, path, _aliases) do
+    cond do
+      List.starts_with?(module, [:NewYou, :Analytics]) ->
+        []
+
+      module == [:NewYou, :Privacy] and function == :current_p817_proof_purpose_snapshot and
+          args == [] ->
+        []
+
+      true ->
+        [
+          violation(
+            path,
+            line,
+            :analytics_foreign_command,
+            "Analytics cannot call another NewYou module's command; use an owner-approved read interface"
+          )
+        ]
+    end
+  end
+
+  defp analytics_call_violation([:Ash], function, args, line, path, aliases)
+       when function in @ash_write_functions do
+    case List.first(args) do
+      {:__aliases__, _, _} = resource ->
+        if List.starts_with?(resolve(resource, aliases), [:NewYou, :Analytics]),
+          do: [],
+          else: [
+            violation(
+              path,
+              line,
+              :analytics_foreign_ash_write,
+              "Analytics Ash mutations must target a statically resolved Analytics resource"
+            )
+          ]
+
+      _ ->
+        [
+          violation(
+            path,
+            line,
+            :analytics_foreign_ash_write,
+            "Analytics Ash mutations must target a statically resolved Analytics resource"
+          )
+        ]
+    end
+  end
+
+  defp analytics_call_violation(_, _, _, _, _, _), do: []
+
+  defp analytics_file?(path) do
+    path = String.replace(path, "\\", "/")
+    path == "lib/new_you/analytics.ex" or String.starts_with?(path, "lib/new_you/analytics/")
+  end
+
+  defp analytics_receiver(:erlang, _aliases, _variables, _attributes), do: [:erlang]
+
+  defp analytics_receiver({:__aliases__, _, _} = receiver, aliases, _variables, _attributes),
+    do: resolve(receiver, aliases)
+
+  defp analytics_receiver({:@, _, [{name, _, _}]}, _aliases, _variables, attributes)
+       when is_atom(name), do: Map.get(attributes, name)
+
+  defp analytics_receiver({name, _, _}, _aliases, variables, _attributes) when is_atom(name),
+    do: Map.get(variables, name)
+
+  defp analytics_receiver(_, _, _, _), do: nil
+
+  defp collect_module_variables(ast, aliases) do
+    {_, values} =
+      Macro.prewalk(ast, %{}, fn
+        {:=, _, [{name, _, _}, {:__aliases__, _, _} = target]} = node, acc when is_atom(name) ->
+          {node, remember_analytics_binding(acc, name, resolve(target, aliases))}
+
+        node, acc ->
+          {node, acc}
+      end)
+
+    values
+  end
+
+  defp collect_module_attributes(ast, aliases) do
+    {_, values} =
+      Macro.prewalk(ast, %{}, fn
+        {:@, _, [{name, _, [{:__aliases__, _, _} = target]}]} = node, acc when is_atom(name) ->
+          {node, remember_analytics_binding(acc, name, resolve(target, aliases))}
+
+        node, acc ->
+          {node, acc}
+      end)
+
+    values
   end
 
   defp violations_for(

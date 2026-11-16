@@ -143,6 +143,7 @@
           "arity": {
             "type": "integer",
             "enum": [
+              0,
               1,
               2,
               3,
@@ -162,7 +163,7 @@
               "type": "string",
               "minLength": 1
             },
-            "minItems": 1
+            "minItems": 0
           },
           "returns": {
             "type": "array",
@@ -197,6 +198,34 @@
             "minItems": 1
           }
         },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "arity"
+              ],
+              "properties": {
+                "arity": {
+                  "const": 0
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "arguments": {
+                  "maxItems": 0
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "arguments": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ],
         "required": [
           "module",
           "function",

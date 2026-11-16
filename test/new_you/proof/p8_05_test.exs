@@ -42,31 +42,21 @@ defmodule NewYou.Proof.P805Test do
 
   @case_ids ~w(p805.accepted p805.rejected p805.envelope_rollback p805.rollback_account p805.rollback_token p805.rollback_intent p805.rollback_nonce p805.rollback_obligation p805.rollback_operation p805.audit_schedule_rollback p805.commit_rollback p805.replay_neutrality p805.pmr_collision p805.retired_pmr p805.same_email_race p805.canonical_email_race p805.same_operation_race p805.pmr_collision_race p805.post_commit_recovery p805.resend p805.resend_binding p805.browser_en p805.browser_af)
 
-  test "bounded P8-05, P8-07, P8-08, P8-09, P8-11, P8-12 and P8-13 cases do not manufacture complete coverage" do
+  test "upstream bounded mappings remain available inside the complete integration" do
+    upstream = NewYou.Proof.P805Catalog.manifests()
+    assert Enum.all?(upstream, fn {_, manifest} -> manifest.scope == :partial end)
     manifests = Catalog.required().business_manifests
-    assert Enum.all?(Map.values(manifests), &(&1.scope == :partial))
     registrations = Catalog.compiled_business_registrations()
-    cases = Enum.flat_map(Map.values(manifests), & &1.cases)
-
-    expected =
-      @case_ids ++
-        ~w(p807.consume_race p807.interrupted_consume p807.browser_en p807.browser_af p809.reconnect p809.interrupted_issue p809.hold_race p809.beam_restart p809.browser_en p809.browser_af p809.magic_consume_race p809.magic_issue_consume_race p809.magic_restart p811.interrupted_materialisation p811.existing_assertion p811.concurrent_execution p811.restart_backlog p813.admission_cut p813.capture_failure p813.source_failure p813.same_attempt_race p813.distinct_attempt_race p813.restart p813.crash_after_admission p813.crash_after_source p812.reset_race p812.stale_login_race p812.interrupted_reset p812.restart)
-
-    assert Enum.sort(Enum.map(cases, & &1.case_id)) == Enum.sort(expected)
-    assert Enum.sort(Enum.map(registrations, & &1.case_id)) == Enum.sort(expected)
+    assert Enum.all?(manifests, fn {_, manifest} -> manifest.scope == :complete end)
+    assert Enum.all?(@case_ids, fn id -> Enum.any?(registrations, &(&1.case_id == id)) end)
     assert :ok = Catalog.validate_compiled_registrations(manifests, registrations)
-    missing = Catalog.validate_registrations(registrations, :tb001).missing_families
-    assert missing == Catalog.coverage_inventory()
-    assert "session_login_revocation_restart" in missing
-    assert "audit_e1" in missing
-    assert "recovery_primary_email_change" in missing
-    assert Catalog.coverage_inventory() |> length() == 10
+    assert Catalog.validate_registrations(registrations, :tb001).missing_families == []
   end
 
   # The aggregate includes independent BEAM boots across all owned families.
   # Each case retains its own proof deadline; this bounds the complete run.
   @tag timeout: 600_000
-  test "runner executes every owned obligation and retains incomplete overall TB-001" do
+  test "runner executes every reviewed obligation and evaluates complete TB-001" do
     manifests = Catalog.required().business_manifests
     assert map_size(manifests) > 0
 
@@ -96,7 +86,7 @@ defmodule NewYou.Proof.P805Test do
 
     assert failures == [], "bounded proof failures: #{inspect(failures, limit: :infinity)}"
 
-    assert length(observations) == length(@case_ids) + 29
+    assert length(observations) == 133
     assert cleanup["verdict"] == "PASS"
 
     for observation <- observations do
@@ -113,13 +103,19 @@ defmodule NewYou.Proof.P805Test do
 
     for entry <- result.entries, Map.has_key?(manifests, entry.coverage_id) do
       assert Enum.all?(entry.cases, &(&1.verdict == "PASS"))
-      assert entry.verdict == "FAIL"
-      assert "manifest.partial" in entry.reason_codes
+
+      if manifests[entry.coverage_id].scope == :complete do
+        assert entry.verdict == "PASS"
+        assert entry.reason_codes == []
+      else
+        assert entry.verdict == "FAIL"
+        assert "manifest.partial" in entry.reason_codes
+      end
     end
 
-    assert result.exit_code == 1
-    assert result.verdict == "FAIL"
-    assert "coverage.incomplete" in result.reason_codes
+    assert result.exit_code == 0
+    assert result.verdict == "PASS"
+    assert result.reason_codes == []
   end
 
   test "fixture cleanup recovers committed browser provenance when operation IDs were not returned" do
@@ -158,6 +154,11 @@ defmodule NewYou.Proof.P805Test do
     alias Ecto.Adapters.SQL.Sandbox
     previous_mfa = Application.fetch_env(:new_you, :identity_mfa_keyring)
 
+    browser_keys =
+      ~w(p8_07_browser_development_fixtures p8_08_browser_development_fixtures p8_09_browser_development_fixtures p8_12_browser_development_fixtures p8_15_browser_development_fixtures)a
+
+    previous_browser = Map.new(browser_keys, &{&1, Application.fetch_env(:new_you, &1)})
+
     parent = self()
 
     scenario = NewYou.Proof.Scenario.start()
@@ -189,6 +190,7 @@ defmodule NewYou.Proof.P805Test do
     assert {:error, [:worker_failed]} = NewYou.Proof.Scenario.stop(scenario)
     restored? = Application.fetch_env(:new_you, :identity_mfa_keyring) == previous_mfa
     assert restored?, "fixture environment was not restored after owner death"
+    assert Map.new(browser_keys, &{&1, Application.fetch_env(:new_you, &1)}) == previous_browser
 
     Sandbox.unboxed_run(NewYou.Repo, fn ->
       assert fixture_rows(snapshot) == List.duplicate(0, 8)

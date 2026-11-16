@@ -27,9 +27,15 @@ defmodule NewYou.Identity.Token do
     repo NewYou.Repo
 
     identity_wheres_to_sql one_current_magic_login: "purpose = 'magic_login'",
-                           one_current_password_reset: "purpose = 'password_reset'"
+                           one_current_password_reset: "purpose = 'password_reset'",
+                           one_current_email_change_confirmation:
+                             "purpose = 'email_change_confirmation'"
 
     check_constraints do
+      check_constraint :recovery_case_id, "tokens_recovery_metadata",
+        check:
+          "(recovery_case_id IS NULL AND recovery_claims IS NULL AND purpose NOT IN ('recovery','recovery_consumed','recovery_revoked')) OR (recovery_case_id IS NOT NULL AND recovery_claims IS NOT NULL AND purpose IN ('recovery','recovery_consumed','recovery_revoked','revocation') AND COALESCE(recovery_claims->>'purpose' = 'recovery' AND recovery_claims->>'jti' = jti AND recovery_claims->>'sub' = subject AND recovery_claims->>'case_id' = recovery_case_id::text, false))"
+
       check_constraint :reset_request_id, "tokens_password_reset_metadata",
         check:
           "(purpose NOT IN ('password_reset', 'password_reset_superseded', 'password_reset_consumed') AND reset_request_id IS NULL AND reset_claims IS NULL AND reset_account_binding IS NULL AND reset_locale IS NULL AND reset_consumption_id IS NULL) OR (reset_request_id IS NOT NULL AND reset_claims IS NOT NULL AND reset_locale IS NOT NULL AND reset_locale IN ('en', 'af') AND ((purpose = 'password_reset_consumed' AND reset_consumption_id IS NOT NULL AND reset_account_binding IS NULL) OR (purpose <> 'password_reset_consumed' AND reset_consumption_id IS NULL AND reset_account_binding IS NOT NULL)))"
@@ -37,10 +43,90 @@ defmodule NewYou.Identity.Token do
       check_constraint :magic_request_id, "tokens_magic_login_metadata",
         check:
           "(purpose NOT IN ('magic_login', 'magic_login_superseded', 'magic_login_consumed') AND magic_request_id IS NULL AND magic_claims IS NULL AND magic_account_binding IS NULL AND magic_locale IS NULL) OR (magic_request_id IS NOT NULL AND magic_claims IS NOT NULL AND magic_account_binding IS NOT NULL AND magic_locale IS NOT NULL AND magic_locale IN ('en', 'af'))"
+
+      check_constraint :email_change_operation_id, "tokens_email_change_metadata",
+        check:
+          "(purpose NOT IN ('email_change_confirmation', 'email_change_confirmation_consumed', 'email_change_confirmation_superseded', 'email_change_confirmation_revoked') AND email_change_operation_id IS NULL AND email_change_claims IS NULL AND email_change_account_binding IS NULL AND email_change_locale IS NULL) OR (email_change_operation_id IS NOT NULL AND email_change_claims IS NOT NULL AND email_change_account_binding IS NOT NULL AND email_change_locale IS NOT NULL AND email_change_locale IN ('en', 'af') AND COALESCE(email_change_claims->>'purpose' = 'email_change_confirmation' AND email_change_claims->>'jti' = jti AND email_change_claims->>'operation_id' = email_change_operation_id::text, false))"
     end
   end
 
   actions do
+    create :issue_email_change_confirmation do
+      description "Store fixed purpose-bound claims for one current Account-owned email-change proof; never store the signed bearer."
+      public? false
+
+      accept [
+        :email_change_operation_id,
+        :email_change_claims,
+        :email_change_account_binding,
+        :email_change_locale
+      ]
+
+      argument :token, :string, allow_nil?: false, sensitive?: true
+
+      validate present([
+                 :email_change_operation_id,
+                 :email_change_claims,
+                 :email_change_account_binding,
+                 :email_change_locale
+               ])
+
+      change set_attribute(:purpose, "email_change_confirmation")
+      change AshAuthentication.TokenResource.StoreTokenChange
+      change NewYou.Identity.Changes.SetTokenAccount
+    end
+
+    update :consume_email_change_confirmation do
+      public? false
+      accept []
+      change filter(expr(purpose == "email_change_confirmation" and expires_at > now()))
+      change set_attribute(:purpose, "email_change_confirmation_consumed")
+    end
+
+    update :supersede_email_change_confirmation do
+      public? false
+      accept []
+      change filter(expr(purpose == "email_change_confirmation"))
+      change set_attribute(:purpose, "email_change_confirmation_superseded")
+    end
+
+    update :revoke_email_change_confirmation do
+      public? false
+      accept []
+
+      change filter(
+               expr(
+                 purpose in ["email_change_confirmation", "email_change_confirmation_consumed"]
+               )
+             )
+
+      change set_attribute(:purpose, "email_change_confirmation_revoked")
+    end
+
+    create :issue_recovery do
+      public? false
+      accept [:recovery_case_id, :recovery_claims]
+      argument :token, :string, allow_nil?: false, sensitive?: true
+      validate present([:recovery_case_id, :recovery_claims])
+      change set_attribute(:purpose, "recovery")
+      change AshAuthentication.TokenResource.StoreTokenChange
+      change NewYou.Identity.Changes.SetTokenAccount
+    end
+
+    update :consume_recovery do
+      public? false
+      accept []
+      change filter(expr(purpose == "recovery" and expires_at > now()))
+      change set_attribute(:purpose, "recovery_consumed")
+    end
+
+    update :revoke_recovery do
+      public? false
+      accept []
+      change filter(expr(purpose in ["recovery", "recovery_consumed"]))
+      change set_attribute(:purpose, "recovery_revoked")
+    end
+
     create :issue_password_reset do
       description "Create one new password-reset proof. Never upsert or reissue an existing JTI."
       public? false
@@ -108,7 +194,12 @@ defmodule NewYou.Identity.Token do
 
     read :expired do
       description "Look up expired Identity tokens for framework cleanup"
-      filter expr(expires_at < now() and purpose != "password_reset_consumed")
+
+      filter expr(
+               expires_at < now() and is_nil(recovery_case_id) and
+                 purpose != "password_reset_consumed"
+             )
+
       public? false
     end
 
@@ -156,7 +247,13 @@ defmodule NewYou.Identity.Token do
 
     destroy :expunge_expired do
       public? false
-      change filter(expr(expires_at < now() and purpose != "password_reset_consumed"))
+
+      change filter(
+               expr(
+                 expires_at < now() and is_nil(recovery_case_id) and
+                   purpose != "password_reset_consumed"
+               )
+             )
     end
 
     update :revoke_all_stored_for_subject do
@@ -174,6 +271,13 @@ defmodule NewYou.Identity.Token do
   end
 
   attributes do
+    attribute :email_change_operation_id, :uuid, sensitive?: true, public?: false
+    attribute :email_change_claims, :map, sensitive?: true, public?: false
+    attribute :email_change_account_binding, :binary, sensitive?: true, public?: false
+    attribute :email_change_locale, :string, constraints: [match: ~r/\A(en|af)\z/], public?: false
+
+    attribute :recovery_case_id, :uuid, sensitive?: true, public?: false
+    attribute :recovery_claims, :map, sensitive?: true, public?: false
     attribute :reset_request_id, :uuid, sensitive?: true, public?: false
     attribute :reset_claims, :map, sensitive?: true, public?: false
     attribute :reset_account_binding, :binary, sensitive?: true, public?: false
@@ -218,6 +322,12 @@ defmodule NewYou.Identity.Token do
   end
 
   relationships do
+    belongs_to :recovery_case, NewYou.Identity.RecoveryCase do
+      define_attribute? false
+      source_attribute :recovery_case_id
+      public? false
+    end
+
     belongs_to :account, NewYou.Identity.Account do
       allow_nil? false
       attribute_writable? false
@@ -226,9 +336,15 @@ defmodule NewYou.Identity.Token do
   end
 
   identities do
+    identity :recovery_case_proof, [:recovery_case_id]
     identity :one_current_password_reset, [:account_id], where: expr(purpose == "password_reset")
     identity :password_reset_request, [:reset_request_id]
     identity :password_reset_consumption, [:reset_consumption_id]
+    identity :email_change_operation_proof, [:email_change_operation_id]
+
+    identity :one_current_email_change_confirmation, [:account_id],
+      where: expr(purpose == "email_change_confirmation")
+
     identity :one_current_magic_login, [:account_id], where: expr(purpose == "magic_login")
     identity :magic_login_request, [:magic_request_id]
   end

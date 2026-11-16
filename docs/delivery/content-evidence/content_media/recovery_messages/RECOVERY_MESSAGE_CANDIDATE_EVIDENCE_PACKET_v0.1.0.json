@@ -1,0 +1,321 @@
+{
+  "packet_id": "account-recovery-messages-candidate-evidence-v0.1.0",
+  "status": "CANDIDATE_NOT_APPROVED",
+  "candidate_base": {
+    "main_sha": "98fbeb8766ff1d20efe4f4f10baa6fc3abcc62f6",
+    "implementation_head": "0d8da094f80ee9f8487dfbe8ffc009b88503e6c3",
+    "verified_on": "2026-11-10"
+  },
+  "drafting_authorization": "Owner explicitly authorized four EN/AF candidate drafts, exact-version evidence and narrow Product proposals. This is not content approval or delivery permission.",
+  "candidate_ids_are_proposals": true,
+  "content_identity_authority_established": false,
+  "intended_content_owner": "Content & Media",
+  "product_proposal": {
+    "status": "PROPOSED_NON_AUTHORITATIVE",
+    "path": "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
+    "bytes": 5180,
+    "sha256": "04f41fe344428a9c7cb30398c599c341d6a416af79c51d8446215ef9075e1b64",
+    "current_governance_routes_unchanged": true
+  },
+  "proposed_applicability": [
+    "local development",
+    "automated tests",
+    "development environments",
+    "bounded P8-15 Phase-8 proof"
+  ],
+  "prohibited_applicability": [
+    "production",
+    "public release",
+    "paid pilot",
+    "real-participant delivery",
+    "Phase 9"
+  ],
+  "eligibility": {
+    "development": false,
+    "automated_tests": false,
+    "development_environments": false,
+    "bounded_p8_15_proof": false,
+    "runtime_release": false,
+    "publication": false,
+    "production": false,
+    "public_release": false,
+    "paid_pilot": false,
+    "real_participant_delivery": false,
+    "phase_9": false
+  },
+  "binding": {
+    "resolution": "exact proposed IDs subject to Content owner confirmation",
+    "latest_alias": false,
+    "silent_locale_fallback": false,
+    "required_locales": [
+      "en",
+      "af"
+    ],
+    "paired_eligibility_per_purpose": true,
+    "runtime_binding_established": false,
+    "support_contact_binding_approved": false,
+    "provider_admission_enabled": false
+  },
+  "serialization": {
+    "format_id": "recovery-message-subject-body-text-v1",
+    "encoding": "UTF-8",
+    "line_endings": "LF",
+    "bom": false,
+    "terminal_lf_count": 1,
+    "subject_prefix": "subject: ",
+    "subject_body_boundary": "one blank line",
+    "digest_input": "exact file bytes",
+    "subject_digest_input": "subject value only, excluding prefix and LF",
+    "body_digest_input": "all bytes after first blank line, including terminal LF",
+    "token_contract_digest_input": "UTF-8 JSON with sort_keys=True, separators=(comma,colon), ensure_ascii=False",
+    "normalization": "none"
+  },
+  "messages": [
+    {
+      "purpose": "proof",
+      "proposed_product_type": "account_recovery_proof_message",
+      "communications_role": "account_recovery",
+      "proposed_content_item_id": "NEWYOU-CONTENTITEM-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL",
+      "proposed_content_version_id": "NEWYOU-CONTENTVERSION-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-V1",
+      "copy_class": "A",
+      "content_risk": "identity_security",
+      "proposed_wording_risk": "editorial_low_risk",
+      "identity_security_risk": "HIGH",
+      "state": "candidate",
+      "token_allowlist": [
+        {
+          "literal": "{{platform_name}}",
+          "type": "platform_display_name",
+          "allowed_fields": [
+            "subject",
+            "body"
+          ],
+          "source": "Approved non-secret platform configuration; single-line plain text."
+        },
+        {
+          "literal": "{{account_recovery_link}}",
+          "type": "identity_account_recovery_confirmation_url",
+          "allowed_fields": [
+            "body"
+          ],
+          "source": "Current Identity-issued purpose-bound recovery proof, serialized only through approved protected delivery; literal only in candidate evidence."
+        }
+      ],
+      "token_contract_sha256": "19862cc352eb8248f4511d9c84c7d4fad650a68a1885a7766b53ddf66cb80f6a",
+      "locale_versions": [
+        {
+          "locale": "en",
+          "proposed_content_translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-EN-V1",
+          "status": "candidate",
+          "artifact": {
+            "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-EN-V1.txt",
+            "bytes": 693,
+            "sha256": "c1d761d829e7eb3e400b94d6c2be734ac33a0087a742c2b77818ff06a21d3cb7"
+          },
+          "subject": {
+            "offset": 9,
+            "bytes": 48,
+            "sha256": "73043422f763167e8714fb79a38c9ed79f993429eeed14314b3b52a04b4fed15"
+          },
+          "body": {
+            "offset": 59,
+            "bytes": 634,
+            "sha256": "8dfd3a54d865885b1cfb8eeddfe7d55bdaeee4d7dbd2d13e35cf3c5c83996148"
+          },
+          "proposed_copy_keys": {
+            "subject": "identity.recovery.proof.email.subject",
+            "body": "identity.recovery.proof.email.body"
+          }
+        },
+        {
+          "locale": "af",
+          "proposed_content_translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-AF-V1",
+          "status": "candidate",
+          "artifact": {
+            "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-AF-V1.txt",
+            "bytes": 826,
+            "sha256": "ae9b51d967c2be015b8f948bb05360027647767c1189e3df284afbb296295d90"
+          },
+          "subject": {
+            "offset": 9,
+            "bytes": 52,
+            "sha256": "b924fddd552a404a47b0bec2c5ef2426a01f25fa3a277bf257db5baaf0973cf3"
+          },
+          "body": {
+            "offset": 63,
+            "bytes": 763,
+            "sha256": "bba7d534bd3e35224bd80ee484fc57909ade179ffa268765e33c67a67063e6f9"
+          },
+          "proposed_copy_keys": {
+            "subject": "identity.recovery.proof.email.subject",
+            "body": "identity.recovery.proof.email.body"
+          }
+        }
+      ]
+    },
+    {
+      "purpose": "completion_notice",
+      "proposed_product_type": "account_recovery_completion_notice",
+      "communications_role": "recovery_security_notice",
+      "proposed_content_item_id": "NEWYOU-CONTENTITEM-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL",
+      "proposed_content_version_id": "NEWYOU-CONTENTVERSION-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-V1",
+      "copy_class": "A",
+      "content_risk": "identity_security",
+      "proposed_wording_risk": "editorial_low_risk",
+      "identity_security_risk": "HIGH",
+      "state": "candidate",
+      "token_allowlist": [
+        {
+          "literal": "{{platform_name}}",
+          "type": "platform_display_name",
+          "allowed_fields": [
+            "subject",
+            "body"
+          ],
+          "source": "Approved non-secret platform configuration; single-line plain text."
+        },
+        {
+          "literal": "{{support_contact}}",
+          "type": "approved_non_secret_support_contact",
+          "allowed_fields": [
+            "body"
+          ],
+          "source": "Exact accountable-owner-approved support contact; binding not yet provided or approved. No participant data or authentication material."
+        }
+      ],
+      "token_contract_sha256": "172b65484ad8fd50e7626b5e8a00784309e5a0c9486a096647d7f30ad1457c7a",
+      "locale_versions": [
+        {
+          "locale": "en",
+          "proposed_content_translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-EN-V1",
+          "status": "candidate",
+          "artifact": {
+            "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-EN-V1.txt",
+            "bytes": 443,
+            "sha256": "7f57114273ec162a9a4dad9a5c260985ba9148f98d58917ac5e7fa95d95a2042"
+          },
+          "subject": {
+            "offset": 9,
+            "bytes": 51,
+            "sha256": "7aeacca511a6754c23ca2832e9a0866ad329d5921966769793defbc5f0e06ef5"
+          },
+          "body": {
+            "offset": 62,
+            "bytes": 381,
+            "sha256": "11f463bdcfd89efb9531a2ae217b52ea5e0d009905bcc4a7f2f3a6f70799bce2"
+          },
+          "proposed_copy_keys": {
+            "subject": "identity.recovery.completion_notice.email.subject",
+            "body": "identity.recovery.completion_notice.email.body"
+          }
+        },
+        {
+          "locale": "af",
+          "proposed_content_translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-AF-V1",
+          "status": "candidate",
+          "artifact": {
+            "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-AF-V1.txt",
+            "bytes": 469,
+            "sha256": "2d55e469b1717a28af4b4ee3467fba2ecc5eca1df9083b23f233de60c158a337"
+          },
+          "subject": {
+            "offset": 9,
+            "bytes": 48,
+            "sha256": "eff70ec2b89aeeefbdd20ca96d0ab97f8040fbf5e5cd35c15025dff36f29e4e9"
+          },
+          "body": {
+            "offset": 59,
+            "bytes": 410,
+            "sha256": "15fe6d59eba72c7789f43cad06df720fa5b6cbb0cf48413051be6c739ce9fd90"
+          },
+          "proposed_copy_keys": {
+            "subject": "identity.recovery.completion_notice.email.subject",
+            "body": "identity.recovery.completion_notice.email.body"
+          }
+        }
+      ]
+    }
+  ],
+  "owner_decisions": [],
+  "locale_reviews": [],
+  "approval_events": [],
+  "review_requirements": {
+    "product": [
+      "each exact type, wording risk, boundaries and applicability"
+    ],
+    "content_media": [
+      "each exact proposed shared/locale identity, subject/body format, bytes, digests, token contract and applicability",
+      "exact non-secret support contact binding"
+    ],
+    "language": [
+      "English review of each exact EN V1 artifact",
+      "Afrikaans review of each exact AF V1 artifact"
+    ],
+    "approval_status": "PENDING; no decision or review is fabricated"
+  },
+  "lifecycle": {
+    "state": "candidate",
+    "proposed_states": [
+      "candidate",
+      "development_approved",
+      "superseded",
+      "withdrawn"
+    ],
+    "promotion_guards": [
+      "current routed Product extension actually approved",
+      "attributable exact-bound Product and Content decisions",
+      "required exact-byte locale reviews",
+      "complete paired EN/AF artifacts and typed token contracts",
+      "approved support contact binding for completion notice",
+      "no conflicting, unverifiable or stale evidence",
+      "separate owning implementation and delivery proof before activation"
+    ],
+    "history": "append-only; changed locale bytes require a successor locale-version proposal and fresh approval",
+    "replay": "identical exact-bound decisions are idempotent; changed reuse or conflicts stop new use for owner reconciliation",
+    "terminal_for_new_use": [
+      "superseded",
+      "withdrawn"
+    ],
+    "restart_reconciliation": "re-read complete current owner decisions, exact bytes and eligibility before new use; queued/provider/browser state cannot preserve authority"
+  },
+  "security": {
+    "rendered_bearer_values_present": false,
+    "participant_identifiers_present": false,
+    "credentials_present": false,
+    "provider_or_audit_recovery_authority": false,
+    "recovery_or_privacy_authority_created": false,
+    "proof_independent_manual_verification_authorized": false
+  },
+  "authority_refs": [
+    {
+      "document_id": "PLATFORM_PRODUCT_LAW",
+      "path": "docs/governance/product/00_PLATFORM_v1.15.0.md",
+      "sha256": "c7f5510817028d28edd4eb29e71b9150e13d0354cccf1af23666e067e0eed0b8"
+    },
+    {
+      "document_id": "PRODUCT_DECISIONS",
+      "path": "docs/governance/product/01_DECISIONS_v1.15.0.md",
+      "sha256": "db57b0b73ed9faf8f3ade458c01d0d4798e4c2401172a35b9a1ad129ce8ae8d4"
+    },
+    {
+      "document_id": "FP001_IDENTITY_ACCESS_JIT",
+      "path": "docs/delivery/jit/identity/FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.3.0.md",
+      "sha256": "400bea9d56ed0e8cc07a9ae3a774978f876b961fcf3d90af549d9478b16d3ea5"
+    },
+    {
+      "document_id": "FP001_COMMUNICATIONS_JIT",
+      "path": "docs/delivery/jit/communications/FP-001_COMMUNICATIONS_JIT_DOMAIN_DOSSIER_WORKING_v0.1.0.md",
+      "sha256": "435228cf1c0657c7e1865201086f3582b2e4e295e19612ec8b20fc51ea39ddeb"
+    },
+    {
+      "document_id": "FP001_AUDIT_EVIDENCE_JIT",
+      "path": "docs/delivery/jit/audit-evidence/FP-001_AUDIT_EVIDENCE_JIT_DOMAIN_DOSSIER_WORKING_v0.1.0.md",
+      "sha256": "069ee7ff8d609cf166fb91831453feff401e5b0c8b455927b39f366462c5af85"
+    },
+    {
+      "document_id": "CONTENT_MEDIA_JIT",
+      "path": "docs/delivery/content-evidence/content_media/NEWYOU_CM_PREJIT_CONTRACT_WORKING_v0.1.0.md",
+      "sha256": "91b9c9b470adabae43aa9e64c5b114c85b052b68147c825125365c19fa7a1c8f"
+    }
+  ]
+}

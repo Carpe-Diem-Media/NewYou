@@ -9,10 +9,8 @@ defmodule NewYou.Proof.CatalogTest do
     assert length(required.coverage_inventory) == 10
     assert required.coverage_inventory == Catalog.coverage_inventory()
 
-    assert Map.keys(required.business_manifests) |> Enum.sort() ==
-             Enum.sort(
-               ~w(registration_pmr_reconciliation audit_e1 audit_e2 browser_spine proof_capability_scanner_replay_supersession session_login_revocation_restart)
-             )
+    assert Enum.sort(Map.keys(required.business_manifests)) ==
+             Enum.sort(Catalog.coverage_inventory())
 
     assert length(required.self_test.cases) == 50
 
@@ -62,7 +60,7 @@ defmodule NewYou.Proof.CatalogTest do
   test "manifest lookup distinguishes unavailable inventory from unknown identifiers" do
     assert {:error, :unknown_coverage} = Catalog.lookup_manifest("unknown", "case.one")
 
-    assert {:error, :missing_manifest} =
+    assert {:error, :unknown_case} =
              Catalog.lookup_manifest("recovery_primary_email_change", "case.one")
 
     assert {:error, :unknown_case} = Catalog.lookup_manifest("harness", "unknown.case")
@@ -86,8 +84,8 @@ defmodule NewYou.Proof.CatalogTest do
                &(get_in(Catalog.required().business_manifests, [&1, :scope]) == :complete)
              )
 
-    assert :missing_manifest in result.errors
-    assert :missing_family in result.errors
+    assert :missing_case in result.errors
+    assert result.missing_families == []
     assert :unknown_case in result.errors
   end
 
@@ -118,8 +116,8 @@ defmodule NewYou.Proof.CatalogTest do
 
     result = Catalog.validate_registrations(registrations, :tb001)
 
-    assert :missing_manifest in result.errors
-    assert :missing_family in result.errors
+    assert :missing_case in result.errors
+    assert result.missing_families == []
 
     self_test = Catalog.validate_registrations([], :harness_self_test)
     assert :missing_self_test_registration in self_test.errors

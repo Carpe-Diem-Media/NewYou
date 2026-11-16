@@ -146,3 +146,9 @@ Documentation impact: this existing handoff is updated because the current-law
 reader behavior changed. No separate vertical-slice handoff is required. The
 source paths and test names above are review locators; reviewers must verify
 them against the exact PR head.
+
+## WELL-110 Product successor compatibility
+
+At implementation source `c33ab1e00dc19e07003a0f1cae3481fb1e8e1737`, [MagicLoginMessage](../../lib/new_you/content/magic_login_message.ex) retains the fixed WELL-97 historical approval checks and the WELL-98 v1.15 lineage, then requires the exact current v1.16 Product and Decision routes and WELL-110 recovery classification proposal. The allowlist admits only those named files. The approved magic-login packet and message bytes remain unchanged. A stale or changed route, source, predecessor or proposal fails closed. This is development-content compatibility, with no production or provider authority.
+
+The combined [magic-login](../../test/new_you/content/magic_login_message_test.exs) and [password-reset](../../test/new_you/content/password_reset_message_test.exs) reader suite passed 27 tests locally after the route change. The same suite failed on both readers before the compatibility correction. Hosted CI and independent review are tracked on the PR, not certified by this note.

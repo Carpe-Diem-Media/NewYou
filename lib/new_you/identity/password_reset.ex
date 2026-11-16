@@ -290,6 +290,30 @@ defmodule NewYou.Identity.PasswordReset do
     end
 
     defp revoke_sessions(id) do
+      active_session_jtis =
+        Session
+        |> Ash.Query.filter(account_id == ^id and state == :active)
+        |> Ash.Query.sort(:id)
+        |> Ash.read!(authorize?: false)
+        |> Enum.map(& &1.token_jti)
+        |> Enum.uniq()
+
+      linked_tokens =
+        case active_session_jtis do
+          [] ->
+            %{}
+
+          jtis ->
+            Token
+            |> Ash.Query.filter(account_id == ^id and jti in ^jtis)
+            |> Ash.Query.sort(:jti)
+            |> Ash.Query.lock(:for_update)
+            |> Ash.read!(authorize?: false)
+            |> Map.new(&{&1.jti, &1})
+        end
+
+      # Account-level security writes lock related Token rows before Sessions.
+      # Keep password reset aligned with primary-email apply and recovery.
       sessions =
         Session
         |> Ash.Query.filter(account_id == ^id and state == :active)
@@ -299,8 +323,8 @@ defmodule NewYou.Identity.PasswordReset do
 
       Enum.each(sessions, fn session ->
         # Invalidate only linked authentication authority, never other purposes.
-        case token(session.token_jti, true) do
-          {:ok, %Token{purpose: "user"} = linked} ->
+        case Map.get(linked_tokens, session.token_jti) do
+          %Token{purpose: "user"} = linked ->
             Ash.update!(linked, %{}, action: :revoke_authentication, authorize?: false)
 
           _ ->

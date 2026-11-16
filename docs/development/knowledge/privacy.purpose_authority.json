@@ -1,0 +1,1038 @@
+{
+  "schema_version": 1,
+  "capability_id": "privacy.purpose_authority",
+  "purpose": "Provide a minimal Privacy-owned, operation-bound purpose and terminal withdrawal record for P8-17 current-authority proof, plus one Analytics-owned, identifier-free aggregate projection with a Privacy source revision. Neither feature is participant consent or a production email-change requirement.",
+  "implementing_tickets": [
+    "WELL-18",
+    "WELL-19"
+  ],
+  "implementation_revision": {
+    "git_sha": "aa53cc48220d7cb15091c5f5899a18b487290f90",
+    "semantics": "WELL-18 introduces proof-only Privacy state, immutable transition history, and a locked current-authority read at Identity's protected mutation boundary. WELL-19 adds authority-negative evidence and one identifier-free, eventually consistent Analytics aggregate. Privacy returns the allowed count and a sum of owner-managed authority versions; grants create version 1, terminal withdrawals increment it, and the Resource exposes no delete action, so the sum increases for every supported source mutation. The snapshot computes the allowed count and owner-version sum in one PostgreSQL Ash aggregate query, returning only the minimized values. The projection schema reserves a fixed production key used by the development rebuild; each test proof fixture receives a separate opaque key and cleanup deletes only that fixture\u2019s row. Production has no rebuild path or purpose for this proof. The database constraint accepts the production key or the validated test-key form. Analytics skips an older upsert after a newer source revision has committed. The projection is not a current-authority read. The map is refreshed against committed source and is not governing authority. Fixture setup now protects partial initialization with cleanup that restores test environment and projection-key state even when setup fails. Concurrent rebuild proof workers are always released and settled before fixture teardown. PostgreSQL's initial-state and lifecycle guards reject caller-selected Authority versions even if the internal Ash action receives one. A regression test attempts invalid create and withdrawal versions and confirms the persisted Privacy revision advances only for the supported grant. PostgreSQL also enforces a non-negative Analytics privacy revision, with a regression proving a direct SQL update to -1 is rejected. The Signals proof delivers a forged repeated verification claim through the application's Phoenix PubSub, passes its fabricated proof through Identity.verify_email/1, and confirms Identity rejects it without changing verification, security version, or Session count. WELL-19 hardening observes the tables written during each synchronous Analytics rebuild and rejects foreign NewYou commands with a bounded AST check. Persisted jobs run through Oban execution, rollback on injected failure, retry the same obligation, and complete only with owner evidence. A stale message job completes with its intent closed and no delivery attempt. Fixture cleanup retries once through its guardian and reports persistent failure; it removes only its own opaque projection key and derived executor queue. Migration rollback removes validated test-key projections before restoring the fixed-key constraint, preserving the reserved aggregate. The bounded Analytics checker rejects conflicting aliases and module receiver bindings rather than allowing a later lexical scope to hide an earlier foreign command. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes only shared browser proof evidence. The stale-session browser now checks the approved confirmed-logout page instead of a 204 response before verifying next-request denial. The browser wrapper reports only allowlisted failure codes. Privacy authority, withdrawal, owner mutation guards, Analytics and the proof inventory are unchanged."
+  },
+  "authoritative_domain": "NewYou.Privacy",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Identity",
+      "interface": "Identity.apply_primary_email_change/1 calls NewYou.Privacy.require_current_p817_proof_purpose_locked/2 inside the owning Account transaction when the development/test proof gate is enabled.",
+      "ownership": "Identity alone owns Account, Session, Token and primary-email mutation. It reads current Privacy authority and never stores a copied permission or performs Privacy writes.",
+      "source_ids": [
+        "identity_integration",
+        "identity_mutation"
+      ]
+    },
+    {
+      "domain": "NewYou.Analytics",
+      "interface": "Analytics.rebuild_p817_privacy_projection/0 reads Privacy.current_p817_proof_purpose_snapshot/0 and conditionally upserts its own derived aggregate using the Privacy revision. Development uses the projection\u2019s reserved production key; test proof fixtures use separate opaque keys for scoped cleanup, and production has no rebuild path or purpose for this proof.",
+      "ownership": "Analytics owns only the derived aggregate row. Privacy remains authoritative for allowed/withdrawn purpose state, and Analytics has no source-domain command interface.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_count_interface"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Privacy",
+      "resource": "NewYou.Privacy.PurposeAuthority",
+      "actions": [
+        "read",
+        "grant_proof_only (development/test only)",
+        "withdraw_proof_only (development/test only)"
+      ],
+      "caller_boundary": "Privacy-owned Ash Resource and owner functions; allowed-to-withdraw is terminal, and the current row is locked for Identity's authoritative re-read.",
+      "source_ids": [
+        "privacy_domain",
+        "authority"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "resource": "NewYou.Privacy.PurposeEvent",
+      "actions": [
+        "read",
+        "record_transition (development/test only)"
+      ],
+      "caller_boundary": "Append-only Privacy-owned evidence of grant and withdrawal version; it never authorizes an Identity mutation.",
+      "source_ids": [
+        "privacy_domain",
+        "events"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.Account",
+      "actions": [
+        "apply_primary_email_change"
+      ],
+      "caller_boundary": "Identity owns the source mutation and obtains current Privacy authority inside its same PostgreSQL transaction before applying the canonical email change.",
+      "source_ids": [
+        "identity_mutation",
+        "identity_integration"
+      ]
+    },
+    {
+      "domain": "NewYou.Analytics",
+      "resource": "NewYou.Analytics.P817PrivacyProjection",
+      "actions": [
+        "read (private)",
+        "rebuild (private, development/test only)"
+      ],
+      "caller_boundary": "Analytics exposes one development/test rebuild function that reads a minimized Privacy count and revision, then upserts only its own projection when its source revision is at least as new as the stored revision. Development uses the projection\u2019s reserved production key; test proof fixtures use opaque per-fixture keys. Production has no rebuild path or purpose for this proof. The resource stores no subject or operation identifiers and has no source-domain write action.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Privacy",
+      "function": "grant_p817_proof_purpose",
+      "arity": 2,
+      "visibility": "internal",
+      "arguments": [
+        "Identity Account UUID and primary-email operation UUID."
+      ],
+      "returns": [
+        "{:ok, :allowed | :already_allowed} or a closed Privacy error.",
+        "A withdrawn operation cannot be regranted."
+      ],
+      "side_effects": [
+        "Development/test only: create one operation-bound allowed authority row and version-1 grant event through Privacy Ash actions in one transaction."
+      ],
+      "caller_constraints": [
+        "This synthetic purpose is a proof fixture, not participant consent, registration acceptance or production policy."
+      ],
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "events"
+      ]
+    },
+    {
+      "module": "NewYou.Privacy",
+      "function": "withdraw_p817_proof_purpose",
+      "arity": 2,
+      "visibility": "internal",
+      "arguments": [
+        "Identity Account UUID and operation UUID for the existing proof-only authority."
+      ],
+      "returns": [
+        "{:ok, :withdrawn | :already_withdrawn}, {:error, :missing} when no current row exists, or a closed Privacy error."
+      ],
+      "side_effects": [
+        "Locks and transitions the Privacy row to withdrawn, increments its version and appends the matching immutable event atomically."
+      ],
+      "caller_constraints": [
+        "Development/test only. Missing records do not create negative state; no restoration transition exists."
+      ],
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "events"
+      ]
+    },
+    {
+      "module": "NewYou.Privacy",
+      "function": "require_current_p817_proof_purpose_locked",
+      "arity": 2,
+      "visibility": "internal",
+      "arguments": [
+        "Identity Account UUID and operation UUID while the source transaction includes PurposeAuthority."
+      ],
+      "returns": [
+        ":ok only for a current allowed row held FOR UPDATE; missing or withdrawn denies and unavailable reads fail closed."
+      ],
+      "side_effects": [
+        "Locks the durable Privacy current-state row through the same Repo transaction as the source mutation; no Identity copy or cache is written."
+      ],
+      "caller_constraints": [
+        "Caller must already be inside the Identity authoritative transaction; a request-start or UI read is insufficient."
+      ],
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "identity_integration"
+      ]
+    },
+    {
+      "module": "NewYou.Identity.PrimaryEmailChange",
+      "function": "apply",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Persisted primary-email operation UUID."
+      ],
+      "returns": [
+        "Existing Identity apply result; proof-gated negative or unavailable Privacy authority maps to the existing unavailable result."
+      ],
+      "side_effects": [
+        "After existing Identity Account, Session, Token, proof, delay and review checks, re-reads and locks current Privacy authority immediately before target mutation."
+      ],
+      "caller_constraints": [
+        "The P8-17 check exists only in development/test and only when the dedicated proof flag is enabled; ordinary primary-email change does not require new consent."
+      ],
+      "source_ids": [
+        "identity_mutation",
+        "identity_integration"
+      ]
+    },
+    {
+      "module": "NewYou.Privacy",
+      "function": "current_p817_proof_purpose_count",
+      "arity": 0,
+      "visibility": "supported",
+      "arguments": [],
+      "returns": [
+        "{:ok, non_neg_integer()} or {:error, :privacy_authority_unavailable}; production returns the unavailable result."
+      ],
+      "side_effects": [
+        "Counts only current allowed rows for the fixed synthetic P8-17 purpose through Privacy's Ash Resource. It returns no subject or operation identifiers."
+      ],
+      "caller_constraints": [
+        "Privacy owns this minimized count. Analytics uses the snapshot interface with a source revision for its projection; neither read grants authority or establishes participant consent."
+      ],
+      "source_ids": [
+        "privacy_domain",
+        "privacy_count_interface"
+      ]
+    },
+    {
+      "module": "NewYou.Analytics",
+      "function": "rebuild_p817_privacy_projection",
+      "arity": 0,
+      "visibility": "supported",
+      "arguments": [],
+      "returns": [
+        ":ok or {:error, :privacy_authority_unavailable | :analytics_projection_unavailable}; production returns {:error, :analytics_projection_unavailable}."
+      ],
+      "side_effects": [
+        "Reads Privacy's current allowed count and source revision, then upserts the production/development fixed-key Analytics row or the current test fixture's row only when the incoming revision is at least the stored revision. Privacy read failures and Analytics projection failures have distinct error atoms; unexpected exceptions propagate for diagnosis. Repeated or stale rebuilds do not write source Domains."
+      ],
+      "caller_constraints": [
+        "The projection is derived-only, eventually consistent between rebuilds, and contains no identity or source-operation identifiers. It cannot restore Privacy authority or decide current suppression."
+      ],
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_count_interface"
+      ]
+    },
+    {
+      "module": "NewYou.Privacy",
+      "function": "current_p817_proof_purpose_snapshot",
+      "arity": 0,
+      "visibility": "supported",
+      "arguments": [],
+      "returns": [
+        "{:ok, %{current_allowed_count: non_neg_integer(), revision: non_neg_integer()}} or {:error, :privacy_authority_unavailable}; production returns the unavailable result."
+      ],
+      "side_effects": [
+        "Reads only the fixed synthetic P8-17 purpose state and versions through Privacy's Ash Resource. The revision sums owner-managed row versions; the returned snapshot contains no subject or operation identifiers."
+      ],
+      "caller_constraints": [
+        "Analytics uses the snapshot only as derived input. Privacy remains authoritative for current suppression and authorization."
+      ],
+      "source_ids": [
+        "privacy_domain",
+        "privacy_snapshot_interface"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261113181815_well_18_privacy_purpose_authority.exs",
+      "tables": [
+        "privacy_purpose_authorities",
+        "privacy_purpose_events"
+      ],
+      "constraints": [
+        "privacy_purpose_authorities_one_operation_purpose_index",
+        "privacy_purpose_authorities_state",
+        "privacy_purpose_authorities_lifecycle_guard",
+        "privacy_purpose_events_one_transition_per_version_index",
+        "privacy_purpose_events_immutable",
+        "privacy_purpose_events_provenance"
+      ],
+      "source_ids": [
+        "privacy_migration"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261113222000_well_18_privacy_initial_state_guard.exs",
+      "tables": [
+        "privacy_purpose_authorities"
+      ],
+      "constraints": [
+        "privacy_purpose_authorities_initial_state"
+      ],
+      "source_ids": [
+        "privacy_initial_state_migration"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261113192700_well_18_privacy_purpose_event_completeness.exs",
+      "tables": [
+        "privacy_purpose_authorities",
+        "privacy_purpose_events"
+      ],
+      "constraints": [
+        "privacy_purpose_authorities_require_event"
+      ],
+      "source_ids": [
+        "privacy_event_migration"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261114125357_p8_18_analytics_projection.exs",
+      "tables": [
+        "p817_privacy_projections"
+      ],
+      "constraints": [
+        "p817_privacy_projections_single_key",
+        "p817_privacy_projections_non_negative_count",
+        "p817_privacy_projections_single_projection_index"
+      ],
+      "source_ids": [
+        "analytics_migration"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261114154132_p8_18_analytics_projection_revision.exs",
+      "tables": [
+        "p817_privacy_projections"
+      ],
+      "constraints": [
+        "privacy_revision"
+      ],
+      "source_ids": [
+        "analytics_revision_migration"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261114173506_p8_18_test_projection_scope.exs",
+      "tables": [
+        "p817_privacy_projections"
+      ],
+      "constraints": [
+        "p817_privacy_projections_valid_key"
+      ],
+      "source_ids": [
+        "analytics_fixture_scope_migration",
+        "migration_identity_test"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261114183535_p8_18_privacy_revision_guard.exs",
+      "tables": [
+        "p817_privacy_projections"
+      ],
+      "constraints": [
+        "p817_privacy_projections_non_negative_revision"
+      ],
+      "source_ids": [
+        "analytics_revision_guard_migration"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "Registration persists Terms and Privacy version acceptance under Identity; a successful registration leaves the separate operation-bound Privacy proof purpose missing.",
+      "source_ids": [
+        "registration_test",
+        "owner_test"
+      ]
+    },
+    {
+      "summary": "A development/test fixture asks the Privacy owner to grant the synthetic purpose for an existing Identity operation; a separate Privacy owner call may withdraw it.",
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "events",
+        "owner_test"
+      ]
+    },
+    {
+      "summary": "Identity's source transaction locks Account, Token and Session authority, then obtains a current FOR UPDATE read from Privacy immediately before its protected mutation.",
+      "source_ids": [
+        "identity_mutation",
+        "identity_integration",
+        "privacy_domain"
+      ]
+    },
+    {
+      "summary": "Analytics reads Privacy's minimized allowed count and monotonic source revision, then conditionally upserts its own aggregate. Development uses the projection\u2019s reserved production key; test proof fixtures use isolated opaque keys. Production has no rebuild path or purpose for this proof. A delayed older rebuild cannot replace a newer committed revision; the projection may still lag until a rebuild runs.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_snapshot_interface"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "missing",
+      "allowed",
+      "withdrawn (terminal)"
+    ],
+    "transitions": [
+      {
+        "from_state": "missing",
+        "to_state": "allowed",
+        "guards": [
+          "Only the Privacy-owned development/test proof fixture can create this exact synthetic purpose and origin for one subject and source operation.",
+          "PostgreSQL rejects initial state other than allowed at version 1, even when a matching withdrawn event is supplied.",
+          "The unique subject/purpose/source-operation key prevents a second competing current row."
+        ],
+        "side_effects": [
+          "Create current authority at version 1 and append the matching granted event in one Ash transaction."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "privacy_domain",
+          "authority",
+          "events",
+          "privacy_migration",
+          "privacy_initial_state_migration"
+        ]
+      },
+      {
+        "from_state": "allowed",
+        "to_state": "withdrawn (terminal)",
+        "guards": [
+          "Privacy locks the current authority row; the only accepted state change is allowed to withdrawn with exactly one version increment.",
+          "PostgreSQL lifecycle guards reject regrant, delete, truncate, provenance edits and version skips."
+        ],
+        "side_effects": [
+          "Update current Privacy state and append the matching withdrawn event atomically."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "privacy_domain",
+          "authority",
+          "events",
+          "privacy_migration",
+          "owner_test"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Privacy owns the purpose/withdrawal row and event history. Identity reads the current result but does not store a competing grant or write Privacy truth.",
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "events",
+        "identity_integration"
+      ]
+    },
+    {
+      "summary": "The only stored purpose and origin are the P8-17 synthetic protected-mutation proof and its fixture origin; both owner writes and Identity enforcement are development/test gated.",
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "events",
+        "identity_integration"
+      ]
+    },
+    {
+      "summary": "Registration Terms/Privacy acceptance is distinct from purpose-specific permission; registration alone leaves the proof purpose missing.",
+      "source_ids": [
+        "registration_test",
+        "owner_test"
+      ]
+    },
+    {
+      "summary": "Missing, withdrawn, negative or unavailable current Privacy authority fails closed. The affected Identity operation does not accept browser, Session, operator, cache or workflow permission snapshots.",
+      "source_ids": [
+        "privacy_domain",
+        "identity_integration",
+        "identity_mutation",
+        "race_test"
+      ]
+    },
+    {
+      "summary": "The Analytics projection stores only the aggregate count and Privacy source revision sampled during an explicit rebuild. The projection schema reserves a fixed production key used by development, while test fixtures use validated opaque keys and remove only their own row. Production has no rebuild path or purpose for this proof. The resource stores no subject, account or operation identifier, has no action that mutates source truth, and cannot overwrite a newer committed source revision. It may lag after source changes; Privacy remains authoritative for current suppression.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_snapshot_interface",
+        "analytics_revision_test",
+        "p818_test"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Identity locks Account, sorted related Token rows and Session rows before locking the Privacy current-purpose row. Privacy withdrawal locks only the purpose row, so the selected path has no reverse Account/Token/Session lock dependency.",
+      "source_ids": [
+        "identity_mutation",
+        "privacy_domain",
+        "authority"
+      ]
+    },
+    {
+      "summary": "Both source mutation and withdrawal contend on the same PostgreSQL Privacy row. If withdrawal commits first, Identity reads withdrawn and denies; if Identity locks and commits first, withdrawal waits and records a later withdrawal.",
+      "source_ids": [
+        "identity_integration",
+        "privacy_domain",
+        "race_test",
+        "reverse_order_test"
+      ]
+    },
+    {
+      "summary": "Overlapping Analytics rebuilds may read different Privacy snapshots. The upsert compares the incoming revision with the stored revision and skips a stale write; the regression test commits a newer withdrawal projection before releasing an older rebuild.",
+      "source_ids": [
+        "privacy_snapshot_interface",
+        "analytics_domain",
+        "analytics_projection",
+        "analytics_revision_test"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Grant and withdrawal retries return stable existing states; grant after terminal withdrawal is denied and cannot recreate a positive row.",
+      "source_ids": [
+        "privacy_domain",
+        "owner_test",
+        "grant_race_test"
+      ]
+    },
+    {
+      "summary": "A denied Identity apply retry re-reads current Privacy state; a fresh BEAM process after withdrawal remains denied, while a source mutation that serialized first is already applied and is not undone by later withdrawal.",
+      "source_ids": [
+        "identity_integration",
+        "identity_mutation",
+        "race_test",
+        "reverse_order_test",
+        "restart_test"
+      ]
+    },
+    {
+      "summary": "Each Analytics rebuild rereads Privacy's current allowed rows and revision, then upserts the reserved development aggregate or the current test fixture's aggregate. Equal revisions carry the same source count; stale revisions leave the newer projection intact. The family-9 proof withdraws rows in reverse order, repeats the rebuild, and confirms terminal withdrawals cannot be regranted or reappear.",
+      "source_ids": [
+        "analytics_domain",
+        "privacy_snapshot_interface",
+        "p818_proof",
+        "p818_test",
+        "analytics_revision_test"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "A missing row denies, and an unavailable Privacy owner read maps to the existing Identity unavailable result without source mutation or downstream apply consequences.",
+      "source_ids": [
+        "privacy_domain",
+        "identity_integration",
+        "owner_test",
+        "race_test"
+      ]
+    },
+    {
+      "summary": "Purpose state is read from PostgreSQL by a fresh process after restart; no process-local flag, cached projection, browser state, Session or Audit record can restore withdrawn permission.",
+      "source_ids": [
+        "privacy_domain",
+        "restart_test",
+        "restart_probe",
+        "identity_mutation"
+      ]
+    },
+    {
+      "summary": "A failed Privacy snapshot or Analytics upsert returns a closed unavailable result. An older snapshot skipped by the revision guard returns successfully without changing the current projection. The projection retains no input identifiers that could restore source authority or participant data.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_snapshot_interface",
+        "analytics_revision_test"
+      ]
+    },
+    {
+      "summary": "Fixture teardown retains tracked identities until cleanup succeeds, then acknowledges recovery. One guardian retry handles a transient failure. Persistent failure marks cleanup unconfirmed and fails a returning callback; an original callback error is preserved. Global test environment and process keys are restored in either case. Executor queue cleanup is scoped to the fixture UUID.",
+      "source_ids": [
+        "p805_fixture",
+        "fixture_recovery_test"
+      ]
+    },
+    {
+      "summary": "The test-key migration rollback deletes only exact validated test-key projections before reinstating the single fixed key. A populated isolated-schema rollback test preserves the reserved aggregate and verifies that new test keys are rejected afterward. Shared DEV and TEST schemas are not rolled back.",
+      "source_ids": [
+        "analytics_fixture_scope_migration",
+        "analytics_rollback_test"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "cases": [
+        "Registration acceptance leaves authority missing.",
+        "Privacy creates allowed state and versioned grant history.",
+        "Withdrawal is terminal, appends matching immutable history, and cannot be regranted or deleted.",
+        "Withdrawing a missing operation returns missing and does not create negative authority.",
+        "A current locked read rejects withdrawn authority and a fresh process reads durable withdrawal.",
+        "PostgreSQL rejects both an authority grant and withdrawal that lack their version-matched event at transaction commit.",
+        "PostgreSQL rejects an initial withdrawn authority even when matching history is supplied.",
+        "Concurrent first-time grants serialize through the unique operation key and resolve against one committed allowed row and one event.",
+        "Ash proof actions cannot commit caller-selected authority versions; database guards preserve the monotonic revision."
+      ],
+      "proves": "The Privacy owner actions and PostgreSQL constraints preserve operation-bound current truth and transition history.",
+      "limits": "Owner operations are synthetic development/test proof fixtures; this does not implement participant consent UX or legal-purpose policy.",
+      "source_ids": [
+        "owner_test",
+        "privacy_domain",
+        "privacy_migration",
+        "privacy_initial_state_migration",
+        "privacy_event_migration",
+        "event_completeness_test",
+        "grant_race_test",
+        "initial_state_test"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "cases": [
+        "Initial RED: missing current purpose did not deny before implementation.",
+        "Withdrawal commits before source's locked current read, then mutation and stale retry deny without apply consequences.",
+        "Source transaction locks current allowed state first; PostgreSQL reports real withdrawal contention and source commits before later withdrawal.",
+        "Unavailable owner read fails closed.",
+        "Fresh BEAM retry after committed withdrawal denies."
+      ],
+      "proves": "The Identity source transaction and Privacy withdrawal serialize on the same durable PostgreSQL authority row in both commit orders.",
+      "limits": "The selected primary-email mutation is only gated by the synthetic purpose in development/test when the dedicated proof flag is enabled; no production consent requirement is introduced.",
+      "source_ids": [
+        "source_test",
+        "race_test",
+        "reverse_order_test",
+        "restart_test",
+        "identity_mutation",
+        "privacy_domain",
+        "email_scenarios"
+      ]
+    },
+    {
+      "path": "test/new_you/proof/p8_18_test.exs",
+      "cases": [
+        "The complete seven-case family-9 manifest registers distinct owner invariants and deterministic assertion IDs.",
+        "Provider evidence, stale browser/session state, Audit records and persisted Oban jobs cannot transition the sampled source-owned facts. A replayed PubSub claim is rejected by the Identity interface; registered Ash Signal producers and listeners are absent.",
+        "Each explicit Analytics rebuild reads the current Privacy count and revision, stores no identifiers, and suppresses withdrawn state across reverse-order and repeated rebuilds.",
+        "A delayed older Analytics rebuild cannot replace a newer committed Privacy withdrawal projection.",
+        "Test fixture cleanup deletes only its own Analytics projection row.",
+        "The real ARC-029 application scan is clean and negative fixtures reject every required bypass class, parser errors fail closed, and narrow exceptions remain accepted.",
+        "The shared P8-04 runner emits machine-readable completed PASS results for every P8-18 case without certifying the full Phase-8 matrix.",
+        "Fixture setup failure restores the previous Analytics key and test environment.",
+        "Overlapping rebuild workers are released and settled even when an assertion fails.",
+        "The P8-18 projection proof reads the Analytics row through the current fixture key.",
+        "The shared P8-04 runner preserves a pre-existing provider override after its provider proof.",
+        "A direct SQL write cannot store a negative Analytics privacy revision.",
+        "A forged replayed verification event crosses the actual PubSub transport but Identity.verify_email/1 rejects the fabricated proof without changing verification, security version, or Sessions.",
+        "Privacy returns the exact allowed count and revision sum from one database-side COUNT/SUM query.",
+        "An actual Identity.register write injected into the Analytics rebuild makes its proof fail. An unrelated worker failure also makes the executor proof fail.",
+        "Oban telemetry confirms actual execution; stored jobs establish queued, executing, retryable and completed states. Cleanup removes the fixture queue and preserves an unrelated queue.",
+        "Conflicting variable, module-attribute and alias bindings cannot hide an earlier foreign owner command from the Analytics checker."
+      ],
+      "proves": "Seven P8-18 cases register 51 deterministic assertions. They exercise owner-bound authority negatives, current Privacy suppression, concurrent rebuild ordering, persisted executor lifecycle and bounded ARC-029 command checks.",
+      "limits": "The suite samples supported synchronous owner paths. It is not a general Elixir sandbox or a certification of future signal consumers, the complete TB-001 matrix, Phase 8 or Phase 9.",
+      "source_ids": [
+        "p818_manifest",
+        "p818_proof",
+        "p818_test",
+        "analytics_revision_test",
+        "p818_architecture_checker",
+        "p818_architecture_test",
+        "p818_browser",
+        "p818_browser_owner_interface",
+        "proof_catalog",
+        "p805_fixture",
+        "migration_identity_test",
+        "analytics_revision_guard_migration"
+      ]
+    },
+    {
+      "path": "test/new_you/proof/fixture_connection_test.exs",
+      "cases": [
+        "A transient teardown failure retries through the guardian and removes a real projection row while preserving the callback error.",
+        "A persistent failure raises after a successful callback and marks connection and lock cleanup false in the real P8-18 runner.",
+        "Setup failure and borrowed-connection loss restore fixture state."
+      ],
+      "proves": "Fixture recovery is bounded and cleanup failure cannot produce a successful case.",
+      "limits": "Deterministic failure hooks exercise TEST-only cleanup; tests are serialized because the fixture restores application environment.",
+      "source_ids": [
+        "p805_fixture",
+        "fixture_recovery_test"
+      ]
+    },
+    {
+      "path": "test/tools/architecture/analytics_projection_rollback_test.exs",
+      "cases": [
+        "Apply and roll back the test-key migration in a unique schema with both fixed and test-key rows."
+      ],
+      "proves": "Rollback succeeds with valid fixture rows, preserves the fixed aggregate, and reinstates the fixed-key constraint.",
+      "limits": "Uses the actual migration runner in an isolated TEST schema; it does not roll back shared databases.",
+      "source_ids": [
+        "analytics_fixture_scope_migration",
+        "analytics_rollback_test"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "A future production purpose requires its own approved purpose semantics and Privacy-owned interface before it can use this demonstration; P8-17 does not create one.",
+      "source_ids": [
+        "privacy_domain",
+        "authority",
+        "identity_integration"
+      ]
+    },
+    {
+      "summary": "Privacy is registered as an Ash domain but is explicitly outside Identity reconciliation; an additional unreviewed domain still blocks reconciliation apply.",
+      "source_ids": [
+        "reconciliation_scope",
+        "reconciliation_guard_test"
+      ]
+    },
+    {
+      "summary": "Analytics is registered only to host its derived projection. Identity reconciliation explicitly treats it as a non-owning derived Domain, while unknown Domains continue to fail closed.",
+      "source_ids": [
+        "analytics_domain",
+        "reconciliation_scope",
+        "reconciliation_guard_test"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Reuse the existing NewYou.Repo PostgreSQL Ash transaction and Identity P8-16 Account/Token/Session lock sequence; do not add a service, cache, Repo or write API.",
+      "source_ids": [
+        "privacy_domain",
+        "identity_mutation",
+        "authority"
+      ]
+    },
+    {
+      "summary": "The certified Phase-7B Privacy dossier disposition remains NOT_REQUIRED; this implementation records only its source-linked code capability map.",
+      "source_ids": [
+        "privacy_domain",
+        "phase7b"
+      ]
+    },
+    {
+      "summary": "Analytics uses the existing Ash Domain/resource pattern and NewYou.Repo. Its only input is a count from Privacy's current owner Resource, and its only write targets its own derived projection. Development uses the projection\u2019s reserved fixed production key; tests isolate fixture rows with validated opaque keys. Production has no rebuild path or purpose for this proof.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "privacy_count_interface"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Do not infer purpose permission from registration acceptance or copy a positive Privacy result into Account, Session, operator view, workflow or another Domain.",
+      "source_ids": [
+        "registration_test",
+        "privacy_domain",
+        "identity_integration"
+      ]
+    },
+    {
+      "summary": "Do not use an unlocked request-start read, cache, process state, Audit evidence or derived projection as authority at Identity's mutation boundary.",
+      "source_ids": [
+        "privacy_domain",
+        "identity_integration",
+        "identity_mutation"
+      ]
+    },
+    {
+      "summary": "Do not expand the proof into a consent centre, production primary-email consent rule, legal-basis engine, deletion/export orchestration or a new Privacy dossier.",
+      "source_ids": [
+        "privacy_domain",
+        "identity_integration",
+        "phase7b"
+      ]
+    },
+    {
+      "summary": "Do not use the Analytics aggregate as Identity, Privacy, Content, Communications or Audit authority. Do not add source commands, subject identifiers, a broad Analytics platform or a new Analytics dossier.",
+      "source_ids": [
+        "analytics_domain",
+        "analytics_projection",
+        "phase7b"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "The demonstration purpose and its grant/withdraw actions compile only for development/test; the Identity apply guard is likewise test/development-only and flag-controlled.",
+    "PostgreSQL order is proven using separate local TEST connections and observed pg_blocking_pids contention. The proof does not model cross-region database failures.",
+    "Unavailable owner-read behavior is exercised with the established deterministic test seam; it does not simulate every physical database outage mode.",
+    "The proof does not establish a production legal consent requirement and does not alter the certified Privacy JIT dossier disposition.",
+    "The P8-18 Analytics projection is an eventually consistent count of the synthetic P8-17 purpose rebuilt only in development/test. The schema reserves a fixed production key used by development; test fixtures use separate validated opaque keys and scoped teardown. Production has no rebuild path or purpose for this proof. It contains no participant identifiers, is not a current-authority read, and cannot decide authorization or suppression; Privacy remains authoritative. It does not certify the complete TB-001 or Phase-8 proof matrix.",
+    "P8-18 provides the family-9 result for later P8-19 integration; it does not itself declare Phase-8 PASS or authorize Phase 9.",
+    "No Ash Signal producers or listeners are registered in the configured Domains. The Signals case inventories that absence and exercises PubSub transport plus direct Identity verification rejection. A future consumer requires its own mutation-boundary and replay proof.",
+    "The Analytics write observer inspects current-process Repo query telemetry for synchronous rebuilds. It records table names without query parameters. The architecture checker covers static calls, imports, aliases and module bindings, but does not prove arbitrary metaprogramming, spawned workers, external services or database triggers safe. New mechanisms require new proof.",
+    "WELL-134 refreshes only shared browser proof evidence. The stale-session browser now checks the approved confirmed-logout page instead of a 204 response before verifying next-request denial. The browser wrapper reports only allowlisted failure codes. Privacy authority, withdrawal, owner mutation guards, Analytics and the proof inventory are unchanged."
+  ],
+  "follow_up_tickets": [],
+  "sources": [
+    {
+      "id": "privacy_domain",
+      "path": "lib/new_you/privacy.ex",
+      "symbol": "defmodule NewYou.Privacy",
+      "sha256": "355c81a487c9ca14a138b8bae731f30ed104340500dbc95b8cb6a50d22f369df"
+    },
+    {
+      "id": "authority",
+      "path": "lib/new_you/privacy/purpose_authority.ex",
+      "symbol": "defmodule NewYou.Privacy.PurposeAuthority",
+      "sha256": "a0b47f86f9e63e0fd86d39a8496de6a19f4bf6c88c5534dfce82bb52dd40b4c9"
+    },
+    {
+      "id": "events",
+      "path": "lib/new_you/privacy/purpose_event.ex",
+      "symbol": "defmodule NewYou.Privacy.PurposeEvent",
+      "sha256": "bfbb25c242138ac25e8ad6866db1a8c548122da67f19bb2cad02c7f2c7c6e9e1"
+    },
+    {
+      "id": "identity_integration",
+      "path": "lib/new_you/identity/primary_email_change.ex",
+      "symbol": "current_privacy_proof_purpose",
+      "sha256": "517c5dc55343c0dec5a3f22f63112109230c6088baf4b668d1f610c97a9e69f5"
+    },
+    {
+      "id": "identity_mutation",
+      "path": "lib/new_you/identity/primary_email_change.ex",
+      "symbol": "defp apply_current",
+      "sha256": "517c5dc55343c0dec5a3f22f63112109230c6088baf4b668d1f610c97a9e69f5"
+    },
+    {
+      "id": "reconciliation_scope",
+      "path": "lib/new_you/identity/reconciliation.ex",
+      "symbol": "defp owner_reviews(current)",
+      "sha256": "5a71867420a439318517569d4369b2b653534e2ea611c757242ecdc32ce8c1ef"
+    },
+    {
+      "id": "reconciliation_guard_test",
+      "path": "test/new_you/identity/reconciliation_test.exs",
+      "symbol": "unreviewed new Domain blocks apply instead of assuming its consequences",
+      "sha256": "6a532cd7ccc6a3f2a584e2ae3ba926e9b4728504227e69c4a327866eca1af049"
+    },
+    {
+      "id": "privacy_migration",
+      "path": "priv/repo/migrations/20261113181815_well_18_privacy_purpose_authority.exs",
+      "symbol": "privacy_purpose_authorities_lifecycle_guard",
+      "sha256": "9908d3da4f586b53b686b30e18d18821f9acc8086248a9522000792b7cd153eb"
+    },
+    {
+      "id": "privacy_event_migration",
+      "path": "priv/repo/migrations/20261113192700_well_18_privacy_purpose_event_completeness.exs",
+      "symbol": "privacy_purpose_authorities_require_event",
+      "sha256": "ce27f698889fa5d5e5c4e578fe5e7d2b0d85cc9997927a282fe42d08c2075995"
+    },
+    {
+      "id": "privacy_initial_state_migration",
+      "path": "priv/repo/migrations/20261113222000_well_18_privacy_initial_state_guard.exs",
+      "symbol": "privacy_purpose_authorities_initial_state_guard",
+      "sha256": "3acf10a8a634bf7e6891937cbd3755fe21cb19e35443809a090edc8b7138b5a6"
+    },
+    {
+      "id": "event_completeness_test",
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "symbol": "PostgreSQL rejects an authority transition without its matching event",
+      "sha256": "8715a040aa86258433007ac4e0950b07ff3b58cedf40301ebc1373d1ca306d53"
+    },
+    {
+      "id": "initial_state_test",
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "symbol": "PostgreSQL rejects an initial withdrawn authority even with matching history",
+      "sha256": "8715a040aa86258433007ac4e0950b07ff3b58cedf40301ebc1373d1ca306d53"
+    },
+    {
+      "id": "owner_test",
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "symbol": "defmodule NewYou.Privacy.PurposeAuthorityTest",
+      "sha256": "8715a040aa86258433007ac4e0950b07ff3b58cedf40301ebc1373d1ca306d53"
+    },
+    {
+      "id": "grant_race_test",
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "symbol": "concurrent first grants resolve to one current authority and one event",
+      "sha256": "8715a040aa86258433007ac4e0950b07ff3b58cedf40301ebc1373d1ca306d53"
+    },
+    {
+      "id": "source_test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "proof-only protected mutation denies when current Privacy authority is missing",
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
+    },
+    {
+      "id": "race_test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "committed Privacy withdrawal wins before Identity's current mutation check",
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
+    },
+    {
+      "id": "reverse_order_test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "Identity mutation committed first serializes before Privacy withdrawal",
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
+    },
+    {
+      "id": "restart_test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "withdrawn Privacy authority remains denied after a fresh BEAM restart",
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
+    },
+    {
+      "id": "restart_probe",
+      "path": "test/proof/p8_17_privacy_restart.exs",
+      "symbol": "P817_RESTART_DENIED",
+      "sha256": "7f10fd40ff26c1e861d9cafb60bbc61600f818ed411d4a3fce80a74d70fa3e58"
+    },
+    {
+      "id": "registration_test",
+      "path": "test/new_you/privacy/purpose_authority_test.exs",
+      "symbol": "proof-only purpose records positive authority, terminal withdrawal and immutable history",
+      "sha256": "8715a040aa86258433007ac4e0950b07ff3b58cedf40301ebc1373d1ca306d53"
+    },
+    {
+      "id": "phase7b",
+      "path": "docs/delivery/proof/fp-001/FP-001_PHASE_7B_RECONCILIATION_WORKING_v0.1.0.md",
+      "symbol": "NOT_REQUIRED",
+      "sha256": "3120893c526336bbb7c301e800312dc9f7a999038ae91f20e9ff4169d76e1a3c"
+    },
+    {
+      "id": "analytics_domain",
+      "path": "lib/new_you/analytics.ex",
+      "symbol": "defmodule NewYou.Analytics",
+      "sha256": "4b2df5014e0da4411a5179c8512fbce2bb4c048df5f5e03f6b487b50f1aa37b7"
+    },
+    {
+      "id": "analytics_projection",
+      "path": "lib/new_you/analytics/p817_privacy_projection.ex",
+      "symbol": "defmodule NewYou.Analytics.P817PrivacyProjection",
+      "sha256": "cfd3828d6b29e23f50b17302a491022de5d4cd33875f7f8b600f5f1e4ab0546d"
+    },
+    {
+      "id": "privacy_count_interface",
+      "path": "lib/new_you/privacy.ex",
+      "symbol": "current_p817_proof_purpose_count",
+      "sha256": "355c81a487c9ca14a138b8bae731f30ed104340500dbc95b8cb6a50d22f369df"
+    },
+    {
+      "id": "analytics_migration",
+      "path": "priv/repo/migrations/20261114125357_p8_18_analytics_projection.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.P818AnalyticsProjection",
+      "sha256": "8ab2feab1604f8c32e4e91ea5d847f3ed899cac82037bd7ff359c9b8e2a3cec1"
+    },
+    {
+      "id": "p818_manifest",
+      "path": "test/support/proof/p8_18_catalog.ex",
+      "symbol": "defmodule NewYou.Proof.P818Catalog",
+      "sha256": "ce70a029b577ae301eace8018558666e3088b4c5b660b7334156d01c021fc21b"
+    },
+    {
+      "id": "p818_proof",
+      "path": "test/support/proof/p8_18.ex",
+      "symbol": "defmodule NewYou.Proof.P818",
+      "sha256": "8029475e62bd7dc2925dd3219bb9e99149132b9333ed3f69b8e0dc27d7eb2f9c"
+    },
+    {
+      "id": "p818_test",
+      "path": "test/new_you/proof/p8_18_test.exs",
+      "symbol": "defmodule NewYou.Proof.P818Test",
+      "sha256": "3ee49f36a43baf5a659bb4f35e0bfaf3c20cec024ef1012d61353813b63c69c5"
+    },
+    {
+      "id": "p818_architecture_checker",
+      "path": "tools/architecture/ash_write_boundary.ex",
+      "symbol": "check_app(root",
+      "sha256": "2d5a01df83fc20d8513f7de711da54dd3d39c0ca7bd56a3b261191b1b29b00d6"
+    },
+    {
+      "id": "p818_architecture_test",
+      "path": "test/tools/architecture/ash_write_boundary_test.exs",
+      "symbol": "defmodule NewYou.Architecture.AshWriteBoundaryTest do",
+      "sha256": "da5e8fd732b8d383441bef95438489c618196e781c6adc5b3de0e4fd76175d5c"
+    },
+    {
+      "id": "p818_browser",
+      "path": "test/proof/p8_05_browser.mjs",
+      "symbol": "input.mode === 'stale_session'",
+      "sha256": "0738d5c69e0651dffb3b7ec0fef7f422eca3b2843f9d3415c71619528995a52b"
+    },
+    {
+      "id": "p818_browser_owner_interface",
+      "path": "test/support/proof/p8_05_browser.ex",
+      "symbol": "def run_stale_session(request, locale) do",
+      "sha256": "16c5f3723bf32b6dde0a7ff10c436fea683c2e794de35ad415deabc88390162d"
+    },
+    {
+      "id": "proof_catalog",
+      "path": "test/support/proof/catalog.ex",
+      "symbol": "def compiled_business_registrations,",
+      "sha256": "b96321ff5293696cce9e182d57f9835eb19778c068c148ec9a13956b066734e2"
+    },
+    {
+      "id": "privacy_snapshot_interface",
+      "path": "lib/new_you/privacy.ex",
+      "symbol": "current_p817_proof_purpose_snapshot",
+      "sha256": "355c81a487c9ca14a138b8bae731f30ed104340500dbc95b8cb6a50d22f369df"
+    },
+    {
+      "id": "analytics_revision_migration",
+      "path": "priv/repo/migrations/20261114154132_p8_18_analytics_projection_revision.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.P818AnalyticsProjectionRevision",
+      "sha256": "e94442dba60013e84db940677a09054e10b5538022711a9fb4cc1bdeb3577ec8"
+    },
+    {
+      "id": "analytics_revision_test",
+      "path": "test/new_you/proof/p8_18_test.exs",
+      "symbol": "a stale overlapping Analytics rebuild cannot replace a newer Privacy snapshot",
+      "sha256": "3ee49f36a43baf5a659bb4f35e0bfaf3c20cec024ef1012d61353813b63c69c5"
+    },
+    {
+      "id": "analytics_fixture_scope_migration",
+      "path": "priv/repo/migrations/20261114173506_p8_18_test_projection_scope.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.P818TestProjectionScope",
+      "sha256": "1ddfba5391066db8fd960dac72fec879c1910446796d7b1ecb104fd40778cf90"
+    },
+    {
+      "id": "p805_fixture",
+      "path": "test/support/proof/p8_05.ex",
+      "symbol": "defmodule NewYou.Proof.P805",
+      "sha256": "f3a99510c4b0370607ebb2d1af09bcb2eb940c3d026b2d656d7db16e53684bed"
+    },
+    {
+      "id": "migration_identity_test",
+      "path": "test/tools/architecture/migration_identity_test.exs",
+      "symbol": "defmodule NewYou.Architecture.MigrationIdentityTest",
+      "sha256": "93593ad0c8f8b9e364fd427752be3abfe91c2f24757211f8ab7d2e710ec93f0d"
+    },
+    {
+      "id": "analytics_revision_guard_migration",
+      "path": "priv/repo/migrations/20261114183535_p8_18_privacy_revision_guard.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.P818PrivacyRevisionGuard",
+      "sha256": "839f8afa1077a5026cd3444bc07a45086baed1679a40599ff4ccb714b5d0dbbd"
+    },
+    {
+      "id": "fixture_recovery_test",
+      "path": "test/new_you/proof/fixture_connection_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureConnectionTest",
+      "sha256": "40f6729fa820bdbba06f7c27ffbf5f48df90c22899bfccc7c7c8d490d68fb762"
+    },
+    {
+      "id": "analytics_rollback_test",
+      "path": "test/tools/architecture/analytics_projection_rollback_test.exs",
+      "symbol": "defmodule NewYou.Architecture.AnalyticsProjectionRollbackTest",
+      "sha256": "7a4c274f494de3d83e5e301c186dd138332e8558ad752fa822bc30d4e4a3fb2f"
+    },
+    {
+      "id": "email_scenarios",
+      "path": "test/support/proof/email_change_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
+      "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
+    }
+  ]
+}

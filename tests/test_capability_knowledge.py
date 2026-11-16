@@ -32,6 +32,40 @@ class CapabilityKnowledgeTests(unittest.TestCase):
         changed=copy.deepcopy(self.sample);changed['interfaces'][0]['source_ids']=['invented']
         with self.assertRaises(ValueError):self.knowledge.validate_map(changed,self.root)
 
+    def test_zero_arity_public_interfaces_allow_empty_arguments(self):
+        changed=copy.deepcopy(self.sample)
+        changed['interfaces'][0]['arity']=0
+        changed['interfaces'][0]['arguments']=[]
+        self.knowledge.validate_map(changed,self.root)
+
+    def test_interface_schema_constrains_argument_descriptions_to_arity(self):
+        schema = self.knowledge.loads(self.knowledge.SCHEMA.read_text())
+        interface_rule = schema['properties']['interfaces']['items']
+        invalid = [(0, ['unexpected']), (2, [])]
+        for arity, arguments in invalid:
+            interface = copy.deepcopy(self.sample['interfaces'][0])
+            interface['arity'] = arity
+            interface['arguments'] = arguments
+            with self.subTest(arity=arity, arguments=arguments), self.assertRaises(ValueError):
+                self.knowledge.validate(interface, interface_rule, schema)
+
+        for arity, arguments in [(0, []), (2, ['first argument', 'second argument'])]:
+            interface = copy.deepcopy(self.sample['interfaces'][0])
+            interface['arity'] = arity
+            interface['arguments'] = arguments
+            with self.subTest(arity=arity, arguments=arguments):
+                self.knowledge.validate(interface, interface_rule, schema)
+
+    def test_argument_descriptions_are_empty_only_for_zero_arity(self):
+        for arity, arguments in [(0, ['unexpected']), (2, [])]:
+            changed=copy.deepcopy(self.sample)
+            changed['interfaces'][0]['arity']=arity
+            changed['interfaces'][0]['arguments']=arguments
+            with self.subTest(arity=arity, arguments=arguments), self.assertRaisesRegex(
+                ValueError, 'arguments'
+            ):
+                self.knowledge.validate_map(changed,self.root)
+
     def test_invented_table_or_unlinked_migration_refuses(self):
         changed=copy.deepcopy(self.sample);changed['persistence'][1]['tables']=['invented_table']
         with self.assertRaises(ValueError):self.knowledge.validate_map(changed,self.root)

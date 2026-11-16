@@ -149,3 +149,9 @@ The next required gate is independent Master Gate review of the exact PR head an
 - `test/support/proof/p8_12.ex`
 - `test/support/proof/p8_12_catalog.ex`
 - `tests/test_foundation_smoke.py`
+
+## WELL-110 Product successor compatibility
+
+At implementation source `c33ab1e00dc19e07003a0f1cae3481fb1e8e1737`, [PasswordResetMessage](../../lib/new_you/content/password_reset_message.ex) retains the exact WELL-98 historical packet, Product/Decision predecessor and proposal checks, and requires the named v1.16 successor routes, file digests, predecessor lineage and WELL-110 recovery classification proposal. The existing exact EN/AF content and no-fallback checks remain in force. A changed, duplicate or stale current route or altered source fails closed. This correction grants no production or provider authority.
+
+The combined [password-reset](../../test/new_you/content/password_reset_message_test.exs) and [magic-login](../../test/new_you/content/magic_login_message_test.exs) reader suite passed 27 tests locally after the route change. The same suite failed on both readers before the compatibility correction. Hosted CI and independent review are tracked on the PR, not certified by this note.

@@ -28,9 +28,25 @@ defmodule NewYouWeb.PlatformNameTest do
 
   test "the page title uses the configured platform name", %{conn: conn} do
     original = Application.fetch_env!(:new_you, :platform_name)
-    on_exit(fn -> Application.put_env(:new_you, :platform_name, original) end)
-    Application.put_env(:new_you, :platform_name, "Example Public Name")
+    previous_entry = Application.fetch_env(:new_you, :fp001_development_entry)
 
-    assert html_response(get(conn, ~p"/"), 200) =~ ">Example Public Name</title>"
+    on_exit(fn ->
+      Application.put_env(:new_you, :platform_name, original)
+
+      case previous_entry do
+        {:ok, value} -> Application.put_env(:new_you, :fp001_development_entry, value)
+        :error -> Application.delete_env(:new_you, :fp001_development_entry)
+      end
+    end)
+
+    Application.put_env(:new_you, :platform_name, "Example Public Name")
+    Application.put_env(:new_you, :fp001_development_entry, true)
+
+    title =
+      NewYouWeb.CopyRegistry.text!("identity.registration.title", "en", %{
+        "platform_name" => "Example Public Name"
+      })
+
+    assert html_response(get(conn, ~p"/"), 200) =~ ">#{title}</title>"
   end
 end

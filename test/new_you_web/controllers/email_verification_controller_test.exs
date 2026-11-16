@@ -1,7 +1,7 @@
 defmodule NewYouWeb.EmailVerificationControllerTest do
   use ExUnit.Case, async: false
+  import NewYou.Proof.VerificationScannerCases
   import Phoenix.ConnTest
-  import Plug.Conn
   import ExUnit.CaptureLog
 
   alias NewYou.Identity
@@ -92,70 +92,7 @@ defmodule NewYouWeb.EmailVerificationControllerTest do
   end
 
   test "GET, HEAD, previews, scanners and prefetch are passive; real CSRF POST verifies EN/AF" do
-    for locale <- ["en", "af"] do
-      P805.with_fixture(fn ->
-        {:ok, registration} = Identity.register(P805.request())
-        before = P805.counts()
-
-        url =
-          "/verification/confirm?" <>
-            URI.encode_query(%{proof: registration.verification_proof, locale: locale})
-
-        for {method, headers} <- [
-              {:get, []},
-              {:head, []},
-              {:get, [{"purpose", "prefetch"}]},
-              {:get, [{"sec-purpose", "prefetch;prerender"}]},
-              {:get, [{"user-agent", "MailScanner/1.0 link-preview"}]}
-            ] do
-          request =
-            Enum.reduce(headers, build_conn(), fn {k, v}, conn -> put_req_header(conn, k, v) end)
-
-          conn = dispatch(request, @endpoint, method, url)
-          assert conn.status == 200
-          assert before == P805.counts()
-          refute account(registration).email_verified?
-          assert :ok = no_login(conn)
-          assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
-          assert get_resp_header(conn, "cache-control") == ["no-store"]
-        end
-
-        page = get(build_conn(), url)
-
-        assert get_resp_header(page, "content-security-policy") == [
-                 "default-src 'none'; style-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
-               ]
-
-        [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
-
-        missing =
-          build_conn()
-          |> put_private(:plug_skip_csrf_protection, false)
-          |> post("/verification/confirm", %{
-            proof: registration.verification_proof,
-            locale: locale
-          })
-
-        assert missing.status == 403
-        refute account(registration).email_verified?
-
-        confirmed =
-          page
-          |> recycle()
-          |> put_private(:plug_skip_csrf_protection, false)
-          |> post("/verification/confirm", %{
-            proof: registration.verification_proof,
-            locale: locale,
-            _csrf_token: csrf
-          })
-
-        assert confirmed.status == 200
-        assert account(registration).email_verified?
-        refute confirmed.resp_body =~ registration.verification_proof
-        assert :ok = no_login(confirmed)
-        assert before == P805.counts()
-      end)
-    end
+    NewYou.Proof.VerificationScannerCases.scanner()
   end
 
   test "disabled fixtures, unsupported locale, provider requests and public invalid results fail safely" do
@@ -224,13 +161,5 @@ defmodule NewYouWeb.EmailVerificationControllerTest do
         Application.put_env(:new_you, :verification_development_fixtures, previous)
       end
     end)
-  end
-
-  defp account(registration),
-    do: Ash.get!(Identity.Account, registration.account_id, authorize?: false)
-
-  defp no_login(conn) do
-    assert Enum.all?(Map.keys(get_session(conn)), &(&1 == "_csrf_token"))
-    :ok
   end
 end

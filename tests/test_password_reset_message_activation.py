@@ -25,6 +25,7 @@ class PasswordResetMessageActivationTests(unittest.TestCase):
             Path("docs/governance"),
             Path("docs/delivery/CURRENT_DELIVERY_ROUTER.json"),
             evidence.APPROVED_PACKET_PATH.parent,
+            Path("docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md"),
             Path("docs/delivery/content-evidence/copy/COPY_INVENTORY.md"),
             Path("docs/delivery/content-evidence/copy/COPY_REGISTRY.json"),
             Path("docs/delivery/content-evidence/copy/REVIEW_REPORT.md"),

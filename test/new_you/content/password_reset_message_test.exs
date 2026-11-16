@@ -41,6 +41,49 @@ defmodule NewYou.Content.PasswordResetMessageTest do
     end
   end
 
+  test "rejects corrupted successor authority and approval proposal", %{root: root} do
+    for path <- [
+          "docs/governance/product/00_PLATFORM_v1.16.0.md",
+          "docs/governance/product/01_DECISIONS_v1.16.0.md",
+          "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
+          "docs/governance/product/proposals/well-98/00_PLATFORM_v1.15.0_PROPOSED.md"
+        ] do
+      full_path = Path.join(root, path)
+      original = File.read!(full_path)
+      File.write!(full_path, original <> "\n")
+      assert {:error, :content_ineligible} = PasswordResetMessage.binding("en")
+      File.write!(full_path, original)
+    end
+  end
+
+  test "rejects duplicate, stale, or altered current authority routes", %{root: root} do
+    path = Path.join(root, "docs/governance/CURRENT_GOVERNANCE_ROUTER.json")
+    original = File.read!(path)
+    router = Jason.decode!(original)
+
+    product =
+      Enum.find(router["governing_documents"], &(&1["document_id"] == "PLATFORM_PRODUCT_LAW"))
+
+    variants = [
+      router["governing_documents"] ++ [product],
+      Enum.map(router["governing_documents"], fn item ->
+        if item["document_id"] == "PLATFORM_PRODUCT_LAW",
+          do: Map.put(item, "semver", "1.15.0"),
+          else: item
+      end),
+      Enum.map(router["governing_documents"], fn item ->
+        if item["document_id"] == "PRODUCT_DECISIONS",
+          do: Map.put(item, "sha256", String.duplicate("0", 64)),
+          else: item
+      end)
+    ]
+
+    for documents <- variants do
+      File.write!(path, Jason.encode!(%{router | "governing_documents" => documents}))
+      assert {:error, :content_ineligible} = PasswordResetMessage.binding("af")
+    end
+  end
+
   test "rejects unsupported locales without fallback" do
     for locale <- ["en-GB", "af-ZA", "zu", ""] do
       assert {:error, :content_ineligible} = PasswordResetMessage.binding(locale)

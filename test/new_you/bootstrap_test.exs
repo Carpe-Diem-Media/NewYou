@@ -13,9 +13,11 @@ defmodule NewYou.BootstrapTest do
     assert Application.fetch_env!(:new_you, :ecto_repos) == [NewYou.Repo]
 
     assert Application.fetch_env!(:new_you, :ash_domains) == [
+             NewYou.Analytics,
              NewYou.Communications,
              NewYou.Identity,
-             NewYou.Audit
+             NewYou.Audit,
+             NewYou.Privacy
            ]
   end
 
@@ -55,10 +57,10 @@ defmodule NewYou.BootstrapTest do
     assert result.rows == [[true, 20_261_022_104_847]]
   end
 
-  test "tests do not serve Tidewave or start an HTTP listener" do
+  test "tests do not serve Tidewave, start an HTTP listener or implicitly enable public entry" do
     refute NewYouWeb.Endpoint.config(:server)
     refute Code.ensure_loaded?(Tidewave)
     conn = Phoenix.ConnTest.build_conn() |> NewYouWeb.Endpoint.call([])
-    assert conn.status == 200
+    assert conn.status == 404
   end
 end

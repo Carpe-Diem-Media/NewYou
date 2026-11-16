@@ -1,0 +1,1331 @@
+{
+  "schema_version": 1,
+  "capability_id": "identity.recovery",
+  "purpose": "Bounded Phase-8 graduated recovery through Identity, Communications, Content and Audit owners. Ordinary verified-email recovery and proof-backed stronger manual recovery are distinct from password reset; zero-factor completion is denied.",
+  "implementing_tickets": [
+    "WELL-16"
+  ],
+  "implementation_revision": {
+    "git_sha": "63274439676ef18db0be25f2b50f613408f1187d",
+    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged."
+  },
+  "authoritative_domain": "NewYou.Identity",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Communications",
+      "interface": "establish_recovery/1, establish_recovery_notice/1, bind_recovery_content/1 (internal), execute/1",
+      "ownership": "Immutable source-bound MessageIntent and exact render snapshot, DeliveryAttempt/provider reconciliation; no recovery authority.",
+      "source_ids": [
+        "communications",
+        "executor",
+        "intent"
+      ]
+    },
+    {
+      "domain": "Content & Media",
+      "interface": "RecoveryMessage.binding/2, eligible/1, support_contact/0",
+      "ownership": "Exact WELL-110 immutable EN/AF development content and current approval revalidation; no sender or Identity authority.",
+      "source_ids": [
+        "content"
+      ]
+    },
+    {
+      "domain": "NewYou.Audit",
+      "interface": "admit_recovery/1, establish_identity_security_obligation/1",
+      "ownership": "Independent E1 admission and linked E2 evidence obligations/scheduling; never a recovery command.",
+      "source_ids": [
+        "audit",
+        "evidence"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.RecoveryCase",
+      "actions": [
+        "request",
+        "await_proof",
+        "accept_proof",
+        "require_review",
+        "record_review",
+        "finish",
+        "fail",
+        "expire",
+        "cancel",
+        "submit_recovery_proof",
+        "complete_recovery",
+        "approve_manual_recovery",
+        "complete_manual_recovery",
+        "cancel_recovery"
+      ],
+      "caller_boundary": "Private policies deny general callers; trusted Identity interfaces execute guarded owner actions.",
+      "source_ids": [
+        "case",
+        "identity",
+        "recovery",
+        "manual"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.Token",
+      "actions": [
+        "issue_recovery",
+        "consume_recovery",
+        "revoke_recovery"
+      ],
+      "caller_boundary": "Existing Identity proof authority; no additional token store.",
+      "source_ids": [
+        "token",
+        "recovery"
+      ]
+    },
+    {
+      "domain": "NewYou.Communications",
+      "resource": "NewYou.Communications.MessageIntent",
+      "actions": [
+        "establish_recovery",
+        "establish_recovery_notice",
+        "bind_recovery_content",
+        "execute_delivery"
+      ],
+      "caller_boundary": "Owning Communications interface. Content/source/provider guards remain independent of persisted intent.",
+      "source_ids": [
+        "communications",
+        "intent",
+        "executor"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Identity",
+      "function": "request_recovery",
+      "arity": 3,
+      "visibility": "supported",
+      "arguments": [
+        "Email, exact en/af locale and immutable request operation UUID."
+      ],
+      "returns": [
+        "Always :ok neutral acknowledgement; this does not prove issuance or Account existence."
+      ],
+      "side_effects": [
+        "Account-first durable bounded request; create or reuse current case and current proof/intent if permitted. No security restriction from an anonymous request."
+      ],
+      "caller_constraints": [
+        "Development proof gate; never log input or transient proof."
+      ],
+      "source_ids": [
+        "identity",
+        "recovery"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "submit_recovery_proof",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Purpose-bound bearer and proof-acceptance UUID."
+      ],
+      "returns": [
+        "{:ok, :accepted | :failed | :expired} or {:error, :recovery_unavailable}."
+      ],
+      "side_effects": [
+        "Token consumption and matching assurance transition share a transaction; justified stronger hold and E2 may also commit."
+      ],
+      "caller_constraints": [
+        "Explicit mutation only. GET/HEAD never calls this action."
+      ],
+      "source_ids": [
+        "identity",
+        "recovery",
+        "controller"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "complete_recovery",
+      "arity": 3,
+      "visibility": "supported",
+      "arguments": [
+        "Accepted recovery bearer, replacement password and completion UUID."
+      ],
+      "returns": [
+        "{:ok, :completed | :already_completed | :failed | :expired} or unavailable."
+      ],
+      "side_effects": [
+        "Guarded credential/security change and required owner consequences commit atomically; no login Session."
+      ],
+      "caller_constraints": [
+        "Ordinary assurance only; higher-assurance cases require governed manual action."
+      ],
+      "source_ids": [
+        "identity",
+        "recovery"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "complete_manual_recovery",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Current credentials/grant, case ID/version, reason, operation UUID and password."
+      ],
+      "returns": [
+        "{:ok, :completed | :already_completed} or unavailable."
+      ],
+      "side_effects": [
+        "Current scoped stronger two-person authority and E1 before protected completion; source-linked outcome."
+      ],
+      "caller_constraints": [
+        "Staff authorization alone is never claimant identity; zero-factor case fails closed."
+      ],
+      "source_ids": [
+        "identity",
+        "manual"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261110154314_graduated_recovery.exs",
+      "tables": [
+        "recovery_cases",
+        "accounts",
+        "tokens",
+        "message_intents",
+        "evidence_obligations",
+        "evidence_records"
+      ],
+      "constraints": [
+        "evidence_obligations_evidence_type",
+        "evidence_obligations_security_shape",
+        "evidence_records_assertion_shape",
+        "message_intents_role",
+        "message_intents_role_purpose_schema",
+        "message_intents_content_binding",
+        "recovery_cases_state",
+        "recovery_cases_assurance",
+        "recovery_cases_terminal",
+        "recovery_cases_completion",
+        "recovery_cases_account_id_fkey",
+        "recovery_cases_completion_operation_index",
+        "recovery_cases_request_operation_index",
+        "recovery_cases_active_account_index"
+      ],
+      "source_ids": [
+        "migration_20261110154314"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261110154755_recovery_constraints.exs",
+      "tables": [
+        "recovery_cases",
+        "tokens",
+        "identity_grants"
+      ],
+      "constraints": [
+        "identity_grants_scope",
+        "recovery_cases_locale",
+        "recovery_cases_version",
+        "tokens_recovery_metadata",
+        "tokens_recovery_case_proof_index",
+        "tokens_recovery_case_id_fkey"
+      ],
+      "source_ids": [
+        "migration_20261110154755"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261110160000_recovery_guards.exs",
+      "tables": [
+        "recovery_cases",
+        "accounts",
+        "evidence_obligations",
+        "evidence_records"
+      ],
+      "constraints": [
+        "identity_recovery_guard",
+        "identity_recovery_immutable",
+        "identity_recovery_account_guard",
+        "accounts_recovery_guard",
+        "audit_recovery_result_guard",
+        "audit_recovery_result_binding"
+      ],
+      "source_ids": [
+        "migration_20261110160000"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261110160037_recovery_proof_shape.exs",
+      "tables": [
+        "recovery_cases",
+        "tokens"
+      ],
+      "constraints": [
+        "recovery_cases_proof_shape",
+        "tokens_recovery_metadata"
+      ],
+      "source_ids": [
+        "migration_20261110160037"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261110161000_preserve_legacy_admissions.exs",
+      "tables": [
+        "evidence_records"
+      ],
+      "constraints": [
+        "evidence_records_assertion_shape"
+      ],
+      "source_ids": [
+        "migration_20261110161000"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261110162802_recovery_approval_admission.exs",
+      "tables": [
+        "evidence_obligations",
+        "evidence_records"
+      ],
+      "constraints": [
+        "evidence_obligations_security_shape",
+        "audit_recovery_result_guard"
+      ],
+      "source_ids": [
+        "migration_20261110162802"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261110163533_recovery_hold_evidence.exs",
+      "tables": [
+        "evidence_obligations"
+      ],
+      "constraints": [
+        "evidence_obligations_security_shape"
+      ],
+      "source_ids": [
+        "migration_20261110163533"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261110163700_recovery_hold_causation.exs",
+      "tables": [
+        "recovery_cases",
+        "accounts",
+        "evidence_obligations"
+      ],
+      "constraints": [
+        "audit_recovery_hold_cause_guard",
+        "audit_recovery_hold_cause"
+      ],
+      "source_ids": [
+        "migration_20261110163700"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261110172234_scope_recovery_assurance.exs",
+      "tables": [
+        "recovery_cases",
+        "accounts",
+        "tokens"
+      ],
+      "constraints": [
+        "identity_recovery_guard",
+        "identity_recovery_account_guard",
+        "audit_recovery_hold_cause_guard"
+      ],
+      "source_ids": [
+        "migration_20261110172234"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261112181942_recovery_content_binding.exs",
+      "tables": [
+        "message_intents"
+      ],
+      "constraints": [
+        "message_intents_content_binding"
+      ],
+      "source_ids": [
+        "migration_20261112181942"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261112182053_recovery_terminal_metadata.exs",
+      "tables": [
+        "recovery_cases"
+      ],
+      "constraints": [
+        "recovery_cases_terminal"
+      ],
+      "source_ids": [
+        "migration_20261112182053"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "Neutral request locks Account and creates/reuses one durable case. Missing verified channel remains case-only held at zero assurance.",
+      "source_ids": [
+        "recovery"
+      ]
+    },
+    {
+      "summary": "Identity issues the existing Token and Communications obligation transactionally. Exact current approved content binds when available; otherwise the obligation remains held.",
+      "source_ids": [
+        "recovery",
+        "token",
+        "communications",
+        "content"
+      ]
+    },
+    {
+      "summary": "Communications revalidates source and content, commits attempt admission and invocation fence, then invokes only the deterministic TEST provider outside any transaction. Unknown submission requires reconciliation.",
+      "source_ids": [
+        "executor",
+        "provider"
+      ]
+    },
+    {
+      "summary": "Passive link retrieval renders an explicit CSRF-protected confirmation form. Explicit POST consumes proof; a separate guarded password POST completes ordinary recovery.",
+      "source_ids": [
+        "controller",
+        "html",
+        "secrecy"
+      ]
+    },
+    {
+      "summary": "Completion atomically establishes credential/revocation consequences, receipt, security notice and E2 work. Manual exceptions first require independent E1. Delivery and Audit cannot execute recovery.",
+      "source_ids": [
+        "recovery",
+        "manual",
+        "audit",
+        "communications"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "requested",
+      "proof_pending",
+      "additional_assurance",
+      "held_manual_review",
+      "completed",
+      "failed",
+      "expired",
+      "cancelled"
+    ],
+    "transitions": [
+      {
+        "from_state": "requested",
+        "to_state": "proof_pending",
+        "guards": [
+          "Open active Account with verified channel; current required risk and one active case."
+        ],
+        "side_effects": [
+          "Issue existing Token proof and durable Communications intent; no Account restriction."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "recovery",
+          "case",
+          "token",
+          "communications"
+        ]
+      },
+      {
+        "from_state": "requested",
+        "to_state": "held_manual_review",
+        "guards": [
+          "No approved ordinary channel."
+        ],
+        "side_effects": [
+          "Case-only hold at zero assurance; no Account hold, Session/Device revocation or proof claim."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "held_manual_review",
+        "to_state": "proof_pending",
+        "guards": [
+          "Zero assurance, no proof/review; independent Identity email verification restores only the missing channel and binding matches."
+        ],
+        "side_effects": [
+          "Issue proof on the same case without reducing required assurance."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "proof_pending",
+        "to_state": "additional_assurance",
+        "guards": [
+          "Explicit signed current purpose-bound single-use proof, Account-first locks and exact current binding."
+        ],
+        "side_effects": [
+          "Atomically consume Token and record satisfied assurance and proof receipt."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "recovery",
+          "token",
+          "case"
+        ]
+      },
+      {
+        "from_state": "additional_assurance",
+        "to_state": "held_manual_review",
+        "guards": [
+          "Current Account risk requires stronger assurance; accepted claimant proof exists."
+        ],
+        "side_effects": [
+          "Justified Account hold, Session/Device revocation and truthful automatic-hold E2 share the transaction."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "recovery",
+          "account",
+          "evidence"
+        ]
+      },
+      {
+        "from_state": "held_manual_review",
+        "to_state": "held_manual_review",
+        "guards": [
+          "Accepted proof, Account hold, current scoped reviewer grant and step-up, case version, E1 admission."
+        ],
+        "side_effects": [
+          "Record case-bound reviewer authority and linked source outcome; no credential replacement."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "manual",
+          "privilege",
+          "evidence"
+        ]
+      },
+      {
+        "from_state": "additional_assurance",
+        "to_state": "completed",
+        "guards": [
+          "Current risk remains ordinary, required assurance one, accepted proof, new guarded password."
+        ],
+        "side_effects": [
+          "One credential replacement and Session/Device invalidation, receipt, durable notice and E2 scheduling commit together."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "account",
+          "communications",
+          "evidence"
+        ]
+      },
+      {
+        "from_state": "held_manual_review",
+        "to_state": "completed",
+        "guards": [
+          "Proof-backed assurance; current stronger scoped actor plus distinct current reviewer, independent committed E1, current hold and case binding."
+        ],
+        "side_effects": [
+          "Guarded credential replacement, revocation, completion receipt, notice and E1-linked E2 outcome. Independent Account hold remains."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "manual",
+          "recovery",
+          "privilege",
+          "evidence"
+        ]
+      },
+      {
+        "from_state": "requested",
+        "to_state": "failed",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "requested",
+        "to_state": "expired",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "requested",
+        "to_state": "cancelled",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "proof_pending",
+        "to_state": "failed",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "proof_pending",
+        "to_state": "expired",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "proof_pending",
+        "to_state": "cancelled",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "additional_assurance",
+        "to_state": "failed",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "additional_assurance",
+        "to_state": "expired",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "additional_assurance",
+        "to_state": "cancelled",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "held_manual_review",
+        "to_state": "failed",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "held_manual_review",
+        "to_state": "expired",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      },
+      {
+        "from_state": "held_manual_review",
+        "to_state": "cancelled",
+        "guards": [
+          "Owner guards require terminal failure, deadline expiry or authorized claimant cancellation; not a public anonymous Account command."
+        ],
+        "side_effects": [
+          "Append immutable history and termination metadata; revoke associated proof when present. Never release an independent Account hold."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "recovery",
+          "case"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Required and satisfied assurance never decrease within a case. The unsupported permanent Account-wide recovery floor was removed; new cases re-evaluate current Account risk.",
+      "source_ids": [
+        "case",
+        "recovery"
+      ]
+    },
+    {
+      "summary": "Anonymous or unverified requests create no Account hold, credential effect or Session/Device revocation. Zero-factor manual completion is denied.",
+      "source_ids": [
+        "recovery",
+        "manual"
+      ]
+    },
+    {
+      "summary": "Terminal cases never reopen and never automatically release a separately justified Account hold. MFA, email verification, Privacy and entitlement authority are not created by recovery.",
+      "source_ids": [
+        "case",
+        "recovery",
+        "manual"
+      ]
+    },
+    {
+      "summary": "Bearer values are serialized transiently from fixed existing Token claims, never ordinary intent fields, Audit, telemetry or job arguments. Exact email bytes are immutable; support contact is a non-secret render input.",
+      "source_ids": [
+        "recovery",
+        "token",
+        "executor",
+        "intent",
+        "secrecy"
+      ]
+    },
+    {
+      "summary": "Production and external delivery remain disabled. Current development content approval does not prove support-mailbox operability or provider permission.",
+      "source_ids": [
+        "content",
+        "provider",
+        "controller"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Account row locks precede recovery case and Token locks; account-wide Session/Device invalidation locks linked authentication Tokens by JTI before sorted Session and Device rows. Support actor/reviewer Accounts lock in stable order before scoped authority revalidation.",
+      "source_ids": [
+        "recovery",
+        "manual",
+        "privilege"
+      ]
+    },
+    {
+      "summary": "Unique active Account case/request/completion/proof indexes prevent parallel weaker authority. Genuine PostgreSQL races cover proof/completion, login/reset and fixture email commits.",
+      "source_ids": [
+        "case",
+        "token",
+        "concurrent_helper"
+      ]
+    },
+    {
+      "summary": "The actual Identity.apply_primary_email_change/1 interface and existing recovery completion serialize in genuine PostgreSQL transactions; WELL-17 proves both commit orders and stale-write denial.",
+      "source_ids": [
+        "identity",
+        "recovery",
+        "primary_email_change_test"
+      ]
+    },
+    {
+      "summary": "The Communications intent lock, one-active-attempt index and invocation marker serialize provider admission; uncertain calls cannot be retried as safe absence.",
+      "source_ids": [
+        "executor"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Request retries reuse the current case and cannot reduce assurance. Exact acceptance/completion IDs return durable receipts without repeating credential or notice/evidence effects.",
+      "source_ids": [
+        "recovery",
+        "case"
+      ]
+    },
+    {
+      "summary": "Communications causal identity rejects conflicting source retries. An unbound held recovery obligation can select current eligible exact content once under the intent lock; a previously bound snapshot cannot be replaced. Provider evidence is independently authenticated and replay controlled.",
+      "source_ids": [
+        "communications",
+        "intent",
+        "executor"
+      ]
+    },
+    {
+      "summary": "Manual review and completion re-read current scopes, step-up, Account hold and recorded independent approval after E1; stale authority cannot reuse prior admission as permission.",
+      "source_ids": [
+        "manual",
+        "privilege"
+      ]
+    },
+    {
+      "summary": "Passive confirmation renders the existing untrusted case UUID as a stable retry key only. A fresh browser explicitly POSTs again to recover the same accepted receipt without another case transition. GET never queries Identity or establishes proof; forged signatures cannot use the key to advance recovery.",
+      "source_ids": [
+        "controller",
+        "recovery",
+        "browser_test"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Returned errors/crash before source commit roll back Token, case, credentials and required consequences together. Existing P8-04 cut points prove interrupted transactions.",
+      "source_ids": [
+        "recovery",
+        "concurrent_helper"
+      ]
+    },
+    {
+      "summary": "E1 survives later failed source effects; durable E2 obligations and notices reconstruct independently of one Oban job or process.",
+      "source_ids": [
+        "manual",
+        "evidence",
+        "communications"
+      ]
+    },
+    {
+      "summary": "Fresh BEAM processes reconstruct case/proof/completion receipts from PostgreSQL. Consumed proof metadata is retained for durable completion and notice provenance.",
+      "source_ids": [
+        "token",
+        "concurrent_helper"
+      ]
+    },
+    {
+      "summary": "Content absence preserves held obligations. Restored eligibility permits a one-time initial content binding through the private Communications action without replaying Identity completion. Current source, content, rendering and provider guards still run before admission and invocation. Revoked proof closes without submission; crash after invocation remains ambiguous until authenticated evidence.",
+      "source_ids": [
+        "communications",
+        "intent",
+        "content",
+        "executor"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/identity/recovery_test.exs",
+      "cases": [
+        "Explicit proof and completion, assurance, anonymous restrictions, terminal/replay, hold causation, rollback and expiry."
+      ],
+      "proves": "Real owner actions and PostgreSQL constraints.",
+      "limits": "Synthetic fixtures; no released participant service.",
+      "source_ids": [
+        "lifecycle_test",
+        "recovery_scenarios"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/manual_recovery_test.exs",
+      "cases": [
+        "Current scoped step-up, distinct reviewer/actor, zero-factor denial, E1 before effect, failed source and hold-release independence."
+      ],
+      "proves": "Proof-backed higher-assurance positive and unsupported-factor negative paths.",
+      "limits": "Does not implement future lost-all-factor verification.",
+      "source_ids": [
+        "manual_test"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/recovery_concurrency_test.exs",
+      "cases": [
+        "Separate PostgreSQL transactions, duplicate proof/completion, stale login/reset/email fixture, hold escalation, crash and fresh BEAM restart."
+      ],
+      "proves": "Owner-side serialization and restart from durable truth.",
+      "limits": "This recovery-specific legacy test still uses a fixture email competitor; the real owner-interface integration is covered by the WELL-17 test below.",
+      "source_ids": [
+        "concurrency_test"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "cases": [
+        "Actual apply-versus-recovery PostgreSQL transactions in both commit orders."
+      ],
+      "proves": "Recovery and canonical-email apply serialize through their owning Identity interfaces; stale competing writes cannot overwrite the committed winner.",
+      "limits": "The test uses the isolated local PostgreSQL test database and does not exercise a deployed production service.",
+      "source_ids": [
+        "primary_email_change_test",
+        "identity",
+        "recovery",
+        "email_scenarios"
+      ]
+    },
+    {
+      "path": "test/new_you/communications/recovery_delivery_test.exs",
+      "cases": [
+        "Exact EN/AF proof and notice, provider acceptance/unknown/rejection, withdrawal at invocation fence, three crash cuts and competing executors.",
+        "Missing-content completion notice and proof recover after current eligibility restoration; one-time binding, private policies and revoked-source denial."
+      ],
+      "proves": "Actual Communications executor, DeliveryAttempt fencing and deterministic P8-04 provider non-authority.",
+      "limits": "No external email, mailbox reachability, production or provider permission.",
+      "source_ids": [
+        "delivery_test"
+      ]
+    },
+    {
+      "path": "test/new_you/communications/recovery_delivery_preparation_test.exs",
+      "cases": [
+        "Read-only exact source guard and completion-notice authority beyond proof expiry, revocation and later password reset."
+      ],
+      "proves": "Immutable notice source survives later mutable credential authority.",
+      "limits": "A source guard alone cannot admit a provider.",
+      "source_ids": [
+        "source_test"
+      ]
+    },
+    {
+      "path": "test/new_you/communications/recovery_obligation_test.exs",
+      "cases": [
+        "Missing content keeps durable immutable obligations held without attempts."
+      ],
+      "proves": "Must-not-lose source handoff and conflicting retry denial.",
+      "limits": "No delivery with unavailable content.",
+      "source_ids": [
+        "held_test"
+      ]
+    },
+    {
+      "path": "test/new_you/content/recovery_message_test.exs",
+      "cases": [
+        "Four exact versions, unknown locales, altered bindings, withdrawn packet, corrupted approvals/authority, paired locale and symlink rejection."
+      ],
+      "proves": "Current pinned approval and immutable bytes fail closed.",
+      "limits": "Owner provenance comes from WELL-110; this reader grants no sender authority.",
+      "source_ids": [
+        "content_test"
+      ]
+    },
+    {
+      "path": "test/new_you_web/controllers/recovery_controller_test.exs",
+      "cases": [
+        "Scanner GET/HEAD, localized forms, actual CSRF-protected confirmation/password replacement/fresh sign-in, non-enumeration and telemetry.",
+        "Fresh browser reopens the delivered link after acceptance, explicitly recovers the same durable receipt without case advancement, then completes; a forged signature with the same form key is denied."
+      ],
+      "proves": "Real Phoenix transport calls owning Identity and Communications boundaries.",
+      "limits": "Development switch only; no production exposure or claimant factor invented.",
+      "source_ids": [
+        "browser_test",
+        "web_scenarios"
+      ]
+    },
+    {
+      "path": "test/new_you/audit/recovery_evidence_test.exs",
+      "cases": [
+        "E2 obligations, manual E1-linked outcomes, rollback, evidence minimisation and restart."
+      ],
+      "proves": "Audit evidence does not execute or authorize Identity recovery.",
+      "limits": "Central evidence is derived from owner source outcomes.",
+      "source_ids": [
+        "audit_test"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Maintain the existing owning Ash interfaces and Account-first current-authority guards when adding approved factors. A new claimant-verification method belongs to its separately approved workstream.",
+      "source_ids": [
+        "identity",
+        "recovery",
+        "manual"
+      ]
+    },
+    {
+      "summary": "A future operational provider must independently establish approved support operability, sender/provider authority and protected delivery; never enable a production adapter through test configuration.",
+      "source_ids": [
+        "provider",
+        "content",
+        "executor"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Recovery uses existing password strategy hashing/guarded replacement, Session/Device owner actions, Identity Token, scoped privilege and Audit/Communications boundaries.",
+      "source_ids": [
+        "recovery",
+        "account",
+        "token",
+        "privilege"
+      ]
+    },
+    {
+      "summary": "Browser composition, tokens and primary button follow existing authentication forms; shared labels and identical password-result copy are reused.",
+      "source_ids": [
+        "html",
+        "copy"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "No second RecoveryProof Resource, raw Repo/Ecto.Multi business write API, workflow engine, additional Repo, Redis or process-authoritative cache.",
+      "source_ids": [
+        "recovery",
+        "case"
+      ]
+    },
+    {
+      "summary": "Provider delivery, Audit admission, staff roles, UI claims and queued jobs never prove claimant identity or release Account holds.",
+      "source_ids": [
+        "manual",
+        "executor",
+        "controller"
+      ]
+    },
+    {
+      "summary": "Do not implement WELL-17 email change or new MFA/passkey methods here; recovery cannot verify or change canonical email.",
+      "source_ids": [
+        "recovery",
+        "manual"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "This descriptive map is subordinate to current routed authority and live Plane. Schema/hash validation is not semantic or independent merge review.",
+    "Provider evidence uses the existing deterministic TEST adapter and synthetic Accounts only. No external email was sent; support mailbox operation and external sender/provider permission are not certified.",
+    "WELL-20 reuses the existing primary-email owner action and both PostgreSQL commit-order scenarios for recovery/email-change integration. Production deployment and cross-region failure behavior remain outside this proof.",
+    "WELL-111 accepts proof-backed manual positive proof and zero-factor negative proof for Phase 8. Successful lost-all-factor recovery is unimplemented and remains a pre-release obligation under WELL-115; privileged hardening remains WELL-65.",
+    "Historical PR #217, PR #228 and Markdown handoffs remain historical evidence. The current WELL-20 candidate requires its own exact-head proof, CI and independent review."
+  ],
+  "follow_up_tickets": [
+    "WELL-17",
+    "WELL-65",
+    "WELL-115",
+    "WELL-114"
+  ],
+  "sources": [
+    {
+      "id": "identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def request_recovery",
+      "sha256": "2ccafe5ad95aff2ef46b468e11debc580a402625daddd5b133b6684553399137"
+    },
+    {
+      "id": "recovery",
+      "path": "lib/new_you/identity/recovery.ex",
+      "symbol": "defmodule NewYou.Identity.Recovery",
+      "sha256": "15b4c7283c65d701e1016001b34e5c80a0bc97f121803f43d255582c53f83752"
+    },
+    {
+      "id": "case",
+      "path": "lib/new_you/identity/recovery_case.ex",
+      "symbol": "defmodule NewYou.Identity.RecoveryCase",
+      "sha256": "ed53e361d8e05d6df22e50f28b2f134742a27681487b9b182e2ce39eadfdfb66"
+    },
+    {
+      "id": "manual",
+      "path": "lib/new_you/identity/manual_recovery.ex",
+      "symbol": "defmodule NewYou.Identity.ManualRecovery",
+      "sha256": "f051ab7b23b12b05b27ed249226f7254abb080fe8d6bdfe767d0b6e5d6bbb9f5"
+    },
+    {
+      "id": "account",
+      "path": "lib/new_you/identity/account.ex",
+      "symbol": ":hold_for_recovery",
+      "sha256": "515114144a2ba38bd4858e2a5be297ef3d33bd9da50666a4859638f3125bc3ce"
+    },
+    {
+      "id": "token",
+      "path": "lib/new_you/identity/token.ex",
+      "symbol": ":consume_recovery",
+      "sha256": "248faddf863dc1d2c1ddeadb16152d215aef6ecc5d8236a4cac0bdf5c69434f1"
+    },
+    {
+      "id": "session",
+      "path": "lib/new_you/identity/session.ex",
+      "symbol": "defmodule NewYou.Identity.Session",
+      "sha256": "e59451e7a1c8341c9fa88c0d90b0c819cc58c8ca3dc1aebb2f8745b65d24d8ce"
+    },
+    {
+      "id": "privilege",
+      "path": "lib/new_you/identity/privileged_access.ex",
+      "symbol": "defmodule NewYou.Identity.PrivilegedAccess",
+      "sha256": "c3cabe7fd241751a268b030242cbd21adf3e7df81f286aa492f6c14e864eacad"
+    },
+    {
+      "id": "communications",
+      "path": "lib/new_you/communications.ex",
+      "symbol": "def establish_recovery",
+      "sha256": "f67d7daa27c991b86d2cb98f92b2823689e86fcb35fe7e0e59c7ce0cd8bf3d90"
+    },
+    {
+      "id": "intent",
+      "path": "lib/new_you/communications/message_intent.ex",
+      "symbol": ":establish_recovery_notice",
+      "sha256": "c0c5d3743c9d833a887a8ccc9a3d1a21adceedf865590566cedc8675866cb42a"
+    },
+    {
+      "id": "executor",
+      "path": "lib/new_you/communications/executor.ex",
+      "symbol": "defp recovery_payload",
+      "sha256": "f5f3c35b6cae76a397f6d1b138e803a2215f8a99a167c1ca96f79c0c198b6b1a"
+    },
+    {
+      "id": "provider",
+      "path": "lib/new_you/communications/delivery_provider.ex",
+      "symbol": "defmodule NewYou.Communications.DeliveryProvider",
+      "sha256": "de22620f43bfd1a9129898d6034038290860d64e856c30ca5160d586a0f7ec2f"
+    },
+    {
+      "id": "content",
+      "path": "lib/new_you/content/recovery_message.ex",
+      "symbol": "defmodule NewYou.Content.RecoveryMessage",
+      "sha256": "8c8a4046d305467fbfeafb7b42f06f53e4ffc1b8238b21b6b4bd72ba5bf96d0a"
+    },
+    {
+      "id": "audit",
+      "path": "lib/new_you/audit.ex",
+      "symbol": "def admit_recovery",
+      "sha256": "4c526021acbd6c1eddbe723815c2a35a7a6f0beec6ca06c2892f829386d2f0e7"
+    },
+    {
+      "id": "evidence",
+      "path": "lib/new_you/audit/privileged_evidence.ex",
+      "symbol": "defmodule NewYou.Audit.PrivilegedEvidence",
+      "sha256": "da1aed8fba3fa54d096f2dcaff62048eff2eda5142db3c1e873e0db33c48cd81"
+    },
+    {
+      "id": "controller",
+      "path": "lib/new_you_web/controllers/recovery_controller.ex",
+      "symbol": "defmodule NewYouWeb.RecoveryController",
+      "sha256": "165241ac5895da37866f60cfa88185d2fecc5f3c21b658cad4d9789a98332d59"
+    },
+    {
+      "id": "html",
+      "path": "lib/new_you_web/controllers/recovery_html/journey.html.heex",
+      "symbol": "recovery-form",
+      "sha256": "131b3844c5f202d1093117e981fb73256137137e9242ecf46b6de0515e1873ee"
+    },
+    {
+      "id": "copy",
+      "path": "lib/new_you_web/recovery_copy.ex",
+      "symbol": "identity.recovery.family",
+      "sha256": "2c72568dbe7dbc36e2e26683d79595a26994a5b0891a488b68ebc6cd8e9a2cca"
+    },
+    {
+      "id": "secrecy",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "symbol": "/recovery",
+      "sha256": "dba784a2fa960cd3f0cb01f1b9ea195e20818d5d47b430b91173adf3a348c47c"
+    },
+    {
+      "id": "concurrent_helper",
+      "path": "test/support/proof/p8_15.ex",
+      "symbol": "defmodule NewYou.Proof.P815",
+      "sha256": "252f6748005ae29c690e90c238f6209fbc9d3a2b79566604502fb9405397e6f3"
+    },
+    {
+      "id": "lifecycle_test",
+      "path": "test/new_you/identity/recovery_test.exs",
+      "symbol": "defmodule ",
+      "sha256": "ca07d3129b5f34b96c497c99e1ae77d2e74cd9be53514bb92bef0c26aa3c5f97"
+    },
+    {
+      "id": "primary_email_change_test",
+      "path": "test/new_you/identity/primary_email_change_test.exs",
+      "symbol": "primary-email apply and recovery completion serialize",
+      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
+    },
+    {
+      "id": "manual_test",
+      "path": "test/new_you/identity/manual_recovery_test.exs",
+      "symbol": "defmodule ",
+      "sha256": "e377be99db77af4f0790a7733901054954ccf460d8e61f5326bbfc282a2af04c"
+    },
+    {
+      "id": "concurrency_test",
+      "path": "test/new_you/identity/recovery_concurrency_test.exs",
+      "symbol": "defmodule ",
+      "sha256": "32ffa9e4ffeecd9d8e3046e9eed743fe95ad3eed5f41ce3d2a6627b9e3d419da"
+    },
+    {
+      "id": "delivery_test",
+      "path": "test/new_you/communications/recovery_delivery_test.exs",
+      "symbol": "defmodule ",
+      "sha256": "e0205b1341e0e4545326e7637623aea7ee017fba382f3aa22ca1ccb98d213d19"
+    },
+    {
+      "id": "source_test",
+      "path": "test/new_you/communications/recovery_delivery_preparation_test.exs",
+      "symbol": "defmodule ",
+      "sha256": "e00d6e2a92781bba4374126ec6c82aadf5b6237e7f48d1ac029855427b7b0059"
+    },
+    {
+      "id": "held_test",
+      "path": "test/new_you/communications/recovery_obligation_test.exs",
+      "symbol": "defmodule ",
+      "sha256": "bcf7361bd3686c77d45d9d31acfc688d0edad504a6cd2fa583f3b065ad3525a8"
+    },
+    {
+      "id": "content_test",
+      "path": "test/new_you/content/recovery_message_test.exs",
+      "symbol": "defmodule ",
+      "sha256": "e77e3eae26a18de29ad8b11302041234f95d6bd33f4c6b1c34e983c8a47ab9ee"
+    },
+    {
+      "id": "browser_test",
+      "path": "test/new_you_web/controllers/recovery_controller_test.exs",
+      "symbol": "defmodule ",
+      "sha256": "535c522a225b64ee9c3f6458181ceed531c62ca249e2062b02689fa53a8821e2"
+    },
+    {
+      "id": "audit_test",
+      "path": "test/new_you/audit/recovery_evidence_test.exs",
+      "symbol": "defmodule ",
+      "sha256": "5dac197e086a437fc6c25992c6c9fe3dc4f295e6cc7ab6ef449e1482059432a7"
+    },
+    {
+      "id": "migration_20261110154314",
+      "path": "priv/repo/migrations/20261110154314_graduated_recovery.exs",
+      "symbol": "defmodule ",
+      "sha256": "c9dcf60fc7ddf25468766842309e3f3cf45b9031733d2a9047ba629da7900888"
+    },
+    {
+      "id": "migration_20261110154755",
+      "path": "priv/repo/migrations/20261110154755_recovery_constraints.exs",
+      "symbol": "defmodule ",
+      "sha256": "aa4e2bf06305337cd04e4d403c25fd92599b70de1c18f38ee1b3c0ca505c51fe"
+    },
+    {
+      "id": "migration_20261110160000",
+      "path": "priv/repo/migrations/20261110160000_recovery_guards.exs",
+      "symbol": "defmodule ",
+      "sha256": "f2288ac914258897de49a55a5240348e23f7be27b3a105e5b13109fdd84ee29e"
+    },
+    {
+      "id": "migration_20261110160037",
+      "path": "priv/repo/migrations/20261110160037_recovery_proof_shape.exs",
+      "symbol": "defmodule ",
+      "sha256": "1d4d4fda5b8f397a6243f31ca3fb22173d51b3c926fb6a2024500905858d1fe9"
+    },
+    {
+      "id": "migration_20261110161000",
+      "path": "priv/repo/migrations/20261110161000_preserve_legacy_admissions.exs",
+      "symbol": "defmodule ",
+      "sha256": "18dc4bc55005fb1f10d4615a73f09d765b083ba2e87ed9a123f30199ad8e1cb8"
+    },
+    {
+      "id": "migration_20261110162802",
+      "path": "priv/repo/migrations/20261110162802_recovery_approval_admission.exs",
+      "symbol": "defmodule ",
+      "sha256": "a6b864737ffa5b9fbe4bf2553e6955e4d893580ad80bfbc238aca95fed68a934"
+    },
+    {
+      "id": "migration_20261110163533",
+      "path": "priv/repo/migrations/20261110163533_recovery_hold_evidence.exs",
+      "symbol": "defmodule ",
+      "sha256": "c51c66e1a3064fe07d4e10384960e2128b909191c13d33b1b2e3db224883c13a"
+    },
+    {
+      "id": "migration_20261110163700",
+      "path": "priv/repo/migrations/20261110163700_recovery_hold_causation.exs",
+      "symbol": "defmodule ",
+      "sha256": "1929044374cab3cec7e9ab20f6d56b3c556240b178af45b8636ca42044bc9330"
+    },
+    {
+      "id": "migration_20261110172234",
+      "path": "priv/repo/migrations/20261110172234_scope_recovery_assurance.exs",
+      "symbol": "defmodule ",
+      "sha256": "028a6b4990cc7c82b56455133dfdb76172ecbe9b74e287868320ae765ebade7f"
+    },
+    {
+      "id": "migration_20261112181942",
+      "path": "priv/repo/migrations/20261112181942_recovery_content_binding.exs",
+      "symbol": "defmodule ",
+      "sha256": "5c8a8d279e2715c9b871dee2827282e795c017f069b633276cedda9a274eee57"
+    },
+    {
+      "id": "migration_20261112182053",
+      "path": "priv/repo/migrations/20261112182053_recovery_terminal_metadata.exs",
+      "symbol": "defmodule ",
+      "sha256": "0684338ebe45a9aa6373db319a6a61ab753d01fbe6186ce9f1620e7c2595d42c"
+    },
+    {
+      "id": "recovery_scenarios",
+      "path": "test/support/proof/recovery_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.RecoveryScenarios",
+      "sha256": "4de5f351c522cbe596324eb74fa8a9b17e545bda3058ab45d059218ea12dfb2b"
+    },
+    {
+      "id": "email_scenarios",
+      "path": "test/support/proof/email_change_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
+      "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
+    },
+    {
+      "id": "web_scenarios",
+      "path": "test/support/proof/web_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.WebScenarios",
+      "sha256": "d33e18605b1495218a788d5e000c47977f410811a2af11cc2c480d9387df7a58"
+    }
+  ]
+}

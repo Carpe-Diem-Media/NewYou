@@ -1,0 +1,97 @@
+{
+  "base_sha": "a47774b004bd016c7deaead24ba3f1061cd56367",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/243/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/243/commits",
+  "files": [
+    {
+      "blob": "f650af2f102a7f976eadc0cf5a5b0f27f5514d49",
+      "mode": "100644",
+      "old_blob": "aa92b3dc313c8ed87442f26a2970f516c75b4c63",
+      "old_mode": "100644",
+      "old_path": "mix.exs",
+      "old_sha256": "189f3688b5ec8d1771cc05e00cefdb08e97e8dd234a8dd181815774542ad16b8",
+      "path": "mix.exs",
+      "sha256": "bba0a75adc1b75aa6ea8bd7b01f07d5313d66853650fe884bec306b1efd8fdcc",
+      "status": "modified"
+    },
+    {
+      "blob": "83fe6e48eacaa14bcdce1d17f5ad69c7ec10396a",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/tools/dialyzer_cache_test.exs",
+      "sha256": "d3111224ab81fcdc53fb56d2768ce7c7e4882ffbdb1523402b85e970f9480f77",
+      "status": "added"
+    }
+  ],
+  "migrations": [],
+  "pr": 243,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/243",
+  "range_base_sha": "a47774b004bd016c7deaead24ba3f1061cd56367",
+  "schema_version": 1,
+  "symbols": [
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.MixProject",
+      "name": null,
+      "old_sha256": "227065bd24dbd6d587e885aface268da5a520c5a525bff976de58eca9ca1a6c6",
+      "path": "mix.exs",
+      "sha256": "87d02c574927f40b8949cdd042f0162de5ff7a0b96a7de7876b939a510e9187c",
+      "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.MixProject",
+      "name": "dialyzer",
+      "old_sha256": "19f376c6260c8a0f719b092c7b20455ac79db310f4eddd38fd21f4e0021c0c9e",
+      "path": "mix.exs",
+      "sha256": "ec0820e97b67924579e4f2bfd5d435c38831b6b3a918c2f61b71b65c35963703",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "mix.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
+      "module": "NewYou.DialyzerCacheTest",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/tools/dialyzer_cache_test.exs",
+      "sha256": "82b6c6093ca6184e3e70ed61daacce5eb21451c95fd5663c0e1b74976acf8d7a",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/tools/dialyzer_cache_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    }
+  ],
+  "tests": [
+    "test/tools/dialyzer_cache_test.exs"
+  ],
+  "tickets": [
+    "WELL-130"
+  ]
+}

@@ -1,0 +1,574 @@
+{
+  "schema_version": 1,
+  "capability_id": "proof.tb001",
+  "purpose": "Execute the complete fixed TB-001 integration through the existing P8-04 runner and real owning interfaces, and emit one immutable exact-head result for independent review.",
+  "implementing_tickets": [
+    "WELL-20",
+    "WELL-131",
+    "WELL-134"
+  ],
+  "implementation_revision": {
+    "git_sha": "aa53cc48220d7cb15091c5f5899a18b487290f90",
+    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh."
+  },
+  "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Identity",
+      "interface": "register/1, verify_email/1, authenticate_password/2, recovery and primary-email-change interfaces",
+      "ownership": "Owns Account, proof, PMR, reconciliation and Session truth.",
+      "source_ids": [
+        "identity"
+      ]
+    },
+    {
+      "domain": "NewYou.Communications",
+      "interface": "execute/1 and existing AshOban delivery trigger",
+      "ownership": "Owns durable delivery admission and provider reconciliation.",
+      "source_ids": [
+        "communications"
+      ]
+    },
+    {
+      "domain": "NewYou.Audit",
+      "interface": "Existing E1 admission and E2 obligation/materialisation interfaces",
+      "ownership": "Owns bounded business evidence, never source transition authority.",
+      "source_ids": [
+        "audit"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "interface": "Existing current operation-bound P8-17 proof-purpose interfaces",
+      "ownership": "Owns synthetic TEST purpose authority and terminal withdrawal; no new production consent rule.",
+      "source_ids": [
+        "privacy"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.Account",
+      "actions": [
+        "confirm_email",
+        "authenticate_magic_link",
+        "reset_password",
+        "apply_primary_email_change"
+      ],
+      "caller_boundary": "Proof scenarios call the existing owning Identity interfaces. No replacement business write path.",
+      "source_ids": [
+        "account",
+        "identity"
+      ]
+    },
+    {
+      "domain": "NewYou.Communications",
+      "resource": "NewYou.Communications.MessageIntent",
+      "actions": [
+        "execute_delivery",
+        "establish"
+      ],
+      "caller_boundary": "Existing Communications owner and AshOban trigger; test provider substitutes only external delivery outcomes.",
+      "source_ids": [
+        "intent",
+        "communications"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Proof.Runner",
+      "function": "run_cli",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Canonical CLI arguments: --mode tb001 --output <unique-output-path>"
+      ],
+      "returns": [
+        "OS exit 0 only for a complete valid PASS; 1 for invariant failure; 2 for infrastructure/provenance/cleanup failure"
+      ],
+      "side_effects": [
+        "Executes synthetic owner scenarios against TEST PostgreSQL and publishes one immutable external JSON report."
+      ],
+      "caller_constraints": [
+        "TEST compilation only. Full-proof mode accepts no case, fixture, catalog or root overrides."
+      ],
+      "source_ids": [
+        "runner",
+        "entrypoint"
+      ]
+    },
+    {
+      "module": "NewYou.Proof.P819Catalog",
+      "function": "manifests",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Existing upstream manifest map assembled by Catalog"
+      ],
+      "returns": [
+        "Fixed ten-entry integration map; upstream loss, case identity drift, owner callback-target drift or mandatory proof-claim drift keeps the affected family partial"
+      ],
+      "side_effects": [
+        "None; computes reviewed case mappings and manifest digests."
+      ],
+      "caller_constraints": [
+        "Compiled fixed mappings only; not business authority."
+      ],
+      "source_ids": [
+        "integration",
+        "catalog"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261106091916_well10_delivery.exs",
+      "tables": [
+        "delivery_attempts"
+      ],
+      "constraints": [
+        "delivery_attempts_one_active",
+        "delivery_attempts_preinvoke"
+      ],
+      "source_ids": [
+        "delivery_migration"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "The canonical entrypoint invokes the unchanged Runner CLI. Catalog assembles nine mandatory business families plus separate browser_spine coverage.",
+      "source_ids": [
+        "entrypoint",
+        "catalog",
+        "integration"
+      ]
+    },
+    {
+      "summary": "The standalone canonical command independently binds all 133 case/invariant identities and the 74 P8-19 owner module/function/arity targets to the static TB-001-linked inventory. It compares the actual emitted boundary, cut, race and expected claim for each added case. Any declaration or claim mismatch leaves the affected family partial; Runner rejects it before any canonical callback executes. Inventory changes require an explicit independent review diff.",
+      "source_ids": [
+        "inventory",
+        "integration",
+        "runner",
+        "inventory_negative"
+      ]
+    },
+    {
+      "summary": "FullCatalog executes required callbacks in fixed order and stops after an unsatisfied invariant. Shared upstream scenarios retain their assertions. The P8-19 ledger records one aggregate owner_assertions marker only after the independently pinned named owner scenario returns normally. The marker does not enumerate each underlying ExUnit assertion; scenario implementation changes still require exact-source review.",
+      "source_ids": [
+        "executor",
+        "integration",
+        "assertions"
+      ]
+    },
+    {
+      "summary": "The browser journey registers, resends, receives the test provider message, explicitly verifies, logs in and reloads protected access in one Chromium context. Endpoint observations prove verification did not create a Session.",
+      "source_ids": [
+        "browser",
+        "browser_script"
+      ]
+    },
+    {
+      "summary": "Result validates source/runtime/dependency/TEST metadata, required cases/assertions and cleanup, then publishes without overwriting an existing path.",
+      "source_ids": [
+        "result",
+        "runner"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "not_run",
+      "completed",
+      "error",
+      "timeout"
+    ],
+    "transitions": [
+      {
+        "from_state": "not_run",
+        "to_state": "completed",
+        "guards": [
+          "All required owner assertions complete within the declared deadline."
+        ],
+        "side_effects": [
+          "Records the named invariant, cut/race metadata and bounded observations."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "assertions",
+          "executor"
+        ]
+      },
+      {
+        "from_state": "not_run",
+        "to_state": "error",
+        "guards": [
+          "Callback fails, a registration is absent or an invariant is unsatisfied."
+        ],
+        "side_effects": [
+          "Stops later work and prevents overall PASS."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "executor",
+          "runner"
+        ]
+      },
+      {
+        "from_state": "not_run",
+        "to_state": "timeout",
+        "guards": [
+          "Required case deadline expires."
+        ],
+        "side_effects": [
+          "Stops the worker, requires cleanup confirmation and prevents PASS."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "assertions",
+          "runner"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Proof controls compile only under TEST. The broken-invariant subprocess recompiles a proof callback, then calls the same canonical Runner; ordinary full-proof CLI gains no override.",
+      "source_ids": [
+        "negative",
+        "runner"
+      ]
+    },
+    {
+      "summary": "Evidence contains only fixed identities and bounded observations. Provider message bodies and bearer values remain transient in the synthetic browser/provider flow.",
+      "source_ids": [
+        "result",
+        "browser",
+        "browser_script"
+      ]
+    },
+    {
+      "summary": "Fixture guardians restore browser flags and secret-bearing in-memory fixture configuration after normal completion or owner death.",
+      "source_ids": [
+        "fixture",
+        "matrix_test"
+      ]
+    },
+    {
+      "summary": "Passive scanner checks snapshot full persisted Account, Token, Session, DeviceAssurance and RecoveryCase attributes for the fixture owner before the initial GET and after subsequent passive requests. Recovery neutrality compares all response headers, cookie attributes and session effects across known, unknown, invalid and source-unavailable outcomes; only request IDs, CSRF values and the encrypted anonymous-session cookie vary.",
+      "source_ids": [
+        "passive_evidence",
+        "web_scenarios",
+        "capability_scenarios",
+        "transport_tests"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Upstream callbacks retain separate PostgreSQL connections, transaction identifiers and observed row-lock contention. New mappings reuse those routines, including both Privacy/Identity commit orders.",
+      "source_ids": [
+        "integration",
+        "delivery_scenarios",
+        "email_scenarios",
+        "reconciliation_scenarios"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Retries, replay, supersession and reconciliation remain existing owner semantics exercised by mapped scenarios. A proof rerun receives a new output path and never changes an earlier report.",
+      "source_ids": [
+        "integration",
+        "capability_scenarios",
+        "result"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Missing or partial coverage, callback failure, absent assertions, timeout, cleanup failure or incomplete/changing source metadata prevents PASS.",
+      "source_ids": [
+        "catalog",
+        "runner",
+        "result",
+        "assertions"
+      ]
+    },
+    {
+      "summary": "Existing fresh BEAM probes reconstruct Communications, recovery, Session, reconciliation and Privacy state from PostgreSQL. The integration adds no recovery authority.",
+      "source_ids": [
+        "integration",
+        "delivery_scenarios",
+        "email_scenarios",
+        "reconciliation_scenarios"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/proof/tb001_integration_test.exs",
+      "cases": [
+        "the reviewed TB-001 catalog compiles every required family and callback",
+        "removing any compiled required callback is a registration failure",
+        "an isolated broken full-proof callback exits nonzero with family and cut identity",
+        "loss of reviewed upstream coverage leaves the affected family partial",
+        "standalone canonical acceptance rejects identity target authority and mandatory claim drift",
+        "callback target and mandatory boundary cut and race claims are independently bound",
+        "deleting or substituting a declared P8-19 obligation leaves its family partial"
+      ],
+      "proves": "Independent identity, owner callback-target and emitted mandatory-claim binding. Fresh TEST VMs invoke the ordinary canonical script after drop, substitution, stale authority, harmless normally returning callback, boundary, cut and race mutations. Callback substitution preserves case/invariant identity and produces no owner assertions or observations. Separate unit mutations also remove cuts/races only from the emitted manifest. Existing broken-invariant fixture retains its family/cut failure and cleanup proof.",
+      "limits": "Does not certify Phase 8 or substitute for clean-head canonical execution and hosted CI.",
+      "source_ids": [
+        "integration_test",
+        "negative",
+        "inventory",
+        "inventory_negative"
+      ]
+    },
+    {
+      "path": "test/new_you/proof/p8_05_test.exs",
+      "cases": [
+        "runner executes every reviewed obligation and evaluates complete TB-001",
+        "fixture guardian cleans committed records when the fixture owner is killed"
+      ],
+      "proves": "Executes all 133 reviewed cases through the shared executor and verifies cleanup and assertion coverage.",
+      "limits": "Pure full-result evaluation in an ExUnit run does not supply final clean-head provenance.",
+      "source_ids": [
+        "matrix_test",
+        "integration",
+        "fixture"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Maintain the explicit obligation-to-case mapping and existing owner scenarios together. A semantic coverage change requires contract review; an ordinary helper extraction does not change business law.",
+      "source_ids": [
+        "integration"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Start with the fixed Catalog and P819Catalog, follow each module/function mapping to its shared scenario, then inspect the actual owner interface and test. Never infer current execution state from this map.",
+      "source_ids": [
+        "catalog",
+        "integration",
+        "identity"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "No dynamic required-family discovery, partial/weighted PASS, production fixture switch, runtime full-proof selection override or alternate proof command.",
+      "source_ids": [
+        "catalog",
+        "runner",
+        "negative"
+      ]
+    },
+    {
+      "summary": "No report commit after final capture without rerunning the canonical proof at the resulting head. No Phase-8 certification, WELL-21 completion or Phase-9 authorization is conferred.",
+      "source_ids": [
+        "entrypoint",
+        "result"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "This source map is descriptive, not Product/Architecture/Domain or Plane authority.",
+    "No new migration, Resource, service, dependency or business write was added. The persistence entry identifies a reused constraint, not an exhaustive owner schema.",
+    "Final proof artifacts remain outside the checkout and must name the exact final PR head. Review actual artifacts and hosted CI independently.",
+    "The current Privacy purpose is a synthetic development/test proof, not a production consent requirement.",
+    "Full applicable local gates, OCR, exact-head CI and independent Master Gate review remain separate obligations. This map does not assert those results.",
+    "The static identity, owner callback-target and mandatory-claim inventory is linked to TB-001 sections 7-8. It remains separate from executable declarations and creates no business or certification authority. Fresh independent Master Gate review must assess semantic completeness and scenario source. The aggregate ledger marker does not enumerate underlying assertions or protect against arbitrary edits inside an owner scenario. Browser verification_form records the observed CSRF form; owning Account/Session/protected-access assertions determine success.",
+    "The WELL-131 ordinary entry mode has separate ExUnit acceptance and is not a new TB-001 inventory case. Existing spine/login modes and the fixed mandatory Catalog inventory remain intact. Production-exclusion now also checks the normal development entry, copy and legal gates with fixture flags set.",
+    "WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh."
+  ],
+  "follow_up_tickets": [],
+  "sources": [
+    {
+      "id": "catalog",
+      "path": "test/support/proof/catalog.ex",
+      "symbol": "defmodule NewYou.Proof.Catalog",
+      "sha256": "b96321ff5293696cce9e182d57f9835eb19778c068c148ec9a13956b066734e2"
+    },
+    {
+      "id": "integration",
+      "path": "test/support/proof/p8_19_catalog.ex",
+      "symbol": "defmodule NewYou.Proof.P819Catalog",
+      "sha256": "ac81b8f9e959a84fc8328eb1a6859ebf10c664c8941709d342ebe162f1f4ab8d"
+    },
+    {
+      "id": "runner",
+      "path": "test/support/proof/runner.ex",
+      "symbol": "defmodule NewYou.Proof.Runner",
+      "sha256": "652218899f519791037eb9a1f1d01030052834d678665f2d8966ffabe48f69b6"
+    },
+    {
+      "id": "executor",
+      "path": "test/support/proof/full_catalog.ex",
+      "symbol": "defmodule NewYou.Proof.FullCatalog",
+      "sha256": "de746ce7c244f685ca4a7319fa14f813c9ec375cd3794289771d4b9eea97683c"
+    },
+    {
+      "id": "assertions",
+      "path": "test/proof/self_test.exs",
+      "symbol": "defmodule NewYou.Proof.SelfTest",
+      "sha256": "e7f1025c567dea6bd64404286901a260894c31b4dd56498570b0e428296f7e72"
+    },
+    {
+      "id": "result",
+      "path": "test/support/proof/result.ex",
+      "symbol": "defmodule NewYou.Proof.Result",
+      "sha256": "2e6896df4879a9c1f5f17c4358c9b825143c4cb17e08e132222cc22fb0b17942"
+    },
+    {
+      "id": "entrypoint",
+      "path": "test/proof/run.exs",
+      "symbol": "System.halt",
+      "sha256": "a3d8a958b46e92902923200d49ea0fc9ee95b71885f8dda375cffca4a7ca3ceb"
+    },
+    {
+      "id": "negative",
+      "path": "test/proof/tb001_broken.exs",
+      "symbol": "Code.compile_string",
+      "sha256": "53c118978c322a1198e51497d7c0b9e0b8cb186cea8c0502a601f4a120977252"
+    },
+    {
+      "id": "browser",
+      "path": "test/support/proof/p8_19_browser.ex",
+      "symbol": "defmodule NewYou.Proof.P819Browser",
+      "sha256": "1cb2adbf1c2abe3cd30553aec82dcd7c2b10527805a0316c9d9be5560b562bec"
+    },
+    {
+      "id": "browser_script",
+      "path": "test/proof/p8_05_browser.mjs",
+      "symbol": "input.mode === 'spine'",
+      "sha256": "0738d5c69e0651dffb3b7ec0fef7f422eca3b2843f9d3415c71619528995a52b"
+    },
+    {
+      "id": "fixture",
+      "path": "test/support/proof/p8_05.ex",
+      "symbol": "defmodule NewYou.Proof.P805",
+      "sha256": "f3a99510c4b0370607ebb2d1af09bcb2eb940c3d026b2d656d7db16e53684bed"
+    },
+    {
+      "id": "delivery_scenarios",
+      "path": "test/support/proof/delivery_recovery_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.DeliveryRecoveryScenarios",
+      "sha256": "e14ac0b0d6f0234d3753d6b160d4825074882e86682fbbd288936ba8dd6ef407"
+    },
+    {
+      "id": "recovery_scenarios",
+      "path": "test/support/proof/recovery_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.RecoveryScenarios",
+      "sha256": "4de5f351c522cbe596324eb74fa8a9b17e545bda3058ab45d059218ea12dfb2b"
+    },
+    {
+      "id": "email_scenarios",
+      "path": "test/support/proof/email_change_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
+      "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
+    },
+    {
+      "id": "reconciliation_scenarios",
+      "path": "test/support/proof/reconciliation_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.ReconciliationScenarios",
+      "sha256": "4868cc6e35f16ac9f6d40fbc47f20541db1727e965eddb57b5f03c88a0b6a7b5"
+    },
+    {
+      "id": "web_scenarios",
+      "path": "test/support/proof/web_scenarios.ex",
+      "symbol": "def recovery_neutral()",
+      "sha256": "d33e18605b1495218a788d5e000c47977f410811a2af11cc2c480d9387df7a58"
+    },
+    {
+      "id": "capability_scenarios",
+      "path": "test/support/proof/capability_scenarios.ex",
+      "symbol": "defmodule NewYou.Proof.MagicScannerCases",
+      "sha256": "8a4a1553d9006b3a72db0c38451498a921b89a28232181743dc05a4b5f795c17"
+    },
+    {
+      "id": "integration_test",
+      "path": "test/new_you/proof/tb001_integration_test.exs",
+      "symbol": "defmodule NewYou.Proof.TB001IntegrationTest",
+      "sha256": "9293c6ad47c7f5cdeeeca725f41faf34b38b251d258f8d8e319f8314ef2c50b2"
+    },
+    {
+      "id": "matrix_test",
+      "path": "test/new_you/proof/p8_05_test.exs",
+      "symbol": "runner executes every reviewed obligation",
+      "sha256": "955a036e6b26b1862fdbfff0aede0d2277777824286c847601535ef527cf7678"
+    },
+    {
+      "id": "identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "defmodule NewYou.Identity",
+      "sha256": "2ccafe5ad95aff2ef46b468e11debc580a402625daddd5b133b6684553399137"
+    },
+    {
+      "id": "account",
+      "path": "lib/new_you/identity/account.ex",
+      "symbol": "defmodule NewYou.Identity.Account",
+      "sha256": "515114144a2ba38bd4858e2a5be297ef3d33bd9da50666a4859638f3125bc3ce"
+    },
+    {
+      "id": "communications",
+      "path": "lib/new_you/communications.ex",
+      "symbol": "defmodule NewYou.Communications",
+      "sha256": "f67d7daa27c991b86d2cb98f92b2823689e86fcb35fe7e0e59c7ce0cd8bf3d90"
+    },
+    {
+      "id": "intent",
+      "path": "lib/new_you/communications/message_intent.ex",
+      "symbol": "defmodule NewYou.Communications.MessageIntent",
+      "sha256": "c0c5d3743c9d833a887a8ccc9a3d1a21adceedf865590566cedc8675866cb42a"
+    },
+    {
+      "id": "audit",
+      "path": "lib/new_you/audit.ex",
+      "symbol": "defmodule NewYou.Audit",
+      "sha256": "4c526021acbd6c1eddbe723815c2a35a7a6f0beec6ca06c2892f829386d2f0e7"
+    },
+    {
+      "id": "privacy",
+      "path": "lib/new_you/privacy.ex",
+      "symbol": "defmodule NewYou.Privacy",
+      "sha256": "355c81a487c9ca14a138b8bae731f30ed104340500dbc95b8cb6a50d22f369df"
+    },
+    {
+      "id": "delivery_migration",
+      "path": "priv/repo/migrations/20261106091916_well10_delivery.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.Well10Delivery",
+      "sha256": "3f0ecc89fa5b4c1f2a83c51bab811f5ba5efef1c4217d51f64aae8da80d88f5c"
+    },
+    {
+      "id": "inventory",
+      "path": "test/proof/tb001_required_cases.json",
+      "symbol": "\"contract\": \"TB-001/v0.1.3\"",
+      "sha256": "e8122a4a151f6c0ed3116660919f92a87d73478acf5a8ee6de5e3e5dddf9c7f3"
+    },
+    {
+      "id": "inventory_negative",
+      "path": "test/proof/tb001_inventory_broken.exs",
+      "symbol": "Code.eval_file(\"test/proof/run.exs\")",
+      "sha256": "20d9c782be9ecd9ec6448749fef6ce5e40e2856708948644927c24a8cc8ca66f"
+    },
+    {
+      "id": "passive_evidence",
+      "path": "test/support/proof/passive_evidence.ex",
+      "symbol": "defmodule NewYou.Proof.PassiveEvidence",
+      "sha256": "fbcb7905b3b877405ca2d907b4dab016f48cafbbf81e905a850a7357b6902b42"
+    },
+    {
+      "id": "transport_tests",
+      "path": "test/new_you/proof/passive_evidence_test.exs",
+      "symbol": "defmodule NewYou.Proof.PassiveEvidenceTest",
+      "sha256": "87e0bc29b8d703e643f0e83328f636277f6d9276237abdd351f4aa87d9f1744a"
+    }
+  ]
+}

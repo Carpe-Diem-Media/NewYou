@@ -1,0 +1,13 @@
+subject: Gaan voort met jou {{platform_name}}-rekeningherstel
+
+Ons het 'n versoek ontvang om toegang tot jou {{platform_name}}-rekening te herstel.
+
+As jy die versoek gerig het, gebruik die skakel hieronder om met die volgende stap voort te gaan:
+
+{{account_recovery_link}}
+
+Deur die skakel bloot oop te maak, bevestig jy nie die stap nie en voltooi jy ook nie die herstel nie. Jy moet die volgende stap uitdruklik bevestig. Die skakel is net vir 'n beperkte tyd geldig en kan net een keer gebruik word om die stap te bevestig. Verdere verifikasie kan nodig wees voordat die herstel voltooi kan word.
+
+Moenie hierdie skakel deel of aanstuur nie. As jy nie die versoek gerig het nie, moenie die skakel gebruik nie. Die versoek alleen verander nie jou wagwoord of plaas 'n nuwe beperking op jou rekening nie.
+
+{{platform_name}}

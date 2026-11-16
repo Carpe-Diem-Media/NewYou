@@ -1,12 +1,11 @@
 defmodule NewYouWeb.PasswordResetControllerTest do
   use ExUnit.Case, async: false
+  import NewYou.Proof.ResetScannerCases
   import Phoenix.ConnTest
   import Plug.Conn
   import ExUnit.CaptureLog
   alias NewYou.Identity
-  alias NewYou.Identity.{Account, Token}
   alias NewYou.Proof.P805
-  require Ash.Query
   @endpoint NewYouWeb.Endpoint
 
   setup do
@@ -67,79 +66,7 @@ defmodule NewYouWeb.PasswordResetControllerTest do
   end
 
   test "GET HEAD scanner and prefetch preserve all durable Identity state; explicit confirmation never logs in" do
-    P805.with_fixture(fn ->
-      request = P805.request()
-      {:ok, registration} = Identity.register(request)
-      {:ok, :verified} = Identity.verify_email(registration.verification_proof)
-      {:ok, credentials} = Identity.authenticate_password(request.email, request.password)
-      :ok = Identity.request_password_reset(request.email, "af", operation())
-
-      proof =
-        Token
-        |> Ash.Query.filter(
-          account_id == ^registration.account_id and purpose == "password_reset"
-        )
-        |> Ash.read_one!(authorize?: false)
-
-      {:ok, {:ok, bearer}} =
-        Ash.transact([Account, Token], fn ->
-          Identity.password_reset_delivery(proof.jti, request.email, "af")
-        end)
-
-      url = "/password/reset/confirm?" <> URI.encode_query(%{proof: bearer, locale: "af"})
-      before = snapshot(registration.account_id)
-
-      for {method, headers} <- [
-            {:get, []},
-            {:head, []},
-            {:get, [{"purpose", "prefetch"}]},
-            {:get, [{"sec-purpose", "prefetch;prerender"}]},
-            {:get, [{"user-agent", "MailScanner/1.0 link-preview"}]}
-          ] do
-        conn = Enum.reduce(headers, build_conn(), fn {k, v}, c -> put_req_header(c, k, v) end)
-        response = dispatch(conn, @endpoint, method, url)
-        assert response.status == 200
-        assert get_resp_header(response, "cache-control") == ["no-store"]
-        assert get_resp_header(response, "referrer-policy") == ["no-referrer"]
-        assert snapshot(registration.account_id) == before
-      end
-
-      page = get(build_conn(), url)
-      csrf = field(page, "_csrf_token")
-      operation = field(page, "operation_id")
-      P805.track_operation(operation)
-
-      bad =
-        build_conn()
-        |> put_private(:plug_skip_csrf_protection, false)
-        |> post("/password/reset/confirm", %{
-          locale: "af",
-          proof: bearer,
-          password: "replacement",
-          operation_id: operation
-        })
-
-      assert bad.status == 403
-      assert snapshot(registration.account_id) == before
-
-      response =
-        page
-        |> recycle()
-        |> put_private(:plug_skip_csrf_protection, false)
-        |> post("/password/reset/confirm", %{
-          locale: "af",
-          proof: bearer,
-          password: "replacement",
-          operation_id: operation,
-          _csrf_token: csrf
-        })
-
-      assert response.status == 200
-      assert get_session(response, :identity_session_id) == nil
-      assert get_session(response, :identity_token) == nil
-      assert Identity.authorize_session(credentials) == {:error, :authentication_unavailable}
-      assert {:ok, _} = Identity.authenticate_password(request.email, "replacement")
-    end)
+    NewYou.Proof.ResetScannerCases.scanner()
   end
 
   test "reset requests and result bodies do not leak secrets into endpoint telemetry or logs" do
@@ -186,68 +113,6 @@ defmodule NewYouWeb.PasswordResetControllerTest do
   end
 
   test "Chromium submits the bilingual confirmation and requires fresh login" do
-    # Focus and responsive checks must use current CSS even in a clean checkout.
-    Mix.Task.run("assets.build")
-    assert Code.ensure_loaded?(NewYou.Proof.P805Browser)
-    assert function_exported?(NewYou.Proof.P805Browser, :run_password_reset, 3)
-
-    for locale <- ["en", "af"] do
-      P805.with_fixture(fn ->
-        request = P805.request()
-        {:ok, registration} = Identity.register(request)
-        {:ok, :verified} = Identity.verify_email(registration.verification_proof)
-        :ok = Identity.request_password_reset(request.email, locale, operation())
-
-        proof =
-          Token
-          |> Ash.Query.filter(
-            account_id == ^registration.account_id and purpose == "password_reset"
-          )
-          |> Ash.read_one!(authorize?: false)
-
-        {:ok, {:ok, bearer}} =
-          Ash.transact([Account, Token], fn ->
-            Identity.password_reset_delivery(proof.jti, request.email, locale)
-          end)
-
-        checks =
-          NewYou.Proof.P805Browser.run_password_reset(bearer, "browser replacement", locale)
-
-        assert checks["explicit_form"]
-        assert checks["reset_complete"]
-        assert checks["replay_denied"]
-        assert checks["no_session"]
-        assert checks["stylesheet_loaded"]
-        assert checks["keyboard_focus"]
-        assert checks["responsive"]
-        assert checks["reduced_motion"]
-        assert {:ok, _} = Identity.authenticate_password(request.email, "browser replacement")
-      end)
-    end
-  end
-
-  defp field(page, name) do
-    [_, value] = Regex.run(~r/name="#{name}"[^>]*value="([^"]+)"/, page.resp_body)
-    value
-  end
-
-  defp operation do
-    id = Ecto.UUID.generate()
-    P805.track_operation(id)
-    id
-  end
-
-  defp snapshot(id) do
-    NewYou.Repo.query!("SELECT row_to_json(a)::text FROM accounts a WHERE id = $1", [
-      Ecto.UUID.dump!(id)
-    ]).rows ++
-      NewYou.Repo.query!(
-        "SELECT row_to_json(t)::text FROM tokens t WHERE account_id = $1 ORDER BY jti",
-        [Ecto.UUID.dump!(id)]
-      ).rows ++
-      NewYou.Repo.query!(
-        "SELECT row_to_json(s)::text FROM sessions s WHERE account_id = $1 ORDER BY id",
-        [Ecto.UUID.dump!(id)]
-      ).rows
+    NewYou.Proof.WebScenarios.reset_browser()
   end
 end

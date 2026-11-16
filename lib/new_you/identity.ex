@@ -30,8 +30,6 @@ defmodule NewYou.Identity do
   @verifier_provider "AshAuthentication.Argon2Provider"
   @verifier_version "argon2_elixir-4.1.3"
   @verification_token_lifetime {24, :hours}
-  @development_terms_id "NEWYOU-TERMS-EN-DEV-2026-10-27-001"
-  @development_privacy_id "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
 
   resources do
     resource Account
@@ -46,7 +44,68 @@ defmodule NewYou.Identity do
     resource NewYou.Identity.Session
     resource IdentityGrant
     resource NewYou.Identity.ReconciliationCase
+    resource NewYou.Identity.RecoveryCase
   end
+
+  @doc "Start or reuse a recovery case with a neutral result. Requests alone do not change Account security or access. A missing channel remains unproven until the existing Identity verification boundary establishes it."
+  @spec request_recovery(term(), term(), term()) :: :ok
+  def request_recovery(email, locale, operation_id),
+    do: NewYou.Identity.Recovery.request(email, locale, operation_id)
+
+  @doc "Accept current proof explicitly. Proof consumption and case assurance commit together."
+  @spec submit_recovery_proof(term(), term()) ::
+          {:ok, :accepted | :failed | :expired} | {:error, :recovery_unavailable}
+  def submit_recovery_proof(proof, operation_id),
+    do: recovery_action(:submit_recovery_proof, %{proof: proof, operation_id: operation_id})
+
+  @doc "Complete ordinary recovery once. An unchanged operation retry returns its committed receipt and cannot apply another password."
+  @spec complete_recovery(term(), term(), term()) ::
+          {:ok, :completed | :already_completed | :failed | :expired}
+          | {:error, :recovery_unavailable}
+  def complete_recovery(proof, password, operation_id),
+    do:
+      recovery_action(:complete_recovery, %{
+        proof: proof,
+        password: password,
+        operation_id: operation_id
+      })
+
+  @doc "Record case-bound current scoped manual review. This does not complete recovery or release a security hold."
+  @spec approve_manual_recovery(term()) ::
+          {:ok, %{status: :approved, version: non_neg_integer()}}
+          | {:error, :recovery_unavailable}
+  def approve_manual_recovery(request), do: recovery_action(:approve_manual_recovery, request)
+
+  @doc "Complete after distinct current scoped approval and independently committed E1 admission. All Identity effects and required owner obligations commit together."
+  @spec complete_manual_recovery(term()) ::
+          {:ok, :completed | :already_completed} | {:error, :recovery_unavailable}
+  def complete_manual_recovery(request), do: recovery_action(:complete_manual_recovery, request)
+
+  @doc "Cancel a current case with its purpose-bound claimant proof. Terminal cases remain final."
+  @spec cancel_recovery(term(), term()) ::
+          {:ok, :cancelled | :failed | :expired} | {:error, :recovery_unavailable}
+  def cancel_recovery(proof, operation_id),
+    do: recovery_action(:cancel_recovery, %{proof: proof, operation_id: operation_id})
+
+  @doc "Trusted transient proof serialization inside a delivery transaction. Content eligibility remains independently required before sending."
+  @spec recovery_delivery(term(), term(), term()) ::
+          {:ok, binary()} | {:error, :source_invalid | :capability_unavailable}
+  def recovery_delivery(reference, destination, locale),
+    do: NewYou.Identity.Recovery.delivery(reference, destination, locale)
+
+  defp recovery_action(name, request) when is_map(request) do
+    NewYou.Identity.RecoveryCase
+    |> Ash.ActionInput.for_action(name, %{request: request}, authorize?: false)
+    |> Ash.run_action()
+    |> case do
+      {:ok, result} -> {:ok, result}
+      _ -> {:error, :recovery_unavailable}
+    end
+  rescue
+    _ -> {:error, :recovery_unavailable}
+  end
+
+  defp recovery_action(_, _), do: {:error, :recovery_unavailable}
 
   @doc "Request a password-reset link through the neutral, bounded development boundary. No Account or Session is created."
   @spec request_password_reset(term(), term(), term()) :: :ok
@@ -142,6 +201,18 @@ defmodule NewYou.Identity do
   def step_up_privileged(credentials, password, code, purpose),
     do: NewYou.Identity.PrivilegedAccess.step_up(credentials, password, code, purpose)
 
+  @doc "Look up one grant-bound Account by its canonical email and return only minimum Identity context."
+  @spec lookup_support_identity(term(), term(), term(), term()) ::
+          {:ok, map() | :not_found} | {:error, :support_lookup_unavailable}
+  def lookup_support_identity(credentials, grant_id, target_account_id, email),
+    do:
+      NewYou.Identity.SupportLookup.lookup(
+        credentials,
+        grant_id,
+        target_account_id,
+        email
+      )
+
   @doc "Place a version-bound security hold under current scoped Support authority and revoke the target's active Sessions."
   @spec place_security_hold(map()) :: {:ok, map()} | {:error, :security_hold_unavailable}
   def place_security_hold(request),
@@ -185,6 +256,66 @@ defmodule NewYou.Identity do
   @doc "Reconcile a bounded batch of Sessions whose expiry deadlines have passed."
   @spec expire_due_sessions() :: {:ok, non_neg_integer()} | {:error, :authentication_unavailable}
   def expire_due_sessions, do: NewYou.Identity.PasswordSession.expire_due()
+
+  @doc "Request an Account-owned primary-email change under the current authenticated Session."
+  @spec request_primary_email_change(term(), term(), term(), term()) ::
+          {:ok, :requested} | {:error, :primary_email_change_unavailable}
+  def request_primary_email_change(credentials, target, locale, operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.request(credentials, target, locale, operation_id)
+
+  @doc "Require fresh password and current Session assurance before issuing or refreshing proof authority."
+  @spec reauthenticate_primary_email_change(term(), term(), term()) ::
+          {:ok, :proof_pending | :assurance_refreshed}
+          | {:error, :primary_email_change_unavailable}
+  def reauthenticate_primary_email_change(credentials, password, operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.reauthenticate(credentials, password, operation_id)
+
+  @doc "Explicitly consume the current new-address proof. Confirmation does not apply the email."
+  @spec confirm_primary_email_change(term()) ::
+          {:ok, :confirmed} | {:error, :primary_email_change_unavailable}
+  def confirm_primary_email_change(proof),
+    do: NewYou.Identity.PrimaryEmailChange.confirm(proof)
+
+  @doc "Apply a current, confirmed primary-email change after its Identity-owned guards pass."
+  @spec apply_primary_email_change(term()) ::
+          {:ok,
+           :applied | :already_applied | :held | :already_held | :rejected | :already_rejected}
+          | {:error, :primary_email_change_unavailable}
+  def apply_primary_email_change(operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.apply(operation_id)
+
+  @doc "Cancel the current primary-email-change operation from its authenticated Account Session."
+  @spec cancel_primary_email_change(term(), term()) ::
+          {:ok, :cancelled | :already_cancelled}
+          | {:error, :primary_email_change_unavailable}
+  def cancel_primary_email_change(credentials, operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.cancel(credentials, operation_id)
+
+  @doc "Expire one current primary-email-change operation after its persisted deadline."
+  @spec expire_primary_email_change(term()) ::
+          {:ok, :expired | :already_expired | :not_expired}
+          | {:error, :primary_email_change_unavailable}
+  def expire_primary_email_change(operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.expire(operation_id)
+
+  @doc "Reconcile due primary-email-change operations from durable Account state."
+  @spec expire_due_primary_email_changes(pos_integer()) ::
+          {:ok, non_neg_integer()} | {:error, :primary_email_change_unavailable}
+  def expire_due_primary_email_changes(limit \\ 100),
+    do: NewYou.Identity.PrimaryEmailChange.expire_due(limit)
+
+  @doc "Review a risk-required operation after fresh password and current applicable MFA step-up."
+  @spec review_primary_email_change(term(), term(), term()) ::
+          {:ok, :reviewed | :already_reviewed}
+          | {:error, :primary_email_change_unavailable}
+  def review_primary_email_change(credentials, password, operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.review(credentials, password, operation_id)
+
+  @doc false
+  @spec primary_email_change_delivery(String.t(), String.t(), String.t()) ::
+          {:ok, String.t()} | {:error, :source_invalid | :capability_unavailable}
+  def primary_email_change_delivery(reference, destination, locale),
+    do: NewYou.Identity.PrimaryEmailChange.delivery(reference, destination, locale)
 
   @doc """
   Consumes an email-verification capability and verifies its Account atomically.
@@ -965,22 +1096,13 @@ defmodule NewYou.Identity do
   defp language(_), do: {:error, :invalid_registration}
 
   defp legal_versions(request) do
-    terms = Map.get(request, :terms_version_id)
-    privacy = Map.get(request, :privacy_version_id)
-
-    if allowed_development_legal_versions?() and terms == @development_terms_id and
-         privacy == @development_privacy_id do
-      {:ok, terms, privacy}
+    with {:ok, versions} <- NewYou.Content.Registration.legal_versions(),
+         true <- Map.get(request, :terms_version_id) == versions.terms_version_id,
+         true <- Map.get(request, :privacy_version_id) == versions.privacy_version_id do
+      {:ok, versions.terms_version_id, versions.privacy_version_id}
     else
-      {:error, :invalid_registration}
+      _ -> {:error, :invalid_registration}
     end
-  end
-
-  defp allowed_development_legal_versions? do
-    Application.get_env(:new_you, :identity_registration_legal_versions) == %{
-      terms_version_id: @development_terms_id,
-      privacy_version_id: @development_privacy_id
-    }
   end
 
   defp password_matches?(%RegistrationOperation{} = operation, password) do

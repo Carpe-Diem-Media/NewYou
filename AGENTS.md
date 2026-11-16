@@ -285,7 +285,7 @@ Derived state, caches, Analytics, search indexes, provider state, PubSub and UI 
 
 Business writes use owning Ash interfaces. Controllers, LiveViews and workers call the owning Domain/application interface.
 
-Do not introduce parallel ordinary "NewYou.Repo", raw SQL or "Ecto.Multi" business-write APIs. "mix check.architecture" enforces these boundaries.
+Do not introduce parallel ordinary "NewYou.Repo", raw SQL or "Ecto.Multi" business-write APIs. `mise exec -- devcore-project run test -- mix check.architecture` enforces these boundaries.
 
 Do not introduce Redis, extra services, extra Repos, ETS/process authority, replicas, Rust/Rustler, microservices or speculative infrastructure without demonstrated need and authority.
 
@@ -354,11 +354,26 @@ Prefer evidence in this order:
 
 Verify current stable package/API facts and distinguish stable releases from prerelease or main-branch documentation.
 
+Local Elixir toolchain execution
+
+NewYou pins Elixir and Erlang/OTP in `.tool-versions`.
+
+All local commands that invoke Elixir or Mix MUST start with `mise exec --`. This applies in the primary checkout and every isolated worktree, including `elixir`, `iex`, Mix tasks and targeted tests.
+
+For commands that need NewYou's DEV or TEST environment, put DevCore inside Mise so Mise selects the pinned runtime and DevCore supplies the requested environment:
+
+- `mise exec -- devcore-project run dev -- mix <task>`
+- `mise exec -- devcore-project run test -- mix <task>`
+
+Do not run local Mix commands through an unwrapped `devcore-project run ...` command or rely on the calling shell's active Elixir version. This rule does not apply to `devcore-project plan`, `doctor`, `render` or `activate`, which do not invoke Elixir or Mix. GitHub Actions uses its configured runner toolchain.
+
+Before reporting local verification success, record the exact command, the resolved Elixir and Erlang/OTP versions from `mise current`, and the observed outcome. Confirm the active Elixir runtime with `mise exec -- elixir --version`.
+
 Verification, review and merge
 
-"mix check" is the canonical fast engineering gate.
+`mise exec -- devcore-project run test -- mix check` is the canonical fast engineering gate.
 
-"mix check.deep" is the slower engineering gate.
+`mise exec -- devcore-project run test -- mix check.deep` is the slower engineering gate.
 
 Foundation Smoke runs on every PR and validates current routing and merge-gate topology.
 
@@ -375,6 +390,43 @@ Do not wait for the nightly Foundation Full during routine implementation. The r
 Ordinary JIT implementation choices do not justify governance amendments merely to obtain Foundation Full evidence.
 
 Investigate material Foundation Full regressions reported by a nightly run against `main`, and use the recorded run SHA to identify affected changes.
+
+### Verification stages and failure diagnosis
+
+Focused development proof answers whether the changed implementation behaves correctly. During IMPLEMENTING, run the narrowest useful test, formatting, compile, architecture or Python contract check. Do not run `mix check` after every edit or `mix check.deep` during each iteration. Reuse settled reconnaissance until a relevant input changes.
+
+When a broad verification command fails, diagnose the failure before repeating that broad command. Enter TARGETED_FAILURE and:
+
+1. Record the failing command and exact source SHA, including any uncommitted inputs.
+2. Inspect the failing test, step, compilation error or relevant logs.
+3. Classify the cause as an implementation defect, test defect, environment issue, dependency issue, fixture interference or suspected nondeterminism.
+4. Reproduce with the narrowest appropriate command.
+5. Correct the identified cause and run focused verification on the correction.
+6. Return to CANDIDATE_STABLE only after focused checks pass and material implementation is complete, then rerun the applicable complete gate.
+
+Never blindly rerun an expensive suite on unchanged inputs. An unchanged-input retry needs a documented diagnostic reason, such as a suspected transient infrastructure failure. A successful retry does not resolve the original failure; investigate it. Do not weaken tests, assertions, security checks or timeouts to hide failures.
+
+Final candidate proof checks the complete applicable repository obligations. For a stable candidate with application code or executable engineering changes, run `mise exec -- devcore-project run test -- mix check` once under normal circumstances. It includes architecture validation. Run `mise exec -- devcore-project run test -- mix check.deep` for application code, dependencies or architecture-rule changes, plus applicable checks not included by those aliases. Focused tests do not replace final integration proof. Material corrections invalidate affected evidence and require fresh verification; there is no artificial retry limit after actual changes.
+
+For proven non-executable documentation, inspect the complete diff and actual consumers. Run directly relevant documentation, instruction, router, knowledge and provenance checks; verify security and workflow requirements remain intact. File extensions alone do not establish an exemption. A Markdown build input still needs its applicable engineering gates. Record a reasoned OCR exemption where permitted. Do not require the full Elixir suite solely because a file is Markdown.
+
+LOCAL_VERIFIED requires all applicable local gates passing. Follow the ticket skill for source commit, Draft PR and generated history. A mechanical history-only commit does not require another full application suite when verified application inputs remain identical. Final provenance and hosted checks still bind the exact final PR head/base.
+
+PR_CI_PENDING cannot become REVIEW_READY until all required exact-head hosted checks, knowledge validation and applicable OCR are complete. PR_CI_FAILED follows the same diagnosis procedure before rerun. Preserve the current local-checks-before-OCR order pending separate WELL-125 reconciliation. CHANGES_REQUESTED requires corrections, refreshed invalidated proof and fresh exact-head review. Changed implementation, stale CI, missing approval and base drift prevent advancement.
+
+APPROVED requires authenticated independent Master Gate approval for the exact final head. Before authorised integration run the read-only native candidate check. INTEGRATED requires the read-only native result check and resulting-main reconciliation. Only that proof permits Plane Done and dependent work. Merge alone never completes delivery.
+
+### Routine PR identity preflight
+
+Before creating or updating a routine PR, run `gh api user --jq .login` and `python3 -m tools.newyou_attest pr-preflight`, adding `--pr NUMBER` for an existing PR. Require actual authenticated `JC-Agents` identity and an agent-authored existing PR. Git commit name/email is insufficient. Wrong, missing or unverifiable authentication stops PR creation/update. Never request founder credentials. `JCSchoeman96` remains the independent code-owner reviewer; do not self-approve, relax protection or merge without independent authority.
+
+### Independent OCR review checkpoint
+
+For material engineering changes (application code, dependencies, migrations, authentication/authorization, security/privacy, lifecycles or cross-Domain behaviour), pass applicable local engineering checks first. Then run `ocr review --from origin/main --to HEAD` against the implementation SHA before independent Master Gate handoff. The command must use the current intended `origin/main` baseline. Follow `.agents/skills/code-change-verification/SKILL.md` for coverage, exclusions and evidence.
+
+OCR findings are **advisory review evidence**, not instructions to auto-fix code and not merge authority. The implementing agent records every finding, severity, source location, scan omissions/errors, the scanned implementation SHA and a brief preliminary assessment in the PR; do not silently discard, auto-dismiss or automatically implement proposed fixes. If findings contain secrets, report them in redacted form and use the existing security reporting boundary. Credible urgent security/privacy/data-integrity exposure must be escalated promptly; keep the PR Draft/Blocked pending review and perform only necessary immediate containment.
+
+ChatGPT Master Gate independently evaluates the full exact-head diff and CI plus the OCR findings against actual code, governing authority and execution context. Classify findings as `CONFIRMED BLOCKER`, `NON-BLOCKING`, `FALSE POSITIVE` or `NEEDS EVIDENCE`, with a rationale. Confirmed blockers prohibit merge; unresolved material `NEEDS EVIDENCE` findings prevent certification until resolved. A new implementation commit requires refreshed applicable local checks, OCR and exact-head CI/review. Trivial/cosmetic or documentation-only changes may record an explicit OCR exemption with a reason. OCR never replaces the required full-diff security review.
 
 Before handoff:
 
@@ -399,7 +451,7 @@ Apply stronger approval only when a governing or external obligation requires it
 
 After authorized integration of PR #224, a one-time GitHub settings change may be made only under separate authorization. Preserve ruleset 24191860's Foundation Integrity requirement, PR-only integration, no bypass, force-push and deletion protections, and regular merge-only behavior. Require one approval, code-owner approval using `.github/CODEOWNERS` with `* @JCSchoeman96`, stale-review dismissal, latest-push approval and resolved review threads. The founder has approved retaining JC-Agents' All-repository Admin, CI/CD Admin and Security manager roles. Native verification accepts only the authenticated JC-Agents account with effective repository Admin or Write and active organization Member access. Do not attempt further permission changes. Admin access grants no merge bypass or founder-review authority. Preserve JCSchoeman96's existing owner/admin access. Independently inspect and verify the live rules and access before describing enforcement as active.
 
-Maintain one source-linked JSON capability map under `docs/development/knowledge/` for meaningful capabilities and material interface/lifecycle/schema changes, following the implementation-handoff standard. Verify actual source and live Plane before reuse. Shape/reference validation does not replace semantic review. Trivial internal/cosmetic changes may record an exemption.
+Maintain one source-linked JSON capability map under `docs/development/knowledge/` for meaningful capabilities and material interface/lifecycle/schema changes, following the implementation-handoff standard. Verify actual source and live Plane before reuse. Generate the mechanical PR history record once at the review checkpoint from live GitHub metadata and the explicit implementation ticket. Verify live Plane state separately. Regenerate the record only when source or base changes. Shape/reference validation does not replace semantic review. Trivial internal/cosmetic changes may record an exemption.
 
 Master Gate reviews JIT implementation choices for correctness and compliance. It must not reject a compliant internal engineering choice merely because governance did not pre-specify it.
 
@@ -413,15 +465,22 @@ Local DevCore credentials
 
 DO NOT ASK THE USER FOR LOCAL DB PASSWORDS OR DEVCORE-MANAGED DB VARIABLES.
 
+NewYou uses existing shared DEV and TEST PostgreSQL allocations. Every linked worktree has separate Git-ignored ".env.dev.local" and ".env.test.local" files. A new worktree can lack these files even when both databases and their centrally managed credentials are healthy. T3 Code may render them in its worktree setup action; agents must still verify readiness in their actual working directory.
+
 If ".devcore/project.conf" exists:
 
-1. run "devcore-project doctor";
-2. if state is missing or stale, run "devcore-project activate";
-3. run DB-dependent commands with:
-   - "devcore-project run dev -- <command>"
-   - "devcore-project run test -- <command>"
+1. From the current repository/worktree root, run "devcore-project doctor".
+2. If the only reported problem is a missing or stale worktree-local rendered environment file, run "devcore-project render", then rerun "devcore-project doctor". Rendering uses existing central credentials; it does not provision databases or change role passwords.
+3. If authentication, role/ownership invariants, central credentials, PostgreSQL services, or other infrastructure checks fail, stop environment preparation and report the exact non-secret error. Do not automatically invoke "devcore-project activate" or change shared state.
+4. Run local Elixir/Mix commands requiring a project environment with:
+   - "mise exec -- devcore-project run dev -- <command>"
+   - "mise exec -- devcore-project run test -- <command>"
 
-Never request or print password values.
+If doctor passes initially, proceed without render. Rendering is allowed automatically only for the missing/stale local-file case above; a healthy worktree needs no recovery.
+
+"devcore-project activate" is a provisioning operation, not routine worktree setup or a generic doctor-failure repair. Use it only for separately authorised workstation provisioning, never as an automatic fallback in agent startup.
+
+Never request, print or commit password values or rendered secret-bearing files.
 
 The repository must not start, stop, recreate or delete shared DevCore services or volumes.
 

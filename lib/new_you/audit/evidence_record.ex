@@ -13,7 +13,7 @@ defmodule NewYou.Audit.EvidenceRecord do
     check_constraints do
       check_constraint :assertion_kind, "evidence_records_assertion_shape",
         check:
-          "(assertion_kind = 'materialisation' AND obligation_id IS NOT NULL AND attempt_id IS NULL AND action_class IS NULL AND actor_id IS NULL AND target_id IS NULL AND grant_id IS NULL AND grant_version IS NULL AND session_id IS NULL AND expected_version IS NULL AND reason_code IS NULL AND admitted_at IS NULL AND outcome IS NULL AND case_id IS NULL AND canonical_grant_id IS NULL AND canonical_grant_version IS NULL) OR (assertion_kind = 'admission' AND obligation_id IS NULL AND attempt_id IS NOT NULL AND action_class IS NOT NULL AND action_class IN ('security_hold_release', 'identity_reconciliation') AND ((action_class = 'security_hold_release' AND case_id IS NULL AND canonical_grant_id IS NULL AND canonical_grant_version IS NULL) OR (action_class = 'identity_reconciliation' AND case_id IS NOT NULL AND canonical_grant_id IS NOT NULL AND canonical_grant_version IS NOT NULL AND canonical_grant_version > 0)) AND actor_id IS NOT NULL AND target_id IS NOT NULL AND grant_id IS NOT NULL AND grant_version IS NOT NULL AND grant_version > 0 AND session_id IS NOT NULL AND expected_version IS NOT NULL AND expected_version >= 0 AND reason_code IS NOT NULL AND reason_code IN ('suspected_compromise', 'security_review', 'verified_recovery', 'mistaken_hold') AND admitted_at IS NOT NULL AND outcome IS NOT NULL AND outcome = 'admitted')"
+          "(assertion_kind = 'materialisation' AND obligation_id IS NOT NULL AND attempt_id IS NULL AND action_class IS NULL AND actor_id IS NULL AND target_id IS NULL AND grant_id IS NULL AND grant_version IS NULL AND session_id IS NULL AND expected_version IS NULL AND reason_code IS NULL AND admitted_at IS NULL AND outcome IS NULL AND case_id IS NULL AND canonical_grant_id IS NULL AND canonical_grant_version IS NULL) OR (assertion_kind = 'admission' AND obligation_id IS NULL AND attempt_id IS NOT NULL AND action_class IS NOT NULL AND action_class IN ('security_hold_release', 'identity_reconciliation', 'identity_recovery') AND ((action_class = 'security_hold_release' AND case_id IS NULL AND canonical_grant_id IS NULL AND canonical_grant_version IS NULL) OR (action_class = 'identity_reconciliation' AND case_id IS NOT NULL AND canonical_grant_id IS NOT NULL AND canonical_grant_version IS NOT NULL AND canonical_grant_version > 0) OR (action_class = 'identity_recovery' AND case_id IS NOT NULL AND canonical_grant_id IS NULL AND canonical_grant_version IS NULL)) AND actor_id IS NOT NULL AND target_id IS NOT NULL AND grant_id IS NOT NULL AND grant_version IS NOT NULL AND grant_version > 0 AND session_id IS NOT NULL AND expected_version IS NOT NULL AND expected_version >= 0 AND reason_code IS NOT NULL AND reason_code IN ('suspected_compromise', 'security_review', 'verified_recovery', 'mistaken_hold') AND admitted_at IS NOT NULL AND outcome IS NOT NULL AND outcome = 'admitted')"
     end
   end
 
@@ -50,6 +50,29 @@ defmodule NewYou.Audit.EvidenceRecord do
 
       change set_attribute(:assertion_kind, :admission)
       change set_attribute(:action_class, :identity_reconciliation)
+      change set_attribute(:outcome, :admitted)
+    end
+
+    create :admit_recovery do
+      description "Immutable E1 admission bound to one Identity recovery case and attempt."
+      public? false
+
+      accept [
+        :attempt_id,
+        :case_id,
+        :actor_id,
+        :target_id,
+        :grant_id,
+        :grant_version,
+        :session_id,
+        :expected_version,
+        :reason_code,
+        :admitted_at,
+        :action_class
+      ]
+
+      change set_attribute(:assertion_kind, :admission)
+      change set_attribute(:action_class, :identity_recovery)
       change set_attribute(:outcome, :admitted)
     end
 
@@ -99,7 +122,9 @@ defmodule NewYou.Audit.EvidenceRecord do
     attribute :attempt_id, :uuid, public?: false
 
     attribute :action_class, :atom,
-      constraints: [one_of: [:security_hold_release, :identity_reconciliation]],
+      constraints: [
+        one_of: [:security_hold_release, :identity_reconciliation, :identity_recovery]
+      ],
       public?: false
 
     attribute :actor_id, :uuid, public?: false

@@ -1,6 +1,9 @@
 <main id="main" class="registration-page ds-production-page" data-design-pilot="registration">
   <header class="ds-container ds-row ds-registration-header">
     <p>{NewYou.platform_name()}</p>
+    <.text_link href={"/login?locale=#{@locale}"}>
+      {copy("shared.navigation.login", @locale)}
+    </.text_link>
     <nav aria-label={copy("shared.language.change", @locale)} class="ds-row">
       <.text_link
         lang="af"

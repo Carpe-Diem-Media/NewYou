@@ -1,0 +1,9 @@
+'n Versoek is ontvang om die e-posadres van 'n {{platform_name}}-rekening na hierdie adres te verander.
+
+Om te bevestig dat jy toegang tot hierdie e-posadres het, klik op die skakel hieronder en volg die instruksies:
+
+{{email_change_confirmation_link}}
+
+Die bevestiging van hierdie e-posadres beteken nie dat die rekening se primêre e-posadres onmiddellik verander word nie.
+
+As jy nie hierdie verandering aangevra het nie, kan jy hierdie boodskap ignoreer.

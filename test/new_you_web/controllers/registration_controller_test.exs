@@ -123,6 +123,14 @@ defmodule NewYouWeb.RegistrationControllerTest do
       html = conn |> get("/register?locale=en") |> html_response(200)
 
       assert_page_copy(html, @registration_copy_keys, "en")
+
+      assert_registration_label_copy(
+        html,
+        "registration-surname",
+        "identity.registration.surname.label",
+        "en"
+      )
+
       assert html =~ ~r/<html\b[^>]*\blang="en"/
       assert html =~ ~s(name="registration[preferred_language]")
       assert html =~ ~s(value="en")
@@ -143,6 +151,37 @@ defmodule NewYouWeb.RegistrationControllerTest do
       refute html =~ "privacy_version_id"
     end
 
+    test "does not treat an opaque CSRF token as Afrikaans copy", %{conn: conn} do
+      previous_token = Process.get(:plug_masked_csrf_token)
+      token = "Van" <> String.duplicate("A", 21)
+      Process.put(:plug_masked_csrf_token, token)
+
+      try do
+        html = conn |> get("/register?locale=en") |> html_response(200)
+
+        assert html =~ ~s(name="csrf-token" content="#{token}")
+        assert_page_copy(html, @registration_copy_keys, "en")
+      after
+        if previous_token do
+          Process.put(:plug_masked_csrf_token, previous_token)
+        else
+          Process.delete(:plug_masked_csrf_token)
+        end
+      end
+    end
+
+    test "still rejects Afrikaans participant copy added to the English page", %{conn: conn} do
+      html = conn |> get("/register?locale=en") |> html_response(200)
+
+      mixed_copy =
+        html <>
+          "<p>" <> expected_rendered_copy("identity.registration.surname.label", "af") <> "</p>"
+
+      assert_raise ExUnit.AssertionError, ~r/found identity.registration.surname.label\/af/, fn ->
+        assert_page_copy(mixed_copy, @registration_copy_keys, "en")
+      end
+    end
+
     test "renders the registered Afrikaans launch and registration copy without English fallback",
          %{
            conn: conn
@@ -150,6 +189,14 @@ defmodule NewYouWeb.RegistrationControllerTest do
       html = conn |> get("/register?locale=af") |> html_response(200)
 
       assert_page_copy(html, @registration_copy_keys, "af")
+
+      assert_registration_label_copy(
+        html,
+        "registration-surname",
+        "identity.registration.surname.label",
+        "af"
+      )
+
       assert html =~ ~r/<html\b[^>]*\blang="af"/
       assert html =~ ~s(value="af")
     end
@@ -430,7 +477,7 @@ defmodule NewYouWeb.RegistrationControllerTest do
       assert Enum.all?(Map.keys(session), &(&1 == "_csrf_token"))
     end
 
-    test "pending navigation separates the public entry content from home" do
+    test "pending navigation preserves the locale for public content and home" do
       for locale <- ["en", "af"] do
         registration = valid_registration(locale)
 
@@ -442,10 +489,10 @@ defmodule NewYouWeb.RegistrationControllerTest do
         browse_label = expected_copy("identity.verification.pending.browse_public", locale)
         home_label = expected_copy("identity.verification.pending.home", locale)
 
-        assert link_target(html, browse_label) == "/register?locale=#{locale}"
-        assert link_target(html, home_label) == "/register"
+        assert link_target(html, browse_label) == "/?locale=#{locale}#launch-heading"
+        assert link_target(html, home_label) == "/?locale=#{locale}"
         refute link_target(html, browse_label) == link_target(html, home_label)
-        assert html =~ ~r/<a href="\/register" class="[^"]*whitespace-nowrap/
+        assert html =~ ~r/<a href="\/\?locale=#{locale}" class="[^"]*whitespace-nowrap/
       end
     end
 
@@ -656,21 +703,25 @@ defmodule NewYouWeb.RegistrationControllerTest do
 
     test "a duplicate canonical email receives the same neutral pending outcome", %{conn: conn} do
       first = valid_registration("en")
-      first_html = conn |> post("/register", %{"registration" => first}) |> html_response(200)
+      first_conn = post(conn, "/register", %{"registration" => first})
+      assert first_conn.status == 200
 
       duplicate_email = String.replace_suffix(first["email"], "@example.test", "@EXAMPLE.TEST ")
       duplicate = valid_registration("en") |> Map.put("email", duplicate_email)
 
-      duplicate_html =
+      duplicate_conn =
         build_conn()
         |> post("/register", %{"registration" => duplicate})
-        |> html_response(200)
 
       neutral = expected_copy("identity.registration.accepted_neutral", "en")
-      assert first_html =~ neutral
-      assert duplicate_html =~ neutral
+      assert first_conn.resp_body =~ neutral
+      assert duplicate_conn.resp_body =~ neutral
+
+      assert registration_public_result(first_conn, first["email"]) ==
+               registration_public_result(duplicate_conn, duplicate_email)
+
       assert length(accounts_for(first["email"])) == 1
-      refute duplicate_html =~ "account_id"
+      refute duplicate_conn.resp_body =~ "account_id"
     end
 
     test "an unknown email receives the same neutral resend outcome", %{conn: conn} do
@@ -782,20 +833,42 @@ defmodule NewYouWeb.RegistrationControllerTest do
 
   defp assert_page_copy(html, keys, locale) do
     other_locale = if locale == "en", do: "af", else: "en"
+    text_nodes = rendered_text_nodes(html)
 
     Enum.each(keys, fn key ->
-      assert html =~ expected_rendered_copy(key, locale), "missing #{key}/#{locale} from page"
+      own = expected_rendered_copy(key, locale)
+      other = expected_rendered_copy(key, other_locale)
 
-      own = expected_copy(key, locale)
-      other = expected_copy(key, other_locale)
+      assert copy_present?(html, text_nodes, key, own), "missing #{key}/#{locale} from page"
 
-      if own != other do
-        refute(
-          html =~ expected_rendered_copy(key, other_locale),
-          "found #{key}/#{other_locale} in #{locale} page"
-        )
-      end
+      refute own != other and copy_present?(html, text_nodes, key, other),
+             "found #{key}/#{other_locale} in #{locale} page"
     end)
+  end
+
+  defp copy_present?(html, _text_nodes, "shared.language.change", copy),
+    do: html =~ ~s(aria-label="#{copy}")
+
+  defp copy_present?(_html, text_nodes, _key, copy), do: copy in text_nodes
+
+  defp assert_registration_label_copy(html, field_id, key, locale) do
+    field_id = Regex.escape(field_id)
+
+    assert [label_text] =
+             Regex.run(
+               ~r/<label\b(?=[^>]*\bfor="#{field_id}")[^>]*>([^<]*)<\/label>/s,
+               html,
+               capture: :all_but_first
+             )
+
+    assert String.trim(label_text) == expected_rendered_copy(key, locale)
+  end
+
+  defp rendered_text_nodes(html) do
+    Regex.scan(~r/>([^<>]*)</s, html, capture: :all_but_first)
+    |> List.flatten()
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
   end
 
   defp expected_rendered_copy(key, locale) do
@@ -838,6 +911,54 @@ defmodule NewYouWeb.RegistrationControllerTest do
       [value] -> value
       _ -> flunk("expected a hidden form value matching #{inspect(pattern)}")
     end
+  end
+
+  defp registration_public_result(conn, submitted_email) do
+    {:ok, canonical_email} = Identity.Email.canonicalize(submitted_email)
+
+    body =
+      [submitted_email, canonical_email]
+      |> Enum.uniq()
+      |> Enum.reduce(conn.resp_body, fn email, body ->
+        String.replace(body, email, "[submitted-email]")
+      end)
+
+    body =
+      Regex.replace(
+        ~r/(name="_csrf_token"[^>]*value=")[^"]+/,
+        body,
+        "\\1[session-token]"
+      )
+
+    body =
+      Regex.replace(
+        ~r/(<meta name="csrf-token" content=")[^"]+/,
+        body,
+        "\\1[session-token]"
+      )
+
+    body =
+      Regex.replace(
+        ~r/(name="resend\[operation_id\]"[^>]*value=")[^"]+/,
+        body,
+        "\\1[operation-id]"
+      )
+
+    cookies =
+      conn
+      |> Plug.Conn.get_resp_header("set-cookie")
+      |> Enum.map(&Regex.replace(~r/(^[^=;]+=)[^;]*/, &1, "\\1[cookie]"))
+
+    {
+      conn.status,
+      body,
+      Plug.Conn.get_resp_header(conn, "location"),
+      Plug.Conn.get_resp_header(conn, "cache-control"),
+      Plug.Conn.get_resp_header(conn, "referrer-policy"),
+      Plug.Conn.get_resp_header(conn, "content-security-policy"),
+      cookies,
+      Plug.Conn.get_session(conn) |> Map.drop(["_csrf_token"])
+    }
   end
 
   defp link_target(html, label) do

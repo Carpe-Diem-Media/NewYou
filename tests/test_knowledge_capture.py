@@ -132,7 +132,7 @@ end
         expected = capture.extract(self.repo, base, head, 224, ['WELL-121'], metadata=pr)
         event = dict(number=224, pull_request=pr, repository={'full_name': 'Carpe-Diem-Media/NewYou'})
         self.assertEqual(expected, capture.extract(self.repo, base, head, 224, ['WELL-121'], metadata=event))
-        for change in (dict(title='WELL-999 mismatch'), dict(base={'sha': '0' * 40}),
+        for change in (dict(number=225), dict(base={'sha': '0' * 40}),
                        dict(head={'sha': '0' * 40}), dict(html_url='https://github.com/other/repo/pull/224')):
             with self.subTest(change=change), self.assertRaises(ValueError):
                 capture.extract(self.repo, base, head, 224, ['WELL-121'], metadata=dict(pr, **change))
@@ -144,19 +144,25 @@ end
             capture._loads('{"schema_version":1,"schema_version":true}')
 
         pristine = capture.extract(self.repo, base, head, 224, ['WELL-121'])
-        pristine['ci']['status'] = 'PASS'
+        pristine['ci'] = {'source': 'external GitHub checks', 'status': 'PASS'}
         with self.assertRaises(ValueError):
             capture.check_record(self.repo, pristine, capture.extract(self.repo, base, head, 224, ['WELL-121']))
 
         metadata = {'number': 224, 'base': {'sha': base, 'repo': {'full_name': 'Carpe-Diem-Media/NewYou'}},
                     'head': {'sha': head}, 'html_url': 'https://github.com/Carpe-Diem-Media/NewYou/pull/224',
                     'title': 'WELL-121 capture', 'body': None}
-        linked = capture.extract(self.repo, base, head, 224, [], metadata=metadata)
-        self.assertEqual(linked['tickets'], ['WELL-121'])
+        linked = capture.extract(self.repo, base, head, 224, ['WELL-123'], metadata=metadata)
+        self.assertEqual(linked['tickets'], ['WELL-123'])
         event = {'number': 224, 'repository': {'full_name': 'Carpe-Diem-Media/NewYou'},
                  'pull_request': {'number': 224, 'base': {'sha': base}, 'head': {'sha': head},
                                   'html_url': metadata['html_url'], 'title': 'WELL-121 capture', 'body': ''}}
-        self.assertEqual(capture.extract(self.repo, base, head, 224, [], metadata=event)['tickets'], ['WELL-121'])
+        self.assertEqual(capture.extract(self.repo, base, head, 224, ['WELL-123'], metadata=event)['tickets'], ['WELL-123'])
+        for changed in (dict(event, number=225), dict(event, repository={'full_name': 'other/repo'}),
+                        dict(event, pull_request=dict(event['pull_request'], number=225)),
+                        dict(event, pull_request=dict(event['pull_request'],
+                             base={'sha': base, 'repo': {'full_name': 'other/repo'}}))):
+            with self.subTest(event=changed), self.assertRaises(ValueError):
+                capture.extract(self.repo, base, head, 224, ['WELL-123'], metadata=changed)
 
     def test_clause_order_default_arity_empty_module_and_dynamic_declaration(self):
         original = '''defmodule Demo do
@@ -297,60 +303,35 @@ end
         visibility = {(row['name'], row.get('visibility')) for row in parsed['functions']}
         self.assertEqual({('visible', 'public'), ('hidden', 'private')}, visibility)
 
-    def test_capture_requires_and_validates_plane_context(self):
+    def test_check_ignores_legacy_plane_administration_but_preserves_source_checks(self):
         (self.repo / 'lib/a.py').write_text('value = 1\n')
         base = self.commit('base')
         (self.repo / 'lib/a.py').write_text('value = 2\n')
         head = self.commit('head')
         metadata = dict(number=224, base={'sha': base}, head={'sha': head}, title='WELL-121 capture', body='',
                         html_url='https://github.com/Carpe-Diem-Media/NewYou/pull/224')
-        receipt = {'status': 'agent_verified', 'source': 'connected-plane', 'checked_at': '2026-11-12T10:00:00Z',
-                   'items': [{'identifier': 'WELL-121', 'id': '11111111-1111-4111-8111-111111111111',
-                              'project_id': '846031af-971b-4f08-92c3-7f008522a5ac', 'sequence_id': 121,
-                              'name': 'Capture evidence', 'state': 'In Review',
-                              'description_sha256': 'a' * 64}]}
-        self.assertEqual('unverified', capture.extract(self.repo, base, head, 224, ['WELL-121'],
-                                                        metadata=metadata)['plane']['status'])
-        record = capture.extract(self.repo, base, head, 224, ['WELL-121'], metadata=metadata,
-                                 plane_context=receipt)
-        self.assertEqual('agent_verified', record['plane']['status'])
-        with self.assertRaises(ValueError):
-            capture.extract(self.repo, base, head, 224, ['WELL-121'], metadata=metadata,
-                            plane_context=dict(receipt, items=[]))
-        with self.assertRaisesRegex(ValueError, 'Plane context is required'):
-            capture.generate(self.repo, base, head, 224, ['WELL-121'], metadata=metadata)
-        capture.generate(self.repo, base, head, 224, ['WELL-121'], metadata=metadata,
-                         plane_context=receipt)
+        capture.generate(self.repo, base, head, 224, ['WELL-121'], metadata=metadata)
         history = capture.record_path(self.repo, 224)
-        self.git('add', str(history.relative_to(self.repo)))
-        self.git('commit', '-qm', 'record')
-        recorded_head = self.git('rev-parse', 'HEAD')
-        metadata['head']['sha'] = recorded_head
-        self.assertEqual('PASS', capture.generate(self.repo, base, recorded_head, 224, ['WELL-121'],
-                                                  metadata=metadata, check=True)['status'])
-        # Missing live evidence must retain the explicit unavailability reason.
-        unverified = json.loads(history.read_text())
-        unverified['plane'] = {'status': 'unverified'}
-        history.write_text(json.dumps(unverified))
-        changed_head = self.commit('drop unavailability reason')
-        metadata['head']['sha'] = changed_head
-        with self.assertRaisesRegex(ValueError, 'Plane unavailability reason'):
-            capture.generate(self.repo, base, changed_head, 224, ['WELL-121'], metadata=metadata, check=True)
+        legacy = json.loads(history.read_text())
+        legacy.update(intent={'title': 'Old PR explanation'},
+                      plane={'status': 'agent_verified', 'items': [{'state': 'In Review'}]},
+                      ci={'source': 'external GitHub checks', 'status': 'unknown'})
+        for state in ('In Review', 'Changes Requested', 'Done'):
+            legacy['plane']['items'][0]['state'] = state
+            history.write_text(json.dumps(legacy))
+            metadata['head']['sha'] = self.commit('historical administration')
+            self.assertEqual('PASS', capture.generate(self.repo, base, metadata['head']['sha'], 224, [],
+                                                      metadata=metadata, check=True)['status'])
+        (self.repo / 'lib/a.py').write_text('value = 3\n')
+        metadata['head']['sha'] = self.commit('uncaptured source')
+        with self.assertRaisesRegex(ValueError, 'differs.*files'):
+            capture.generate(self.repo, base, metadata['head']['sha'], 224, [], metadata=metadata, check=True)
 
-    def test_intent_ignores_changing_ci_footer_and_parser_gate_uses_changed_paths(self):
+    def test_parser_gate_uses_changed_paths(self):
         (self.repo / 'lib/a.py').write_text('value = 1\n')
         base = self.commit('base')
         (self.repo / 'lib/a.py').write_text('value = 2\n')
         head = self.commit('head')
-        pr = dict(number=224, base={'sha': base}, head={'sha': head}, title='WELL-121 capture',
-                  body='## Purpose\nKeep capture stable.\n\n## CI Results\nrun 1 failed',
-                  html_url='https://github.com/Carpe-Diem-Media/NewYou/pull/224',
-                  user={'login': 'member', 'id': 42})
-        first = capture._metadata(pr, 224, base, head, [])['intent']
-        pr['body'] = '## Purpose\nKeep capture stable.\n\n## CI Results\nrun 2 passed'
-        second = capture._metadata(pr, 224, base, head, [])['intent']
-        self.assertEqual(first, second)
-        self.assertEqual({'login': 'member', 'id': 42}, first['author'])
         event = {'pull_request': {'base': {'sha': base}, 'head': {'sha': head}}}
         (self.repo / 'lib/a.ex').write_text('defmodule A do\nend\n')
         source_head = self.commit('elixir file')
@@ -359,6 +340,115 @@ end
         docs_event = {'pull_request': {'base': {'sha': source_head}, 'head': {'sha': source_head}},
                       'changed_files': ['docs/readme.md']}
         self.assertFalse(capture.parser_needed(self.repo, docs_event))
+
+    def test_pr_prose_and_authorship_do_not_identify_tickets_or_change_capture(self):
+        (self.repo / 'lib/a.py').write_text('value = 1\n')
+        base = self.commit('base')
+        (self.repo / 'lib/a.py').write_text('value = 2\n')
+        head = self.commit('source')
+        metadata = dict(number=224, base={'sha': base}, head={'sha': head},
+                        html_url='https://github.com/Carpe-Diem-Media/NewYou/pull/224',
+                        title='WELL-121 original', body='## Summary\nOriginal explanation.',
+                        user={'login': 'original', 'id': 1})
+        expected = capture.extract(self.repo, base, head, 224, ['WELL-123'], metadata=metadata)
+        metadata.update(title='A corrected title', body='## Summary\nWELL-999 unrelated context.',
+                        user={'login': 'another', 'id': 2})
+        actual = capture.extract(self.repo, base, head, 224, ['WELL-123'], metadata=metadata)
+        self.assertEqual(expected, actual)
+        self.assertEqual(['WELL-123'], actual['tickets'])
+        self.assertTrue({'intent', 'plane', 'ci'}.isdisjoint(actual))
+
+    def test_generation_and_event_check_need_no_plane_receipt_or_ticket_in_pr_text(self):
+        (self.repo / 'lib/a.py').write_text('value = 1\n')
+        base = self.commit('base')
+        (self.repo / 'lib/a.py').write_text('value = 2\n')
+        head = self.commit('source')
+        metadata = dict(number=224, base={'sha': base}, head={'sha': head},
+                        html_url='https://github.com/Carpe-Diem-Media/NewYou/pull/224',
+                        title='No ticket in prose', body='An explanation.')
+        capture.generate(self.repo, base, head, 224, ['WELL-123'], metadata=metadata)
+        record = capture.record_path(self.repo, 224)
+        committed_head = self.commit('capture')
+        metadata.update(head={'sha': committed_head}, body='Corrected explanation.')
+        event = {'number': 224, 'repository': {'full_name': 'Carpe-Diem-Media/NewYou'},
+                 'pull_request': metadata}
+        event_path = self.repo / '.git/event.json'
+        event_path.write_text(json.dumps(event))
+        result = subprocess.run(['python3', str(Path(capture.__file__)), '--repo', str(self.repo),
+                                 'check', '--metadata-json', str(event_path)],
+                                capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(['WELL-123'], json.loads(record.read_text())['tickets'])
+
+    def test_current_and_actual_historical_records_remain_queryable_together(self):
+        (self.repo / 'lib/a.py').write_text('value = 1\n')
+        base = self.commit('base')
+        (self.repo / 'lib/a.py').write_text('value = 2\n')
+        head = self.commit('source')
+        path = capture.record_path(self.repo, 9999)
+        path.parent.mkdir(parents=True)
+        current = capture.extract(self.repo, base, head, 9999, ['WELL-123'])
+        for field in ('intent', 'plane', 'ci'):
+            current.pop(field, None)
+        path.write_text(json.dumps(current))
+        root = Path(__file__).resolve().parents[1]
+        historical = {}
+        for number in (224, 228):
+            name = f'pr-{number}.json'
+            historical[name] = (root / capture.HISTORY / name).read_bytes()
+            (path.parent / name).write_bytes(historical[name])
+        self.commit('mixed records')
+        for ticket, number in [('WELL-121', 224), ('WELL-16', 228), ('WELL-123', 9999)]:
+            rows = capture.query_index(self.repo, ticket)['results']
+            self.assertTrue(any(row.get('pr') == number and row['historical'] for row in rows), ticket)
+        for name, data in historical.items():
+            self.assertEqual(data, (path.parent / name).read_bytes())
+
+    def test_explicit_ref_generation_matches_event_check_without_metadata(self):
+        (self.repo / 'lib/a.py').write_text('value = 1\n')
+        base = self.commit('base')
+        (self.repo / 'lib/a.py').write_text('value = 2\n')
+        head = self.commit('source')
+        capture.generate(self.repo, base, head, 224, ['WELL-123'])
+        recorded_head = self.commit('record')
+        metadata = dict(number=224, base={'sha': base}, head={'sha': recorded_head},
+                        html_url='https://github.com/Carpe-Diem-Media/NewYou/pull/224')
+        self.assertEqual('PASS', capture.generate(self.repo, base, recorded_head, 224, [],
+                                                  metadata=metadata, check=True)['status'])
+
+    def test_generate_requires_explicit_ticket_and_rejects_invalid_references(self):
+        (self.repo / 'lib/a.py').write_text('value = 1\n')
+        base = self.commit('base')
+        (self.repo / 'lib/a.py').write_text('value = 2\n')
+        head = self.commit('source')
+        for tickets in ([], ['WELL-0'], ['OTHER-123'], ['WELL-123 extra'], [123]):
+            with self.subTest(tickets=tickets), self.assertRaises(ValueError):
+                capture.generate(self.repo, base, head, 224, tickets)
+
+    def test_event_check_rejects_missing_or_tampered_source_history(self):
+        (self.repo / 'lib/old.py').write_text('value = 1\n')
+        (self.repo / 'lib/deleted.py').write_text('deleted = True\n')
+        base = self.commit('base')
+        self.git('mv', 'lib/old.py', 'lib/new.py')
+        (self.repo / 'lib/deleted.py').unlink()
+        head = self.commit('rename and delete')
+        with self.assertRaisesRegex(ValueError, 'missing PR history'):
+            capture.generate(self.repo, base, head, 224, ['WELL-123'], check=True)
+        capture.generate(self.repo, base, head, 224, ['WELL-123'])
+        path = capture.record_path(self.repo, 224)
+        record = json.loads(path.read_text())
+        self.assertEqual({'renamed', 'deleted'}, {entry['status'] for entry in record['files']})
+        for field, value in [('files', []), ('range_base_sha', head), ('base_sha', head),
+                             ('tests', ['test/missed_test.exs']), ('migrations', ['priv/migrations/missed.exs'])]:
+            with self.subTest(field=field):
+                path.write_text(json.dumps(dict(record, **{field: value})))
+                current_head = self.commit('tamper record')
+                with self.assertRaisesRegex(ValueError, 'differs'):
+                    capture.generate(self.repo, base, current_head, 224, [], check=True)
+        path.write_text(json.dumps(record))
+        current_head = self.commit('restore record')
+        with self.assertRaisesRegex(ValueError, 'ticket references differ'):
+            capture.generate(self.repo, base, current_head, 224, ['WELL-999'], check=True)
 
     def test_history_directory_symlink_cannot_escape_repository(self):
         (self.repo / 'docs/development/knowledge').mkdir(parents=True)

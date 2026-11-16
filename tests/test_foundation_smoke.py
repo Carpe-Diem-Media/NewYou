@@ -15,6 +15,18 @@ DELIVERY_ROUTER = Path("docs/delivery/CURRENT_DELIVERY_ROUTER.json")
 
 
 class FoundationSmokeTests(unittest.TestCase):
+    def test_fixture_includes_every_current_capability_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._fixture(directory)
+            for path in (ROOT / "docs/development/knowledge").glob("*.json"):
+                knowledge = json.loads(path.read_text())
+                if "capability_id" not in knowledge:
+                    continue
+                for source in knowledge["sources"]:
+                    target = root / source["path"]
+                    self.assertTrue(target.is_file(), source["path"])
+                    self.assertEqual((ROOT / source["path"]).read_bytes(), target.read_bytes())
+
     def _fixture(self, directory: str) -> Path:
         root = Path(directory)
         shutil.copy2(ROOT / "AGENTS.md", root / "AGENTS.md")
@@ -22,6 +34,8 @@ class FoundationSmokeTests(unittest.TestCase):
         (root / ".hallmark").mkdir()
         for record in ("log.json", "preflight.json"):
             shutil.copy2(ROOT / ".hallmark" / record, root / ".hallmark" / record)
+        (root / ".devcore").mkdir()
+        shutil.copy2(ROOT / ".devcore/README.md", root / ".devcore/README.md")
         for relative in ("docs/governance", "docs/delivery", "docs/history"):
             shutil.copytree(ROOT / relative, root / relative)
         shutil.copytree(ROOT / "docs/superpowers", root / "docs/superpowers")
@@ -29,11 +43,14 @@ class FoundationSmokeTests(unittest.TestCase):
         shutil.copy2(ROOT / "docs/README.md", root / "docs/README.md")
         shutil.copytree(ROOT / "docs/development", root / "docs/development")
         # Capability JSON is active documentation with exact source references.
-        knowledge = json.loads((ROOT / "docs/development/knowledge/identity.registration.json").read_text())
-        for source in knowledge["sources"]:
-            target = root / source["path"]
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(ROOT / source["path"], target)
+        for path in (ROOT / "docs/development/knowledge").glob("*.json"):
+            knowledge = json.loads(path.read_text())
+            if "capability_id" not in knowledge:
+                continue
+            for source in knowledge["sources"]:
+                target = root / source["path"]
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / source["path"], target)
         shutil.copytree(ROOT / "tools/hex_audit", root / "tools/hex_audit")
         shutil.copytree(ROOT / "priv/resource_snapshots", root / "priv/resource_snapshots")
         shutil.copytree(ROOT / "priv/static/fonts", root / "priv/static/fonts")

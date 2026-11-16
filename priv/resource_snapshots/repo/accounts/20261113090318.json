@@ -1,0 +1,852 @@
+{
+  "attributes": [
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"uuid_generate_v7()\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": true,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"open\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "account_status",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"normal\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "security_posture",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "0",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "hold_version",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "hold_review",
+      "type": "map"
+    },
+    {
+      "allow_nil?": false,
+      "default": "%{}",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "hold_operations",
+      "type": "map"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "first_name",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "surname",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "email",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"none\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_state",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_operation_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_target",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_locale",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "0",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_version",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_security_version",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_credential_version",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_reauth_session_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_token_jti",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_confirmation_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_requested_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_reauthenticated_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_confirmed_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_apply_after",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_requires_review?",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_reviewed_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_applied_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_terminated_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_expires_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "primary_email_change_token_expires_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "preferred_language",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "confirmed_age_18?",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "terms_version_id",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "privacy_version_id",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "legal_accepted_at",
+      "type": "timestamptz(6)"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "acceptance_locale",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "credential_status",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "hashed_password",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "false",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "email_verified?",
+      "type": "boolean"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"active\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "pmr_status",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "canonical_account_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "0",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reconciliation_version",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "pmr",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"disabled\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "mfa_enrollment_state",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "mfa_confirmed_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "mfa_last_accepted_period",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "0",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "mfa_failed_attempts",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "mfa_locked_until",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": false,
+      "default": "1",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "mfa_version",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "1",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "security_version",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "1",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "credential_version",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "encrypted_totp_secret",
+      "type": "binary"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "encrypted_pending_totp_secret",
+      "type": "binary"
+    }
+  ],
+  "base_filter": null,
+  "check_constraints": [
+    {
+      "attribute": [
+        "pmr_status"
+      ],
+      "base_filter": null,
+      "check": "(pmr_status = 'active' AND canonical_account_id IS NULL) OR (pmr_status = 'retired' AND canonical_account_id IS NOT NULL AND canonical_account_id <> id AND account_status = 'closed_terminal' AND credential_status = 'revoked')",
+      "name": "accounts_reconciliation_shape"
+    },
+    {
+      "attribute": [
+        "account_status"
+      ],
+      "base_filter": null,
+      "check": "account_status IN ('open', 'closed_recoverable', 'closed_terminal')",
+      "name": "accounts_account_status"
+    },
+    {
+      "attribute": [
+        "security_posture"
+      ],
+      "base_filter": null,
+      "check": "security_posture IN ('normal', 'held')",
+      "name": "accounts_security_posture"
+    },
+    {
+      "attribute": [
+        "email"
+      ],
+      "base_filter": null,
+      "check": "octet_length(email) <= 254",
+      "name": "accounts_email_length"
+    },
+    {
+      "attribute": [
+        "pmr"
+      ],
+      "base_filter": null,
+      "check": "pmr ~ '^PMR-[0-9A-Z]{16}[0-9A-Z*]$'",
+      "name": "accounts_pmr_format"
+    },
+    {
+      "attribute": [
+        "preferred_language"
+      ],
+      "base_filter": null,
+      "check": "preferred_language IN ('af', 'en')",
+      "name": "accounts_preferred_language"
+    },
+    {
+      "attribute": [
+        "acceptance_locale"
+      ],
+      "base_filter": null,
+      "check": "acceptance_locale IN ('af', 'en')",
+      "name": "accounts_acceptance_locale"
+    },
+    {
+      "attribute": [
+        "credential_status"
+      ],
+      "base_filter": null,
+      "check": "credential_status IN ('active', 'replaced', 'revoked')",
+      "name": "accounts_credential_status"
+    },
+    {
+      "attribute": [
+        "confirmed_age_18?"
+      ],
+      "base_filter": null,
+      "check": "\"confirmed_age_18?\" IS TRUE",
+      "name": "accounts_adult_confirmation"
+    },
+    {
+      "attribute": [
+        "mfa_enrollment_state"
+      ],
+      "base_filter": null,
+      "check": "mfa_enrollment_state IN ('disabled', 'pending', 'active')",
+      "name": "accounts_mfa_enrollment_state"
+    },
+    {
+      "attribute": [
+        "hold_version"
+      ],
+      "base_filter": null,
+      "check": "hold_version >= 0",
+      "name": "accounts_hold_version"
+    },
+    {
+      "attribute": [
+        "hold_operations"
+      ],
+      "base_filter": null,
+      "check": "jsonb_typeof(hold_operations) = 'object'",
+      "name": "accounts_hold_operations"
+    },
+    {
+      "attribute": [
+        "primary_email_change_state"
+      ],
+      "base_filter": null,
+      "check": "(primary_email_change_state = 'none' AND primary_email_change_operation_id IS NULL AND primary_email_change_target IS NULL AND primary_email_change_locale IS NULL AND primary_email_change_requested_at IS NULL AND primary_email_change_expires_at IS NULL) OR (primary_email_change_state <> 'none' AND primary_email_change_operation_id IS NOT NULL AND primary_email_change_target IS NOT NULL AND primary_email_change_locale IS NOT NULL AND primary_email_change_locale IN ('en', 'af') AND primary_email_change_requested_at IS NOT NULL AND primary_email_change_expires_at IS NOT NULL)",
+      "name": "accounts_primary_email_change_shape"
+    },
+    {
+      "attribute": [
+        "primary_email_change_version"
+      ],
+      "base_filter": null,
+      "check": "primary_email_change_version >= 0",
+      "name": "accounts_primary_email_change_version"
+    },
+    {
+      "attribute": [
+        "primary_email_change_state"
+      ],
+      "base_filter": null,
+      "check": "(primary_email_change_state IN ('applied', 'cancelled', 'expired', 'rejected', 'superseded', 'held')) = (primary_email_change_terminated_at IS NOT NULL) AND (primary_email_change_state = 'applied') = (primary_email_change_applied_at IS NOT NULL) AND (primary_email_change_state = 'reviewed') = (primary_email_change_reviewed_at IS NOT NULL) AND (primary_email_change_state <> 'reviewed' OR \"primary_email_change_requires_review?\" IS TRUE)",
+      "name": "accounts_primary_email_change_terminal"
+    }
+  ],
+  "create_table_options": null,
+  "custom_indexes": [
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "primary_email_change_state",
+        "primary_email_change_expires_at"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "primary_email_change_state"
+        },
+        {
+          "type": "atom",
+          "value": "primary_email_change_expires_at"
+        }
+      ],
+      "include": null,
+      "include_base_filter?": true,
+      "message": null,
+      "name": "accounts_primary_email_change_expiry_index",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": "primary_email_change_state IN ('requested','reauthenticated','new_address_pending','confirmed','delayed','reviewed')"
+    }
+  ],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "6FB349B5AA3E9DEC48EBF13169B3D65F7C4C3BB53BF18059D38DF76DE57ADFFC",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "accounts_canonical_email_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "email"
+        }
+      ],
+      "name": "canonical_email",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "accounts_one_pending_primary_email_change_target_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "primary_email_change_target"
+        }
+      ],
+      "name": "one_pending_primary_email_change_target",
+      "nils_distinct?": true,
+      "where": "primary_email_change_state IN ('requested','reauthenticated','new_address_pending','confirmed','delayed','reviewed')"
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "accounts_permanent_pmr_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "pmr"
+        }
+      ],
+      "name": "permanent_pmr",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "accounts_primary_email_change_operation_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "primary_email_change_operation_id"
+        }
+      ],
+      "name": "primary_email_change_operation",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
+  "multitenancy": {
+    "attribute": null,
+    "global": null,
+    "strategy": null
+  },
+  "repo": "Elixir.NewYou.Repo",
+  "schema": null,
+  "table": "accounts",
+  "temporal": null
+}

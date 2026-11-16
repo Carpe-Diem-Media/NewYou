@@ -10,4 +10,4 @@ PR #224 remains governed by current `main`. Its exact merge transition requires 
 
 After PR #224 integrates under that authorization, any proposed settings or access change needs separate authorization. See [the settings proposal](founder-merge-admin-proposal.md) and verify the live configuration independently before relying on it.
 
-The knowledge capture workflow records the PR history and Plane receipt. See [the ticket workflow](../../.agents/skills/ticket-implement/SKILL.md) for the agent procedure. Meaningful application capabilities retain one source-linked JSON map; this process handoff does not duplicate that map in Markdown.
+The ticket workflow generates the mechanical PR history record at the review checkpoint and maintains the source-linked capability map when semantics change. Author and reviewer verify live Plane state separately. See [the implementation handoff standard](implementation-handoff-standard.md); do not create a duplicate PR dossier.

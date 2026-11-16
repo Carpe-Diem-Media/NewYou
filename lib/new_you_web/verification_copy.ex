@@ -1,6 +1,6 @@
 defmodule NewYouWeb.VerificationCopy do
   @moduledoc """
-  Pinned temporary P8-07 copy authorized for bounded development proof only.
+  Pinned temporary P8-07 copy authorized for local, test and development use.
   The fixture records authorship, exact bytes and the owner's scoped permission.
   It records no prior exact-byte review, runtime grant or release approval.
   """
@@ -20,9 +20,18 @@ defmodule NewYouWeb.VerificationCopy do
   def enabled? do
     Enum.all?([
       @development_build,
+      current_artifact?(),
       Application.get_env(:new_you, :verification_development_fixtures) == true,
-      Application.get_env(:new_you, :p8_07_browser_development_fixtures) == @version
+      NewYouWeb.DevelopmentEntry.enabled?() or
+        Application.get_env(:new_you, :p8_07_browser_development_fixtures) == @version
     ])
+  end
+
+  defp current_artifact? do
+    case File.read(@path) do
+      {:ok, bytes} -> Base.encode16(:crypto.hash(:sha256, bytes), case: :lower) == @digest
+      _ -> false
+    end
   end
 
   @spec text!(String.t(), String.t()) :: String.t()

@@ -134,6 +134,8 @@ Do not create a separate governance document merely to record these implementati
 
 ## 6. Implement test-first
 
+Follow `AGENTS.md` "Verification stages and failure diagnosis" throughout implementation. Use focused checks while developing. Diagnose a failed broad command before another broad run; record command/SHA, classify the cause, reproduce narrowly, correct and prove the correction before returning to the stable-candidate gate. Do not repeat expensive gates on unchanged inputs without a recorded diagnostic reason.
+
 For each material behaviour:
 
 1. write the smallest focused test that expresses the required behaviour;
@@ -151,6 +153,22 @@ Use owning Ash interfaces for business writes. Do not create parallel ordinary R
 
 Do not add infrastructure or dependencies merely because they are convenient. Apply the authority and Ash-first rules in `AGENTS.md`.
 
+### Public interface documentation and typespecs
+
+For every new or materially changed public Domain or application interface:
+
+- Use `@moduledoc` to explain a public module's responsibility, authoritative ownership, and primary integration boundary.
+- Use `@doc` to describe externally meaningful functions, including authorization assumptions, side effects, failure results, and idempotency/retry semantics where relevant.
+- Use `@spec` to describe public function inputs and success/error results. Prefer meaningful types over broad `term()` annotations where practical.
+- Use `@type` or `@typep` when shared domain data, lifecycle states, or return contracts benefit from named types.
+- Use `@impl true` for behaviour callbacks where applicable.
+
+Internal implementation modules may use `@moduledoc false` and `@doc false`. Do not require documentation or typespecs for every private helper, trivial function, or Ash DSL declaration.
+Cross-Domain interfaces must make the owning Domain and authorization boundary understandable without introducing competing business authority.
+These annotations complement the existing source-linked capability maps; they do not replace them or require duplicate documentation.
+Apply prospectively to code created or materially changed within the ticket. Do not perform unrelated documentation cleanups.
+
+
 ## 7. Control scope and discovered work
 
 Implement the ticket acceptance contract only.
@@ -165,9 +183,9 @@ Do not mutate Product/Architecture/Domain/Roadmap or semantic contracts merely t
 
 ## 8. Automatic knowledge capture before review
 
-After implementation and semantic-map updates, generate the PR history record as part of this workflow. Export live PR metadata with `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` and obtain a small Plane receipt from the live Plane connector. Save each as temporary JSON. Run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/pr.json --plane-context /tmp/plane-receipt.json`. If Plane is unavailable, use `--plane-unavailable "REASON"` and record the specific limitation. Do not ask the founder to create or supply a Plane JSON file. CI checks PR metadata using `mise exec -- python3 -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"`; it needs no Plane token.
+After applicable local checks, commit the stable source and run the existing OCR checkpoint against that committed SHA. If needed, open a Draft PR after the identity preflight below and push the source checkpoint. At the review checkpoint, generate the PR history record from live PR metadata and the WELL ticket already identified in implementation context. Export metadata with `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` and run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/pr.json --ticket WELL-N`. The ticket argument is explicit; the tool does not infer it from the PR title or body. GitHub metadata validates repository, PR, base, head and URL. The record does not copy PR prose, author details or Plane state. Do not add a manual receipt or Plane-unavailable explanation.
 
-Commit the generated `docs/development/knowledge/history/pr-NUMBER.json` before final review. Regenerate if source or base changes. Foundation Integrity independently checks mechanical fields without mutating the PR branch. A final approval must never be followed by a generated commit. Do not manually enumerate changed files, functions, tests, migrations or SHAs in a second handoff.
+Commit `docs/development/knowledge/history/pr-NUMBER.json` before final review. Regenerate it if source or base changes, then request fresh review and CI. Do not regenerate for prose, author or Plane-state changes. Foundation Integrity checks the exact event binding and record with `mise exec -- python3 -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"`; when `--ticket` is omitted, check uses stable tickets in the committed record. If supplied, the ticket must agree. Keep the mechanical record and canonical capability map; do not create a duplicate PR dossier. A final approval must never be followed by a generated commit.
 
 ## 9. Verify before handoff
 
@@ -183,22 +201,28 @@ At minimum:
 - inspect the complete final diff;
 - verify required handoff source links and material claims, including a cold-start walkthrough for a new substantial slice, against the exact head;
 - resolve the exact base and head SHAs;
-- verify no secrets/sensitive payloads leaked into code, logs, fixtures, jobs, or evidence.
+- verify no secrets/sensitive payloads leaked into code, logs, fixtures, jobs, or evidence;
+- **after applicable local checks pass**, complete the independent OCR checkpoint in `code-change-verification` for material engineering changes, preserving findings and coverage exclusions without automatically editing code. Document a reasoned exemption for trivial/cosmetic or documentation-only changes.
 
 For DB-dependent commands, use the DevCore workflow in `AGENTS.md` when configured.
 
 Do not claim a check passed unless you observed it pass. Separate unrelated pre-existing failures from PR-caused failures with evidence; do not hide either.
 
+Check new or materially changed public Domain/application interfaces for appropriate @moduledoc, @doc and @spec coverage. Correct meaningful omissions before handoff, or record a narrowly justified exemption. Do not block compliant Ash DSL or private implementation code merely for missing annotations.
+
 ## 10. Open the PR and hand off exact evidence
+
+Before creating or updating a routine PR, run `gh api user --jq .login`. It must return `JC-Agents`. Run `python3 -m tools.newyou_attest pr-preflight`, or add `--pr NUMBER` for an existing PR to verify its author too. Stop on wrong/missing authentication or a founder-authored PR. Do not request founder credentials. `JCSchoeman96` independently reviews the exact final head; the agent cannot approve its own work.
 
 When the implementation and required local verification are review-ready:
 
 1. create or update the PR;
 2. confirm the PR contains only authorised ticket scope;
-3. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
-4. record material JIT choices and discovered work in Plane/PR evidence where useful;
-5. hand off for independent Master Gate review, including the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
-6. follow the eligible founder-development route in the merge-gate procedure. ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the final head. That review is both technical approval and standing merge authorization. Do not add a second comment or a base-SHA line. Keep any stronger approval that an actual governing or external obligation requires.
+3. include an `OCR Review Findings` section containing the scanned implementation SHA, all advisory findings/exclusions and preliminary assessments (or an explicit exemption), as required by `code-change-verification`; do not auto-fix OCR findings;
+4. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
+5. record material JIT choices and discovered work in Plane/PR evidence where useful;
+6. hand off for independent Master Gate review, including OCR adjudication, the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
+7. follow the eligible founder-development route in the merge-gate procedure. ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the final head. That review is both technical approval and standing merge authorization. Do not add a second comment or a base-SHA line. Keep any stronger approval that an actual governing or external obligation requires.
 
 Report:
 
@@ -209,6 +233,7 @@ Report:
 - material JIT decisions and why they are compliant;
 - migrations/constraints/lifecycle implications where relevant;
 - tests/checks actually run and observed results;
+- OCR command, scanned implementation SHA, findings/coverage and Master Gate handoff (or documented exemption);
 - discovered/deferred Plane work;
 - remaining review risks or known non-PR failures.
 

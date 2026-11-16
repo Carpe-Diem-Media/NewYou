@@ -107,6 +107,12 @@ defmodule NewYou.Proof.ConcurrentTest do
     {worker, monitor} = Scenario.spawn(scenario, :worker, fn -> receive do: (:finish -> :ok) end)
     [{^worker, guardian}] = Scenario.owned_processes(scenario)
     guardian_monitor = Process.monitor(guardian)
+
+    # monitor/2 sends an asynchronous signal. Confirm the monitor at the
+    # guardian before another process can make it exit. process_info/2 observes
+    # signals from this caller in order; a returned reference alone is not an ack.
+    assert {:monitored_by, monitoring_processes} = Process.info(guardian, :monitored_by)
+    assert self() in monitoring_processes
     request_ref = make_ref()
 
     # Queue the acknowledgement before either DOWN in the controller mailbox,

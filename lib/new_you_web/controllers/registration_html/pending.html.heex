@@ -80,13 +80,13 @@
       </p>
       <div class="flex flex-wrap gap-x-5 gap-y-2 border-t border-ny-rule pt-5">
         <a
-          href={"/register?locale=#{@locale}"}
+          href={"/?locale=#{@locale}#launch-heading"}
           class="min-h-11 content-center whitespace-nowrap text-sm text-ny-ink underline decoration-ny-accent underline-offset-4 hover:text-ny-accent active:text-ny-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ny-focus"
         >
           {copy("identity.verification.pending.browse_public", @locale)}
         </a>
         <a
-          href="/register"
+          href={"/?locale=#{@locale}"}
           class="min-h-11 content-center whitespace-nowrap text-sm text-ny-ink underline decoration-ny-accent underline-offset-4 hover:text-ny-accent active:text-ny-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ny-focus"
         >
           {copy("identity.verification.pending.home", @locale)}

@@ -42,6 +42,7 @@ jobs:
         id: classify
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: python tools/foundation_integrity_routing.py --root . >> "$GITHUB_OUTPUT"
@@ -72,6 +73,8 @@ jobs:
           version-type: strict
       - name: Run Foundation path-routing regression tests
         run: python -m unittest discover -s tests -p 'test_foundation_lane_routing.py' -v
+      - name: Verify agent instruction contracts
+        run: python -m unittest tests.test_agent_instruction_contract -v
       - name: Run dependency cache recovery tests
         run: python -m unittest discover -s tests -p 'test_ci_cache_recovery.py' -v
       - name: Run Hex security audit regression tests

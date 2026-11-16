@@ -1,5 +1,6 @@
 defmodule NewYou.Identity.EmailVerificationTest do
   use ExUnit.Case, async: false
+  import NewYou.Proof.VerificationCases
 
   alias NewYou.Identity
   alias NewYou.Proof.P805
@@ -71,51 +72,7 @@ defmodule NewYou.Identity.EmailVerificationTest do
   end
 
   test "invalid, wrong-purpose, revoked, expired and superseded proofs fail closed" do
-    P805.with_fixture(fn ->
-      {:ok, registration} = Identity.register(P805.request())
-      user = account(registration)
-
-      {:ok, wrong, _} =
-        AshAuthentication.Jwt.token_for_user(user, %{"purpose" => "account_recovery"},
-          purpose: :account_recovery,
-          authorize?: false
-        )
-
-      {:ok, expired, _} =
-        AshAuthentication.Jwt.token_for_user(user, %{"purpose" => "email_verification"},
-          purpose: :email_verification,
-          token_lifetime: {-1, :seconds},
-          authorize?: false
-        )
-
-      for proof <- [nil, "invalid", wrong, expired] do
-        assert {:error, :verification_unavailable} = Identity.verify_email(proof)
-        refute account(registration).email_verified?
-      end
-
-      assert :ok =
-               AshAuthentication.TokenResource.Actions.revoke_jti(
-                 Identity.Token,
-                 token_jti(registration.verification_proof),
-                 AshAuthentication.user_to_subject(user),
-                 authorize?: false,
-                 context: %{ash_authentication: %{user: user}}
-               )
-
-      assert {:error, :verification_unavailable} =
-               Identity.verify_email(registration.verification_proof)
-
-      assert {:ok, :verification_pending} =
-               Identity.resend_verification(%{
-                 operation_id: Ecto.UUID.generate(),
-                 account_id: user.id
-               })
-
-      refute account(registration).email_verified?
-
-      assert {:error, :verification_unavailable} =
-               Identity.verify_email(registration.verification_proof)
-    end)
+    NewYou.Proof.VerificationCases.fail_closed()
   end
 
   test "current credential eligibility is re-read and account-write failure restores proof" do
@@ -239,24 +196,5 @@ defmodule NewYou.Identity.EmailVerificationTest do
 
       refute account(registration).email_verified?
     end)
-  end
-
-  defp account(registration),
-    do: Ash.get!(Identity.Account, registration.account_id, authorize?: false)
-
-  defp run_case(id) do
-    registration = Enum.find(NewYou.Proof.P807Catalog.registrations(), &(&1.case_id == id))
-    manifest = Map.put(registration.manifest, :version, "p8-07.1")
-
-    {result, cleanup} =
-      NewYou.Proof.SelfTest.execute_registered_case(manifest, registration.callback)
-
-    assert result["verdict"] == "PASS", inspect(result)
-    assert Enum.all?(cleanup, fn {_key, value} -> value == true end), inspect(cleanup)
-  end
-
-  defp token_jti(proof) do
-    {:ok, claims} = AshAuthentication.Jwt.peek(proof)
-    claims["jti"]
   end
 end

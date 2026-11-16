@@ -28,7 +28,7 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
       assert page.status == 200
 
       assert get_resp_header(page, "content-security-policy") == [
-               "default-src 'none'; style-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+               "default-src 'none'; style-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
              ]
 
       [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, page.resp_body)
@@ -107,6 +107,10 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
       assert (first |> recycle() |> get("/session/protected")).status == 401
       assert (second |> recycle() |> get("/session/protected")).status == 401
     end)
+  end
+
+  test "known wrong-password and unknown-account login failures have the same public response" do
+    NewYou.Proof.WebScenarios.login_neutral()
   end
 
   test "Chromium submits the bilingual form and reconstructs protected access" do

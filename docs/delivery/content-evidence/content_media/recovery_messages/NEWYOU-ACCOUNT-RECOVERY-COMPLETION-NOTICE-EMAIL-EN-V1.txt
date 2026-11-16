@@ -1,0 +1,9 @@
+subject: Your {{platform_name}} account recovery is complete
+
+Your account recovery is complete and your password was changed.
+
+Previous sign-ins have ended. Previously remembered devices are no longer trusted. Any separate security restriction on your account still applies.
+
+If you did not authorise this recovery, contact {{platform_name}} support at {{support_contact}}. Do not share your password or any recovery link.
+
+{{platform_name}}
