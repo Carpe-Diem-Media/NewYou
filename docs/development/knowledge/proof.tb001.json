@@ -9,7 +9,7 @@
     "WELL-114"
   ],
   "implementation_revision": {
-    "git_sha": "2ce87181b692783c4633855dc27583314518a237",
+    "git_sha": "4a4a789cf117e67e28c29f8e9de1337ba0c80441",
     "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
@@ -512,7 +512,7 @@
       "id": "integration_test",
       "path": "test/new_you/proof/tb001_integration_test.exs",
       "symbol": "defmodule NewYou.Proof.TB001IntegrationTest",
-      "sha256": "9293c6ad47c7f5cdeeeca725f41faf34b38b251d258f8d8e319f8314ef2c50b2"
+      "sha256": "81593fe2504e08d733fe0b6515ab615a5d41c0376289152f8bf4a32d8a4ca515"
     },
     {
       "id": "matrix_test",
