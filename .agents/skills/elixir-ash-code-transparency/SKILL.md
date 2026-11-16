@@ -46,18 +46,24 @@ Do not invoke it merely because an unrelated `.ex` file changed.
 - Phoenix must not become a second domain layer.
 - Prefer current Ash semantics for the project's installed version; verify version-sensitive behaviour against authoritative docs or installed dependency source.
 
-## Quick Verification
+## Verification
 
-Use the repository's own aliases/checks first. Where configured, relevant checks may include:
+Follow `AGENTS.md` and the existing
+`code-change-verification` workflow.
 
-```bash
-mix format --check-formatted
-mix compile --warnings-as-errors
-mix test
-mix dialyzer
-mix credo --strict
-mix docs
-mix ash.codegen --check
+During implementation, run only focused checks
+needed to verify the current change.
+
+Do not independently invoke broad engineering
+gates such as `mix check`, `mix check.deep`,
+the full test suite or CI merely because this
+skill was loaded.
+
+Reuse valid existing evidence where permitted.
+The owning verification workflow runs all
+applicable final gates on the stable candidate.
+
+This skill does not waive any required check.
 ```
 
 Do not add tools to the project merely to satisfy this list.
