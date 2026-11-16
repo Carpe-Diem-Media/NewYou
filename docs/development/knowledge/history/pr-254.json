@@ -1,0 +1,50 @@
+{
+  "base_sha": "58c642a211a07b90241c4822e04edfe4dd169403",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/254/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/254/commits",
+  "files": [
+    {
+      "blob": "33b47a69a522cdfd17a9132da37dfdf7801b4644",
+      "mode": "100644",
+      "old_blob": "2a41903eb73d9a68193a339a22d685e64ceb15ef",
+      "old_mode": "100644",
+      "old_path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "old_sha256": "c2a6cdc1a1aa0459f8d2bccd3d97dae01737a1420ec12b6f86adfa4d11798dca",
+      "path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "sha256": "1ec3981ee1d50bc0e200f23b967694351f9542c118944a07e454692e217aee81",
+      "status": "modified"
+    },
+    {
+      "blob": "547c520b6bbe310e88c005d47e5ea7c0f699f89d",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/copy/evidence/FP001_VERIFICATION_RESULT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "2c190d41d962b371807f1dfa31c3b60d5e18ba15f71a4356384897cf70f4a297",
+      "status": "added"
+    },
+    {
+      "blob": "69511eba7d42de75529b06ddf8fa4224aa855576",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/copy/evidence/FP001_VERIFICATION_RESULT_BROWSER_COPY_LOCK_v0.1.1.md",
+      "sha256": "8bbe2d466282eacf55f62e4ec393686f20983618252bbc9b228ebf44aa7c927e",
+      "status": "added"
+    }
+  ],
+  "migrations": [],
+  "pr": 254,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/254",
+  "range_base_sha": "58c642a211a07b90241c4822e04edfe4dd169403",
+  "schema_version": 1,
+  "symbols": [],
+  "tests": [],
+  "tickets": [
+    "WELL-45"
+  ]
+}

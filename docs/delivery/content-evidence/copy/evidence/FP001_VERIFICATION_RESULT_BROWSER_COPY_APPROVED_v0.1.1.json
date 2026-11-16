@@ -1,0 +1,162 @@
+{
+  "packet_id": "FP001_VERIFICATION_RESULT_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; DEVELOPMENT_CONSUMPTION_AFTER_INTEGRATION; PRODUCTION_RELEASE_NOT_YET_ELIGIBLE",
+  "prepared_on": "2026-11-16",
+  "source": {
+    "repository": "Carpe-Diem-Media/NewYou",
+    "main_sha": "58c642a211a07b90241c4822e04edfe4dd169403",
+    "path": "docs/development/fixtures/p8-07-copy-v1.json",
+    "source_fixture_sha256": "146eeb3399c96fd0bc995fc905161a4a70f90bbf21fa77f395b2e427e840b1fa",
+    "original_status": "temporary_development_authorized",
+    "exact_bytes_previously_owner_reviewed": false,
+    "strings_preserved_unchanged": false,
+    "source_review_candidate_sha256": "e097d093312aab7354efd4dc5ea08694413b220d512b82382a577d59444e8d94",
+    "preserve_temporary_runtime_fixture_unmodified": true
+  },
+  "scope": "Exact NewYou platform browser wording for the seven FP-001 email-verification confirmation, verified and common-unavailable semantic keys. Approved for bounded development consumption after canonical integration; future real-participant use requires independently satisfied runtime and production-release gates.",
+  "owner": "Content & Media",
+  "copy_class": "A",
+  "copy_items": [
+    {
+      "key": "identity.verification.result.confirm.title",
+      "en": {
+        "text": "Confirm your email",
+        "sha256": "0d1fe19967e25e33df16b6d1f4478ebe5e6aa7fd1556f0a34aaae3a5ada06a29"
+      },
+      "af": {
+        "text": "Bevestig jou e-posadres",
+        "sha256": "950bf81b6dd8799e6015acdb87a83de37c30e63d5d65721e3bb81d04eb9c1d6b"
+      }
+    },
+    {
+      "key": "identity.verification.result.confirm.body",
+      "en": {
+        "text": "Choose \"Verify email\" to confirm this address. Opening this page does not verify it.",
+        "sha256": "fa4d7d8fe4ed6c0b63738ff9f7add41101c041704e2a089f72ab7117d2efcd5b"
+      },
+      "af": {
+        "text": "Kies \"Verifieer e-posadres\" om hierdie adres te bevestig. As jy hierdie bladsy oopmaak, word dit nie geverifieer nie.",
+        "sha256": "fd7a312378caaf7f56dc22a7701c9b58292f342c5819a9bf4b70d114599e9d07"
+      }
+    },
+    {
+      "key": "identity.verification.result.confirm.action",
+      "en": {
+        "text": "Verify email",
+        "sha256": "e89a77e7fe58a6d14ffde89db2a9d370d605da0cad4b8df1fa7eec63fb2fac2b"
+      },
+      "af": {
+        "text": "Verifieer e-posadres",
+        "sha256": "4883cb339a783021a5b1b69b7f0f2eb4d12347ba535ceb4d677bd9d3ec5b06ee"
+      }
+    },
+    {
+      "key": "identity.verification.result.verified.title",
+      "en": {
+        "text": "Email verified",
+        "sha256": "bdfb1e4f00c73e984c7b7594afa4b22855fc7eb777c1e5ef279cb27302b10f5a"
+      },
+      "af": {
+        "text": "E-posadres geverifieer",
+        "sha256": "e775db9ef8708a77da585f4722e34257965353fb3fb42d936b9457c860d00c3f"
+      }
+    },
+    {
+      "key": "identity.verification.result.verified.body",
+      "en": {
+        "text": "Your email address is verified. You have not been logged in.",
+        "sha256": "e017225ca6fbd69b75129b3f57b8f6c254ba856c40845cc7c1bbd3fe72faa26c"
+      },
+      "af": {
+        "text": "Jou e-posadres is geverifieer. Jy is nie aangemeld nie.",
+        "sha256": "f458157f636d9dadef6bc0b8288c1c819ea6645cd297cc877bda07f0e28b04c1"
+      }
+    },
+    {
+      "key": "identity.verification.result.unavailable.title",
+      "en": {
+        "text": "Verification unavailable",
+        "sha256": "9c32bbe5689cdd9772dc278d9ec2d65eebdf0da8aee8b0d6ce1613c6e6aa7881"
+      },
+      "af": {
+        "text": "Verifikasie nie beskikbaar nie",
+        "sha256": "c65b50083fe70b9eab96a5e5847579268b20316653ae6a45dfa4433e168bda5b"
+      }
+    },
+    {
+      "key": "identity.verification.result.unavailable.body",
+      "en": {
+        "text": "This link cannot verify your email. Request another verification email from the registration page.",
+        "sha256": "7f13ca2eb593c1c56915f8a52427ec8a111bd616d144d4ede74f00991f40d77e"
+      },
+      "af": {
+        "text": "Hierdie skakel kan nie jou e-posadres verifieer nie. Vra nog ’n verifikasie-e-pos op die registrasiebladsy aan.",
+        "sha256": "c9e539d0d9c79485947b23e2db4c870aca5577814d62e222369fa2b95ba77973"
+      }
+    }
+  ],
+  "lifecycle_projection": {
+    "presentation_states": [
+      "confirm",
+      "verified",
+      "unavailable"
+    ],
+    "business_authority": "Identity & Access: opening confirmation is passive; only explicit CSRF-protected POST consumes proof",
+    "success_guard": "Only Identity.verify_email/1 returning {:ok, :verified} shows the verified result",
+    "unavailable_guard": "All other verification outcomes map to the common unavailable result; do not expose reasons",
+    "no_session_issuance": true,
+    "retry_recovery": "Revalidate current proof on every attempt; invalid, stale or replayed proofs cannot succeed",
+    "copy_states": [
+      "candidate",
+      "development_approved",
+      "production_approved",
+      "superseded",
+      "withdrawn"
+    ],
+    "terminal_for_new_use": [
+      "superseded",
+      "withdrawn"
+    ]
+  },
+  "eligibility": {
+    "exact_copy_owner_approved": true,
+    "intended_for_platform": true,
+    "development_eligible_after_canonical_integration": true,
+    "development_scope": [
+      "local development",
+      "automated tests",
+      "development environments"
+    ],
+    "existing_temporary_runtime_fixture_unchanged": true,
+    "runtime_activation_authorized": false,
+    "production_content_version_eligible": false,
+    "real_participants_authorized": false,
+    "public_release_authorized": false,
+    "paid_pilot_authorized": false,
+    "legal_privacy_or_security_release_gates_satisfied": false,
+    "email_provider_or_sending_authorized": false,
+    "no_silent_locale_fallback": true
+  },
+  "approval": {
+    "decision": "OWNER_APPROVED_EXACT_PLATFORM_BROWSER_COPY_WITH_TWO_QUOTATION_EDITS",
+    "date": "2026-11-16",
+    "source": "Direct owner message in this conversation: supplied both corrected confirmation-body sentences, approved the remaining wording and explicitly authorised opening a PR.",
+    "decision_actor": "one accountable owner; do not imply multiple independent human approvals",
+    "scope": "seven fixed semantic keys, seven EN + seven AF exact UTF-8 strings",
+    "content_is_for_newyou_platform": true,
+    "development_scope": "local development, automated tests and authorised development environments after exact canonical integration",
+    "production_release_scope": "NOT YET GRANTED; requires all applicable release and runtime eligibility proof"
+  },
+  "change_evidence": {
+    "original_candidate_version": "0.1.0",
+    "original_candidate_sha256": "e097d093312aab7354efd4dc5ea08694413b220d512b82382a577d59444e8d94",
+    "total_keys": 7,
+    "total_locale_strings": 14,
+    "changed_locale_strings": 2,
+    "unchanged_locale_strings": 12,
+    "changed_key": "identity.verification.result.confirm.body",
+    "change_description": "Wrap existing English and Afrikaans action labels in straight double quotation marks",
+    "all_other_string_digests_preserved": true
+  }
+}

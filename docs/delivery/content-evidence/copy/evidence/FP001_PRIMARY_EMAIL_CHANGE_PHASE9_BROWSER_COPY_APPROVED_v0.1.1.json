@@ -1,0 +1,327 @@
+{
+  "packet_id": "FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_DEVELOPMENT_COPY_AWAITING_CANONICAL_INTEGRATION",
+  "created_on": "2026-11-16",
+  "baseline_github_main": "a30d8b3c112b61b6b867c12e1cc4c14e8a17cbd2",
+  "proposed_scope": "Owner-approved exact browser-copy text for a potential future FP-001 Phase-9 primary-email-change journey; actual vertical-slice selection and execution remain Plane-governed.",
+  "authority_sources": [
+    "Product 00_PLATFORM_v1.18.0.md §21J.8 / §21E.27-28",
+    "Decisions 01_DECISIONS_v1.18.0.md DEC-251 / DEC-324",
+    "Identity JIT v0.3.0 F.7",
+    "FP-001 Final Contract §Q.3",
+    "lib/new_you_web/controllers/primary_email_change_html.ex at baseline SHA",
+    "COPY_REGISTRY.json identity.change_email.family (draft, non-authoritative)"
+  ],
+  "eligibility": {
+    "owner_approved_bounded_phase9_browser_copy": true,
+    "can_be_consumed_only_after_exact_canonical_integration_and_current_eligibility_check": true,
+    "phase8_existing_message_dev_evidence": true,
+    "phase9_email_messages": false,
+    "implementation_dispatch_without_plane_ready": false,
+    "release": false,
+    "provider_sending": false,
+    "real_participants": false
+  },
+  "approval_needed": [
+    "Canonical GitHub merge of this exact JSON and its pinned digest before ordinary implementation may treat it as routed approved copy",
+    "Current Plane Ready gate and independent implementation handoff for any selected Phase-9 slice",
+    "Separate Product/Decision successor before any bounded Phase-9 consumption of existing primary-email-change email content; Product §21E.28 currently excludes Phase 9",
+    "At consumption, verify current exact version/digests, required locale and authority; fail closed for changed, withdrawn, superseded or unsupported evidence",
+    "Production/public/pilot/real-participant/sender/provider permissions remain explicitly unavailable"
+  ],
+  "copy_items": [
+    {
+      "semantic_key": "identity.change_email.start.title",
+      "en": "Change your email address",
+      "af": "Verander jou e-posadres",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "36c0a5cff6831c23416c909c79afd295630d172ce29fb185c5e76b0bff32f844",
+        "af": "7b00871f9868de9bf0b4490f1c56bee191368043a7cf83f57c8aff9d31eb6654"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.start.body",
+      "en": "Your current email address stays active until the new address is confirmed and the change is applied. Additional security checks may be required.",
+      "af": "Jou huidige e-posadres bly aktief totdat die nuwe adres bevestig en die verandering toegepas is. Bykomende sekuriteitskontroles kan nodig wees.",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "38e9b84e8d5363f4d54136d077a3eddc26ba070325e7d22c6c6a85afe00d700d",
+        "af": "b2e8b997b20409d53cf84bb64a2ef75f692b490bef749d486feb4b1ff26e77a6"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.current.label",
+      "en": "Current email address",
+      "af": "Huidige e-posadres",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "50b4525c49a6911c957bde6d3b9228eb5a8dfaea16a91e32b9e100329abacc82",
+        "af": "b2871cea1907b2115ba9693570fff1284eab68741997a5c8f5ecc577e14a9415"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.new.label",
+      "en": "New email address",
+      "af": "Nuwe e-posadres",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "bb0d06f56708ee27cc97f2a166a825f81e459113a7cd4c08052d55fe77bdb859",
+        "af": "89e4f8445867261f6e45ec5eb7caac0840308424f13a0332ab1c8e67e33f671e"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.reauthentication.body",
+      "en": "For your security, confirm your identity before requesting this change.",
+      "af": "Vir jou veiligheid, bevestig jou identiteit voordat jy hierdie verandering versoek.",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "92d4b25a013aafeb96dd37d8343f2e79553ebd378c56386b3e2bdabe346a224d",
+        "af": "86dcbcb7ef556debf4f544649abf36e402dc997d61a0c59c84f5c1d06824eb01"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.request.action",
+      "en": "Request email change",
+      "af": "Versoek e-posadresverandering",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "f8ef0b31478fe442261506a5519ee2e845021872bac7f33dd74d673e30758a94",
+        "af": "1acffdac0dd9b828727729b98f40d8680e75a430c405b1d91c6b2dfbd71e2ce8"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.request.neutral",
+      "en": "If the request can proceed, you will need to confirm your new email address. Your current email address has not changed.",
+      "af": "As die versoek kan voortgaan, sal jy jou nuwe e-posadres moet bevestig. Jou huidige e-posadres het nie verander nie.",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "c5293c274210ea5be86d17bd5fa85d26bdb7de83a49f25db95f1acc6a0262b8f",
+        "af": "d5ade26ea31068f4448a85a787d998b808c3498376055f89016a5dd81d47417c"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.pending.title",
+      "en": "Check your new email address",
+      "af": "Gaan jou nuwe e-posadres na",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "d968ad136c428104e8a3ead86752afc98e7c0e0398c6b81964ee48e1b47923e2",
+        "af": "c0b2a790177dfd1b0a5fbccb2dcfdabd60f1db1789315f9a1a8065d6e2f88d5d"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.pending.body",
+      "en": "If a confirmation email is sent, use its link to confirm the new address. Confirmation alone does not change your account email.",
+      "af": "As ’n bevestigings-e-pos gestuur word, gebruik die skakel daarin om die nuwe adres te bevestig. Bevestiging alleen verander nie jou rekening se e-posadres nie.",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "6b1bca35a6fe3bb9284b0c22298d4d282c80db22826e699dfa4fa8de0d392f7a",
+        "af": "8f54412b3eb1387ced1703fc75ab7fe9d142e408de3dc66b01955b85b8767daa"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.confirm.title",
+      "en": "Confirm your new email address",
+      "af": "Bevestig jou nuwe e-posadres",
+      "source_class": "existing_phase8_code",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "63a3c52990d29f5f5f7244a3bc1a0b2917b58780a7caf0a87b64ce5f2f90476c",
+        "af": "e54d00af95c6f4ff66e724b74e80206dc5cda2839e37aab4437f392e0b973a6f"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.confirm.body",
+      "en": "Confirm that you can access this address. Your current email stays in place until the change is applied.",
+      "af": "Bevestig dat jy toegang tot hierdie adres het. Jou huidige e-posadres bly aktief totdat die verandering toegepas word.",
+      "source_class": "existing_phase8_code",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "a3f8a2e11481a1acdb62f2460dfd03f3ce95723fbc9ab9be4564580caf491fa6",
+        "af": "9f14d4e603004bab58e0c84867ba861ac542dfa9cf05ac501158e883bc27c1f3"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.confirm.action",
+      "en": "Confirm new email",
+      "af": "Bevestig nuwe e-posadres",
+      "source_class": "existing_phase8_code",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "b6aab77765a65808a4c721256992bf20bd4d563ddd2ecdb2c0e09ec2bcb1061a",
+        "af": "fee6443259fdd60bf938ae42d9b394e7918593bddfa25def2f9b433dfbd15ca5"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.confirmed.title",
+      "en": "New email address confirmed",
+      "af": "Nuwe e-posadres bevestig",
+      "source_class": "existing_phase8_code",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "9348816881f702c57683ee38e4bf3926f0c1a4a25dd036115ac38d426609165b",
+        "af": "71c493f37f26145fffd3a7ab5659f0dabe99bb4bfc59fe92dd8584cf583ef285"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.confirmed.body",
+      "en": "Your current email remains active until the account change is applied.",
+      "af": "Jou huidige e-posadres bly aktief totdat die rekeningverandering toegepas word.",
+      "source_class": "existing_phase8_code",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "6f6871a41a6a8059b5e7480c877aef73ebf30bf56dfed91702626a62c529af37",
+        "af": "9281323841f100f8926c5cfefaf03468e06d0daf4bf4afcf564fa8e17e02c5e2"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.review.title",
+      "en": "Additional security checks are in progress",
+      "af": "Bykomende sekuriteitskontroles is aan die gang",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "6f2599ba07e6183c68090531a3f7f3dfa0aaebd6c221340045ed28ccab9e107a",
+        "af": "63b54e50a5a6d6d537296d99f759a9912d8feb9173f1b09698cf0c986364b455"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.review.body",
+      "en": "Your new address has been confirmed, but the change has not been applied. Keep using your current email address until the security checks are complete.",
+      "af": "Jou nuwe adres is bevestig, maar die verandering is nog nie toegepas nie. Gebruik intussen jou huidige e-posadres totdat die sekuriteitskontroles afgehandel is.",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "b8650ba1071145e09e66674aa2ee797593b13f8201a71433bab285bb37a12ea4",
+        "af": "94a0b44fc5b6a29b9301225701efa0f31ee9d69c46c22f8ff0aae982b486474e"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.applied.title",
+      "en": "Email address changed",
+      "af": "E-posadres verander",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "578cbddda345b71e5209abe3c81a96f648113f2afa983d32e6ee5690a181eef4",
+        "af": "2b47cf37bc13c30bf777316efa626d117c32e441f1d31b73b2e8c09965a885a9"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.applied.body",
+      "en": "Your new email address is now the primary address for your account. Sign in again if prompted.",
+      "af": "Jou nuwe e-posadres is nou jou rekening se primêre e-posadres. Meld weer aan as jy gevra word.",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "69e26c7c308177093668367548303eee973c0f50546336f78ac35c52e1066da2",
+        "af": "43dd9d657a4afb2da49875ff62d18b0dc05e3797532e6296c279735ac432e8cb"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.uncertain.title",
+      "en": "We could not confirm the current status",
+      "af": "Ons kon nie die huidige status bevestig nie",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "2709ab61d5230840be56d4327b6e84de87bd8693e162487563fa7f9dbe270d12",
+        "af": "7fd53c2970bbe424b127eb3d5eb1686d5ce5d734435114f50a093fb39943eaf8"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.uncertain.body",
+      "en": "Sign in and check your account email address before you try again.",
+      "af": "Meld aan en gaan jou rekening se e-posadres na voordat jy weer probeer.",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "c8cbb0ca4fb6a263b2a45cee1b70ec14ce0e9932e357a9343a2879b533c89ce5",
+        "af": "5596f70cd84c1d56560dbc9c07dacfd690d0bce0224a7de35064cd7ebe0c0ee9"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.unavailable.title",
+      "en": "This confirmation is unavailable",
+      "af": "Hierdie bevestiging is nie beskikbaar nie",
+      "source_class": "existing_phase8_code",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "5453bc5f27e834aa167c45c3f83f26bb331bbb48588fecd49746a69098ef9ebb",
+        "af": "19f805f52a46d60b375b8445823d325db02a1ba6b43a8b3aeccbb7382c423433"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.unavailable.body",
+      "en": "The link may have expired or been replaced. Sign in to start a new email change.",
+      "af": "Die skakel het dalk verval of is vervang. Meld aan om 'n nuwe e-posverandering te begin.",
+      "source_class": "existing_phase8_code",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "fd6e3bacddfd5c7191c516427362d5b62a890b5aad4eece77b7b1b23fd79bdea",
+        "af": "b3ea9e2d6d35b4f5c372340ee6e088c9d51df51f287cee1adfd93419d19962b2"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.cancel.action",
+      "en": "Cancel email change",
+      "af": "Kanselleer e-posadresverandering",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "b6ea6d4aea911521960503efede9a7f0fc42286460e3a7dac94567bef9f8bc14",
+        "af": "02ebddbfad24b880fb1d225022268cee87150144722e90dc50c8be804165741a"
+      }
+    },
+    {
+      "semantic_key": "identity.change_email.cancelled.title",
+      "en": "Email change cancelled",
+      "af": "E-posadresverandering gekanselleer",
+      "source_class": "new",
+      "copy_status": "owner_approved_bounded_development_copy",
+      "locale_sha256": {
+        "en": "0615b35154812f4221a76459673021d3e28acef4aeedf1ed5abfd0603145e60a",
+        "af": "37fb1c2ff912bd6db0b1550c38ffdc5082023cc85db8b12504b9d399033bca3f"
+      }
+    }
+  ],
+  "approved_on": "2026-11-16",
+  "source_candidate": {
+    "version": "0.1",
+    "filename": "FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_CANDIDATE_v0.1.json",
+    "sha256": "0d045639e5405791860f2bd19bf9d0b5945a0f7ee487ba2a6538e35434b39847"
+  },
+  "approval_evidence": {
+    "decision": "OWNER_APPROVED_EXACT_EN_AF_BROWSER_COPY",
+    "source": "2026-11-16 owner authorization in the current ChatGPT conversation: all original text approved; final reauthentication Afrikaans amendment explicitly approved and authorized",
+    "actor_attribution": "One authorizing owner via conversation; separate human reviewer identities have not been independently verified",
+    "scope": "Exact 24 EN/AF browser-copy keys for a potential future bounded non-production FP-001 Phase-9 primary-email-change journey only",
+    "language_review": "Owner-approved exact final English and Afrikaans wording; does not imply independent specialist reviewers or additional runtime role permissions",
+    "approval_effective_on": "After the exact approved artifact is merged and correctly routed in canonical GitHub; current candidate files are not self-promoting authority"
+  },
+  "approval_scope_prohibitions": [
+    "No ordinary Phase-9 email sending/content eligibility granted",
+    "No Product/Architecture/Domain/Roadmap amendment",
+    "No release, real participant or external provider approval",
+    "No new implementation Ready ticket automatically created"
+  ],
+  "copy_integrity": {
+    "total_semantic_keys": 24,
+    "total_locale_strings": 48,
+    "source_copy_changes": 1,
+    "changed_semantic_key": "identity.change_email.reauthentication.body",
+    "changed_locale": "af",
+    "all_english_and_other_afrikaner_strings_unchanged": true
+  }
+}

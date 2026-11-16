@@ -1,0 +1,517 @@
+{
+  "packet_id": "FP001_PROFILE_AND_LANGUAGE_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; NONPRODUCTION_DEVELOPMENT_AFTER_INTEGRATION; PRODUCTION_RELEASE_PENDING",
+  "prepared_on": "2026-11-16",
+  "baseline_main_sha": "72f7ab0a30228f46e63b33dedc7323c5e7d1655e",
+  "intended_purpose": "NewYou participant Profile and preferred interface-language UI, for a future dependency-cleared bounded FP-001 slice",
+  "copy_approval": {
+    "owner_approved": true,
+    "development_eligible_after_canonical_integration": true,
+    "production_eligible": false,
+    "implementation_authorized": false,
+    "owner_decision": "2026-11-16: 'First name can stay \"Naam\". I approve and authorize the text and opening of a PR'",
+    "attribution": "One accountable owner decision; no multiple-human approval claimed",
+    "scope": "Exact NewYou platform Profile and preferred-language browser copy only",
+    "production_release_requires_separate_eligibility": true
+  },
+  "authority": [
+    "Product Law 00_PLATFORM_v1.18.0 §7.3: name, email, language, language persistence and independent content language",
+    "Decision Register 01_DECISIONS_v1.18.0 DEC-027 and DEC-028",
+    "Identity & Access JIT v0.3.0: Account is canonical owner of names, canonical email, preferred language and verification status",
+    "Frontend Experience System v1.0.1 §3.2: Profile and Language areas",
+    "Copy workspace: COPY_INVENTORY.md, COPY_REGISTRY.json, GLOSSARY.md, STYLE_GUIDE.md, GOVERNANCE.md"
+  ],
+  "copy_items": [
+    {
+      "key": "participant.profile.overview.title",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "Your profile",
+        "sha256": "528d89ad72cba22e2d9d116befd3bb96a519f06b5f1147a2348d29fa6d1a2cbd"
+      },
+      "af": {
+        "text": "Jou profiel",
+        "sha256": "d3bf46ea39c664c5fbd8c8238940212e0ee55561d519e55667f2993b69e9e52e"
+      }
+    },
+    {
+      "key": "participant.profile.overview.body",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "Keep your personal details and language preference up to date.",
+        "sha256": "28066fdcbd558080a8e619562b1a6042a48b71f31dc7f637e2203d509e5c0516"
+      },
+      "af": {
+        "text": "Hou jou persoonlike besonderhede en taalvoorkeur op datum.",
+        "sha256": "17dd95b2107828a9cd50de9abb7f18d7b9b6239386672711fa504c23f8976048"
+      }
+    },
+    {
+      "key": "participant.profile.details.title",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "Personal details",
+        "sha256": "15c43f6771f372d5ed186b52bbacda34458820fd903ce4570d0b2917cba45af1"
+      },
+      "af": {
+        "text": "Persoonlike besonderhede",
+        "sha256": "9b31ddf970629e21b73529406669e0a25f9f9c0eec308eb5adfa584bade09754"
+      }
+    },
+    {
+      "key": "participant.profile.details.first_name.label",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "First name",
+        "sha256": "702ef921ed1d89bf63353c899af7e338722a3ef6123d0a98333a162818f85e59"
+      },
+      "af": {
+        "text": "Naam",
+        "sha256": "eca46fcab2ab68be18dba9651913d1194a89c2a2e07049808f456b8e3cf50317"
+      }
+    },
+    {
+      "key": "participant.profile.details.edit.action",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "Edit details",
+        "sha256": "fd9c61ac500e51185a5844b7f373df989d56c8e19246f3a34700aadc853e93b2"
+      },
+      "af": {
+        "text": "Wysig besonderhede",
+        "sha256": "ad79bd863d57287ebe066a0a34da19304c23505c7d35d9375a53d26cd0cbdff0"
+      }
+    },
+    {
+      "key": "participant.profile.details.save.processing",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "Saving your details…",
+        "sha256": "02a9590a2affa182b6de87e7cec05616718ae130e55faa14029e02ee095d5ca5"
+      },
+      "af": {
+        "text": "Besig om jou besonderhede te stoor…",
+        "sha256": "ffb1e23528e2344b5e40cdbbdf649ab578e69e8a691e2aa3402ab4853ac5983f"
+      }
+    },
+    {
+      "key": "participant.profile.details.save.confirmed",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "Your details have been saved.",
+        "sha256": "0d7be2aa7d268cdc85e76e439adc186a3ba66dec6aaa44aaa8852ede9998abbc"
+      },
+      "af": {
+        "text": "Jou besonderhede is gestoor.",
+        "sha256": "edf7d7a5916e1f66ef4822707a0b1cb8b63f9f75030d086170a85b9c42a7d00c"
+      }
+    },
+    {
+      "key": "participant.profile.details.save.failed",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "We couldn't save your details. Check them and try again.",
+        "sha256": "95c382b54238ac94321cd3984e4fa77fd164abd9564e1d3ad1c174d9d9630c49"
+      },
+      "af": {
+        "text": "Ons kon nie jou besonderhede stoor nie. Gaan dit na en probeer weer.",
+        "sha256": "ac9cff27aa937a081edb2ef697c4b584fc32d6611d47cc21b935bc72f737b585"
+      }
+    },
+    {
+      "key": "participant.profile.details.save.uncertain",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "We couldn't confirm whether your changes were saved. Check your current details before trying again.",
+        "sha256": "0935481ae78cf0b7b079d6f4065f7c6221cb34e0db7e3fabfb4c97a9ca17168a"
+      },
+      "af": {
+        "text": "Ons kon nie bevestig of jou veranderinge gestoor is nie. Gaan jou huidige besonderhede na voordat jy weer probeer.",
+        "sha256": "b797488760b3af3e62800e63f463209c6a2d5f6f4a013217c2abd1c94006e3c1"
+      }
+    },
+    {
+      "key": "participant.profile.details.save.stale",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "Your details have changed. Reload them before saving again.",
+        "sha256": "313a37ab27427eb963c5f72854db0bf71545226b89dc4de655f19cca61a86a3b"
+      },
+      "af": {
+        "text": "Jou besonderhede het verander. Laai dit weer voordat jy weer stoor.",
+        "sha256": "eed4702d98ec4d33164282f2fd860021b879f6adaf25caa9598730b88a190e2a"
+      }
+    },
+    {
+      "key": "participant.profile.email_change.help",
+      "family": "profile",
+      "class": "A",
+      "en": {
+        "text": "To change your email address, complete the separate security checks.",
+        "sha256": "cdcf1e063d899afbfee15587703b20220c106f11bc699ccd638541d6a68e51f2"
+      },
+      "af": {
+        "text": "Om jou e-posadres te verander, voltooi die afsonderlike sekuriteitskontroles.",
+        "sha256": "cdcccf85287b77ada551d55c00f1268d5aa99f91ab53cf27e08c5be70f3bb598"
+      }
+    },
+    {
+      "key": "participant.profile.email_status.unverified",
+      "family": "profile",
+      "class": "A",
+      "en": {
+        "text": "Email address not yet verified",
+        "sha256": "bc8d18dc05210b1a7b10cd5458cd9c78597d11859635134a336a28093279244a"
+      },
+      "af": {
+        "text": "E-posadres nog nie geverifieer nie",
+        "sha256": "7ee1798145da94ad4956f91aa5e6bfa97f6938799018abff6f5bbab33bb1046d"
+      }
+    },
+    {
+      "key": "participant.profile.email_status.unavailable",
+      "family": "profile",
+      "class": "A",
+      "en": {
+        "text": "We can't confirm your email verification status right now.",
+        "sha256": "0ec36e1b5023756509c7ecb98b65d11f37a1625b95751c3ed235220a538ed0bf"
+      },
+      "af": {
+        "text": "Ons kan nie tans die verifikasiestatus van jou e-posadres bevestig nie.",
+        "sha256": "c2bee11368063ebaee4e36e20beca9c5b825796c4e82b2e5b22f3c40c8fcbfc4"
+      }
+    },
+    {
+      "key": "participant.profile.unsaved.title",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "Leave without saving?",
+        "sha256": "2190d03af90aa90922478ee31b1558321a3db1ce466934d16de99174a8936b4e"
+      },
+      "af": {
+        "text": "Gaan weg sonder om te stoor?",
+        "sha256": "cab406e75e7960b24844e4c4c20f6efad23352c724f9901412df5a3b9247d6a9"
+      }
+    },
+    {
+      "key": "participant.profile.unsaved.body",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "Your latest changes haven't been saved.",
+        "sha256": "3b3ae10699196b57bfa8854e7e2f0c601fca1445b20c84587d9f60b630697b7e"
+      },
+      "af": {
+        "text": "Jou jongste veranderinge is nog nie gestoor nie.",
+        "sha256": "359beb940ceddab5c25dfcdf5c83141c24ebddbfe357cd9bd0bc73090ff86dd3"
+      }
+    },
+    {
+      "key": "participant.profile.unsaved.discard.action",
+      "family": "profile",
+      "class": "B",
+      "en": {
+        "text": "Discard changes",
+        "sha256": "f9bfa3dc7c8fcdea10ec324b8f3a6876f76fc8f541aa41b2e1da20979064dc0b"
+      },
+      "af": {
+        "text": "Gooi veranderinge weg",
+        "sha256": "1a34ccac7f266597d2bf4d9e83162cf69aff506e3ac1028d57ad0633699d3687"
+      }
+    },
+    {
+      "key": "participant.language.page.title",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "Language preferences",
+        "sha256": "fecdc1f70c03ff2b7884f02e0cf70df595095415db7690475b6d138cb7268bb9"
+      },
+      "af": {
+        "text": "Taalvoorkeure",
+        "sha256": "c097860e28e36fe1a2e2ae81e76f90dfd146518cfe6d59cb35e174751a3d7814"
+      }
+    },
+    {
+      "key": "participant.language.page.body",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "Choose the language you want to use for NewYou's menus and account screens.",
+        "sha256": "73376c4d963f5379f8d0417c516aeaeaf6495d817829de34e2ca66f0575f81f6"
+      },
+      "af": {
+        "text": "Kies die taal waarin jy NewYou se kieslyste en rekeningskerms wil gebruik.",
+        "sha256": "9d1dd95e1eba14dc79a1d2038f368414bbbea160f699d830bd79d92fa2b7f2f8"
+      }
+    },
+    {
+      "key": "participant.language.content.help",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "You can still open content in another language where it is available.",
+        "sha256": "be4da21a84e42ac2d0d664212d97aaa56626382c6a582552c9c35638af9c2df8"
+      },
+      "af": {
+        "text": "Jy kan steeds inhoud in ’n ander taal oopmaak waar dit beskikbaar is.",
+        "sha256": "56b0882690594c841695ae4a991298a37bef9ce3a58e5429eebc454c76e9f4d9"
+      }
+    },
+    {
+      "key": "participant.language.before_sign_in.help",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "Before you sign in, your language choice is stored in this browser. After you register or sign in, it is saved to your profile.",
+        "sha256": "49b7143ac237f21ceea68b2619b57442af268e7431be0f739c532f52b6fd3397"
+      },
+      "af": {
+        "text": "Voordat jy aanmeld, word jou taalkeuse in hierdie blaaier gestoor. Nadat jy registreer of aanmeld, word dit in jou profiel gestoor.",
+        "sha256": "43f5b712ee8b10e1c29079a9a9f5fc33fdabf01e07f5af5b1168acd5fa071e68"
+      }
+    },
+    {
+      "key": "participant.language.save.processing",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "Saving your language choice…",
+        "sha256": "74cebc10e0bded07079546524e07e70ca83f58bac4368487770d965d700ed22a"
+      },
+      "af": {
+        "text": "Besig om jou taalkeuse te stoor…",
+        "sha256": "1cb3fc071c56d93e7c5ab6a35b560b6551c6dfc860877a927ebbe18cbe079573"
+      }
+    },
+    {
+      "key": "participant.language.save.failed",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "We couldn't save your language choice. Try again.",
+        "sha256": "94be500ccd75b297434565df2f3c517cbc056d27924630fcb3147fa9e8c5fc4b"
+      },
+      "af": {
+        "text": "Ons kon nie jou taalkeuse stoor nie. Probeer weer.",
+        "sha256": "631f3739078d80de0a966dc7f832ff1d0d769412997a72d971f86ea283df2c72"
+      }
+    },
+    {
+      "key": "participant.language.save.uncertain",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "We couldn't confirm whether your language choice was saved. Check your preference before trying again.",
+        "sha256": "0e66648585ec6078acbb0ca2abb974fb6215b8f2c6f84fefca56f13e4cd7cf8b"
+      },
+      "af": {
+        "text": "Ons kon nie bevestig of jou taalkeuse gestoor is nie. Gaan jou voorkeur na voordat jy weer probeer.",
+        "sha256": "b07071296da33c221d417fd27db593a908f8e2c7591aa1b8822a94674b3d8812"
+      }
+    },
+    {
+      "key": "participant.language.save.stale",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "Your language preference has changed. Reload it before saving again.",
+        "sha256": "70181e5025bef2035c23fc4222f218d4a13b06497eb431154517fa8d88d334dc"
+      },
+      "af": {
+        "text": "Jou taalvoorkeur het verander. Laai dit weer voordat jy weer stoor.",
+        "sha256": "6b1bf45657808d3048d35e3ddd909b1bf60aa1e151baccc221463e96cbca43bf"
+      }
+    }
+  ],
+  "reuse_existing_keys": [
+    {
+      "key": "shared.navigation.profile",
+      "en": "Profile",
+      "af": "Profiel",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "shared.navigation.settings",
+      "en": "Settings",
+      "af": "Instellings",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "identity.registration.surname.label",
+      "en": "Surname",
+      "af": "Van",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "identity.registration.email.label",
+      "en": "Email address",
+      "af": "E-posadres",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "identity.registration.preferred_language.label",
+      "en": "Preferred language",
+      "af": "Voorkeurtaal",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "shared.language.afrikaans",
+      "en": "Afrikaans",
+      "af": "Afrikaans",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "shared.language.english",
+      "en": "English",
+      "af": "Engels",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "shared.language.change",
+      "en": "Change language",
+      "af": "Verander taal",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "shared.language.saved",
+      "en": "Language saved",
+      "af": "Taal gestoor",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "shared.language.required_unavailable",
+      "en": "Required content is unavailable in your selected language. Please try again later.",
+      "af": "Vereiste inhoud is nie in jou gekose taal beskikbaar nie. Probeer asseblief later weer.",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "shared.action.save_changes",
+      "en": "Save changes",
+      "af": "Stoor veranderinge",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "shared.action.cancel",
+      "en": "Cancel",
+      "af": "Kanselleer",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "shared.action.retry",
+      "en": "Try again",
+      "af": "Probeer weer",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "identity.verification.result.verified.title",
+      "en": "Email verified",
+      "af": "E-posadres geverifieer",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    },
+    {
+      "key": "identity.change_email.start.title",
+      "en": "Change your email address",
+      "af": "Verander jou e-posadres",
+      "reuse_only": true,
+      "warning": "Existing workspace status and separate bounded owner approval remain unchanged; this candidate does not promote any reused key."
+    }
+  ],
+  "journey_boundaries": {
+    "profile_display": "Read personal details from Identity Account; do not infer a live self-service update API from copy.",
+    "profile_save": "Only confirmed Identity mutation may show saved; validation, failure, concurrency conflict, uncertain response and retry remain distinct.",
+    "primary_email": "Current canonical email is displayed read-only in this prospective surface; email changes use separately governed reauthentication, proof and guarded apply, not profile-save.",
+    "verification": "Verified/unverified/unknown account state is derived only from current Identity authority, not copy, delivery or a cached browser claim.",
+    "language_anonymous": "Language choice locally persisted before registration/login; not an Account write.",
+    "language_authenticated": "After registration/login, preferred interface language saved through Identity; only confirmed persistence may show saved.",
+    "language_content_independence": "The language of separately chosen content is not automatically changed by interface language.",
+    "language_availability": "No silent fallback for required EN/AF content; reuse the existing required-content-unavailable semantic key.",
+    "terminal_copy_version_states": [
+      "superseded",
+      "withdrawn"
+    ],
+    "copy_lifecycle": [
+      "draft",
+      "candidate",
+      "development_approved",
+      "production_approved",
+      "superseded",
+      "withdrawn"
+    ],
+    "concurrency_idempotency_retry": "Read current Account before mutation; prevent stale overwrite; identical confirmed retries converge, conflicting/uncertain results require current-state reread. Do not fabricate success."
+  },
+  "explicit_non_goals": [
+    "No Account/profile update actions implemented or presumed to exist.",
+    "No change to registration copy or existing copy keys.",
+    "No direct email address edit; use the separately approved primary-email-change journey when authorised.",
+    "No personal health data, date of birth, profile assessments, consent, marketing or subscription features.",
+    "No production/public/real-participant release authorization and no new governance/Plane authority."
+  ],
+  "source_candidate": {
+    "filename": "FP001_PROFILE_AND_LANGUAGE_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+    "sha256": "d6baa99e2668692aed6d60a4d54eb653117251924d31ec0b4cb79881bce8f345",
+    "existing_23_keys_and_46_locale_strings_unchanged": true
+  },
+  "owner_correction": {
+    "field": "profile-only first-name label",
+    "new_semantic_key": "participant.profile.details.first_name.label",
+    "en": "First name",
+    "af": "Naam",
+    "reason": "Explicit owner-selected Afrikaans profile label",
+    "registration_copy_not_changed": true,
+    "registration_label_still": {
+      "en": "First name",
+      "af": "Voornaam"
+    },
+    "registration_alignment_requires_separate_explicit_decision": true
+  },
+  "copy_integrity": {
+    "total_semantic_keys": 24,
+    "profile_copy_keys": 16,
+    "language_copy_keys": 8,
+    "new_copy_locale_strings": 48,
+    "existing_copy_locale_strings_unchanged": 46,
+    "owner_added_locale_strings": 2,
+    "existing_semantic_keys_reused_without_approval_change": 15,
+    "no_duplicate_semantic_keys": true
+  },
+  "eligibility_boundaries": {
+    "intended_for_newyou_platform": true,
+    "en_af_exact_content_approved": true,
+    "production_release_authorized": false,
+    "feature_implementation_authorized": false,
+    "runtime_permission_granted": false,
+    "participant_pilot_authorized": false,
+    "real_participants_authorized": false,
+    "email_change_lifecycle_authorized": false,
+    "identity_or_profile_actions_changed": false,
+    "no_silent_locale_fallback": true,
+    "approval_does_not_change_existing_registry_candidate_states": true
+  }
+}
