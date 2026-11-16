@@ -125,6 +125,56 @@ defmodule NewYouWeb.PrivacyTelemetryTest do
     end
   end
 
+  test "DEV guide paths render without exposing session transport to router telemetry" do
+    handler =
+      attach([
+        [:phoenix, :router_dispatch, :start],
+        [:phoenix, :router_dispatch, :stop],
+        [:phoenix, :error_rendered]
+      ])
+
+    try do
+      for method <- [:get, :head],
+          path <- ["/dev/design-system", "/dev/design-system/preview"] do
+        conn =
+          Phoenix.ConnTest.build_conn()
+          |> Plug.Test.init_test_session(%{identity_token: "synthetic-session-bearer"})
+          |> put_req_header("cookie", "synthetic-session-transport")
+          |> put_req_header("authorization", "Bearer synthetic-authorization")
+
+        result =
+          Phoenix.ConnTest.dispatch(
+            conn,
+            NewYouWeb.Endpoint,
+            method,
+            path <> "?proof=synthetic-query-proof",
+            nil
+          )
+
+        assert result.status == 200
+        assert observed_events() == []
+      end
+
+      for {method, path} <- [
+            {:post, "/dev/design-system"},
+            {:post, "/dev/design-system/preview"},
+            {:get, "/dev/design-system/unknown"},
+            {:get, "/dev/design-system/"}
+          ] do
+        conn =
+          Phoenix.ConnTest.build_conn()
+          |> Plug.Test.init_test_session(%{identity_token: "synthetic-session-bearer"})
+
+        assert Phoenix.ConnTest.dispatch(conn, NewYouWeb.Endpoint, method, path, nil).status ==
+                 404
+
+        assert observed_events() == []
+      end
+    after
+      :telemetry.detach(handler)
+    end
+  end
+
   test "malformed requests return safe errors without full-connection error telemetry" do
     handler =
       attach([
