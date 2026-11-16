@@ -755,3 +755,38 @@ unrecognized errors. It does not suppress toolbar scripts or alter their code.
 Component/contract/token tests passed 48/48 through an explicit ExUnit runner
 using `mix run --no-start`, without application or Repo startup. These focused
 results do not certify the entire PR's mandatory gates or integration.
+
+
+Floating-label verification limits at the source checkpoint:
+
+- Bounded source review found no implementation defect and did not run tests or
+  certify Master Gate. It independently retained the Hallmark gap below.
+- Supported Hallmark command: `HALLMARK_PUPPETEER=<global-node-lib> node
+  <hallmark>/scripts/sloplint.mjs assets/css/design-forms.css
+  assets/css/design-tokens.css --scope app --url
+  http://127.0.0.1:4237/dev/design-system --json`. Report is private at
+  `/tmp/newyou-floating-hallmark-guide.json`.
+- Gate 40 FAIL measures the borderless inner input at 1:1. The actual whole-field
+  boundary is the wrapping native label, measured by the permanent browser proof
+  at at least 3:1, with label text at least 4.5:1. This explains the mismatch but
+  does not make the automated gate pass. It remains unresolved verification;
+  no Floor waiver or Hallmark-verified completion is claimed.
+- Render REFLEX 39b reports control sizes outside its generic range. DESIGN.md
+  preserves 58px minimum controls, with growth for long labels, and the enclosing
+  label is the full click target. Treat this as the existing project-grounded
+  geometry exception, not a change to native semantics. Static 26b is waived for
+  text controls without a pressed-button state. The preexisting numeric-weight
+  font-family false positive remains waived in canonical CSS.
+- Render WARN 40 on the existing lit typography CTA reports 3.97:1 at a sampled
+  gradient point; this batch changes no button styles. F3 on global heading
+  wrapping is unchanged; the guide supplies balanced heading rules elsewhere.
+- A temporary extracted HTML specimen was also tried. Its stylesheet/font source
+  associations did not match the real route, so its findings are not a valid
+  replacement for the supported URL result. No fallback render is certified.
+
+WELL-114's correction is now independently integrated in main
+`f72cf637453408896a5037dcb2f8d37f0d29e3af`. The guide incorporates that commit;
+three source-map merge conflicts preserve both the UI contracts and the
+fixture-isolation proof, with exact merged-source hashes. This does not reuse
+WELL-114's passing suite as guide-branch proof. Complete guide gates, OCR,
+current-head CI and independent review remain separate delivery requirements.

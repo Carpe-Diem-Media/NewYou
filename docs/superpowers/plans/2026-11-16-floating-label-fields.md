@@ -19,10 +19,10 @@
 
 ## Tasks
 
-- [ ] Add `DesignFieldTest` cases for valid/invalid placement, label/input associations, placeholder ownership, password omission and unchanged stacked defaults. Run the focused suite and observe RED before implementation.
-- [ ] Extend `lib/new_you_web/components/design/field.ex`; append scoped CSS to `assets/css/design-forms.css`; define local-resolving roles in `assets/css/design-tokens.css` and record the approved extension in `DESIGN.md`.
-- [ ] Extend `lib/new_you_web/live/design_system_forms.ex` with `#floating-labels` specimens and usage guidance. Add focused render assertions.
-- [ ] Add `test/assets/design_floating_fields_browser.mjs` for actual focus/fill/blur/clear, autofill, long-label reflow, 200 percent text, reduced motion, no script and LiveView patch/reconnect. Block POST requests. Recheck unchanged registration focus.
+- [x] Add `DesignFieldTest` cases for valid/invalid placement, label/input associations, placeholder ownership, password omission and unchanged stacked defaults. Run the focused suite and observe RED before implementation.
+- [x] Extend `lib/new_you_web/components/design/field.ex`; append scoped CSS to `assets/css/design-forms.css`; define local-resolving roles in `assets/css/design-tokens.css` and record the approved extension in `DESIGN.md`.
+- [x] Extend `lib/new_you_web/live/design_system_forms.ex` with `#floating-labels` specimens and usage guidance. Add focused render assertions.
+- [x] Add `test/assets/design_floating_fields_browser.mjs` for actual focus/fill/blur/clear, autofill, long-label reflow, 200 percent text, reduced motion, no script and LiveView patch/reconnect. Block POST requests. Recheck unchanged registration focus.
 - [ ] Run formatting, focused ExUnit, design enforcement and assets build. Run supported Hallmark static/render checks against affected CSS/guide, distinguishing inherited findings. Request bounded source review, fix introduced issues, document exact proof and residual gaps in the existing handoff.
 
 ## Proof commands
