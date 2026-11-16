@@ -1,4 +1,10 @@
-<div id="design-system" class="ds-guide" phx-hook="DesignSystem">
+<div
+  id="design-system"
+  class="ds-guide"
+  phx-hook="DesignSystem"
+  data-live-socket="/dev/design-system/live"
+  data-live-url={@live_url}
+>
   <div :if={@preview?} id="preview-content" class="ds-preview-content">
     <h1 class="ds-responsive-heading">A little room to grow.</h1>
     <p class="ds-lead">The same tokens, at every width.</p>

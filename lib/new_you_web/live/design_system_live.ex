@@ -34,6 +34,7 @@ defmodule NewYouWeb.DesignSystemLive do
 
   @impl true
   def handle_params(params, _uri, socket) do
+    params = display_params(params)
     count = choice(params["count"], @counts, "5")
 
     {:noreply,
@@ -44,6 +45,7 @@ defmodule NewYouWeb.DesignSystemLive do
        viewport: choice(params["viewport"], @viewports, "auto"),
        allocation: choice(params["allocation"], @allocations, "full"),
        counts: @counts,
+       live_url: display_url(socket.assigns.live_action, params),
        preview?: socket.assigns.live_action == :preview
      )}
   end
@@ -71,6 +73,26 @@ defmodule NewYouWeb.DesignSystemLive do
   def handle_event("layout", _params, socket), do: {:noreply, socket}
   def handle_event("grid", _params, socket), do: {:noreply, socket}
   def handle_event("viewport", _params, socket), do: {:noreply, socket}
+
+  @doc false
+  def display_params(params) do
+    for {key, allowed} <- [
+          {"count", @counts},
+          {"alignment", @alignments},
+          {"viewport", @viewports},
+          {"allocation", @allocations}
+        ],
+        value = params[key],
+        value in allowed,
+        into: %{},
+        do: {key, value}
+  end
+
+  defp display_url(action, params) do
+    path = if action == :preview, do: "/dev/design-system/preview", else: "/dev/design-system"
+    query = params |> Enum.sort() |> URI.encode_query()
+    if query == "", do: path, else: path <> "?" <> query
+  end
 
   defp patch_choices(socket, updates) do
     choices =

@@ -15,11 +15,21 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage()
 const errors = []
 page.on("pageerror", error => errors.push(error.message))
+const socketPaths = []
+const network = await page.createCDPSession()
+await network.send("Network.enable")
+network.on("Network.webSocketCreated", ({url}) => socketPaths.push(new URL(url).pathname))
 
 try {
   await page.setViewport({width: 1440, height: 900})
-  await page.goto(`${base}/dev/design-system`, {waitUntil: "networkidle0"})
+  await page.setCookie({name: "_new_you_key", value: "synthetic-session-transport", url: base, httpOnly: true})
+  await page.goto(`${base}/dev/design-system?count=synthetic-invalid-count&proof=synthetic-query-proof`, {waitUntil: "networkidle0"})
   await page.waitForFunction(() => window.liveSocket?.isConnected() && document.querySelector("[data-token='--primary']")?.textContent.trim() !== "CSS value")
+  assert.equal(new URL(page.url()).search, "", "unrecognized display input is removed before LiveView connects")
+  assert.ok(socketPaths.length > 0, "the guide opens a real websocket")
+  assert.ok(socketPaths.every(path => path === "/dev/design-system/live/websocket"), "the guide uses only its sessionless transport")
+  assert.equal((await page.cookies(base)).find(cookie => cookie.name === "_new_you_key")?.value,
+    "synthetic-session-transport", "viewing the guide preserves the browser's Identity cookie")
   assert.equal(await page.evaluate(() => matchMedia("(hover: hover)").matches), true)
 
   const primarySelector = "#buttons button[data-variant='primary']:not(:disabled)"
