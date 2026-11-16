@@ -130,28 +130,46 @@ defmodule NewYou.Identity.PasswordSessionTest do
           {credentials, session}
         end
 
-      assert :ok = AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
-      assert :ok = AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
+      before_sessions = session_signature()
+      before_tokens = token_signature()
 
-      for {credentials, original} <- credentials do
-        retained = Ash.get!(Identity.Session, credentials.session_id, authorize?: false)
-        assert retained.state == original.state
-        assert retained.token_jti == original.token_jti
-        assert retained.created_at == original.created_at
+      # The maintenance action is global. Roll back its whole effect after
+      # proving fixture token deletion and retained Session history.
+      with_rolled_back_maintenance(fn ->
+        assert :ok =
+                 AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
 
-        assert is_nil(
-                 Ash.get!(Identity.Token, original.token_jti,
-                   authorize?: false,
-                   not_found_error?: false
+        assert :ok =
+                 AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
+
+        for {credentials, original} <- credentials do
+          retained =
+            Ash.get!(Identity.Session, credentials.session_id, authorize?: false)
+
+          assert retained.state == original.state
+          assert retained.token_jti == original.token_jti
+          assert retained.created_at == original.created_at
+
+          assert is_nil(
+                   Ash.get!(Identity.Token, original.token_jti,
+                     authorize?: false,
+                     not_found_error?: false
+                   )
                  )
-               )
 
-        assert {:error, :authentication_unavailable} = Identity.authorize_session(credentials)
-      end
+          assert {:error, :authentication_unavailable} =
+                   Identity.authorize_session(credentials)
+        end
 
-      assert {:ok, fresh} = Identity.authenticate_password(request.email, request.password)
-      assert {:ok, %{account_id: id}} = Identity.authorize_session(fresh)
-      assert id == registration.account_id
+        assert {:ok, fresh} =
+                 Identity.authenticate_password(request.email, request.password)
+
+        assert {:ok, %{account_id: id}} = Identity.authorize_session(fresh)
+        assert id == registration.account_id
+      end)
+
+      assert session_signature() == before_sessions
+      assert token_signature() == before_tokens
     end)
   end
 
@@ -165,8 +183,12 @@ defmodule NewYou.Identity.PasswordSessionTest do
       parent = self()
       reference = make_ref()
       scenario = NewYou.Proof.Scenario.start()
-      before_tokens = P805.scalar("SELECT count(*) FROM tokens")
-      before_sessions = P805.scalar("SELECT count(*) FROM sessions")
+
+      before_tokens =
+        P805.scalar("SELECT count(*) FROM tokens WHERE account_id = $1", [account_id])
+
+      before_sessions =
+        P805.scalar("SELECT count(*) FROM sessions WHERE account_id = $1", [account_id])
 
       try do
         {:ok, monitor} =
@@ -211,8 +233,12 @@ defmodule NewYou.Identity.PasswordSessionTest do
 
         assert_receive {^reference, :denied, true}, 5_000
         assert_receive {:DOWN, ^monitor, :process, _, :normal}, 5_000
-        assert P805.scalar("SELECT count(*) FROM tokens") == before_tokens
-        assert P805.scalar("SELECT count(*) FROM sessions") == before_sessions
+
+        assert P805.scalar("SELECT count(*) FROM tokens WHERE account_id = $1", [account_id]) ==
+                 before_tokens
+
+        assert P805.scalar("SELECT count(*) FROM sessions WHERE account_id = $1", [account_id]) ==
+                 before_sessions
 
         assert {:error, :authentication_unavailable} =
                  Identity.authenticate_password(request.email, request.password)
@@ -326,7 +352,10 @@ defmodule NewYou.Identity.PasswordSessionTest do
       request = P805.request()
       {:ok, registration} = Identity.register(request)
       {:ok, :verified} = Identity.verify_email(registration.verification_proof)
-      before = NewYou.Repo.query!("SELECT count(*) FROM tokens").rows
+      account_id = Ecto.UUID.dump!(registration.account_id)
+
+      before =
+        NewYou.Repo.query!("SELECT count(*) FROM tokens WHERE account_id = $1", [account_id]).rows
 
       NewYou.Repo.query!("""
       CREATE FUNCTION p809_reject_session() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -341,7 +370,10 @@ defmodule NewYou.Identity.PasswordSessionTest do
         assert {:error, :authentication_unavailable} =
                  Identity.authenticate_password(request.email, request.password)
 
-        assert before == NewYou.Repo.query!("SELECT count(*) FROM tokens").rows
+        assert before ==
+                 NewYou.Repo.query!("SELECT count(*) FROM tokens WHERE account_id = $1", [
+                   account_id
+                 ]).rows
       after
         NewYou.Repo.query!("DROP TRIGGER p809_reject ON sessions")
         NewYou.Repo.query!("DROP FUNCTION p809_reject_session()")
@@ -421,12 +453,82 @@ defmodule NewYou.Identity.PasswordSessionTest do
         [Ecto.UUID.dump!(credentials.session_id)]
       )
 
-      assert {:ok, 1} = Identity.expire_due_sessions()
-      assert {:ok, 0} = Identity.expire_due_sessions()
+      foreign_request = P805.request()
+      {:ok, foreign_registration} = Identity.register(foreign_request)
+      {:ok, :verified} = Identity.verify_email(foreign_registration.verification_proof)
+
+      {:ok, foreign_credentials} =
+        Identity.authenticate_password(foreign_request.email, foreign_request.password)
+
+      NewYou.Repo.query!(
+        "UPDATE sessions SET expires_at = now() - interval '1 second' WHERE id = $1",
+        [Ecto.UUID.dump!(foreign_credentials.session_id)]
+      )
+
+      before = session_signature()
+
+      # Reconciliation is intentionally global and bounded to 100 rows per call.
+      # Exercise its actual batches, then roll back all changes to retained rows.
+      with_rolled_back_maintenance(fn ->
+        due =
+          P805.scalar(
+            "SELECT count(*) FROM sessions WHERE state = 'active' AND (expires_at <= now() OR idle_expires_at <= now())"
+          )
+
+        assert due >= 2
+
+        for batch <- 0..div(due - 1, 100) do
+          expected = min(due - batch * 100, 100)
+          assert {:ok, ^expected} = Identity.expire_due_sessions()
+        end
+
+        assert {:ok, 0} = Identity.expire_due_sessions()
+
+        assert Ash.get!(Identity.Session, credentials.session_id, authorize?: false).state ==
+                 :expired
+
+        assert Ash.get!(Identity.Session, foreign_credentials.session_id, authorize?: false).state ==
+                 :expired
+
+        assert P805.scalar(
+                 "SELECT count(*) FROM sessions WHERE account_id = $1 AND state = 'expired'",
+                 [Ecto.UUID.dump!(registration.account_id)]
+               ) == 1
+      end)
+
+      assert session_signature() == before
 
       assert Ash.get!(Identity.Session, credentials.session_id, authorize?: false).state ==
-               :expired
+               :active
+
+      assert Ash.get!(Identity.Session, foreign_credentials.session_id, authorize?: false).state ==
+               :active
     end)
+  end
+
+  # Use Ecto's sandbox transaction rather than nesting an outer Repo transaction.
+  # Ash denials roll back their own savepoint without aborting the whole proof.
+  defp with_rolled_back_maintenance(callback) do
+    sandbox = Ecto.Adapters.SQL.Sandbox
+    :ok = sandbox.checkin(NewYou.Repo)
+    :ok = sandbox.checkout(NewYou.Repo)
+
+    try do
+      callback.()
+    after
+      :ok = sandbox.checkin(NewYou.Repo)
+      :ok = sandbox.checkout(NewYou.Repo, sandbox: false)
+    end
+  end
+
+  defp token_signature do
+    %{rows: rows} = NewYou.Repo.query!("SELECT row_to_json(t)::text FROM tokens t ORDER BY jti")
+    :crypto.hash(:sha256, :erlang.term_to_binary(rows))
+  end
+
+  defp session_signature do
+    %{rows: rows} = NewYou.Repo.query!("SELECT row_to_json(s)::text FROM sessions s ORDER BY id")
+    :crypto.hash(:sha256, :erlang.term_to_binary(rows))
   end
 
   defp await_account_lock(holder, login, deadline) do
