@@ -255,3 +255,91 @@ This proves the local canonical gate for these executable inputs, not OCR,
 exact-final-head hosted CI, independent Master Gate, integration or resulting-main
 certification. Those delivery obligations remain open. WELL-112's separate
 Hallmark/tooling and delivery gaps are unchanged.
+
+
+## Current-base verification after approved copy integration
+
+The branch incorporated current main without changing its executable correction.
+The first merge was `6f710ebc591a9e32f2ef51b408a7a2ec996060e9` against
+`d1d09031e6995952277d2bb1dcc49d555be21ad4`. The final tested merge is
+`9f4b8fd1975e0b1f67b12463e01156529ce7d57b` against
+`2736a9c6925c8c126cbba007f404b2e38ec2080d`, which adds the approved Help
+copy packet. These upstream changes add seven browser-copy packets, router
+entries and generated history. Application, test, tooling, dependency and
+configuration sources remain identical to the previous candidate. Router JSON
+is a runtime input: message-eligibility consumers select exact document IDs, so
+additive entries required focused compatibility proof rather than an assumption
+that documentation cannot affect execution.
+
+On clean `6f710eb`, the seven affected files passed 111/111 in 26.9 seconds,
+then canonical passed 831/831 in 531.6 seconds, seed 813027. The wrapper held
+`/tmp/newyou-shared-test-plt.lock` around doctor, read-only snapshots, focused
+and canonical commands. It waited for the actual conflicting command to finish;
+no booking, permission or release-message prerequisite was added.
+
+A bounded read-only review found no code regression. It found two limits in the
+temporary observation tooling: the 14-table snapshot omitted `delivery_attempts`,
+and chmod after file creation could briefly leave hash files too permissive.
+The author added that table and set `umask 077` before process startup. A new
+seven-file run passed 111/111 in 26.1 seconds with 15-table preservation and
+mode-0600 files. These are proof-tool corrections, not application changes.
+The earlier 14-table canonical observation does not cover DeliveryAttempt rows.
+This advisory source review is not independent Master Gate certification.
+
+Final tested source `9f4b8fd` passed:
+
+- Existing MagicLoginMessage, PasswordResetMessage and RecoveryMessage suites,
+  loaded through an isolated ExUnit runner using `mix run --no-start`: 34/34,
+  seed 813027, 5.1 seconds. The runner starts crypto and ExUnit only, without
+  application or database startup, and uses a unique temporary directory.
+- `mise exec -- python3 -m unittest tests.test_capability_knowledge
+  tests.test_foundation_lane_routing tests.test_foundation_smoke`: 71 tests,
+  13.288 seconds, PASS.
+- `ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test -- mix check
+  --seed 813027`: 831/831, 508.2 seconds, PASS. The actual wrapper held the
+  command-scoped flock around doctor, the canonical command and snapshots.
+  Doctor passed. The wrapper completed and released the lock automatically.
+
+Mise resolved Elixir 1.20.5-otp-29, Erlang 29.1.2 / OTP29 and Node 26.2.0.
+`mise exec -- elixir --version` confirmed Elixir 1.20.5 on OTP29.
+No reset, manual retained-row cleanup, schema migration or role change occurred.
+
+The final observations compare per-row SHA-256 multisets from one consistent
+SELECT over 15 tables before and after canonical. They start only the configured
+Repo through `mix run --no-start`, not the application or workers. Every
+preexisting digest retains its multiplicity. No raw rows or credentials are
+published. Both private JSON files were mode 0600. This improves on the earlier
+aggregate comparison by proving membership preservation even in growing tables.
+
+Final observed counts were Accounts 5, Tokens 10, Sessions 5, registration
+operations 5, resend operations 0, message intents 5, protected envelopes 5,
+evidence obligations 5, Oban jobs 10, identity grants 0, Privacy authorities 3,
+Privacy events 5 and delivery attempts 0, unchanged. Nonces grew from 5029 to
+5080 and permanent PMR reservations from 96110 to 96991. All preexisting rows
+remained unchanged, with zero added rows outside those two reservation tables.
+DeliveryAttempt preservation is an empty-set check here. Positive own/foreign
+attempt coverage remains in the permanent fixture-observation regression.
+Hashes establish observed row preservation, not historical authorship or the
+absence of every transient mutation inside a rolled-back test.
+
+Fresh private evidence:
+
+- `/tmp/newyou-well114-final-base-canonical.log`, SHA-256
+  `5d31e45a798837bda0890f78429aef77d3fdf87dd2489a603f09d0b2b476395a`.
+- `/tmp/newyou-well114-final-base-preservation.log`, SHA-256
+  `88f83cc2cba752288c146bab36263c4878913de6480a95e1a30a3560810cd7d8`.
+- `/tmp/newyou-well114-final-base-content.log`, SHA-256
+  `710e870b300996cb9bfa5f539fb737b510a3c2e64d148401c614e7974444b3f5`.
+- `/tmp/newyou-well114-final-base-python.log`, SHA-256
+  `98d4afa39667228d2ca3791bab9b2d748c4c8a0e76cf85aae4e53fe304212786`.
+
+The T3 restart removed the three earlier canonical/targeted `/tmp` logs named
+above. Their committed summaries and recorded hashes survive; the original raw
+logs cannot now be re-inspected. Fresh evidence does not recreate them. The
+current-base logs and private fingerprint files exist at this checkpoint.
+
+Only descriptive proof/map notes and mechanical history follow this tested
+source. Verify executable inputs remain identical before reusing its local
+proof. Fresh OCR and final-head hosted CI remain required before review handoff.
+Independent review, integration and resulting-main reconciliation remain open;
+WELL-114 is not Done and still blocks dependent delivery.
