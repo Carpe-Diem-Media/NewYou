@@ -51,6 +51,11 @@
     <.primary_button type="submit">{Copy.text!("identity.login.submit", @locale)}</.primary_button>
   </.form>
   <a
+    :if={NewYou.Content.PasswordResetBrowserCopy.available?()}
+    href={"/password/reset?locale=#{@locale}"}
+    class="min-h-11 w-fit content-center text-design-body-xs leading-design-body-xs text-design-ink underline decoration-design-primary underline-offset-4 hover:text-design-primary active:text-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+  >{NewYouWeb.PasswordResetCopy.text!("identity.login.forgot_password", @locale)}</a>
+  <a
     href={"/login/magic?locale=#{@locale}"}
     class="min-h-11 w-fit content-center text-design-body-xs leading-design-body-xs text-design-ink underline decoration-design-primary underline-offset-4 hover:text-design-primary active:text-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
   >{Copy.text!(

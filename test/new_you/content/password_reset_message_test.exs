@@ -50,6 +50,77 @@ defmodule NewYou.Content.PasswordResetMessageTest do
     end
   end
 
+  test "WELL-136 consumption requires its exact current context and successor evidence", %{
+    root: root
+  } do
+    for locale <- ["en", "af"] do
+      assert {:ok, binding} = PasswordResetMessage.binding(locale, :well136)
+      assert {:ok, _bytes} = PasswordResetMessage.eligible(binding, :well136)
+      assert {:error, :content_ineligible} = PasswordResetMessage.binding(locale, :production)
+      assert {:error, :content_ineligible} = PasswordResetMessage.binding(locale, :phase9)
+    end
+
+    path =
+      Path.join(
+        root,
+        "docs/delivery/content-evidence/content_media/password_reset_messages/PASSWORD_RESET_MESSAGE_WELL136_PHASE9_ELIGIBILITY_v0.3.0.json"
+      )
+
+    original = File.read!(path)
+    packet = Jason.decode!(original)
+
+    for altered <- [
+          put_in(packet, ["lifecycle", "state"], "withdrawn"),
+          Map.put(packet, "new_applicability_events", []),
+          put_in(packet, ["eligibility", "other_phase9"], true)
+        ] do
+      File.write!(path, Jason.encode!(altered))
+      assert {:error, :content_ineligible} = PasswordResetMessage.binding("en", :well136)
+      assert {:ok, _} = PasswordResetMessage.binding("en")
+    end
+
+    File.write!(path, original)
+    assert {:ok, _} = PasswordResetMessage.binding("af", :well136)
+  end
+
+  test "WELL-136 binding, route and complete historical lineage are rechecked before delivery", %{
+    root: root
+  } do
+    assert {:ok, binding} = PasswordResetMessage.binding("en", :well136)
+
+    for changed <- [
+          Map.put(binding, :locale, "af"),
+          Map.put(binding, :translation_version_id, "latest"),
+          Map.put(binding, :content_sha256, String.duplicate("0", 64))
+        ] do
+      assert {:error, :content_ineligible} = PasswordResetMessage.eligible(changed, :well136)
+    end
+
+    router_path = Path.join(root, "docs/delivery/CURRENT_DELIVERY_ROUTER.json")
+    original = File.read!(router_path)
+    router = Jason.decode!(original)
+
+    contracts =
+      Enum.reject(
+        router["delivery_contracts"],
+        &(&1["document_id"] == "PASSWORD_RESET_MESSAGE_WELL136_PHASE9_DEVELOPMENT_EVIDENCE")
+      )
+
+    File.write!(router_path, Jason.encode!(%{router | "delivery_contracts" => contracts}))
+    assert {:error, :content_ineligible} = PasswordResetMessage.eligible(binding, :well136)
+    File.write!(router_path, original)
+    assert {:ok, _} = PasswordResetMessage.eligible(binding, :well136)
+
+    locale_path =
+      Path.join(
+        root,
+        "docs/delivery/content-evidence/content_media/password_reset_messages/NEWYOU-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2.txt"
+      )
+
+    File.write!(locale_path, File.read!(locale_path) <> "\n")
+    assert {:error, :content_ineligible} = PasswordResetMessage.eligible(binding, :well136)
+  end
+
   test "rejects corrupted successor authority and approval proposal", %{root: root} do
     for path <- [
           "docs/governance/product/00_PLATFORM_v1.16.0.md",

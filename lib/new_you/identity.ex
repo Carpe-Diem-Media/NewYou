@@ -112,9 +112,9 @@ defmodule NewYou.Identity do
   def request_password_reset(email, locale, operation_id),
     do: NewYou.Identity.PasswordReset.request(email, locale, operation_id)
 
-  @doc "Explicitly replace a password using current reset proof. A retry of the committed confirmation operation returns its prior outcome without applying new input. No login occurs."
+  @doc "Explicitly replace a password using current reset proof. A committed-operation retry returns its prior outcome without applying new input. An unconfirmed transaction returns reset_uncertain, never a confirmed failure. No login occurs."
   @spec reset_password(term(), term(), term()) ::
-          {:ok, :reset | :already_reset} | {:error, :reset_unavailable}
+          {:ok, :reset | :already_reset} | {:error, :reset_unavailable | :reset_uncertain}
   def reset_password(proof, password, operation_id)
       when is_binary(proof) and byte_size(proof) in 1..8192 do
     Account
@@ -126,10 +126,12 @@ defmodule NewYou.Identity do
     |> Ash.run_action()
     |> case do
       {:ok, outcome} when outcome in [:reset, :already_reset] -> {:ok, outcome}
-      _ -> {:error, :reset_unavailable}
+      {:ok, outcome} when outcome in [:reset_unavailable, :reset_uncertain] -> {:error, outcome}
+      {:error, %Ash.Error.Invalid{}} -> {:error, :reset_unavailable}
+      _ -> {:error, :reset_uncertain}
     end
   rescue
-    _ -> {:error, :reset_unavailable}
+    _ -> {:error, :reset_uncertain}
   end
 
   def reset_password(_, _, _), do: {:error, :reset_unavailable}

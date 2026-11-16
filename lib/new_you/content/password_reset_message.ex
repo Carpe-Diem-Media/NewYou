@@ -13,11 +13,13 @@ defmodule NewYou.Content.PasswordResetMessage do
     @packet_path "docs/delivery/content-evidence/content_media/password_reset_messages/PASSWORD_RESET_MESSAGE_EVIDENCE_PACKET_v0.2.0.json"
     @candidate_path "docs/delivery/content-evidence/content_media/password_reset_messages/PASSWORD_RESET_MESSAGE_EVIDENCE_PACKET_v0.1.0.json"
     @approvals_path "docs/delivery/content-evidence/content_media/password_reset_messages/OWNER_APPROVALS_v1.json"
+    @well136_packet_path "docs/delivery/content-evidence/content_media/password_reset_messages/PASSWORD_RESET_MESSAGE_WELL136_PHASE9_ELIGIBILITY_v0.3.0.json"
     @delivery_router_path "docs/delivery/CURRENT_DELIVERY_ROUTER.json"
     @governance_router_path "docs/governance/CURRENT_GOVERNANCE_ROUTER.json"
     @packet_sha "93330874efbfed68587107a5d33bbce7d3f07461fb90842c72bc1e1dc95c35ec"
     @candidate_sha "7d9df40d8b8ed8ca2c1bf204682a70d88425f4619a7663ac89db401036c01132"
     @approvals_sha "80b95f1f25df5bd67b08792a665965b6ab34cf265f400b389cb90e77df203b4b"
+    @well136_packet_sha "988910723b5e7c13d8826ae3d43ddb409a9a2e0ba1ff6219972d6fb94dbdd891"
     @repo_root Path.expand("../../..", __DIR__)
     @item_id "NEWYOU-CONTENTITEM-PASSWORD-RESET-MESSAGE-EMAIL"
     @content_version_id "NEWYOU-CONTENTVERSION-PASSWORD-RESET-MESSAGE-EMAIL-V1"
@@ -112,6 +114,35 @@ defmodule NewYou.Content.PasswordResetMessage do
 
     def binding(_locale), do: {:error, :content_ineligible}
 
+    @doc """
+    Binds an exact locale to the current WELL-136 non-production applicability.
+
+    Rechecks the integrated route, immutable approvals and original email bytes.
+    This read grants no delivery, provider, authentication or runtime-role authority.
+    Other contexts and incomplete or changed evidence fail closed.
+    """
+    @spec binding(String.t(), :well136) :: {:ok, map()} | {:error, :content_ineligible}
+    def binding(locale, :well136) when is_binary(locale) do
+      with {:ok, root} <- evidence_root(),
+           {:ok, packet, versions} <- well136_evidence(root),
+           {:ok, {version, _bytes}} <- Map.fetch(versions, locale) do
+        {:ok,
+         %{
+           locale: locale,
+           content_item_id: packet["content_item_id"],
+           content_version_id: packet["content_version_id"],
+           translation_version_id: version["id"],
+           content_sha256: version["artifact"]["sha256"]
+         }}
+      else
+        _ -> {:error, :content_ineligible}
+      end
+    rescue
+      _ -> {:error, :content_ineligible}
+    end
+
+    def binding(_locale, _context), do: {:error, :content_ineligible}
+
     @spec eligible(map()) :: {:ok, binary()} | {:error, :content_ineligible}
     def eligible(binding) when is_map(binding) do
       with {:ok, root} <- evidence_root(),
@@ -131,6 +162,128 @@ defmodule NewYou.Content.PasswordResetMessage do
     end
 
     def eligible(_binding), do: {:error, :content_ineligible}
+
+    @doc """
+    Revalidates a persisted WELL-136 binding before consuming its exact email bytes.
+
+    Callers must use this context-specific read at delivery as well as issuance;
+    an earlier binding does not preserve eligibility after withdrawal or drift.
+    No state is changed and no locale fallback is permitted.
+    """
+    @spec eligible(map(), :well136) :: {:ok, binary()} | {:error, :content_ineligible}
+    def eligible(binding, :well136) when is_map(binding) do
+      with {:ok, root} <- evidence_root(),
+           {:ok, packet, versions} <- well136_evidence(root),
+           locale when is_binary(locale) <- Map.get(binding, :locale),
+           {:ok, {version, bytes}} <- Map.fetch(versions, locale),
+           true <- Map.get(binding, :content_item_id) == packet["content_item_id"],
+           true <- Map.get(binding, :content_version_id) == packet["content_version_id"],
+           true <- Map.get(binding, :translation_version_id) == version["id"],
+           true <- Map.get(binding, :content_sha256) == version["artifact"]["sha256"] do
+        {:ok, bytes}
+      else
+        _ -> {:error, :content_ineligible}
+      end
+    rescue
+      _ -> {:error, :content_ineligible}
+    end
+
+    def eligible(_binding, _context), do: {:error, :content_ineligible}
+
+    defp well136_evidence(root) do
+      with {:ok, packet, versions} <- current_evidence(root),
+           {:ok, router} <- read_json(root, @delivery_router_path),
+           {:ok, applicability_bytes} <- read_file(root, @well136_packet_path),
+           true <- digest(applicability_bytes) == @well136_packet_sha,
+           {:ok, applicability} <- Jason.decode(applicability_bytes),
+           true <- current_well136_route?(router),
+           true <- well136_applicability?(applicability, packet) do
+        {:ok, applicability, versions}
+      else
+        _ -> {:error, :content_ineligible}
+      end
+    end
+
+    defp current_well136_route?(router) do
+      Enum.filter(
+        Map.get(router, "delivery_contracts", []),
+        &(&1["document_id"] == "PASSWORD_RESET_MESSAGE_WELL136_PHASE9_DEVELOPMENT_EVIDENCE")
+      ) == [
+        %{
+          "document_id" => "PASSWORD_RESET_MESSAGE_WELL136_PHASE9_DEVELOPMENT_EVIDENCE",
+          "canonical_filename" => Path.basename(@well136_packet_path),
+          "repository_path" => @well136_packet_path,
+          "sha256" => @well136_packet_sha,
+          "contract_type" => "content_evidence",
+          "status" => "BOUNDED_WELL136_NONPRODUCTION_SCOPE; RUNTIME_RELEASE_PROHIBITED"
+        }
+      ]
+    end
+
+    defp well136_applicability?(applicability, historical_packet) do
+      well136_identity?(applicability, historical_packet) and well136_scope?(applicability) and
+        well136_decisions?(applicability) and well136_history?(applicability)
+    end
+
+    defp well136_identity?(applicability, historical_packet) do
+      applicability["packet_id"] ==
+        "password-reset-message-email-well136-phase9-applicability-v0.3.0" and
+        applicability["status"] ==
+          "EXACT_BOUNDED_WELL136_DEVELOPMENT_SCOPE_APPROVED; RUNTIME_RELEASE_PROHIBITED" and
+        applicability["owner"] == "Content & Media" and
+        applicability["content_item_id"] == historical_packet["content_item_id"] and
+        applicability["content_version_id"] == historical_packet["content_version_id"] and
+        applicability["lifecycle"]["state"] == "development_approved"
+    end
+
+    defp well136_scope?(applicability) do
+      applicability["eligibility"] == %{
+        "development" => true,
+        "automated_tests" => true,
+        "development_environments" => true,
+        "bounded_p8_12_proof" => true,
+        "bounded_well136_phase9" => true,
+        "other_phase9" => false,
+        "production" => false,
+        "public_release" => false,
+        "paid_pilot" => false,
+        "real_participants" => false,
+        "sender_provider" => false,
+        "runtime_release" => false
+      }
+    end
+
+    defp well136_decisions?(applicability) do
+      Enum.map(applicability["new_applicability_events"], & &1["decision_id"]) == [
+        "WELL136-GOV-01-V0.1-PRODUCT-SCOPE",
+        "WELL136-PHASE9-EMAIL-APPLICABILITY-EN-V1",
+        "WELL136-PHASE9-EMAIL-APPLICABILITY-AF-V1"
+      ] and
+        applicability["current_governing_authority"] == [
+          %{
+            "document_id" => "PLATFORM_PRODUCT_LAW",
+            "path" => "docs/governance/product/00_PLATFORM_v1.18.0.md",
+            "sha256" => "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f",
+            "section" => "§21E.29"
+          },
+          %{
+            "document_id" => "PRODUCT_DECISIONS",
+            "path" => "docs/governance/product/01_DECISIONS_v1.18.0.md",
+            "sha256" => "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0",
+            "section" => "DEC-325"
+          }
+        ]
+    end
+
+    defp well136_history?(applicability) do
+      applicability["predecessor_packet"]["path"] == @packet_path and
+        applicability["predecessor_packet"]["current_file_sha256"] == @packet_sha and
+        applicability["historical_approval_source"]["path"] == @approvals_path and
+        applicability["historical_approval_source"]["current_file_sha256"] == @approvals_sha and
+        applicability["activation"]["existing_p8_12_route_unchanged"] == true and
+        applicability["activation"]["provider_and_runtime_authority"] == false and
+        applicability["activation"]["release_authority"] == false
+    end
 
     defp current_evidence(root) do
       with {:ok, delivery_router} <- read_json(root, @delivery_router_path),
@@ -387,6 +540,7 @@ defmodule NewYou.Content.PasswordResetMessage do
                 @packet_path,
                 @candidate_path,
                 @approvals_path,
+                @well136_packet_path,
                 @delivery_router_path,
                 @governance_router_path,
                 @recovery_proposal,
@@ -475,7 +629,13 @@ defmodule NewYou.Content.PasswordResetMessage do
     @spec binding(String.t()) :: {:error, :content_ineligible}
     def binding(_locale), do: {:error, :content_ineligible}
 
+    @spec binding(String.t(), :well136) :: {:error, :content_ineligible}
+    def binding(_locale, _context), do: {:error, :content_ineligible}
+
     @spec eligible(map()) :: {:error, :content_ineligible}
     def eligible(_binding), do: {:error, :content_ineligible}
+
+    @spec eligible(map(), :well136) :: {:error, :content_ineligible}
+    def eligible(_binding, _context), do: {:error, :content_ineligible}
   end
 end

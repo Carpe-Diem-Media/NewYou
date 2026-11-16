@@ -145,7 +145,7 @@ defmodule NewYou.Identity.PasswordReset do
                source_reference: proof.jti,
                role: :password_reset,
                source_purpose: "password_reset",
-               render_schema: "password-reset-v1",
+               render_schema: "password-reset-well136-v1",
                destination: account.email,
                destination_provenance: "identity_password_reset_issuance",
                destination_authorized_at: proof.created_at,
@@ -189,38 +189,57 @@ defmodule NewYou.Identity.PasswordReset do
     No Session is issued. Every failed write rolls back all consequences.
     """
     @spec reset(binary(), binary(), String.t()) ::
-            {:ok, :reset | :already_reset} | {:error, :reset_unavailable}
+            {:ok, :reset | :already_reset} | {:error, :reset_unavailable | :reset_uncertain}
     def reset(bearer, password, operation_id) do
       with true <- is_binary(password) and byte_size(password) in 1..1024,
            {:ok, operation_id} <- Ecto.UUID.cast(operation_id),
            {:ok, %{"purpose" => "password_reset", "jti" => jti}} <-
              Joken.verify(bearer, Config.token_signer(Account)),
-           {:ok, %Token{} = locator} <- token(jti),
-           {:ok, result} <-
-             Ash.transact(
-               [
-                 Account,
-                 Token,
-                 Session,
-                 DeviceAssurance,
-                 RegistrationOperation,
-                 EvidenceObligation
-               ],
-               fn ->
-                 consume_locked(locator.account_id, jti, bearer, password, operation_id)
-               end
-             ) do
-        case result do
-          {:ok, outcome} when outcome in [:reset, :already_reset] -> {:ok, outcome}
-          outcome when outcome in [:reset, :already_reset] -> {:ok, outcome}
-          _ -> {:error, :reset_unavailable}
-        end
+           {:ok, %Token{} = locator} <- token(jti) do
+        reset_transaction(locator.account_id, jti, bearer, password, operation_id)
       else
         _ -> {:error, :reset_unavailable}
       end
     rescue
-      _ -> {:error, :reset_unavailable}
+      _ -> {:error, :reset_uncertain}
     end
+
+    defp reset_transaction(account_id, jti, bearer, password, operation_id) do
+      case Ash.transact(
+             [
+               Account,
+               Token,
+               Session,
+               DeviceAssurance,
+               RegistrationOperation,
+               EvidenceObligation
+             ],
+             fn ->
+               consume_locked(account_id, jti, bearer, password, operation_id)
+               |> reset_write_result()
+             end
+           ) do
+        {:ok, {:ok, outcome}} when outcome in [:reset, :already_reset] -> {:ok, outcome}
+        {:ok, outcome} when outcome in [:reset, :already_reset] -> {:ok, outcome}
+        {:ok, {:error, :reset_unavailable}} -> {:error, :reset_unavailable}
+        {:error, :reset_unavailable} -> {:error, :reset_unavailable}
+        {:error, %Ash.Error.Invalid{}} -> {:error, :reset_unavailable}
+        _ -> {:error, :reset_uncertain}
+      end
+    rescue
+      _ -> {:error, :reset_uncertain}
+    end
+
+    defp reset_write_result({:error, :reset_unavailable}) do
+      {:error,
+       Ash.Error.Invalid.exception(
+         errors: [
+           Ash.Error.Action.InvalidArgument.exception(field: :proof, message: "is unavailable")
+         ]
+       )}
+    end
+
+    defp reset_write_result(result), do: result
 
     defp consume_locked(account_id, jti, bearer, password, operation_id) do
       with {:ok, account} <- lock_account(account_id),

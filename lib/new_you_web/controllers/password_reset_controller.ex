@@ -13,17 +13,23 @@ defmodule NewYouWeb.PasswordResetController do
   plug :require_proof_environment
 
   def new(conn, %{"locale" => locale}) when locale in ["en", "af"] do
-    render_page(conn, :request, locale, %{operation_id: Ecto.UUID.generate()})
+    if email_available?(locale),
+      do: render_page(conn, :request, locale, %{operation_id: Ecto.UUID.generate()}),
+      else: unavailable(conn, locale)
   end
 
   def new(conn, _params), do: not_found(conn)
 
   def request(conn, %{"locale" => locale, "email" => email, "operation_id" => operation_id})
       when locale in ["en", "af"] and is_binary(email) and is_binary(operation_id) do
-    if valid_operation_id?(operation_id),
-      do: safely_request_password_reset(email, locale, operation_id)
+    if email_available?(locale) do
+      if valid_operation_id?(operation_id),
+        do: safely_request_password_reset(email, locale, operation_id)
 
-    render_page(conn, :request_result, locale, %{})
+      render_page(conn, :request_result, locale, %{})
+    else
+      unavailable(conn, locale)
+    end
   end
 
   def request(conn, _params), do: not_found(conn)
@@ -48,20 +54,28 @@ defmodule NewYouWeb.PasswordResetController do
         "operation_id" => operation_id
       })
       when locale in ["en", "af"] do
-    outcome = Identity.reset_password(proof, password, operation_id)
+    # This check only rejects a mismatched presentation locale. Identity alone
+    # verifies the signature, current proof, Account and durable outcome.
+    outcome =
+      if proof_locale?(proof, locale),
+        do: Identity.reset_password(proof, password, operation_id),
+        else: {:error, :reset_unavailable}
 
     if match?({:ok, result} when result in [:reset, :already_reset], outcome) do
       conn
       |> configure_session(renew: true)
       |> clear_session()
-      |> render_page(:confirmation_result, locale, %{completed?: true})
+      |> render_page(:confirmation_result, locale, %{completed?: true, uncertain?: false})
     else
-      render_page(conn, :confirmation_result, locale, %{completed?: false})
+      render_page(conn, :confirmation_result, locale, %{
+        completed?: false,
+        uncertain?: outcome != {:error, :reset_unavailable}
+      })
     end
   end
 
   def confirm(conn, %{"locale" => locale}) when locale in ["en", "af"],
-    do: render_page(conn, :confirmation_result, locale, %{completed?: false})
+    do: render_page(conn, :confirmation_result, locale, %{completed?: false, uncertain?: false})
 
   def confirm(conn, _params), do: not_found(conn)
 
@@ -70,7 +84,9 @@ defmodule NewYouWeb.PasswordResetController do
          @development_environment,
          :erlang.andalso(
            @verification_development_fixtures == true,
-           Application.get_env(:new_you, :p8_12_browser_development_fixtures) == true
+           NewYou.Content.PasswordResetBrowserCopy.available?() and
+             (NewYouWeb.DevelopmentEntry.enabled?() or
+                Application.get_env(:new_you, :p8_12_browser_development_fixtures) == true)
          )
        ) do
       conn
@@ -81,6 +97,18 @@ defmodule NewYouWeb.PasswordResetController do
 
   defp valid_operation_id?(operation_id), do: match?({:ok, _}, Ecto.UUID.cast(operation_id))
 
+  defp email_available?(locale),
+    do: match?({:ok, _}, NewYou.Content.PasswordResetMessage.binding(locale, :well136))
+
+  defp unavailable(conn, locale),
+    do: conn |> put_status(:service_unavailable) |> render_page(:service_unavailable, locale, %{})
+
+  defp proof_locale?(proof, locale) when is_binary(proof) and byte_size(proof) <= 8192 do
+    match?({:ok, %{"locale" => ^locale}}, Joken.peek_claims(proof))
+  end
+
+  defp proof_locale?(_, _), do: false
+
   defp safely_request_password_reset(email, locale, operation_id) do
     Identity.request_password_reset(email, locale, operation_id)
   rescue
@@ -90,11 +118,24 @@ defmodule NewYouWeb.PasswordResetController do
   end
 
   defp render_page(conn, template, locale, assigns) do
+    assigns = if template == :confirmation_result, do: result_copy(assigns), else: assigns
+
     conn
     |> security_headers()
     |> put_root_layout(false)
     |> put_view(html: NewYouWeb.PasswordResetHTML)
     |> render(template, Map.merge(%{locale: locale}, assigns))
+  end
+
+  defp result_copy(%{completed?: completed?, uncertain?: uncertain?} = assigns) do
+    prefix =
+      cond do
+        completed? -> "identity.password_reset.confirm.complete"
+        uncertain? -> "identity.password_reset.uncertain"
+        true -> "identity.password_reset.confirm.unavailable"
+      end
+
+    Map.merge(assigns, %{result_title: prefix <> ".title", result_body: prefix <> ".body"})
   end
 
   defp security_headers(conn) do
@@ -103,7 +144,7 @@ defmodule NewYouWeb.PasswordResetController do
     |> put_resp_header("referrer-policy", "no-referrer")
     |> put_resp_header(
       "content-security-policy",
-      "default-src 'none'; style-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+      "default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
     )
   end
 
