@@ -21,6 +21,15 @@ defmodule NewYou.Content.PasswordResetMessageTest do
     {:ok, root: root}
   end
 
+  test "current v1.18 authority accepts approved content and rejects changed v1.17 lineage", %{
+    root: root
+  } do
+    assert {:ok, _} = PasswordResetMessage.binding("en")
+    path = Path.join(root, "docs/governance/product/00_PLATFORM_v1.17.0.md")
+    File.write!(path, File.read!(path) <> "\n")
+    assert {:error, :content_ineligible} = PasswordResetMessage.binding("en")
+  end
+
   test "returns exact approved bytes for EN V1 and AF V2" do
     for {locale, suffix, size, digest} <- [
           {"en", "EN-V1", 369,
