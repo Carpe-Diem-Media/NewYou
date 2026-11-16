@@ -191,15 +191,26 @@
       "status": "added"
     },
     {
-      "blob": "81b7ed2dc27522fb776d2fbbea1bad0feefab37d",
+      "blob": "a6d57df4d41756358c3bf2bc0f03e7b5a0fc94bb",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "a38ec014b60c33cda09eb5243379ff3bcf15cce33e93d976888d7d1cc8d0679d",
+      "sha256": "4c7ab8cbf119ce62e2f22b8182289a7f72eddcf2d2c9a9f8d33f07b181b27ceb",
       "status": "modified"
+    },
+    {
+      "blob": "cce892693eae3c1fe81313cb4f6577c54d32051d",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/design_system_coverage.md",
+      "sha256": "6c4fb7f0160d6335322bc77a874e5eab3cf822c28bf1186cab439974efd2fc1a",
+      "status": "added"
     },
     {
       "blob": "0654a604971d4dff28220bdc36a1c0bdad7fe642",
@@ -257,14 +268,14 @@
       "status": "modified"
     },
     {
-      "blob": "cb37d751e7217781f214d9a98ce58b0dea26c670",
+      "blob": "17b700abade4d678a25aac2ed579b26134a18064",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/README.md",
-      "sha256": "cd9c1c602f84924c08c71599c93248af6671a2a3b274dfb52c03087a502bc1ee",
+      "sha256": "310996ca5ff7aa4edbc537b8030d273fc4684ac44197787c7396feda9a7f2e35",
       "status": "added"
     },
     {
@@ -323,14 +334,14 @@
       "status": "added"
     },
     {
-      "blob": "426ede284267a7bd1d603d042c903e6f0f0b625e",
+      "blob": "ee7aada5299068b53bdb668bb44ecd77d7820f65",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/next-passes.md",
-      "sha256": "dd793f4e83bf49f6eedf70055fb1492fa413129ba8f6f24d05232f453548615e",
+      "sha256": "820d87f212a7b9e2a610cfbf20dff12f756f3ce3f769c4a6cf34ec2a34149007",
       "status": "added"
     },
     {
@@ -463,6 +474,28 @@
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/proof-plan.md",
       "sha256": "bbb7a866993fa3172faadce06ce1c665e8be23ff81d7245a8149cd31a1a93b10",
+      "status": "added"
+    },
+    {
+      "blob": "5ecf3c4ae8f0961a1ada99cb3ea3c0a434abbe2a",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/quality-gate-diagnosis-evidence.json",
+      "sha256": "38bd155e696115e09ced5c294048bb34e03882c883efd56c7e4f64a605cabba3",
+      "status": "added"
+    },
+    {
+      "blob": "6003d29236d897819837e536032d6a8b116c1a35",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/development/research/acss-4.0.3-inventory/quality-gate-diagnosis.md",
+      "sha256": "33403a0b35851e98fde9c97e6a5cd3bee1faf87c832c2a2ea30216fd0c0b3508",
       "status": "added"
     },
     {
@@ -1104,14 +1137,14 @@
       "status": "added"
     },
     {
-      "blob": "baf89e04395d5b3082f007b4032a11fae7d57a69",
+      "blob": "5a3e91e5754cf29ba70f1bba9423ae451952c8c5",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_floating_fields_browser.mjs",
-      "sha256": "bdd6a23a14ace055c47e1ac5cdf993cceda8a860a6950393450a373a96fed7b7",
+      "sha256": "df926ea30a18361d72277e5bd81d58076c30df95550545dec4c4082a480d91df",
       "status": "added"
     },
     {
