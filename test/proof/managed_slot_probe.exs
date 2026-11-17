@@ -147,6 +147,10 @@ defmodule NewYou.ManagedSlotProbe do
       )
     )
 
+    # Both peer databases must survive until each has completed its connection
+    # denial checks. A final controller acknowledgement releases this barrier.
+    wait_for_finish!()
+
     if probe.fail_after_commit?, do: run_retained_failure_test!()
     :ok
   end
@@ -349,6 +353,15 @@ defmodule NewYou.ManagedSlotProbe do
 
       _ ->
         fail(:barrier_failed)
+    end
+  end
+
+  defp wait_for_finish! do
+    task = Task.async(fn -> IO.gets("") end)
+
+    case Task.yield(task, @barrier_timeout) || Task.shutdown(task, :brutal_kill) do
+      {:ok, "finish\n"} -> :ok
+      _ -> fail(:finish_barrier_failed)
     end
   end
 
