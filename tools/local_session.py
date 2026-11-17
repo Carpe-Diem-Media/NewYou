@@ -42,8 +42,8 @@ def worktree_lock(path):
 def check_version(tool, probe=subprocess.run):
     result = probe([str(tool), "--version"], capture_output=True, text=True, timeout=10)
     version = re.fullmatch(r"devcore-project 1\.(\d+)\.(\d+)\s*", result.stdout)
-    if result.returncode or not version or tuple(map(int, version.groups())) < (2, 0):
-        raise SessionError("DevCore managed-slot capability requires reviewed installation of version 1.2 or compatible 1.x")
+    if result.returncode or not version or tuple(map(int, version.groups())) < (2, 1):
+        raise SessionError("DevCore managed-slot capability requires reviewed installation of version 1.2.1 or compatible 1.x")
 
 
 def check_jobs(root, rows):

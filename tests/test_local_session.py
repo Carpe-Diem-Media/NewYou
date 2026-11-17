@@ -327,7 +327,7 @@ os.execvp('mise', ['mise', 'exec', '--', str(Path.home() / '.local/bin/devcore-p
                 self.assertTrue(lock_available(lock), "status completion must release the build lock")
 
     def test_old_or_unknown_devcore_is_rejected_before_status_or_launch(self):
-        for output in ("devcore-project 1.1.0", "unknown", "devcore-project 2.0.0"):
+        for output in ("devcore-project 1.1.0", "devcore-project 1.2.0", "unknown", "devcore-project 2.0.0"):
             calls = []
 
             def probe(arguments, **_kwargs):
