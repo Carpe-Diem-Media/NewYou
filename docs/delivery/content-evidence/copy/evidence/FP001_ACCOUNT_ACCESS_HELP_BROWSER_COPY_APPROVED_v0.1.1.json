@@ -1,0 +1,499 @@
+{
+  "packet_id": "FP001_ACCOUNT_ACCESS_HELP_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_NONPRODUCTION_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY",
+  "prepared_on": "2026-11-16",
+  "repository": "Carpe-Diem-Media/NewYou",
+  "verified_main_sha": "d1d09031e6995952277d2bb1dcc49d555be21ad4",
+  "purpose": "Bilingual account-access Help landing, factual self-service guidance, safe account-support handoff and honest unavailable/stale states.",
+  "content_owner": "Content & Media (version/copy); Identity & Access owns verification, sign-in, recovery and security actions",
+  "copy_risk": "Class A + B; security-critical explanatory copy receives owner/content/language/security review before use",
+  "review_scope": "25 new semantic keys, 50 EN/AF strings; 7 existing keys referenced unchanged",
+  "source_authority": [
+    "docs/governance/product/00_PLATFORM_v1.18.0.md §21J verification, sessions and recovery boundaries",
+    "docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md ownership and no shared-write rule",
+    "docs/delivery/feature-contracts/fp-001/FP-001_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md §§E–G controlled support and Identity authority",
+    "docs/delivery/content-evidence/copy/COPY_INVENTORY.md support/help and identity JIT inventory",
+    "docs/delivery/content-evidence/copy/GOVERNANCE.md; STYLE_GUIDE.md; GLOSSARY.md",
+    "Prior owner-approved FP-001 Account Settings, MFA and verification-result evidence"
+  ],
+  "eligibility": {
+    "owner_approved": false,
+    "development_eligible": false,
+    "production_eligible": false,
+    "release_authorized": false,
+    "implementation_authorized": false,
+    "support_case_or_message_submission_authorized": false,
+    "security_or_recovery_action_authorized": false,
+    "existing_copy_mutated": false,
+    "no_silent_locale_fallback": true
+  },
+  "scope": {
+    "included": [
+      "Help landing and account-access topic navigation",
+      "factual conditional sign-in, verification and password-reset guidance",
+      "optional MFA, loss of factors and suspicious access guidance",
+      "safe contact-support entry, secret-sharing warning and support-authority boundary",
+      "loading, unavailable and stale presentation copy"
+    ],
+    "excluded": [
+      "new public support form, support ticket/case or response SLA",
+      "support case states, staff handling or backend permission changes",
+      "manual recovery method or zero-factor proof selection (WELL-115)",
+      "email delivery or provider guarantees",
+      "new account or security actions, step-up bypass or admin override",
+      "legal/privacy/safety/health advice",
+      "implementation, public release or paid-pilot authorisation"
+    ]
+  },
+  "presentation_lifecycle": {
+    "states": [
+      "loading",
+      "ready",
+      "stale",
+      "unavailable",
+      "route_opened"
+    ],
+    "transitions": [
+      "loading -> ready only after available Help routes are read",
+      "loading -> unavailable on failed required read",
+      "ready -> stale when route eligibility or account authority changes",
+      "stale -> ready only after a fresh authorised read",
+      "ready -> route_opened only for currently available route",
+      "unavailable -> loading on explicit retry"
+    ],
+    "guards": [
+      "Help can be publicly readable where product permits; do not require sign-in to view general guidance",
+      "links/actions appear only for currently available, authorised destinations",
+      "Identity must independently recheck real sign-in, recovery, proof and step-up requests",
+      "no page open or support contact changes account state",
+      "do not disclose account existence or inaccessible security detail"
+    ],
+    "side_effects": "Viewing Help has none; route_opened means navigation only, never successful authentication/recovery/support receipt",
+    "terminal": "route_opened ends the navigation interaction, not the underlying Identity/Support journey",
+    "retries_recovery": "Read-only refresh is safe and repeatable; ambiguous route/current-access state shows unavailable or stale and fails closed",
+    "durable_support_lifecycle": "Not defined here; an actual support case/form requires its owning authority and separately reviewed contract"
+  },
+  "copy_items": [
+    {
+      "key": "support.account_help.page.title",
+      "family": "overview",
+      "class": "B",
+      "en": {
+        "text": "Help with your account",
+        "sha256": "5d5bfc18ea9995dd5c8c6e88ad66327a82ada8e647efba2813fbc932320d27bd"
+      },
+      "af": {
+        "text": "Hulp met jou rekening",
+        "sha256": "152363feecceeca24af8ab02b46434d4b1d7addeb318713df97034e3194f264b"
+      }
+    },
+    {
+      "key": "support.account_help.page.body",
+      "family": "overview",
+      "class": "B",
+      "en": {
+        "text": "Find guidance for signing in, verifying your email address and keeping access to your account.",
+        "sha256": "0b89e45fd5443e73aa86641607c667a0a9ecb449f708cf4ccebef382653efbe1"
+      },
+      "af": {
+        "text": "Kry hulp met aanmelding, e-posverifikasie en toegang tot jou rekening.",
+        "sha256": "ef9dd0de7ab70fbc8419c0a0cf853d9bd8766a3ab3246975d12449d72eeed094"
+      }
+    },
+    {
+      "key": "support.account_help.options.title",
+      "family": "overview",
+      "class": "B",
+      "en": {
+        "text": "What do you need help with?",
+        "sha256": "e4bb03b399c07eeda658d87305435a58818cb5e0c3b76ae054d99564cf14ef6b"
+      },
+      "af": {
+        "text": "Waarmee het jy hulp nodig?",
+        "sha256": "0be153f98dda083c478aa6957d843ea6e49858368ae40152b2b1032933ae3c48"
+      }
+    },
+    {
+      "key": "support.account_help.signin.title",
+      "family": "signin",
+      "class": "B",
+      "en": {
+        "text": "Signing in",
+        "sha256": "824a1d703ce676bb5fe218089a0b899c37d7ff38a2b30a8a422fd04cac39f948"
+      },
+      "af": {
+        "text": "Aanmelding",
+        "sha256": "174e013427850e2589192b2abe09472d06436c33edb100ea1f1f5d9afa1c178d"
+      }
+    },
+    {
+      "key": "support.account_help.signin.body",
+      "family": "signin",
+      "class": "B",
+      "en": {
+        "text": "If you cannot sign in, check the email address and password you entered. You can use an available password-reset option if needed.",
+        "sha256": "b2db4055ade0545195f5e7c1e5a0bd364ac7320c4952ed0092591dabd501c110"
+      },
+      "af": {
+        "text": "As jy nie kan aanmeld nie, gaan die e-posadres en wagwoord na wat jy ingevul het. Jy kan ook ’n beskikbare wagwoordherstelopsie gebruik.",
+        "sha256": "c36bfc1c3754a8309b194c4ff59c5e7015f9925ea74cc136ae3cef9963f92be0"
+      }
+    },
+    {
+      "key": "support.account_help.signin.action",
+      "family": "signin",
+      "class": "B",
+      "en": {
+        "text": "Open sign-in page",
+        "sha256": "d3976936e979be164499768f7baa4965692500bfc5f78042b4f73efd932028ef"
+      },
+      "af": {
+        "text": "Maak die aanmeldbladsy oop",
+        "sha256": "e320656df9a0d9acabcbfb09475f3c0bf7d2293aad951d98b2c78d7a07671315"
+      }
+    },
+    {
+      "key": "support.account_help.verification.title",
+      "family": "verification",
+      "class": "B",
+      "en": {
+        "text": "Verify your email address",
+        "sha256": "e4b357d6d9328853a83497c90b72edc718b5dc83c81d49ecbce9a99aa23aef21"
+      },
+      "af": {
+        "text": "Verifieer jou e-posadres",
+        "sha256": "7b2132f8957e1285e0a1c0da17ae6fb525a76b210ecd682bcab6e588becfed4a"
+      }
+    },
+    {
+      "key": "support.account_help.verification.body",
+      "family": "verification",
+      "class": "A",
+      "en": {
+        "text": "If you have a verification email, open its link and choose \"Verify email\". Opening the page alone does not verify your address.",
+        "sha256": "30fcdf4f1fc294d14e9be0dc4b0379e97aab9ba6fcf4eb231bf5bdf7421f36ad"
+      },
+      "af": {
+        "text": "As jy ’n verifikasie-e-pos het, maak die skakel daarin oop en kies \"Verifieer e-posadres\". Om net die bladsy oop te maak, verifieer nie jou adres nie.",
+        "sha256": "ca70260047f4483bd3a0f0de044674a204fc4d76da97f3647d0bc68fb8fcbae9"
+      }
+    },
+    {
+      "key": "support.account_help.verification.missing.title",
+      "family": "verification",
+      "class": "B",
+      "en": {
+        "text": "Didn't receive a verification email?",
+        "sha256": "bde9d319c99185a92db0b466f747fd9725ddbfdc1942903085ed00ea178add48"
+      },
+      "af": {
+        "text": "Het jy nie ’n verifikasie-e-pos ontvang nie?",
+        "sha256": "0cf350f8c929396b233da60e47ff97b468ea40fb3f5549a49d9ca11c7eb584ee"
+      }
+    },
+    {
+      "key": "support.account_help.verification.missing.body",
+      "family": "verification",
+      "class": "B",
+      "en": {
+        "text": "Check your inbox and junk folder. If a resend option is available, request another verification email.",
+        "sha256": "618489c8ac719de800a55f6e3f32e295365ca2805357e7b1d42a31cf993037ba"
+      },
+      "af": {
+        "text": "Gaan jou e-posse na (kyk ook in jou Spam). As daar ’n opsie is om weer te stuur, vra nog ’n verifikasie-e-pos aan.",
+        "sha256": "7a5ed54e7cf66f30aaae53d2fd87aa1f7e79116b2620cab449529f8da910405e",
+        "emphasis": {
+          "encoding": "unicode_code_points",
+          "spans": [
+            {
+              "start": 36,
+              "end_exclusive": 40,
+              "style": "italic",
+              "literal_text": "Spam"
+            }
+          ],
+          "markdown_review_only": "Gaan jou e-posse na (kyk ook in jou *Spam*). As daar ’n opsie is om weer te stuur, vra nog ’n verifikasie-e-pos aan.",
+          "rendering_requirement": "Italicise only Spam. A future UI must render this as semantic emphasis, not display raw Markdown markers. Never use HTML injection."
+        }
+      }
+    },
+    {
+      "key": "support.account_help.password.title",
+      "family": "password",
+      "class": "B",
+      "en": {
+        "text": "Reset your password",
+        "sha256": "59fa4379be1f3398d540b1330f0d7c96c62e4def43b2faba97fc1bd234e57f18"
+      },
+      "af": {
+        "text": "Herstel jou wagwoord",
+        "sha256": "0ddafbfa5927017e926f9e43fe7fe44d4912fdbe88f7c2ca45424da7ecff4321"
+      }
+    },
+    {
+      "key": "support.account_help.password.body",
+      "family": "password",
+      "class": "A",
+      "en": {
+        "text": "If you've forgotten your password, use the password-reset option on the sign-in page. Requesting a reset does not change your password.",
+        "sha256": "f8a509e258195997bab0459058086b4c3de9d85a069065cab387f35be1574916"
+      },
+      "af": {
+        "text": "As jy jou wagwoord vergeet het, gebruik die wagwoordherstelopsie op die aanmeldbladsy. Om wagwoordherstel aan te vra, verander nie jou wagwoord nie.",
+        "sha256": "e7dbb2bf69cf7cf0e044656c6aa9b1ff31b500532a55d48830600adebb5bfefe"
+      }
+    },
+    {
+      "key": "support.account_help.password.action",
+      "family": "password",
+      "class": "B",
+      "en": {
+        "text": "Open password reset",
+        "sha256": "67e9727ebbb25571dc95c9668c224a1c352c1a55e0731aa324ba7a01e3c37609"
+      },
+      "af": {
+        "text": "Maak wagwoordherstel oop",
+        "sha256": "be9113de65604504b7fa70fb0e69425e473de4adf78a3cfe6374c4b83c5d9458"
+      }
+    },
+    {
+      "key": "support.account_help.mfa.body",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "If you cannot use your verification app, use an available recovery option or contact support. This Help page cannot bypass a required security check.",
+        "sha256": "9525437fee52c864b44a71c707abb47b47502b646f71fc311bc9861759b959de"
+      },
+      "af": {
+        "text": "As jy nie jou verifikasie-app kan gebruik nie, gebruik ’n beskikbare herstelopsie of kontak ondersteuning. Hierdie Hulp-bladsy kan nie ’n verpligte sekuriteitskontrole omseil nie.",
+        "sha256": "b84763007d7a48ba8bc4f6e6b0536403df7a203ffc5a7cab87590af58ef6109f"
+      }
+    },
+    {
+      "key": "support.account_help.mfa.lost.title",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Lost access to all your verification methods?",
+        "sha256": "04f42b06168ed6af7f2c4ba63057d717e68c1101d47f1e87d7003d0ff0928d86"
+      },
+      "af": {
+        "text": "Het jy toegang tot al jou verifikasiemetodes verloor?",
+        "sha256": "2f5dff24bc80ed130e515a4fb05748ed8824b751c21276c08ad55f6cc5e9debe"
+      }
+    },
+    {
+      "key": "support.account_help.mfa.lost.body",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Contact support to find out which recovery steps are available. Contacting support does not by itself restore account access.",
+        "sha256": "d7b9725de9e6056269567e92558b0a48eae3715104e57a418341e6a13fa2cf1f"
+      },
+      "af": {
+        "text": "Kontak ondersteuning om uit te vind watter herstelstappe beskikbaar is. Deur ondersteuning te kontak, kry jy nie vanself weer toegang tot jou rekening nie.",
+        "sha256": "5557cea4d3ade468c112ee3d45283580a61d1d45d799fc85ba43e11b10012771"
+      }
+    },
+    {
+      "key": "support.account_help.security.title",
+      "family": "security",
+      "class": "B",
+      "en": {
+        "text": "Concerned about account security?",
+        "sha256": "4f1f7b1dbdd592b534493015e304c7566c8ab74c14e348dcb27b4b984f1cbe69"
+      },
+      "af": {
+        "text": "Bekommerd oor jou rekening se sekuriteit?",
+        "sha256": "8eda7c025e817b4c416e8b432fce03b186ac61a45ce04b193b059dde3f6ba3a9"
+      }
+    },
+    {
+      "key": "support.account_help.security.body",
+      "family": "security",
+      "class": "A",
+      "en": {
+        "text": "If you think someone else accessed your account, use any available security options and contact support. Account changes may require another identity check.",
+        "sha256": "2133ce6c473e354f9269fea164b41b931ed3fb1a815d8196e987b6fbdb74f11d"
+      },
+      "af": {
+        "text": "As jy vermoed dat iemand anders toegang tot jou rekening gehad het, gebruik enige beskikbare sekuriteitsopsies en kontak ondersteuning. Jy sal dalk weer jou identiteit moet bevestig voordat rekeningveranderinge aangebring kan word.",
+        "sha256": "67092524b7e6a0595bb1c42863077a19f9ddd6603ff947d54afd781f5522da97"
+      }
+    },
+    {
+      "key": "support.account_help.contact.title",
+      "family": "contact",
+      "class": "B",
+      "en": {
+        "text": "Ask for account help",
+        "sha256": "e40603f124a91765e3a09432d470b2ef4690fe9ee5281f7cc9a7d37f343201bf"
+      },
+      "af": {
+        "text": "Vra hulp met jou rekening",
+        "sha256": "d902d1f409e7f39b8f37d7f07de874db6135b34b148bcf1d4cb5fbe03197d002"
+      }
+    },
+    {
+      "key": "support.account_help.contact.body",
+      "family": "contact",
+      "class": "B",
+      "en": {
+        "text": "Use an available support channel if the account-help options do not solve your problem.",
+        "sha256": "2da464197f3e9a7629735c51cd109d9fc79e75a760afe72b5afcf87db1b9d98c"
+      },
+      "af": {
+        "text": "Gebruik ’n beskikbare ondersteuningskanaal as die opsies vir rekeninghulp nie jou probleem oplos nie.",
+        "sha256": "76433423f70169e73ff0c0e7868be034245ee09bb5267e35186d95cf69b4fefb"
+      }
+    },
+    {
+      "key": "support.account_help.contact.sensitive_warning",
+      "family": "contact",
+      "class": "A",
+      "en": {
+        "text": "Never share your password, verification codes, sign-in or recovery links, or your verification app's secret key with support.",
+        "sha256": "e4d51f3481d8277d2a7f5856c7b1b3672da963a1edf3133efd6b5ea4178b8545"
+      },
+      "af": {
+        "text": "Moet nooit jou wagwoord, verifikasiekodes, aanmeld- of herstelskakels of die geheime sleutel van jou verifikasie-app met ondersteuning deel nie.",
+        "sha256": "8c18402157ec23a9ec9f2d0908811b34bbf08c8cd6f66e5da47e5fb0300aa171"
+      }
+    },
+    {
+      "key": "support.account_help.contact.authority_boundary",
+      "family": "contact",
+      "class": "A",
+      "en": {
+        "text": "Contacting support does not verify your identity or authorise account changes.",
+        "sha256": "5e99b901f138dbf81ccac7cfa7f20e7eb032d02c699a0eb9a1767a55b36e8570"
+      },
+      "af": {
+        "text": "Kontak met ondersteuning bevestig nie jou identiteit nie en magtig nie rekeningveranderinge nie.",
+        "sha256": "3312905083f9b542802a40342405ec028d25d976c2577a1e0394c83920f66b8d"
+      }
+    },
+    {
+      "key": "support.account_help.state.loading",
+      "family": "state",
+      "class": "B",
+      "en": {
+        "text": "Loading account help…",
+        "sha256": "22ad14570e5073272f7734e60ae2f6d872cf5b4df5cab01886e997a2cda632df"
+      },
+      "af": {
+        "text": "Besig om rekeninghulp te laai…",
+        "sha256": "ae4dfe5229d58d9ea7d4569c7ab78bf71db629cb06bccfbfcb04ffc3a7b64da7"
+      }
+    },
+    {
+      "key": "support.account_help.state.unavailable",
+      "family": "state",
+      "class": "B",
+      "en": {
+        "text": "Account help is temporarily unavailable. Try again later or use another available help option.",
+        "sha256": "50ac297cb82fe72f290d231cc056e4ddd83327fd5dacf374c1c666f4513c730e"
+      },
+      "af": {
+        "text": "Rekeninghulp is tydelik nie beskikbaar nie. Probeer later weer of gebruik ’n ander beskikbare hulpopsie.",
+        "sha256": "8cb7495a8bed88e8a62aad560874ed90565595287abea96400d3a2f3da0adf61"
+      }
+    },
+    {
+      "key": "support.account_help.state.stale",
+      "family": "state",
+      "class": "B",
+      "en": {
+        "text": "Available help options have changed. Refresh to see what's available now.",
+        "sha256": "f3d0602b4f1911a1aba2a689bdd1a22c563caf8435a8f05f1f0ff310500da404"
+      },
+      "af": {
+        "text": "Die beskikbare hulpopsies het verander. Herlaai die bladsy om te sien wat nou beskikbaar is.",
+        "sha256": "1fc960690d3a1f8644738f92afe66e3662c35eba8d917008d10cb74be6709bf3"
+      }
+    }
+  ],
+  "reuse_existing_keys": [
+    {
+      "key": "shared.navigation.help",
+      "en": "Help",
+      "af": "Hulp",
+      "source": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.login",
+      "en": "Log in",
+      "af": "Meld aan",
+      "source": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.settings",
+      "en": "Settings",
+      "af": "Instellings",
+      "source": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.action.contact_support",
+      "en": "Contact support",
+      "af": "Kontak ondersteuning",
+      "source": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.action.retry",
+      "en": "Try again",
+      "af": "Probeer weer",
+      "source": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "identity.mfa.settings.title",
+      "en": "Two-step verification",
+      "af": "Tweestapverifikasie",
+      "source": "docs/delivery/content-evidence/copy/evidence/FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "source_status_unchanged": "owner_approved"
+    },
+    {
+      "key": "identity.verification.result.confirm.action",
+      "en": "Verify email",
+      "af": "Verifieer e-posadres",
+      "source": "docs/delivery/content-evidence/copy/evidence/FP001_VERIFICATION_RESULT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "source_status_unchanged": "owner_approved"
+    }
+  ],
+  "source_candidate": {
+    "filename": "FP001_ACCOUNT_ACCESS_HELP_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+    "sha256": "231a67384ad9055d99e16ce4054f64f7a3561e5efda828d07aae3b1f1f2c785b",
+    "original_copy_keys": 25,
+    "original_locale_strings": 50,
+    "unchanged_locale_strings": 49,
+    "revised_locale_strings": 1,
+    "reused_semantic_keys_preserved": 7
+  },
+  "approval": {
+    "owner_approved": true,
+    "owner_approved_on": "2026-11-16",
+    "decision": "Approved and authorized to open a PR. Owner requests revised Afrikaans missing-verification-email help text and italics on the word Spam.",
+    "scope": "Exact NewYou platform account-access Help copy; one Afrikaans string changed, typography metadata binds the word Spam only",
+    "en_af_content_review_by_same_owner": true,
+    "independent_specialist_review_claimed": false,
+    "development_eligible_after_canonical_integration": true,
+    "production_eligible": false,
+    "implementation_authorized": false,
+    "live_support_or_recovery_authorized": false,
+    "real_participant_or_pilot_authorized": false
+  },
+  "review_boundary": {
+    "scope": "Content-evidence and delivery-router record only; source registry statuses not changed",
+    "presentation_lifecycle": "Preserve source candidate navigation/read-only lifecycle; no new SupportCase or ticket lifecycle invented",
+    "owner_domains": "Content & Media owns copy; Identity & Access owns credentials/proof/recovery; Support access retains governed scope",
+    "security": "Help-page retrieval and contact are non-mutating and never establish verification, login, support approval or account recovery",
+    "locale": "Both English and Afrikaans required; no silent fallback",
+    "no_feature_runtime_or_production": true,
+    "markup": "The italic Spam span is exact evidence of the approved formatting requirement; rendering is future JIT and must not be inferred from Markdown delimiters"
+  }
+}

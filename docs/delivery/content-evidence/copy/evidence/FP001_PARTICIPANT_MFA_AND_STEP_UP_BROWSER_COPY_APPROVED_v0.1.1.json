@@ -1,0 +1,750 @@
+{
+  "packet_id": "FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_CANONICAL_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY",
+  "prepared_on": "2026-11-16",
+  "repository": "Carpe-Diem-Media/NewYou",
+  "verified_main_sha": "64d8113eb04647925d4fcd69b08f326d189f9a47",
+  "purpose": "Owner-approved exact NewYou platform EN/AF browser copy for optional participant two-step verification and purpose-bound high-risk identity confirmation; deployment/release eligibility remains separate.",
+  "source_authority": [
+    "docs/governance/product/00_PLATFORM_v1.18.0.md §21J.3 participant MFA, §21J.5 sessions, §21J.6 trusted device, §21J.7 recovery",
+    "docs/delivery/jit/identity/FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.3.0.md §K.4, §§F.3–F.5",
+    "docs/delivery/feature-contracts/fp-001/FP-001_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md §Q.2",
+    "docs/delivery/content-evidence/copy/GOVERNANCE.md + STYLE_GUIDE.md + GLOSSARY.md",
+    "docs/governance/supporting/FRONTEND_EXPERIENCE_SYSTEM_v1.0.1.md §5.7"
+  ],
+  "content_owner": "Content & Media",
+  "copy_risk": "Class A — identity/security-sensitive wording",
+  "scope_classification": "FUTURE_PARTICIPANT_BROWSER_COPY_ONLY",
+  "copy_items": [
+    {
+      "key": "identity.mfa.settings.title",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Two-step verification",
+        "sha256": "7c0ff7eab32d9abdb6671a5a3e6e710065a4baba7ca7bb61e135f8bdb59dee5e"
+      },
+      "af": {
+        "text": "Tweestapverifikasie",
+        "sha256": "555d777028de3364bcdbf1888aceb65d30f9a6268a7c39fd5ed655ae9285f2c1"
+      }
+    },
+    {
+      "key": "identity.mfa.settings.body",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Add an extra verification step to help protect your account. Setting it up is your choice.",
+        "sha256": "ecd965b04ebf53f142595e0ac22112700e695fb3d6ade9293b635797656f8f69"
+      },
+      "af": {
+        "text": "Voeg ’n ekstra verifikasiestap by om jou rekening te help beskerm. Dit is nie verpligtend nie.",
+        "sha256": "fbcba20d1a6efd106e7d5b23b240b12e2e0e0ac527e50effabcd02aed630d8b5"
+      }
+    },
+    {
+      "key": "identity.mfa.status.not_enrolled",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Not set up",
+        "sha256": "94b768af74236a6780055999a95a6db3486c2252347f643bf057d2a746a8163e"
+      },
+      "af": {
+        "text": "Nog nie opgestel nie",
+        "sha256": "4595cdd268cade22bb6db93c20f384adcfdb02b408800724ce0275f60c1e2690"
+      }
+    },
+    {
+      "key": "identity.mfa.status.pending",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Setup not finished",
+        "sha256": "9901c948fedbf6e7d1fa1c130e294b094fb388aa4576aa7885d99c92caa37a2d"
+      },
+      "af": {
+        "text": "Opstelling nog nie voltooi nie",
+        "sha256": "5b3093b634c038888b361d77ae3dd5dd45ee6a0ca500877d130dd60ea7ca55b1"
+      }
+    },
+    {
+      "key": "identity.mfa.status.active",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Turned on",
+        "sha256": "b1e06e10559352fdd671e93cf64e54f91eeac85826dc6c43540f5d21c6db928f"
+      },
+      "af": {
+        "text": "Aangeskakel",
+        "sha256": "ed7e649ca39d2231c48864306e7b2efecc98c7afe54dcbca645f6e6bfecca68a"
+      }
+    },
+    {
+      "key": "identity.mfa.status.revoked",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "No longer active",
+        "sha256": "b3839e7c0b517bcd6ca3c4784f86db1958501f709eb3f2d97308bdf4d103bd05"
+      },
+      "af": {
+        "text": "Nie meer aktief nie",
+        "sha256": "eb6239c27919d7c8c7606b6f592e287ff1106ffa2b232f081a9659397267da6d"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.action",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Set up two-step verification",
+        "sha256": "c66e085fac39fdcddbcd2bda865fa530d994e71cbe7f15365c885759780bb98c"
+      },
+      "af": {
+        "text": "Stel tweestapverifikasie op",
+        "sha256": "b029a9888abafd40ae2e4d534c60cbcbbf0e93ad7d1aeaa4ccb6fe37ecac8ede"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.title",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Set up your verification app",
+        "sha256": "73559a65caac8d111b98d06181fa777c211efc494bc01a57543fb318a48a01aa"
+      },
+      "af": {
+        "text": "Stel jou verifikasie-app op",
+        "sha256": "105a07b6213025c20744b3cff14818310b9dc57f8650f0e67447ab909b05dcf0"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.body",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Scan the QR code with your verification app, or enter the setup key. Then enter the code from your app to finish.",
+        "sha256": "e7c78eca159fc8645f5080d3ef304e2026ca486ef76875f973f916bb723181ab"
+      },
+      "af": {
+        "text": "Skandeer die QR-kode met jou verifikasie-app, of voer die opstellingsleutel in. Voer dan die kode uit jou app in om klaar te maak.",
+        "sha256": "a9028bc7f2400ee69ba32dad9c42eb446170eba38c8d9e320726d36438c50f2c"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.qr.alt",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "QR code for setting up two-step verification",
+        "sha256": "84ff05aa26f337a78d4815d0fa99323ceb581bde03ea861cfa4ccf45931e5529"
+      },
+      "af": {
+        "text": "QR-kode om tweestapverifikasie op te stel",
+        "sha256": "8680a0ed8566525fce32a1de8c4dc8772b209530e7dca99bab264707c97c521e"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.manual_key.label",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Setup key",
+        "sha256": "5fa7f5f25451b34b34f793c0e372b3e8f18e7f201a917915b769d2c5e45c964e"
+      },
+      "af": {
+        "text": "Opstellingsleutel",
+        "sha256": "dcd6068100092d2f40c4c9f86984562f1b15f944b103d1232752d1fb32dbefd4"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.manual_key.warning",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Keep this key private. Someone with this key may be able to generate verification codes.",
+        "sha256": "13ed6dc3505d702324428a0a90a72c6781859e5c234443c0bb16f57524e27f85"
+      },
+      "af": {
+        "text": "Hou hierdie sleutel privaat. Iemand met hierdie sleutel kan moontlik verifikasiekodes genereer.",
+        "sha256": "6564747db5b77c700b3b406b7769f743cabbb1eaf3315cd11adfe4b86de0e35f"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.code.label",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Code from your verification app",
+        "sha256": "2088b526174889b55a680a700b1d0ce8f057a4993ad41d87a0346f1d33b4dee5"
+      },
+      "af": {
+        "text": "Kode uit jou verifikasie-app",
+        "sha256": "044be09bc4a21d1cad1c00d625198655ee4aef22efbebd845b9311591cecfded"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.confirm.action",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Turn on verification",
+        "sha256": "9469de1b04c39a1445264774865eefc2d71d7ca3b502493532bc4f9284796c32"
+      },
+      "af": {
+        "text": "Skakel verifikasie aan",
+        "sha256": "70c4ffbeff1afed8135fae325c2a3dcec75373300249f4e435101ab883020b17"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.confirm.processing",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Checking your code…",
+        "sha256": "bdf375b2286eb026c40bb89e7f04e48b215346bd978e68b5393d91366908ecb8"
+      },
+      "af": {
+        "text": "Besig om jou kode na te gaan…",
+        "sha256": "df64f5f2059b52e58b0b5b3c2b58a368599e0f56ad0216991ab4ce3571ae0b74"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.confirm.invalid",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "We couldn’t confirm that code. Check your app and try the current code.",
+        "sha256": "a10fce9030d6b02bd1c1c43809e83d28e0c38ca77e97c4788b2bd28bd5aaf022"
+      },
+      "af": {
+        "text": "Ons kon nie daardie kode bevestig nie. Gaan jou app na en probeer die huidige kode.",
+        "sha256": "27a528c4bde44289dd02c837c569cf95a6fd65a9711e49baf078462f69c128bd"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.confirm.success",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Two-step verification is on.",
+        "sha256": "e9479e8bbd87b10b9e9d092bde8da8dcda6ef749d21550b101617352f52936cd"
+      },
+      "af": {
+        "text": "Tweestapverifikasie is aangeskakel.",
+        "sha256": "3a129b88d3a5c368061a49755b88f579bdfdee91c250d25ec9b512cb3726b5c6"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.confirm.failed",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "We couldn’t complete setup. Please try again.",
+        "sha256": "163ff5641e90e7ee0026667fc7ca4103c0be36f3d76cbca2c5c3177ac128d339"
+      },
+      "af": {
+        "text": "Ons kon nie die opstelling voltooi nie. Probeer asseblief weer.",
+        "sha256": "71a8f22af9f9e28c5e5cb4ec2497affd2cf08c1daf0230cb18fc6d93a3e5324b"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.confirm.uncertain",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "We can’t confirm whether setup finished. Refresh your security settings before trying again.",
+        "sha256": "a793f6e4028bbf0d407c78993ac211f03cd3d8e58f6f2b20550e11d4d08ec857"
+      },
+      "af": {
+        "text": "Ons kan nie bevestig of die opstelling voltooi is nie. Herlaai jou sekuriteitsinstellings voordat jy weer probeer.",
+        "sha256": "36f8005fb70c502eb2bc8e2e137717c90c43a9012fb25d5a07cfd8094ea9721e"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.cancel.action",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Cancel setup",
+        "sha256": "c17bac18b5a6250d0f1b9919516de8d9f155d87af5e80d2ffd30d799bad0102e"
+      },
+      "af": {
+        "text": "Kanselleer opstelling",
+        "sha256": "0ae2f86bd8ed0b18e71596fd3da74f5bc167d573842993c7d3a6bdc4fe75bd80"
+      }
+    },
+    {
+      "key": "identity.mfa.enroll.cancel.body",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Two-step verification stays off until setup is confirmed.",
+        "sha256": "2dca8897d486853a5d3b3be15f3afdfbf8460972f36e3cdc4fc6ddf3fcddb87f"
+      },
+      "af": {
+        "text": "Tweestapverifikasie bly af totdat die opstelling bevestig is.",
+        "sha256": "a610e4fd6504001525e68c1bb8a39b32a136618c9e73ab7d43fff9a479ccb2ad"
+      }
+    },
+    {
+      "key": "identity.mfa.disable.action",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Turn off two-step verification",
+        "sha256": "5867bd3934830955f77cba3486fbba68fa69b99daf734fac5286e7c361aa3746"
+      },
+      "af": {
+        "text": "Skakel tweestapverifikasie af",
+        "sha256": "0428945d7ed4c2c68db59be553b71a2e8e248c2c7143f4001a374c0cba830c4a"
+      }
+    },
+    {
+      "key": "identity.mfa.disable.confirm.title",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Turn off two-step verification?",
+        "sha256": "aaeec523893f12be2d1cd6f5a1026b2625686d56aafbaf0fa0cbdc4f4a2b3020"
+      },
+      "af": {
+        "text": "Skakel tweestapverifikasie af?",
+        "sha256": "442f4c0b17c68a6ce5e3494e166ac3273d5a3afd82f68809350b77397dadff3b"
+      }
+    },
+    {
+      "key": "identity.mfa.disable.confirm.body",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Your account will have one less security check. First, you’ll need to confirm it’s you.",
+        "sha256": "ee2be6bf4284a61faddfb2dc72eba55b6e84290f5c2410665f6150efec11a4d8"
+      },
+      "af": {
+        "text": "Jou rekening sal een minder sekuriteitskontrole hê. Jy moet eers bevestig dat dit jy is.",
+        "sha256": "77bfd79809597c1392d899ebfecebcebb154db3427a077a3203886161b2fa71b"
+      }
+    },
+    {
+      "key": "identity.mfa.disable.confirm.action",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Turn off verification",
+        "sha256": "4b3e6c08e801575d2ee37f7f5cfe0a06e860b5082d8b8f21d7cc8baf49bee4c2"
+      },
+      "af": {
+        "text": "Skakel verifikasie af",
+        "sha256": "7eb31e65bd7ae3dcc47ab05805e1253c941a1f4d33b2e18ee361c6875044fbf9"
+      }
+    },
+    {
+      "key": "identity.mfa.disable.processing",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Turning off verification…",
+        "sha256": "be9b028f1949349d4f95fb539dc19ec7fe840266a26a745751699f0a6d5f6930"
+      },
+      "af": {
+        "text": "Besig om verifikasie af te skakel…",
+        "sha256": "79bafeca267d284a7288f0295d6100aff8b46216303ad6ae48bd20e57bb236ec"
+      }
+    },
+    {
+      "key": "identity.mfa.disable.success",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Two-step verification is off.",
+        "sha256": "46ef4bbf21baeeacf3ca7887b48a279f7ad6a48dddbc038b37b1f5a24183cce7"
+      },
+      "af": {
+        "text": "Tweestapverifikasie is afgeskakel.",
+        "sha256": "79ba3fe8f9a46d4d7bbcc590386ce6009a914062939e13b64327ca809c0fcb00"
+      }
+    },
+    {
+      "key": "identity.mfa.disable.failed",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "The request could not be completed. Check your security settings before trying again.",
+        "sha256": "0dd27d4923179e956f58ea41f91932fbffecf5a416ecc23eb753a71c13ad15e4"
+      },
+      "af": {
+        "text": "Die versoek kon nie voltooi word nie. Gaan jou sekuriteitsinstellings na voordat jy weer probeer.",
+        "sha256": "f9e0e383ecb5ff3a3039e49138a9e2cedcf966235edefa3d1c9731e19f070474"
+      }
+    },
+    {
+      "key": "identity.mfa.disable.uncertain",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "We can’t confirm whether verification was turned off. Refresh your security settings before taking another action.",
+        "sha256": "d10c3478c53c181992aadbc182a83417c8f1efb7bba21e08693dd950b3ed7e99"
+      },
+      "af": {
+        "text": "Ons kan nie bevestig of verifikasie afgeskakel is nie. Herlaai jou sekuriteitsinstellings voordat jy ’n volgende aksie uitvoer.",
+        "sha256": "129e3e61f0349c3bd393435f79231a2662cfc4e2f0b645eb8785eccc7409e5d8"
+      }
+    },
+    {
+      "key": "identity.mfa.disable.requires_step_up",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Confirm it’s you before turning off verification.",
+        "sha256": "45f7c3602304aa707fdc26c5c1a729f4b208453aa797a5ed600843fb379350e4"
+      },
+      "af": {
+        "text": "Bevestig dat dit jy is voordat jy verifikasie afskakel.",
+        "sha256": "5b5f5c316296862b1b10c040913d83c90980c5cf27577cf6697eab999fb6efa1"
+      }
+    },
+    {
+      "key": "identity.mfa.disable.already_off",
+      "family": "mfa",
+      "class": "A",
+      "en": {
+        "text": "Two-step verification is already off.",
+        "sha256": "90923664838acb2b4d8807e452ecc3cff6364350c81569ddc342b9798e4b91da"
+      },
+      "af": {
+        "text": "Tweestapverifikasie is reeds afgeskakel.",
+        "sha256": "22a08b4992086e01c1d7335f94e890884aae7fbd35925091508797d48b65b082"
+      }
+    },
+    {
+      "key": "identity.step_up.title",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "Confirm it’s you",
+        "sha256": "da81bd0f191a507ed9f49a82b72fd19a5b108e765f3f4952e248fb0c85d00433"
+      },
+      "af": {
+        "text": "Bevestig dat dit jy is",
+        "sha256": "bb4c8b06d38cbdb60ccbbf3d9478a6b277a85e995b741503e2823385eb2bb201"
+      }
+    },
+    {
+      "key": "identity.step_up.body",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "This sensitive action needs an additional identity check before you can continue.",
+        "sha256": "7ca8095cd2997c77651c72b82c3804bc151f4a1323e33c5040e0772d157c2030"
+      },
+      "af": {
+        "text": "Hierdie sensitiewe aksie vereis ’n ekstra identiteitskontrole voordat jy kan voortgaan.",
+        "sha256": "3502bf69387c36a34740898e186bd02faf6c2776a7a7e33c9a8fb86dd5eae1ab"
+      }
+    },
+    {
+      "key": "identity.step_up.password.help",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "Enter your current password when asked to continue.",
+        "sha256": "68d48927208491dbce46d571bb264feaa1d02e80c73b645ebc5ea333f41437e7"
+      },
+      "af": {
+        "text": "Voer jou huidige wagwoord in wanneer jy gevra word om voort te gaan.",
+        "sha256": "887ba2b912711cd49c44bc3643dd6091979bce7d81f9822e119e14ad4eff249c"
+      }
+    },
+    {
+      "key": "identity.step_up.code.help",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "Enter the current code from your verification app when asked.",
+        "sha256": "be296121d32b9a2822ec0fa2569982957cd7a7f572c9654f1345e008884d3d99"
+      },
+      "af": {
+        "text": "Voer die huidige kode uit jou verifikasie-app in wanneer jy daarvoor gevra word.",
+        "sha256": "4aa2d9629ed88f7d566769272ac8b1e6249cfc4c03c17f5440818988f6f1b531"
+      }
+    },
+    {
+      "key": "identity.step_up.submit",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "Verify identity",
+        "sha256": "7446e3aa6067fb5f8f0a8fa20d3eaa7e7a82e181b3e651fbdf4a4183182d72e8"
+      },
+      "af": {
+        "text": "Verifieer identiteit",
+        "sha256": "4b891d4eff4fb39ddff315c561b929c91db1684ebbb65cdbf645f8eb746a225f"
+      }
+    },
+    {
+      "key": "identity.step_up.processing",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "Verifying your identity…",
+        "sha256": "6f5de8ecc5383ca705d4f649d786cbba745032eac151be536dcfac6046976198"
+      },
+      "af": {
+        "text": "Besig om jou identiteit te verifieer…",
+        "sha256": "b299fc19e5ee60b1ac431d8eb98a7bf9f3ea1866a54d53b50fe1c9d6c8138058"
+      }
+    },
+    {
+      "key": "identity.step_up.invalid",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "We couldn’t verify those details. Check them and try again.",
+        "sha256": "9c77db16b6eeec19e079b5017b3540e9b49e9dd882d0fcf1d549196aeb2d23d2"
+      },
+      "af": {
+        "text": "Ons kon nie daardie besonderhede verifieer nie. Gaan dit na en probeer weer.",
+        "sha256": "e872f130982712902067fef4f16136e7d1a719fc395d1bedd33c4934c0913235"
+      }
+    },
+    {
+      "key": "identity.step_up.expired",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "This verification has expired. Verify your identity again to continue.",
+        "sha256": "af8079ccd4439bcb7462a0fc1090e146df7f31367a259137ca6c09c1d11f69e8"
+      },
+      "af": {
+        "text": "Hierdie verifikasie het verval. Verifieer weer jou identiteit om voort te gaan.",
+        "sha256": "bd4d830735424d04fd275594ebe6fa626f3606fb478f51b6168ea7054c36340c"
+      }
+    },
+    {
+      "key": "identity.step_up.success",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "Your identity is confirmed for this action.",
+        "sha256": "c3f0e04c2507d800744ac16ed60cfb2aad49c9203b18a19c2556bb1fedeebb16"
+      },
+      "af": {
+        "text": "Jou identiteit is vir hierdie aksie bevestig.",
+        "sha256": "7b5503304bd0dfdf803670588c0d4cb6883ed215e724cb82d83a757b46a072c7"
+      }
+    },
+    {
+      "key": "identity.step_up.uncertain",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "We can’t confirm this check yet. Refresh the page before trying again.",
+        "sha256": "3c355f0d7d20464dccf3d09b6b47a81584e7a5725e3d0df40909ec25d93ac592"
+      },
+      "af": {
+        "text": "Ons kan hierdie kontrole nog nie bevestig nie. Herlaai die bladsy voordat jy weer probeer.",
+        "sha256": "2ca6cfbe9dac60c08a721896a4f7f7be16e42e02db6e35d1db965c91afca24b5"
+      }
+    },
+    {
+      "key": "identity.step_up.unavailable",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "This check isn’t available right now. Your requested action has not been completed.",
+        "sha256": "2c55c3f20f0a3882df246c665117aeaa15ff0c28f92543c6ef196eb24bdece2d"
+      },
+      "af": {
+        "text": "Hierdie kontrole is tans nie beskikbaar nie. Jou aangevraagde aksie is nie voltooi nie.",
+        "sha256": "ce184aaf8df5a115ded8cd0ac00edf8178c79ee37803094766bd8ff0889ecf7a"
+      }
+    },
+    {
+      "key": "identity.step_up.mfa_required",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "A code from your verification app is required for this action.",
+        "sha256": "5b21e7e8e805ccd595fa7cf276b0f9c8341098c0635d82b2a6e1613adb240259"
+      },
+      "af": {
+        "text": "’n Kode uit jou verifikasie-app is nodig vir hierdie aksie.",
+        "sha256": "75b7a9d68886cb032bad9b880ab3dc265acd2f6633835bc3d8c9c7abd322f0a6"
+      }
+    },
+    {
+      "key": "identity.step_up.signin_again",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "Sign in again to continue.",
+        "sha256": "40f531d6cd857acae5c94a3a3d4b1883b5fb480dfa7b5cfd49f4d2b7947adc85"
+      },
+      "af": {
+        "text": "Meld weer aan om voort te gaan.",
+        "sha256": "36d0fa655a99c1b8a6e604865e24f0d37c3784e953f6caa4d7e266dda4ed7348"
+      }
+    },
+    {
+      "key": "identity.step_up.security_changed",
+      "family": "step_up",
+      "class": "A",
+      "en": {
+        "text": "Your account’s security status has changed. Start this verification again.",
+        "sha256": "36fb251ba04d6c98b4022474fa3556bbf24e20e00bf3025c60a89d970c79d0b5"
+      },
+      "af": {
+        "text": "Jou rekening se sekuriteitstatus het verander. Begin weer met hierdie verifikasie.",
+        "sha256": "be77fa2f9d7085b77cfe23f767228642e140a33eef5fb0e73702d0edb2913d1b"
+      }
+    }
+  ],
+  "reuse_existing_keys_without_modification": [
+    {
+      "key": "shared.navigation.settings",
+      "en": "Settings",
+      "af": "Instellings"
+    },
+    {
+      "key": "shared.action.cancel",
+      "en": "Cancel",
+      "af": "Kanselleer"
+    },
+    {
+      "key": "shared.action.retry",
+      "en": "Try again",
+      "af": "Probeer weer"
+    },
+    {
+      "key": "identity.registration.password.label",
+      "en": "Password",
+      "af": "Wagwoord"
+    }
+  ],
+  "supported_lifecycle_projections": {
+    "mfa_enrollment": {
+      "business_states": [
+        "not_enrolled",
+        "pending",
+        "active",
+        "revoked"
+      ],
+      "transitions": [
+        "not_enrolled → pending on authorised setup request",
+        "pending → active only after confirmed current valid one-time code",
+        "active → revoked on authorised disable or security invalidation",
+        "revoked → fresh pending setup only through a new authorised enrollment"
+      ],
+      "guards": [
+        "current Account/session and security eligibility",
+        "Identity-owned confirmed TOTP validation and replay protection",
+        "step-up required to disable",
+        "current state re-read after failed, uncertain or competing requests"
+      ],
+      "side_effects": [
+        "Identity-owned factor record/state and audit when confirmed",
+        "sensitive assurance invalidation as governed"
+      ],
+      "terminal_history": [
+        "revoked is final for that factor version, not an irreversible ban on future fresh enrollment"
+      ],
+      "non_goals": [
+        "no privileged staff MFA flows",
+        "no account recovery design",
+        "no automatic code generation in copy",
+        "no TOTP secret included in telemetry or approval packet"
+      ]
+    },
+    "step_up": {
+      "presentation_states": [
+        "requested",
+        "checking",
+        "confirmed_for_purpose",
+        "invalid",
+        "expired",
+        "unavailable",
+        "outcome_uncertain"
+      ],
+      "authority": "Current Identity-owned Session assurance for a single purpose and bounded time; re-check current Account/security/MFA state",
+      "guards": [
+        "current password reauthentication, plus active MFA/TOTP where enrolled or required",
+        "expiry, replay, Session revocation, recovery, security change, account hold and purpose change fail closed"
+      ],
+      "side_effects": [
+        "authorised current Session assurance only; an identity confirmation does NOT itself perform the sensitive action"
+      ],
+      "terminal_results": [
+        "confirmed_for_purpose",
+        "invalid/denied",
+        "expired",
+        "unavailable"
+      ],
+      "recovery": [
+        "uncertain results require an Identity-authoritative refresh/recheck; never claim success on a timeout"
+      ],
+      "explicit_exclusions": [
+        "trusted device is never high-risk step-up proof",
+        "no consent or entitlement grant",
+        "no automatic MFA bypass via a remembered browser state"
+      ]
+    }
+  },
+  "approval_status": {
+    "owner_approved": true,
+    "production_approved": false,
+    "development_activation_authorized": false,
+    "implementation_ticket_authorized": false,
+    "runtime_content_grant_authorized": false,
+    "production_release_authorized": false,
+    "real_participants_authorized": false,
+    "existing approved copy_unchanged": true,
+    "no_silent_af_en_fallback": true
+  },
+  "review_decisions": {
+    "primary_term": {
+      "en": "Two-step verification",
+      "af": "Tweestapverifikasie",
+      "status": "OWNER_APPROVED_EXACT"
+    },
+    "app_term": {
+      "en": "Verification app",
+      "af": "Verifikasie-app",
+      "status": "OWNER_APPROVED_EXACT"
+    },
+    "other_comments": "Owner approved all English and Afrikaans text with only the specific Afrikaans optionality sentence revised. Future runtime eligibility and feature implementation require separate authority."
+  },
+  "owner_approval": {
+    "decision": "APPROVED_ALL_45_KEYS_90_LOCALE_STRINGS_WITH_ONE_AFRIKAANS_SENTENCE_REVISION",
+    "date": "2026-11-16",
+    "evidence": "Direct owner message in current conversation: All text is approved and you are authorized to open a PR; proposed “Dit is nie verpligtend nie” instead of “Dit is jou keuse om dit op te stel.” Owner exact amendment adopted.",
+    "accountable_capacity": "Content & Media / owner copy approval; not a claim of independent multi-person reviewers",
+    "source_candidate_sha256": "08b7e92f2c5b20cfc5f2b4e4f2a22266998dd5c13fda16adf48a31feaba528db",
+    "changed_key": "identity.mfa.settings.body",
+    "changed_locale": "af",
+    "old_af": "Voeg ’n ekstra verifikasiestap by om jou rekening te help beskerm. Dit is jou keuse om dit op te stel.",
+    "new_af": "Voeg ’n ekstra verifikasiestap by om jou rekening te help beskerm. Dit is nie verpligtend nie.",
+    "unchanged_locale_strings": 89,
+    "total_keys": 45,
+    "total_locale_strings": 90,
+    "exact_english_text_unchanged": true,
+    "exact_reuse_keys_unchanged": true
+  },
+  "scope_limits": {
+    "copy_is_for_newyou_platform": true,
+    "applicability": "Approval of exact EN/AF wording for future bounded development use after canonical integration and applicable readiness; no runtime, pilot, public, participant or production grants",
+    "participant_mfa_optional": true,
+    "privileged_staff_practitioner_mfa_mandatory": true,
+    "purpose_bound_step_up_still_mandatory_when_governed": true,
+    "current_mfa_ui_implemented_by_this_packet": false,
+    "account_session_identity_state_changed": false,
+    "security_policy_unchanged": true,
+    "copy_lifecycle": "draft → candidate → development_approved → production_approved → superseded | withdrawn",
+    "approval_requires_digest_and_locale_pair_match": true,
+    "no_new_consumption_of_superseded_or_withdrawn_version": true,
+    "retry_or_competing_decisions_must_recheck_current_approved_version": true
+  }
+}

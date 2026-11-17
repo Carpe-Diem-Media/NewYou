@@ -198,6 +198,14 @@
       "status": "DEVELOPMENT_ONLY_APPROVED; RUNTIME_RELEASE_PROHIBITED"
     },
     {
+      "document_id": "PASSWORD_RESET_MESSAGE_WELL136_PHASE9_DEVELOPMENT_EVIDENCE",
+      "canonical_filename": "PASSWORD_RESET_MESSAGE_WELL136_PHASE9_ELIGIBILITY_v0.3.0.json",
+      "repository_path": "docs/delivery/content-evidence/content_media/password_reset_messages/PASSWORD_RESET_MESSAGE_WELL136_PHASE9_ELIGIBILITY_v0.3.0.json",
+      "sha256": "988910723b5e7c13d8826ae3d43ddb409a9a2e0ba1ff6219972d6fb94dbdd891",
+      "contract_type": "content_evidence",
+      "status": "BOUNDED_WELL136_NONPRODUCTION_SCOPE; RUNTIME_RELEASE_PROHIBITED"
+    },
+    {
       "document_id": "RECOVERY_MESSAGE_CANDIDATE_EVIDENCE",
       "canonical_filename": "RECOVERY_MESSAGE_CANDIDATE_EVIDENCE_PACKET_v0.1.0.json",
       "repository_path": "docs/delivery/content-evidence/content_media/recovery_messages/RECOVERY_MESSAGE_CANDIDATE_EVIDENCE_PACKET_v0.1.0.json",
@@ -220,6 +228,102 @@
       "sha256": "3db7668d20090ec5b53c7ba2213865ab64818e52f87d4da99b2e986ed19355df",
       "contract_type": "content_evidence",
       "status": "DEVELOPMENT_ONLY_APPROVED; DELIVERY_DISABLED"
+    },
+    {
+      "document_id": "FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "41d6ae138c541ea05e1efdcfec42865d3dc019a697aebc2d182333b18ed9edc4",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_BOUNDED_NONPRODUCTION_BROWSER_COPY; PHASE9_EMAIL_AND_RELEASE_PROHIBITED"
+    },
+    {
+      "document_id": "FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "db49143d725bc09a16ca31490e438370377393632ebba5850ded318e67a381ef",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_BOUNDED_NONPRODUCTION_BROWSER_COPY; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_VERIFICATION_RESULT_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_VERIFICATION_RESULT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_VERIFICATION_RESULT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "2c190d41d962b371807f1dfa31c3b60d5e18ba15f71a4356384897cf70f4a297",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_BROWSER_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; RUNTIME_RELEASE_NOT_AUTHORIZED"
+    },
+    {
+      "document_id": "FP001_PROFILE_AND_LANGUAGE_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_PROFILE_AND_LANGUAGE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_PROFILE_AND_LANGUAGE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "271b6374820b7864adb682b11a4935fad7974fb0222089c00c671f789ee2fbc6",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_NONPRODUCTION_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_PARTICIPANT_MFA_AND_STEP_UP_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "ab99de6d15cf0deaa11edd9a45643c7c44708138f8abd9f92ffa0b3bf280e966",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_PARTICIPANT_ACCOUNT_SETTINGS_OVERVIEW_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_PARTICIPANT_ACCOUNT_SETTINGS_OVERVIEW_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_PARTICIPANT_ACCOUNT_SETTINGS_OVERVIEW_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "6d4778e028e6d4b1bed2d28e8b5d7669d170ac38660c25a4c182bef181334c35",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_ACCOUNT_ACCESS_HELP_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_ACCOUNT_ACCESS_HELP_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_ACCOUNT_ACCESS_HELP_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "91eaddd8c2fa82cbdf415ea5a19da6f258fb4ef10371724c3563bd6e8b988d83",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_NONPRODUCTION_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_CONTACT_SUPPORT_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_CONTACT_SUPPORT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_CONTACT_SUPPORT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "d2851c4792ec99d646d058cfd169b8d228ee4d387ef3141a6473c629d51c1e8c",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_NONPRODUCTION_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "3fd0e58196e7895973725f3b7fae4494e16e1004144ae5468befa98d14ffc0b4",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "e640e07d3baf6bc03cdb4df9944f696ba4a022cefa60284154468d1876450b19",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_PUBLIC_SHELL_HEADER_FOOTER_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_PUBLIC_SHELL_HEADER_FOOTER_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_SHELL_HEADER_FOOTER_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "32dc444c5dcf2a6838b02ac62294453f853abc327262a42170b45256d718f6b4",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "PUBLIC_CONTENT_DISCOVERY_BROWSER_COPY_APPROVED",
+      "canonical_filename": "PUBLIC_CONTENT_DISCOVERY_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/PUBLIC_CONTENT_DISCOVERY_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "cbe52691a62300f80c1ea9cca5949503d200558e146395815fdb24b79398075c",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_WORDING_ONLY; FUTURE_GATED; NO_IMPLEMENTATION_PUBLICATION_OR_RELEASE_AUTHORITY"
     }
   ]
 }

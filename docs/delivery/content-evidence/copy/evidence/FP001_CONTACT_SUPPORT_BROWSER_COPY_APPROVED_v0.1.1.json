@@ -1,0 +1,575 @@
+{
+  "packet_id": "FP001_CONTACT_SUPPORT_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY",
+  "prepared_on": "2026-11-16",
+  "repository": "Carpe-Diem-Media/NewYou",
+  "verified_main_sha": "2736a9c6925c8c126cbba007f404b2e38ec2080d",
+  "purpose": "Intended NewYou bilingual contact-support entry and form wording, conditional submission outcomes and safe handling of private information.",
+  "content_owner": "Content & Media owns exact words/version; any future support-request record needs an approved authoritative owner",
+  "risk": "Class A + B; sensitive privacy/security wording requires relevant review",
+  "scope": {
+    "new_semantic_keys": 29,
+    "new_locale_strings": 58,
+    "unchanged_existing_keys_for_reuse": 10,
+    "includes": [
+      "form introduction, topic/subject/details and reply-email labels",
+      "optional attachment text (only if upload is actually supported)",
+      "sensitive-information and identity-verification boundaries",
+      "conditional submission-confirmed, failed, uncertain, duplicate, stale and unavailable states",
+      "unsent-message dismissal text"
+    ],
+    "excludes": [
+      "selecting a SupportCase Domain owner or creating a ticket/case system",
+      "defining categorical taxonomy, SLAs, response times or business case-state transitions",
+      "automatic account recovery, authentication or support authority through contact",
+      "guaranteeing that email delivery or a help message was received",
+      "requiring an attachment, identity document, health record or private account data",
+      "production, public contact-channel launch, implementation or provider permission"
+    ]
+  },
+  "governing_sources": [
+    "docs/governance/product/00_PLATFORM_v1.18.0.md (privacy, account and support limits)",
+    "docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md (owning-Domain mutation and support UI boundary)",
+    "docs/delivery/feature-contracts/fp-001/FP-001_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md §F (operator/support authority)",
+    "docs/governance/supporting/FRONTEND_EXPERIENCE_SYSTEM_v1.0.1.md §5.7 (honest recoverable states)",
+    "docs/delivery/content-evidence/copy/COPY_INVENTORY.md (SUPPORT/contact JIT scope)",
+    "docs/delivery/content-evidence/copy/GOVERNANCE.md; STYLE_GUIDE.md; GLOSSARY.md",
+    "FP001_ACCOUNT_ACCESS_HELP_BROWSER_COPY_APPROVED_v0.1.1.json (existing approved security/help language)"
+  ],
+  "submission_presentation_lifecycle": {
+    "states": [
+      "editing",
+      "submitting",
+      "received_confirmed",
+      "not_sent",
+      "outcome_uncertain",
+      "stale",
+      "unavailable",
+      "discarded"
+    ],
+    "transitions": [
+      "editing -> submitting on one authorised, valid submit intent",
+      "submitting -> received_confirmed only on current authoritative receipt confirmation",
+      "submitting -> not_sent only on a known no-effect or rejected outcome",
+      "submitting -> outcome_uncertain when receipt cannot be confirmed",
+      "editing/submitting -> stale if selected options or permissions are no longer current",
+      "editing/submitting -> unavailable when submission capability cannot be used",
+      "editing -> discarded after explicit unsent confirmation",
+      "not_sent/stale/unavailable -> editing only after safe correction and reread",
+      "outcome_uncertain -> received_confirmed/not_sent only through authoritative reconciliation"
+    ],
+    "guards": [
+      "No unconfirmed success claim or fabricated reference; {{reference}} renders only if issued by an authoritative source",
+      "No automatic resubmission after uncertain receipt; use idempotent operation identity or source reconciliation where supported",
+      "Do not permit duplicate click or conflicting request to create more than one confirmed source outcome",
+      "Public versus authenticated contact eligibility is determined by applicable governance and implemented route policy, not this copy",
+      "Optional attachment UI is hidden until secure media processing and privacy review support it",
+      "Account change, step-up, recovery, consent and privacy decisions stay with the relevant owners",
+      "No auto-fallback to another locale for required EN/AF content"
+    ],
+    "side_effects": "Form display/edit/discard is UI-only. Submission may request an owned support communication outcome once a separate authoritative contract exists. This copy packet creates no such source action.",
+    "terminal": [
+      "received_confirmed terminates the current submission attempt, not a support case",
+      "discarded terminates the current unsent edit",
+      "outcome_uncertain is nonterminal and requires reconciliation"
+    ],
+    "idempotency_recovery": "An identical confirmed operation returns the same receipt; uncertain attempts cannot be marked as failed or retried blindly.",
+    "business_support_case_lifecycle": "NOT_SPECIFIED_BY_THIS_CONTENT_PACKET"
+  },
+  "eligibility": {
+    "owner_approved": true,
+    "development_eligible": false,
+    "production_eligible": false,
+    "implementation_authorized": false,
+    "release_authorized": false,
+    "contact_channel_authorized": false,
+    "support_case_lifecycle_approved": false,
+    "development_eligible_after_canonical_integration": true
+  },
+  "copy_items": [
+    {
+      "key": "support.contact.form.intro.body",
+      "family": "introduction",
+      "class": "B",
+      "en": {
+        "text": "Tell us what you need help with so we can understand your question.",
+        "sha256": "bacd58c26730feab453159dc120e14a70627f543d56909818b7877962b5fd0ae"
+      },
+      "af": {
+        "text": "Vertel ons waarmee jy hulp nodig het sodat ons jou vraag kan verstaan.",
+        "sha256": "772d62b857688907685b2c79f1a394b2b0aa10b7c27df3ac4c40cf359d721415"
+      }
+    },
+    {
+      "key": "support.contact.form.topic.label",
+      "family": "form",
+      "class": "B",
+      "en": {
+        "text": "Choose a topic",
+        "sha256": "a11d13ad72faf509ab84dc5c0a43a710b48cd9330780f9fb729dc2ca5fadbc58"
+      },
+      "af": {
+        "text": "Kies ’n onderwerp",
+        "sha256": "050640dc55e054906a94b7e775a2ebcdec4d620388036a571b736171de053790"
+      }
+    },
+    {
+      "key": "support.contact.form.topic.help",
+      "family": "form",
+      "class": "B",
+      "en": {
+        "text": "Choose the option that best describes what you need help with.",
+        "sha256": "05b3faacfc4e312896619d7617760c2ea9d9584c37010652b06b429c36b2d2a0"
+      },
+      "af": {
+        "text": "Kies die opsie wat die beste beskryf waarmee jy hulp nodig het.",
+        "sha256": "b31bbdfb8d66ae1ef16d1ed648c829e88fa4c1d74e4d685f80dc43a5f0f4489c"
+      }
+    },
+    {
+      "key": "support.contact.form.topic.unavailable",
+      "family": "form",
+      "class": "B",
+      "en": {
+        "text": "That topic is no longer available. Choose another available option.",
+        "sha256": "2417926aca91c68a97abc05baacfb94efcca8fceba875a05c6c5e8a9ae2694b4"
+      },
+      "af": {
+        "text": "Daardie onderwerp is nie meer beskikbaar nie. Kies ’n ander beskikbare opsie.",
+        "sha256": "3c26126920cdd9ca244aeed1c61a69da43244e7dfdc95af322f2861083d01532"
+      }
+    },
+    {
+      "key": "support.contact.form.subject.label",
+      "family": "form",
+      "class": "B",
+      "en": {
+        "text": "Subject (optional)",
+        "sha256": "12b4b85ec643db6c83da33186790f77f560119c83dd4849d9b05f950ae96d40a"
+      },
+      "af": {
+        "text": "Onderwerp (opsioneel)",
+        "sha256": "75296fe85683d3708099e124d06da684d36e435c00388da4cfaefbd7409cc0d8"
+      }
+    },
+    {
+      "key": "support.contact.form.details.label",
+      "family": "form",
+      "class": "B",
+      "en": {
+        "text": "Tell us what happened",
+        "sha256": "70ca7e3a7482a8e7909be358acb380906cd300b2a74f931aea8a65fa0ad1dd42"
+      },
+      "af": {
+        "text": "Vertel ons wat gebeur het",
+        "sha256": "dbc29c11ed976cb4b043ce0786e339e776ffddd76b84f921307502f9539ce0d2"
+      }
+    },
+    {
+      "key": "support.contact.form.details.help",
+      "family": "form",
+      "class": "A",
+      "en": {
+        "text": "Explain what you were trying to do and what happened. Please leave out passwords and verification codes.",
+        "sha256": "1f42ccef55a797d090dbc2985ff16b543b01b93bcdf9ff28bc91b836005df7a0"
+      },
+      "af": {
+        "text": "Verduidelik wat jy probeer doen het en wat gebeur het. Moenie wagwoorde of verifikasiekodes insluit nie.",
+        "sha256": "a33575cf1628c0a87db3c0f40877a722b2cd5100a67f2eacb8d4954f11781823"
+      }
+    },
+    {
+      "key": "support.contact.form.reply_email.label",
+      "family": "form",
+      "class": "B",
+      "en": {
+        "text": "Email address for a reply",
+        "sha256": "ed9f3079f4745831ddf79fc68c24516d2c6169e1193e3a4d1d8b8e76869e283f"
+      },
+      "af": {
+        "text": "E-posadres vir terugvoer",
+        "sha256": "c489b98c691f3d5a04e711c2400fdd5668a5abc5012a595bab4c8d00f9976646"
+      }
+    },
+    {
+      "key": "support.contact.form.reply_email.help",
+      "family": "form",
+      "class": "B",
+      "en": {
+        "text": "Use an email address you can access.",
+        "sha256": "8e83e8ca61c32cbe99b89563c390a3188f31bf7b50d0b5e383671b545635ee83"
+      },
+      "af": {
+        "text": "Gebruik ’n e-posadres waartoe jy toegang het.",
+        "sha256": "a87d460acf8272ad79410127790c4b5d900d833931d5966db69aa75743327387"
+      }
+    },
+    {
+      "key": "support.contact.form.attachments.label",
+      "family": "attachment",
+      "class": "B",
+      "en": {
+        "text": "Attachments (optional)",
+        "sha256": "159552f45f1acbd90b1f47b9ec1992cdf76e365e9fb130a9880686319f512b43"
+      },
+      "af": {
+        "text": "Aanhangsels (opsioneel)",
+        "sha256": "f38cf677a89b2ec55b77f43c5719ef9b78af2ac3461a4a33f7f9124e6e9016c9"
+      }
+    },
+    {
+      "key": "support.contact.form.attachments.help",
+      "family": "attachment",
+      "class": "B",
+      "en": {
+        "text": "Add a file only if this option is available and it helps explain the problem.",
+        "sha256": "e0a579c07ba239d0150cf06e021b32372e7639b7a899d1860345c11db2b07cfb"
+      },
+      "af": {
+        "text": "Voeg slegs ’n lêer by as dié opsie beskikbaar is en dit help om die probleem te verduidelik.",
+        "sha256": "cbb3455026272982cbd3e52ded6ce5fe60e730ea8156bf80686d3f3d74559071"
+      }
+    },
+    {
+      "key": "support.contact.form.attachments.sensitive_warning",
+      "family": "attachment",
+      "class": "A",
+      "en": {
+        "text": "Do not attach identity documents, medical records or other sensitive information unless a separately approved secure process specifically asks for them.",
+        "sha256": "c1acf2c54c120dad54cdf000ea0347b63c68bf221de8cbc1a248382350fcb4f0"
+      },
+      "af": {
+        "text": "Moenie identiteitsdokumente, mediese rekords of ander sensitiewe inligting aanheg tensy ’n afsonderlik goedgekeurde, veilige proses dit uitdruklik vereis nie.",
+        "sha256": "f3c6c5611241bf33a7cd2e460d0275f40effa68a1c58bf19109af833e3dada59"
+      }
+    },
+    {
+      "key": "support.contact.form.attachments.failed",
+      "family": "attachment",
+      "class": "B",
+      "en": {
+        "text": "The file couldn't be added. Try another file or send your message without it.",
+        "sha256": "e2e455e9198533fe5c87d751c33b6614bcad0b72f64dd3a569bfe962a7a8c701"
+      },
+      "af": {
+        "text": "Die lêer kon nie bygevoeg word nie. Probeer ’n ander lêer of stuur jou boodskap daarsonder.",
+        "sha256": "c149ec74788983d9cdc278e9ba847c07fd815ce35c7b68f3213b5e962cb0a755"
+      }
+    },
+    {
+      "key": "support.contact.form.attachments.unavailable",
+      "family": "attachment",
+      "class": "B",
+      "en": {
+        "text": "Attachments aren't available right now. You can continue without one.",
+        "sha256": "5ed4b0b092789fae0174733f77e5a665b60da76b180df28e8d3e1d8a83667212"
+      },
+      "af": {
+        "text": "Aanhangsels is tans nie beskikbaar nie. Jy kan sonder ’n aanhangsel voortgaan.",
+        "sha256": "8736953dc27a6eba03d549e6f0b91ee209a6a268a6428250704136d52f73be6c"
+      }
+    },
+    {
+      "key": "support.contact.form.identity_check.notice",
+      "family": "security",
+      "class": "A",
+      "en": {
+        "text": "We may need to verify your identity before discussing private account details or making account changes.",
+        "sha256": "905df02f2a243ece9d839b11691e3194ba8c10ae351f1f59e10dd112e860f223"
+      },
+      "af": {
+        "text": "Ons sal dalk eers jou identiteit moet bevestig voordat ons privaat rekeningbesonderhede bespreek of rekeningveranderinge aanbring.",
+        "sha256": "03a21718cf6ffe83d5ce3f140d4ba3597adde61fec38bcd46ea9682d5a9a4134"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.action",
+      "family": "submission",
+      "class": "B",
+      "en": {
+        "text": "Send message",
+        "sha256": "93a26b1eaff99b3a84dd80366660991d15703a96514497afd997c12c43000ed7"
+      },
+      "af": {
+        "text": "Stuur boodskap",
+        "sha256": "404d4b34e57875c4bdbdc79b71024ee3f104f876363efb5628c126da2031997e"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.processing",
+      "family": "submission",
+      "class": "B",
+      "en": {
+        "text": "Sending your message…",
+        "sha256": "e3e43fc7851bf24ccba4d1b6652f5fecda1bbce1a4e7677d36377ad6f7e6dae4"
+      },
+      "af": {
+        "text": "Besig om jou boodskap te stuur…",
+        "sha256": "4323dfea07bbdd1048e90fd2da22c84544b022b9c85e6470a79ced7e32c60396"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.confirmed",
+      "family": "submission",
+      "class": "A",
+      "en": {
+        "text": "We've received your message.",
+        "sha256": "57c8d56965a69d04039295c3d58e094f63c9c511af24f751178df3361244a55e"
+      },
+      "af": {
+        "text": "Ons het jou boodskap ontvang.",
+        "sha256": "dbeef80e30463f2aed71909aec554138d973c1fbc17095b3a21479a5b87ad82b"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.reference",
+      "family": "submission",
+      "class": "B",
+      "en": {
+        "text": "Reference: {{reference}}",
+        "sha256": "9d3da412c144ab359d45d6d630b44edfe2e667efc5c5591ca7705cbc71a7030f"
+      },
+      "af": {
+        "text": "Verwysing: {{reference}}",
+        "sha256": "1ef80b61bb1110e14387bbba5170431def02f5519b6c80915f92261caa0b6e9c"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.reference.help",
+      "family": "submission",
+      "class": "B",
+      "en": {
+        "text": "Keep this reference if you need to follow up.",
+        "sha256": "e8555dc0ddad0b1521bb34e735670b1e704a0b00a707aa771739bc11d66ce01f"
+      },
+      "af": {
+        "text": "Hou hierdie verwysing byderhand as jy moet opvolg.",
+        "sha256": "8744ee96b0c6c8d5b961f153454132f8c3dcb4143649ee9d5b90bf56148d4489"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.failed",
+      "family": "submission",
+      "class": "B",
+      "en": {
+        "text": "We couldn't send your message. Check the information and try again.",
+        "sha256": "3ad139e382b41fa1152c733941f8367d99306457057a7bd1b9df524e602d6173"
+      },
+      "af": {
+        "text": "Ons kon nie jou boodskap stuur nie. Gaan die inligting na en probeer weer.",
+        "sha256": "a4c18d757a703f023cda1578ef2724c92e2a96def2c81e773489d38eeffb658d"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.uncertain",
+      "family": "submission",
+      "class": "A",
+      "en": {
+        "text": "We couldn't confirm whether your message was received. Avoid sending it again immediately; use an available status or support option to check first.",
+        "sha256": "ae4b47442d613d84041139d08b307a22059bc55d678faad5ad750bf17c7b85a5"
+      },
+      "af": {
+        "text": "Ons kon nie bevestig of jou boodskap ontvang is nie. Moenie dit dadelik weer stuur nie; gebruik eers ’n beskikbare status- of ondersteuningsopsie om na te gaan.",
+        "sha256": "0c1034aec7fd8e6f42143c369b2df77d9d08a694bf9b0f1e9e8d18aec9571f36"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.already_received",
+      "family": "submission",
+      "class": "A",
+      "en": {
+        "text": "We've already received this message.",
+        "sha256": "845c3f39b04669885b684166b2bff92a08e52f3bbfb0daa22e7b15907ee75378"
+      },
+      "af": {
+        "text": "Ons het reeds hierdie boodskap ontvang.",
+        "sha256": "3029fa5f149b697644d2e15d591dd22e6e5b3dd3cb22e84983fded45824b80a3"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.validation_needed",
+      "family": "submission",
+      "class": "B",
+      "en": {
+        "text": "Check the highlighted information before sending your message.",
+        "sha256": "9787b38c65909a1e78940c279b4903d462319439581d6631779eb2db138187f3"
+      },
+      "af": {
+        "text": "Gaan die aangeduide inligting na voordat jy jou boodskap stuur.",
+        "sha256": "e71c36b482bc0e78c4556571b3fb64b678b3b50648cbf9fc12cf233220a05336"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.stale",
+      "family": "submission",
+      "class": "B",
+      "en": {
+        "text": "The available contact options have changed. Reload them before sending your message.",
+        "sha256": "a04d20abe5b25fe4eed655bd43c62ce7dcc05ab798d3ad3428355fa0cb5fc8cc"
+      },
+      "af": {
+        "text": "Die beskikbare kontakopsies het verander. Laai dit weer voordat jy jou boodskap stuur.",
+        "sha256": "db8f888a1ffb5c092c996eeeab3d3d917d9b2104141e002c0510c453e82d23d6"
+      }
+    },
+    {
+      "key": "support.contact.form.submit.unavailable",
+      "family": "submission",
+      "class": "B",
+      "en": {
+        "text": "Messages can't be sent this way right now. Try another available support option.",
+        "sha256": "fc28cd60b05e5d781e73483e22a7fe1b17c4e314f4759356d25a7f20b8ba4722"
+      },
+      "af": {
+        "text": "Boodskappe kan tans nie op hierdie manier gestuur word nie. Probeer ’n ander beskikbare ondersteuningsopsie.",
+        "sha256": "947ee85994285565ce62ce93089f69574431a2ef5e726e79c07b3fde602fdbee"
+      }
+    },
+    {
+      "key": "support.contact.form.unsent.title",
+      "family": "unsent",
+      "class": "B",
+      "en": {
+        "text": "Leave without sending?",
+        "sha256": "791c47ee24650f257f0dfd00f48e73f1817395afc36cae5b8cbfb44ea6e60748"
+      },
+      "af": {
+        "text": "Gaan weg sonder om te stuur?",
+        "sha256": "9df286162cbfff023ae6ae91e96fa8391472d79ad1d77cc12259b8f7f2047777"
+      }
+    },
+    {
+      "key": "support.contact.form.unsent.body",
+      "family": "unsent",
+      "class": "B",
+      "en": {
+        "text": "Your message hasn't been sent.",
+        "sha256": "88199068c084f630ef6cf1bc6c8c4a1dd58d947fb1ba5c9a119f057eb2d1c05e"
+      },
+      "af": {
+        "text": "Jou boodskap is nog nie gestuur nie.",
+        "sha256": "e350b2cdab0b249e6e53d01feb3847a112823365f28c3d77f6a75cde3eb550e5"
+      }
+    },
+    {
+      "key": "support.contact.form.unsent.discard.action",
+      "family": "unsent",
+      "class": "B",
+      "en": {
+        "text": "Discard message",
+        "sha256": "f1bbf37e46cce32990d59b09d7df2353da4495a9afcb68ba130c74e25a34aafa"
+      },
+      "af": {
+        "text": "Gooi boodskap weg",
+        "sha256": "49b81a7121a64a2c8bcf77cf42c8b3488e7b65c43d7f86e088f377e822e85916"
+      }
+    }
+  ],
+  "reuse_existing_keys": [
+    {
+      "key": "shared.action.contact_support",
+      "en": "Contact support",
+      "af": "Kontak ondersteuning",
+      "source": "copy_registry",
+      "source_status_unchanged": "candidate",
+      "en_sha256": "814f4ed2d5bd33e3a1b93f0d555b2224913e418a41390c90368d856c08c87d42",
+      "af_sha256": "0d13e857296bd3788ff272d7be738d01bdfae6b96722273b0e5877ec34a81ce6"
+    },
+    {
+      "key": "shared.navigation.contact",
+      "en": "Contact",
+      "af": "Kontak",
+      "source": "copy_registry",
+      "source_status_unchanged": "candidate",
+      "en_sha256": "2b5c3d26721ae9c350cf3009318b626f0fc8a90b4a2ac0ca8099c05aa849282e",
+      "af_sha256": "7de5e47b262c3009a180a289c7dea36a9ad1ad6d07112461e4753055dcd1bf63"
+    },
+    {
+      "key": "shared.navigation.help",
+      "en": "Help",
+      "af": "Hulp",
+      "source": "copy_registry",
+      "source_status_unchanged": "candidate",
+      "en_sha256": "b79cac926e0b2e347e72cc91d5174037c9e17ae7733fd7bdb570f71b10cd7bfc",
+      "af_sha256": "6534898de5d8e1e9cf9e7c82131037921db77f508780b0aa2d905b57a8c88556"
+    },
+    {
+      "key": "shared.action.cancel",
+      "en": "Cancel",
+      "af": "Kanselleer",
+      "source": "copy_registry",
+      "source_status_unchanged": "candidate",
+      "en_sha256": "19766ed6ccb2f4a32778eed80d1928d2c87a18d7c275ccb163ec6709d3eb2e27",
+      "af_sha256": "3fa3af02ca18bc9990514bd16ee396a488788de5ba550a6c3bbc807dbc9f9a3e"
+    },
+    {
+      "key": "shared.action.retry",
+      "en": "Try again",
+      "af": "Probeer weer",
+      "source": "copy_registry",
+      "source_status_unchanged": "candidate",
+      "en_sha256": "d8b8392e2c542950ca64867168e4ef87d4ad606882d5898f826b51c6d553988f",
+      "af_sha256": "18b7178ef7bba8c82b0c9ffa7059df56d5bd9c18a8f2530a8b4bc2be266ffedd"
+    },
+    {
+      "key": "shared.action.upload",
+      "en": "Upload",
+      "af": "Laai op",
+      "source": "copy_registry",
+      "source_status_unchanged": "candidate",
+      "en_sha256": "865e89de78d94c747184d6a7e6f5244b453d8062343c07e014ae698cfb0260e8",
+      "af_sha256": "0a6561ca215746c11de20daefb84e95387c5aa4b4944be4fabd30ab7bbe38e9d"
+    },
+    {
+      "key": "shared.action.remove",
+      "en": "Remove",
+      "af": "Verwyder",
+      "source": "copy_registry",
+      "source_status_unchanged": "candidate",
+      "en_sha256": "c3812fc4acb861d5182fc2b8155f327f736fbe5e5eb86a7bd7afcb6dc5497282",
+      "af_sha256": "fec234a9f41585ca3d264a38ba49e2a78bcd181edd071c214656fffe73e3edb5"
+    },
+    {
+      "key": "shared.validation.required",
+      "en": "This field is required.",
+      "af": "Hierdie veld is verpligtend.",
+      "source": "copy_registry",
+      "source_status_unchanged": "candidate",
+      "en_sha256": "68cadcee19d24b1aeae71d92cd2a2098fc183e74b604d3a06b1e655c9887d660",
+      "af_sha256": "24679286b301e6e1574901d7a29a15ea77a5c91da154bcc01d07c36798023ba3"
+    },
+    {
+      "key": "support.account_help.contact.sensitive_warning",
+      "en": "Never share your password, verification codes, sign-in or recovery links, or your verification app's secret key with support.",
+      "af": "Moet nooit jou wagwoord, verifikasiekodes, aanmeld- of herstelskakels of die geheime sleutel van jou verifikasie-app met ondersteuning deel nie.",
+      "source": "approved_account_access_help_v0.1.1",
+      "source_status_unchanged": "owner_approved",
+      "en_sha256": "e4d51f3481d8277d2a7f5856c7b1b3672da963a1edf3133efd6b5ea4178b8545",
+      "af_sha256": "8c18402157ec23a9ec9f2d0908811b34bbf08c8cd6f66e5da47e5fb0300aa171"
+    },
+    {
+      "key": "support.account_help.contact.authority_boundary",
+      "en": "Contacting support does not verify your identity or authorise account changes.",
+      "af": "Kontak met ondersteuning bevestig nie jou identiteit nie en magtig nie rekeningveranderinge nie.",
+      "source": "approved_account_access_help_v0.1.1",
+      "source_status_unchanged": "owner_approved",
+      "en_sha256": "5e99b901f138dbf81ccac7cfa7f20e7eb032d02c699a0eb9a1767a55b36e8570",
+      "af_sha256": "3312905083f9b542802a40342405ec028d25d976c2577a1e0394c83920f66b8d"
+    }
+  ],
+  "approval": {
+    "decision_date": "2026-11-16",
+    "owner_decision": "approved and authorized to open a PR",
+    "owner_review_scope": "All 29 semantic keys and 58 exact EN/AF locale strings approved as-is",
+    "owner_approved": true,
+    "pr_opening_authorised": true,
+    "same_exact_58_strings_as_source_candidate": true,
+    "source_candidate_file": "FP001_CONTACT_SUPPORT_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+    "source_candidate_sha256": "8fbcb8a0b9f23b47a52e3008f6f1e5c173194fbe11d169ddef6760ed6f423778",
+    "one_accountable_owner_decision_only": true,
+    "production_release_authorised": false,
+    "application_implementation_authorised": false,
+    "founder_authored_copy_evidence_pr_exception": "This owner authorisation applies to a disclosed content-only PR and does not satisfy the routine JC-Agents authorship preflight, grant independent review, permit merge, or waive CI/branch protection."
+  }
+}

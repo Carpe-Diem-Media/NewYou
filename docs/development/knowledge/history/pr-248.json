@@ -1,0 +1,251 @@
+{
+  "base_sha": "d1001ee3c935337676fe61f855d1004e080bc143",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/248/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/248/commits",
+  "files": [
+    {
+      "blob": "e3995471fc2eefbe02fef4586b98c0acd5275817",
+      "mode": "100644",
+      "old_blob": "dfd8899a0b9e230684064b0e766201bfb09066c8",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/identity.recovery.json",
+      "old_sha256": "148c94c87e8a3b3f21022a0b8e5bccf838518d3bc79f2520b549e35ae296c97d",
+      "path": "docs/development/knowledge/identity.recovery.json",
+      "sha256": "8c5886b0ad5790e480aa53cf7840eeff419f1c39b79ee4ec7136df22f51f66b3",
+      "status": "modified"
+    },
+    {
+      "blob": "465c5e1ca04db9f712bc5fc5c63992e7ebaf8b66",
+      "mode": "100644",
+      "old_blob": "272b980511e31b6a1ba2f31192eb0d7ce76e9680",
+      "old_mode": "100644",
+      "old_path": "lib/new_you/content/magic_login_message.ex",
+      "old_sha256": "4e3e92be14cad75a0c3a3b239ce0108b5afb890da32e217e4b99e776e701167b",
+      "path": "lib/new_you/content/magic_login_message.ex",
+      "sha256": "26eafaf0a710fcf7ed03532849f67a4ce4c3e1550824f89242bb602cbe7fd503",
+      "status": "modified"
+    },
+    {
+      "blob": "d5df4b7d42ca32c5612dcdfe49bd3d75f2779145",
+      "mode": "100644",
+      "old_blob": "a8b1eab6deed55d0d91609b7dbdb2b1b52f3f741",
+      "old_mode": "100644",
+      "old_path": "lib/new_you/content/password_reset_message.ex",
+      "old_sha256": "326bab96ce92a34bbe89824e1472f5e5403f54e7480048a81dae43d9beabeee5",
+      "path": "lib/new_you/content/password_reset_message.ex",
+      "sha256": "eda16f4262c974fa4e3c543040f97f2bd934304a391a080497a1004072af9cfd",
+      "status": "modified"
+    },
+    {
+      "blob": "8359e2adaf5ce20038897ef6142b5d946a3e87d3",
+      "mode": "100644",
+      "old_blob": "102d1bf2a6db5dd8c06ee68a74c81144f3e920c4",
+      "old_mode": "100644",
+      "old_path": "lib/new_you/content/recovery_message.ex",
+      "old_sha256": "8c8a4046d305467fbfeafb7b42f06f53e4ffc1b8238b21b6b4bd72ba5bf96d0a",
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "434c0e6fd92837b3df07af3a9b872e50739fdbdab4c993afda291d413cdadae3",
+      "status": "modified"
+    },
+    {
+      "blob": "787bc5d254350daf66559830c5346193306dee18",
+      "mode": "100644",
+      "old_blob": "711412a0034583ca5204c8c0357f1dbeb9c96494",
+      "old_mode": "100644",
+      "old_path": "test/new_you/content/magic_login_message_test.exs",
+      "old_sha256": "ef8a89ad85b34d33e4cf252ad028a1fbdf726de94a398a942a9f0a56b46ded56",
+      "path": "test/new_you/content/magic_login_message_test.exs",
+      "sha256": "71180fdfbf83ebed18795512255f8430959a1efe76ed88b2d5a7bc9f0555681d",
+      "status": "modified"
+    },
+    {
+      "blob": "999cb1c7c41d2225d2fc428705ce3ef2a4a8c349",
+      "mode": "100644",
+      "old_blob": "2ddb8bf968f6fa993a7859392f0324776aa6695d",
+      "old_mode": "100644",
+      "old_path": "test/new_you/content/password_reset_message_test.exs",
+      "old_sha256": "263e062d3a4f70cda290355b21d769668b4a1745b38ab9407457a19c467380b4",
+      "path": "test/new_you/content/password_reset_message_test.exs",
+      "sha256": "eb22f9335c4da797576a70f1ef27149cd8d709ab73e6891c00b100e4ed89b5d8",
+      "status": "modified"
+    },
+    {
+      "blob": "edad98df4a246f2cdfc28bbacc13d1e31b892f9f",
+      "mode": "100644",
+      "old_blob": "d02177b47221562eecb6a69714fa1ee0aafb8196",
+      "old_mode": "100644",
+      "old_path": "test/new_you/content/recovery_message_test.exs",
+      "old_sha256": "e77e3eae26a18de29ad8b11302041234f95d6bd33f4c6b1c34e983c8a47ab9ee",
+      "path": "test/new_you/content/recovery_message_test.exs",
+      "sha256": "b150a101893d1c2cc637285c5a68ab6fd00e7513b5d0725ad10a9c2730cfa037",
+      "status": "modified"
+    }
+  ],
+  "migrations": [],
+  "pr": 248,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/248",
+  "range_base_sha": "d1001ee3c935337676fe61f855d1004e080bc143",
+  "schema_version": 1,
+  "symbols": [
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.MagicLoginMessage",
+      "name": null,
+      "old_sha256": "7180b2e2d263ba848ff2a44dbe3b9f2bd3de94e20455e4735ac3a3b06602601c",
+      "path": "lib/new_you/content/magic_login_message.ex",
+      "sha256": "a4a385dcbe59ef1a59cf7457b9ecdaad87f53529ef33cd36a350ab9eb2bf9fbd",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/content/magic_login_message.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.PasswordResetMessage",
+      "name": null,
+      "old_sha256": "cb794d97b194b34424cb947678f008825c1565609ada4c466ad353f029f01cf1",
+      "path": "lib/new_you/content/password_reset_message.ex",
+      "sha256": "5f290161b2e2f4818e3f998dd11e8ee9103096364d5812cb6563739cd7f5ab1e",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/content/password_reset_message.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": null,
+      "old_sha256": "35e5e39cb7581e8e560d2634c6a049cdfd07f53721b61a2607405dcd59bba80c",
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "5534b08d5b702f76692273dc74b2a058075d876e392873bf45107e07b78583b8",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "current_authority?",
+      "old_sha256": "6a6b71e360bc411fc3b71a76f17941422b14d215f7387430c88a85c60d1408dc",
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "39b66ddf5902bed70732aef09405ed5ff155e0be31e086b0f156241639ef0d68",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Content.RecoveryMessage",
+      "name": "successor_lineage?",
+      "old_sha256": "aaf19d1ee2ed16995d653bb96e3e5fe995fe8608dedaa1cc637cfcd20ad72f7e",
+      "path": "lib/new_you/content/recovery_message.ex",
+      "sha256": "e9045aaf41422c328e533a27585980fc74a584fe801dbd7efcb33694611b5e7c",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "lib/new_you/content/recovery_message.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.MagicLoginMessageTest",
+      "name": null,
+      "old_sha256": "4bcf8e7e776a28ed0a04ba8b8339a5794b05a3c30f061f10928e00a6364a4606",
+      "path": "test/new_you/content/magic_login_message_test.exs",
+      "sha256": "85ef9f8d93282fd7135cf5a819b50198bff33de6dcbdf1bccd67f3035fa77a0f",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/content/magic_login_message_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.PasswordResetMessageTest",
+      "name": null,
+      "old_sha256": "b8bff5454b2a140d2a8338bad640db55447a7807f392dbd9e54fc40ef2f7cbb4",
+      "path": "test/new_you/content/password_reset_message_test.exs",
+      "sha256": "bb8ae836da528d36102c9dcc18d6d28ca6dfad52aa808a6a78d0d656e08a23b9",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/content/password_reset_message_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Content.RecoveryMessageTest",
+      "name": null,
+      "old_sha256": "cf1e2264f0e69b564e2802a3709b1d6530c8538c8648074628e00a4ab7877973",
+      "path": "test/new_you/content/recovery_message_test.exs",
+      "sha256": "b2618b21343e0507f3810bc2c3de366064ee26e0845740cf77be6b3f89b383e6",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/content/recovery_message_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    }
+  ],
+  "tests": [
+    "test/new_you/content/magic_login_message_test.exs",
+    "test/new_you/content/password_reset_message_test.exs",
+    "test/new_you/content/recovery_message_test.exs"
+  ],
+  "tickets": [
+    "WELL-137"
+  ]
+}

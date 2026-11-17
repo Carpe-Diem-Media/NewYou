@@ -1,0 +1,944 @@
+{
+  "schema_version": 1,
+  "capability_id": "identity.sign_in",
+  "purpose": "WELL-134 bounded FP-001 EN/AF development sign-in and current-session protected access. This source map grants no release or review approval.",
+  "implementing_tickets": [
+    "WELL-134",
+    "WELL-112",
+    "WELL-114"
+  ],
+  "implementation_revision": {
+    "git_sha": "658a4c1afb604ad4d6c81635b2d2a1a500ce2ea5",
+    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main."
+  },
+  "authoritative_domain": "Identity",
+  "collaborating_domains": [
+    {
+      "domain": "Content",
+      "interface": "NewYou.Content.SignInCopy.available?/0 and text!/2",
+      "ownership": "Exact C-01 owner-approved development wording only. No runtime Content grants or participant publication authority.",
+      "source_ids": [
+        "copy",
+        "approval",
+        "artifact"
+      ]
+    },
+    {
+      "domain": "Communications",
+      "interface": "establish_magic_login/1 and execute/1",
+      "ownership": "Existing id-only delivery obligations and current eligible locale message; real provider result is not Session authority.",
+      "source_ids": [
+        "magic",
+        "communications"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "Identity",
+      "resource": "NewYou.Identity.Account",
+      "actions": [
+        "authenticate_magic_link",
+        "read"
+      ],
+      "caller_boundary": "Web callers use Identity interfaces. Trusted owner code performs current Account checks inside existing Ash transactions.",
+      "source_ids": [
+        "identity",
+        "account",
+        "magic",
+        "password"
+      ]
+    },
+    {
+      "domain": "Identity",
+      "resource": "NewYou.Identity.Token",
+      "actions": [
+        "store_token",
+        "issue_magic_login",
+        "supersede_magic_login",
+        "consume_magic_login"
+      ],
+      "caller_boundary": "AshAuthentication and Identity own Token presence, purpose and single-use magic proof. No browser or public Ash mutation authority.",
+      "source_ids": [
+        "token",
+        "magic",
+        "password"
+      ]
+    },
+    {
+      "domain": "Identity",
+      "resource": "NewYou.Identity.Session",
+      "actions": [
+        "issue",
+        "touch",
+        "logout",
+        "revoke",
+        "expire"
+      ],
+      "caller_boundary": "Private actions with public denial policy. Existing Identity interface coordinates current Account, Token and Session state.",
+      "source_ids": [
+        "session",
+        "password"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Identity",
+      "function": "authenticate_password",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Untrusted email",
+        "Transient password"
+      ],
+      "returns": [
+        "{:ok, %{session_id: id, token: bearer}}",
+        "{:error, :authentication_unavailable}"
+      ],
+      "side_effects": [
+        "Verifies password; eligible current Account is locked before atomic Token/Session issuance."
+      ],
+      "caller_constraints": [
+        "Protect returned bearer; never log, persist it in ordinary rows, or select another Account from browser parameters."
+      ],
+      "source_ids": [
+        "identity",
+        "password"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "request_magic_login",
+      "arity": 3,
+      "visibility": "supported",
+      "arguments": [
+        "Untrusted email",
+        "Exact EN/AF locale",
+        "Operation UUID"
+      ],
+      "returns": [
+        ":ok for every public result"
+      ],
+      "side_effects": [
+        "Existing eligible Account may gain one current proof and Communications obligation; no Account creation or Session."
+      ],
+      "caller_constraints": [
+        "Neutral bounded request outcome; same operation retry is not a new proof."
+      ],
+      "source_ids": [
+        "identity",
+        "magic"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "authenticate_magic_link",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Transient single-use proof"
+      ],
+      "returns": [
+        "{:ok, %{session_id: id, token: bearer}}",
+        "{:error, :authentication_unavailable}"
+      ],
+      "side_effects": [
+        "Consumes current eligible proof and issues shared Token/Session pair atomically."
+      ],
+      "caller_constraints": [
+        "Browser path requires explicit valid-CSRF POST; GET and HEAD never call this interface."
+      ],
+      "source_ids": [
+        "identity",
+        "magic",
+        "magic_web",
+        "boundary"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "authorize_session",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Protected transport credentials containing session_id and token"
+      ],
+      "returns": [
+        "{:ok, %{account_id: id}}",
+        "{:error, :authentication_unavailable}"
+      ],
+      "side_effects": [
+        "Revalidates current Account, Token and Session; eligible access touches idle deadline; due expiry becomes terminal."
+      ],
+      "caller_constraints": [
+        "Call on every protected request. Prior render or cookie contents alone convey no current authority."
+      ],
+      "source_ids": [
+        "identity",
+        "password",
+        "password_web"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "logout",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Protected transport credentials for the current Session"
+      ],
+      "returns": [
+        ":ok",
+        "{:error, :authentication_unavailable}"
+      ],
+      "side_effects": [
+        "Commits logged_out through private Session action. Does not log out other Sessions."
+      ],
+      "caller_constraints": [
+        "Browser uses CSRF-protected POST; only :ok permits confirmed wording and transport drop."
+      ],
+      "source_ids": [
+        "identity",
+        "password",
+        "password_web"
+      ]
+    },
+    {
+      "module": "NewYou.Content.SignInCopy",
+      "function": "text!",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Exact approved semantic key",
+        "en or af"
+      ],
+      "returns": [
+        "Exact UTF-8 text",
+        "Raises on unavailable artifact, missing key or unsupported locale"
+      ],
+      "side_effects": [
+        "Reads current fixed artifact/source hashes before consumption; no lifecycle mutations."
+      ],
+      "caller_constraints": [
+        "Development build only, owner version NEWYOU-WELL134-C01-LOGIN-PROTECTED-EN-AF-V0.1 and original canonical payload digest retained. No translation fallback."
+      ],
+      "source_ids": [
+        "copy",
+        "approval",
+        "artifact"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261105193238_well9_session.exs",
+      "tables": [
+        "sessions"
+      ],
+      "constraints": [
+        "sessions_state"
+      ],
+      "source_ids": [
+        "migration_session"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261105193401_well9_session_relations.exs",
+      "tables": [
+        "sessions",
+        "accounts",
+        "tokens"
+      ],
+      "constraints": [
+        "sessions_one_session_per_token_index",
+        "sessions_account_id_fkey",
+        "sessions_token_jti_fkey"
+      ],
+      "source_ids": [
+        "migration_relations"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261106041805_well9_session_token_retention.exs",
+      "tables": [
+        "sessions"
+      ],
+      "constraints": [
+        "sessions_token_jti_fkey"
+      ],
+      "source_ids": [
+        "migration_retention"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261107145731_p8_09_magic_login.exs",
+      "tables": [
+        "tokens",
+        "sessions",
+        "message_intents"
+      ],
+      "constraints": [
+        "sessions_one_session_per_magic_proof_index",
+        "sessions_authentication_provenance",
+        "tokens_magic_login_request_index",
+        "tokens_one_current_magic_login_index",
+        "tokens_magic_login_metadata",
+        "message_intents_role_purpose_schema"
+      ],
+      "source_ids": [
+        "migration_magic"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "Cold start: inspect the entry and Content gates, then password/magic controllers, then Identity interfaces and their owner transactions. Shell components render no Account, PMR or bearer context.",
+      "source_ids": [
+        "entry",
+        "copy",
+        "password_web",
+        "magic_web",
+        "identity",
+        "shell"
+      ]
+    },
+    {
+      "summary": "Normal authorized development navigation starts at registration entry and exposes locale-specific /login. The normal entry flag suffices with legacy browser-proof flags disabled. Verification still creates no Session and only offers sign-in.",
+      "source_ids": [
+        "entry",
+        "journey_test",
+        "journey",
+        "browser"
+      ]
+    },
+    {
+      "summary": "Password POST delegates to Identity.authenticate_password/2. Success renews and clears the encrypted browser session, then stores transport credentials and locale and redirects to /session/protected. Failure renders one approved generic response with empty password.",
+      "source_ids": [
+        "password_web",
+        "password",
+        "endpoint",
+        "password_web_test"
+      ]
+    },
+    {
+      "summary": "Magic request delegates to Identity/Communications; neutral pending UI offers retry. Passive confirmation renders an explicit POST form. Successful consumption uses the same Session issuance and protected destination with magic provenance.",
+      "source_ids": [
+        "magic_web",
+        "magic",
+        "identity",
+        "journey"
+      ]
+    },
+    {
+      "summary": "Protected GET always calls authorize_session. Denial clears transport state and renders usable reauthentication. No unfinished product destination or administrative capability is added.",
+      "source_ids": [
+        "password_web",
+        "boundary",
+        "journey_test",
+        "browser"
+      ]
+    },
+    {
+      "summary": "Logout commits the current owner transition before transport drop and confirmed text. Error returns 503 with retry and sign-in links, without claiming durable logout.",
+      "source_ids": [
+        "password_web",
+        "password",
+        "journey_test"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "active",
+      "expired",
+      "revoked",
+      "logged_out"
+    ],
+    "transitions": [
+      {
+        "from_state": "active",
+        "to_state": "active",
+        "guards": [
+          "Current matching eligible Account, valid present user Token, matching active Session and both deadlines current"
+        ],
+        "side_effects": [
+          "Touch last_seen_at and existing 30-minute idle window without extending absolute expiry"
+        ],
+        "terminal": false,
+        "source_ids": [
+          "password",
+          "session"
+        ]
+      },
+      {
+        "from_state": "active",
+        "to_state": "logged_out",
+        "guards": [
+          "Identity validates bound credentials and private Session action accepts active state"
+        ],
+        "side_effects": [
+          "Record ended_at and clear step-up fields; browser drops transport only after owner success"
+        ],
+        "terminal": true,
+        "source_ids": [
+          "password",
+          "session",
+          "password_web"
+        ]
+      },
+      {
+        "from_state": "active",
+        "to_state": "revoked",
+        "guards": [
+          "Existing owning revocation path"
+        ],
+        "side_effects": [
+          "Record ended_at and remove elevated assurance; stale transport is denied"
+        ],
+        "terminal": true,
+        "source_ids": [
+          "session",
+          "password",
+          "password_web_test"
+        ]
+      },
+      {
+        "from_state": "active",
+        "to_state": "expired",
+        "guards": [
+          "Idle or absolute deadline has elapsed"
+        ],
+        "side_effects": [
+          "Record terminal expiry and deny subsequent requests, including copied cookies"
+        ],
+        "terminal": true,
+        "source_ids": [
+          "password",
+          "session",
+          "journey_test"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Only Identity owns authentication authority. Cookie/account_id/PMR/query intent cannot select another Account or grant unfinished capabilities. Current scoped privileged and Privacy purpose checks remain separate owner boundaries.",
+      "source_ids": [
+        "password",
+        "boundary",
+        "privilege_test",
+        "proof_authority",
+        "proof_privacy"
+      ]
+    },
+    {
+      "summary": "Exact C-01 v0.1 is development-only. Both pinned artifact and approval hashes are checked before embedding; decoding uses the exact bytes that passed verification. Runtime consumption rechecks both current source hashes. Compile-time tampering followed by restoration cannot admit unapproved embedded text. Original canonical digest 43ee2ad61accfed40aceaa8fcb035c01282210a3ac69f5949df6c913419ccc5b is preserved as source identity, not claimed as the derived serialization hash. Missing/changed/withdrawn artifact fails closed with no fallback.",
+      "source_ids": [
+        "copy",
+        "approval",
+        "artifact",
+        "copy_test"
+      ]
+    },
+    {
+      "summary": "Compile-time production exclusion defeats all runtime development flags. The existing normal entry legal/content gate is retained; Content.EntryCopy is not expanded to the candidate registry.",
+      "source_ids": [
+        "production_test",
+        "entry",
+        "copy",
+        "magic_web",
+        "password_web"
+      ]
+    },
+    {
+      "summary": "Existing encrypted Secure/HttpOnly/SameSite cookie, renewal, CSRF, no-store/no-referrer and strict proof CSP remain. Password/protected pages permit same-origin connections for existing reload proof, with default-src none and no external connections.",
+      "source_ids": [
+        "endpoint",
+        "boundary",
+        "password_web",
+        "magic_web",
+        "password_web_test"
+      ]
+    },
+    {
+      "summary": "No bearer/password enters ordinary rows, jobs, telemetry, referrers, assets or third-party requests. TEST email delivery reads only the real provider's transient payload and returns fixed boolean proof facts.",
+      "source_ids": [
+        "privacy_test",
+        "password_web_test",
+        "journey",
+        "browser"
+      ]
+    },
+    {
+      "summary": "Endpoint start/stop always use the existing redacted connection projection because cookies accompany ordinary URLs. Legal GET/HEAD dispatch through the existing browser boundary. Unknown paths return 404; malformed JSON/query input returns its safe parser status with class-only logging, avoiding full-connection router/error telemetry. Parser, method override and HEAD order is retained inside the existing boundary; Session transport remains in Endpoint.",
+      "source_ids": [
+        "browser_telemetry",
+        "browser_telemetry_test",
+        "boundary",
+        "endpoint"
+      ]
+    },
+    {
+      "summary": "The DEV/test design guide renders on a fresh request projection with no Identity session, headers, cookies or endpoint secret. Its separate LiveView transport reads no session and enforces connection-origin checks. It grants no sign-in or protected-access capability. Reassess transport isolation before routing another LiveView.",
+      "source_ids": [
+        "design_reference_boundary",
+        "endpoint",
+        "boundary",
+        "browser_telemetry_test"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Existing Account lock arbitrates password issuance against hold/credential change. Protected authorization locks Account, Token, Session in existing order and rechecks. Logout retains existing terminal Session serialization.",
+      "source_ids": [
+        "password",
+        "password_test",
+        "restart"
+      ]
+    },
+    {
+      "summary": "Magic issue/supersession/consume serialize on Account then current proof. Consumption and Session issuance share one transaction with unique provenance, so two consumers cannot commit two Sessions. No new process-local authority, scheduler or event model.",
+      "source_ids": [
+        "magic",
+        "session",
+        "migration_magic",
+        "magic_test"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Same magic operation retry reuses its proof identity and expiry; new operation supersedes current proof. Explicit consumption is single use. Separate valid password submissions remain separate authentications.",
+      "source_ids": [
+        "magic",
+        "magic_test",
+        "password",
+        "journey"
+      ]
+    },
+    {
+      "summary": "Repeated logout of logged_out is owner-idempotent and preserves ended_at; revoked/expired authority cannot be restored. Lost logout response may safely retry with the previous cookie; a denied browser converges through protected reauthentication.",
+      "source_ids": [
+        "password",
+        "password_test",
+        "journey_test"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Issuance or proof-consumption failure rolls back Token/Session/proof effects. A response lost after committed magic consumption cannot replay the proof; request a new link or sign in with the password. A lost password result requires fresh authentication, not inferred success.",
+      "source_ids": [
+        "password_test",
+        "magic_test",
+        "magic_web",
+        "password_web"
+      ]
+    },
+    {
+      "summary": "Committed valid authority reconstructs on a fresh connection and BEAM instance. Revoked Token/Session, hold, expiry and logged_out remain denied after restart; cleanup retains Session history.",
+      "source_ids": [
+        "restart",
+        "password_test",
+        "migration_retention"
+      ]
+    },
+    {
+      "summary": "Owner unavailability renders neutral login/unavailable magic or explicit unconfirmed logout. No partial protected effect or claimed delivery success follows provider ambiguity. Existing reset/hold/recovery invalidators remain authoritative.",
+      "source_ids": [
+        "password_web",
+        "magic_web",
+        "magic_test",
+        "reset_test"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you_web/sign_in_journey_test.exs",
+      "cases": [
+        "ordinary bilingual password sign-in reaches a protected page and durably logs out",
+        "denied access is a usable reauthentication page without a false logout claim",
+        "logout rejects a missing CSRF token and an uncertain result offers safe recovery",
+        "idle and absolute expiry deny the copied cookie and retain a terminal Session",
+        "ordinary English browser completes password and magic sign-in without proof entry flags",
+        "ordinary Afrikaans browser completes password and magic sign-in without proof entry flags"
+      ],
+      "proves": "Normal EN/AF navigation, real password/magic forms, explicit passive confirmation, current protected reload, invalid correction, logged_out/stale-cookie/replay denial, reauthentication recovery and durable method/state counts.",
+      "limits": "Synthetic shared TEST with loopback test provider. No production sender, public release or complete FP-001 certification.",
+      "source_ids": [
+        "journey_test"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/password_session_test.exs",
+      "cases": [
+        "proof runner reconstructs Session authority across BEAM restarts",
+        "proof runner arbitrates login against a concurrent security hold",
+        "session write failure rolls back token issuance",
+        "logout is idempotent and its session remains denied",
+        "an idle deadline denies access independently of absolute expiry"
+      ],
+      "proves": "Unchanged owner transaction, lifetime, terminal, concurrency and restart obligations.",
+      "limits": "Owner tests complement, and do not replace, the new ordinary browser journey.",
+      "source_ids": [
+        "password_test"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/magic_login_lifecycle_test.exs",
+      "cases": [
+        "expiry, revocation, supersession and replay fail closed",
+        "current verification, credential, email, closure and hold state gates issuance and use",
+        "a failed Session insert restores the proof for a later attempt",
+        "the existing partial Identity proof runs consume contention and BEAM restart cases"
+      ],
+      "proves": "Unchanged proof lifecycle and real separate-transaction/restart cases.",
+      "limits": "Synthetic development contracts; provider and abuse-policy release evidence remain open.",
+      "source_ids": [
+        "magic_test"
+      ]
+    },
+    {
+      "path": "test/new_you_web/controllers/password_session_controller_test.exs",
+      "cases": [
+        "known wrong-password and unknown-account login failures have the same public response",
+        "stale browser cookies cannot bypass Session or token revocation",
+        "authentication credentials are absent from endpoint telemetry and logs"
+      ],
+      "proves": "Normalized non-enumeration body/status/header/cookie effects, CSRF/cookie security and current authority denial.",
+      "limits": "Deliberate existing timing protection is retained, not a mathematical constant-time claim.",
+      "source_ids": [
+        "password_web_test"
+      ]
+    },
+    {
+      "path": "test/new_you/content/sign_in_copy_test.exs",
+      "cases": [
+        "only the exact owner-approved bilingual development version is eligible",
+        "a changed locale, approval, scope, lifecycle or source digest cannot acquire eligibility",
+        "modified compile-time text cannot become eligible after the approved file is restored",
+        "modified approval bytes are rejected before embedding text",
+        "approved compiled text retains current-source eligibility without fallback"
+      ],
+      "proves": "Exact owner text, compile/restore mismatch rejection before embedding, approval-byte binding, runtime missing/changed/withdrawn source denial and restoration, and unsupported key/locale rejection. Isolated temporary artifacts and uniquely named modules leave shared fixtures unchanged.",
+      "limits": "Immutable development artifact admission, not a Content publishing/resource lifecycle.",
+      "source_ids": [
+        "copy_test"
+      ]
+    },
+    {
+      "path": "test/proof/self_test.exs",
+      "cases": [
+        "NewYou.Content.SignInCopy.available?()"
+      ],
+      "proves": "Existing isolated production compilation keeps the copy/journey excluded despite synthetic runtime flags.",
+      "limits": "This does not authorize production deployment or assert release eligibility.",
+      "source_ids": [
+        "production_test"
+      ]
+    },
+    {
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "cases": [
+        "endpoint events redact transport and payload on every request path",
+        "legal pages keep session-bearing requests out of router dispatch telemetry",
+        "unfinished paths and unsupported methods fail closed without router errors or telemetry",
+        "malformed requests return safe errors without full-connection error telemetry"
+      ],
+      "proves": "Permanent synthetic transport regressions for endpoint projection, ordinary legal GET/HEAD and disabled entry, unknown method/path denial and malformed login/magic/query errors without full-connection telemetry or marker-bearing logs. Real connection transport is left intact.",
+      "limits": "Synthetic local protocol tests. No participant data, real bearer, database reset or public endpoint activation.",
+      "source_ids": [
+        "browser_telemetry_test"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Maintain this map when changing the capability. Extend only through current Domain interfaces, approved semantic copy identity and observed owner/browser regressions.",
+      "source_ids": [
+        "identity",
+        "copy",
+        "journey_test"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "USE existing Ash Resources/actions, AshAuthentication JWT/password verification, AshPostgres transactions/constraints and Phoenix forms. Signals and Temporal Resources are not applicable: this web slice adds no cross-Domain reaction or as-of/effective-period requirement. No dependency installation.",
+      "source_ids": [
+        "identity",
+        "password",
+        "magic",
+        "session",
+        "boundary"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "No parallel authentication authority, custom Repo business writes, public bearer API, localStorage, admin bypass, new grant UI, scheduler, duration policy, production provider or unfinished participant function.",
+      "source_ids": [
+        "identity",
+        "password",
+        "magic",
+        "boundary",
+        "production_test"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "No new migration or reversal is introduced. The linked existing migrations establish Account foreign key, unique Session/Token and magic-provenance constraints. The retention migration removes the Token foreign key so cleanup preserves Session history. Existing rollback/reconciliation guards still apply.",
+    "Author proof and this map never substitute for exact-head independent Master Gate, hosted CI or resulting-main reconciliation. WELL-21 remains open.",
+    "C-01 source table is archived exactly; the original canonical JSON serialization is unavailable. Derived table strings have individual byte/digest bindings, a separate artifact hash and the unchanged original canonical digest. This does not claim a fabricated reproduction of unavailable source serialization.",
+    "Hallmark existing-design extension check renders 20 EN/AF normal/error/pending/confirmation/protected/reauthentication/logout states. Generated unchanged app.css reports 96 static FAILs: gate 48 x89, 10a x4, 15 x2, 20 x1. No page-level FAIL is introduced; do not describe the whole inherited stylesheet as clean.",
+    "Hallmark REFLEX 39b x8 is waived because DESIGN.md explicitly requires 58px input height. Generated dependency/token CSS REFLEX 7b x6, 22 x5, 24b x2 belongs to unchanged compatibility/design styles. F1 x5 preserves exact approved apostrophes, F23 x20 is non-public authentication metadata, and unchanged CSS warnings 10b x2/F7 x1 are recorded. Balanced heads removed both F26 stub warnings.",
+    "Browser tests assert real Tab focus with visible outline, labels, styles loaded, reduced-motion state, responsive widths 320/375/768/1280/1920 and 200% text resize. Hallmark render contrast checks report no page-level contrast failure; source review preserves shared tokens. No redesign or theme run was invoked.",
+    "Current-session logout only. Remaining FP-001 Q.2 session controls, recovery/email-change/support/reconciliation product journeys, OQ-035 abuse thresholds, OQ-036 real channel/retry proof and participant content/legal eligibility remain release obligations. Existing owner capabilities do not grant participant UI or release access.",
+    "Permanent ordinary EN/AF browser proof doubles computed text sizes and numeric line heights at widths 320/375/768/1280/1920, checks horizontal document and text/control fit, then restores original inline styles. This runs on the login state; the earlier 20-state resize supplement remains separate evidence, not permanent all-state coverage.",
+    "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations.",
+    "WELL-114 source checkpoint 145c2be adds fixture-isolation regression coverage and assertion-preserving test corrections. See docs/superpowers/plans/2026-11-16-retained-fixture-observations.md for observed commands, test limits and current resource handling. Full applicable gates, OCR, exact-head CI and independent post-merge certification remain required. The original all-job privacy secret scan remains intentionally broad to detect incorrectly addressed leakage. The seven-file focused run passed 111/111, seed 985650. Canonical on clean 96a8455 passed 831/831, seed 813027, in 547.2 seconds under a command-scoped lock, after preserving and diagnosing a five-failure overlapping attempt and a same-seed 47/47 targeted pass. The focused plan records exact commands, fingerprints and limits. OCR, exact-final-head hosted CI and independent resulting-main certification remain separate requirements. Global maintenance tests use native Ecto sandbox checkout/checkin with signature restoration, rather than an outer Repo transaction that can be aborted by expected Ash denials.",
+    "Current-base WELL-114 proof: clean 9f4b8fd1975e0b1f67b12463e01156529ce7d57b incorporates main 2736a9c6925c8c126cbba007f404b2e38ec2080d with identical executable correction. Canonical passed 831/831, seed 813027, in 508.2 seconds; content compatibility passed 34/34 and routing/knowledge/smoke checks passed 71/71. Private per-row digest multisets preserve all preexisting rows across 15 tables, including membership in growing nonce and PMR sets, with no unexpected additions. DeliveryAttempt baseline was empty; permanent synthetic own/foreign coverage is separate. The focused plan records exact commands, hashes, observed counts, review limits and lost historical raw logs. Fresh OCR, final-head CI and independent integration/resulting-main certification remain separate requirements.",
+    "WELL-112 incorporates independently integrated WELL-114 from main f72cf637453408896a5037dcb2f8d37f0d29e3af. Earlier proof notes describe their historical checkpoints; new complete branch gates, OCR and independent review remain required. The floating-label variant is opt-in and does not migrate registration or change owner lifecycles."
+  ],
+  "follow_up_tickets": [
+    "WELL-21",
+    "WELL-45",
+    "WELL-115",
+    "WELL-114",
+    "WELL-132",
+    "WELL-116"
+  ],
+  "sources": [
+    {
+      "id": "identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def authenticate_password",
+      "sha256": "2ccafe5ad95aff2ef46b468e11debc580a402625daddd5b133b6684553399137"
+    },
+    {
+      "id": "password",
+      "path": "lib/new_you/identity/password_session.ex",
+      "symbol": "def authorize",
+      "sha256": "280a7e1c69ee0aa878349ecd810394a2588d4d285269a429f8f3bcbbdc27957f"
+    },
+    {
+      "id": "magic",
+      "path": "lib/new_you/identity/magic_login.ex",
+      "symbol": "defp consume_locked",
+      "sha256": "51582b3fb72194d42ddbb1353248405a0a1b9692a2bc66f73e240eac657b332a"
+    },
+    {
+      "id": "session",
+      "path": "lib/new_you/identity/session.ex",
+      "symbol": "update :logout",
+      "sha256": "e59451e7a1c8341c9fa88c0d90b0c819cc58c8ca3dc1aebb2f8745b65d24d8ce"
+    },
+    {
+      "id": "token",
+      "path": "lib/new_you/identity/token.ex",
+      "symbol": "create :issue_magic_login",
+      "sha256": "248faddf863dc1d2c1ddeadb16152d215aef6ecc5d8236a4cac0bdf5c69434f1"
+    },
+    {
+      "id": "account",
+      "path": "lib/new_you/identity/account.ex",
+      "symbol": "action :authenticate_magic_link",
+      "sha256": "515114144a2ba38bd4858e2a5be297ef3d33bd9da50666a4859638f3125bc3ce"
+    },
+    {
+      "id": "password_web",
+      "path": "lib/new_you_web/controllers/password_session_controller.ex",
+      "symbol": "def protected",
+      "sha256": "fc280380f919d6afc19dae79577b65e08d3d8bb3c4f3edc4685404b4fdbeca70"
+    },
+    {
+      "id": "magic_web",
+      "path": "lib/new_you_web/controllers/magic_login_controller.ex",
+      "symbol": "def confirm",
+      "sha256": "d600871376cb9e47fa5ccd161bfed12531debf6457de13efaba6f0ed107bb335"
+    },
+    {
+      "id": "boundary",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "symbol": "defp dispatch_browser_request",
+      "sha256": "d2f0230bd21a84ecfc2566e92c0ff75e58f7d3cb62ec0176b1a9e162b0527254"
+    },
+    {
+      "id": "endpoint",
+      "path": "lib/new_you_web/endpoint.ex",
+      "symbol": "Plug.Session",
+      "sha256": "28f5b007b9841067c90adce5f2ba8a35dc3a3bac0f7de252b4a732fea0cb5e17"
+    },
+    {
+      "id": "copy",
+      "path": "lib/new_you/content/sign_in_copy.ex",
+      "symbol": "def available?",
+      "sha256": "1617dd42a4f5e523bb2ac0ed416adbb067b489ec067753bde657160f5ee81cdc"
+    },
+    {
+      "id": "approval",
+      "path": "docs/development/fixtures/well134-c01-owner-approval.json",
+      "symbol": "5071ff0e-21e4-406c-9c69-0a3e1f6cf498",
+      "sha256": "6e6c592112ee9f1dcbd4fabe7595218a74d941afce2e5aa491a3ea78cce1a6f2"
+    },
+    {
+      "id": "artifact",
+      "path": "docs/development/fixtures/well134-c01-v0.1.json",
+      "symbol": "canonical_payload_sha256",
+      "sha256": "4d442f4f7ad861e6d23feb3a23c421889b2f5516bb32963949389759f3d35f6c"
+    },
+    {
+      "id": "entry",
+      "path": "lib/new_you_web/development_entry.ex",
+      "symbol": "def enabled?",
+      "sha256": "e2ad6ede008eb55a59b552932781e3fc5bc124dff16428c16653a76d8ce18363"
+    },
+    {
+      "id": "communications",
+      "path": "lib/new_you/communications.ex",
+      "symbol": "def execute",
+      "sha256": "f67d7daa27c991b86d2cb98f92b2823689e86fcb35fe7e0e59c7ce0cd8bf3d90"
+    },
+    {
+      "id": "shell",
+      "path": "lib/new_you_web/components/sign_in_components.ex",
+      "symbol": "def auth_shell",
+      "sha256": "4cd330481b3abfe2b35dfb293f23a3a96f8d696b1d4686f1cf77d1b1a86edd33"
+    },
+    {
+      "id": "migration_session",
+      "path": "priv/repo/migrations/20261105193238_well9_session.exs",
+      "symbol": "sessions_state",
+      "sha256": "81abadfad86258d93b4a0821e8c0ffc479810b64ab91cb1be28f2e22119f8daa"
+    },
+    {
+      "id": "migration_relations",
+      "path": "priv/repo/migrations/20261105193401_well9_session_relations.exs",
+      "symbol": "sessions_one_session_per_token_index",
+      "sha256": "46d8aec19f9a87fff481a2399f0b32b53617085d50d415d05926413f66e5ea24"
+    },
+    {
+      "id": "migration_retention",
+      "path": "priv/repo/migrations/20261106041805_well9_session_token_retention.exs",
+      "symbol": "drop constraint",
+      "sha256": "ace62fb4e063646d2ce48dad1e0ac0fe0e20e8ba93bfc932562e26a1e255a5c5"
+    },
+    {
+      "id": "migration_magic",
+      "path": "priv/repo/migrations/20261107145731_p8_09_magic_login.exs",
+      "symbol": "sessions_authentication_provenance",
+      "sha256": "bbae11968c6973e90252ccc6189fb6565e59b70e0f9b92db4683123d0204a77d"
+    },
+    {
+      "id": "journey_test",
+      "path": "test/new_you_web/sign_in_journey_test.exs",
+      "symbol": "idle and absolute expiry",
+      "sha256": "118e440fd4b6c5b024a798822d51ecbdb7c869fcd947623455bd310b46d1b26e"
+    },
+    {
+      "id": "journey",
+      "path": "test/support/sign_in_journey.ex",
+      "symbol": "defp assert_sessions",
+      "sha256": "b8f574a6488ac67735aaf0632983d63b14503f8273e204097fda12767b8c427c"
+    },
+    {
+      "id": "browser",
+      "path": "test/proof/p8_05_browser.mjs",
+      "symbol": "input.mode === 'signin'",
+      "sha256": "0738d5c69e0651dffb3b7ec0fef7f422eca3b2843f9d3415c71619528995a52b"
+    },
+    {
+      "id": "password_test",
+      "path": "test/new_you/identity/password_session_test.exs",
+      "symbol": "session write failure rolls back token issuance",
+      "sha256": "cf08ec8cae3bbaf156dfd7d072779198cec07d1f7766fee1c7ecfd7c52b86e31"
+    },
+    {
+      "id": "password_web_test",
+      "path": "test/new_you_web/controllers/password_session_controller_test.exs",
+      "symbol": "known wrong-password and unknown-account",
+      "sha256": "b5b3d488e20ee0141b759f6e03ab549cf1b1c7f3e14902219bf978731bbf21f8"
+    },
+    {
+      "id": "magic_test",
+      "path": "test/new_you/identity/magic_login_lifecycle_test.exs",
+      "symbol": "the existing partial Identity proof",
+      "sha256": "03a75a9961f77afa5c10dfd8ae0c8d4afe3a265ab98e6e3d7fcff2ddf98b51ed"
+    },
+    {
+      "id": "magic_web_test",
+      "path": "test/new_you_web/controllers/magic_login_controller_test.exs",
+      "symbol": "defmodule",
+      "sha256": "4604dcc44e86b1c4110d730a06571f798f49579c239db3e2192c753e6b12ce40"
+    },
+    {
+      "id": "privacy_test",
+      "path": "test/new_you/identity/magic_login_privacy_test.exs",
+      "symbol": "bearers stay out",
+      "sha256": "b52a97f7849a6bd8615f16f379869f8bb2d9307912ecb30084bfe250e5b67ea3"
+    },
+    {
+      "id": "privilege_test",
+      "path": "test/new_you/identity/privileged_access_test.exs",
+      "symbol": "scoped grant consumption",
+      "sha256": "4679fbdc79f7ea35aefcd5ee4b3f1f0fc6f9b18617d0a2171cc7ac778d8adfb7"
+    },
+    {
+      "id": "proof_authority",
+      "path": "test/support/proof/p8_19.ex",
+      "symbol": "defmodule",
+      "sha256": "67f88004646fc03a38baedfa75b057b8e732a08537c4fb27238b4c0724239c2e"
+    },
+    {
+      "id": "proof_privacy",
+      "path": "test/support/proof/p8_18.ex",
+      "symbol": "defmodule",
+      "sha256": "8029475e62bd7dc2925dd3219bb9e99149132b9333ed3f69b8e0dc27d7eb2f9c"
+    },
+    {
+      "id": "restart",
+      "path": "test/support/proof/p8_09.ex",
+      "symbol": "\"p809.beam_restart\"",
+      "sha256": "3df53741e6bbb313df3e11f3367bca3696099ab5a8b4a094a236f6fbda38998c"
+    },
+    {
+      "id": "reset_test",
+      "path": "test/new_you/security/password_revocation_test.exs",
+      "symbol": "preserves another user",
+      "sha256": "e9f3d12edf427787e1826698f758c58529454b65edbb1b4f21a29d6f0cf98b8c"
+    },
+    {
+      "id": "copy_test",
+      "path": "test/new_you/content/sign_in_copy_test.exs",
+      "symbol": "a changed locale",
+      "sha256": "34d97c0f779c32587cadb5e923536406ee7ca4d56bd2b68a9dc006d4c7e68108"
+    },
+    {
+      "id": "production_test",
+      "path": "test/proof/self_test.exs",
+      "symbol": "NewYou.Content.SignInCopy.available?()",
+      "sha256": "e7f1025c567dea6bd64404286901a260894c31b4dd56498570b0e428296f7e72"
+    },
+    {
+      "id": "browser_telemetry",
+      "path": "lib/new_you_web/privacy_telemetry.ex",
+      "symbol": "defmodule NewYouWeb.PrivacyTelemetry",
+      "sha256": "d002278f8536002bfde7b08b3b88270a7180723110206854b432d2fce65b11b0"
+    },
+    {
+      "id": "browser_telemetry_test",
+      "path": "test/new_you_web/privacy_telemetry_test.exs",
+      "symbol": "defmodule NewYouWeb.PrivacyTelemetryTest",
+      "sha256": "3806af345f2a4cdb9f25275de5dbf989f8f6ebd98f6ae53030f4c09a0e25caf0"
+    },
+    {
+      "id": "design_reference_boundary",
+      "path": "lib/new_you_web/design_system_boundary.ex",
+      "symbol": "def render(",
+      "sha256": "b42ce70f4534ef399ce64688cac7fc1a1f36f0f4031db0a124bab6f29ac6320c"
+    }
+  ]
+}

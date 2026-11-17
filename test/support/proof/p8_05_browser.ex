@@ -279,7 +279,7 @@ defmodule NewYou.Proof.P805Browser do
 
       code when code in @failure_codes ->
         SelfTest.observe_manifest!(code, false)
-        raise "proof browser failed with bounded diagnostic"
+        raise "proof browser failed with bounded diagnostic: #{code}"
 
       _ ->
         raise "proof browser returned an unrecognized diagnostic"

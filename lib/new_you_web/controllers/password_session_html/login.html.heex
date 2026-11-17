@@ -1,58 +1,67 @@
-<!DOCTYPE html>
-<html lang={@locale}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{NewYouWeb.CopyRegistry.text!("shared.navigation.login", @locale)}</title>
-    <link rel="stylesheet" href={~p"/assets/css/app.css"} />
-    <link rel="stylesheet" href={~p"/identity-login.css"} />
-  </head>
-  <body>
-    <main class="min-h-svh bg-design-canvas text-design-ink font-design-sans">
-      <section class="mx-auto grid w-full max-w-7xl content-start gap-design-lg px-design-base py-design-2xl">
-        <h1 class="font-design-bold text-design-display-sm">
-          {NewYouWeb.CopyRegistry.text!("shared.navigation.login", @locale)}
-        </h1>
-        <p :if={@failed?} role="alert">
-          {if @locale == "af", do: "Aanmelding is nie beskikbaar nie.", else: "Unable to log in."}
-        </p>
-        <.form
-          for={%{}}
-          action="/login"
-          method="post"
-          class="grid w-full max-w-prose gap-design-base justify-items-start"
-        >
-          <input type="hidden" name="locale" value={@locale} />
-          <label class="text-design-body-sm font-design-bold text-design-ink" for="email">{NewYouWeb.CopyRegistry.text!(
-            "identity.registration.email.label",
-            @locale
-          )}</label>
-          <input
-            class="min-h-12 w-full border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
-            id="email"
-            name="email"
-            type="email"
-            required
-            autocomplete="username"
-          />
-          <label class="text-design-body-sm font-design-bold text-design-ink" for="password">{NewYouWeb.CopyRegistry.text!(
-            "identity.registration.password.label",
-            @locale
-          )}</label>
-          <input
-            class="min-h-12 w-full border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
-            id="password"
-            name="password"
-            type="password"
-            required
-            autocomplete="current-password"
-          />
-          <.primary_button type="submit">{NewYouWeb.CopyRegistry.text!(
-            "shared.navigation.login",
-            @locale
-          )}</.primary_button>
-        </.form>
-      </section>
-    </main>
-  </body>
-</html>
+<.auth_shell
+  title={Copy.text!("identity.login.title", @locale)}
+  locale={@locale}
+  locale_path="/login"
+>
+  <p class="max-w-prose text-design-body-sm leading-design-body-sm">
+    {Copy.text!("identity.login.intro", @locale)}
+  </p>
+  <p
+    :if={@error_key}
+    id="sign-in-error"
+    role="alert"
+    class="max-w-prose text-design-body-sm leading-design-body-sm"
+  >
+    {Copy.text!(@error_key, @locale)}
+  </p>
+  <.form
+    for={%{}}
+    action="/login"
+    method="post"
+    id="password-login"
+    class="grid w-full max-w-prose gap-design-base justify-items-start"
+  >
+    <input type="hidden" name="locale" value={@locale} />
+    <label class="text-design-body-sm font-design-bold" for="email">{Copy.text!(
+      "identity.login.email.label",
+      @locale
+    )}</label>
+    <input
+      class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      id="email"
+      name="email"
+      type="email"
+      required
+      autocomplete="username"
+      aria-describedby={if @error_key, do: "sign-in-error"}
+    />
+    <label class="text-design-body-sm font-design-bold" for="password">{Copy.text!(
+      "identity.login.password.label",
+      @locale
+    )}</label>
+    <input
+      class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      id="password"
+      name="password"
+      type="password"
+      required
+      autocomplete="current-password"
+      aria-describedby={if @error_key, do: "sign-in-error"}
+    />
+    <.primary_button type="submit">{Copy.text!("identity.login.submit", @locale)}</.primary_button>
+  </.form>
+  <a
+    href={"/login/magic?locale=#{@locale}"}
+    class="min-h-11 w-fit content-center text-design-body-xs leading-design-body-xs text-design-ink underline decoration-design-primary underline-offset-4 hover:text-design-primary active:text-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+  >{Copy.text!(
+    "identity.login.magic.option",
+    @locale
+  )}</a>
+  <a
+    href={"/register?locale=#{@locale}"}
+    class="min-h-11 w-fit content-center text-design-body-xs leading-design-body-xs text-design-ink underline decoration-design-primary underline-offset-4 hover:text-design-primary active:text-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+  >{Copy.text!(
+    "identity.login.create_account",
+    @locale
+  )}</a>
+</.auth_shell>

@@ -1,0 +1,50 @@
+{
+  "base_sha": "a30d8b3c112b61b6b867c12e1cc4c14e8a17cbd2",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/252/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/252/commits",
+  "files": [
+    {
+      "blob": "0adff4892ab03167615680fa5ad815ca25e99597",
+      "mode": "100644",
+      "old_blob": "cdf4780d8004a53d8e052c18edc6cf4e08bb47cf",
+      "old_mode": "100644",
+      "old_path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "old_sha256": "f0688a790dec1110e58e36528276f8299fb2a35f7ece9a2e60e4991d5b48e155",
+      "path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "sha256": "c32080cf072e766155de8832ff4ed7d2c31f14096e00ee128b2f797835f57f52",
+      "status": "modified"
+    },
+    {
+      "blob": "532531ee27220b55fd451feb8a4b3eb121619cd4",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/copy/evidence/FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "41d6ae138c541ea05e1efdcfec42865d3dc019a697aebc2d182333b18ed9edc4",
+      "status": "added"
+    },
+    {
+      "blob": "4c3707fbbbe1178fd07850a1b0dcb1031ff25ca6",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/copy/evidence/FP001_PRIMARY_EMAIL_CHANGE_PHASE9_COPY_LOCK_v0.1.1.md",
+      "sha256": "d36a2d4ce10e86138247f0f93c1b8e34297fa0c0834a2c05997613386999dcd0",
+      "status": "added"
+    }
+  ],
+  "migrations": [],
+  "pr": 252,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/252",
+  "range_base_sha": "a30d8b3c112b61b6b867c12e1cc4c14e8a17cbd2",
+  "schema_version": 1,
+  "symbols": [],
+  "tests": [],
+  "tickets": [
+    "WELL-21"
+  ]
+}

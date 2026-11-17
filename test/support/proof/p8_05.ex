@@ -863,13 +863,45 @@ defmodule NewYou.Proof.P805 do
 
   def account!(id), do: Ash.get!(Identity.Account, id, domain: Identity, authorize?: false)
 
-  def read(Identity.RegistrationOperation, Identity) do
-    {operations, _emails} = fixture_values()
+  @doc false
+  def read(resource, domain), do: read(resource, domain, fixture_values())
 
+  # Explicit context lets sandbox tests use the same finite observation rules.
+  # Filter before hydration so incompatible foreign enum values stay unread.
+  @doc false
+  def read(resource, domain, {operations, emails}) when is_list(operations) and is_list(emails) do
+    resource
+    |> fixture_query(operations, emails)
+    |> Ash.read!(domain: domain, authorize?: false)
+  end
+
+  defp fixture_query(Identity.RegistrationOperation, operations, _emails) do
     Identity.RegistrationOperation
     |> Ash.Query.filter(operation_id in ^operations)
-    |> Ash.read!(domain: Identity, authorize?: false)
   end
+
+  defp fixture_query(Identity.Account, _operations, emails),
+    do: Ash.Query.filter(Identity.Account, email in ^emails)
+
+  defp fixture_query(Identity.Token, _operations, emails),
+    do: Ash.Query.filter(Identity.Token, account.email in ^emails)
+
+  defp fixture_query(Communications.MessageIntent, operations, _emails),
+    do: Ash.Query.filter(Communications.MessageIntent, source_operation_id in ^operations)
+
+  defp fixture_query(Communications.DeliveryAttempt, operations, _emails),
+    do:
+      Ash.Query.filter(
+        Communications.DeliveryAttempt,
+        message_intent.source_operation_id in ^operations
+      )
+
+  defp fixture_query(Communications.ProtectedEnvelope, operations, _emails),
+    do:
+      Ash.Query.filter(
+        Communications.ProtectedEnvelope,
+        message_intent.source_operation_id in ^operations
+      )
 
   def registration_operations(operation_id) do
     Identity.RegistrationOperation

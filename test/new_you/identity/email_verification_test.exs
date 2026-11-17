@@ -53,9 +53,9 @@ defmodule NewYou.Identity.EmailVerificationTest do
     P805.with_fixture(fn ->
       {:ok, registration} = Identity.register(P805.request())
       before = P805.counts()
-      [original] = Ash.read!(Identity.Token, authorize?: false)
+      [original] = P805.read(Identity.Token, Identity)
       assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
-      [consumed] = Ash.read!(Identity.Token, authorize?: false)
+      [consumed] = P805.read(Identity.Token, Identity)
       assert consumed.expires_at == original.expires_at
       assert account(registration).email_verified?
 
@@ -65,7 +65,7 @@ defmodule NewYou.Identity.EmailVerificationTest do
       assert before == P805.counts()
 
       assert Enum.all?(
-               Ash.read!(Identity.Token, authorize?: false),
+               P805.read(Identity.Token, Identity),
                &(&1.purpose == "revocation")
              )
     end)
@@ -152,7 +152,7 @@ defmodule NewYou.Identity.EmailVerificationTest do
                Identity.verify_email(registration.verification_proof)
 
       [token] =
-        Ash.read!(Identity.Token, authorize?: false)
+        P805.read(Identity.Token, Identity)
         |> Enum.filter(&(&1.purpose == "email_verification"))
 
       %{rows: [[intent, nonce, ciphertext, tag, version]]} =

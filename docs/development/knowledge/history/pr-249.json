@@ -1,0 +1,39 @@
+{
+  "base_sha": "d47d1b5ed10658b173a070a0df43a337b240b254",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/249/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/249/commits",
+  "files": [
+    {
+      "blob": "cdf4780d8004a53d8e052c18edc6cf4e08bb47cf",
+      "mode": "100644",
+      "old_blob": "4778bb274bc5cc908a3b432523e547227a2e5d83",
+      "old_mode": "100644",
+      "old_path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "old_sha256": "09531fe5875f39e82e450b18e65daa5e7d5bba2e5cc9cb27cc0d27f6829ecec1",
+      "path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "sha256": "f0688a790dec1110e58e36528276f8299fb2a35f7ece9a2e60e4991d5b48e155",
+      "status": "modified"
+    },
+    {
+      "blob": "9817ec4549335adc8afefba109c788699acde1f1",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "docs/delivery/content-evidence/content_media/password_reset_messages/PASSWORD_RESET_MESSAGE_WELL136_PHASE9_ELIGIBILITY_v0.3.0.json",
+      "sha256": "988910723b5e7c13d8826ae3d43ddb409a9a2e0ba1ff6219972d6fb94dbdd891",
+      "status": "added"
+    }
+  ],
+  "migrations": [],
+  "pr": 249,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/249",
+  "range_base_sha": "d47d1b5ed10658b173a070a0df43a337b240b254",
+  "schema_version": 1,
+  "symbols": [],
+  "tests": [],
+  "tickets": [
+    "WELL-136"
+  ]
+}

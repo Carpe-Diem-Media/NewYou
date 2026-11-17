@@ -3,11 +3,12 @@
   "capability_id": "identity.recovery",
   "purpose": "Bounded Phase-8 graduated recovery through Identity, Communications, Content and Audit owners. Ordinary verified-email recovery and proof-backed stronger manual recovery are distinct from password reset; zero-factor completion is denied.",
   "implementing_tickets": [
-    "WELL-16"
+    "WELL-16",
+    "WELL-112"
   ],
   "implementation_revision": {
-    "git_sha": "7d3ce6c146d9608984da0dd1abcae979098b76cd",
-    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged."
+    "git_sha": "95d733bb8069a77d5ec7a58edc3c8e10ef36d9e8",
+    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -956,7 +957,8 @@
     {
       "path": "test/new_you/content/recovery_message_test.exs",
       "cases": [
-        "Four exact versions, unknown locales, altered bindings, withdrawn packet, corrupted approvals/authority, paired locale and symlink rejection."
+        "Four exact versions, unknown locales, altered bindings, withdrawn packet, corrupted approvals/authority, paired locale and symlink rejection.",
+        "Current v1.18 routing accepts approved content and changed v1.17 predecessor fails closed."
       ],
       "proves": "Current pinned approval and immutable bytes fail closed.",
       "limits": "Owner provenance comes from WELL-110; this reader grants no sender authority.",
@@ -1054,7 +1056,8 @@
     "Provider evidence uses the existing deterministic TEST adapter and synthetic Accounts only. No external email was sent; support mailbox operation and external sender/provider permission are not certified.",
     "WELL-20 reuses the existing primary-email owner action and both PostgreSQL commit-order scenarios for recovery/email-change integration. Production deployment and cross-region failure behavior remain outside this proof.",
     "WELL-111 accepts proof-backed manual positive proof and zero-factor negative proof for Phase 8. Successful lost-all-factor recovery is unimplemented and remains a pre-release obligation under WELL-115; privileged hardening remains WELL-65.",
-    "Historical PR #217, PR #228 and Markdown handoffs remain historical evidence. The current WELL-20 candidate requires its own exact-head proof, CI and independent review."
+    "Historical PR #217, PR #228 and Markdown handoffs remain historical evidence. The current WELL-20 candidate requires its own exact-head proof, CI and independent review.",
+    "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations."
   ],
   "follow_up_tickets": [
     "WELL-17",
@@ -1139,7 +1142,7 @@
       "id": "content",
       "path": "lib/new_you/content/recovery_message.ex",
       "symbol": "defmodule NewYou.Content.RecoveryMessage",
-      "sha256": "8c8a4046d305467fbfeafb7b42f06f53e4ffc1b8238b21b6b4bd72ba5bf96d0a"
+      "sha256": "434c0e6fd92837b3df07af3a9b872e50739fdbdab4c993afda291d413cdadae3"
     },
     {
       "id": "audit",
@@ -1175,7 +1178,7 @@
       "id": "secrecy",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "/recovery",
-      "sha256": "ff5cd556c7a495abd3e67aa80f9c6c1795e12077f066841071b5698234437c77"
+      "sha256": "d2f0230bd21a84ecfc2566e92c0ff75e58f7d3cb62ec0176b1a9e162b0527254"
     },
     {
       "id": "concurrent_helper",
@@ -1229,7 +1232,7 @@
       "id": "content_test",
       "path": "test/new_you/content/recovery_message_test.exs",
       "symbol": "defmodule ",
-      "sha256": "e77e3eae26a18de29ad8b11302041234f95d6bd33f4c6b1c34e983c8a47ab9ee"
+      "sha256": "b150a101893d1c2cc637285c5a68ab6fd00e7513b5d0725ad10a9c2730cfa037"
     },
     {
       "id": "browser_test",

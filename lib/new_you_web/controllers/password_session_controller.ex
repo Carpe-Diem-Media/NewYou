@@ -2,14 +2,17 @@ defmodule NewYouWeb.PasswordSessionController do
   use NewYouWeb, :controller
 
   alias NewYou.Identity
+  alias NewYouWeb.{DevelopmentEntry, SignInCopy}
   @development_environment Mix.env() in [:dev, :test]
   plug :require_proof_environment
 
   defp require_proof_environment(conn, _) do
     if :erlang.andalso(
          @development_environment,
-         Application.get_env(:new_you, :p8_08_browser_development_fixtures) == true or
-           conn.private[:p8_08_browser_development_fixtures] == true
+         SignInCopy.available?() and
+           (DevelopmentEntry.enabled?() or
+              Application.get_env(:new_you, :p8_08_browser_development_fixtures) == true or
+              conn.private[:p8_08_browser_development_fixtures] == true)
        ) do
       conn
     else
@@ -18,7 +21,7 @@ defmodule NewYouWeb.PasswordSessionController do
   end
 
   def new(conn, %{"locale" => locale}) when locale in ["en", "af"] do
-    page(conn, locale, false)
+    page(conn, locale, nil)
   end
 
   def new(conn, _), do: send_resp(conn, 404, "")
@@ -32,33 +35,69 @@ defmodule NewYouWeb.PasswordSessionController do
         |> clear_session()
         |> put_session(:identity_session_id, id)
         |> put_session(:identity_token, token)
+        |> put_session(:identity_locale, locale)
         |> put_resp_header("cache-control", "no-store")
         |> redirect(to: "/session/protected")
 
       _ ->
-        page(conn, locale, true)
+        page(conn, locale, "identity.login.credential_failure")
     end
   end
 
   def create(conn, _), do: send_resp(conn, 404, "")
 
-  def protected(conn, _) do
-    conn = put_resp_header(conn, "cache-control", "no-store")
+  def protected(conn, params) do
+    case locale(conn, params) do
+      locale when locale in ["en", "af"] ->
+        case Identity.authorize_session(credentials(conn)) do
+          {:ok, _} ->
+            render_page(conn, :protected, locale, %{})
 
-    case Identity.authorize_session(credentials(conn)) do
-      {:ok, _} -> send_resp(conn, 200, "")
-      _ -> send_resp(conn, 401, "")
+          _ ->
+            conn
+            |> clear_session()
+            |> configure_session(drop: true)
+            |> put_status(:unauthorized)
+            |> page(locale, "identity.session.reauthentication_required")
+        end
+
+      _ ->
+        send_resp(conn, 404, "")
     end
   end
 
-  def logout(conn, _) do
-    conn = put_resp_header(conn, "cache-control", "no-store")
+  def logout(conn, params) do
+    locale = locale(conn, params)
 
-    case Identity.logout(credentials(conn)) do
-      :ok -> conn |> configure_session(drop: true) |> send_resp(204, "")
-      _ -> send_resp(conn, 503, "")
+    cond do
+      locale not in ["en", "af"] ->
+        send_resp(conn, 404, "")
+
+      is_nil(get_session(conn, :identity_session_id)) ->
+        conn
+        |> clear_session()
+        |> configure_session(drop: true)
+        |> put_status(:unauthorized)
+        |> page(locale, "identity.session.reauthentication_required")
+
+      true ->
+        case Identity.logout(credentials(conn)) do
+          :ok ->
+            conn
+            |> clear_session()
+            |> configure_session(drop: true)
+            |> render_page(:logout, locale, %{confirmed?: true})
+
+          _ ->
+            conn
+            |> put_status(:service_unavailable)
+            |> render_page(:logout, locale, %{confirmed?: false})
+        end
     end
   end
+
+  defp locale(conn, params),
+    do: Map.get(params, "locale", get_session(conn, :identity_locale) || "en")
 
   defp credentials(conn),
     do: %{
@@ -66,16 +105,19 @@ defmodule NewYouWeb.PasswordSessionController do
       token: get_session(conn, :identity_token)
     }
 
-  defp page(conn, locale, failed?) do
+  defp page(conn, locale, error_key),
+    do: render_page(conn, :login, locale, %{error_key: error_key})
+
+  defp render_page(conn, template, locale, assigns) do
     conn
     |> put_resp_header("cache-control", "no-store")
     |> put_resp_header("referrer-policy", "no-referrer")
     |> put_resp_header(
       "content-security-policy",
-      "default-src 'none'; style-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+      "default-src 'none'; style-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
     )
     |> put_root_layout(false)
     |> put_view(html: NewYouWeb.PasswordSessionHTML)
-    |> render(:login, locale: locale, failed?: failed?)
+    |> render(template, Map.merge(%{locale: locale}, assigns))
   end
 end
