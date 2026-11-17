@@ -56,7 +56,7 @@ defmodule NewYou.Content.PasswordResetBrowserCopyTest do
           File.write!(path, Jason.encode!(Map.put(Jason.decode!(original), "status", state)))
           refute module.available?()
 
-          assert_raise ArgumentError, fn ->
+          assert_raise Module.concat(module, UnavailableError), fn ->
             module.text!("identity.login.forgot_password", "en")
           end
         end
@@ -69,14 +69,21 @@ defmodule NewYou.Content.PasswordResetBrowserCopyTest do
 
       :code.purge(module)
       :code.delete(module)
+      :code.purge(Module.concat(module, UnavailableError))
+      :code.delete(Module.concat(module, UnavailableError))
       Mix.env(:prod)
       Code.compile_string(source, source_path)
       refute module.available?()
-      assert_raise ArgumentError, fn -> module.text!("identity.login.forgot_password", "en") end
+
+      assert_raise Module.concat(module, UnavailableError), fn ->
+        module.text!("identity.login.forgot_password", "en")
+      end
     after
       Mix.env(environment)
       :code.purge(module)
       :code.delete(module)
+      :code.purge(Module.concat(module, UnavailableError))
+      :code.delete(Module.concat(module, UnavailableError))
       File.rm_rf!(root)
     end
   end

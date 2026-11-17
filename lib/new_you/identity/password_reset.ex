@@ -205,6 +205,7 @@ defmodule NewYou.Identity.PasswordReset do
              Joken.verify(bearer, Config.token_signer(Account)),
            {:ok, %Token{} = locator} <- token(jti) do
         reset_transaction(locator.account_id, jti, bearer, password, operation_id)
+        |> observe_reset_result()
       else
         _ -> {:error, :reset_unavailable}
       end
@@ -466,8 +467,10 @@ defmodule NewYou.Identity.PasswordReset do
 
     if Mix.env() == :test do
       defp checkpoint, do: NewYou.Proof.RegistrationSeam.checkpoint()
+      defp observe_reset_result(result), do: NewYou.Proof.RegistrationSeam.reset_result(result)
     else
       defp checkpoint, do: :ok
+      defp observe_reset_result(result), do: result
     end
   else
     @spec request(term(), term(), term()) :: :ok

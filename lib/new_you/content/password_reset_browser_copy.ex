@@ -11,6 +11,11 @@ defmodule NewYou.Content.PasswordResetBrowserCopy do
   withdrawn or missing runtime artifacts stop new consumption.
   """
 
+  defmodule UnavailableError do
+    @moduledoc false
+    defexception message: "WELL-136 development copy is unavailable"
+  end
+
   @development_build Mix.env() in [:dev, :test]
   @path Path.expand("../../../docs/development/fixtures/well136-c02-v0.1.json", __DIR__)
   @source Path.expand(
@@ -49,7 +54,7 @@ defmodule NewYou.Content.PasswordResetBrowserCopy do
   @doc "Reads one exact approved locale, without fallback or token interpolation."
   @spec text!(String.t(), String.t()) :: String.t()
   def text!(key, locale) when locale in ["en", "af"] do
-    unless available?(), do: raise(ArgumentError, "WELL-136 development copy is unavailable")
+    unless available?(), do: raise(UnavailableError)
     @entries |> Map.fetch!(key) |> Map.fetch!(locale) |> Map.fetch!("text")
   end
 

@@ -28,6 +28,16 @@ defmodule NewYou.Proof.RegistrationSeam do
     end
   end
 
+  @doc "Observe or interrupt the TEST reset result after the owner transaction returns."
+  def reset_result(result) do
+    case Process.get({__MODULE__, :reset_result}) do
+      nil -> :ok
+      callback when is_function(callback, 1) -> callback.(result)
+    end
+
+    result
+  end
+
   @doc "Carry the TEST checkpoint and isolated password-reset evidence into a bounded request worker."
   def inherit(callback) when is_function(callback, 0) do
     checkpoint = Process.get(__MODULE__)

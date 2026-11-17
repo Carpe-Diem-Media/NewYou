@@ -171,6 +171,14 @@ defmodule NewYouWeb.PasswordResetController do
     |> put_root_layout(false)
     |> put_view(html: NewYouWeb.PasswordResetHTML)
     |> render(template, Map.merge(%{locale: locale}, assigns))
+  rescue
+    NewYou.Content.PasswordResetBrowserCopy.UnavailableError ->
+      # Content can disappear after admission or an Identity commit. This is a
+      # presentation outage, never evidence that issuance/reset failed or
+      # succeeded. Send no withdrawn wording, retain the durable owner outcome
+      # and let an unchanged operation recover its receipt when copy is eligible.
+      # Rendering is buffered, so no partial approved/unapproved body was sent.
+      conn |> security_headers() |> send_resp(503, "")
   end
 
   defp result_copy(%{completed?: completed?, uncertain?: uncertain?} = assigns) do
