@@ -491,7 +491,7 @@ class HandoffTests(unittest.TestCase):
         self.assertEqual(gate.proof_binding(state, BINDING)['implementation'], HEAD)
         for key in ('head', 'tree', 'base', 'merge_base'):
             with self.subTest(key=key), self.assertRaises(gate.GateError):
-                gate.proof_binding(state, dict(BINDING, **{key: MERGE}))
+                gate.proof_binding(state, dict(BINDING, **{key: 'e' * 40}))
 
     def test_preview_rejects_changed_selection(self):
         gate.validate_reuse_preview(PREVIEW, PREVIEW)

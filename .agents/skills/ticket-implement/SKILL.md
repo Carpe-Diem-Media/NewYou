@@ -196,7 +196,7 @@ Do not mutate Product/Architecture/Domain/Roadmap or semantic contracts merely t
 
 Update the canonical capability map when material capability semantics change, or record a justified exemption. Describe changed functionality, major code locations, reuse decisions, tests and limitations in the PR handoff. Make source stable and commit it before final verification. No local PR-history generation is required, and do not push a generated-history-only commit. CI generates informational mechanical snapshots without branch or PR mutation. Existing historical records remain available.
 
-Preserve local verification → local OCR → exact-head hosted CI → independent Master Gate. Use the verification helper for its applicable local stage, then run OCR on the committed candidate before pushing wherever practical. Follow the authenticated Draft PR workflow. Require exact-head CI against the current base and current Plane evidence before independent review. Investigate findings and preserve unresolved risks for Master Gate.
+Preserve local verification → local OCR → exact-head hosted CI → independent Master Gate. Prepare a clean committed candidate before the verification helper's applicable local stage. Only after that stage passes, run OCR on the committed candidate before pushing wherever practical. Follow the authenticated Draft PR workflow. Require exact-head CI against the current base and current Plane evidence before independent review. Investigate findings and preserve unresolved risks for Master Gate.
 
 ## 9. Verify before handoff
 

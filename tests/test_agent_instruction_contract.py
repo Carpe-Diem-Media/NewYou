@@ -166,11 +166,9 @@ class AgentInstructionContractTests(unittest.TestCase):
 
     def test_helper_final_local_stage_uses_committed_candidate_before_ocr(self):
         preparation = self.ticket.split('## 8.', 1)[1].split('## 9.', 1)[0]
-        self.assertIn('After focused development checks pass, commit the stable source', preparation)
-        self.assertIn('before its final `local` stage', preparation)
+        self.assertIn('commit it before final verification', preparation)
         self.assertIn('clean committed candidate', preparation)
-        self.assertIn('Only after applicable final local checks pass', preparation)
-        self.assertIn('run the existing OCR checkpoint', preparation)
+        self.assertIn('Only after that stage passes, run OCR', preparation)
 
     def test_smoke_runs_instruction_contract_tests(self):
         self.assertIn('python -m unittest tests.test_agent_instruction_contract -v',
