@@ -43,7 +43,7 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.stale_login_race()
   end
 
-  test "stale password reset proof cannot race past recovery completion" do
+  test "stale password reset proof cannot race past recovery completion with an unrelated proof retained" do
     assert P815.reset_vs_recovery_race()
   end
 

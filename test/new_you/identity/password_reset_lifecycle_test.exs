@@ -227,7 +227,9 @@ defmodule NewYou.Identity.PasswordResetLifecycleTest do
         )
 
         try do
-          assert reset(bearer) == {:error, :reset_unavailable}
+          # The public boundary cannot assert a committed outcome after a
+          # database exception. Durable rollback is independently checked below.
+          assert reset(bearer) == {:error, :reset_uncertain}
           assert Ash.get!(Account, initial.id, authorize?: false) == initial
           assert Ash.get!(Token, proof.jti, authorize?: false).purpose == "password_reset"
           assert {:ok, _} = Identity.authorize_session(credentials)

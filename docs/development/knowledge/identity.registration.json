@@ -15,7 +15,7 @@
   ],
   "implementation_revision": {
     "git_sha": "658a4c1afb604ad4d6c81635b2d2a1a500ce2ea5",
-    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 retains the registration and verification owner interfaces and exact semantic copy while using the shared native controls and approved font policy. The shared router/boundary also declares an isolated DEV-only design guide; no registration transaction, eligibility rule or Account lifecycle is changed. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main."
+    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 retains the registration and verification owner interfaces and exact semantic copy while using the shared native controls and approved font policy. The shared router/boundary also declares an isolated DEV-only design guide; no registration transaction, eligibility rule or Account lifecycle is changed. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -625,7 +625,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def register(request)",
-      "sha256": "2ccafe5ad95aff2ef46b468e11debc580a402625daddd5b133b6684553399137"
+      "sha256": "0a2fc564c87ab0e36a46d055e25270cdc12f9b86d5ac4628dbf59a0180d20fbe"
     },
     {
       "id": "accept",
@@ -649,7 +649,7 @@
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def establish_verification",
-      "sha256": "f67d7daa27c991b86d2cb98f92b2823689e86fcb35fe7e0e59c7ce0cd8bf3d90"
+      "sha256": "b1dff58da7f739e9baf68f3ff33f9e4659662aa5e07dc64295bdd29d2ef99d54"
     },
     {
       "id": "audit",

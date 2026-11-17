@@ -3,7 +3,7 @@
 // leave this process. Only fixed facts, allow-listed error codes and opaque
 // operation IDs are returned.
 import { boundedProtocol, createBrowserContext, completeNavigation, settleBrowserExit, settleContextLoss, protocolError, boundedFailureCode } from './browser_protocol.mjs';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir, homedir } from 'node:os';
@@ -20,6 +20,7 @@ let closeBrowser;
 let browserReady = false;
 let cleanup = false;
 let failure;
+let checkpoint;
 // A closed runner pipe or cancellation also terminates the browser child.
 const cancel = () => { browser?.kill('SIGTERM'); try { rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); } catch {} process.exit(2); };
 process.stdin.on('end', cancel);
@@ -198,6 +199,133 @@ try {
     await navigation(() => evaluate(`document.querySelector('a[href="/login?locale=${input.locale}"]').click()`));
     await passwordSubmit(input.input.password);
     checks.recovery = await hasTitle('identity.session.protected.title');
+  } else if (input.mode === 'ordinary_reset') {
+    const approved = JSON.parse(readFileSync('docs/development/fixtures/well136-c02-v0.1.json', 'utf8'));
+    const text = key => approved.entries[key][input.locale].text;
+    const literal = key => JSON.stringify(text(key));
+    const title = key => evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && document.querySelector('h1')?.textContent.trim() === ${literal(key)}`);
+    const snapshot = () => fetch(`${base}/__well136/snapshot`).then(r => r.json());
+    const login = async password => {
+      await evaluate(`document.querySelector('#email').value=${JSON.stringify(input.email)}; document.querySelector('#password').value=${JSON.stringify(password)};`);
+      await navigation(() => evaluate(`document.querySelector('#password-login').requestSubmit()`));
+    };
+    checkpoint = 'reset.public_entry';
+    await navigation(() => cdp('Page.navigate', {url: `${base}/?locale=${input.locale}`}));
+    checks.public_entry = await evaluate(`!!document.querySelector('a[href="/login?locale=${input.locale}"]')`);
+    await navigation(() => evaluate(`document.querySelector('a[href="/login?locale=${input.locale}"]').click()`));
+    checkpoint = 'reset.prior_login';
+    await login(input.password);
+    checks.prior_session = await evaluate(`location.pathname === '/session/protected'`);
+    const {cookies: oldCookies} = await cdp('Network.getCookies', {urls: [base]});
+    checkpoint = 'reset.request_entry';
+    await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
+    checks.forgot_password = await evaluate(`document.querySelector('a[href="/password/reset?locale=${input.locale}"]')?.textContent.trim() === ${literal('identity.login.forgot_password')}`);
+    await navigation(() => evaluate(`document.querySelector('a[href="/password/reset?locale=${input.locale}"]').click()`));
+    checkpoint = 'reset.request_layout';
+    checks.approved_request = await title('identity.password_reset.request.title');
+    checks.labels = await evaluate(`document.querySelector('label[for="email"]')?.textContent.trim() === ${literal('identity.login.email.label')} && !!document.querySelector('[name="_csrf_token"]') && document.querySelector('#email').autocomplete === 'email'`);
+    checks.stylesheet = await evaluate(`document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
+    checks.responsive = true;
+    checks.text_resize = true;
+    await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+    checks.reduced_motion = await evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0`);
+    for (const width of [320, 375, 768, 1280, 1920]) {
+      await cdp('Emulation.setDeviceMetricsOverride', {width, height: 900, deviceScaleFactor: 1, mobile: width < 768});
+      checks.responsive &&= await evaluate(`document.documentElement.scrollWidth <= innerWidth`);
+      checks.text_resize &&= await evaluate(`(async () => {
+        const nodes = [...document.querySelectorAll('h1,p,a,button,input:not([type="hidden"]),label')];
+        const original = nodes.map(el => ({el, font: el.style.fontSize, line: el.style.lineHeight, size: parseFloat(getComputedStyle(el).fontSize), height: parseFloat(getComputedStyle(el).lineHeight)}));
+        try {
+          for (const {el, size, height} of original) { el.style.fontSize = (size * 2) + 'px'; if (Number.isFinite(height)) el.style.lineHeight = (height * 2) + 'px'; }
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          globalThis.resetResizeFailures = nodes.filter(el => { const r=el.getBoundingClientRect(); return r.width > 0 && !(r.left >= -0.5 && r.right <= innerWidth + 0.5 && el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1); }).map(el=>({tag:el.tagName,id:el.id,width:innerWidth,clientWidth:el.clientWidth,scrollWidth:el.scrollWidth,clientHeight:el.clientHeight,scrollHeight:el.scrollHeight}));
+          return document.documentElement.scrollWidth <= innerWidth && globalThis.resetResizeFailures.length === 0;
+        } finally { for (const {el, font, line} of original) { el.style.fontSize = font; el.style.lineHeight = line; } }
+      })()`);
+      if (!checks.text_resize) checks.resize_diagnostics = await evaluate(`globalThis.resetResizeFailures`);
+    }
+    for (let tab = 0; tab < 6 && !(await evaluate(`document.activeElement.id === 'email'`)); tab++) {
+      await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+      await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    }
+    checks.keyboard_focus = await evaluate(`document.activeElement.id === 'email' && document.activeElement.matches(':focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+    checkpoint = 'reset.request_csrf';
+    checks.csrf = await evaluate(`fetch('/password/reset', {method:'POST', headers:{'content-type':'application/x-www-form-urlencoded'}, body:new URLSearchParams({locale:${JSON.stringify(input.locale)}, email:${JSON.stringify(input.email)}, operation_id:crypto.randomUUID()})}).then(r=>r.status===403)`);
+    let neutral;
+    for (const email of [`unknown-${randomUUID()}@example.test`, input.email]) {
+      checkpoint = 'reset.request_submit';
+      if (neutral) await navigation(() => cdp('Page.navigate', {url:`${base}/password/reset?locale=${input.locale}`}));
+      operations.push(await evaluate(`document.querySelector('[name="operation_id"]').value`));
+      await evaluate(`document.querySelector('#email').value=${JSON.stringify(email)}`);
+      await navigation(() => evaluate(`document.querySelector('#password-reset-request').requestSubmit()`));
+      const result = await evaluate(`JSON.stringify([document.querySelector('h1')?.textContent.trim(),document.querySelector('[role="status"]')?.textContent.trim()])`);
+      checks.neutral_request = !neutral || neutral === result;
+      neutral = result;
+      checks.accepted_copy = await title('identity.password_reset.request.accepted.title') && await evaluate(`document.querySelector('[role="status"]')?.textContent.trim() === ${literal('identity.password_reset.request.accepted.body')}`);
+    }
+    checkpoint = 'reset.delivery';
+    const delivered = await fetch(`${base}/__well136/delivery?${new URLSearchParams({operation:operations.at(-1)})}`).then(r=>r.json());
+    checks.real_delivery = typeof delivered.proof === 'string';
+    checkpoint = 'reset.confirm_entry';
+    const url = `${base}/password/reset/confirm?${new URLSearchParams({proof:delivered.proof,locale:input.locale})}`;
+    const before = JSON.stringify(await snapshot());
+    const head = await fetch(url,{method:'HEAD'});
+    await fetch(url,{headers:{purpose:'prefetch'}});
+    await navigation(() => cdp('Page.navigate',{url}));
+    checks.scanner_safe = head.status === 200 && JSON.stringify(await snapshot()) === before;
+    checks.confirmation_copy = await title('identity.password_reset.confirm.title') && await evaluate(`document.querySelector('#reset-instructions')?.textContent.trim() === ${literal('identity.password_reset.confirm.body')} && document.querySelector('label[for="password"]')?.textContent.trim() === ${literal('identity.password_reset.confirm.password.label')}`);
+    checkpoint = 'reset.confirm_submit';
+    operations.push(await evaluate(`document.querySelector('[name="operation_id"]').value`));
+    await evaluate(`document.querySelector('#password').value=${JSON.stringify(input.replacement)}`);
+    await navigation(() => evaluate(`document.querySelector('#password-reset-confirmation').requestSubmit()`));
+    checks.completed_copy = await title('identity.password_reset.confirm.complete.title') && await evaluate(`document.querySelector('[role="status"]')?.textContent.trim() === ${literal('identity.password_reset.confirm.complete.body')}`);
+    checks.no_automatic_login = await evaluate(`fetch('/session/protected').then(r=>r.status===401)`);
+    checks.proof_not_rendered = await evaluate(`!document.querySelector('[name="proof"]') && !document.body.textContent.includes(${JSON.stringify(delivered.proof)})`);
+    const reset = await snapshot();
+    checks.persisted_reset = reset.credential_version === 2 && reset.current_proofs === 0 && reset.active_sessions === 0;
+    checkpoint = 'reset.session_revocation';
+    await cdp('Network.setCookies',{cookies:oldCookies.map(cookie=>({name:cookie.name,value:cookie.value,url:base,path:cookie.path,secure:cookie.secure,httpOnly:cookie.httpOnly,sameSite:cookie.sameSite,...(cookie.expires>0?{expires:cookie.expires}:{})}))});
+    checks.stale_session_denied = await evaluate(`fetch('/session/protected').then(r=>r.status===401)`);
+    checkpoint = 'reset.replay_submit';
+    await navigation(() => cdp('Page.navigate',{url}));
+    operations.push(await evaluate(`document.querySelector('[name="operation_id"]').value`));
+    await evaluate(`document.querySelector('#password').value=${JSON.stringify(input.replacement)}`);
+    await navigation(() => evaluate(`document.querySelector('#password-reset-confirmation').requestSubmit()`));
+    checks.replay_denied = await title('identity.password_reset.confirm.unavailable.title');
+    checkpoint = 'reset.retry_navigation';
+    await navigation(() => evaluate(`document.querySelector('a[href="/password/reset?locale=${input.locale}"]').click()`));
+    checks.retry_navigation = await title('identity.password_reset.request.title');
+    await navigation(() => evaluate(`document.querySelector('a[href="/login?locale=${input.locale}"]').click()`));
+    checkpoint = 'reset.old_login';
+    await login(input.password);
+    checks.old_password_denied = await evaluate(`!!document.querySelector('#sign-in-error')`);
+    checkpoint = 'reset.fresh_login';
+    await login(input.replacement);
+    checks.fresh_sign_in = await evaluate(`location.pathname==='/session/protected' && fetch('/session/protected').then(r=>r.status===200)`);
+    const newRequest = async () => {
+      checkpoint = 'reset.new_request';
+      await navigation(() => cdp('Page.navigate',{url:`${base}/password/reset?locale=${input.locale}`}));
+      const operation = await evaluate(`document.querySelector('[name="operation_id"]').value`);
+      operations.push(operation);
+      await evaluate(`document.querySelector('#email').value=${JSON.stringify(input.email)}`);
+      await navigation(() => evaluate(`document.querySelector('#password-reset-request').requestSubmit()`));
+      return operation;
+    };
+    const expiringOperation = await newRequest();
+    checkpoint = 'reset.expired_link';
+    const expiring = await fetch(`${base}/__well136/delivery?${new URLSearchParams({operation:expiringOperation})}`).then(r=>r.json());
+    await fetch(`${base}/__well136/expire?${new URLSearchParams({operation:expiringOperation})}`);
+    await navigation(() => cdp('Page.navigate',{url:`${base}/password/reset/confirm?${new URLSearchParams({proof:expiring.proof,locale:input.locale})}`}));
+    operations.push(await evaluate(`document.querySelector('[name="operation_id"]').value`));
+    await evaluate(`document.querySelector('#password').value='expired attempt replacement'`);
+    await navigation(() => evaluate(`document.querySelector('#password-reset-confirmation').requestSubmit()`));
+    checks.expired_link = await title('identity.password_reset.confirm.unavailable.title');
+    const withdrawnOperation = await newRequest();
+    checkpoint = 'reset.withdrawal';
+    await fetch(`${base}/__well136/withdraw`);
+    const held = await fetch(`${base}/__well136/delivery?${new URLSearchParams({operation:withdrawnOperation})}`).then(r=>r.json());
+    checks.withdrawal_blocks_delivery = held.held === true && !held.proof;
+    checks.failed_attempts_preserve_credential = (await snapshot()).credential_version === 2;
   } else if (input.mode === 'password_reset') {
     await cdp('Emulation.setDeviceMetricsOverride', {width: 375, height: 800, deviceScaleFactor: 1, mobile: true});
     await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
@@ -328,6 +456,7 @@ try {
   }
 
   }
+  checkpoint = undefined;
   await call('Target.disposeBrowserContext', { browserContextId: context.browserContextId });
 } catch (error) {
   failure = boundedFailureCode(error);
@@ -346,5 +475,5 @@ try {
     cleanup = false;
   }
 }
-process.stdout.write(JSON.stringify({checks, operations, cleanup, failure}));
+process.stdout.write(JSON.stringify({checks, operations, cleanup, failure, checkpoint}));
 process.exit(0);

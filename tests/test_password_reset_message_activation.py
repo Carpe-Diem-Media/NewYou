@@ -166,6 +166,37 @@ class PasswordResetMessageActivationTests(unittest.TestCase):
             router_path.write_text(json.dumps(router, ensure_ascii=False, indent=2) + "\n")
             self.assert_rejected(root, "current Product authority route mismatch")
 
+    def test_current_product_routes_must_follow_the_current_router_lineage(self):
+        for document_id, stale_path in (
+            ("PLATFORM_PRODUCT_LAW", "docs/governance/product/00_PLATFORM_v1.17.0.md"),
+            ("PRODUCT_DECISIONS", "docs/governance/product/01_DECISIONS_v1.17.0.md"),
+        ):
+            temporary, root = self.copy_evidence()
+            with temporary, self.subTest(document_id=document_id):
+                router_path = root / evidence.GOVERNANCE_ROUTER_PATH
+                router = json.loads(router_path.read_text())
+                route = next(item for item in router["governing_documents"] if item["document_id"] == document_id)
+                stale = ROOT / stale_path
+                route.update(
+                    repository_path=stale_path,
+                    canonical_filename=stale.name,
+                    sha256=hashlib.sha256(stale.read_bytes()).hexdigest(),
+                    semver="1.17.0",
+                )
+                router_path.write_text(json.dumps(router, ensure_ascii=False, indent=2) + "\n")
+                self.assert_rejected(root, "current Product authority route mismatch")
+
+    def test_current_product_document_must_match_router_predecessor_lineage(self):
+        temporary, root = self.copy_evidence()
+        with temporary:
+            product_path = root / "docs/governance/product/00_PLATFORM_v1.18.0.md"
+            product_path.write_text(product_path.read_text().replace(
+                "docs/governance/product/00_PLATFORM_v1.17.0.md",
+                "docs/governance/product/00_PLATFORM_v1.16.0.md",
+                1,
+            ))
+            self.assert_rejected(root, "current Product authority lineage mismatch")
+
     def test_product_and_decision_successors_preserve_all_unrelated_prior_text(self):
         old_product = (ROOT / "docs/governance/product/00_PLATFORM_v1.14.0.md").read_text()
         new_product = (ROOT / "docs/governance/product/00_PLATFORM_v1.15.0.md").read_text()

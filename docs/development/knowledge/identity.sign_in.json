@@ -9,7 +9,7 @@
   ],
   "implementation_revision": {
     "git_sha": "658a4c1afb604ad4d6c81635b2d2a1a500ce2ea5",
-    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main."
+    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
   },
   "authoritative_domain": "Identity",
   "collaborating_domains": [
@@ -653,6 +653,17 @@
       "source_ids": [
         "browser_telemetry_test"
       ]
+    },
+    {
+      "path": "test/new_you/identity/magic_login_request_timing_test.exs",
+      "cases": [
+        "intent observations exclude another operation without changing its retained intent"
+      ],
+      "proves": "The timing proof observes only the selected fixture operations through P805.read; a retained foreign intent is excluded and unchanged. Existing timing, rollback and admission assertions are preserved.",
+      "limits": "Fixture observation only, no magic-login business behavior changes.",
+      "source_ids": [
+        "magic_timing_test"
+      ]
     }
   ],
   "safe_extensions": [
@@ -701,7 +712,8 @@
     "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations.",
     "WELL-114 source checkpoint 145c2be adds fixture-isolation regression coverage and assertion-preserving test corrections. See docs/superpowers/plans/2026-11-16-retained-fixture-observations.md for observed commands, test limits and current resource handling. Full applicable gates, OCR, exact-head CI and independent post-merge certification remain required. The original all-job privacy secret scan remains intentionally broad to detect incorrectly addressed leakage. The seven-file focused run passed 111/111, seed 985650. Canonical on clean 96a8455 passed 831/831, seed 813027, in 547.2 seconds under a command-scoped lock, after preserving and diagnosing a five-failure overlapping attempt and a same-seed 47/47 targeted pass. The focused plan records exact commands, fingerprints and limits. OCR, exact-final-head hosted CI and independent resulting-main certification remain separate requirements. Global maintenance tests use native Ecto sandbox checkout/checkin with signature restoration, rather than an outer Repo transaction that can be aborted by expected Ash denials.",
     "Current-base WELL-114 proof: clean 9f4b8fd1975e0b1f67b12463e01156529ce7d57b incorporates main 2736a9c6925c8c126cbba007f404b2e38ec2080d with identical executable correction. Canonical passed 831/831, seed 813027, in 508.2 seconds; content compatibility passed 34/34 and routing/knowledge/smoke checks passed 71/71. Private per-row digest multisets preserve all preexisting rows across 15 tables, including membership in growing nonce and PMR sets, with no unexpected additions. DeliveryAttempt baseline was empty; permanent synthetic own/foreign coverage is separate. The focused plan records exact commands, hashes, observed counts, review limits and lost historical raw logs. Fresh OCR, final-head CI and independent integration/resulting-main certification remain separate requirements.",
-    "WELL-112 incorporates independently integrated WELL-114 from main f72cf637453408896a5037dcb2f8d37f0d29e3af. Earlier proof notes describe their historical checkpoints; new complete branch gates, OCR and independent review remain required. The floating-label variant is opt-in and does not migrate registration or change owner lifecycles."
+    "WELL-112 incorporates independently integrated WELL-114 from main f72cf637453408896a5037dcb2f8d37f0d29e3af. Earlier proof notes describe their historical checkpoints; new complete branch gates, OCR and independent review remain required. The floating-label variant is opt-in and does not migrate registration or change owner lifecycles.",
+    "WELL-136 verification found a global MessageIntent counter in the timing fixture. Its deterministic retained-foreign-intent regression failed before correction; the corrected fixture delegates to the existing P805 finite observation reader. Timing and shared observation tests passed 9 with seed 441709 and four schedulers. No retained shared records were deleted and no business API or response-window assertion changed."
   ],
   "follow_up_tickets": [
     "WELL-21",
@@ -716,7 +728,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def authenticate_password",
-      "sha256": "2ccafe5ad95aff2ef46b468e11debc580a402625daddd5b133b6684553399137"
+      "sha256": "0a2fc564c87ab0e36a46d055e25270cdc12f9b86d5ac4628dbf59a0180d20fbe"
     },
     {
       "id": "password",
@@ -800,7 +812,7 @@
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def execute",
-      "sha256": "f67d7daa27c991b86d2cb98f92b2823689e86fcb35fe7e0e59c7ce0cd8bf3d90"
+      "sha256": "b1dff58da7f739e9baf68f3ff33f9e4659662aa5e07dc64295bdd29d2ef99d54"
     },
     {
       "id": "shell",
@@ -848,7 +860,7 @@
       "id": "browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'signin'",
-      "sha256": "0738d5c69e0651dffb3b7ec0fef7f422eca3b2843f9d3415c71619528995a52b"
+      "sha256": "079aef336a83c074d1bf6c5c976157db418f29bc6a1c91f6df0b9f5d55556df9"
     },
     {
       "id": "password_test",
@@ -933,6 +945,12 @@
       "path": "test/new_you_web/privacy_telemetry_test.exs",
       "symbol": "defmodule NewYouWeb.PrivacyTelemetryTest",
       "sha256": "3806af345f2a4cdb9f25275de5dbf989f8f6ebd98f6ae53030f4c09a0e25caf0"
+    },
+    {
+      "id": "magic_timing_test",
+      "path": "test/new_you/identity/magic_login_request_timing_test.exs",
+      "symbol": "defmodule NewYou.Identity.MagicLoginRequestTimingTest do",
+      "sha256": "b6094ae4f49ee75f1aa4a1af7e20cdd56c91c5008a432b03c054b85dd96cba9c"
     },
     {
       "id": "design_reference_boundary",
