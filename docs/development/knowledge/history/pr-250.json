@@ -1,5 +1,5 @@
 {
-  "base_sha": "41f00356b90b01da9d80e9bbeae6f93021306864",
+  "base_sha": "fbfc85271cdc5021b388d1c908eade0279b0f850",
   "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/250/checks",
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/250/commits",
   "files": [
@@ -48,14 +48,14 @@
       "status": "added"
     },
     {
-      "blob": "3358f6937b75c0ff386e45cf5799a74bc210e574",
+      "blob": "8a3d58d94bc2b366a2b3dbf80a5d19709da63282",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/identity.password_reset.json",
-      "sha256": "6c68f34af4654ff7f3709e067b7b2a3e7a84377d4cbc8e80f14c064398daf8f2",
+      "sha256": "92a53b030c18b2f451e6b493bdde5d90c57714c3d2e99dd3be02b42c513d171e",
       "status": "added"
     },
     {
@@ -70,14 +70,14 @@
       "status": "modified"
     },
     {
-      "blob": "e48dd91807283acf12fd63ef49724bdd7a677b3a",
+      "blob": "d0b1783703ba1020ada393d08ae08cdf33153ce8",
       "mode": "100644",
       "old_blob": "e3995471fc2eefbe02fef4586b98c0acd5275817",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.recovery.json",
       "old_sha256": "8c5886b0ad5790e480aa53cf7840eeff419f1c39b79ee4ec7136df22f51f66b3",
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "a7515e2b1c678894d946987af702b5af250ded28c68f49c03436b06fbda925d1",
+      "sha256": "dcd0e8f0847dd53fc15ebd13832465367c63dc3e0aee1d43266fab4eb4008381",
       "status": "modified"
     },
     {
@@ -92,14 +92,14 @@
       "status": "modified"
     },
     {
-      "blob": "70f2d2af8bb8d152a1bae6b8d7100cc5e02c8c36",
+      "blob": "0070005d7691ba1c18bf5d01de64622ba1f487b2",
       "mode": "100644",
       "old_blob": "d1a5cdd08f1ce18ff92dcbd86dde5a9520ed1848",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.sign_in.json",
       "old_sha256": "a50cab92291c3fad1ce58ba9e4714bab42aba6d78ddbd6b3e203ebeed52c1a37",
       "path": "docs/development/knowledge/identity.sign_in.json",
-      "sha256": "19d415ca1aa4224e50926e64857a5e7a32d888e80ad63e67b722b9df890b5b5a",
+      "sha256": "4188dace1688611f1afa307d043d52b3564718cc1c4b60e93aea80809404daf6",
       "status": "modified"
     },
     {
@@ -114,25 +114,25 @@
       "status": "modified"
     },
     {
-      "blob": "6d9d55d651220ee3d0cee9db9bdf674e1f6c5f38",
+      "blob": "f0ab47f61050546c2c0fe0b9c750bba93f2c5399",
       "mode": "100644",
       "old_blob": "e9f34776ba14b8941509dc3fedb352a1d1d4ec44",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
       "old_sha256": "f355c1aca3c731d6b0938177d9212e54daf61496eb6efe05ab15264a67490f9e",
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "26dc1001141e33944c2bd39b83d06ab8d2873437e2daf1f73e4d8a5ef27a2b4a",
+      "sha256": "0eefaea6689260a9588e6ff90247ca9ae06f9432978e03014bd9f7ad49d6a0e1",
       "status": "modified"
     },
     {
-      "blob": "9df4f81f1b305098a65f860a7cbc556bd1ea42b1",
+      "blob": "e1de26c11a5c0164466bc1b48984a77401e91e3c",
       "mode": "100644",
       "old_blob": "edd670ea7e0808e3100a91194866b1a382ff3090",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/proof.tb001.json",
       "old_sha256": "252171d0dd2d0abac3bdcbab47ca7bc0f718cdb9b05f0bc7121117d48b417b9d",
       "path": "docs/development/knowledge/proof.tb001.json",
-      "sha256": "37bf42d6e04e9bec15962f2f5a99b66dbdea787fd7fd8e29583eb4242e8507df",
+      "sha256": "8265b332e6b25233c250ea31761ee08d2a31ad32c6a103bab6126c6e262a27b7",
       "status": "modified"
     },
     {
@@ -422,6 +422,17 @@
       "status": "modified"
     },
     {
+      "blob": "7e19fffb633e80a9a46d579d280006513521b842",
+      "mode": "100644",
+      "old_blob": "c97648cdb91f88964c46db8f9d1298988cb40c10",
+      "old_mode": "100644",
+      "old_path": "test/new_you/identity/magic_login_request_timing_test.exs",
+      "old_sha256": "ed199a9541bd952eb6949904820dd42440a29b22c25e97d207bde0176a23124d",
+      "path": "test/new_you/identity/magic_login_request_timing_test.exs",
+      "sha256": "b6094ae4f49ee75f1aa4a1af7e20cdd56c91c5008a432b03c054b85dd96cba9c",
+      "status": "modified"
+    },
+    {
       "blob": "babfb496aad9dce803b6ebc9b9adbbe4908eccfc",
       "mode": "100644",
       "old_blob": "3f78561f9c033af5301d92c4fd731cbe69d615dd",
@@ -441,6 +452,28 @@
       "old_sha256": "bf14b2472f9f524e3374996e5e12018cbc093a1d218e12b09b22a6b5939dcbc2",
       "path": "test/new_you/identity/password_reset_test.exs",
       "sha256": "d66a2ca8b06f2dcc6147aba430dff4a7944c2c7168b6a9c363f8470c550b9fd0",
+      "status": "modified"
+    },
+    {
+      "blob": "8a16d5ae55b0582c5c17ceba2320c59d816c98fc",
+      "mode": "100644",
+      "old_blob": "194d959d40743cd848956b458397a7998cd525ae",
+      "old_mode": "100644",
+      "old_path": "test/new_you/identity/recovery_concurrency_test.exs",
+      "old_sha256": "32ffa9e4ffeecd9d8e3046e9eed743fe95ad3eed5f41ce3d2a6627b9e3d419da",
+      "path": "test/new_you/identity/recovery_concurrency_test.exs",
+      "sha256": "dca26068b191e9d69b031577ea4457ecffa2b6a69f0cf79e3237a0090e071905",
+      "status": "modified"
+    },
+    {
+      "blob": "c609f159b25a71853bc24ef6d969886f5571ddac",
+      "mode": "100644",
+      "old_blob": "6e5aea2479c903b418c85e078d5b1167ae948219",
+      "old_mode": "100644",
+      "old_path": "test/new_you/proof/browser_protocol_test.exs",
+      "old_sha256": "0bdc4fbbb1c194338c0cc620e3ae92b3787e10ee423e9b83047cb17dd48681be",
+      "path": "test/new_you/proof/browser_protocol_test.exs",
+      "sha256": "fc23b4c94ed71061c8e9ace8cdd42bb320dfaf1e5a21b4454cafb830d8e2ab4f",
       "status": "modified"
     },
     {
@@ -510,25 +543,25 @@
       "status": "added"
     },
     {
-      "blob": "8a03bc9857e0f6485ccb4f5567500924cc1bcc9a",
+      "blob": "27b0ff5b8ad89d1c4ade4cd0c0cce3b57d8a7b60",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/controllers/well136_browser_test.exs",
-      "sha256": "a11979d7aad288f8bcecc8742339d01b80ae5c8d9a41848a2dbf30efd44b813f",
+      "sha256": "fe194517cc0cada9cc1a1e46aa58e624f8b9afde3a1ca2895ebd79774eea81cd",
       "status": "added"
     },
     {
-      "blob": "2c3985ffa4b619f5d674eef6ea26cb88c08214bc",
+      "blob": "3504369697f55d6dc1f8b3339c03798563e7eeb0",
       "mode": "100644",
       "old_blob": "90548235d52d0a4b571059d769ebba86b8422adc",
       "old_mode": "100644",
       "old_path": "test/proof/p8_05_browser.mjs",
       "old_sha256": "0738d5c69e0651dffb3b7ec0fef7f422eca3b2843f9d3415c71619528995a52b",
       "path": "test/proof/p8_05_browser.mjs",
-      "sha256": "406a409429247925ccdb9fab1838bf036d8833a11b30c113ae0255ea7f01851d",
+      "sha256": "079aef336a83c074d1bf6c5c976157db418f29bc6a1c91f6df0b9f5d55556df9",
       "status": "modified"
     },
     {
@@ -540,6 +573,28 @@
       "old_sha256": "93c5ef3cb8197382b533cba4d270189e44f8a43b34176a108dd2414b7ac89e67",
       "path": "test/support/proof/p8_05.ex",
       "sha256": "b95b22b6c828563a9144268b72baeed6c37bcfbb0dea87e5c57df32ce235655a",
+      "status": "modified"
+    },
+    {
+      "blob": "8ec1a066e1839285abfeace8b471ad00bb17d4a1",
+      "mode": "100644",
+      "old_blob": "2f714b89c2442cd80b03f2e07e2463b816afb23b",
+      "old_mode": "100644",
+      "old_path": "test/support/proof/p8_05_browser.ex",
+      "old_sha256": "16c5f3723bf32b6dde0a7ff10c436fea683c2e794de35ad415deabc88390162d",
+      "path": "test/support/proof/p8_05_browser.ex",
+      "sha256": "04f1831ae2b007c474f5c46b540f68db5e049fc078e57a96151b9b79f00abddd",
+      "status": "modified"
+    },
+    {
+      "blob": "d0147099c7c37f6d804b9433478b48af0200d71d",
+      "mode": "100644",
+      "old_blob": "31a0bc5264474c5c3c0caa08e7477d9f104fc4c6",
+      "old_mode": "100644",
+      "old_path": "test/support/proof/p8_15.ex",
+      "old_sha256": "252f6748005ae29c690e90c238f6209fbc9d3a2b79566604502fb9405397e6f3",
+      "path": "test/support/proof/p8_15.ex",
+      "sha256": "96d5037117c038f7ce0f117b4d6ec1b4fc0fbc9c27e6ea96420cab122e2e0c74",
       "status": "modified"
     },
     {
@@ -603,7 +658,7 @@
   ],
   "pr": 250,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/250",
-  "range_base_sha": "41f00356b90b01da9d80e9bbeae6f93021306864",
+  "range_base_sha": "fbfc85271cdc5021b388d1c908eade0279b0f850",
   "schema_version": 1,
   "symbols": [
     {
@@ -1284,6 +1339,53 @@
       "arity": null,
       "change": "changed",
       "kind": "module",
+      "module": "NewYou.Identity.MagicLoginRequestTimingTest",
+      "name": null,
+      "old_sha256": "db7916fc95cbc4bba0c70923a79018bdff8c2383beb391fd829b5b4aae37121a",
+      "path": "test/new_you/identity/magic_login_request_timing_test.exs",
+      "sha256": "f01f1721756c9590feaaa4b78cfbce5a152fe061dafd4c5f2a00e9d9bc5cfe35",
+      "status": "parsed"
+    },
+    {
+      "arity": 0,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.MagicLoginRequestTimingTest",
+      "name": "intent_count",
+      "old_sha256": "1226e542e121b14b57a89d84bf7c36563dd88b231c816dd5fa9681571eb40aa9",
+      "path": "test/new_you/identity/magic_login_request_timing_test.exs",
+      "sha256": "50e610a59990cbf130ee7f77f68ccc19112d69c9123e2ed5ec6cb626b35afa0e",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Identity.MagicLoginRequestTimingTest",
+      "name": "intent_count",
+      "old_sha256": null,
+      "path": "test/new_you/identity/magic_login_request_timing_test.exs",
+      "sha256": "50e610a59990cbf130ee7f77f68ccc19112d69c9123e2ed5ec6cb626b35afa0e",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/identity/magic_login_request_timing_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
       "module": "NewYou.Identity.PasswordResetLifecycleTest",
       "name": null,
       "old_sha256": "007077ca94a3b43467b5a809207814e1a6a4ab36e81a195bfcd97687d0590760",
@@ -1319,6 +1421,61 @@
       "module": null,
       "name": null,
       "path": "test/new_you/identity/password_reset_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Identity.RecoveryConcurrencyTest",
+      "name": null,
+      "old_sha256": "f2e0bfdbe228ddfba77dd059444deb06b99453d1ab1c800666cd36fc2238b8cb",
+      "path": "test/new_you/identity/recovery_concurrency_test.exs",
+      "sha256": "b820464f369278be579c09c5570b8ff3e72ff9480fa19db0df72ead7db51215e",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/identity/recovery_concurrency_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Proof.BrowserProtocolTest",
+      "name": null,
+      "old_sha256": "b7ba60380af9c6c343742d61619f071ecfac7149a7a72a39c5ef547d51304693",
+      "path": "test/new_you/proof/browser_protocol_test.exs",
+      "sha256": "0dae1067381edcb6bac5c2a9a2209ee132b2b379d46a62c31bcf9413581dad88",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.BrowserProtocolTest",
+      "name": "browser_failure",
+      "old_sha256": null,
+      "path": "test/new_you/proof/browser_protocol_test.exs",
+      "sha256": "0d1ade0e9122c08f6f2b7a1588babc504f8f0cc86122b97bf0b6f2df518ffdfc",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/proof/browser_protocol_test.exs",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -1755,7 +1912,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/controllers/well136_browser_test.exs",
-      "sha256": "0a9d50ade417321bfc45be9f6b842346fc64bbea26e3661a009e683cfe28709b",
+      "sha256": "efb6b1c41cc80a9b711dac3957efd929f7790a3ac4731af01fd92a5820ef6ddb",
       "status": "parsed"
     },
     {
@@ -1786,6 +1943,100 @@
       "module": null,
       "name": null,
       "path": "test/support/proof/p8_05.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Proof.P805Browser",
+      "name": null,
+      "old_sha256": "ee9c8839395ac6c1b648ea8aa01de963b89cb5c404db78e0b3ef8f61be4e524e",
+      "path": "test/support/proof/p8_05_browser.ex",
+      "sha256": "8af0b70070865597750a9d7e9b20e5355cee48981546b4d794e423b4e7c2d265",
+      "status": "parsed"
+    },
+    {
+      "arity": 3,
+      "change": "changed",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.P805Browser",
+      "name": "run_port",
+      "old_sha256": "c8b8a318804e72f72742defc3f8f4b0ebb33abb776acb4e637500a21299073af",
+      "path": "test/support/proof/p8_05_browser.ex",
+      "sha256": "dd633ee5a627170659052f014b74a4f2c248382025d48d1dac624ee1073ad0a4",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/support/proof/p8_05_browser.ex",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "changed",
+      "kind": "module",
+      "module": "NewYou.Proof.P815",
+      "name": null,
+      "old_sha256": "37ecae38a237ecbfb12c2110611c297a3d5a357d954416d230d134bc4231ff3b",
+      "path": "test/support/proof/p8_15.ex",
+      "sha256": "09f0c911f03ad9626f13502a5873548d25fb3184832da45c307e07d891a79296",
+      "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "removed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P815",
+      "name": "password_reset_delivery",
+      "old_sha256": "3db76fc63c6fa6aa22b823c8aa3fa8d3ff2bb07e01dabff716b4680641ce71c0",
+      "path": "test/support/proof/p8_15.ex",
+      "sha256": null,
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P815",
+      "name": "password_reset_delivery",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_15.ex",
+      "sha256": "57705b58115d3135f25a238b0ed9b62b5e27e1ed2e37ac2cd1902cff829cd7e8",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 0,
+      "change": "changed",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.P815",
+      "name": "reset_vs_recovery_race",
+      "old_sha256": "72c16d293206f96479bf85ad8f5e188ec13c2efd1f44ddcdac50778163e87ab0",
+      "path": "test/support/proof/p8_15.ex",
+      "sha256": "2ead159381207cc4829312264d60ebdbf763bd5fbe9602255edd37575ea2c079",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/support/proof/p8_15.ex",
       "reason": "module expression may generate declarations; expressions are not evaluated",
       "status": "unknown"
     },
@@ -2041,8 +2292,11 @@
   "tests": [
     "test/new_you/content/password_reset_browser_copy_test.exs",
     "test/new_you/content/password_reset_message_test.exs",
+    "test/new_you/identity/magic_login_request_timing_test.exs",
     "test/new_you/identity/password_reset_lifecycle_test.exs",
     "test/new_you/identity/password_reset_test.exs",
+    "test/new_you/identity/recovery_concurrency_test.exs",
+    "test/new_you/proof/browser_protocol_test.exs",
     "test/new_you/proof/development_entry_recovery_test.exs",
     "test/new_you/proof/tb001_integration_test.exs",
     "test/new_you/proof/well136_browser_setup_test.exs",
@@ -2052,6 +2306,8 @@
     "test/new_you_web/controllers/well136_browser_test.exs",
     "test/proof/p8_05_browser.mjs",
     "test/support/proof/p8_05.ex",
+    "test/support/proof/p8_05_browser.ex",
+    "test/support/proof/p8_15.ex",
     "test/support/proof/registration_seam.ex",
     "test/support/proof/well136_browser.ex",
     "tests/test_password_reset_message_activation.py",
