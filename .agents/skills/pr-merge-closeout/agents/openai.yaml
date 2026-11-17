@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Merge Closeout"
+  short_description: "Close out an approved NewYou pull request"
+  default_prompt: "Use $pr-merge-closeout to verify and close out an approved NewYou pull request."
