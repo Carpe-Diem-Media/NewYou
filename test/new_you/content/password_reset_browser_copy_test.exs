@@ -72,8 +72,34 @@ defmodule NewYou.Content.PasswordResetBrowserCopyTest do
       :code.purge(Module.concat(module, UnavailableError))
       :code.delete(Module.concat(module, UnavailableError))
       Mix.env(:prod)
-      Code.compile_string(source, source_path)
+      compiled = Code.compile_string(source, source_path)
+      artifact = Path.join(fixtures, "well136-c02-v0.1.json") |> File.read!() |> Jason.decode!()
+
+      forbidden =
+        [artifact["version"], artifact["source_packet_sha256"] | artifact["approval_comments"]] ++
+          for {_key, entry} <- artifact["entries"],
+              locale <- ["en", "af"],
+              do: entry[locale]["text"]
+
+      for {_compiled_module, beam} <- compiled do
+        # Decode actual literal/debug/documentation terms using the pinned OTP
+        # reader. A raw byte search can miss compressed BEAM chunks.
+        assert {:ok, {_, chunks}} =
+                 :beam_lib.chunks(beam, [:literals, :debug_info, :attributes, :documentation], [
+                   :allow_missing_chunks
+                 ])
+
+        payload = :erlang.term_to_binary(chunks)
+
+        for text <- forbidden do
+          refute :binary.match(payload, text) != :nomatch,
+                 "production BEAM embeds approved C-02 content: #{text}"
+        end
+      end
+
       refute module.available?()
+      assert is_nil(module.artifact_path())
+      refute module.valid_artifact?(artifact)
 
       assert_raise Module.concat(module, UnavailableError), fn ->
         module.text!("identity.login.forgot_password", "en")

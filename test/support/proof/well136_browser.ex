@@ -52,14 +52,7 @@ defmodule NewYou.Proof.Well136Browser do
     assert result["cleanup"] == true
     Enum.each(result["operations"], &P805.track_operation/1)
 
-    for {key, value} <- result["checks"],
-        do:
-          assert(
-            value == true,
-            "WELL-136 browser check failed: #{key}; resize #{inspect(result["checks"]["resize_diagnostics"])}"
-          )
-
-    assert map_size(result["checks"]) >= 20
+    assert_checks!(result["checks"])
 
     consumed =
       Token
@@ -77,6 +70,27 @@ defmodule NewYou.Proof.Well136Browser do
     assert Enum.count(sessions, &(&1.state == :active)) == 1
     account = Ash.get!(Account, account_id, authorize?: false)
     assert account.credential_version == 2
+  end
+
+  @doc false
+  def assert_checks!(checks) do
+    for {key, value} <- checks,
+        do:
+          assert(
+            value == true,
+            "WELL-136 browser check failed: #{key}; resize #{inspect(checks["resize_diagnostics"])}"
+          )
+
+    for key <- ~w(
+          public_entry prior_session forgot_password approved_request labels stylesheet
+          responsive text_resize reduced_motion keyboard_focus csrf neutral_request accepted_copy
+          real_delivery scanner_safe confirmation_copy completed_copy no_automatic_login
+          proof_not_rendered persisted_reset stale_session_denied replay_denied retry_navigation
+          old_password_denied fresh_sign_in expired_link withdrawal_blocks_delivery
+          failed_attempts_preserve_credential
+        ) do
+      assert checks[key] == true, "WELL-136 required browser check missing or failed: #{key}"
+    end
   end
 
   defp with_browser_fixture(account_id, reference, callback) do

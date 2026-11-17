@@ -204,7 +204,7 @@ defmodule NewYou.Content.PasswordResetMessage do
       end
     end
 
-    defp current_well136_route?(router) do
+    defp current_well136_route?(%{"status" => "CURRENT"} = router) do
       Enum.filter(
         Map.get(router, "delivery_contracts", []),
         &(&1["document_id"] == "PASSWORD_RESET_MESSAGE_WELL136_PHASE9_DEVELOPMENT_EVIDENCE")
@@ -219,6 +219,8 @@ defmodule NewYou.Content.PasswordResetMessage do
         }
       ]
     end
+
+    defp current_well136_route?(_router), do: false
 
     defp well136_applicability?(applicability, historical_packet) do
       well136_identity?(applicability, historical_packet) and well136_scope?(applicability) and

@@ -121,6 +121,42 @@ defmodule NewYou.Content.PasswordResetMessageTest do
     assert {:error, :content_ineligible} = PasswordResetMessage.eligible(binding, :well136)
   end
 
+  for status <- ["WITHDRAWN", "SUPERSEDED", nil] do
+    @status status
+    test "WELL-136 denies new binding and delivery with router status #{inspect(status)}", %{
+      root: root
+    } do
+      bindings =
+        for locale <- ["en", "af"] do
+          assert {:ok, binding} = PasswordResetMessage.binding(locale, :well136)
+          {locale, binding}
+        end
+
+      path = Path.join(root, "docs/delivery/CURRENT_DELIVERY_ROUTER.json")
+      original = File.read!(path)
+      router = Jason.decode!(original)
+
+      altered =
+        if is_nil(@status),
+          do: Map.delete(router, "status"),
+          else: Map.put(router, "status", @status)
+
+      File.write!(path, Jason.encode!(altered))
+
+      for {locale, binding} <- bindings do
+        assert {:error, :content_ineligible} = PasswordResetMessage.binding(locale, :well136)
+        assert {:error, :content_ineligible} = PasswordResetMessage.eligible(binding, :well136)
+      end
+
+      File.write!(path, original)
+
+      for {locale, binding} <- bindings do
+        assert {:ok, ^binding} = PasswordResetMessage.binding(locale, :well136)
+        assert {:ok, _} = PasswordResetMessage.eligible(binding, :well136)
+      end
+    end
+  end
+
   test "rejects corrupted successor authority and approval proposal", %{root: root} do
     for path <- [
           "docs/governance/product/00_PLATFORM_v1.16.0.md",
