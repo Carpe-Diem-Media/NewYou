@@ -1,5 +1,5 @@
 {
-  "base_sha": "5fe3455f00ead029b354c426359d9fae6abc59bf",
+  "base_sha": "708ca5f75f57d02b685ac60242dd00da8d4f7f7e",
   "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/260/checks",
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/260/commits",
   "files": [
@@ -117,7 +117,7 @@
   "migrations": [],
   "pr": 260,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/260",
-  "range_base_sha": "5fe3455f00ead029b354c426359d9fae6abc59bf",
+  "range_base_sha": "708ca5f75f57d02b685ac60242dd00da8d4f7f7e",
   "schema_version": 1,
   "symbols": [],
   "tests": [
