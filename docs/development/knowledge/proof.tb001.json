@@ -9,7 +9,7 @@
     "WELL-114"
   ],
   "implementation_revision": {
-    "git_sha": "4a4a789cf117e67e28c29f8e9de1337ba0c80441",
+    "git_sha": "0630e32d1b6db95cc22c23ec905635d81154cf58",
     "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
@@ -464,7 +464,7 @@
       "id": "browser_script",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'spine'",
-      "sha256": "406a409429247925ccdb9fab1838bf036d8833a11b30c113ae0255ea7f01851d"
+      "sha256": "079aef336a83c074d1bf6c5c976157db418f29bc6a1c91f6df0b9f5d55556df9"
     },
     {
       "id": "fixture",

@@ -6,7 +6,7 @@
     "WELL-16"
   ],
   "implementation_revision": {
-    "git_sha": "cb106a9f493f5712e4a9c9f0ead355feb9a8e668",
+    "git_sha": "0630e32d1b6db95cc22c23ec905635d81154cf58",
     "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1055,7 +1055,8 @@
     "Provider evidence uses the existing deterministic TEST adapter and synthetic Accounts only. No external email was sent; support mailbox operation and external sender/provider permission are not certified.",
     "WELL-20 reuses the existing primary-email owner action and both PostgreSQL commit-order scenarios for recovery/email-change integration. Production deployment and cross-region failure behavior remain outside this proof.",
     "WELL-111 accepts proof-backed manual positive proof and zero-factor negative proof for Phase 8. Successful lost-all-factor recovery is unimplemented and remains a pre-release obligation under WELL-115; privileged hardening remains WELL-65.",
-    "Historical PR #217, PR #228 and Markdown handoffs remain historical evidence. The current WELL-20 candidate requires its own exact-head proof, CI and independent review."
+    "Historical PR #217, PR #228 and Markdown handoffs remain historical evidence. The current WELL-20 candidate requires its own exact-head proof, CI and independent review.",
+    "WELL-136 verification corrected only the P815 reset-versus-recovery fixture lookup to its own Account. The strengthened case creates an unrelated reset proof through Identity and asserts that Token remains unchanged after contention. Deterministic RED failed at the previous global-purpose lookup; GREEN passed all 13 recovery-concurrency tests with seed 441709 and four schedulers. No recovery business API or lifecycle was changed and no retained shared records were deleted. Full gate results remain separately required."
   ],
   "follow_up_tickets": [
     "WELL-17",
@@ -1182,7 +1183,7 @@
       "id": "concurrent_helper",
       "path": "test/support/proof/p8_15.ex",
       "symbol": "defmodule NewYou.Proof.P815",
-      "sha256": "252f6748005ae29c690e90c238f6209fbc9d3a2b79566604502fb9405397e6f3"
+      "sha256": "96d5037117c038f7ce0f117b4d6ec1b4fc0fbc9c27e6ea96420cab122e2e0c74"
     },
     {
       "id": "lifecycle_test",
@@ -1206,7 +1207,7 @@
       "id": "concurrency_test",
       "path": "test/new_you/identity/recovery_concurrency_test.exs",
       "symbol": "defmodule ",
-      "sha256": "32ffa9e4ffeecd9d8e3046e9eed743fe95ad3eed5f41ce3d2a6627b9e3d419da"
+      "sha256": "dca26068b191e9d69b031577ea4457ecffa2b6a69f0cf79e3237a0090e071905"
     },
     {
       "id": "delivery_test",
