@@ -1,8 +1,19 @@
 {
-  "base_sha": "f72cf637453408896a5037dcb2f8d37f0d29e3af",
+  "base_sha": "6b92ba6d2b51be4f15af27c66a9d24dcf73640f8",
   "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/260/checks",
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/260/commits",
   "files": [
+    {
+      "blob": "f5773fe3a2fe14cfa2dd3b443c624836879069a4",
+      "mode": "100644",
+      "old_blob": "b0d02e34a7636e7fd524f28bd312ea95bb535dcc",
+      "old_mode": "100644",
+      "old_path": ".agents/skills/code-change-verification/SKILL.md",
+      "old_sha256": "3c3629aa96920204a86bc6d05448c85d86cee2f17f9939caef4018a3cb497b82",
+      "path": ".agents/skills/code-change-verification/SKILL.md",
+      "sha256": "a28ee046498174f380ea303e48f63a64fcefa9569abd82569f5f599fbe627fac",
+      "status": "modified"
+    },
     {
       "blob": "3a82019858a9658561ff98e4bff378573f7f1dcd",
       "mode": "100644",
@@ -70,6 +81,17 @@
       "status": "added"
     },
     {
+      "blob": "3097734e746092828849d603d3cb4d98557eb0ed",
+      "mode": "100644",
+      "old_blob": "b540bba47eb9f6bc62a777dc7ac9190e60e181cd",
+      "old_mode": "100644",
+      "old_path": ".agents/skills/ticket-implement/SKILL.md",
+      "old_sha256": "f534ff845ccaab37e77d6f510dab1c0c19966f3ca4dc9a449e1bf132dbf77e28",
+      "path": ".agents/skills/ticket-implement/SKILL.md",
+      "sha256": "ba686b11fbe1bc9516b98fe33027729ccfad65f4552161693fc61d956394e336",
+      "status": "modified"
+    },
+    {
       "blob": "9be876973304b62518553c379c499e120f049f98",
       "mode": "100644",
       "old_blob": null,
@@ -79,15 +101,28 @@
       "path": ".agents/skills/ticket-implement/agents/openai.yaml",
       "sha256": "1be90c150d3efd876114e1788055f48eef7f979d1d7ed7d633179e2e80a105c9",
       "status": "added"
+    },
+    {
+      "blob": "ac44c012fa408797c555b639373ba49ad70fc19e",
+      "mode": "100644",
+      "old_blob": "e1ea8b4c58c0dd64b35730830de57cbce06cf38c",
+      "old_mode": "100644",
+      "old_path": "tests/test_agent_instruction_contract.py",
+      "old_sha256": "81ae965343eb93b61dbd9b0caedbeec56e6e09ea81570f88716e4cd1b2f9f634",
+      "path": "tests/test_agent_instruction_contract.py",
+      "sha256": "38882dc2dc67b6b88e985f22ac1fb913b32e09cb54a4f751f75830d583f9d01c",
+      "status": "modified"
     }
   ],
   "migrations": [],
   "pr": 260,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/260",
-  "range_base_sha": "f72cf637453408896a5037dcb2f8d37f0d29e3af",
+  "range_base_sha": "6b92ba6d2b51be4f15af27c66a9d24dcf73640f8",
   "schema_version": 1,
   "symbols": [],
-  "tests": [],
+  "tests": [
+    "tests/test_agent_instruction_contract.py"
+  ],
   "tickets": [
     "WELL-140"
   ]
