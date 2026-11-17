@@ -301,19 +301,45 @@ defmodule NewYou.LocalConfigTest do
     assert_raise ArgumentError, ~r/managed/, fn -> LocalConfig.repo(:test, environment()) end
   end
 
-  test "only the explicitly selected CI allocation preserves the legacy runner contract" do
-    ci =
+  test "CI flags cannot select workstation shared TEST in an opted-in worktree" do
+    shared =
       environment(%{"NEW_YOU_DATABASE_MODE" => "ci", "GITHUB_ACTIONS" => "true", "CI" => "true"})
 
-    assert LocalConfig.repo(:test, ci)[:database] == "new_you_test"
+    assert_raise ArgumentError, fn -> LocalConfig.repo(:test, shared) end
+  end
+
+  test "CI accepts only its distinct ephemeral database and role" do
+    ci =
+      environment(%{
+        "NEW_YOU_DATABASE_MODE" => "ci",
+        "GITHUB_ACTIONS" => "true",
+        "CI" => "true",
+        "TEST_DATABASE_NAME" => "new_you_ci_test",
+        "TEST_DATABASE_USERNAME" => "new_you_ci_test"
+      })
+
+    assert LocalConfig.repo(:test, ci)[:database] == "new_you_ci_test"
+    assert LocalConfig.repo(:test, ci)[:username] == "new_you_ci_test"
 
     assert_raise ArgumentError, ~r/managed/, fn -> LocalConfig.repo(:dev, ci) end
+
+    for {key, value} <- [
+          {"TEST_DATABASE_HOST", "localhost"},
+          {"TEST_DATABASE_PORT", "55432"},
+          {"TEST_DATABASE_NAME", "new_you_test"},
+          {"TEST_DATABASE_USERNAME", "new_you_test"}
+        ] do
+      env = fn name -> if name == key, do: value, else: ci.(name) end
+      assert_raise ArgumentError, fn -> LocalConfig.repo(:test, env) end
+    end
 
     partial =
       environment(%{
         "NEW_YOU_DATABASE_MODE" => "ci",
         "GITHUB_ACTIONS" => "true",
         "CI" => "true",
+        "TEST_DATABASE_NAME" => "new_you_ci_test",
+        "TEST_DATABASE_USERNAME" => "new_you_ci_test",
         "DEVCORE_SLOT_JOB" => "cccccccccccccccccccccccccccccccc"
       })
 

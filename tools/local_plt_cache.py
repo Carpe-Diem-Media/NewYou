@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import shutil
+import stat
 import tempfile
 from pathlib import Path
 
@@ -31,10 +32,24 @@ class Cache:
         self.manifest = self.namespace / "complete.json"
 
     def validate_baseline(self):
+        namespace_fd = None
+        manifest_fd = None
         try:
-            if self.manifest.is_symlink():
-                raise ValueError("manifest cannot be a symlink")
-            manifest = json.loads(self.manifest.read_text())
+            namespace_fd = os.open(
+                self.namespace,
+                os.O_RDONLY | getattr(os, "O_DIRECTORY", 0) | getattr(os, "O_NOFOLLOW", 0),
+            )
+            manifest_fd = os.open(
+                "complete.json",
+                os.O_RDONLY | os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0),
+                dir_fd=namespace_fd,
+            )
+            manifest_stat = os.fstat(manifest_fd)
+            if not stat.S_ISREG(manifest_stat.st_mode) or manifest_stat.st_uid != os.getuid():
+                raise ValueError("manifest must be an owned regular file")
+            with os.fdopen(manifest_fd, "rb") as manifest_file:
+                manifest_fd = None
+                manifest = json.loads(manifest_file.read())
             if manifest["key"] != self.key or manifest["format"] != FORMAT_REVISION:
                 raise ValueError("cache key or format mismatch")
             if set(manifest["files"]) != set(self.plt_names):
@@ -47,6 +62,11 @@ class Cache:
                     raise ValueError("missing or modified core PLT")
         except (OSError, KeyError, ValueError, TypeError, json.JSONDecodeError) as error:
             raise RuntimeError("local core PLT baseline is incomplete or invalid") from error
+        finally:
+            if manifest_fd is not None:
+                os.close(manifest_fd)
+            if namespace_fd is not None:
+                os.close(namespace_fd)
 
     def prepare(self, producer, destination):
         self.cache_root.mkdir(parents=True, exist_ok=True)

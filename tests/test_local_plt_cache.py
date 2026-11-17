@@ -6,9 +6,15 @@ import sys
 import multiprocessing
 import fcntl
 import json
+import os
+import socket
+import stat
 import subprocess
+from types import SimpleNamespace
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+import local_plt_cache
 from local_plt_cache import Cache, write_request
 
 
@@ -59,6 +65,119 @@ class LocalPltCacheTest(unittest.TestCase):
         (cache.namespace / "dialyxir_erlang-27.2.plt").write_bytes(b"tampered")
         with self.assertRaises(RuntimeError):
             cache.validate_baseline()
+
+    def test_fifo_manifest_is_rejected_without_blocking_or_changing_cache(self):
+        cache = self.cache()
+        cache.namespace.mkdir(parents=True)
+        os.mkfifo(cache.manifest)
+        lock_path = cache.cache_root / (cache.namespace.name + ".lock")
+        script = "\n".join((
+            "import sys",
+            "from pathlib import Path",
+            "from tools.local_plt_cache import Cache",
+            "root=Path(sys.argv[1])",
+            "cache=Cache(root/'cache',root/'work',"
+            "{'otp':'27.2','elixir':'1.20.4','dialyxir':'1.4.8',"
+            "'apps':['mix','ex_unit'],'revision':1},"
+            "['dialyxir_erlang-27.2.plt','dialyxir_elixir.plt'])",
+            "try:",
+            "    cache.prepare(lambda _:None,root/'work'/'copy')",
+            "except RuntimeError:",
+            "    pass",
+            "else:",
+            "    raise AssertionError('FIFO manifest accepted')",
+        ))
+        result = subprocess.run(
+            [sys.executable, "-c", script, str(self.root)],
+            cwd=Path(__file__).resolve().parents[1],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(cache.manifest.is_fifo())
+        with lock_path.open("a+b") as lock_file:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+    def test_directory_symlink_and_socket_manifests_are_rejected(self):
+        target = self.root / "outside-manifest"
+        target.write_text("preserve")
+        socket_path = self.root / "socket-manifest"
+        for kind in ("directory", "symlink", "socket"):
+            with self.subTest(kind=kind):
+                cache = self.cache({"manifest-kind": kind})
+                cache.namespace.mkdir(parents=True)
+                listener = None
+                if kind == "directory":
+                    cache.manifest.mkdir()
+                elif kind == "symlink":
+                    cache.manifest.symlink_to(target)
+                else:
+                    listener = socket.socket(socket.AF_UNIX)
+                    listener.bind(str(socket_path))
+                    os.replace(socket_path, cache.manifest)
+                try:
+                    self._assert_manifest_rejected_and_unlocked(cache)
+                    if kind == "directory":
+                        self.assertTrue(cache.manifest.is_dir())
+                    elif kind == "symlink":
+                        self.assertTrue(cache.manifest.is_symlink())
+                        self.assertEqual(target.read_text(), "preserve")
+                    else:
+                        self.assertTrue(stat.S_ISSOCK(cache.manifest.lstat().st_mode))
+                finally:
+                    if listener is not None:
+                        listener.close()
+
+    def test_wrong_owner_manifest_is_rejected_and_lock_is_released(self):
+        cache = self.cache()
+        cache.prepare(self.producer, self.root / "work" / "first")
+        actual_fstat = os.fstat
+
+        def report_wrong_owner(descriptor):
+            result = actual_fstat(descriptor)
+            return SimpleNamespace(st_mode=result.st_mode, st_uid=os.getuid() + 1)
+
+        with patch.object(local_plt_cache.os, "fstat", side_effect=report_wrong_owner):
+            with self.assertRaisesRegex(RuntimeError, "incomplete or invalid"):
+                cache.prepare(self.producer, self.root / "work" / "rejected")
+
+        self.assertTrue(cache.manifest.is_file())
+        self._assert_lock_available(cache)
+
+    def _assert_manifest_rejected_and_unlocked(self, cache):
+        with self.assertRaisesRegex(RuntimeError, "incomplete or invalid"):
+            cache.prepare(self.producer, self.root / "work" / "rejected")
+        self._assert_lock_available(cache)
+
+    def _assert_lock_available(self, cache):
+        lock_path = cache.cache_root / (cache.namespace.name + ".lock")
+        with lock_path.open("a+b") as lock_file:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+    def test_interrupted_private_copy_replacement_restores_owned_copy(self):
+        cache = self.cache()
+        destination = cache.prepare(self.producer, self.root / "work" / "analysis")
+        original = {path.name: path.read_bytes() for path in destination.iterdir()}
+        real_replace = os.replace
+
+        def fail_staged_install(source, target):
+            if Path(source).name.startswith(".core-copy-") and Path(target) == destination:
+                raise OSError("injected private-copy install interruption")
+            return real_replace(source, target)
+
+        (destination / "dialyxir_erlang-27.2.plt").unlink()
+        del original["dialyxir_erlang-27.2.plt"]
+        with patch.object(local_plt_cache.os, "replace", side_effect=fail_staged_install):
+            with self.assertRaisesRegex(OSError, "injected private-copy install interruption"):
+                cache.prepare(self.producer, destination)
+
+        self.assertEqual({path.name: path.read_bytes() for path in destination.iterdir()}, original)
+        self.assertFalse(destination.with_name(destination.name + ".previous").exists())
+        cache.validate_baseline()
+        self._assert_lock_available(cache)
 
     def test_failure_does_not_publish_and_retry_succeeds(self):
         cache = self.cache()

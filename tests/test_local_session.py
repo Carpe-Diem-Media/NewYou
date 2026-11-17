@@ -8,6 +8,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from contextlib import redirect_stderr
 from io import StringIO
@@ -142,6 +143,188 @@ except KeyboardInterrupt:
                 process.wait(timeout=5)
                 process.stdout.close()
                 process.stderr.close()
+
+    def test_lock_survives_devcore_fd3_heredoc_and_launcher_exit(self):
+        root = Path(local_session.__file__).resolve().parent.parent
+        installed = Path.home() / ".local/bin/devcore-project"
+        if installed.is_file():
+            source = installed.read_text()
+            self.assertIn("python3 /dev/fd/3 \"$0\"", source,
+                          "installed DevCore handoff no longer matches this regression")
+            self.assertIn("3<<'DEVCORE_SLOTS_PYTHON'", source,
+                          "installed DevCore fd 3 heredoc no longer matches this regression")
+        # DevCore's installed slots_main sends its embedded Python on fd 3.
+        # Keep that reviewed handoff shape, while the synthetic supervisor
+        # waits before registering any job or starting a command.
+        shell = """#!/bin/sh
+echo $$ > "$3"
+python3 /dev/fd/3 "$1" "$2" 3<<'DEVCORE_SLOTS_PYTHON'
+import os, sys, time
+from pathlib import Path
+Path(sys.argv[1]).write_text(str(os.getpid()))
+while not Path(sys.argv[2]).exists(): time.sleep(.01)
+DEVCORE_SLOTS_PYTHON
+"""
+        launcher = """import os, sys
+from pathlib import Path
+from tools.local_session import worktree_lock
+context = worktree_lock(Path(sys.argv[1]))
+context.__enter__()
+os.execvp('mise', ['mise', 'exec', '--', 'bash', '-c', sys.argv[2],
+                   'slots_main', sys.argv[3], sys.argv[4], sys.argv[5]])
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            root_dir = Path(directory)
+            lock = root_dir / "build.lock"
+            ready, finish, launcher_pid_file = (root_dir / "ready", root_dir / "finish",
+                                                 root_dir / "launcher-pid")
+            process = subprocess.Popen([sys.executable, "-c", launcher, str(lock), shell,
+                                        str(ready), str(finish), str(launcher_pid_file)], cwd=root,
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       start_new_session=True)
+            try:
+                deadline = time.monotonic() + 5
+                while not ready.exists() and process.poll() is None and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                self.assertTrue(ready.exists(), "installed handoff shape did not start")
+                supervisor_pid = int(ready.read_text())
+                launcher_pid = int(launcher_pid_file.read_text())
+                self.assertTrue(Path("/proc", str(supervisor_pid), "stat").exists(),
+                                "supervisor exited before the lock check")
+                self.assertFalse(lock_available(lock),
+                                 "lock must remain held before launcher exit")
+                os.kill(launcher_pid, signal.SIGTERM)
+                process.wait(timeout=5)
+                self.assertTrue(Path("/proc", str(supervisor_pid), "stat").exists(),
+                                "supervisor must remain alive after launcher exit")
+                self.assertFalse(lock_available(lock),
+                                 "DevCore supervisor must retain the lock after launcher exit")
+            finally:
+                finish.touch()
+                if process.poll() is None:
+                    process.terminate()
+                    process.wait(timeout=5)
+                deadline = time.monotonic() + 5
+                while ready.exists() and Path("/proc", ready.read_text(), "stat").exists() \
+                        and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                self.assertTrue(select.select([process.stdout], [], [], 5)[0],
+                                "handoff child retained the output pipe")
+                self.assertEqual(process.stdout.read(), b"")
+                process.stdout.close()
+                process.stderr.close()
+
+    def test_installed_devcore_status_retains_lock_while_registry_is_blocked(self):
+        installed = Path.home() / ".local/bin/devcore-project"
+        if not installed.is_file():
+            self.skipTest("installed DevCore is unavailable")
+
+        root = Path(local_session.__file__).resolve().parent.parent
+        launcher = """import os, sys
+from pathlib import Path
+from tools.local_session import worktree_lock
+context = worktree_lock(Path(sys.argv[1]))
+context.__enter__()
+os.execvp('mise', ['mise', 'exec', '--', str(Path.home() / '.local/bin/devcore-project'),
+                   'slots', 'status'])
+"""
+
+        def proc_info(pid):
+            try:
+                stat_fields = Path("/proc", str(pid), "stat").read_text().rsplit(")", 1)[1].split()
+                return int(stat_fields[1]), Path("/proc", str(pid), "comm").read_text().strip()
+            except (OSError, ValueError, IndexError):
+                return None
+
+        def descendant_pids(root_pid):
+            children = {}
+            for entry in Path("/proc").iterdir():
+                if not entry.name.isdecimal():
+                    continue
+                info = proc_info(int(entry.name))
+                if info is not None:
+                    children.setdefault(info[0], []).append(int(entry.name))
+            pending, found = [root_pid], set()
+            while pending:
+                current = pending.pop()
+                for child_pid in children.get(current, []):
+                    if child_pid not in found:
+                        found.add(child_pid)
+                        pending.append(child_pid)
+            return found
+
+        with tempfile.TemporaryDirectory() as directory:
+            temp_root = Path(directory)
+            central = temp_root / "central"
+            slots_root = central / "slots"
+            pool_root = slots_root / "new_you"
+            pool_root.mkdir(mode=0o700, parents=True)
+            os.chmod(central, 0o700)
+            os.chmod(slots_root, 0o700)
+            os.chmod(pool_root, 0o700)
+            project_conf = temp_root / "project.conf"
+            project_conf.write_text("\n".join(
+                line for line in (root / ".devcore/project.conf").read_text().splitlines()
+                if not line.startswith("SLOT_POOL=")
+            ) + "\n")
+            global_conf, secrets = temp_root / "global.conf", temp_root / "secrets.env"
+            global_conf.touch(mode=0o600)
+            secrets.touch(mode=0o600)
+            registry = pool_root / "registry.lock"
+            registry.touch(mode=0o600)
+            registry_fd = os.open(registry, os.O_RDWR | os.O_NOFOLLOW)
+            fcntl.flock(registry_fd, fcntl.LOCK_EX)
+            lock, sibling_lock = temp_root / "build.lock", temp_root / "sibling.lock"
+            environment = {key: value for key, value in os.environ.items()
+                           if not key.startswith("DEVCORE_")}
+            environment.update(
+                DEVCORE_CONFIG_DIR=str(central),
+                DEVCORE_SECRETS_FILE=str(secrets),
+                DEVCORE_GLOBAL_CONF=str(global_conf),
+                DEVCORE_PROJECT_CONF=str(project_conf),
+            )
+            process = subprocess.Popen([sys.executable, "-c", launcher, str(lock)], cwd=root,
+                                       env=environment, stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE, start_new_session=True)
+            try:
+                deadline = time.monotonic() + 10
+                python_pid, bash_pid = None, None
+                while time.monotonic() < deadline and process.poll() is None:
+                    for pid in descendant_pids(process.pid):
+                        info = proc_info(pid)
+                        if info is None or info[1] not in ("python3", "python"):
+                            continue
+                        parent_info = proc_info(info[0])
+                        if parent_info is not None and parent_info[1] == "bash":
+                            python_pid, bash_pid = pid, info[0]
+                            break
+                    if python_pid is not None:
+                        break
+                    time.sleep(0.01)
+                self.assertIsNotNone(python_pid,
+                                     "installed slots status did not reach its blocked Python registry read; "
+                                     f"launcher exit={process.poll()}, "
+                                     f"stderr={process.stderr.peek(4096).decode(errors='replace') if process.poll() is not None else ''}")
+                self.assertIsNotNone(bash_pid)
+                self.assertTrue(Path("/proc", str(python_pid), "stat").exists())
+                self.assertFalse(lock_available(lock), "same-worktree lock must be held before launcher exit")
+                self.assertTrue(lock_available(sibling_lock), "a sibling worktree lock must remain independent")
+                os.kill(bash_pid, signal.SIGTERM)
+                process.wait(timeout=5)
+                self.assertTrue(Path("/proc", str(python_pid), "stat").exists(),
+                                "installed DevCore Python must survive Bash launcher termination")
+                self.assertFalse(lock_available(lock),
+                                 "installed DevCore Python must retain the build lock while blocked")
+            finally:
+                fcntl.flock(registry_fd, fcntl.LOCK_UN)
+                os.close(registry_fd)
+                if process.poll() is None:
+                    process.terminate()
+                    process.wait(timeout=5)
+                stdout, stderr = process.communicate(timeout=5)
+                self.assertEqual(stdout, b"[]\n")
+                self.assertEqual(stderr, b"")
+                self.assertTrue(lock_available(lock), "status completion must release the build lock")
 
     def test_old_or_unknown_devcore_is_rejected_before_status_or_launch(self):
         for output in ("devcore-project 1.1.0", "unknown", "devcore-project 2.0.0"):

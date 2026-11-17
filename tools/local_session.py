@@ -28,7 +28,11 @@ def worktree_lock(path):
             raise SessionError("worktree lock ownership is invalid")
         os.fchmod(descriptor, 0o600)
         fcntl.flock(descriptor, fcntl.LOCK_EX)
-        # The exec chain and DevCore supervisor retain the same open lock.
+        # DevCore uses fd 3 for its embedded Python source heredoc.
+        # Keep the lock on a separate descriptor through that handoff.
+        inherited_descriptor = fcntl.fcntl(descriptor, fcntl.F_DUPFD, 10)
+        os.close(descriptor)
+        descriptor = inherited_descriptor
         os.set_inheritable(descriptor, True)
         yield descriptor
     finally:

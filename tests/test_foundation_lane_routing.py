@@ -446,9 +446,20 @@ class TopologyTests(unittest.TestCase):
     def test_application_ci_uses_isolated_test_database_contract(self):
         workflow = (WORKFLOWS / "application-ci.yml").read_text(encoding="utf-8")
         self.assertIn('TEST_DATABASE_PORT: "55433"', workflow)
-        self.assertIn("TEST_DATABASE_USERNAME: new_you_test", workflow)
-        self.assertIn("CREATE ROLE new_you_test LOGIN NOSUPERUSER NOCREATEDB", workflow)
+        self.assertIn("TEST_DATABASE_USERNAME: new_you_ci_test", workflow)
+        self.assertIn("CREATE ROLE new_you_ci_test LOGIN NOSUPERUSER NOCREATEDB", workflow)
         self.assertNotIn("DEV_DATABASE", workflow)
+
+    def test_all_database_ci_lanes_use_distinct_ephemeral_identity(self):
+        for name in ("application-ci.yml", "nightly-hardening.yml", "phase8-proof.yml"):
+            workflow = (WORKFLOWS / name).read_text(encoding="utf-8")
+            with self.subTest(workflow=name):
+                self.assertIn("NEW_YOU_DATABASE_MODE: ci", workflow)
+                self.assertIn("CREATE DATABASE new_you_ci_test OWNER new_you_ci_test;", workflow)
+                self.assertIn("TEST_DATABASE_USERNAME: new_you_ci_test", workflow)
+                self.assertIn("TEST_DATABASE_NAME: new_you_ci_test", workflow)
+                self.assertNotIn("CREATE DATABASE new_you_test ", workflow)
+                self.assertNotIn("CREATE ROLE new_you_test ", workflow)
 
     def test_foundation_full_is_called_only_by_nightly_and_keeps_historical_checks(self):
         workflow = (WORKFLOWS / "foundation-full.yml").read_text(encoding="utf-8")

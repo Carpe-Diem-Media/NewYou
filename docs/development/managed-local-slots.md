@@ -65,9 +65,11 @@ doctor passed authenticated DEV and TEST reconnection afterward. Existing owner
 connections were preserved. No rows, databases, passwords or other privileges
 changed. Managed-role denial against legacy TEST still needs the live pilot.
 
-The owner also authorized the exact disposable-generation contract in chat.
-Allocator enable remains pending the required authenticated GitHub approval
-comment. No managed database has yet been provisioned on this workstation.
+The owner also authorized the exact disposable-generation contract in chat. The
+[authenticated approval](https://github.com/Carpe-Diem-Media/devcore-project/pull/6#issuecomment-6952421506)
+now supplies the exact required text. Enable and the live pilot must follow the
+R1–R3 corrections requested by independent checkpoint review. No managed database
+has yet been provisioned on this workstation.
 
 ## Routine commands after activation
 
@@ -174,12 +176,13 @@ seconds, and the shared cache lock was available during that overlap. Neither
 command used a TEST lease or the legacy TEST/PLT lock. Permanent temporary-cache
 tests cover concurrent cold preparation; this real proof used the prepared cache.
 
-The explicit `NEW_YOU_DATABASE_MODE=ci` compatibility path preserves the hosted
-runner's disposable `new_you_test` allocation and requires both existing CI flags.
-Those caller-controlled flags are not authentication. This is deliberate legacy
-compatibility, not a managed lease. The local entry point rejects that mode;
-partial managed markers always reject even in CI mode. Do not set it locally to
-bypass allocation or the legacy TEST lock.
+The explicit `NEW_YOU_DATABASE_MODE=ci` path requires both existing CI flags and
+the distinct ephemeral database and role `new_you_ci_test` on loopback port
+55433. It rejects the retained workstation `new_you_test` identity even with all
+flags set. These caller-controlled flags select a fixed CI binding and provide
+no authentication. The local entry point rejects that mode; partial managed
+markers always reject even in CI mode. The hosted service provisions only its
+ephemeral CI identity. Workstation CI databases are not provisioned by this task.
 
 Pure LocalConfig, temporary-metadata cache and admission tests do not prove real
 NewYou database isolation. Before activation claims, WELL-147 still requires

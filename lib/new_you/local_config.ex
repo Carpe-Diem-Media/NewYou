@@ -4,7 +4,9 @@ defmodule NewYou.LocalConfig do
 
   Managed identities require a live DevCore job verification, never a database
   prefix alone. Verification reads private allocation metadata and starts no
-  database or cleanup operation. Production uses its separate runtime path.
+  database or cleanup operation. CI uses a distinct ephemeral database identity;
+  caller-controlled CI flags never permit workstation shared TEST. Production
+  uses its separate runtime path.
   """
 
   @markers ~w(DEVCORE_SLOT_PROJECT DEVCORE_SLOT_LEASE DEVCORE_SLOT_GENERATION DEVCORE_SLOT_JOB DEVCORE_SLOT_WORKTREE)
@@ -43,7 +45,14 @@ defmodule NewYou.LocalConfig do
         validate_binding!("TEST", 55433, allocation["database"], allocation["role"], get_env)
 
       :test ->
-        validate_binding!("TEST", 55433, "new_you_test", "new_you_test", get_env)
+        # Hosted CI has its own disposable service, never the retained workstation
+        # identity. The flags select this exact binding; they authenticate nothing.
+        identity =
+          if get_env.("NEW_YOU_DATABASE_MODE") == "ci",
+            do: "new_you_ci_test",
+            else: "new_you_test"
+
+        validate_binding!("TEST", 55433, identity, identity, get_env)
     end
   end
 
