@@ -4,11 +4,12 @@
   "purpose": "Change an Account's canonical primary email only after explicit confirmation of the new mailbox and a guarded, durable Identity apply transaction.",
   "implementing_tickets": [
     "WELL-17",
-    "WELL-18"
+    "WELL-18",
+    "WELL-112"
   ],
   "implementation_revision": {
-    "git_sha": "2070ff9362583d503fcf51b198527c5305dec425",
-    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
+    "git_sha": "a2fd19007ad855c5d098f84197f33be0afd31d6d",
+    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1347,7 +1348,8 @@
     "Restart recovery is proven with the existing test harness and a fresh BEAM process against the isolated test database; it is not a production deployment test.",
     "Session/logout and recovery/apply contention proof uses independent PostgreSQL transactions in the local test database; it does not model cross-region or production database failure modes.",
     "Delay and risk-review policy exercised by development tests does not select production thresholds or authorize live participant delivery.",
-    "Selected E2 records carry minimal event facts only; they do not contain bearer proof or full private diagnostics."
+    "Selected E2 records carry minimal event facts only; they do not contain bearer proof or full private diagnostics.",
+    "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -1427,7 +1429,7 @@
       "id": "route",
       "path": "lib/new_you_web/router.ex",
       "symbol": "primary-email-change/confirm",
-      "sha256": "61a829e8080bba8451843308b8b038e3f80755b729786551b7d6762533dc2160"
+      "sha256": "a08e890d4f49151edcd36ed69fd884ce07cf3f06b89b15438d164ecc95697485"
     },
     {
       "id": "audit",
@@ -1481,7 +1483,7 @@
       "id": "reachability_test",
       "path": "test/new_you_web/security/authentication_reachability_test.exs",
       "symbol": "request_primary_email_change",
-      "sha256": "21c74afa306dc808ae97614fd1ef9cfe077f5b66e9cccebaf25979d6d4fe0498"
+      "sha256": "3c145eefac36f061b25f9c742fd4de5a6a4e6f087d2efd8e2803a0f17b2dd33b"
     },
     {
       "id": "privacy",

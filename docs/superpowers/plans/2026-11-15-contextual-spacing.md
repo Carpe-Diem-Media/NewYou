@@ -1,0 +1,20 @@
+# Contextual spacing and prose implementation plan
+
+Continue WELL-112 / draft PR #227 from `86ba37300a95f7087e87ab0260fad51902aca55f`, implementing Pass 2 of the approved [roadmap](../../development/research/acss-4.0.3-inventory/next-passes.md). The existing Phase 5 recipes remain the baseline. The owner-approved WELL-114 continuation exception remains open. Current main `f004ac7` adds Dialyxir cache changes and does not supersede these CSS/component seams. No base integration is included.
+
+## Acceptance criteria
+
+1. Canonical `--card-content-gap` and `--card-action-gap` roles map to the existing 16px geometry and namespaced Tailwind utilities. Shared cards consume them independently of padding, prose, control spacing and inset-radius calculations. Actions retain wrapping and bottom alignment. Root edits propagate; supported local role overrides isolate sibling cards.
+2. Opt-in `.ds-prose` supports native figure/figcaption markup and explicit nested prose scopes. A neutral flow wrapper separates a locally overridden nested scope from the outer margin owner. Figure edges introduce no browser default margins. Caption separation uses optional local `--prose-caption-space`, falling back to approved 8px. Captions use approved caption typography. Direct block flow, list/quote rhythms, first/last edges and focus remain intact. No arbitrary wrapper interpreter, layout-gap override, media/crop framework or global reset is added.
+3. The guide shows the actual shared cards, root roles, labelled local overrides, long EN/AF figures/captions and nested scopes in narrow allocations. Existing production type and guide candidate scales remain separate. No new type value, palette, button treatment or participant copy is adopted.
+4. Regression proof observes actual CSS geometry and propagation: card/content/action/control isolation, unchanged padding/radii, root/local inputs, zero/equal spacing, figure/caption edges, explicit nested scope flow, 240px parents, 320px reflow, current/candidate typography, exact doubled text and text-spacing overrides. Check native links, no-script content, both supported browser engines and existing registration consumers without POSTs.
+5. Document formulas, editing ownership, source references, supported markup and limits. Inspect actual page/router seams for an eligible later rich-content consumer. Do not alter hash-locked legal responses or invent a page if none exists. Presentation-only additions introduce no Domain/interface/lifecycle/schema capability and are exempt from a new semantic capability map.
+6. Run focused ExUnit, assets/design/architecture, canonical TEST `mix check`, `mix check.deep`, supported Hallmark and browser regressions. Preserve failures and exclusions. Inspect the complete diff, obtain independent bounded review, generate exact-head history and reconcile PR/Plane. No merge, Done, visual approval or resulting-main certification.
+
+## Implementation sequence
+
+1. Add missing-contract tests in the existing component and LiveView files. Add an independent browser proof helper and demonstrate expected failures before the implementation.
+2. Update `assets/css/design-tokens.css`, its required narrow `DESIGN.md` mechanism note, card classes/component CSS and `assets/css/design-content.css`. Keep current values and layout owners.
+3. Extend `DesignSystemContent.content_recipes/1` with shared card comparisons and semantic prose specimens. Use internal Class C EN/AF copy and existing component APIs; no new event/route/state.
+4. Integrate browser proof into the existing compatibility runner and run dedicated stress checks. Run browser proof after the asset build settles, keeping CSSOM fallback selection separate from rebuilds. Record any failing run before a controlled rerun.
+5. Add a focused Pass 2 research addendum and links from existing notes/developer guide. Run checks, review, push source/history and record exact-head results in PR/Plane. Use DevCore TEST for tests and DEV for assets; never reset/clean the database.
