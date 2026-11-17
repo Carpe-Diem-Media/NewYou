@@ -1,5 +1,5 @@
 {
-  "base_sha": "fbfc85271cdc5021b388d1c908eade0279b0f850",
+  "base_sha": "6b92ba6d2b51be4f15af27c66a9d24dcf73640f8",
   "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/250/checks",
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/250/commits",
   "files": [
@@ -48,58 +48,58 @@
       "status": "added"
     },
     {
-      "blob": "8a3d58d94bc2b366a2b3dbf80a5d19709da63282",
+      "blob": "b68ca7979f5c5697174b4904c2ca40f715ab6db8",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/identity.password_reset.json",
-      "sha256": "92a53b030c18b2f451e6b493bdde5d90c57714c3d2e99dd3be02b42c513d171e",
+      "sha256": "f89783bc9b770d42c92d87c1d0a1080dd300de63ff60f2a53d7b3cfe751f8247",
       "status": "added"
     },
     {
-      "blob": "b1dddd2b81c9062c726269c30f32e7b4e6162abc",
+      "blob": "9fcbb353428774b4891dbde2c3d40d860d216b0c",
       "mode": "100644",
-      "old_blob": "6dc3caf67974abb254d82cbb973d338db3ed5069",
+      "old_blob": "0654a604971d4dff28220bdc36a1c0bdad7fe642",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.primary_email_change.json",
-      "old_sha256": "054a16cf4a4ca2247f7ac8d0015bb65bda5b4b434e80a01a079e6f659a8c1c4d",
+      "old_sha256": "b8689de11a15d079772ad3e4c0b708606fe3b6ffb99cb48a096efc9c1e593584",
       "path": "docs/development/knowledge/identity.primary_email_change.json",
-      "sha256": "c9beb38e53aba865c5e4416288d9d147e1a5026183dd9a7c17e85405ee3f33cd",
+      "sha256": "638f6f9cf10126cc6eeb7b239a5d974368164474be7671c644ffe83d3a6673d8",
       "status": "modified"
     },
     {
-      "blob": "d0b1783703ba1020ada393d08ae08cdf33153ce8",
+      "blob": "aff0839e7df6ed6a2f1bcb5bfe0e985aded850c0",
       "mode": "100644",
-      "old_blob": "e3995471fc2eefbe02fef4586b98c0acd5275817",
+      "old_blob": "d16be8a9b72c2acc2d3c6f8ce66925eb0c56b0d0",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.recovery.json",
-      "old_sha256": "8c5886b0ad5790e480aa53cf7840eeff419f1c39b79ee4ec7136df22f51f66b3",
+      "old_sha256": "130f06cfbfd4fcb0eee80339c1442ca83f9dc169412024084ab510e15bb48365",
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "dcd0e8f0847dd53fc15ebd13832465367c63dc3e0aee1d43266fab4eb4008381",
+      "sha256": "21cc6dfff6138006a5ff057b763a083b391cf43340ee9970b4f6c01ee631b193",
       "status": "modified"
     },
     {
-      "blob": "b94b559867dfd44aab0a995f5202be7f1b582df0",
+      "blob": "76171cf0d352028ca6d5a1427b6f28d0b112d892",
       "mode": "100644",
-      "old_blob": "c0f7ca97a2a5946e480d03592ab1cc6234d96a96",
+      "old_blob": "48f58ebf122ac8b7241d9d10dd3ad75dd7315859",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.registration.json",
-      "old_sha256": "490b17d82d06702fa653661bdbdbe7e9ef4db3d0831f5e6e3a62d9650dec36fc",
+      "old_sha256": "4c47ddf4b304c707ce4773311968dcb2530449f8725c16424618a8a62bc9668b",
       "path": "docs/development/knowledge/identity.registration.json",
-      "sha256": "ab70cfdc8f19c718c46989d61e4f0ad3866bf89199c330a542e1699202eb04a6",
+      "sha256": "3edcc5d4db79fa1131d82a79737fd280498a83416be5347f357fb9ef387ad69b",
       "status": "modified"
     },
     {
-      "blob": "0070005d7691ba1c18bf5d01de64622ba1f487b2",
+      "blob": "de9495e8fad0e88aa31e63c3f1267f48b47a7e5c",
       "mode": "100644",
-      "old_blob": "d1a5cdd08f1ce18ff92dcbd86dde5a9520ed1848",
+      "old_blob": "bd6e8c851abbfb4e97e99d91f5fcc1cc562eed6a",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.sign_in.json",
-      "old_sha256": "a50cab92291c3fad1ce58ba9e4714bab42aba6d78ddbd6b3e203ebeed52c1a37",
+      "old_sha256": "057742e1982848ecc0176bd0e9e42dfb81a4f8bf790e6c97e6a6250445b30a9c",
       "path": "docs/development/knowledge/identity.sign_in.json",
-      "sha256": "4188dace1688611f1afa307d043d52b3564718cc1c4b60e93aea80809404daf6",
+      "sha256": "00971909646092485bf9836c680147d36461fb012f6830f0cb07ccf869d2c683",
       "status": "modified"
     },
     {
@@ -125,14 +125,14 @@
       "status": "modified"
     },
     {
-      "blob": "e1de26c11a5c0164466bc1b48984a77401e91e3c",
+      "blob": "598c66ab615ceabea7a153b0f102256d9e6dec9c",
       "mode": "100644",
-      "old_blob": "edd670ea7e0808e3100a91194866b1a382ff3090",
+      "old_blob": "0efdf5b7ce13f6506af19f58b044b97cf7cdc44f",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/proof.tb001.json",
-      "old_sha256": "252171d0dd2d0abac3bdcbab47ca7bc0f718cdb9b05f0bc7121117d48b417b9d",
+      "old_sha256": "56b39ff83b2afa367aa95104cb40abd683c8392ecea927d995b03d3f2b44ccff",
       "path": "docs/development/knowledge/proof.tb001.json",
-      "sha256": "8265b332e6b25233c250ea31761ee08d2a31ad32c6a103bab6126c6e262a27b7",
+      "sha256": "5b41113576f44e26dd18b7772e61836162f698f9a38dc0a475a695810d4b31ef",
       "status": "modified"
     },
     {
@@ -169,25 +169,25 @@
       "status": "modified"
     },
     {
-      "blob": "07e209efc0e5a764ef0ba2d1f3475cd218bc0700",
+      "blob": "ea7fc5665b804f70f1da5c57c17b88170f3f547e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you/content/password_reset_browser_copy.ex",
-      "sha256": "1cf18ca159b476b402ebb77bdf3ae0182ae30e415b2bbb3dd917cf3b8710b2a1",
+      "sha256": "5671e795a491175519a3569171a6d99968d627890bd38cdb34c2c6a9970385dc",
       "status": "added"
     },
     {
-      "blob": "dd3960c7ce2a59dedd75725c790368e4868b1410",
+      "blob": "34f0c99c1c9ea2aa29f16d97f6463447ab402363",
       "mode": "100644",
       "old_blob": "d5df4b7d42ca32c5612dcdfe49bd3d75f2779145",
       "old_mode": "100644",
       "old_path": "lib/new_you/content/password_reset_message.ex",
       "old_sha256": "eda16f4262c974fa4e3c543040f97f2bd934304a391a080497a1004072af9cfd",
       "path": "lib/new_you/content/password_reset_message.ex",
-      "sha256": "16f8d31198a0f38659bb7eb95167d0d4da8f50f7584575ebe07b91258a9dd2e7",
+      "sha256": "2db36457616e6257047940ce0113c0866955a285a1651b1399a4bfc049222cf1",
       "status": "modified"
     },
     {
@@ -224,25 +224,25 @@
       "status": "modified"
     },
     {
-      "blob": "ebc1477362cf5b0c22c169da6d8262af3a803105",
+      "blob": "46130055d15371b6dcb10dc4de12634578a3fd5c",
       "mode": "100644",
-      "old_blob": "0785335bdcd83b612e5f32c860004db6e01ebb7f",
+      "old_blob": "6ee2a5e3356d4f9dbd31d7f1a5b7355fe2af7832",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/components/design/button.ex",
-      "old_sha256": "9d461b9ff2437f511937ad5acc7389fb6edbf9113d22ea626529aaef916d73c7",
+      "old_sha256": "e7e28ed73fdcc5da76bfdd94bc9b43e52f8d401383be37fe4f01333d08983f8d",
       "path": "lib/new_you_web/components/design/button.ex",
-      "sha256": "9a98975bcd5a4efb13abf9ca8f0a2ecc47bd10a12d5e00c73de11c3dfcbcae72",
+      "sha256": "5a5ac939d768c0fd1877bb1a5cc35cbd78763f6a5efcb6d25b66cb20b6a4b5d3",
       "status": "modified"
     },
     {
-      "blob": "a7704100b855249c689a17081593ae49972c2176",
+      "blob": "4f1729763ee25feb099fa88b77ba17735aaeb384",
       "mode": "100644",
-      "old_blob": "6396fa3dda39a0c2a337c1c2a8644b81e8bf8718",
+      "old_blob": "96c84eca9da16b7bf7d2464a95d1f9f3ca930507",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/controllers/password_reset_controller.ex",
-      "old_sha256": "58b350a6b32964beb7dac6541e2f69095355f33ab89484f4df9c20cae35e0984",
+      "old_sha256": "750408ded78fde7b469635347c8bbd9bde88f3bde067cece88100fc8931992d5",
       "path": "lib/new_you_web/controllers/password_reset_controller.ex",
-      "sha256": "34c17c5881843dd818be87f8d604f06c59f19f76535f014f627245355460cf19",
+      "sha256": "0af63662ff7da33d0f2729249b3e86701bb2c3a1511f9c20698183e26a8fc0ad",
       "status": "modified"
     },
     {
@@ -400,25 +400,25 @@
       "status": "added"
     },
     {
-      "blob": "c3579d6afda7547fd69a2a49dbf74c187b0b4eb1",
+      "blob": "8c704b0867b2073b52d3b09336cc8f404cc9485a",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/content/password_reset_browser_copy_test.exs",
-      "sha256": "816d0a154fc3b0a6cabea9c2abcee91476a018aaecb18cff80fa961dee0a41ea",
+      "sha256": "fb9e4f0ec3d6a21f05210faef68612fbc03724408e1c2505daf204356095e427",
       "status": "added"
     },
     {
-      "blob": "1e5aa307944110b990dc62dd6936a3b81da0c95a",
+      "blob": "fe9f044de0cd1d8bc1e15a198469bba3d2eb5d26",
       "mode": "100644",
       "old_blob": "999cb1c7c41d2225d2fc428705ce3ef2a4a8c349",
       "old_mode": "100644",
       "old_path": "test/new_you/content/password_reset_message_test.exs",
       "old_sha256": "eb22f9335c4da797576a70f1ef27149cd8d709ab73e6891c00b100e4ed89b5d8",
       "path": "test/new_you/content/password_reset_message_test.exs",
-      "sha256": "3b77147c69085742574b1ab90d6efcca3d665bc29e20a80a92ef692d136d101a",
+      "sha256": "98c634d47bd0a9e0dbf76f4d29701e1a2682c4077959b7cb7844c34b7403e84e",
       "status": "modified"
     },
     {
@@ -499,6 +499,17 @@
       "status": "modified"
     },
     {
+      "blob": "5d9d335bc1b8f52a8cff7267312c39e973d8fdd6",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/new_you/proof/well136_browser_checks_test.exs",
+      "sha256": "bab4965964eaa42fb016ffa3fc379b4e27353a850cf1ef6fab05e5525bad7677",
+      "status": "added"
+    },
+    {
       "blob": "f5eecc57f90d1bcfeb81de34e345574adc41606b",
       "mode": "100644",
       "old_blob": null,
@@ -510,14 +521,14 @@
       "status": "added"
     },
     {
-      "blob": "1e7a5485b2703afe716fc2902ccf810de105a71d",
+      "blob": "df66c290e40d76feb1f17c663b85e9abcd1b66ff",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you_web/controllers/ordinary_password_reset_test.exs",
-      "sha256": "e3b7cfc1c4a4af765fec209da3a379b8dcaad360b891c94eb9e5df832e1c4ad8",
+      "sha256": "01f4d87c12817a9468241857e34db45a0d748618da94d8c25fe61ead26bc2b2e",
       "status": "added"
     },
     {
@@ -609,14 +620,14 @@
       "status": "modified"
     },
     {
-      "blob": "0c2559f0d758ebcb6b06cf5b04fccba6916474ac",
+      "blob": "d6ff06a2a9c928111d422af6c3a2eb5d2cc37cb8",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/well136_browser.ex",
-      "sha256": "b225df076384eb75d1aa4982e5ea35e21d61899285b965263b69ff45bc2b23a5",
+      "sha256": "f5d9eea338a1576e9edc26740a4db5d537ef1abac29f2ee9e687aa956b636c71",
       "status": "added"
     },
     {
@@ -658,7 +669,7 @@
   ],
   "pr": 250,
   "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/250",
-  "range_base_sha": "fbfc85271cdc5021b388d1c908eade0279b0f850",
+  "range_base_sha": "6b92ba6d2b51be4f15af27c66a9d24dcf73640f8",
   "schema_version": 1,
   "symbols": [
     {
@@ -829,7 +840,7 @@
       "name": null,
       "old_sha256": "5f290161b2e2f4818e3f998dd11e8ee9103096364d5812cb6563739cd7f5ab1e",
       "path": "lib/new_you/content/password_reset_message.ex",
-      "sha256": "31d3d4be37a91987da1c761e7acdb732ccfb1c31fba93d9dd9d574d31a59949f",
+      "sha256": "645a220e0afb72f52a2053d3572552cc323015d57be16cf31743b6f3917877e7",
       "status": "parsed"
     },
     {
@@ -960,9 +971,9 @@
       "kind": "module",
       "module": "NewYouWeb.Components.Design.Button",
       "name": null,
-      "old_sha256": "f0699b68d4752fded89ce3848f4e17c27f291f0b6dea247956209ce79dfd3acd",
+      "old_sha256": "c63e981912ae30279c84ba296a284e0ffa380b180fe0c018406cd6a2dd239465",
       "path": "lib/new_you_web/components/design/button.ex",
-      "sha256": "cdb2a18548f146d95f6829087b49efe35be6992fe5199dd99cd81a567bceaf06",
+      "sha256": "fcfa40f727c353e44670f441c0e10ebc246a5a1e107c143ec8014446072ada6e",
       "status": "parsed"
     },
     {
@@ -972,9 +983,9 @@
       "kind": "function",
       "module": "NewYouWeb.Components.Design.Button",
       "name": "primary_button",
-      "old_sha256": "ec0a30b2a901bf639d64df6b7ceccc1a993a564ed8cd1c447a18614e400dc176",
+      "old_sha256": "0fba839b5bb1a5b567b68fff3b0d75b0295b95cc90b968faaf036d27441e37c3",
       "path": "lib/new_you_web/components/design/button.ex",
-      "sha256": "154e9b3f3f2d38d0fd0f68efa2763221b25b18b1f24e485d09fe1fc6b7701a1a",
+      "sha256": "1f31af6eb4cd8f9f94c3fc740a931c0f03664d617faf4d3d7a6a296b057c02c8",
       "status": "parsed",
       "visibility": "public"
     },
@@ -994,9 +1005,9 @@
       "kind": "module",
       "module": "NewYouWeb.PasswordResetController",
       "name": null,
-      "old_sha256": "62940c6df2fe0d405b04bfeac297cc94b9541529519a2814a64e627b8d08f405",
+      "old_sha256": "1274628e11315000412dba40874bef5977ed1e23ec80fd6c7aac062cb302facc",
       "path": "lib/new_you_web/controllers/password_reset_controller.ex",
-      "sha256": "25bff29947937e8f0f6858cf3f09c4d411dd3cdd4fa2b4ab1ebd817c256cbe6b",
+      "sha256": "38b0e77a6d5d73f1f2ffca05c1a986630caafd6b583a9fa5d40c6e348d593d58",
       "status": "parsed"
     },
     {
@@ -1162,9 +1173,9 @@
       "kind": "function",
       "module": "NewYouWeb.PasswordResetController",
       "name": "security_headers",
-      "old_sha256": "b181bbf71b5f0d73e33269e111fd4229103ce07e06d7b23654e7af3ab18440cb",
+      "old_sha256": "fb9cf8768a73366482ac1da6233bbcfd7f8d1525b93fb73d667e0f1d3b0160c5",
       "path": "lib/new_you_web/controllers/password_reset_controller.ex",
-      "sha256": "8fd042a7cfefb76873234de80011b79806d246726002a6d33ee6b542eb02667c",
+      "sha256": "830a319dd868d0a1a0b40c327cedad82e13284911213adee08f1d7614576b323",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1301,7 +1312,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/content/password_reset_browser_copy_test.exs",
-      "sha256": "56382ffa0ff738c059c9d221ec874324f57d55757318aa0e00f4304d20b7d698",
+      "sha256": "7ff65f5b0ad010098a105101ecb752b7fe42e335404a5d0e953cf5f69b8ed62d",
       "status": "parsed"
     },
     {
@@ -1322,7 +1333,7 @@
       "name": null,
       "old_sha256": "bb8ae836da528d36102c9dcc18d6d28ca6dfad52aa808a6a78d0d656e08a23b9",
       "path": "test/new_you/content/password_reset_message_test.exs",
-      "sha256": "05fe75f5f581a8b8b693e514310e04dd87d1abaebc6eb8488d4fe8dec64b6a1e",
+      "sha256": "c491eaadeac13a1b81148f111812ec330e7e6928f6a056108795f00ec6e88114",
       "status": "parsed"
     },
     {
@@ -1577,6 +1588,27 @@
       "arity": null,
       "change": "added",
       "kind": "module",
+      "module": "NewYou.Proof.Well136BrowserChecksTest",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/new_you/proof/well136_browser_checks_test.exs",
+      "sha256": "a3e80993c875af8ffcc9b685e21bf8e57d04c26083edd404f4f1e7757185192e",
+      "status": "parsed"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you/proof/well136_browser_checks_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
       "module": "NewYou.Proof.Well136BrowserSetupTest",
       "name": null,
       "old_sha256": null,
@@ -1602,7 +1634,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you_web/controllers/ordinary_password_reset_test.exs",
-      "sha256": "3ad697eb7fcf3c314c3d0f24a31cc9082782c8e40f3419c9f337264da30af16b",
+      "sha256": "520231c79e9e19c36d1e704eb50833fa7e3e4bd311d21c9f54fa30428ac2676b",
       "status": "parsed"
     },
     {
@@ -2095,7 +2127,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/well136_browser.ex",
-      "sha256": "af684b0f890d212da49560edf1f153391cd69b1e349ed0bbfc3e52875bc907f5",
+      "sha256": "fba97d207497d24f89ca1d9f622fd0219c7b12bb6c08e3e68ad2069a03e40c20",
       "status": "parsed"
     },
     {
@@ -2118,9 +2150,22 @@
       "name": "assert_browser_journey",
       "old_sha256": null,
       "path": "test/support/proof/well136_browser.ex",
-      "sha256": "4dbb7a853a3f3c047e9f58d48accc595d979cb9cd881f34b607c8a25c05b8571",
+      "sha256": "373162020dc429dae10a0a97f13ad086409b05c770bbd2c4123edee371b1f9e1",
       "status": "parsed",
       "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.Well136Browser",
+      "name": "assert_checks!",
+      "old_sha256": null,
+      "path": "test/support/proof/well136_browser.ex",
+      "sha256": "5262d89ff2f7fa7505b9c0ddf632d1cd0720072d3820be258439539a04e7a167",
+      "status": "parsed",
+      "visibility": "public"
     },
     {
       "arity": 1,
@@ -2299,6 +2344,7 @@
     "test/new_you/proof/browser_protocol_test.exs",
     "test/new_you/proof/development_entry_recovery_test.exs",
     "test/new_you/proof/tb001_integration_test.exs",
+    "test/new_you/proof/well136_browser_checks_test.exs",
     "test/new_you/proof/well136_browser_setup_test.exs",
     "test/new_you_web/controllers/ordinary_password_reset_test.exs",
     "test/new_you_web/controllers/password_reset_content_context_test.exs",
