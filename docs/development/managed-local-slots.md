@@ -156,14 +156,23 @@ unknown-function warnings for that task; it does not suppress analysis findings.
 The first real local `mise exec -- /usr/bin/time -v mix dialyzer --plt` preparation
 passed on OTP 29.1.2 / Elixir 1.20.5, elapsed `2:58.40`, maximum RSS
 `3692448` KiB and no swaps. It used the new baseline namespace and private local
-core copies, without a TEST lease. This is one cold preparation measurement;
-concurrent real analysis and full-suite capacity are still unverified.
+core copies, without a TEST lease. TEST preparation plus analysis then passed in
+`4:25.69`, maximum RSS `3465708` KiB. Peer TEST preparation passed in `4:11.22`,
+maximum RSS `4087804` KiB. Full-suite capacity remains unmeasured.
 
 A DEV-profile analysis then failed with 20 warnings. Adding the pinned build-tool
 input and rerunning reduced that to 18 warnings in Communications and Privacy,
 with no remaining LocalDialyzer unknown-function warnings. Those application
-warnings have not been classified against a base or the required TEST-profile
-deep gate. Neither analysis is recorded as passing.
+warnings have not been classified against a separate base DEV run. Neither DEV
+analysis is recorded as passing. TEST-profile static analysis passed with zero
+errors, skips or unnecessary skips; this does not replace `mix check.deep`.
+
+At source `e583d5cd22c42b7850711ecf07c15a27702bd85b`, two independent worktrees
+ran `mise exec -- env MIX_ENV=test /usr/bin/time -v mix dialyzer --format dialyxir`
+concurrently. Both passed with zero errors. Analysis overlapped for `17.385`
+seconds, and the shared cache lock was available during that overlap. Neither
+command used a TEST lease or the legacy TEST/PLT lock. Permanent temporary-cache
+tests cover concurrent cold preparation; this real proof used the prepared cache.
 
 The explicit `NEW_YOU_DATABASE_MODE=ci` compatibility path preserves the hosted
 runner's disposable `new_you_test` allocation and requires both existing CI flags.
@@ -176,5 +185,5 @@ Pure LocalConfig, temporary-metadata cache and admission tests do not prove real
 NewYou database isolation. Before activation claims, WELL-147 still requires
 two independent worktrees with their own migrations and distinguishable committed
 synthetic fixtures, child/restart/browser paths, failure retention and clean
-reuse, actual PLT preparation/analysis concurrency, measured heavy capacity,
+reuse, measured heavy capacity,
 full repository gates, bounded OCR, exact-head CI and independent review.

@@ -93,7 +93,7 @@ Checks apply to this branch's inspected source bytes, not a final PR candidate.
   stale/partial/substituted context, strict endpoint identities and deliberate
   legacy/CI compatibility. It starts no Repo.
 - `python3 -m unittest tests.test_local_session tests.test_local_plt_cache tests.test_foundation_lane_routing tests.test_phase8_proof_workflow -v`
-  passed 64 tests. Admission and cache tests use temporary metadata and owned
+  passed 65 tests. Admission and cache tests use temporary metadata and owned
   temporary processes. They cover concurrent cache preparation, private copies,
   failed publication, tamper rejection, old-version rejection, redaction,
   same-worktree exclusion, cancellation and real Mise/Bash exec descriptor
@@ -104,7 +104,7 @@ Checks apply to this branch's inspected source bytes, not a final PR candidate.
   `mise exec -- mix compile --warnings-as-errors` passed and compiled the actual
   application and task. Neither compile starts the application or Repo.
 - `mise exec -- elixir -pa _build/dev/lib/jason/ebin -pa _build/dev/lib/dialyxir/ebin -e 'Mix.start(); Code.require_file("mix.exs"); Code.require_file("lib/mix/tasks/local_dialyzer.ex"); ExUnit.start(); Code.require_file("test/tools/dialyzer_cache_test.exs")'`
-  passed seven pure task/configuration tests. This also runs the nine-test Python
+  passed eight pure task/configuration tests. This also runs the ten-test Python
   cache adapter suite. Missing-input guards had observed failing tests before
   implementation. No PLT analysis or database is part of these tests.
 - The changed Elixir paths passed `mise exec -- mix format --check-formatted`
@@ -119,8 +119,23 @@ Checks apply to this branch's inspected source bytes, not a final PR candidate.
   configuration tests first failed, then passed after adding the already pinned
   `:dialyxir` to `plt_add_apps`. Fresh analysis of that changed input, the same
   command, failed with 18 warnings, none from LocalDialyzer. Communications and
-  Privacy warnings remain unclassified against base and the required TEST-profile
-  gate. No warnings were suppressed and neither analysis is a passing check.
+  Privacy warnings remain unclassified against a separate base DEV run. No warnings
+  were suppressed and neither DEV analysis is a passing check.
+- `mise exec -- env MIX_ENV=test /usr/bin/time -v mix dialyzer --format dialyxir`
+  passed TEST-profile static analysis with zero errors/skips, initially including
+  cold preparation in `4:25.69`, maximum RSS `3465708` KiB. Peer preparation via
+  `mise exec -- env MIX_ENV=test /usr/bin/time -v mix dialyzer --plt` passed in
+  `4:11.22`, maximum RSS `4087804` KiB. Neither starts NewYou or Repo.
+- The same TEST analysis command then ran concurrently in this worktree and
+  `well-147-isolation-peer`, both at implementation source
+  `e583d5cd22c42b7850711ecf07c15a27702bd85b`. Both passed, with analysis overlapping
+  `17.385` seconds and the cache lock available during the overlap. Receipt:
+  `/tmp/newyou-well147-final-parallel-analysis.json`; individual logs have the
+  same prefix with `-1.log` and `-2.log`. This proves independent prepared-cache
+  analysis, not actual simultaneous cold production of a shared core.
+- Both worktrees passed `mise exec -- env MIX_ENV=test mix compile --warnings-as-errors`.
+- `mise exec -- python3 -m unittest tests.test_capability_knowledge tests.test_knowledge_capture -v`
+  passed 34 knowledge tests. The source-linked map remains descriptive, not approval.
 
 Temporary native review identified a conditional CI-compatibility concern.
 `NEW_YOU_DATABASE_MODE=ci` plus both CI flags is deliberately supported legacy
@@ -163,9 +178,39 @@ been provisioned, and no routine cleanup has run on this workstation.
 WELL-147 is not review-ready. Required live migrations, two-worktree committed
 business fixture isolation, child/restart/browser/prod-probe execution,
 intentional failed test retention and fresh clean reuse remain unverified.
-Real independent analysis concurrency and full-suite resource measurements are
-also pending. After the authenticated manifest approval enables the bounded
+Full-suite resource measurements are also pending. After the authenticated
+manifest approval enables the bounded
 pilot, finish that proof, then run the stable final `mix check` and
 `mix check.deep` through the required executor. Only passing local gates permit
 bounded OCR, authenticated separate NewYou PR/history generation, exact-head CI
 and independent Master Gate. No NewYou merge or Done claim is made here.
+
+The actual `mise exec -- tools/newyou-local test -- mix test test/new_you/local_config_test.exs`
+entry attempt exited 1 with `ERROR: slot activation and disposable cleanup authorization are required`.
+It launched no Mix child and provisioned no database. The owner's chat consent is
+recorded; the missing authenticated GitHub artifact is the remaining enable guard.
+
+## Checkpoint assessment
+
+Task type IMPLEMENTATION, author self-assessment of WELL-147 only. Against the
+seven live acceptance groups, PASS 0/7 in full: groups 1, 2, 3 and 6 are UNVERIFIED
+with partial source/test evidence; groups 4, 5 and 7 are NOT_DONE. The groups cover
+strict configuration, subprocess propagation, build/PLT isolation, real business
+fixture isolation/reuse, measured heavy capacity, operational adoption, and final
+gates/review respectively. No completed DevCore criterion is counted as a passed
+NewYou criterion.
+
+Implementation Score 5/10 = requirements 2/4 + observed verification 1/3 +
+correctness/architecture/risk 1.5/2 + handoff 0.5/1. Confidence Score 85% in this
+partial assessment, supported by focused negative/concurrency tests and actual
+parallel static analysis. Positive managed database and child execution remain
+the highest-risk unknowns. Verification Status BLOCKED for the live feature,
+pending the authenticated approval artifact. Merge readiness
+NOT_VERIFIED_FOR_MERGE.
+
+The three-point gap to 8/10 reflects missing real application proof and full
+repository/review evidence, not an estimate of remaining effort. First enable
+against the owner's exact authenticated comment, then prove migrations, business
+fixtures, child paths, retention/reuse and heavy capacity. Finish the required
+executor gates, OCR, exact-head CI and independent Master Gate before reassessing.
+No additional routine-operation consent is needed inside the approved contract.

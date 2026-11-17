@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "e55373972036124091a068116c2235822462ae4e",
-    "semantics": "WELL-147 source checkpoint after the DevCore prerequisite integrated. Configuration/admission/cache adapters and compile checks passed; real cold core/project PLT preparation passed without TEST. DEV analysis still fails with 18 Communications/Privacy warnings after correcting two introduced Dialyxir input warnings. Live NewYou managed DB/child/isolation/reuse proof, required final TEST gates, bounded OCR, hosted CI, independent approval and resulting main remain unverified."
+    "git_sha": "e583d5cd22c42b7850711ecf07c15a27702bd85b",
+    "semantics": "WELL-147 staged source after the DevCore prerequisite integrated. Pure configuration/admission/cache tests, source compilation and real PLT preparation passed. Two TEST-profile analyses overlapped successfully with the shared cache lock available. DEV analysis retains 18 Communications/Privacy warnings after correcting two introduced build-tool input warnings. Live NewYou managed DB/child/isolation/reuse proof, required final local executor gates, bounded OCR, hosted CI, independent Master Gate and resulting main remain unverified."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -406,7 +406,8 @@
         "Separate cache namespaces when key inputs change.",
         "Reject incomplete or modified baselines and recover after producer failure.",
         "Concurrent thread and process requests prepare one baseline and create separate local destinations.",
-        "Release the cache lock before preparation returns and pass a private staging path to the producer."
+        "Release the cache lock before preparation returns and pass a private staging path to the producer.",
+        "Reject a symlinked build ancestor without touching the external sentinel."
       ],
       "proves": "Cache helper behavior with synthetic PLT bytes, temporary paths, and process/thread contention.",
       "limits": "Does not produce real Dialyxir core PLTs, run Dialyzer, or prove analysis succeeds on the pinned runtime.",
@@ -420,7 +421,8 @@
         "Select private local core paths and worktree-local project PLT paths outside GitHub Actions.",
         "Preserve hosted CI PLT cache paths.",
         "Keep the deep gate routed through the local Dialyzer preparation task and analysis.",
-        "Reject missing source/core/version cache identity inputs; the project PLT includes the pinned Dialyxir build-tool API."
+        "Reject missing source/core/version cache identity inputs; the project PLT includes the pinned Dialyxir build-tool API.",
+        "Read Dialyxir sources from the dependency root selected by Mix, rejecting missing source."
       ],
       "proves": "Mix project configuration and alias structure by source-level assertions.",
       "limits": "Does not execute the preparation task or Dialyzer analysis.",
@@ -497,8 +499,8 @@
   ],
   "proof_limitations": [
     "No NewYou managed database was provisioned or contacted and no managed child command was launched. Positive live lease verification and real two-worktree fixture isolation, failed retention and clean reuse remain unverified.",
-    "Real cold PLT preparation passed on OTP 29.1.2 / Elixir 1.20.5 in 2:58.40, maximum RSS 3692448 KiB, without TEST. Temporary-adapter cache/session tests passed 9 each, pure LocalConfig 18, pure Dialyzer configuration 7, and application compilation passed. Actual concurrent independent Dialyzer analysis and full-suite resource capacity are unverified.",
-    "DEV-profile Dialyzer analysis failed with 20 warnings, then 18 after adding pinned :dialyxir to project PLT inputs. The two introduced LocalDialyzer unknown-function warnings were corrected and absent in fresh analysis. Remaining Communications/Privacy warnings are not classified against base or the required TEST deep gate; neither analysis passed.",
+    "Real cold preparation passed on OTP 29.1.2 / Elixir 1.20.5, first DEV 2:58.40 / 3692448 KiB max RSS; TEST preparation plus analysis 4:25.69 / 3465708 KiB, and peer TEST preparation 4:11.22 / 4087804 KiB. Two subsequent TEST analyses passed with zero errors and 17.385 seconds of overlapping analysis at source e583d5cd22c42b7850711ecf07c15a27702bd85b while the shared cache lock was free. Full-suite capacity remains unmeasured. Final pure tests: cache 10, admission 9, LocalConfig 18, Dialyzer configuration 8; compilation and 34 knowledge tests passed.",
+    "DEV-profile analysis failed with 20 warnings, then 18 after adding pinned :dialyxir to project PLT inputs. No LocalDialyzer unknown-function warnings remain. TEST-profile static analysis passed with zero errors/skips, so the observed DEV failure does not establish failure in the required TEST compile profile. The unchanged Communications/Privacy sources were not compared in a separate base DEV run; those DEV warnings are not certified as baseline.",
     "Explicit CI compatibility flags are caller controlled, not authentication of hosted origin. The normal local entry point rejects that mode and any partial managed context rejects. Independent Master Gate must assess this deliberate legacy compatibility boundary.",
     "The regular mix check, final TEST-profile mix check.deep, hosted CI, bounded OCR, final independent Master Gate, NewYou merge and resulting-main checks remain unverified. This checkpoint is not review-ready.",
     "The required persistence locator points to the DevCore slot allocation JSON because this capability has no NewYou migration or table. Its slots/database_prefix fields configure allocation. DevCore owns lease lifecycle and cleanup; this map describes consumer checks only."
@@ -539,13 +541,13 @@
       "id": "dialyzer",
       "path": "lib/mix/tasks/local_dialyzer.ex",
       "symbol": "defmodule Mix.Tasks.LocalDialyzer do",
-      "sha256": "d874c8b6c8bbe4b6a2a3bffa964bd95ea78b81fb984aed8b65086962d9caf963"
+      "sha256": "4b69d7ad79466f0a9c25462300555d93b9a1d0d9c5e61f0b5aa4dc10352905f4"
     },
     {
       "id": "cache",
       "path": "tools/local_plt_cache.py",
       "symbol": "class Cache:",
-      "sha256": "1dbb7032b63b59db004bd4e3e4d344b27c749459671a0130d32f59bab8483888"
+      "sha256": "123710e6ad194a58e89a9274148163d8f87b7c5451bc504d570e32ae649df091"
     },
     {
       "id": "producer",
@@ -563,19 +565,19 @@
       "id": "session_tests",
       "path": "tests/test_local_session.py",
       "symbol": "class LocalSessionTests(unittest.TestCase):",
-      "sha256": "82430f6abb407f64f535b609e962acbe93a1cb5939a7d569becd40cb03b80815"
+      "sha256": "6fe1fda2fb0db8da3d81e20bdde5637b907d23aae8c4dae1db755ddf96476016"
     },
     {
       "id": "cache_tests",
       "path": "tests/test_local_plt_cache.py",
       "symbol": "class LocalPltCacheTest(unittest.TestCase):",
-      "sha256": "d3d01b75e6e331961ee91945241747f8400903d5a21e494224f8f8cb004664ca"
+      "sha256": "5e93ba4936e3dc5ea08fc23e67d10625986569f25f6ae666381770ba4265e1d9"
     },
     {
       "id": "dialyzer_tests",
       "path": "test/tools/dialyzer_cache_test.exs",
       "symbol": "defmodule NewYou.DialyzerCacheTest do",
-      "sha256": "de4dbbe5baf3589679b01ef42ed1209e47d0a28ad6e53465b1305a7734a2c3bf"
+      "sha256": "86f8f431c959387b470250f7ea9bd4e91336e55136d4f83e03607b185a5ca8cd"
     },
     {
       "id": "restart",
