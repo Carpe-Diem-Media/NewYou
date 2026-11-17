@@ -1,6 +1,14 @@
 defmodule Mix.Tasks.LocalDialyzer do
   use Mix.Task
 
+  @moduledoc """
+  Prepares a versioned local core baseline and private copies before Dialyxir.
+
+  Shared locking ends after baseline validation or publication. Dialyxir then
+  mutates only the worktree's copies. CI keeps its existing cache paths and
+  delegates directly to Dialyxir with the original command arguments.
+  """
+
   @shortdoc "Prepares private local core PLTs before Dialyxir analysis"
 
   @impl Mix.Task
@@ -69,8 +77,8 @@ defmodule Mix.Tasks.LocalDialyzer do
     otp_version = File.read!(otp_version_path) |> String.trim()
     architecture = :erlang.system_info(:system_architecture) |> List.to_string()
 
-    source_root = Path.expand("deps/dialyxir")
-    source_paths = Path.wildcard(Path.join(source_root, "lib/**/*.ex"))
+    source_root = Map.get(Mix.Project.deps_paths(), :dialyxir)
+    {source_root, source_paths} = dialyxir_source_inputs(source_root)
     core_inputs = core_input_paths(plt_plan)
     dialyxir_version = Application.spec(:dialyxir, :vsn) |> to_string()
 
@@ -87,10 +95,37 @@ defmodule Mix.Tasks.LocalDialyzer do
     }
   end
 
+  @doc false
+  @spec normalize_core_apps([{String.t(), [String.t()]}]) ::
+          [%{basename: String.t(), apps: [String.t()]}]
   def normalize_core_apps(plt_plan) do
     Enum.map(plt_plan, fn {basename, apps} -> %{basename: basename, apps: apps} end)
   end
 
+  @doc false
+  @spec dialyxir_source_inputs(String.t() | nil) :: {String.t(), [String.t()]}
+  def dialyxir_source_inputs(source_root) when is_binary(source_root) do
+    source_paths = Path.wildcard(Path.join(source_root, "lib/**/*.ex"))
+
+    if source_paths == [] or not Enum.all?(source_paths, &File.regular?/1) do
+      raise ArgumentError, "selected Dialyxir dependency has no readable source inputs"
+    end
+
+    {source_root, source_paths}
+  end
+
+  def dialyxir_source_inputs(_source_root) do
+    raise ArgumentError, "selected Dialyxir dependency path is unavailable"
+  end
+
+  @doc false
+  @spec validate_identity_inputs!(
+          [{String.t(), [String.t()]}],
+          [String.t()],
+          %{String.t() => [String.t()]},
+          String.t(),
+          String.t()
+        ) :: :ok
   def validate_identity_inputs!(
         plt_plan,
         source_paths,
@@ -152,6 +187,8 @@ defmodule Mix.Tasks.LocalDialyzer do
 
   defp tree_hash(paths), do: tree_hash(paths, nil)
 
+  @doc false
+  @spec source_hash([String.t()], String.t()) :: String.t()
   def source_hash(paths, root), do: tree_hash(paths, root)
 
   defp tree_hash(paths, root) do

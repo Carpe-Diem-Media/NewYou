@@ -119,6 +119,27 @@ class LocalPltCacheTest(unittest.TestCase):
         write_request(path, b"{}")
         self.assertEqual(path.stat().st_mode & 0o777, 0o600)
 
+    def test_symlinked_build_ancestor_is_rejected_without_touching_target(self):
+        outside = self.root / "outside"
+        outside.mkdir()
+        sentinel = outside / "sentinel"
+        sentinel.write_bytes(b"keep")
+        work_root = self.root / "worktree" / "_build" / "plts"
+        work_root.parent.parent.mkdir(parents=True)
+        work_root.parent.parent.joinpath("_build").symlink_to(outside, target_is_directory=True)
+        cache = Cache(
+            self.root / "cache",
+            work_root,
+            {"otp": "27.2", "elixir": "1.20.4", "dialyxir": "1.4.8", "apps": ["mix", "ex_unit"], "revision": 1},
+            ["dialyxir_erlang-27.2.plt", "dialyxir_elixir.plt"],
+        )
+
+        with self.assertRaises(RuntimeError):
+            cache.prepare(self.producer, work_root / "local-core")
+
+        self.assertEqual(sentinel.read_bytes(), b"keep")
+        self.assertEqual(list(outside.iterdir()), [sentinel])
+
     def test_processes_share_one_cold_preparation(self):
         context = multiprocessing.get_context("fork")
         barrier = context.Barrier(4)

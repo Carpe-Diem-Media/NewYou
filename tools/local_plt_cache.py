@@ -92,9 +92,9 @@ class Cache:
             relative_destination = destination.relative_to(work_root)
         except ValueError as error:
             raise RuntimeError("private core PLT destination escaped its worktree root") from error
+        if _contains_symlink(work_root):
+            raise RuntimeError("private core PLT worktree path cannot contain symlinks")
         work_root.mkdir(parents=True, exist_ok=True)
-        if work_root.is_symlink():
-            raise RuntimeError("private core PLT worktree root cannot be a symlink")
         cursor = work_root
         for component in relative_destination.parts[:-1]:
             cursor = cursor / component
@@ -167,6 +167,16 @@ def _fsync_directory(path):
         os.fsync(descriptor)
     finally:
         os.close(descriptor)
+
+
+def _contains_symlink(path):
+    absolute = Path(path).absolute()
+    cursor = Path(absolute.anchor)
+    for component in absolute.parts[1:]:
+        cursor = cursor / component
+        if cursor.is_symlink():
+            return True
+    return False
 
 
 def _owned_private_directory(path, plt_names=None, expected_key=None):

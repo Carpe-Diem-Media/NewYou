@@ -135,11 +135,10 @@ except KeyboardInterrupt:
             finally:
                 if process.stdin and not process.stdin.closed:
                     process.stdin.close()
-                # Only this temporary proof's new process group is signalled.
-                try:
-                    os.killpg(process.pid, signal.SIGTERM)
-                except ProcessLookupError:
-                    pass
+                # EOF lets the owned orphan finish. Popen only signals its own
+                # still-live direct child, never a stale process-group number.
+                if process.poll() is None:
+                    process.terminate()
                 process.wait(timeout=5)
                 process.stdout.close()
                 process.stderr.close()

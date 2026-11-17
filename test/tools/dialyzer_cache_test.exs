@@ -90,6 +90,26 @@ defmodule NewYou.DialyzerCacheTest do
     end
   end
 
+  test "Dialyxir source inputs follow the selected dependency root" do
+    root =
+      Path.join(System.tmp_dir!(), "newyou-plt-alt-deps-#{System.unique_integer([:positive])}")
+
+    source = Path.join(root, "dialyxir/lib/dialyxir/project.ex")
+    File.mkdir_p!(Path.dirname(source))
+    File.write!(source, "selected dependency source")
+
+    try do
+      assert Mix.Tasks.LocalDialyzer.dialyxir_source_inputs(Path.join(root, "dialyxir")) ==
+               {Path.join(root, "dialyxir"), [source]}
+
+      assert_raise ArgumentError, fn ->
+        Mix.Tasks.LocalDialyzer.dialyxir_source_inputs(Path.join(root, "missing-deps/dialyxir"))
+      end
+    after
+      File.rm_rf!(root)
+    end
+  end
+
   test "cache identity rejects missing Dialyxir source and core inputs" do
     root =
       Path.join(System.tmp_dir!(), "newyou-plt-identity-#{System.unique_integer([:positive])}")
