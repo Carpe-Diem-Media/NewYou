@@ -24,9 +24,10 @@ defmodule NewYou.BootstrapTest do
   test "the real connection uses the TEST cluster, role and database without CREATEDB" do
     assert Mix.env() == :test
     config = NewYou.Repo.config()
+    expected = NewYou.LocalConfig.repo(:test)
 
     assert {config[:hostname], config[:port], config[:username], config[:database]} ==
-             {"127.0.0.1", 55433, "new_you_test", "new_you_test"}
+             {"127.0.0.1", 55433, expected[:username], expected[:database]}
 
     refute config[:url]
 
@@ -42,7 +43,7 @@ defmodule NewYou.BootstrapTest do
       )
 
     assert result.rows == [
-             ["new_you_test", "new_you_test", 5432, false, false, false, false, false]
+             [expected[:database], expected[:username], 5432, false, false, false, false, false]
            ]
   end
 
