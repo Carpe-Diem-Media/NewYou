@@ -307,7 +307,7 @@ class HandoffTests(unittest.TestCase):
             artifacts = root/'evidence'
             artifacts.mkdir(mode=0o700)
             state = dict(binding=BINDING, local=[dict(exit_code=0)],
-                         prepared=dict(preview=PREVIEW, budget=100000, exclude=gate.HISTORY_EXCLUDE))
+                         prepared=dict(preview=PREVIEW, budget=100000, exclude=None))
             (artifacts/'state.json').write_text(json.dumps(state))
             def command(*args, **kwargs):
                 if args[:3] == ('git', 'rev-parse', '--show-toplevel'):
@@ -486,55 +486,19 @@ class HandoffTests(unittest.TestCase):
         self.assertEqual(stopped.exception.code, 1)
         cmd.assert_not_called()
 
-    def test_mechanical_history_reuse_requires_identical_source_base_and_selection(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            def git(*args):
-                return subprocess.run(['git', '-C', str(root), *args], check=True, capture_output=True, text=True).stdout.strip()
-            git('init', '-q')
-            git('config', 'user.email', 'test@example.invalid')
-            git('config', 'user.name', 'Fixture')
-            git('remote', 'add', 'origin', 'git@github.com:Carpe-Diem-Media/NewYou.git')
-            (root/'source.py').write_text('base')
-            git('add', '.')
-            git('commit', '-qm', 'base')
-            git('update-ref', 'refs/remotes/origin/main', 'HEAD')
-            (root/'source.py').write_text('implementation')
-            git('commit', '-qam', 'implementation')
-            with patch.object(gate, 'ROOT', root):
-                scanned, _ = gate.worktree()
-                state = dict(binding=scanned, local=[dict(exit_code=0)])
-                history = 'docs/development/knowledge/history/pr-232.json'
-                (root/history).parent.mkdir(parents=True)
-                (root/history).write_text('{}')
-                git('add', '.')
-                git('commit', '-qm', 'generated history')
-                final, _ = gate.worktree()
-                reuse = gate.proof_binding(state, final, 232)
-                self.assertEqual(reuse['implementation'], scanned['head'])
-                self.assertEqual(reuse['history_only'], history)
-                for changed in [dict(final, base=HEAD), dict(final, merge_base=HEAD)]:
-                    with self.assertRaises(gate.GateError):
-                        gate.proof_binding(state, changed, 232)
-                with self.assertRaises(gate.GateError):
-                    gate.proof_binding(state, final, 233)
-                (root/'source.py').write_text('corrected')
-                git('commit', '-qam', 'source correction')
-                with self.assertRaises(gate.GateError):
-                    gate.proof_binding(state, gate.worktree()[0], 232)
+    def test_proof_binding_requires_exact_candidate_and_base(self):
+        state = dict(binding=BINDING, local=[dict(exit_code=0)])
+        self.assertEqual(gate.proof_binding(state, BINDING)['implementation'], HEAD)
+        for key in ('head', 'tree', 'base', 'merge_base'):
+            with self.subTest(key=key), self.assertRaises(gate.GateError):
+                gate.proof_binding(state, dict(BINDING, **{key: MERGE}))
 
-    def test_history_preview_reuse_rejects_new_eligible_files(self):
-        history = 'docs/development/knowledge/history/pr-232.json'
+    def test_preview_rejects_changed_selection(self):
+        gate.validate_reuse_preview(PREVIEW, PREVIEW)
         fresh = copy.deepcopy(PREVIEW)
-        fresh['files'].append(dict(path=history, will_review=False, exclude_reason='user_exclude'))
-        fresh.update(total_files=3, excluded_count=2)
-        gate.validate_reuse_preview(PREVIEW, fresh, history)
-        fresh['files'][-1] = dict(path=history, will_review=True)
+        fresh['files'].append(dict(path='new.py', will_review=True))
         with self.assertRaises(gate.GateError):
-            gate.validate_reuse_preview(PREVIEW, fresh, history)
-        fresh['files'][-1] = dict(path='new.py', will_review=True)
-        with self.assertRaises(gate.GateError):
-            gate.validate_reuse_preview(PREVIEW, fresh, history)
+            gate.validate_reuse_preview(PREVIEW, fresh)
 
     def test_finish_requires_fresh_final_ci_after_valid_ocr(self):
         evidence = dict(head=HEAD, base=BASE, premerge_main=BASE, reviewed_head=HEAD,
@@ -547,7 +511,7 @@ class HandoffTests(unittest.TestCase):
                 artifacts = root/'evidence'
                 artifacts.mkdir(mode=0o700)
                 state = dict(binding=BINDING, local=[dict(exit_code=0)],
-                             prepared=dict(preview=PREVIEW, budget=100000, exclude=gate.HISTORY_EXCLUDE),
+                             prepared=dict(preview=PREVIEW, budget=100000, exclude=None),
                              ocr=dict(result=result(), command=['ocr', 'review']))
                 (artifacts/'state.json').write_text(json.dumps(state))
                 def command(*args, **kwargs):
@@ -578,7 +542,6 @@ class HandoffTests(unittest.TestCase):
                      patch.object(gate, 'ROOT', root), patch.object(gate, 'worktree', return_value=(BINDING, ['.agents/skills/code-change-verification/scripts/handoff.py', 'assets/page.heex'])), \
                      patch.object(gate, 'command', side_effect=command), patch.object(gate, 'api', side_effect=api), \
                      patch.object(gate.ci_attestation, 'collect', return_value=e), \
-                     patch.object(gate, 'validate_knowledge', return_value=dict(outcome='PASS')), \
                      patch('builtins.print') as printed, patch('sys.stderr'):
                     self.assertEqual(gate.main(), 0 if outcome == 'success' else 1)
                     if outcome == 'success':

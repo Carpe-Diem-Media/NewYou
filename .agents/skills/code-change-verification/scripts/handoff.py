@@ -28,7 +28,6 @@ from tools.foundation_integrity_routing import classify_changed_paths, classify_
 REPO = 'Carpe-Diem-Media/NewYou'
 ROOT = Path.cwd()
 DEFAULT_BUDGET = 100000
-HISTORY_EXCLUDE = 'docs/development/knowledge/history/pr-*.json'
 EXCLUDE_REASONS = {'user_exclude', 'unsupported_ext', 'default_path', 'secret_exclude',
                    'provider_directory', 'deleted', 'binary', 'too_large'}
 
@@ -208,7 +207,7 @@ def verify_base(binding):
             'stale origin/main; fetch and refresh affected local/OCR proof')
 
 
-def prepare_preview(state, binding, paths, *, budget=DEFAULT_BUDGET, exclude=HISTORY_EXCLUDE):
+def prepare_preview(state, binding, paths, *, budget=DEFAULT_BUDGET, exclude=None):
     # Local verification is the only prerequisite. No PR or CI calls here.
     require_local(state, binding)
     verify_base(binding)
@@ -216,55 +215,20 @@ def prepare_preview(state, binding, paths, *, budget=DEFAULT_BUDGET, exclude=HIS
     return dict(preview=preview, budget=budget, exclude=exclude)
 
 
-def proof_binding(state, final, pr_number):
-    """Allow only generated history commits after the scanned implementation.
-
-    Check every intervening commit and the complete tree diff. A source change
-    followed by a revert is not a mechanical history chain. Knowledge capture
-    separately validates the history contents against live final PR metadata.
-    """
+def proof_binding(state, final):
+    """Require the tested and scanned candidate to match the final candidate."""
     scanned = state.get('binding', {})
     require_local(state, scanned)
     require(scanned.get('base') == final['base'] and scanned.get('merge_base') == final['merge_base'],
             'comparison base changed; fresh local/OCR proof required')
-    if scanned == final:
-        return dict(implementation=scanned['head'], history_only=None)
-    command('git', 'merge-base', '--is-ancestor', scanned['head'], final['head'])
-    history = f'docs/development/knowledge/history/pr-{pr_number}.json'
-    changed = command('git', 'diff', '--name-only', '-z', scanned['head'], final['head']).strip('\0').split('\0')
-    require(changed == [history], 'source changed after local/OCR proof; only generated history may reuse it')
-    commits = command('git', 'rev-list', '--parents', f'{scanned["head"]}..{final["head"]}').splitlines()
-    require(commits, 'missing history-only commit chain')
-    for line in commits:
-        commit = line.split()
-        require(len(commit) == 2, 'merge commits cannot reuse local/OCR evidence')
-        changed = command('git', 'diff-tree', '--no-commit-id', '--name-only', '-r', '-z', commit[0]).strip('\0').split('\0')
-        require(changed == [history], 'non-mechanical commit invalidates local/OCR evidence')
-    return dict(implementation=scanned['head'], history_only=history)
+    require(scanned == final, 'candidate changed after local/OCR proof')
+    return dict(implementation=scanned['head'])
 
 
-def validate_reuse_preview(scanned, final, history):
+def validate_reuse_preview(scanned, final):
     previous = path_map(scanned.get('files'), 'scanned preview')
     current = path_map(final.get('files'), 'final preview')
-    if history:
-        require(current.get(history, {}).get('will_review') is False
-                and current[history].get('exclude_reason') == 'user_exclude',
-                'newly eligible history file cannot reuse OCR evidence')
-        current.pop(history)
-        previous.pop(history, None)
     require(previous == current, 'selected inputs/exclusions changed; fresh OCR required')
-
-
-def validate_knowledge(pr_number, directory):
-    metadata = api(f'pulls/{pr_number}')
-    path = directory / 'pr-metadata.json'
-    with private_output(path) as output:
-        output.write(json.dumps(metadata))
-    output = command('mise', 'exec', '--', 'python3', '-m', 'tools.knowledge_capture',
-                     'check', '--metadata-json', str(path), timeout=180)
-    require(decode(output).get('status') == 'PASS', 'final PR history validation did not pass')
-    return dict(command='mise exec -- python3 -m tools.knowledge_capture check --metadata-json ' + str(path),
-                outcome='PASS')
 
 
 def object_field(parent, key):
@@ -480,7 +444,7 @@ def main():
                 state.pop('ocr', None)
                 state.pop('prepared', None)
                 write_state(state_path, state)
-                exclusions = ','.join(filter(None, (HISTORY_EXCLUDE, args.exclude)))
+                exclusions = args.exclude
                 state['prepared'] = prepare_preview(state, binding, paths, budget=args.budget, exclude=exclusions)
                 write_state(state_path, state)
                 print(json.dumps(state['prepared'], indent=2))
@@ -520,22 +484,21 @@ def main():
             require(args.ticket and re.fullmatch(r'WELL-[1-9][0-9]*', args.ticket), 'finish requires the execution ticket')
             require('ocr' in state, 'missing complete OCR evidence')
             pr = discover_pr(binding['head'], args.pr)
-            reuse = proof_binding(state, binding, pr['number'])
+            reuse = proof_binding(state, binding)
             summary = validate_ocr(state['ocr']['result'], prepared['preview'], state['binding'], prepared['budget'])
             # Preview costs no tokens. This catches changed selection/configuration
             # and newly eligible files before reusing an earlier OCR session.
             fresh_preview = validate_preview(decode(command(*ocr_args(binding, prepared['budget'], prepared['exclude']), '--preview')), paths)
-            validate_reuse_preview(prepared['preview'], fresh_preview, reuse['history_only'])
-            knowledge = validate_knowledge(pr['number'], directory)
+            validate_reuse_preview(prepared['preview'], fresh_preview)
             fresh_ci = collect_ci(binding, paths, pr['number'])
             review = api(f'pulls/{pr["number"]}/reviews/{args.disposition_review}') if args.disposition_review else None
             validate_findings(summary, review, binding['head'])
             require(worktree()[0] == binding, 'source changed while finishing')
             print(json.dumps(dict(ticket=args.ticket, binding=binding, local=state['local'], ci=fresh_ci,
-                                  implementation_binding=state['binding'], proof_reuse=reuse, knowledge=knowledge,
+                                  implementation_binding=state['binding'], proof_binding=reuse,
                                   ocr=summary, command=state['ocr']['command'],
                                   disposition_review=args.disposition_review,
-                                  risks='Excluded paths and generated history require independent full-diff review. OCR is advisory.',
+                                  risks='Excluded paths require independent full-diff review. OCR is advisory.',
                                   status='awaiting independent Master Gate'), indent=2))
             return 0
     except (GateError, OSError, ValueError, KeyError, TypeError, AttributeError) as exc:

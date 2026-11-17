@@ -4,8 +4,8 @@
 Every changed path is classified into exactly one category:
 
 * ``documentation``: exact allowlisted non-executable instructions/docs and
-  generated PR history. Always-on Smoke validates instruction contracts and
-  exact-event provenance, including missing records and tampering.
+  legacy PR history. Always-on Smoke validates instruction contracts and
+  current governance routing.
 * ``application``: application source, delivery contracts, development docs,
   agent instructions, application tests and normal engineering files. These
   run Application CI.

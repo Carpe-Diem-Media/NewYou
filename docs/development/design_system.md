@@ -128,7 +128,7 @@ width. Variant attributes do not replace layout utilities or responsiveness.
 Adopt this convention as each production scope migrates. Keep existing legacy
 styling on its compatibility lane. This internal presentation change introduces
 no material capability, lifecycle, schema or Domain interface, so a new capability
-JSON map is exempt. The automatically generated PR history still applies.
+JSON map is exempt. The PR description records the change; CI provides an informational snapshot.
 
 The owner-approved implementation is recorded at source commit
 `4ee2ecfa4d8a5cbc2b275f8a62d2c0ba423e54b2`. Repeatable verification uses:

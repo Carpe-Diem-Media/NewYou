@@ -99,7 +99,7 @@ gh pr merge \
   "$PR_NUMBER"
 ```
 
-Use **regular merge**, not squash/rebase, administrative bypass, auto-merge, force push or branch-protection changes. Do not alter PR source or generated PR history after approval. On ambiguous outcome or timeout, **do not retry**: inspect PR state, merge SHA and current `main` and reconcile.
+Use **regular merge**, not squash/rebase, administrative bypass, auto-merge, force push or branch-protection changes. Do not alter the reviewed PR head after approval. On ambiguous outcome or timeout, **do not retry**: inspect PR state, merge SHA and current `main` and reconcile.
 
 ## Phase 3 — Resulting-main proof
 

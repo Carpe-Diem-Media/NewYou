@@ -77,8 +77,17 @@ class AgentInstructionContractTests(unittest.TestCase):
         self.assertIn('after applicable local checks pass', self.ticket)
         self.assertIn('Do not self-certify merge authority', self.ticket)
         self.assertIn('Any head change', self.ticket)
-        self.assertIn('tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"', self.ticket)
-        self.assertIn('mechanical history-only commit', self.verify)
+        self.assertIn('canonical capability map', self.ticket)
+        self.assertIn('CI generates informational', self.ticket)
+        self.assertIn('No local PR-history generation is required', self.ticket)
+        self.assertIn('exact final head and current base', self.verify)
+        self.assertNotIn('tools.knowledge_capture check --metadata-json', self.ticket)
+        self.assertNotIn('mechanical history-only commit', self.verify)
+        workflow = (ROOT / '.github/workflows/foundation-integrity.yml').read_text()
+        self.assertIn('tools.knowledge_capture snapshot', workflow)
+        self.assertIn('actions/upload-artifact@v4', workflow)
+        self.assertIn('continue-on-error: true', workflow)
+        self.assertNotIn('tools.knowledge_capture check --metadata-json', workflow)
 
     def test_handoff_sequence_and_cost_controls_are_consistent(self):
         for document in (self.agents, self.ticket, self.verify):
