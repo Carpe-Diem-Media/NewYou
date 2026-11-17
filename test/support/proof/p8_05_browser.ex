@@ -15,6 +15,15 @@ defmodule NewYou.Proof.P805Browser do
     browser.protocol_timeout.Browser.close
   )
 
+  # Fixed TEST progress labels, never expression text, page state or input.
+  @failure_checkpoints ~w(
+    reset.public_entry reset.prior_login reset.request_entry reset.request_layout
+    reset.request_csrf reset.request_submit reset.delivery reset.confirm_entry
+    reset.confirm_submit reset.session_revocation reset.replay_submit
+    reset.retry_navigation reset.old_login reset.fresh_login reset.new_request
+    reset.expired_link reset.withdrawal
+  )
+
   def run_login(request, locale) do
     reference = make_ref()
 
@@ -279,7 +288,12 @@ defmodule NewYou.Proof.P805Browser do
 
       code when code in @failure_codes ->
         SelfTest.observe_manifest!(code, false)
-        raise "proof browser failed with bounded diagnostic: #{code}"
+        checkpoint = result["checkpoint"]
+
+        suffix =
+          if checkpoint in @failure_checkpoints, do: "; checkpoint: #{checkpoint}", else: ""
+
+        raise "proof browser failed with bounded diagnostic: #{code}#{suffix}"
 
       _ ->
         raise "proof browser returned an unrecognized diagnostic"
