@@ -1,0 +1,3 @@
+interface:
+  display_name: "NewYou TDD (Elixir/Ash)"
+  short_description: "Risk-based RED/GREEN/REFACTOR with ExUnit and owning Ash Domain interfaces"
