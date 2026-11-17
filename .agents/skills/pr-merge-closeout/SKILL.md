@@ -29,7 +29,7 @@ Required live inputs (read them, do **not** hardcode a prior PR's values):
 - `PLANE_TICKET`: actual linked `WELL-N` work item, including live state, dependencies and acceptance criteria.
 - `EXPECTED_BASE_SHA`: PR's currently approved/verified base commit at entry.
 
-**Entry gate:** Verify the exact full PR diff and original independent Master Gate disposition have no unresolved material blockers; all applicable checks and OCR dispositions are complete; the PR is open, not Draft and not merged; latest decisive founder review is `APPROVED` for the exact current head; and the current base is the trusted `main` used for candidate verification. Do not reuse an earlier review after a head change. Do not treat Plane as an override of GitHub or durable governance.
+**Entry gate:** Verify the exact full PR diff and original independent Master Gate disposition have no unresolved material blockers; all mandatory checks and any material OCR finding dispositions are complete; the PR is open, not Draft and not merged; latest decisive founder review is `APPROVED` for the exact current head; and the current base is the trusted `main` used for candidate verification. Do not reuse an earlier review after a head change. Do not treat Plane as an override of GitHub or durable governance.
 
 The implementing agent must use its own `JC-Agents` GitHub credentials, **never founder credentials**, and must not bypass branch protection or approve its own work.
 

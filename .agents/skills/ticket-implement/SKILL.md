@@ -196,7 +196,7 @@ Do not mutate Product/Architecture/Domain/Roadmap or semantic contracts merely t
 
 Update the canonical capability map when material capability semantics change, or record a justified exemption. Describe changed functionality, major code locations, reuse decisions, tests and limitations in the PR handoff. Make source stable and commit it before final verification. No local PR-history generation is required, and do not push a generated-history-only commit. CI generates informational mechanical snapshots without branch or PR mutation. Existing historical records remain available.
 
-Preserve local verification → local OCR → exact-head hosted CI → independent Master Gate. Prepare a clean committed candidate before the verification helper's applicable local stage. Only after that stage passes, run OCR on the committed candidate before pushing wherever practical. Follow the authenticated Draft PR workflow. Require exact-head CI against the current base and current Plane evidence before independent review. Investigate findings and preserve unresolved risks for Master Gate.
+Preserve local verification → optional OCR → required exact-head hosted CI → required independent Master Gate. Prepare a clean committed candidate before the verification helper's applicable local stage. After that stage passes, OCR may be selected as optional advisory evidence; absence of OCR does not invalidate local or CI proof. Follow the authenticated Draft PR workflow. Require exact-head CI against the current base and current Plane evidence before independent review. Investigate findings and preserve unresolved risks for Master Gate.
 
 ## 9. Verify before handoff
 
@@ -204,7 +204,7 @@ Preserve local verification → local OCR → exact-head hosted CI → independe
 
 TDD owns focused test-first development. `ticket-implement` coordinates implementation, consumer discovery and stable-candidate preparation; it does not independently execute final broad gates. `code-change-verification` owns applicable final verification and handoff. The independent Master Gate separately inspects actual code, authority, tests, the exact PR diff and CI evidence.
 
-Preserve local verification → local OCR → exact-head hosted CI → independent Master Gate. The verification skill selects the authorised executor, including the existing WELL-125 helper where installed and applicable. Do not run broad checks here and then invoke that workflow to repeat them. Reuse proof only under its input-validity rules; focused development runs do not automatically satisfy final committed-candidate obligations.
+Preserve local verification → optional OCR → required exact-head hosted CI → required independent Master Gate. The verification skill selects the authorised executor, including the existing WELL-125 helper where installed and applicable. Do not run broad checks here and then invoke that workflow to repeat them. Reuse proof only under its input-validity rules; focused development runs do not automatically satisfy final committed-candidate obligations.
 
 At minimum:
 
@@ -217,7 +217,7 @@ At minimum:
 - verify required handoff source links and material claims, including a cold-start walkthrough for a new substantial slice, against the exact head;
 - resolve the exact base and head SHAs;
 - verify no secrets/sensitive payloads leaked into code, logs, fixtures, jobs, or evidence;
-- **after applicable local checks pass**, preview and run local subscription-backed OCR on the committed implementation using `.agents/skills/code-change-verification/scripts/handoff.py`, as specified in `code-change-verification`. Do this before pushing wherever practical, without requiring a PR or green CI. Reject incomplete manifests, unknown coverage, budget exhaustion and unresolved warnings. Investigate findings and disclose unresolved material risks. Then preserve authenticated PR workflow and require successful exact-final-head Foundation Integrity and every applicable routed lane against the current base before handoff. Document a reasoned exemption for trivial/cosmetic or proven documentation-only changes.
+- **after applicable local checks pass**, optionally preview and run local OCR using `.agents/skills/code-change-verification/scripts/handoff.py`. Report `NOT_RUN` if skipped and disclose partial or failed results accurately. Investigate credible findings and preserve material findings for independent adjudication. Required exact-head CI and independent Master Gate remain mandatory.
 
 Before stable-candidate verification, identify affected existing contract tests, action allowlists, proof catalogs, security scans, consumer interfaces and capability knowledge maps. For browser/subprocess tests, verify prerequisites exist in hosted CI rather than depending on developer-local generated files. Keep this preflight focused; it is not another full-suite invocation.
 
@@ -231,16 +231,16 @@ Check new or materially changed public Domain/application interfaces for appropr
 
 Before creating or updating a routine PR, run `gh api user --jq .login`. It must return `JC-Agents`. Run `python3 -m tools.newyou_attest pr-preflight`, or add `--pr NUMBER` for an existing PR to verify its author too. Stop on wrong/missing authentication or a founder-authored PR. Do not request founder credentials. `JCSchoeman96` independently reviews the exact final head; the agent cannot approve its own work.
 
-Keep the PR Draft while local verification, exact-head hosted CI or local OCR is incomplete or blocked. Ordinary PR discovery uses the actual worktree and HEAD, not T3Code attached metadata. Any source correction invalidates affected local, CI, OCR and review evidence and requires the fresh sequence.
+Keep the PR Draft while mandatory local verification or exact-head hosted CI is incomplete or blocked; OCR is optional. Ordinary PR discovery uses the actual worktree and HEAD, not T3Code attached metadata. Any source correction invalidates affected local, CI, OCR and review evidence and requires refreshed affected proof; OCR remains optional.
 
 Only when the full sequence is review-ready:
 
 1. update the existing Draft PR with the complete evidence, then mark it ready for independent review;
 2. confirm the PR contains only authorised ticket scope;
-3. include an `OCR Review Findings` section containing the scanned implementation SHA/range separately from final PR head, model, soft budget/usage, manifest/session, all findings and reviewed dispositions, exclusions and risks, or an explicit exemption. Report local commands/outcomes, exact required CI, Plane ticket, PR, base/head and "awaiting independent Master Gate". Do not auto-fix OCR findings;
+3. include an `OCR Review Findings` section containing the scanned implementation SHA/range separately from final PR head, model, soft budget/usage, manifest/session, all findings and reviewed dispositions, exclusions and risks, or `NOT_RUN` if skipped. Report local commands/outcomes, exact required CI, Plane ticket, PR, base/head and "awaiting independent Master Gate". Do not auto-fix OCR findings;
 4. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
 5. record material JIT choices and discovered work in Plane/PR evidence where useful;
-6. hand off for independent Master Gate review, including OCR adjudication, the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
+6. hand off for independent Master Gate review, including adjudication of any material OCR findings, the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
 7. follow the eligible founder-development route in the merge-gate procedure. ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the final head. That review is both technical approval and standing merge authorization. Do not add a second comment or a base-SHA line. Keep any stronger approval that an actual governing or external obligation requires.
 
 Report:
@@ -252,7 +252,7 @@ Report:
 - material JIT decisions and why they are compliant;
 - migrations/constraints/lifecycle implications where relevant;
 - tests/checks actually run and observed results;
-- OCR command, scanned implementation SHA, findings/coverage and Master Gate handoff (or documented exemption);
+- OCR command, scanned implementation SHA, findings/coverage and Master Gate handoff (or `NOT_RUN`);
 - discovered/deferred Plane work;
 - remaining review risks or known non-PR failures.
 

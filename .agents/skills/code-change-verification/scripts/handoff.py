@@ -194,7 +194,7 @@ def validate_preview(preview, paths):
 def ocr_args(binding, budget, exclude):
     require(type(budget) is int and budget > 0, 'a positive soft token budget is required')
     args = ['ocr', 'review', '--from', binding['merge_base'], '--to', binding['head'],
-            '--provider', 'chatgpt', '--effort', 'low', '--concurrency', '1',
+            '--provider', 'chatgpt', '--model', 'gpt-6-luna', '--effort', 'low', '--concurrency', '1',
             '--max-tokens-budget', str(budget), '--format', 'json', '--audience', 'agent']
     if exclude:
         args += ['--exclude', exclude]
@@ -257,7 +257,7 @@ def validate_ocr(result, preview, binding, budget):
     require(isinstance(result.get('session_id'), str) and result['session_id']
             and manifest.get('run_id') == result['session_id'] and not manifest.get('parent_run_id'), 'unknown/resumed OCR session')
     execution = object_field(manifest, 'execution')
-    require(execution.get('provider') == 'chatgpt' and execution.get('model')
+    require(execution.get('provider') == 'chatgpt' and execution.get('model') == 'gpt-6-luna'
             and execution.get('configured_concurrency') == 1, 'OCR provider/model/concurrency mismatch')
     require(not result.get('warnings'), 'unresolved OCR warnings, including review/token limits')
     summary = object_field(result, 'summary')
@@ -309,6 +309,68 @@ def validate_findings(summary, review, head):
         require(re.search(pattern, review.get('body', '')), f'OCR finding {index} unresolved; keep Draft')
 
 
+def optional_ocr(state, binding, review):
+    """Report optional evidence honestly; never discard known findings."""
+    history = state.get('ocr_history', [])
+    require(isinstance(history, list), 'invalid OCR history')
+    prior = []
+    for previous in history:
+        previous_result = previous.get('result') if isinstance(previous, dict) else None
+        if isinstance(previous_result, dict):
+            prior_findings = previous_result.get('comments', [])
+            if not isinstance(prior_findings, list):
+                prior.append(dict(status='FAILED', limitation='Malformed prior OCR findings; independent inspection required.'))
+                continue
+            previous_session = previous_result.get('session_id')
+            if prior_findings:
+                require(isinstance(previous_session, str) and previous_session, 'prior OCR findings have no session identity')
+                validate_findings(dict(findings=prior_findings, session=previous_session), review, binding['head'])
+            manifest = previous_result.get('manifest') if isinstance(previous_result.get('manifest'), dict) else {}
+            execution = manifest.get('execution') if isinstance(manifest.get('execution'), dict) else {}
+            prior.append(dict(status=previous_result.get('status', 'unknown'), session=previous_session,
+                              model=execution.get('model'),
+                              coverage=manifest.get('coverage'), usage=previous_result.get('summary'),
+                              budget=(previous.get('prepared') or {}).get('budget'),
+                              command=previous.get('command'), reasoning_effort='unverified',
+                              findings=prior_findings, limitation=previous_result.get('message')))
+        else:
+            prior.append(dict(status='FAILED', limitation='Prior OCR output unavailable.'))
+    evidence = state.get('ocr')
+    if not evidence:
+        return dict(status='NOT_RUN', limitation='No OCR result recorded for this candidate.', prior_attempts=prior)
+    require(isinstance(evidence, dict), 'invalid OCR evidence')
+    result = evidence.get('result')
+    if result is None:
+        return dict(status='FAILED', prior_attempts=prior, limitation=evidence.get('limitation', 'OCR attempt failed or was unavailable.'),
+                    command=evidence.get('command'))
+    require(isinstance(result, dict), 'invalid OCR result')
+    findings = result.get('comments', [])
+    if not isinstance(findings, list):
+        return dict(status='FAILED', prior_attempts=prior, limitation='Malformed OCR findings; independent inspection required.')
+    session = result.get('session_id')
+    if findings:
+        require(isinstance(session, str) and session, 'OCR findings have no session identity')
+        validate_findings(dict(findings=findings, session=session), review, binding['head'])
+    if not all(isinstance(f, dict) and f.get('content') for f in findings):
+        return dict(status='FAILED', prior_attempts=prior, limitation='Malformed OCR findings; independent inspection required.')
+    prepared = evidence.get('prepared') or state.get('prepared')
+    try:
+        require(isinstance(prepared, dict), 'OCR preview unavailable')
+        summary = validate_ocr(result, prepared['preview'], binding, prepared['budget'])
+    except (GateError, ValueError, KeyError, TypeError, AttributeError) as exc:
+        manifest = result.get('manifest') if isinstance(result.get('manifest'), dict) else {}
+        coverage = manifest.get('coverage') if isinstance(manifest.get('coverage'), dict) else {}
+        execution = manifest.get('execution') if isinstance(manifest.get('execution'), dict) else {}
+        usage = result.get('summary') if isinstance(result.get('summary'), dict) else {}
+        return dict(status='PARTIAL' if result.get('status') == 'partial' else 'FAILED', prior_attempts=prior,
+                    limitation=str(exc), session=session, model=execution.get('model'),
+                    reasoning_effort='unverified', tokens=usage.get('total_tokens'),
+                    selected=coverage.get('selected'), completed=coverage.get('completed'),
+                    failed=coverage.get('failed'), excluded=coverage.get('excluded'), findings=findings,
+                    command=evidence.get('command'))
+    return dict(status='COMPLETE', prior_attempts=prior, reasoning_effort='unverified', command=evidence.get('command'), **summary)
+
+
 def write_state(path, state):
     temporary = path.with_suffix('.tmp')
     with private_output(temporary) as output:
@@ -345,6 +407,26 @@ def focused_kind(argv):
 
 def local(state_path, binding, paths, focused, deep=False):
     """Invalidate old receipts first; record only observed successful local runs."""
+    prior = []
+    history_path = state_path.with_name('ocr-history.json')
+    if not state_path.exists() and history_path.exists():
+        prior = decode(history_path.read_text()).get('attempts', [])
+    if state_path.exists():
+        old = decode(state_path.read_text())
+        prior = old.get('ocr_history', [])
+        if old.get('ocr'):
+            prior.append(old['ocr'])
+        else:
+            for attempt in old.get('attempts', []):
+                path = Path(attempt.get('result', ''))
+                if path.parent == state_path.parent and path.is_file() and not path.is_symlink():
+                    try:
+                        prior.append(dict(result=decode(path.read_text()), prepared=old.get('prepared'),
+                                          command=old.get('ocr', {}).get('command')))
+                    except (OSError, ValueError):
+                        prior.append(dict(result=None))
+    if prior:
+        write_state(history_path, dict(attempts=prior))
     state_path.unlink(missing_ok=True)
     require(focused, 'at least one ticket-scoped --focused command is required')
     commands = [shlex.split(c) for c in focused]
@@ -375,7 +457,7 @@ def local(state_path, binding, paths, focused, deep=False):
                         f'focused command reported no tests; inspect {log}')
         require(worktree()[0] == binding, 'worktree changed during local verification')
         results.append(dict(command=argv, exit_code=0, log=str(log)))
-    state = dict(binding=binding, local=results)
+    state = dict(binding=binding, local=results, ocr_history=prior)
     write_state(state_path, state)
     return state
 
@@ -441,7 +523,6 @@ def main():
                 return 0
             state = decode(state_path.read_text()) if state_path.exists() else {}
             if args.stage == 'preview':
-                state.pop('ocr', None)
                 state.pop('prepared', None)
                 write_state(state_path, state)
                 exclusions = args.exclude
@@ -449,16 +530,19 @@ def main():
                 write_state(state_path, state)
                 print(json.dumps(state['prepared'], indent=2))
                 return 0
-            prepared = state.get('prepared')
-            require(isinstance(prepared, dict), 'run preview after local verification first')
             if args.stage == 'ocr':
+                prepared = state.get('prepared')
+                require(isinstance(prepared, dict), 'run preview after local verification first')
                 require(not state.get('attempts') or (args.retry_reason and args.retry_reason.strip()),
                         'paid OCR already attempted; inspect preserved evidence and supply --retry-reason for a deliberate rerun')
-                state.pop('ocr', None)
-                write_state(state_path, state)
                 fresh = prepare_preview(state, binding, paths, budget=prepared['budget'], exclude=prepared['exclude'])
                 require(fresh['preview'] == prepared['preview'], 'OCR selection changed; inspect a new preview first')
                 # auth status is captured, never printed or written to evidence.
+                if state.get('ocr'):
+                    state.setdefault('ocr_history', []).append(state['ocr'])
+                state['ocr'] = dict(limitation='OCR attempt did not complete', prepared=prepared,
+                                    command=ocr_args(binding, prepared['budget'], prepared['exclude']))
+                write_state(state_path, state)
                 require_subscription()
                 require(worktree()[0] == binding, 'source changed before OCR')
                 attempt = str(uuid4())
@@ -471,32 +555,34 @@ def main():
                 print(f'Running {shlex.join(argv)}; result {result_path}', flush=True)
                 with private_output(result_path, exclusive=True) as output, private_output(log_path, exclusive=True) as errors:
                     process = subprocess.run(argv, cwd=ROOT, stdout=output, stderr=errors)
-                require(process.returncode == 0, f'OCR CLI failed; inspect private result/log at {directory}')
                 require(worktree()[0] == binding, 'source changed during OCR')
-                result = decode(result_path.read_text())
+                try:
+                    result = decode(result_path.read_text())
+                except (ValueError, OSError):
+                    result = None
+                state['ocr'] = dict(result=result, command=argv, prepared=prepared,
+                                    limitation=f'OCR exit {process.returncode}; inspect private attempt evidence')
+                write_state(state_path, state)
+                require(process.returncode == 0 and result is not None, f'OCR CLI failed; inspect private result/log at {directory}')
                 summary = validate_ocr(result, prepared['preview'], binding, prepared['budget'])
-                state['ocr'] = dict(summary=summary, result=result, command=argv)
+                state['ocr'] = dict(summary=summary, result=result, command=argv, prepared=prepared)
                 write_state(state_path, state)
                 print(json.dumps(summary, indent=2))
                 if summary['findings']:
                     raise GateError('OCR findings require independent disposition or verified repair; keep Draft')
                 return 0
             require(args.ticket and re.fullmatch(r'WELL-[1-9][0-9]*', args.ticket), 'finish requires the execution ticket')
-            require('ocr' in state, 'missing complete OCR evidence')
+            require_local(state, binding)
+            verify_base(binding)
             pr = discover_pr(binding['head'], args.pr)
             reuse = proof_binding(state, binding)
-            summary = validate_ocr(state['ocr']['result'], prepared['preview'], state['binding'], prepared['budget'])
-            # Preview costs no tokens. This catches changed selection/configuration
-            # and newly eligible files before reusing an earlier OCR session.
-            fresh_preview = validate_preview(decode(command(*ocr_args(binding, prepared['budget'], prepared['exclude']), '--preview')), paths)
-            validate_reuse_preview(prepared['preview'], fresh_preview)
             fresh_ci = collect_ci(binding, paths, pr['number'])
             review = api(f'pulls/{pr["number"]}/reviews/{args.disposition_review}') if args.disposition_review else None
-            validate_findings(summary, review, binding['head'])
+            summary = optional_ocr(state, binding, review)
             require(worktree()[0] == binding, 'source changed while finishing')
             print(json.dumps(dict(ticket=args.ticket, binding=binding, local=state['local'], ci=fresh_ci,
                                   implementation_binding=state['binding'], proof_binding=reuse,
-                                  ocr=summary, command=state['ocr']['command'],
+                                  ocr=summary,
                                   disposition_review=args.disposition_review,
                                   risks='Excluded paths require independent full-diff review. OCR is advisory.',
                                   status='awaiting independent Master Gate'), indent=2))

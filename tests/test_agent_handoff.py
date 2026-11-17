@@ -38,7 +38,7 @@ def result():
                               run_id='session-1', terminal_state='complete',
                               input=dict(mode='range', resolved_base=MERGE, resolved_head=HEAD,
                                          exact_range=f'{MERGE}..{HEAD}'),
-                              execution=dict(provider='chatgpt', model='configured-model', configured_concurrency=1),
+                              execution=dict(provider='chatgpt', model='gpt-6-luna', configured_concurrency=1),
                               coverage=dict(selected=[item], completed=[copy.deepcopy(item)], reused=[], failed=[], waived=[],
                                             excluded=[dict(item_id='file-2', path='assets/page.heex', exclude_reason='unsupported_ext')])))
 
@@ -521,9 +521,9 @@ class HandoffTests(unittest.TestCase):
                         return str(artifacts)
                     if args[:3] == ('gh', 'pr', 'view'):
                         return json.dumps(dict(number=232))
-                    self.assertEqual(args[:2], ('ocr', 'review'))
-                    self.assertIn('--preview', args)
-                    return json.dumps(PREVIEW)
+                    if args[:3] == ('git', 'ls-remote', 'origin'):
+                        return f'{BASE}\trefs/heads/main'
+                    self.fail(f'unexpected command: {args}')
                 def api(path):
                     if path.startswith('commits/'):
                         return [PR]
@@ -548,6 +548,60 @@ class HandoffTests(unittest.TestCase):
                         summary = json.loads(printed.call_args.args[0])
                         self.assertEqual(summary['status'], 'awaiting independent Master Gate')
                         self.assertEqual(summary['implementation_binding']['head'], HEAD)
+                        self.assertEqual(summary['ocr']['status'], 'COMPLETE')
+
+    def test_optional_ocr_status_and_findings(self):
+        self.assertEqual(gate.optional_ocr({}, BINDING, None)['status'], 'NOT_RUN')
+        self.assertEqual(gate.optional_ocr({'ocr': {'limitation': 'unavailable'}}, BINDING, None)['status'], 'FAILED')
+        partial = result()
+        partial['status'] = 'partial'
+        state = {'ocr': {'result': partial}, 'prepared': {'preview': PREVIEW, 'budget': 100000}}
+        self.assertEqual(gate.optional_ocr(state, BINDING, None)['status'], 'PARTIAL')
+        partial['comments'] = [dict(path='example.py', start_line=1, content='Material concern')]
+        with self.assertRaises(gate.GateError):
+            gate.optional_ocr(state, BINDING, None)
+        partial['comments'] = None
+        self.assertEqual(gate.optional_ocr(state, BINDING, None)['status'], 'FAILED')
+        previous = result()
+        previous['comments'] = [dict(path='example.py', start_line=1, content='Prior concern')]
+        with self.assertRaises(gate.GateError):
+            gate.optional_ocr({'ocr_history': [{'result': previous}]}, BINDING, None)
+        malformed = result()
+        malformed['manifest'] = None
+        self.assertEqual(gate.optional_ocr({'ocr': {'result': malformed}}, BINDING, None)['status'], 'FAILED')
+
+    def test_ocr_arguments_select_model_and_low_review_effort(self):
+        args = gate.ocr_args(BINDING, 100000, None)
+        for key, value in (('--model', 'gpt-6-luna'), ('--provider', 'chatgpt'),
+                           ('--effort', 'low'), ('--concurrency', '1')):
+            self.assertEqual(args[args.index(key) + 1], value)
+
+    def test_finish_without_ocr_requires_local_and_ci_without_ocr_calls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            root.chmod(0o700)
+            state = dict(binding=BINDING, local=[dict(exit_code=0)])
+            (root/'state.json').write_text(json.dumps(state))
+            def command(*args, **kwargs):
+                if args[:3] == ('git', 'rev-parse', '--show-toplevel'):
+                    return str(root)
+                if args[:3] == ('git', 'rev-parse', '--path-format=absolute'):
+                    return str(root)
+                if args[:3] == ('git', 'ls-remote', 'origin'):
+                    return f'{BASE}\trefs/heads/main'
+                self.fail(f'unexpected command: {args}')
+            with patch('sys.argv', ['handoff', 'finish', '--ticket', 'WELL-151']), \
+                 patch.dict('os.environ', {'CI': 'false', 'GITHUB_ACTIONS': 'false'}), \
+                 patch.object(gate, 'ROOT', root), \
+                 patch.object(gate, 'worktree', return_value=(BINDING, ['source.py'])), \
+                 patch.object(gate, 'command', side_effect=command), \
+                 patch.object(gate, 'discover_pr', return_value=PR), \
+                 patch.object(gate, 'collect_ci', return_value={'evidence': 'verified'}), \
+                 patch('builtins.print') as printed:
+                self.assertEqual(gate.main(), 0)
+                summary = json.loads(printed.call_args.args[0])
+                self.assertEqual(summary['ocr']['status'], 'NOT_RUN')
+                self.assertEqual(summary['status'], 'awaiting independent Master Gate')
 
     def test_actual_clean_committed_and_detached_git_worktrees(self):
         with tempfile.TemporaryDirectory() as directory:
