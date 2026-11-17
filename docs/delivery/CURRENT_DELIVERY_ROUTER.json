@@ -300,6 +300,14 @@
       "sha256": "3fd0e58196e7895973725f3b7fae4494e16e1004144ae5468befa98d14ffc0b4",
       "contract_type": "content_evidence",
       "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "sha256": "e640e07d3baf6bc03cdb4df9944f696ba4a022cefa60284154468d1876450b19",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
     }
   ]
 }
