@@ -94,6 +94,75 @@ class AgentInstructionContractTests(unittest.TestCase):
         self.assertIn('python -m unittest tests.test_agent_handoff -v',
                       (ROOT / '.github/workflows/foundation-integrity.yml').read_text())
 
+    def test_reconnaissance_has_distinct_planning_and_implementation_depth(self):
+        discovery = self.ticket.split('## 2.', 1)[1].split('## 3.', 1)[0]
+        self.assertIn('Feature-level discovery', discovery)
+        self.assertIn('Ready-ticket discovery', discovery)
+        planning, implementation = discovery.split('### Ready-ticket discovery', 1)
+        for term in ('capabilities', 'Domain', 'Resources', 'interfaces', 'mix.exs', 'mix.lock'):
+            self.assertIn(term, planning)
+        for term in ('functions', 'actions', 'callers', 'consumers', 'constraints', 'migrations',
+                     'configuration', 'pinned', 'return types', 'DSL'):
+            self.assertIn(term, implementation)
+        self.assertIn('Do not restart feature planning', discovery)
+
+    def test_fitness_choices_allow_justified_introduction_and_cohesion(self):
+        for choice in ('REUSE', 'EXTEND', 'COMPOSE', 'INTRODUCE', 'REPLACE'):
+            self.assertIn(f'`{choice}`', self.ticket)
+        for term in ('Reuse first', 'new Resources, modules, dependencies', 'fitness',
+                     'single authoritative Domain', 'forwarding wrappers', 'arbitrary line limits'):
+            self.assertIn(term, self.ticket)
+
+    def test_material_elixir_work_loads_existing_tracked_tdd(self):
+        relative = '.agents/skills/tdd/SKILL.md'
+        self.assertIn(f'**REQUIRED SUB-SKILL:** load `{relative}`', self.ticket)
+        tdd = ROOT / relative
+        self.assertTrue(tdd.is_file())
+        for reference in ('tests.md', 'mocking.md'):
+            self.assertIn(reference, tdd.read_text())
+            self.assertTrue((tdd.parent / reference).is_file())
+        self.assertTrue((tdd.parent / 'agents/openai.yaml').is_file())
+        for term in ('Behaviour and Proof Matrix', 'existing implementation plan',
+                     'RED → GREEN → REFACTOR', 'LOW', 'STANDARD', 'HIGH'):
+            self.assertIn(term, self.ticket)
+        for term in ('valid fixture', 'intended guard', 'sensitivity', 'restore', 'durable'):
+            self.assertIn(term, self.ticket)
+        self.assertIn('proven non-executable documentation', self.ticket)
+        self.assertIn('do not force database-backed ExUnit', self.ticket)
+        # TDD may discuss broad gates, but must never prescribe their execution.
+        for document in (tdd.read_text(), (tdd.parent / 'tests.md').read_text(),
+                         (tdd.parent / 'mocking.md').read_text()):
+            self.assertNotRegex(document, r'(?m)^\s*(?:mise exec -- (?:devcore-project run test -- )?)?mix check(?:\.deep)?\s*$')
+
+    def test_final_verification_has_one_owner_and_preserves_helper_execution(self):
+        for document in (self.ticket, self.verify):
+            for term in ('TDD', 'focused', 'ticket-implement', 'code-change-verification',
+                         'independent Master Gate', 'local verification → local OCR → exact-head hosted CI → independent Master Gate'):
+                self.assertIn(term, document)
+        for term in ('single owner', 'where installed and applicable', 'handoff.py',
+                     'Do not manually run broad gates before invoking', 'local` stage twice',
+                     'receipt caching', 'arbitrary evidence adoption', 'environment', 'comparison base'):
+            self.assertIn(term, self.verify)
+        self.assertIn('does not independently execute final broad gates', self.ticket)
+        self.assertIn('Do not automatically rerun already-valid focused proof', self.verify)
+        self.assertIn('final committed-candidate proof', self.verify)
+        self.assertIn('proven non-executable documentation', self.verify)
+
+    def test_verification_reviews_quality_and_affected_consumers(self):
+        for term in ('valid fixture prerequisites', 'intended guard', 'sensitivity', 'JIT',
+                     'Domain ownership', 'terminal states', 'concurrency', 'idempotency',
+                     'retry', 'recovery', 'constraints', 'security/privacy', 'action allowlists',
+                     'proof catalogs', 'security scans', 'capability knowledge maps', 'hosted CI'):
+            self.assertIn(term, self.verify)
+
+    def test_helper_final_local_stage_uses_committed_candidate_before_ocr(self):
+        preparation = self.ticket.split('## 8.', 1)[1].split('## 9.', 1)[0]
+        self.assertIn('After focused development checks pass, commit the stable source', preparation)
+        self.assertIn('before its final `local` stage', preparation)
+        self.assertIn('clean committed candidate', preparation)
+        self.assertIn('Only after applicable final local checks pass', preparation)
+        self.assertIn('run the existing OCR checkpoint', preparation)
+
     def test_smoke_runs_instruction_contract_tests(self):
         self.assertIn('python -m unittest tests.test_agent_instruction_contract -v',
                       (ROOT / '.github/workflows/foundation-integrity.yml').read_text())
