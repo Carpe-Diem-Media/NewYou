@@ -319,3 +319,10 @@ It is staged from resulting main but not installed. Source approval expressly
 excludes installation and quarantine cleanup. NewYou acquisition remains disabled
 and its two quarantines remain preserved. WELL-147's implementation assessment
 and outstanding live/final gates above are unchanged.
+
+Fresh resulting-main CI run `44132976402` subsequently completed successfully
+for exact `cc57a70c54478f93bf7a68cac5935486c58ee25a`. Both `checks` and
+`postgres-integration` passed. The logs show 158 unit tests with 155 passes and
+three opt-in SQL skips, plus five passing integration-lane tests. WELL-154 source
+integration is complete; exact installation authorization and quarantine
+reconciliation remain separate. This does not advance NewYou's application proof.
