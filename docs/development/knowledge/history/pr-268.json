@@ -4,6 +4,28 @@
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/268/commits",
   "files": [
     {
+      "blob": "43d2615bae2071e2790f6e621925f318442d03e7",
+      "mode": "100644",
+      "old_blob": "b68ca7979f5c5697174b4904c2ca40f715ab6db8",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/identity.password_reset.json",
+      "old_sha256": "f89783bc9b770d42c92d87c1d0a1080dd300de63ff60f2a53d7b3cfe751f8247",
+      "path": "docs/development/knowledge/identity.password_reset.json",
+      "sha256": "661c03e6f3cdeedd9f5732d706bfd408ff95143040963a129585b6a5903224f6",
+      "status": "modified"
+    },
+    {
+      "blob": "f3bfe63a9592d818281e44438606527c8348028d",
+      "mode": "100644",
+      "old_blob": "f0ab47f61050546c2c0fe0b9c750bba93f2c5399",
+      "old_mode": "100644",
+      "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
+      "old_sha256": "0eefaea6689260a9588e6ff90247ca9ae06f9432978e03014bd9f7ad49d6a0e1",
+      "path": "docs/development/knowledge/privacy.purpose_authority.json",
+      "sha256": "220a492d69942a9c91b67a3dd4e7bd66fe95f5b163aed961a7285f2f22219add",
+      "status": "modified"
+    },
+    {
       "blob": "4049cbc7992658d73bbbd89ac10c0216f3e736ed",
       "mode": "100644",
       "old_blob": "294a84002e465b70f386a44efab3342fdcea8af7",
