@@ -1,0 +1,542 @@
+{
+  "packet_id": "FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_CANONICAL_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY",
+  "prepared_on": "2026-11-17",
+  "repository": "Carpe-Diem-Media/NewYou",
+  "verified_main_sha_at_reconnaissance": "41f00356b90b01da9d80e9bbeae6f93021306864",
+  "scope": "Owner-approved exact EN/AF public homepage/first-visit copy for the FP-001 bilingual entry boundary; future bounded non-production use only.",
+  "source_material": [
+    "Verloor gewig op jou manier — user-supplied EPUB, foreword, chapter 1 and closing chapter",
+    "docs/governance/product/PROJECT_NORTH_STAR_AND_MVP_v1.3.0.md §§2–5",
+    "docs/governance/product/00_PLATFORM_v1.18.0.md §§1, 21J, 21L",
+    "docs/delivery/feature-contracts/fp-001/FP-001_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md §B/D",
+    "docs/delivery/content-evidence/copy/COPY_INVENTORY.md, COPY_REGISTRY.json, GOVERNANCE.md, STYLE_GUIDE.md and GLOSSARY.md"
+  ],
+  "content_owner": "Content & Media",
+  "class_policy": "37 owner-approved paired EN/AF browser-copy keys; Class A keys retain applicable Identity/security/domain review and scope guards. No runtime, production, clinical, release, or implementation authority.",
+  "copy_items": [
+    {
+      "key": "public.home.hero.eyebrow",
+      "class": "B",
+      "placement": "Hero",
+      "en": {
+        "text": "Health, habits and real life",
+        "sha256": "93bc56cf45fbf06e277a013dffe3b5d2a25ab539e7635856b111808780bbb1b5"
+      },
+      "af": {
+        "text": "Gesondheid, gewoontes en die werklike lewe",
+        "sha256": "1d5fdf6a89507a64e5378f584dd67d1fa1989db7353f2bc73abe61ed9905cc4c"
+      }
+    },
+    {
+      "key": "public.home.hero.title",
+      "class": "B",
+      "placement": "Hero",
+      "en": {
+        "text": "A healthier life starts with understanding who you are.",
+        "sha256": "8d1256a131a7fe8b73f2c8da5ee584a5b36837815d402d3e24ba47a6227e18a9"
+      },
+      "af": {
+        "text": "’n Gesonder lewe begin wanneer jy verstaan wie jy is.",
+        "sha256": "0fc8b78bb69e3ac1cd75f677ad7ec11a8e12842b3d66dd4d4bee40362618c329"
+      }
+    },
+    {
+      "key": "public.home.hero.body",
+      "class": "B",
+      "placement": "Hero",
+      "en": {
+        "text": "Health is about more than food or the number on the scale. Our temperament-guided approach helps adult women understand everyday patterns and take practical steps towards wellbeing.",
+        "sha256": "e11d7974c47069f7e5fbe4ab6ba29491ed3f8af1ae1cb05643678b558f51550d"
+      },
+      "af": {
+        "text": "Gesondheid gaan oor meer as kos of die syfer op die skaal. Ons temperamentgerigte benadering help volwasse vroue om hul alledaagse patrone te verstaan en praktiese stappe na welstand te neem.",
+        "sha256": "56fa2fcaf7a46875834890a80cf64edc59a9d4d451a2ce48bac6408d2d449cb8"
+      }
+    },
+    {
+      "key": "public.home.hero.explore.action",
+      "class": "B",
+      "placement": "Hero",
+      "en": {
+        "text": "Discover our approach",
+        "sha256": "55716cf3f7bca07e2cfdcc7309a18b12ff1d1b2c83a65bf3574aa7421ab45191"
+      },
+      "af": {
+        "text": "Ontdek ons benadering",
+        "sha256": "6ba9b6baf5bc5c19e289ea7dcb632a9be54888db488c6afd51ac5bf6f95a5791"
+      }
+    },
+    {
+      "key": "public.home.whole_person.title",
+      "class": "B",
+      "placement": "Whole-person approach",
+      "en": {
+        "text": "There is more to health than a quick fix.",
+        "sha256": "e749a10678a669b0888044540de38718d84b407746dde59ff0986cfeb7750f70"
+      },
+      "af": {
+        "text": "Gesondheid gaan oor meer as ’n kitsoplossing.",
+        "sha256": "6f2aebd10c9cb8739b289552ec6dbbd381b5329d3e83c39467a6b30db9205a1d"
+      }
+    },
+    {
+      "key": "public.home.whole_person.body",
+      "class": "B",
+      "placement": "Whole-person approach",
+      "en": {
+        "text": "Sleep, stress, habits, daily pressures and the way you see yourself all deserve attention. We look at the bigger picture, not just one number or one difficult day.",
+        "sha256": "5002d525e776dd1081e14c98e59702009a902dca86d211f328b8c9a9a72896fa"
+      },
+      "af": {
+        "text": "Slaap, stres, gewoontes, alledaagse druk en die manier waarop jy jouself sien, verdien almal aandag. Ons kyk na die groter prentjie, nie net een syfer of een moeilike dag nie.",
+        "sha256": "28c5d5bb8eb9c00070bb746b9dceb485402dbe3090cec5e9240b59d2d8b37bd6"
+      }
+    },
+    {
+      "key": "public.home.pillars.self.title",
+      "class": "B",
+      "placement": "Three principles",
+      "en": {
+        "text": "Understand your patterns",
+        "sha256": "6404e405e045ad322f525593eb7e3b55d798edf7faf0703d12eafcc7f9ec0bb4"
+      },
+      "af": {
+        "text": "Verstaan jou patrone",
+        "sha256": "bcae36f3ea0300f4ae2fce5ea9ba4c65905709e50eb80763f52571ddf9eac9e6"
+      }
+    },
+    {
+      "key": "public.home.pillars.self.body",
+      "class": "B",
+      "placement": "Three principles",
+      "en": {
+        "text": "Notice your strengths, preferences and the habits that shape everyday choices.",
+        "sha256": "fa628221a3eed39b5a54560a7391309a7b466ef187c5f3d5e105fb076a5e48a3"
+      },
+      "af": {
+        "text": "Raak bewus van jou sterkpunte, voorkeure en die gewoontes wat jou alledaagse keuses beïnvloed.",
+        "sha256": "5bb64720f96c27a75880a8dc09805bbfe8777e172f77d13a7f8b10b1314a021a"
+      }
+    },
+    {
+      "key": "public.home.pillars.everyday.title",
+      "class": "B",
+      "placement": "Three principles",
+      "en": {
+        "text": "Make room for real life",
+        "sha256": "cef9c489635efc6057d203e4c384d750ba354ef8d0472a69022b51974086a3a9"
+      },
+      "af": {
+        "text": "Maak ruimte vir die werklike lewe",
+        "sha256": "5d518d62ebc4d9e1b6dcf57171ddbd0d4b394843e5d6b3fcef81f6663bec6419"
+      }
+    },
+    {
+      "key": "public.home.pillars.everyday.body",
+      "class": "B",
+      "placement": "Three principles",
+      "en": {
+        "text": "Practical changes need to fit around work, family and responsibilities—not depend on perfect circumstances.",
+        "sha256": "4e814b47954be6ad873a57a8ba1b5f8ac5856931e33b5e506d045685f6d234b3"
+      },
+      "af": {
+        "text": "Praktiese veranderinge moet by werk, gesin en verantwoordelikhede inpas—nie van perfekte omstandighede afhang nie.",
+        "sha256": "fdf4aa0784889c1bcdb85a3b0315a72b7c537bda5b9cb47495b31ddaa31b3c41"
+      }
+    },
+    {
+      "key": "public.home.pillars.restart.title",
+      "class": "B",
+      "placement": "Three principles",
+      "en": {
+        "text": "Begin again without shame",
+        "sha256": "3e456af3ef070559e0689c0e30968bd0c0c68a264278eec5dc33c9ba84995f7b"
+      },
+      "af": {
+        "text": "Begin weer sonder skaamte",
+        "sha256": "66dab15e790bb8a045010222fb5e884e3b3509fd3fffd7e3dc33588c54d4731f"
+      }
+    },
+    {
+      "key": "public.home.pillars.restart.body",
+      "class": "B",
+      "placement": "Three principles",
+      "en": {
+        "text": "One difficult day does not erase every good choice. You can return to a manageable step whenever life interrupts your routine.",
+        "sha256": "a9578eb9f6479a3f04ac3538c8bdeeed07d750fb6a091ce8610d8cb3af31e0f6"
+      },
+      "af": {
+        "text": "Een moeilike dag wis nie al jou goeie keuses uit nie. Jy kan weer met ’n haalbare tree begin wanneer die lewe jou roetine onderbreek.",
+        "sha256": "f59ecc3d21bc05f4fd97e814870ffa64f99a195c2d4236949608517cf9d1e7c2"
+      }
+    },
+    {
+      "key": "public.home.temperament.title",
+      "class": "B",
+      "placement": "Temperament framing",
+      "en": {
+        "text": "Temperament is one part of your story",
+        "sha256": "44f8936b38c64eed34010cd884f4c2008254095cd9d0b961de0fc0f45753ee71"
+      },
+      "af": {
+        "text": "Temperament is net een deel van jou verhaal",
+        "sha256": "f5a6e82a1d772a3a8af7f1b1391de11d706f0b55ce10817fe62c6f672d7ef8bb"
+      }
+    },
+    {
+      "key": "public.home.temperament.body",
+      "class": "B",
+      "placement": "Temperament framing",
+      "en": {
+        "text": "The Four-Colour Temperament Model™ offers a way to reflect on strengths, preferences and habits. It is a starting point for understanding yourself, not a label that defines you.",
+        "sha256": "513a627373a47685925276961a06f3d79a75284889f00444ebf2ecd5daae161f"
+      },
+      "af": {
+        "text": "Die Four-Colour Temperament Model™ bied ’n manier om oor sterkpunte, voorkeure en gewoontes na te dink. Dit is ’n vertrekpunt om jouself te verstaan, nie ’n etiket wat jou definieer nie.",
+        "sha256": "091c52d2be632f5d2294c6e63c8efc74062f775025f21d78c1834e172e9e7a8a"
+      }
+    },
+    {
+      "key": "public.home.faith.title",
+      "class": "B",
+      "placement": "Faith framing",
+      "en": {
+        "text": "Rooted in Christian values",
+        "sha256": "02bdb32e26c7d45f33f1ea6a09dddefeba016037297ba555638849cf43ba3072"
+      },
+      "af": {
+        "text": "Gegrond op Christelike waardes",
+        "sha256": "9af8b228952435c960a770f68a4b9c2508c5cc1cc0fd9e8f159264f9d24aed32"
+      }
+    },
+    {
+      "key": "public.home.faith.body",
+      "class": "B",
+      "placement": "Faith framing",
+      "en": {
+        "text": "Our Christian perspective places value on dignity, grace and practical care. Your journey is not a test of perfection.",
+        "sha256": "ce1981e82b0f7212c96a1d20962d3c317ea3417a6859d51c23d405eda3c9a8a8"
+      },
+      "af": {
+        "text": "Ons Christelike benadering heg waarde aan waardigheid, genade en praktiese sorg. Jou reis is nie ’n toets van volmaaktheid nie.",
+        "sha256": "65bd2d3eadafd2f3ce3cbbe6e7de69641759f5789b3e650931723a4bdd43d955"
+      }
+    },
+    {
+      "key": "public.home.getting_started.title",
+      "class": "B",
+      "placement": "Getting started",
+      "en": {
+        "text": "Start where you are",
+        "sha256": "3f3873713f5379a33ee3eb506c2b46db0697d3de5556ce793806cb9a6ddc5306"
+      },
+      "af": {
+        "text": "Begin waar jy is",
+        "sha256": "cc0b7be05b73c970ad63b9b893c102a9bd9734c08d9f164c245da2878312ba80"
+      }
+    },
+    {
+      "key": "public.home.getting_started.body",
+      "class": "B",
+      "placement": "Getting started",
+      "en": {
+        "text": "Explore the public information first. Creating an account is a separate step when you are ready.",
+        "sha256": "db6dfe2b17b86a4420b0be034fd8364129eda44fc719af20d8079827c402b4be"
+      },
+      "af": {
+        "text": "Verken eers die openbare inligting. Om ’n rekening te skep, is ’n aparte stap wanneer jy gereed is.",
+        "sha256": "952ddcc29b2f2d83dd9711ec70116c7d816214b9e8227d6515c35def02c20ad3"
+      }
+    },
+    {
+      "key": "public.home.getting_started.language.title",
+      "class": "B",
+      "placement": "Getting started",
+      "en": {
+        "text": "Choose your language",
+        "sha256": "8e2d0664dbbb529de872582461068f7f7f752fc226a03a1b8439a4299dbf5e74"
+      },
+      "af": {
+        "text": "Kies jou taal",
+        "sha256": "950f4e56f09d09c8cff924a4731aaa8194a9c59e6eecb510cf3b9a51112049ee"
+      }
+    },
+    {
+      "key": "public.home.getting_started.language.body",
+      "class": "B",
+      "placement": "Getting started",
+      "en": {
+        "text": "Use the platform in Afrikaans or English.",
+        "sha256": "16e9a850a4c2d1f48f049638abf1cb4d007eae43c8d190be4e6f682b1ed6f335"
+      },
+      "af": {
+        "text": "Gebruik die platform in Afrikaans of Engels.",
+        "sha256": "a24d9a35d60edd2b7e2933f3912b354d7f603fee42a920d2742877ca27be4033"
+      }
+    },
+    {
+      "key": "public.home.getting_started.explore.title",
+      "class": "B",
+      "placement": "Getting started",
+      "en": {
+        "text": "Look around",
+        "sha256": "19f9c9778a7dabc41265c8d83f8a90232f75e9e6e3241baa7877da8f102619cd"
+      },
+      "af": {
+        "text": "Kyk gerus rond",
+        "sha256": "a579b1f59d2a28a841c90ab91f527b8ceb41ff458f83ed3691ec4b0e57a4da3f"
+      }
+    },
+    {
+      "key": "public.home.getting_started.explore.body",
+      "class": "B",
+      "placement": "Getting started",
+      "en": {
+        "text": "Get to know the approach through the information available on public pages.",
+        "sha256": "3d7583a4561109140d06b90aadb0c1862b51128ef5938e39b9a78763d7c98749"
+      },
+      "af": {
+        "text": "Leer die benadering ken deur die inligting wat op openbare bladsye beskikbaar is.",
+        "sha256": "2039f18bdeee0c1294e324e8aecdcbe5907442591b95863210b2ad0fe6538218"
+      }
+    },
+    {
+      "key": "public.home.getting_started.account.title",
+      "class": "B",
+      "placement": "Getting started",
+      "en": {
+        "text": "Create your own account",
+        "sha256": "eb821caa46ff2438702f87961985dddfebe45e571de9fa7192c3c52d2444d0f9"
+      },
+      "af": {
+        "text": "Skep jou eie rekening",
+        "sha256": "7bd040d8090a86bd18a5deeaa61e85652907d4e1cf28595f5fa3c38d0a790e86"
+      }
+    },
+    {
+      "key": "public.home.getting_started.account.body",
+      "class": "A",
+      "placement": "Getting started",
+      "en": {
+        "text": "If you choose to register, confirm that you are at least 18 and verify your email before using protected account features.",
+        "sha256": "acd86265d2b307434ed8bb6d2d8f7f229f3d9337f2d40e3cb7297ec64c8b1345"
+      },
+      "af": {
+        "text": "As jy besluit om te registreer, bevestig dat jy minstens 18 is en verifieer jou e-posadres voordat jy beskermde rekeningfunksies gebruik.",
+        "sha256": "5e401575d501bbc2382c20f0dec4eb2456c197ef888287f863f2dad4cb9a7430"
+      }
+    },
+    {
+      "key": "public.home.account_access.notice",
+      "class": "A",
+      "placement": "Getting started",
+      "en": {
+        "text": "Creating an account does not automatically grant access to every service. Availability and access requirements depend on the service.",
+        "sha256": "b80e34d8dad93c37b4423ce4f65190246660e2a7a9873352af4dd4b6389cdfa3"
+      },
+      "af": {
+        "text": "Om ’n rekening te skep, gee jou nie outomaties toegang tot elke diens nie. Beskikbaarheid en toegangsvereistes hang van die diens af.",
+        "sha256": "fb5154a0557e505587d56a8471146a8c852f95b15e563cb3f085a1a4fdd2d77f"
+      }
+    },
+    {
+      "key": "public.home.faq.title",
+      "class": "B",
+      "placement": "FAQ",
+      "en": {
+        "text": "Good to know",
+        "sha256": "aab7685123cf4b021c62a41c905fdc381aaa3ae8e944299e4cdf58955258f445"
+      },
+      "af": {
+        "text": "Goed om te weet",
+        "sha256": "1ffe6c1250d2f362c83a41c49123f6ea897fb8965e6229f2e2657f579e90046a"
+      }
+    },
+    {
+      "key": "public.home.faq.audience.question",
+      "class": "B",
+      "placement": "FAQ",
+      "en": {
+        "text": "Who is this platform designed for?",
+        "sha256": "9f40ab858261c854b3ff8286a992522a5d6b1731ec0e265e508977321522d03a"
+      },
+      "af": {
+        "text": "Vir wie is hierdie platform bedoel?",
+        "sha256": "16d80a932bcb25ef107e126a5de77e56c6a53c2813b15efb05d57c9d2af20c37"
+      }
+    },
+    {
+      "key": "public.home.faq.audience.answer",
+      "class": "B",
+      "placement": "FAQ",
+      "en": {
+        "text": "It is designed for adult women aged 18 and older.",
+        "sha256": "dbe3c77e5c03feae4cdfe15eef176bacd2fcac76a0cdea975180831afeff3e0f"
+      },
+      "af": {
+        "text": "Dit is ontwerp vir volwasse vroue van 18 jaar en ouer.",
+        "sha256": "4aee34b1f3d6c210cdb0cffde6d73a20af9afe2c858d5494bf4aab375f59017d"
+      }
+    },
+    {
+      "key": "public.home.faq.browse.question",
+      "class": "B",
+      "placement": "FAQ",
+      "en": {
+        "text": "Can I look around without an account?",
+        "sha256": "9f035c410b7cfa670dba55ea5fb7fd0312d0f5ab1b75010fc2fc32ab8c90b7d1"
+      },
+      "af": {
+        "text": "Kan ek rondkyk sonder ’n rekening?",
+        "sha256": "ac6b25b74f7e52a33d588c40a545199b212479e2691e3e62715a9cc9044280e9"
+      }
+    },
+    {
+      "key": "public.home.faq.browse.answer",
+      "class": "A",
+      "placement": "FAQ",
+      "en": {
+        "text": "Yes. You can view public pages without signing in. Some experiences require a verified account or separate access.",
+        "sha256": "e681b55c2111bd3a92d2ee500da93f175a56c30081cbafe9177a3a8c8a2e85bf"
+      },
+      "af": {
+        "text": "Ja. Jy kan openbare bladsye sien sonder om aan te meld. Sommige ervarings vereis ’n geverifieerde rekening of afsonderlike toegang.",
+        "sha256": "22f735b48fc601ba00fa86001ad1d9af42a0e3d298674196a6411a3329a1060d"
+      }
+    },
+    {
+      "key": "public.home.faq.care.question",
+      "class": "A",
+      "placement": "FAQ",
+      "en": {
+        "text": "Does this replace medical care?",
+        "sha256": "c523d98f94084deee4cc64cc7e2d3b9ab78d51d5ac917d250f1399bb0d630739"
+      },
+      "af": {
+        "text": "Vervang dit mediese sorg?",
+        "sha256": "12bda2600313928138c907d682d599bada599d6d1ae082c3c2c2713176fe3008"
+      }
+    },
+    {
+      "key": "public.home.closing.title",
+      "class": "B",
+      "placement": "Closing",
+      "en": {
+        "text": "Your next step can begin today.",
+        "sha256": "2025488267de9751eff6e5b71ae593fcd9bec2d381a2f595d27d519a63be24bf"
+      },
+      "af": {
+        "text": "Jou volgende tree kan vandag begin.",
+        "sha256": "409e8acb07120a7d9d4201fd414e056af015629eb4a9a64d7fbff4f22f1e8bc1"
+      }
+    },
+    {
+      "key": "public.home.closing.body",
+      "class": "B",
+      "placement": "Closing",
+      "en": {
+        "text": "You do not need to have everything figured out. Begin by learning more about yourself, one practical step at a time.",
+        "sha256": "cac4c95070250243957763c7c731ad5c99bb3f86452330d15844ea774e80ea11"
+      },
+      "af": {
+        "text": "Jy hoef nie reeds al die antwoorde te hê nie. Begin deur jouself beter te leer ken, een praktiese tree op ’n slag.",
+        "sha256": "1c845aa19f27dbc5abab6b33a568a66eb5e4ee2b2cef298bce348612c50855ed"
+      }
+    },
+    {
+      "key": "public.home.availability.registration.title",
+      "class": "B",
+      "placement": "Conditional availability",
+      "en": {
+        "text": "Account registration is unavailable",
+        "sha256": "b8c048340b0e005cfeaadb985f6b61d899372a53f469510f21cf0b0f3fa7646e"
+      },
+      "af": {
+        "text": "Jy kan nie tans registreer nie",
+        "sha256": "cd9419cd6382d24df6e0ffe3c424eacb28fae8b4839d05c7d75ae7764835e3f8"
+      }
+    },
+    {
+      "key": "public.home.availability.registration.body",
+      "class": "B",
+      "placement": "Conditional availability",
+      "en": {
+        "text": "You cannot create an account right now. You can still explore the public information that is available.",
+        "sha256": "b93b6c9e6ed66c54f5ef81cd55f32446d01a557cc91c05c3260254eca62cfd10"
+      },
+      "af": {
+        "text": "Jy kan nie tans ’n rekening skep nie. Jy kan steeds die openbare inligting verken wat beskikbaar is.",
+        "sha256": "92406f4189fd60fe0e29a35455ac4956efaf58df27a0abc5c825c170e37e604c"
+      }
+    },
+    {
+      "key": "public.home.availability.section.title",
+      "class": "B",
+      "placement": "Conditional availability",
+      "en": {
+        "text": "This section is not available yet",
+        "sha256": "778bec7fef93699666ef43985f75b5d8d0170052543235b55b1722951c56d2e3"
+      },
+      "af": {
+        "text": "Hierdie afdeling is nog nie beskikbaar nie",
+        "sha256": "e0b2d267f52d9d8939e573cecdc0dd2bd748faa534be76d81fc2746edf5e2a4a"
+      }
+    },
+    {
+      "key": "public.home.availability.section.body",
+      "class": "B",
+      "placement": "Conditional availability",
+      "en": {
+        "text": "Explore another public page or return when this section becomes available.",
+        "sha256": "24e1fce4c64f86724263c2836d16488b69b367186751c330e65bc4ca520c7e75"
+      },
+      "af": {
+        "text": "Verken ’n ander openbare bladsy of kom terug wanneer hierdie afdeling beskikbaar is.",
+        "sha256": "b453ba5111d343f83e2351f1b0f59155994b4bb343f762ab177104e3a2a185e1"
+      }
+    }
+  ],
+  "reuse_existing_keys_unchanged": [
+    "public.entry.launch.title",
+    "public.entry.launch.body",
+    "public.entry.safety.body",
+    "shared.navigation.create_account",
+    "shared.navigation.login",
+    "shared.navigation.help"
+  ],
+  "composition_note": "Use public.entry.safety.body as the answer to public.home.faq.care.question only if that existing text is independently eligible for the relevant presentation. Never duplicate or silently reapprove its bytes here.",
+  "presentation_guards": [
+    "Do not show unavailable or unfinished catalogue, plans, professional pathways, assessments, or other features as live.",
+    "Registration CTA displays only when the owning implementation confirms registration is available.",
+    "Availability errors may be shown only on actual corresponding states; do not imply a specific release date.",
+    "No user registration, verification, paid access, clinical eligibility or treatment outcome is granted by copy.",
+    "Bilingual required; never silently fall back to the other language.",
+    "Use variable {{platform_name}} where a dynamic brand name is needed; this packet hardcodes no brand.",
+    "Do not substitute reused public.entry.launch.body (which contains Christian/Christelike) for the owner-approved public.home.hero.body in the homepage's prominent hero text; the existing shared source key and its bytes remain untouched."
+  ],
+  "explicitly_excluded": [
+    "Any new legal, privacy, clinical or emergency instructions",
+    "Pricing, paid feature details, launch timeline or feature release commitments",
+    "Clinical diagnoses, temperament assessment results, plan/paid entitlement promises",
+    "Application implementation, source routing, runtime eligibility, release and merge. This packet is submitted in a separately owner-authorised content PR."
+  ],
+  "verified_main_sha": "41f00356b90b01da9d80e9bbeae6f93021306864",
+  "approval": {
+    "approved_on": "2026-11-17",
+    "authority": "Direct content owner approval and specific authorisation to open a content-only PR in conversation",
+    "decision": "Approve the entire 37-key EN/AF candidate with only the public.home.hero.body English/Afrikaans removal of 'Christian'/'Christelike' as worded by the owner.",
+    "changed_key": "public.home.hero.body",
+    "changed_locale_count": 2,
+    "unchanged_locale_count": 72,
+    "secondary_faith_content": "The already-approved secondary public.home.faith.title/body strings are preserved verbatim.",
+    "visibility_intent": "No overt Christian/Christelike description in the main homepage hero body; faith-based content and values remain part of the platform.",
+    "pr_creation_authorisation": "Explicit approval to open the copy PR only; no merge authorisation."
+  },
+  "source_candidate": {
+    "filename": "FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+    "sha256": "4266cb8e855ca0b0bd6576c7969319468bf8bc7dec5d7575a5b4642533d75267",
+    "source_status": "CANDIDATE_NOT_OWNER_APPROVED"
+  }
+}
