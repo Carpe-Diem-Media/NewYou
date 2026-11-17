@@ -1,0 +1,612 @@
+{
+  "packet_id": "SHARED_UI_NAVIGATION_LANGUAGE_ACCESSIBILITY_BROWSER_COPY_APPROVED",
+  "version": "0.1.0",
+  "status": "OWNER_APPROVED_WORDING_ONLY; BOUNDED_NONPRODUCTION_SHARED_BASELINE; NO_RUNTIME_PUBLICATION_OR_RELEASE_AUTHORITY",
+  "prepared_on": "2026-11-17",
+  "repository": "Carpe-Diem-Media/NewYou",
+  "verified_main_sha_at_reconnaissance": "5fe3455f00ead029b354c426359d9fae6abc59bf",
+  "scope": "28 existing Class B shared semantic keys: locale choice/missing-translation messaging (8), navigation labels (15), reusable Search/Contact support actions (2), and navigation accessibility actions (3). These remain reusable wording candidates, not route, feature, entitlement, accessibility-conformance or release authority.",
+  "owner": "Content & Media",
+  "copy_classification": "28 Class B keys / 56 EN+AF locale strings; no new semantic key identities; 26 existing key pairs retained byte-for-byte; two proposed refinements.",
+  "source_registry": {
+    "path": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+    "git_blob_sha": "7a25a11bedccead4bc59abbbf9da9d5b35ef3c28",
+    "workspace_version": "0.3.0",
+    "all_selected_source_entries_status": "candidate",
+    "selected_readiness": "SHARED_BASELINE",
+    "relationship": "Proposes an immutable candidate evidence packet; does not edit or silently promote the existing review workspace/runtime registry."
+  },
+  "source_authority": [
+    "docs/README.md and docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+    "docs/governance/product/00_PLATFORM_v1.18.0.md §§21E.1, 21E.7, 21E.18",
+    "docs/delivery/content-evidence/copy/GOVERNANCE.md, GLOSSARY.md, STYLE_GUIDE.md, COPY_INVENTORY.md",
+    "docs/delivery/content-evidence/copy/COPY_REGISTRY.json and shared-ui/SHARED_UI_BASELINE.md",
+    "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_SHELL_HEADER_FOOTER_BROWSER_COPY_APPROVED_v0.1.1.json",
+    "docs/delivery/content-evidence/copy/evidence/PUBLIC_CONTENT_DISCOVERY_BROWSER_COPY_APPROVED_v0.1.1.json",
+    "Plane WELL-45 (bounded registration development content already satisfied), WELL-21 (programme gate, not an implementation ticket)"
+  ],
+  "copy_items": [
+    {
+      "key": "shared.language.afrikaans",
+      "family": "language",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Afrikaans",
+        "sha256": "6884e4dc730055b5fa078865884341f1a6acbac2b0cde02bcfa9adbdc734be8f"
+      },
+      "af": {
+        "text": "Afrikaans",
+        "sha256": "6884e4dc730055b5fa078865884341f1a6acbac2b0cde02bcfa9adbdc734be8f"
+      }
+    },
+    {
+      "key": "shared.language.english",
+      "family": "language",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "English",
+        "sha256": "ba118bf7fc9c1aedc1edb28a0aa86e0b43b681f222af6616e13c43be87815b06"
+      },
+      "af": {
+        "text": "Engels",
+        "sha256": "79cb5279d893492c9a66aaed0e2eb526f3b0ba64088fcb7134b74b176367ec39"
+      }
+    },
+    {
+      "key": "shared.language.change",
+      "family": "language",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Change language",
+        "sha256": "009ed110badf6e7bb1d9dc5e70d1dbf1d3dcb8283c23508477ee7cb2b730f07d"
+      },
+      "af": {
+        "text": "Verander taal",
+        "sha256": "613c677eca1c1b3a3420f3341a1742455881a0031eb35f085846b7f53c8b4b97"
+      }
+    },
+    {
+      "key": "shared.language.saved",
+      "family": "language",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Language saved",
+        "sha256": "4a09031283e42af1ec26a5c590510031116fc493c1dc182c4687cc1e99561bd2"
+      },
+      "af": {
+        "text": "Taal gestoor",
+        "sha256": "c6fc1c7ea59fdc3295baa41a2ec1675ec2d34ea5f5b5395afcadeaf03208b7a7"
+      }
+    },
+    {
+      "key": "shared.language.unavailable.title",
+      "family": "language",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Translation unavailable",
+        "sha256": "81cb3cf414b1e9a331c9bf8200ec7731600abad316a53606d46507c27e864705"
+      },
+      "af": {
+        "text": "Vertaling nie beskikbaar nie",
+        "sha256": "b29aff4376f5de5c1390768597fe697d6469addad75a4f787b5b6d887dc4ab08"
+      }
+    },
+    {
+      "key": "shared.language.unavailable.body",
+      "family": "language",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "TWO_LOCALE_WORDING_REFINEMENT",
+      "en": {
+        "text": "This content isn't available in your selected language.",
+        "sha256": "c7dd20220a72f5de3277fc5690c01b1ab18c9a4c38121949a1942aad381085d1"
+      },
+      "af": {
+        "text": "Hierdie inhoud is nie in jou gekose taal beskikbaar nie.",
+        "sha256": "d01172aa7d2f24eb06912fb9595d03809e39c05fda55bbcf493c46032b7750f1"
+      }
+    },
+    {
+      "key": "shared.language.unavailable.action",
+      "family": "language",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "TWO_LOCALE_WORDING_REFINEMENT",
+      "en": {
+        "text": "Choose an available language",
+        "sha256": "596ebb05d81b3e8b856cc316c0235381d0a2c9662946be96a2183415ebbd0465"
+      },
+      "af": {
+        "text": "Kies ’n beskikbare taal",
+        "sha256": "7e22eb6e3c3c19ad8861b694aae9d16a25e1a2dfd22c528458380cdb548c24b3"
+      }
+    },
+    {
+      "key": "shared.language.required_unavailable",
+      "family": "language",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Required content is unavailable in your selected language. Please try again later.",
+        "sha256": "ebd3182d2f066ccb8c49d90389fcc55db9e820be7b3fbde08dc4d4348e3e9729"
+      },
+      "af": {
+        "text": "Vereiste inhoud is nie in jou gekose taal beskikbaar nie. Probeer asseblief later weer.",
+        "sha256": "b4c445ecf4c29e7ef0dd4d525b9aea1a332fdcd536d37441dec301997be67d8b"
+      }
+    },
+    {
+      "key": "shared.navigation.home",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Home",
+        "sha256": "3a78695388b38b5cceefaf6796b0137877514593543b91af2752d5a17e3d736c"
+      },
+      "af": {
+        "text": "Tuis",
+        "sha256": "51d44fbef712914d086a1cd880c78b70bbd1cadd8aa9baf42f4ece26ad3b3f78"
+      }
+    },
+    {
+      "key": "shared.navigation.content",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Content",
+        "sha256": "47bd29075f8b8019f0beec6d86beda7c9bf67aaf05053dcbe0b3bcb63968517f"
+      },
+      "af": {
+        "text": "Inhoud",
+        "sha256": "0286255c9d0dc033b1f4c8d320e2da8dfe3adcb70d7c9c1803107f4da2c543f3"
+      }
+    },
+    {
+      "key": "shared.navigation.programmes",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Programmes",
+        "sha256": "7848722e77625dbba9b31923da41d5ef2f59786060bc92ef5b288e9785f9e087"
+      },
+      "af": {
+        "text": "Programme",
+        "sha256": "30556a7a38a54f7935b69b5d80d7f577dc5b1430b12689538d78929950b213a0"
+      }
+    },
+    {
+      "key": "shared.navigation.products",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Products",
+        "sha256": "4edc8bfafc6bd936b849f38c009454eac0febc8982f990e734724156584d56f9"
+      },
+      "af": {
+        "text": "Produkte",
+        "sha256": "ff09a8b6df04b7a4dfd9027db3456eda587447ea3ab18fd18f0e81a978ce0857"
+      }
+    },
+    {
+      "key": "shared.navigation.about",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "About",
+        "sha256": "4efca0d10c5feb8e9b35eb1d994f2905bb71714e6a271f511d713b539ea5faa1"
+      },
+      "af": {
+        "text": "Meer oor ons",
+        "sha256": "aa74aef4d941bfa005d0bc370b2b0bf68c547314301cfc69a47ad439e40a02e6"
+      }
+    },
+    {
+      "key": "shared.navigation.help",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Help",
+        "sha256": "b79cac926e0b2e347e72cc91d5174037c9e17ae7733fd7bdb570f71b10cd7bfc"
+      },
+      "af": {
+        "text": "Hulp",
+        "sha256": "6534898de5d8e1e9cf9e7c82131037921db77f508780b0aa2d905b57a8c88556"
+      }
+    },
+    {
+      "key": "shared.navigation.contact",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Contact",
+        "sha256": "2b5c3d26721ae9c350cf3009318b626f0fc8a90b4a2ac0ca8099c05aa849282e"
+      },
+      "af": {
+        "text": "Kontak",
+        "sha256": "7de5e47b262c3009a180a289c7dea36a9ad1ad6d07112461e4753055dcd1bf63"
+      }
+    },
+    {
+      "key": "shared.navigation.search",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Search",
+        "sha256": "49c266baaaa70981ea188fa714d5c40cf13830d786a861c9943ae0d26a7f3fe9"
+      },
+      "af": {
+        "text": "Soek",
+        "sha256": "f3d9036c1224b6005990cbea7afeca6f83ea02fb7e6dfcdee2daf027ffd51734"
+      }
+    },
+    {
+      "key": "shared.navigation.create_account",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Create account",
+        "sha256": "798ca2ce18bf2038bc13aaa33ebfe6db7020df5b4bba40f68e21462a9207db3d"
+      },
+      "af": {
+        "text": "Skep rekening",
+        "sha256": "09cacf2e32f0ab1a9112e4cc5dfa2f4e82e0d08cfda0818ef23e1b1efbedf5ec"
+      }
+    },
+    {
+      "key": "shared.navigation.login",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Log in",
+        "sha256": "c189840cf7e2d6f6fdeefde1ac59dfdf50bb75642eb569b4e38a5614d6f12ac2"
+      },
+      "af": {
+        "text": "Meld aan",
+        "sha256": "69a8b09db2f59e0bd846273e36db485337fad31cb1ca7169388cd4515727753f"
+      }
+    },
+    {
+      "key": "shared.navigation.logout",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Log out",
+        "sha256": "49616145514e9abf1fc47d631fccccff2ed974cc260d38848181a07e0fa9972f"
+      },
+      "af": {
+        "text": "Meld af",
+        "sha256": "fb6cdfbc369e34d285d9de6bdc1874b75acdeb5e281cff904ed10b513b53cee1"
+      }
+    },
+    {
+      "key": "shared.navigation.plan",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Plan",
+        "sha256": "fa8ed0bdabdd6bcb1c0746f1d3e15212f7f3439d74339fbaaf16c60c0a80fb8e"
+      },
+      "af": {
+        "text": "Plan",
+        "sha256": "fa8ed0bdabdd6bcb1c0746f1d3e15212f7f3439d74339fbaaf16c60c0a80fb8e"
+      }
+    },
+    {
+      "key": "shared.navigation.progress",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Progress",
+        "sha256": "4664827f8e89019280ba99cd889f9ea31eaeecf6fc1bb7541c4a0e546685599f"
+      },
+      "af": {
+        "text": "Vordering",
+        "sha256": "2525efb54f338b02429df50015c2ac4372f16d39487f1951323b45a7b95e67c2"
+      }
+    },
+    {
+      "key": "shared.navigation.profile",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Profile",
+        "sha256": "d696a35bdd1883da07a8d6c41bb7a3153381b23aa197629ee273479a6eaa5a9c"
+      },
+      "af": {
+        "text": "Profiel",
+        "sha256": "6eb1a5e8cfdd32bbbff315b08258042cc59294cd1af8e3f1bfbc80f7e6a14a43"
+      }
+    },
+    {
+      "key": "shared.navigation.settings",
+      "family": "navigation",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Settings",
+        "sha256": "74a883a037bc227f91891ab654a753d3a99f31ab06ae5b5d2b6e594a692b41f8"
+      },
+      "af": {
+        "text": "Instellings",
+        "sha256": "b5bb22d9af3ebe9fab1921363b7e91e227f527e1454cd968b545faac5e71d0c2"
+      }
+    },
+    {
+      "key": "shared.action.search",
+      "family": "public_safe_action",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Search",
+        "sha256": "49c266baaaa70981ea188fa714d5c40cf13830d786a861c9943ae0d26a7f3fe9"
+      },
+      "af": {
+        "text": "Soek",
+        "sha256": "f3d9036c1224b6005990cbea7afeca6f83ea02fb7e6dfcdee2daf027ffd51734"
+      }
+    },
+    {
+      "key": "shared.action.contact_support",
+      "family": "public_safe_action",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Contact support",
+        "sha256": "814f4ed2d5bd33e3a1b93f0d555b2224913e418a41390c90368d856c08c87d42"
+      },
+      "af": {
+        "text": "Kontak ondersteuning",
+        "sha256": "0d13e857296bd3788ff272d7be738d01bdfae6b96722273b0e5877ec34a81ce6"
+      }
+    },
+    {
+      "key": "shared.accessibility.skip",
+      "family": "navigation_accessibility",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Skip to main content",
+        "sha256": "c887f134c26ea8310e1fb4bd6fbab7b640393bd1b556e62691c7a442be92ec2a"
+      },
+      "af": {
+        "text": "Slaan oor na hoofinhoud",
+        "sha256": "bc6ffcfa303dc0c587327d08a04e1931685574a4fa32b24fde85eeeed16f0125"
+      }
+    },
+    {
+      "key": "shared.accessibility.open_menu",
+      "family": "navigation_accessibility",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Open menu",
+        "sha256": "b40b3713b43dc702682dc967ea5c2dbe20ae414c30baf100d162a8250a928065"
+      },
+      "af": {
+        "text": "Maak kieslys oop",
+        "sha256": "d217914ffb9bfa3256e458864b106fef7fc0e1b6e50a9c64af0c554b1553947d"
+      }
+    },
+    {
+      "key": "shared.accessibility.close_menu",
+      "family": "navigation_accessibility",
+      "class": "B",
+      "readiness": "SHARED_BASELINE",
+      "source_registry_status": "candidate",
+      "change_from_registry": "UNCHANGED",
+      "en": {
+        "text": "Close menu",
+        "sha256": "6ccd5c7856042d36476ffd35a41b54518be95621cc741ac3ed55b8108ea41586"
+      },
+      "af": {
+        "text": "Maak kieslys toe",
+        "sha256": "f1d75a6f2b45d016d607c6872e608a76a2d5d5667c8e686ee222b98391b2a007"
+      }
+    }
+  ],
+  "proposed_revisions_from_registry": [
+    {
+      "key": "shared.language.unavailable.body",
+      "source_en": "This content isn't available in your selected language yet.",
+      "proposed_en": "This content isn't available in your selected language.",
+      "source_af": "Hierdie inhoud is nog nie in jou gekose taal beskikbaar nie.",
+      "proposed_af": "Hierdie inhoud is nie in jou gekose taal beskikbaar nie.",
+      "reason": "Avoid implying that a translation is guaranteed to arrive later."
+    },
+    {
+      "key": "shared.language.unavailable.action",
+      "source_en": "View available language",
+      "proposed_en": "Choose an available language",
+      "source_af": "Bekyk beskikbare taal",
+      "proposed_af": "Kies ’n beskikbare taal",
+      "reason": "Describe the explicit user choice rather than a passive view; availability must be established by the Content owner."
+    }
+  ],
+  "existing_approved_pack_consumers": {
+    "public_shell": "FP001_PUBLIC_SHELL_HEADER_FOOTER_BROWSER_COPY_APPROVED_v0.1.1.json references shared language, navigation, accessible-menu and contact-support candidates; reference does not approve original source registry state.",
+    "public_content_discovery": "PUBLIC_CONTENT_DISCOVERY_BROWSER_COPY_APPROVED_v0.1.1.json references shared navigation, two language names and search; other generic filter/sort/clear/retry candidate keys remain outside this pack."
+  },
+  "display_guards": [
+    "Labels are reusable presentation strings only: show a navigation destination only when the actual route, feature, environment, Identity state and authorization allow it. Programmes, Products, Plan, Progress and other future areas remain hidden or unavailable until independently approved.",
+    "Account, Profile, Settings, Log out and other protected links require current Identity-owned access. Unknown/stale sign-in status must not be represented as signed-out or signed-in authority.",
+    "Language saved may be announced only after the owning preference/presentation state has been confirmed. Failed, unknown and in-progress states use separately approved contextual wording; never display success optimistically.",
+    "The optional-language-unavailable offer applies only to eligible low-risk public editorial versions where the Content owner confirms an approved published alternate locale and the visitor explicitly selects it.",
+    "For required bilingual core, safety, consent, privacy or other governed content, a missing selected locale fails closed; do not show a language-switch option as a workaround and never silently substitute text or machine translate.",
+    "Search action appears only if its actual search path is eligible and functioning. Contact support appears only when a supported and currently available contact route/channel exists.",
+    "Skip to main content must target an actual main-content landmark. Open/close menu names must correspond to keyboard-operable controls and accurate expanded/collapsed state.",
+    "These accessible action names do not by themselves prove accessibility conformance, and generic labels for dialogs, charts or tables are deliberately outside this scope.",
+    "Do not hardcode the public brand, service uptime, available programmes/products, contact channels, support SLAs or unpublished content."
+  ],
+  "presentation_lifecycle": {
+    "menu": {
+      "states": [
+        "closed",
+        "open"
+      ],
+      "transitions": [
+        "closed → open on an actual supported menu control",
+        "open → closed on supported close action, Escape or navigation"
+      ],
+      "guards": [
+        "Only eligible destinations appear",
+        "Accessible names and expanded state agree with actual UI",
+        "No identity/entitlement state is mutated"
+      ],
+      "side_effects": [
+        "UI focus and menu visibility only"
+      ],
+      "terminal_states": [
+        "None; reversible ephemeral presentation state"
+      ]
+    },
+    "language_choice": {
+      "states": [
+        "current",
+        "changing",
+        "applied",
+        "failed",
+        "uncertain"
+      ],
+      "transitions": [
+        "current → changing on explicit selection",
+        "changing → applied only after confirmed application",
+        "changing → failed on confirmed rejection",
+        "changing → uncertain when confirmation is missing",
+        "failed/uncertain → changing on a fresh user request"
+      ],
+      "guards": [
+        "No success claim until confirmed",
+        "No prohibited fallback",
+        "Re-read current owner truth after uncertainty"
+      ],
+      "side_effects": [
+        "Allowed UI presentation and owning preference update only, where supported"
+      ],
+      "terminal_states": [
+        "None for the reversible selector; applied is terminal only for one successful selection attempt"
+      ]
+    },
+    "optional_editorial_locale": {
+      "states": [
+        "selected_locale_available",
+        "selected_locale_missing",
+        "alternate_offered",
+        "alternate_selected",
+        "unavailable"
+      ],
+      "transitions": [
+        "selected_locale_missing → alternate_offered only when an eligible published alternate exists",
+        "alternate_offered → alternate_selected only on explicit visitor selection",
+        "alternate_offered → unavailable if alternate loses eligibility"
+      ],
+      "guards": [
+        "Content & Media owns current publication/translation eligibility",
+        "Never silently translate or substitute language",
+        "Required-governed content cannot enter this optional fallback path"
+      ],
+      "side_effects": [
+        "Explicit navigation/display request to eligible alternate locale only"
+      ],
+      "terminal_states": [
+        "alternate_selected for this choice attempt; unavailable for this failed lookup, both require revalidation on new use"
+      ]
+    }
+  },
+  "excluded": [
+    "Runtime registry mutation or approval of unselected shared candidate keys.",
+    "New public page/route, content discovery backend, support ticket or contact provider, Account, entitlement, publication or locale authority.",
+    "Full generic accessibility labels for dialog/table/chart, chart alt text or accessibility conformance certification.",
+    "Class A legal/consent/safety/health/commercial wording and any change to already approved FP-001 registration/verification copy.",
+    "Production publication, feature activation, release, implementation PR or merge authorization."
+  ],
+  "approval": {
+    "approved_on": "2026-11-17",
+    "owner_approved": true,
+    "decision": "Approved in project conversation; exact complete v0.1.0 EN/AF candidate, including the two proposed locale wording refinements.",
+    "approved_source_sha256": "33b62f93cfae1a6ed7094c70f031a99ba05252692e4565b5d24d087c03362c38",
+    "approved_key_count": 28,
+    "approved_en_af_locale_string_count": 56,
+    "pr_creation_authorization": "Prior discussion offered a bounded copy-only PR after approval. Actual creation is deferred until repository-required authenticated JC-Agents preflight succeeds.",
+    "pr_opened": false,
+    "merge_authorised": false,
+    "runtime_publishing_authorised": false,
+    "production_authorised": false
+  },
+  "source_candidate": {
+    "filename": "SHARED_UI_NAVIGATION_LANGUAGE_ACCESSIBILITY_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+    "sha256": "33b62f93cfae1a6ed7094c70f031a99ba05252692e4565b5d24d087c03362c38",
+    "source_status": "CANDIDATE_NOT_OWNER_APPROVED; SHARED_BASELINE_NONPRODUCTION; NO_ROUTER_OR_RUNTIME_ELIGIBILITY",
+    "provenance_note": "All 28 semantic keys and their English/Afrikaans wording are preserved unchanged from the exact owner-approved candidate. The derived packet adds only approval metadata."
+  }
+}
