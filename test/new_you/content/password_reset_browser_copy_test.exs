@@ -77,9 +77,17 @@ defmodule NewYou.Content.PasswordResetBrowserCopyTest do
 
       forbidden =
         [artifact["version"], artifact["source_packet_sha256"] | artifact["approval_comments"]] ++
+          Map.keys(artifact["entries"]) ++
+          Enum.map(["well136-c02-v0.1.json", "well136-c02-owner-approval.json"], fn file ->
+            Path.join(fixtures, file)
+            |> File.read!()
+            |> then(&:crypto.hash(:sha256, &1))
+            |> Base.encode16(case: :lower)
+          end) ++
           for {_key, entry} <- artifact["entries"],
               locale <- ["en", "af"],
-              do: entry[locale]["text"]
+              value <- ["text", "sha256"],
+              do: entry[locale][value]
 
       for {_compiled_module, beam} <- compiled do
         # Decode actual literal/debug/documentation terms using the pinned OTP

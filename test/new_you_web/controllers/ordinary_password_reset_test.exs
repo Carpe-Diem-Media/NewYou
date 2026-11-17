@@ -57,6 +57,11 @@ defmodule NewYouWeb.OrdinaryPasswordResetTest do
       assert login.resp_body =~ "/password/reset?locale=#{locale}"
       request = get(build_conn(), "/password/reset?locale=#{locale}")
       assert request.status == 200
+
+      assert Plug.Conn.get_resp_header(request, "content-security-policy") == [
+               "default-src 'none'; style-src 'self'; font-src 'self'; script-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+             ]
+
       assert request.resp_body =~ title
       assert request.resp_body =~ "/login?locale=#{locale}"
     end

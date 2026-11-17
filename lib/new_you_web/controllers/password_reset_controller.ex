@@ -193,13 +193,19 @@ defmodule NewYouWeb.PasswordResetController do
   end
 
   defp security_headers(conn) do
+    # Only the ordinary form loads the pending-state script. Keep historical
+    # P8-12's existing transport policy independent of the ordinary journey.
+    csp =
+      if conn.assigns[:password_reset_context] == :well136 do
+        "default-src 'none'; style-src 'self'; font-src 'self'; script-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+      else
+        "default-src 'none'; style-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+      end
+
     conn
     |> put_resp_header("cache-control", "no-store")
     |> put_resp_header("referrer-policy", "no-referrer")
-    |> put_resp_header(
-      "content-security-policy",
-      "default-src 'none'; style-src 'self'; font-src 'self'; script-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
-    )
+    |> put_resp_header("content-security-policy", csp)
   end
 
   defp not_found(conn), do: conn |> security_headers() |> send_resp(404, "")
