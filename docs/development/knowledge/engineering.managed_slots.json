@@ -438,11 +438,9 @@
         "The psql boundary uses supported options and keeps credentials out of arguments.",
         "Probe validation rejects non-TEST execution, partial markers and malformed identifiers.",
         "Input accepts only synthetic slot-proof addresses, and continuation requires a different allocated slot database.",
-        "Reject a fresh DEV invocation before input or Repo startup.",
-        "Use supported psql options and environment-only credential injection.",
         "Forward a complete non-secret receipt before waiting behind the stream redaction buffer."
       ],
-      "proves": "Seven pure and subprocess regression cases for probe input, marker, environment, child invocation and psql argument boundaries.",
+      "proves": "Eight pure and subprocess regression tests for probe input, managed markers, fresh invocation, psql arguments and framed output.",
       "limits": "Does not prove live lease verification, real two-worktree database isolation, child receipt propagation, failure retention, clean reuse or completion of the active pilot.",
       "source_ids": [
         "managed_probe_tests",
@@ -518,7 +516,7 @@
   ],
   "proof_limitations": [
     "Managed migrations and 35 bootstrap/result tests passed after correcting two legacy-only identity assertions. Both diagnostic worktrees emitted own-count 1 and peer-count 0 after synthetic registration and browser login, but their receipt/barrier protocol stalled and supervisor ownership was lost. No completed two-worktree child/cross-slot-denial or cleanup/reuse proof is claimed. Guarded recovery quarantined the two exact generations; their databases and records remain preserved. New acquisitions are disabled.",
-    "Real cold PLT preparation passed on OTP 29.1.2 / Elixir 1.20.5, first DEV 2:58.40 / 3692448 KiB max RSS; TEST preparation plus analysis 4:25.69 / 3465708 KiB, and peer TEST preparation 4:11.22 / 4087804 KiB. Two subsequent TEST analyses passed with zero errors and 17.385 seconds of overlapping analysis at source e583d5cd22c42b7850711ecf07c15a27702bd85b while the shared cache lock was free. Full-suite capacity remains unmeasured. Latest pure tests: cache 14, admission 11, LocalConfig 19; eight probe guard/adapter tests passed. Earlier compilation and 34 knowledge tests passed; final knowledge checks are refreshed separately.",
+    "Real cold PLT preparation passed on OTP 29.1.2 / Elixir 1.20.5, first DEV 2:58.40 / 3692448 KiB max RSS; TEST preparation plus analysis 4:25.69 / 3465708 KiB, and peer TEST preparation 4:11.22 / 4087804 KiB. Two subsequent TEST analyses passed with zero errors and 17.385 seconds of overlapping analysis at source e583d5cd22c42b7850711ecf07c15a27702bd85b while the shared cache lock was free. Full-suite capacity remains unmeasured. Latest pure tests: cache 14, admission 11, LocalConfig 19; eight probe guard/adapter tests passed. Earlier compilation passed. The corrected map passed nine-map validation and all 34 knowledge tests; validation does not prove its semantic claims.",
     "DEV-profile analysis failed with 20 warnings, then 18 after adding pinned :dialyxir to project PLT inputs. No LocalDialyzer unknown-function warnings remain. TEST-profile static analysis passed with zero errors/skips, so the observed DEV failure does not establish failure in the required TEST compile profile. The unchanged Communications/Privacy sources were not compared in a separate base DEV run; those DEV warnings are not certified as baseline.",
     "Hosted CI uses the separate new_you_ci_test database and role on port 55433. Caller-controlled flags do not authenticate CI, and workstation shared TEST rejects these flags even when both are present. Exact-head hosted CI remains unverified.",
     "WELL-154 corrects canonical renderer contention and a failure-path double-close. Its 1.2.1 source passed temporary contention/parallel/timeout/cancellation tests and the full local DevCore suite, but is not installed or integrated. This worktree rejects installed 1.2.0 before allocation. Prior exact manifest consent is preserved; a new executable installation and any quarantine reconciliation need their own reviewed exact targets.",
