@@ -1,0 +1,593 @@
+{
+  "schema_version": 1,
+  "capability_id": "engineering.managed_slots",
+  "purpose": "Provide opt-in NewYou worktree commands with a live DevCore managed allocation, fail-closed database identity checks, worktree-local execution artifacts, and private mutable Dialyzer core PLTs.",
+  "implementing_tickets": [
+    "WELL-147"
+  ],
+  "implementation_revision": {
+    "git_sha": "e55373972036124091a068116c2235822462ae4e",
+    "semantics": "WELL-147 source checkpoint after the DevCore prerequisite integrated. Configuration/admission/cache adapters and compile checks passed; real cold core/project PLT preparation passed without TEST. DEV analysis still fails with 18 Communications/Privacy warnings after correcting two introduced Dialyxir input warnings. Live NewYou managed DB/child/isolation/reuse proof, required final TEST gates, bounded OCR, hosted CI, independent approval and resulting main remain unverified."
+  },
+  "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
+  "collaborating_domains": [
+    {
+      "domain": "DevCore managed-slot allocator",
+      "interface": "The local entry point checks DevCore version and worktree job status, then delegates profile execution to DevCore. Runtime configuration verifies the active job receipt through the installed DevCore command.",
+      "ownership": "DevCore owns slot leases, generation resources, credentials, job supervision, and cleanup. NewYou owns only its local admission checks, environment binding checks, worktree build lock, and local tool caches.",
+      "source_ids": [
+        "session",
+        "config",
+        "pool"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "Not applicable",
+      "resource": "No Ash Resource is added or changed by this developer-tooling capability.",
+      "actions": [
+        "No business action is added or changed."
+      ],
+      "caller_boundary": "Local development commands configure the existing Repo before startup. They do not add business write interfaces.",
+      "source_ids": [
+        "config",
+        "session"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.LocalConfig",
+      "function": "repo",
+      "arity": 3,
+      "visibility": "internal",
+      "arguments": [
+        "env is :dev or :test",
+        "environment_reader returns environment values by key",
+        "options may inject a verifier and managed-required declaration for isolated tests"
+      ],
+      "returns": [
+        "Ecto Repo keyword options after validating legacy or verified managed identity",
+        "raises ArgumentError for partial, unavailable, expired, substituted, or mismatched managed context"
+      ],
+      "side_effects": [
+        "The managed path invokes the installed DevCore slots verify command and reads its JSON receipt."
+      ],
+      "caller_constraints": [
+        "Runtime configuration calls this before Repo startup.",
+        "TEST partitioning is rejected because runtime roles lack CREATEDB.",
+        "Production uses its separate runtime configuration."
+      ],
+      "source_ids": [
+        "config"
+      ]
+    },
+    {
+      "module": "NewYou.LocalConfig",
+      "function": "port",
+      "arity": 4,
+      "visibility": "internal",
+      "arguments": [
+        "worktree? identifies the legacy checkout mode",
+        "value is NEW_YOU_PORT or nil",
+        "environment_reader returns environment values by key",
+        "options may inject a verifier and managed-required declaration for isolated tests"
+      ],
+      "returns": [
+        "The verified managed slot port or permitted legacy port",
+        "raises ArgumentError for missing, altered, or out-of-range port assignments"
+      ],
+      "side_effects": [
+        "Managed mode verifies the live DevCore job receipt."
+      ],
+      "caller_constraints": [
+        "Managed ports are receipt-bound to slots 1 through 20.",
+        "The legacy worktree range remains 4221 through 4239; port 4240 requires a verified slot."
+      ],
+      "source_ids": [
+        "config"
+      ]
+    },
+    {
+      "module": "Mix.Tasks.LocalDialyzer",
+      "function": "run",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "args are Dialyxir command-line options"
+      ],
+      "returns": [
+        "Runs Dialyxir after local private core PLT preparation outside GitHub Actions"
+      ],
+      "side_effects": [
+        "Reads runtime and dependency inputs, prepares or reuses a shared immutable PLT baseline under a cache-specific lock, copies core PLTs into this worktree build tree, and invokes Dialyxir."
+      ],
+      "caller_constraints": [
+        "GitHub Actions skips local baseline preparation and retains its existing _build/plts cache path.",
+        "The shared-cache lock is released before Dialyxir analysis; the per-worktree copies are the mutable PLT targets."
+      ],
+      "source_ids": [
+        "dialyzer",
+        "cache",
+        "producer"
+      ]
+    },
+    {
+      "module": "tools.local_session",
+      "function": "main",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "arguments select dev or test and the child command"
+      ],
+      "returns": [
+        "Usage or admission status; successful admission replaces the wrapper with the mise and DevCore execution chain"
+      ],
+      "side_effects": [
+        "Checks the installed DevCore version and same-worktree job status, holds an inheritable per-worktree build lock, and execs the selected managed profile command."
+      ],
+      "caller_constraints": [
+        "The wrapper rejects nested managed context and manual database-mode overrides.",
+        "It does not print captured status output or credentials."
+      ],
+      "source_ids": [
+        "session",
+        "launcher"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": ".devcore/slots.json",
+      "tables": [
+        "slots"
+      ],
+      "constraints": [
+        "database_prefix"
+      ],
+      "source_ids": [
+        "config",
+        "pool"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "The developer invokes tools/newyou-local with dev or test and a child command. The wrapper checks the repository root, project declaration, supported DevCore version, and unresolved same-worktree jobs under an inheritable build lock. It then execs mise and DevCore run for the selected profile.",
+      "source_ids": [
+        "launcher",
+        "session"
+      ]
+    },
+    {
+      "summary": "Before Repo startup, LocalConfig rejects partial markers, verifies the live managed job receipt, checks the exact slot and generation-derived database and role, validates environment binding, and rejects TEST partitions. Missing or mismatched managed context fails closed when the managed pool is declared.",
+      "source_ids": [
+        "config",
+        "pool"
+      ]
+    },
+    {
+      "summary": "Before local Dialyzer analysis, LocalDialyzer derives a cache identity from toolchain versions, Dialyxir source, the core application set, and core beam/application inputs. The cache helper serializes baseline preparation, checks its manifest and file hashes, publishes complete baselines atomically, and copies them to a distinct worktree-local directory before Dialyxir mutates them. The project PLT includes the already pinned Dialyxir API so the build task is analyzed without suppressing unknown-function findings.",
+      "source_ids": [
+        "dialyzer",
+        "cache",
+        "producer"
+      ]
+    },
+    {
+      "summary": "Restart-child scripts invoke the existing read-only Proof.Result.capture_postgresql preflight before fixture operations. The production exclusion probe validates inherited TEST configuration while starting no Repo and keeping its private production build worktree-local. Actual managed subprocess execution remains unverified.",
+      "source_ids": [
+        "restart",
+        "production_probe",
+        "config"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "Local command not admitted",
+      "Local command admitted with worktree lock held",
+      "Managed job running with admission lock held",
+      "Local command finished and lock released",
+      "PLT baseline absent",
+      "PLT baseline validated and immutable",
+      "Worktree-private PLT copies prepared",
+      "Dialyzer analysis running against private copies"
+    ],
+    "transitions": [
+      {
+        "from_state": "Local command not admitted",
+        "to_state": "Local command admitted with worktree lock held",
+        "guards": [
+          "The project declaration and installed DevCore capability validate.",
+          "DevCore status is available and the same worktree has no unresolved job.",
+          "The per-worktree lock path is a private regular file and the lock is acquired."
+        ],
+        "side_effects": [
+          "The wrapper execs the selected managed profile command while the lock descriptor remains inheritable."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "session",
+          "launcher"
+        ]
+      },
+      {
+        "from_state": "Local command admitted with worktree lock held",
+        "to_state": "Managed job running with admission lock held",
+        "guards": [
+          "The exec chain retains the open admission descriptor through the DevCore supervisor.",
+          "If the supervisor dies and the descriptor closes, same-worktree admission still rejects unresolved or quarantined registry jobs."
+        ],
+        "side_effects": [
+          "Sibling commands in the same worktree remain excluded while the child runs."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "session",
+          "session_tests"
+        ]
+      },
+      {
+        "from_state": "Managed job running with admission lock held",
+        "to_state": "Local command finished and lock released",
+        "guards": [
+          "The final process holding the inherited descriptor exits."
+        ],
+        "side_effects": [
+          "The operating system releases the per-worktree lock."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "session",
+          "session_tests"
+        ]
+      },
+      {
+        "from_state": "PLT baseline absent",
+        "to_state": "PLT baseline validated and immutable",
+        "guards": [
+          "The cache-specific lock is held.",
+          "The producer creates both expected PLT files in a private staging directory.",
+          "The completion manifest records the key and file digests."
+        ],
+        "side_effects": [
+          "The helper atomically publishes the complete baseline and releases the cache lock before local copies and analysis."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "cache",
+          "producer"
+        ]
+      },
+      {
+        "from_state": "PLT baseline validated and immutable",
+        "to_state": "Worktree-private PLT copies prepared",
+        "guards": [
+          "The destination is inside the worktree PLT root and is not an unmanaged or symlinked path.",
+          "An existing destination is replaced only when its ownership marker validates."
+        ],
+        "side_effects": [
+          "The helper copies both baseline files into a separate worktree-local directory and writes an ownership marker."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "cache"
+        ]
+      },
+      {
+        "from_state": "Worktree-private PLT copies prepared",
+        "to_state": "Dialyzer analysis running against private copies",
+        "guards": [
+          "LocalDialyzer configures the private core path and invokes Dialyxir after cache preparation returns."
+        ],
+        "side_effects": [
+          "Dialyxir may add or remove entries from the private PLT files."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "dialyzer",
+          "cache"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Managed identity markers alone do not authorize a database target. LocalConfig requires a successful live DevCore receipt and exact field agreement. Verification failure, partial markers, stale allocation, mismatched worktree or database binding raises before Repo startup.",
+      "source_ids": [
+        "config",
+        "config_tests"
+      ]
+    },
+    {
+      "summary": "NewYou keeps shared DEV fixed at its legacy endpoint and identity. Managed jobs can select TEST only through the verified generation-specific TEST receipt. TEST partitioning remains unsupported.",
+      "source_ids": [
+        "config",
+        "config_tests",
+        "pool"
+      ]
+    },
+    {
+      "summary": "The wrapper does not print captured DevCore status output or inherited credentials. Cache files and lock paths reject symlink substitution and unmanaged destination replacement.",
+      "source_ids": [
+        "session",
+        "session_tests",
+        "cache",
+        "cache_tests"
+      ]
+    },
+    {
+      "summary": "The explicit ci compatibility mode preserves the runner-owned legacy allocation shape. Caller-controlled flags do not authenticate CI. The local entry point rejects this override and managed markers never fall back through it.",
+      "source_ids": [
+        "config",
+        "config_tests",
+        "session"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "The command lock is scoped to a Git worktree and inherited by its child process chain. It excludes overlapping build commands in that worktree while permitting work in sibling worktrees. It does not lock TEST globally.",
+      "source_ids": [
+        "session",
+        "session_tests"
+      ]
+    },
+    {
+      "summary": "The PLT preparation lock is keyed to one cache identity and covers baseline validation or creation and atomic publication. The helper releases it before copying into a worktree path; Dialyzer analysis runs without holding the shared-cache lock, so separate worktrees use separate mutable PLT copies.",
+      "source_ids": [
+        "cache",
+        "cache_tests",
+        "dialyzer"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "A valid complete PLT baseline for the same cache key is reused. A failed producer does not publish an incomplete baseline, so a later attempt can prepare it again. A worktree copy with a matching ownership marker and cache key is reused.",
+      "source_ids": [
+        "cache",
+        "cache_tests"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Unavailable DevCore status, unsupported installation, unresolved same-worktree jobs, malformed project declaration, or unsafe lock state prevents child launch with a bounded non-secret diagnosis.",
+      "source_ids": [
+        "session",
+        "session_tests"
+      ]
+    },
+    {
+      "summary": "Invalid or incomplete PLT baseline metadata, digest mismatch, unsafe path, producer failure, or unowned destination prevents Dialyzer analysis. Staging files are removed on failed publication, and the previous owned local copy is restored when atomic replacement fails.",
+      "source_ids": [
+        "cache",
+        "cache_tests"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/local_config_test.exs",
+      "cases": [
+        "Every slot 1 through 20 selects its exact generation-specific TEST identity and verified port.",
+        "Partial markers, missing or stale verification, mismatched endpoint and forged receipt fields fail closed.",
+        "Managed pool declaration rejects marker-free local context by default; only explicit CI mode retains its legacy runner contract.",
+        "DEV and TEST remain distinct and TEST partitions are rejected."
+      ],
+      "proves": "Pure configuration decisions against injected environment and verifier functions.",
+      "limits": "Injected positive verifier responses prove pure decisions, not an actual lease. The default verifier rejects forged context against the installed executable. No Repo or database starts.",
+      "source_ids": [
+        "config_tests"
+      ]
+    },
+    {
+      "path": "tests/test_local_session.py",
+      "cases": [
+        "Reject unsupported DevCore versions before status or launch.",
+        "Redact failed status output and launch no command.",
+        "Model inherited lock ownership until a child exits.",
+        "Reject unresolved same-worktree jobs while permitting sibling worktrees.",
+        "Reject symlink locks and preserve lock permissions."
+      ],
+      "proves": "Wrapper behavior against mocks and temporary files/processes.",
+      "limits": "The ownership test models descriptor inheritance; it does not run DevCore, attach to managed descendants, or prove recovery from a real supervisor failure.",
+      "source_ids": [
+        "session_tests"
+      ]
+    },
+    {
+      "path": "tests/test_local_plt_cache.py",
+      "cases": [
+        "Publish complete baselines and independent local copies.",
+        "Separate cache namespaces when key inputs change.",
+        "Reject incomplete or modified baselines and recover after producer failure.",
+        "Concurrent thread and process requests prepare one baseline and create separate local destinations.",
+        "Release the cache lock before preparation returns and pass a private staging path to the producer."
+      ],
+      "proves": "Cache helper behavior with synthetic PLT bytes, temporary paths, and process/thread contention.",
+      "limits": "Does not produce real Dialyxir core PLTs, run Dialyzer, or prove analysis succeeds on the pinned runtime.",
+      "source_ids": [
+        "cache_tests"
+      ]
+    },
+    {
+      "path": "test/tools/dialyzer_cache_test.exs",
+      "cases": [
+        "Select private local core paths and worktree-local project PLT paths outside GitHub Actions.",
+        "Preserve hosted CI PLT cache paths.",
+        "Keep the deep gate routed through the local Dialyzer preparation task and analysis.",
+        "Reject missing source/core/version cache identity inputs; the project PLT includes the pinned Dialyxir build-tool API."
+      ],
+      "proves": "Mix project configuration and alias structure by source-level assertions.",
+      "limits": "Does not execute the preparation task or Dialyzer analysis.",
+      "source_ids": [
+        "dialyzer_tests"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Keep DevCore receipt semantics and managed resource lifecycle in DevCore. NewYou should validate the returned identity and never duplicate slot allocation, generation advancement, credential provisioning, job supervision, or cleanup.",
+      "source_ids": [
+        "config",
+        "session",
+        "pool"
+      ]
+    },
+    {
+      "summary": "Add local command conveniences only through the managed entry point and preserve explicit legacy and CI compatibility gates.",
+      "source_ids": [
+        "launcher",
+        "session",
+        "pool"
+      ]
+    },
+    {
+      "summary": "Change PLT cache identity when the OTP, Elixir, Dialyxir source, core application set, core runtime inputs, or cache format changes. Continue to give each worktree its own writable PLT copies.",
+      "source_ids": [
+        "dialyzer",
+        "cache",
+        "producer"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Use the existing NewYou.Repo and runtime configuration seam for database target selection. No second Repo or business persistence path is introduced.",
+      "source_ids": [
+        "config"
+      ]
+    },
+    {
+      "summary": "Use pinned Mix, OTP, Elixir, and Dialyxir tooling and preserve the existing GitHub Actions PLT cache behavior.",
+      "source_ids": [
+        "dialyzer",
+        "dialyzer_tests"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Do not infer authorization from a database name prefix, local environment markers, or a successful TCP connection without live DevCore receipt verification.",
+      "source_ids": [
+        "config",
+        "config_tests"
+      ]
+    },
+    {
+      "summary": "Do not partition the NOCREATEDB TEST role, fall back from managed mode to shared TEST, redirect managed work to DEV, or create NewYou-owned slot databases and roles.",
+      "source_ids": [
+        "config",
+        "config_tests",
+        "pool"
+      ]
+    },
+    {
+      "summary": "Do not share mutable Dialyxir core PLT files across worktrees, hold the cache lock for full analysis, or serialize the TEST database and full test suite through the PLT lock.",
+      "source_ids": [
+        "dialyzer",
+        "cache",
+        "cache_tests"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "No NewYou managed database was provisioned or contacted and no managed child command was launched. Positive live lease verification and real two-worktree fixture isolation, failed retention and clean reuse remain unverified.",
+    "Real cold PLT preparation passed on OTP 29.1.2 / Elixir 1.20.5 in 2:58.40, maximum RSS 3692448 KiB, without TEST. Temporary-adapter cache/session tests passed 9 each, pure LocalConfig 18, pure Dialyzer configuration 7, and application compilation passed. Actual concurrent independent Dialyzer analysis and full-suite resource capacity are unverified.",
+    "DEV-profile Dialyzer analysis failed with 20 warnings, then 18 after adding pinned :dialyxir to project PLT inputs. The two introduced LocalDialyzer unknown-function warnings were corrected and absent in fresh analysis. Remaining Communications/Privacy warnings are not classified against base or the required TEST deep gate; neither analysis passed.",
+    "Explicit CI compatibility flags are caller controlled, not authentication of hosted origin. The normal local entry point rejects that mode and any partial managed context rejects. Independent Master Gate must assess this deliberate legacy compatibility boundary.",
+    "The regular mix check, final TEST-profile mix check.deep, hosted CI, bounded OCR, final independent Master Gate, NewYou merge and resulting-main checks remain unverified. This checkpoint is not review-ready.",
+    "The required persistence locator points to the DevCore slot allocation JSON because this capability has no NewYou migration or table. Its slots/database_prefix fields configure allocation. DevCore owns lease lifecycle and cleanup; this map describes consumer checks only."
+  ],
+  "follow_up_tickets": [],
+  "sources": [
+    {
+      "id": "config",
+      "path": "lib/new_you/local_config.ex",
+      "symbol": "def repo(env",
+      "sha256": "68bbf945202d2b145492998b3417fa81d77a8a44f832a8231599301891305901"
+    },
+    {
+      "id": "session",
+      "path": "tools/local_session.py",
+      "symbol": "def main(arguments=None)",
+      "sha256": "5988a2ae579d9a06d142ffd0438b6348b8a05e04019833959026d343e4e6fff1"
+    },
+    {
+      "id": "launcher",
+      "path": "tools/newyou-local",
+      "symbol": "from tools.local_session import main",
+      "sha256": "1381d6c22c5a015d4c45bd1c273f471fe24b0a194d5ae444e87e24f72bab5382"
+    },
+    {
+      "id": "pool",
+      "path": ".devcore/slots.json",
+      "symbol": "\"database_prefix\": \"dc_new_you_s\"",
+      "sha256": "25295c449ce0acebc1d8291d370c989b0eef3f8ec92c64f98d342645f3623938"
+    },
+    {
+      "id": "project_config",
+      "path": ".devcore/project.conf",
+      "symbol": "SLOT_POOL=.devcore/slots.json",
+      "sha256": "dc50737271f440424999f9a1757e7158dc45f1218073a658bbe23e3a3d672f95"
+    },
+    {
+      "id": "dialyzer",
+      "path": "lib/mix/tasks/local_dialyzer.ex",
+      "symbol": "defmodule Mix.Tasks.LocalDialyzer do",
+      "sha256": "d874c8b6c8bbe4b6a2a3bffa964bd95ea78b81fb984aed8b65086962d9caf963"
+    },
+    {
+      "id": "cache",
+      "path": "tools/local_plt_cache.py",
+      "symbol": "class Cache:",
+      "sha256": "1dbb7032b63b59db004bd4e3e4d344b27c749459671a0130d32f59bab8483888"
+    },
+    {
+      "id": "producer",
+      "path": "tools/local_plt_core.exs",
+      "symbol": "Dialyxir.Plt.check(plts)",
+      "sha256": "c6e30adf4083a363082bbaa2eaa37fd5f2ae70ce9a1d292cc68713e8e6232305"
+    },
+    {
+      "id": "config_tests",
+      "path": "test/new_you/local_config_test.exs",
+      "symbol": "test \"a verified managed job selects its isolated TEST identity and slot 20 port\"",
+      "sha256": "34668dc489755c99b21c493ce1484e8b92aead17cdd4406008dc6824cf74bdc3"
+    },
+    {
+      "id": "session_tests",
+      "path": "tests/test_local_session.py",
+      "symbol": "class LocalSessionTests(unittest.TestCase):",
+      "sha256": "82430f6abb407f64f535b609e962acbe93a1cb5939a7d569becd40cb03b80815"
+    },
+    {
+      "id": "cache_tests",
+      "path": "tests/test_local_plt_cache.py",
+      "symbol": "class LocalPltCacheTest(unittest.TestCase):",
+      "sha256": "d3d01b75e6e331961ee91945241747f8400903d5a21e494224f8f8cb004664ca"
+    },
+    {
+      "id": "dialyzer_tests",
+      "path": "test/tools/dialyzer_cache_test.exs",
+      "symbol": "defmodule NewYou.DialyzerCacheTest do",
+      "sha256": "de4dbbe5baf3589679b01ef42ed1209e47d0a28ad6e53465b1305a7734a2c3bf"
+    },
+    {
+      "id": "restart",
+      "path": "test/proof/p8_16_restart.exs",
+      "symbol": "NewYou.Proof.Result.capture_postgresql()",
+      "sha256": "6855cf241edb021ebf5637c6bb54b979d8e4185dc8573fb9a7762e213dff2cc7"
+    },
+    {
+      "id": "production_probe",
+      "path": "test/proof/self_test.exs",
+      "symbol": "NewYou.LocalConfig.repo(:test)",
+      "sha256": "8e13d6026f146665e0712f4b64e66936afcd37f4a80753db90d3e4c8a09754c0"
+    }
+  ]
+}
