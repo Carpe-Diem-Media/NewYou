@@ -29,6 +29,10 @@ def _route(paths: list[str]) -> dict[str, bool]:
 class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
     """Application and engineering changes retain the fast route."""
 
+    def test_application_ci_builds_browser_assets_before_fast_gate(self):
+        workflow = (WORKFLOWS / 'application-ci.yml').read_text()
+        self.assertLess(workflow.index('run: mix assets.build'), workflow.index('run: mix check\n'))
+
     def test_application_source_runs_application_ci_without_full(self):
         decision = _route(["lib/new_you/accounts.ex"])
         self.assertEqual({"application_changes": True}, decision)
