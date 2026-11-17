@@ -1,4 +1,4 @@
-/* Hallmark · shape: app screen · genre: editorial · theme: custom · idea: exact launch and safety copy leads into the real registration form · vibe: warm grounded calm editorial practical · redesign: full · nav: language switch · signature: safety before registration · states: initial, validation, pending, resend result · ground: warm paper · ink: forest-black · accent: forest · faces: Georgia / system sans · posture: restrained · axes: light/roman-serif/chromatic-green · contrast: pass · copy: governed P8-05 verbatim · v2.0.0 */
+/* Hallmark · shape: app screen · genre: editorial · theme: custom · idea: exact launch and safety copy leads into the real registration form · vibe: warm grounded calm editorial practical · redesign: full · nav: language switch · signature: safety before registration · states: initial, validation, pending, resend result · ground: warm paper · ink: forest-black · accent: forest · faces: central body/display tokens · posture: restrained · axes: light/roman-serif/chromatic-green · contrast: pass · copy: governed P8-05 verbatim · v2.0.0 */
 /* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V3 · weakest: V, a registration form must stay familiar; made the launch and safety content lead before the action */
 /* Hallmark · hero-review: fix · 4 findings · 2 resolved (responsive composition, custom direction); 2 governed (exact title, safety before registration) */
 /* Hallmark · finish-review: fix · routed Browse public content to the locale-specific approved launch/safety screen and Back to home to language choice; regression tested */
@@ -40,8 +40,6 @@
   --ny-accent-ink: oklch(98% 0.01 83);
   --ny-focus: oklch(40% 0.11 160);
   --ny-error: oklch(46% 0.14 27);
-  --ny-font-display: Georgia, "Times New Roman", serif;
-  --ny-font-body: ui-sans-serif, system-ui, sans-serif;
   --ny-text-display: clamp(2.5rem, 5vw, 4.5rem);
   --ny-text-section: clamp(2rem, 3vw, 3rem);
 }
@@ -68,44 +66,44 @@ body {
   overflow-x: clip;
 }
 
-.registration-page {
+.registration-page:not([data-design-pilot]) {
   color-scheme: light;
   color: var(--ny-copy);
   font-family: var(--ny-font-body);
 }
 
-:root[data-theme="dark"] .registration-page {
+:root[data-theme="dark"] .registration-page:not([data-design-pilot]) {
   color-scheme: dark;
 }
 
-.registration-page :focus-visible {
+.registration-page:not([data-design-pilot]) :focus-visible {
   outline: 2px solid var(--ny-focus);
   outline-offset: 2px;
 }
 
-.registration-page a:active {
+.registration-page:not([data-design-pilot]) a:active {
   color: var(--ny-accent-strong);
 }
 
-.registration-page button:active {
+.registration-page:not([data-design-pilot]) button:active {
   background-color: var(--ny-accent-strong);
 }
 
-.registration-page :is(h1, h2) {
+.registration-page:not([data-design-pilot]) :is(h1, h2) {
   text-wrap: balance;
 }
 
-.registration-page ::selection {
+.registration-page:not([data-design-pilot]) ::selection {
   color: var(--ny-accent-ink);
   background-color: var(--ny-accent);
 }
 
-.registration-page :where(input:not([type="checkbox"]), textarea) {
+.registration-page:not([data-design-pilot]) :where(input:not([type="checkbox"]), textarea) {
   caret-color: var(--ny-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .registration-page {
+  .registration-page:not([data-design-pilot]) {
     scroll-behavior: auto;
   }
 }

@@ -32,6 +32,17 @@ defmodule Mix.Tasks.Design.Check do
   @default_breakpoint ~r/^(?:sm|md|lg|xl|2xl|min-\[[^\]]+\]|max-\[[^\]]+\])$/
   @css_property ~r/(?:^|[;{])\s*(background(?:-color)?|color|border(?:-(?:top|right|bottom|left|inline|block))?(?:-(?:color|width|radius))?|outline(?:-(?:color|width))?|box-shadow|font-(?:family|size|weight|style)|line-height|letter-spacing|text-transform|padding(?:-(?:top|right|bottom|left|inline|block))?|margin(?:-(?:top|right|bottom|left|inline|block))?|(?:row-|column-)?gap|height|min-height)\s*:\s*([^;}]+)/i
   @css_variable ~r/(--[\w-]+)\s*:\s*([^;]+);/s
+  @mix_inputs ~w(surface-canvas-shade surface-panel-mix edge-highlight-strength
+    edge-side-strength edge-shade-strength shadow-strength action-light-strength
+    action-shade-strength action-edge-light-strength action-edge-dark-strength
+    design-tint-strength design-shade-strength design-overlay-strength)
+  @fluid_sizes for role <- ~w(display body space gutter),
+                   edge <- ~w(min max),
+                   do: "--fluid-#{role}-#{edge}"
+  @type_inputs for family <- ~w(body heading),
+                   edge <- ~w(min max),
+                   {kind, unit, rule} <- [{"base", "rem", :positive}, {"ratio", "", :scale_ratio}],
+                   do: {"--type-#{family}-#{kind}-#{edge}", unit, rule}
   @raw_value ~r/(?:#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla|oklch|oklab)\s*\(|\b(?:black|white|red|green|blue|orange|purple)\b|(?:^|\s)-?\d+(?:\.\d+)?(?:px|rem|em|vw|vh|%)\b|^\d+(?:\.\d+)?$)/i
   @media_width ~r/(@(?:media|container)\b[^{}]*\b(?:min-width|max-width)\s*:[^{}]*|@(?:media|container)\b[^{}]*\bwidth\s*(?:>=|<=|>|<)[^{}]*)/is
   @style_attribute ~r/(?<![\w:-])style\s*=\s*(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\{)/is
@@ -53,6 +64,7 @@ defmodule Mix.Tasks.Design.Check do
 
     errors =
       token_color_violations(design, tokens) ++
+        token_numeric_violations(tokens) ++
         token_authority_violations(
           "DESIGN.md" in changed,
           "assets/css/design-tokens.css" in changed
@@ -85,13 +97,20 @@ defmodule Mix.Tasks.Design.Check do
 
   @doc false
   def token_color_violations(design, css) do
-    colors = fn source, pattern ->
-      Regex.scan(pattern, source, capture: :all_but_first)
+    expected =
+      Regex.scan(~r/^  ([\w-]+):\s*"(#[0-9a-fA-F]{3,8})"\s*$/m, design, capture: :all_but_first)
       |> Map.new(fn [name, color] -> {name, String.downcase(color)} end)
-    end
 
-    expected = colors.(design, ~r/^  ([\w-]+):\s*"(#[0-9a-fA-F]{3,8})"\s*$/m)
-    actual = colors.(css, ~r/^\s*--color-design-([\w-]+):\s*(#[0-9a-fA-F]{3,8});\s*$/m)
+    variables =
+      Regex.scan(@css_variable, css, capture: :all_but_first)
+      |> Map.new(fn [name, value] -> {name, String.trim(value)} end)
+
+    actual =
+      variables
+      |> Enum.filter(fn {name, _value} -> String.starts_with?(name, "--color-design-") end)
+      |> Map.new(fn {name, _value} ->
+        {String.replace_prefix(name, "--color-design-", ""), resolve_color(name, variables, [])}
+      end)
 
     missing =
       Enum.flat_map(expected, fn {name, value} ->
@@ -105,12 +124,125 @@ defmodule Mix.Tasks.Design.Check do
       )
   end
 
+  defp resolve_color(name, variables, visited) do
+    if name in visited do
+      nil
+    else
+      resolve_color_value(Map.get(variables, name), variables, [name | visited])
+    end
+  end
+
+  defp resolve_color_value(nil, _variables, _visited), do: nil
+
+  defp resolve_color_value(value, variables, visited) do
+    reference =
+      Regex.run(~r/^var\((--[\w-]+)\)$/, value, capture: :all_but_first) ||
+        Regex.run(~r/^oklch\(from var\((--[\w-]+)\) l c h\)$/, value, capture: :all_but_first)
+
+    case reference do
+      [name] -> resolve_color(name, variables, visited)
+      _ -> String.downcase(value)
+    end
+  end
+
   @doc false
   def token_authority_violations(authority_changed?, tokens_changed?) do
     if tokens_changed? and not authority_changed?,
       do: ["design-tokens.css changed without a DESIGN.md authority change"],
       else: []
   end
+
+  @doc false
+  def token_numeric_violations(css) do
+    declarations =
+      css
+      |> then(&Regex.replace(~r/\/\*.*?\*\//s, &1, " "))
+      |> then(&Regex.scan(@css_variable, &1, capture: :all_but_first))
+      |> Enum.group_by(&hd/1, &(&1 |> List.last() |> String.trim()))
+
+    rules =
+      [{"--fluid-vmin", "rem", :positive}, {"--fluid-vmax", "rem", :positive}] ++
+        Enum.map(@fluid_sizes, &{&1, "rem", :non_negative}) ++
+        @type_inputs ++
+        Enum.map(@mix_inputs, &{"--#{&1}", "%", {:range, 0, 100}}) ++
+        [
+          {"--design-noise-opacity", "", {:range, 0, 1}},
+          {"--design-layout-min", "rem", :positive},
+          {"--design-layout-narrow", "rem", :positive},
+          {"--design-layout-columns", "", {:integer_range, 1, 12}},
+          {"--design-layout-content-ratio", "", :positive_ratio}
+        ]
+
+    errors =
+      Enum.flat_map(rules, &numeric_input_errors(&1, declarations)) ++
+        Enum.flat_map(
+          for(family <- ~w(body heading), edge <- ~w(min max), do: {family, edge}),
+          fn {family, edge} -> type_endpoint_errors(declarations, family, edge) end
+        )
+
+    with {:ok, lower} <- numeric_input(declarations["--fluid-vmin"], "rem"),
+         {:ok, upper} <- numeric_input(declarations["--fluid-vmax"], "rem"),
+         true <- lower >= upper do
+      errors ++ ["numeric token --fluid-vmin must be less than --fluid-vmax"]
+    else
+      _ -> errors
+    end
+  end
+
+  defp type_endpoint_errors(declarations, family, edge) do
+    with {:ok, base} <- numeric_input(declarations["--type-#{family}-base-#{edge}"], "rem"),
+         {:ok, ratio} <- numeric_input(declarations["--type-#{family}-ratio-#{edge}"], ""),
+         true <- base > 0 and ratio >= 1 do
+      sizes = [
+        base / ratio / ratio,
+        base / ratio,
+        base,
+        base * ratio,
+        base * ratio * ratio,
+        base * ratio * ratio * ratio
+      ]
+
+      if Enum.all?(sizes, &(&1 > 0)),
+        do: [],
+        else: ["derived type #{family}/#{edge} endpoints must stay finite and positive"]
+    else
+      _ -> []
+    end
+  rescue
+    ArithmeticError -> ["derived type #{family}/#{edge} endpoints must stay finite and positive"]
+  end
+
+  defp numeric_input_errors({name, unit, constraint}, declarations) do
+    with {:ok, value} <- numeric_input(declarations[name], unit),
+         true <- numeric_in_range?(value, constraint) do
+      []
+    else
+      _ -> ["numeric token #{name} needs one #{inspect(constraint)} #{inspect(unit)} literal"]
+    end
+  end
+
+  defp numeric_input([value], unit) do
+    pattern = ~r/^([+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:e[+-]?\d+)?)#{Regex.escape(unit)}$/i
+
+    with [number] <- Regex.run(pattern, value, capture: :all_but_first),
+         normalized <- Regex.replace(~r/^([+-]?)\./, number, fn _, sign -> sign <> "0." end),
+         {parsed, ""} <- Float.parse(normalized) do
+      {:ok, parsed}
+    else
+      _ -> :error
+    end
+  end
+
+  defp numeric_input(_values, _unit), do: :error
+  defp numeric_in_range?(value, :positive), do: value > 0
+  defp numeric_in_range?(value, :non_negative), do: value >= 0
+  defp numeric_in_range?(value, :scale_ratio), do: value >= 1
+  defp numeric_in_range?(value, :positive_ratio), do: value > 0 and value <= 1
+
+  defp numeric_in_range?(value, {:integer_range, lower, upper}),
+    do: value >= lower and value <= upper and trunc(value) == value
+
+  defp numeric_in_range?(value, {:range, lower, upper}), do: value >= lower and value <= upper
 
   defp scan(path, source) do
     classes(path, source) ++ styles(path, source)
@@ -338,10 +470,16 @@ defmodule Mix.Tasks.Design.Check do
     end
   end
 
-  defp approved_css?(value),
-    do:
-      value in ["0", "none", "transparent", "currentColor", "inherit"] or
-        (String.contains?(value, "var(--design-") and not Regex.match?(@raw_value, value))
+  defp approved_css?(value) do
+    references = Regex.scan(~r/var\((--[\w-]+)/, value, capture: :all_but_first) |> List.flatten()
+    tokens = File.read!("assets/css/design-tokens.css")
+
+    value in ["0", "none", "transparent", "currentColor", "inherit"] or
+      (references != [] and not Regex.match?(@raw_value, value) and
+         Enum.all?(references, fn name ->
+           String.starts_with?(name, "--design-") or String.contains?(tokens, name <> ":")
+         end))
+  end
 
   defp capture_matches(pattern, source) do
     Regex.scan(pattern, source, capture: :all_but_first, return: :index)
