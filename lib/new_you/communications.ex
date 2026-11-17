@@ -274,14 +274,21 @@ defmodule NewYou.Communications do
     :render_digest
   ]
 
-  @doc "Establish a password-reset delivery obligation without retaining its bearer."
+  @doc """
+  Establishes an Identity-authorized password-reset obligation without its bearer.
+
+  The persisted render schema selects historical P8-12 or bounded WELL-136 Content
+  applicability. Current eligibility is required now and again before delivery.
+  Identical source-operation retries reuse the existing obligation; conflicting
+  bindings fail closed. Establishment never proves delivery or changes Identity.
+  """
   @spec establish_password_reset(map()) ::
           {:ok, MessageIntent.t()} | {:error, :password_reset_unavailable}
   def establish_password_reset(attrs) when is_map(attrs) do
     with true <- valid_password_reset_attrs?(attrs),
-         {:ok, content_binding} <- NewYou.Content.PasswordResetMessage.binding(attrs.locale) do
+         {:ok, content_binding} <- password_reset_binding(attrs.locale, attrs.render_schema) do
       platform_name = NewYou.platform_name()
-      render_schema = "password-reset-v1"
+      render_schema = attrs.render_schema
 
       render_digest =
         :crypto.hash(
@@ -315,6 +322,12 @@ defmodule NewYou.Communications do
   end
 
   def establish_password_reset(_), do: {:error, :password_reset_unavailable}
+
+  defp password_reset_binding(locale, "password-reset-v1"),
+    do: NewYou.Content.PasswordResetMessage.binding(locale)
+
+  defp password_reset_binding(locale, "password-reset-well136-v1"),
+    do: NewYou.Content.PasswordResetMessage.binding(locale, :well136)
 
   @recovery_fields [
     :source_operation_id,
@@ -490,7 +503,7 @@ defmodule NewYou.Communications do
 
   defp valid_password_reset_attrs?(attrs) do
     attrs[:role] == :password_reset and attrs[:source_purpose] == "password_reset" and
-      attrs[:render_schema] == "password-reset-v1" and
+      attrs[:render_schema] in ["password-reset-v1", "password-reset-well136-v1"] and
       attrs[:destination_provenance] == "identity_password_reset_issuance" and
       attrs[:locale] in ["en", "af"]
   end

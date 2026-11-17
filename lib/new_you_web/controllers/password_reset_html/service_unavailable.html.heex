@@ -1,0 +1,14 @@
+<.auth_shell
+  title={Copy.text!("request.title", @locale, :well136)}
+  locale={@locale}
+  locale_path="/password/reset"
+  heading_id="password-reset-heading"
+>
+  <p role="status" class="max-w-prose text-design-body-sm leading-design-body-sm">
+    {Copy.text!("identity.password_reset.service_unavailable.body", @locale, :well136)}
+  </p>
+  <a
+    href={"/login?locale=#{@locale}"}
+    class="min-h-11 w-fit content-center text-design-body-xs leading-design-body-xs text-design-ink underline decoration-design-primary underline-offset-4 hover:text-design-primary active:text-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+  >{Copy.text!("identity.password_reset.navigation.back_to_login", @locale, :well136)}</a>
+</.auth_shell>

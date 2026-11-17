@@ -13,16 +13,29 @@ defmodule NewYouWeb.Components.Design.Button do
   attr :variant, :string, default: "primary", values: ~w(primary)
   attr :treatment, :string, default: "flat", values: ~w(flat lit)
   attr :type, :string, default: "button", values: ~w(button submit reset)
+  attr :adaptive, :boolean, default: false
   attr :disabled, :boolean, default: false
   attr :rest, :global
   slot :inner_block, required: true
 
-  @doc "Renders the approved primary CTA while preserving caller HTML and LiveView attributes."
+  @doc "Renders the approved primary CTA. Adaptive mode retains the token minimum height and permits wrapped, resized text."
   def primary_button(%{variant: "primary", rest: rest} = assigns) do
     validate_rest!(rest, "design primary_button", assigns.treatment)
 
     ~H"""
     <button
+      :if={@adaptive}
+      type={@type}
+      disabled={@disabled}
+      class="ds-design-button inline-flex items-center justify-center min-h-design-button-height h-auto max-w-full whitespace-normal text-center px-design-button-inline py-design-button-block rounded-design-xl data-[treatment=flat]:data-[variant=primary]:bg-design-primary data-[treatment=flat]:data-[variant=primary]:text-design-on-primary font-design-sans font-design-bold text-design-button-md leading-design-button-md tracking-design-button-md data-[treatment=flat]:data-[variant=primary]:hover:bg-design-primary-deep data-[treatment=flat]:data-[variant=primary]:active:bg-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      data-variant="primary"
+      data-treatment={@treatment}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    <button
+      :if={!@adaptive}
       type={@type}
       disabled={@disabled}
       class="ds-design-button inline-flex items-center justify-center min-h-design-button-height data-[treatment=flat]:h-design-button-height px-design-button-inline py-design-button-block rounded-design-xl data-[treatment=flat]:data-[variant=primary]:bg-design-primary data-[treatment=flat]:data-[variant=primary]:text-design-on-primary font-design-sans font-design-bold text-design-button-md leading-design-button-md tracking-design-button-md data-[treatment=flat]:data-[variant=primary]:hover:bg-design-primary-deep data-[treatment=flat]:data-[variant=primary]:active:bg-design-primary-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"

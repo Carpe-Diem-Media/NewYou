@@ -8,6 +8,19 @@ defmodule NewYou.Identity.MagicLoginRequestTimingTest do
   alias NewYou.Communications.MessageIntent
   alias NewYou.Proof.{P805, RegistrationSeam}
 
+  test "intent observations exclude another operation without changing its retained intent" do
+    P805.with_fixture(fn ->
+      foreign = account(true)
+      foreign_operation = operation()
+      assert {:ok, _elapsed} = request(foreign.email, foreign_operation)
+      [intent] = P805.intents(foreign_operation)
+      assert intent.role == :magic_login
+
+      assert intent_count({[operation()], []}) == 0
+      assert Ash.get!(MessageIntent, intent.id, authorize?: false) == intent
+    end)
+  end
+
   test "eligible, unknown and ineligible requests share the public response window" do
     P805.with_fixture(fn ->
       eligible = account(true)
@@ -251,8 +264,14 @@ defmodule NewYou.Identity.MagicLoginRequestTimingTest do
     |> Ash.count!(authorize?: false)
   end
 
-  defp intent_count do
-    MessageIntent |> Ash.Query.filter(role == :magic_login) |> Ash.count!(authorize?: false)
+  defp intent_count(context \\ :fixture) do
+    intents =
+      case context do
+        :fixture -> P805.read(MessageIntent, NewYou.Communications)
+        context -> P805.read(MessageIntent, NewYou.Communications, context)
+      end
+
+    Enum.count(intents, &(&1.role == :magic_login))
   end
 
   defp fail(:exception), do: raise("magic request transaction failure")
