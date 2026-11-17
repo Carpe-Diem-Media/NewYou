@@ -114,14 +114,14 @@
       "status": "added"
     },
     {
-      "blob": "b5cde3da1f424751cb84d67f8a1dc639a583a919",
+      "blob": "76e40f13c7194ae4e280017aa735cdcc8b31dc02",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "assets/css/design-surfaces.css",
-      "sha256": "4454282628467a63edb2c1a52ef1c736b0e7c4ffc3c7c720baade9caf1392601",
+      "sha256": "4b3eb8a00bfb500a83771dcae838dc99aac769c0290ef12e7a93438b3767de8c",
       "status": "added"
     },
     {
@@ -136,14 +136,14 @@
       "status": "added"
     },
     {
-      "blob": "7b9c900887e94ee421150752d4058f3ad809fb3d",
+      "blob": "83cf643891d219a8d6c3df7ae2fb92fa5edec202",
       "mode": "100644",
       "old_blob": "53acbf1c16b0dbfda02da449aae8b22155ec4ed4",
       "old_mode": "100644",
       "old_path": "assets/css/design-tokens.css",
       "old_sha256": "1ff08b553dee7f8427f22387a78aeba909c4be0165baa1b96d909b5ca42b8729",
       "path": "assets/css/design-tokens.css",
-      "sha256": "b438b2423a9d5463c5443fc7129a2a8028fbb227c366f556232f89508f0e69fb",
+      "sha256": "2da102167221aa60c7dd45bafe415f46b50b0dc22123d55a5c9e189dbe69d2b4",
       "status": "modified"
     },
     {
@@ -191,25 +191,25 @@
       "status": "added"
     },
     {
-      "blob": "6881116423225da0c682b2e57fea47decf7ac80d",
+      "blob": "698de4637f1e4df8575b216b40af0a260beb44b1",
       "mode": "100644",
       "old_blob": "e62760ef4e95f794eab5473961c8770fdf589c20",
       "old_mode": "100644",
       "old_path": "docs/development/design_system.md",
       "old_sha256": "993faeb94c6b8fb0b27bf5c3a2c4a49c07f87a42e8cd98ca39566f1690158118",
       "path": "docs/development/design_system.md",
-      "sha256": "d94cd07e779b39a3e6c70f5b801282ca9a6173f57b2ebd8347df0174b61cba2b",
+      "sha256": "0150bd837cf13e3e27c081cb72769230e3d297ed11784badd2712ac7a16f8ea2",
       "status": "modified"
     },
     {
-      "blob": "cc00790b6df6aa12afee43cf0c35132f2bf79e85",
+      "blob": "77eae5a2973281b643d00f4cba57cd95310cef86",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/design_system_coverage.md",
-      "sha256": "17ac300a6ed025b9f0723ead9a72f88179e3a6f7460402f8cf318f11ea056015",
+      "sha256": "ab07b23df9f8e5d90928da5b82d6b616d394887467f5dd8e7df624f506b0538b",
       "status": "added"
     },
     {
@@ -488,14 +488,14 @@
       "status": "added"
     },
     {
-      "blob": "cf18e7e6ca777d776326883e03385f0c934bc42f",
+      "blob": "78ac26b592271d49dd83bb3eba8f3a165ecb5699",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/research/acss-4.0.3-inventory/quality-gate-diagnosis.md",
-      "sha256": "d874c052feac34b2922312ac72efe0626e95735fb2d99a873160b021f38353d6",
+      "sha256": "6ac15329fd6000b9ae2402b74dc2b5eebb8a3e311db1b30a2e3f0b11ee1c7c1a",
       "status": "added"
     },
     {
@@ -1082,14 +1082,14 @@
       "status": "added"
     },
     {
-      "blob": "0e2c1742e10402f7dd9cc928018320866fc330b2",
+      "blob": "b564791a638c9e6096a39952044d927fa8101c0e",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_borders_browser.mjs",
-      "sha256": "363a9e260ae7619956dbca27589c34d2f52110b39e77760f1fdaf739e1b94d09",
+      "sha256": "1c2d22a76b433345f73263f154f4abaa55d10539eebcfc78ab6b80962e6d3f34",
       "status": "added"
     },
     {
@@ -1137,14 +1137,25 @@
       "status": "added"
     },
     {
-      "blob": "5a3e91e5754cf29ba70f1bba9423ae451952c8c5",
+      "blob": "6b86b2b616b58a0e8b6214a499ecb9415d00bb29",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/assets/design_floating_composition_contract.mjs",
+      "sha256": "a84e8c6410ff6c164b386f85fe7164e013683f1b8eb575f06e55786d50314015",
+      "status": "added"
+    },
+    {
+      "blob": "eb58221fceebd1c450af4166cadbce9ebd63c343",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_floating_fields_browser.mjs",
-      "sha256": "df926ea30a18361d72277e5bd81d58076c30df95550545dec4c4082a480d91df",
+      "sha256": "35f3cd6df18ad400677e4a8ec6dcaf59d4cd5322aaf2d40b522c000a64601bbe",
       "status": "added"
     },
     {
@@ -1225,14 +1236,14 @@
       "status": "added"
     },
     {
-      "blob": "f721b87d09893eb7b144f6f18409840c31757045",
+      "blob": "8b9d944873533454e80adf94afbe2b150c51c833",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/assets/design_surfaces_browser.mjs",
-      "sha256": "c4f1d5b639d72ffc093f36d76b14e082d8c8aaa8c3ccac0f5469511f4e12e43f",
+      "sha256": "297db7e7bac1f40f1acca16c24f75a7498f5344e7d6ad826d1b5b0230a74618e",
       "status": "added"
     },
     {
@@ -3085,6 +3096,7 @@
     "test/assets/design_component_contracts_browser.mjs",
     "test/assets/design_content_browser.mjs",
     "test/assets/design_content_contract.mjs",
+    "test/assets/design_floating_composition_contract.mjs",
     "test/assets/design_floating_fields_browser.mjs",
     "test/assets/design_layouts_browser.mjs",
     "test/assets/design_lighting_browser.mjs",
