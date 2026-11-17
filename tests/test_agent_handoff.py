@@ -569,6 +569,13 @@ class HandoffTests(unittest.TestCase):
         malformed = result()
         malformed['manifest'] = None
         self.assertEqual(gate.optional_ocr({'ocr': {'result': malformed}}, BINDING, None)['status'], 'FAILED')
+        nonzero = {'ocr': {'result': result(), 'exit_code': 1}, 'prepared': {'preview': PREVIEW, 'budget': 100000}}
+        self.assertEqual(gate.optional_ocr(nonzero, BINDING, None)['status'], 'FAILED')
+        warned = result()
+        warned['warnings'] = [{'type': 'review_limit_reached'}]
+        history = gate.optional_ocr({'ocr_history': [{'result': warned}]}, BINDING, None)
+        self.assertEqual(history['prior_attempts'][0]['status'], 'UNVERIFIED')
+        self.assertEqual(history['prior_attempts'][0]['warnings'], warned['warnings'])
 
     def test_ocr_arguments_select_model_and_low_review_effort(self):
         args = gate.ocr_args(BINDING, 100000, None)

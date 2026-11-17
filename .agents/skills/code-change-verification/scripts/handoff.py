@@ -327,12 +327,13 @@ def optional_ocr(state, binding, review):
                 validate_findings(dict(findings=prior_findings, session=previous_session), review, binding['head'])
             manifest = previous_result.get('manifest') if isinstance(previous_result.get('manifest'), dict) else {}
             execution = manifest.get('execution') if isinstance(manifest.get('execution'), dict) else {}
-            prior.append(dict(status=previous_result.get('status', 'unknown'), session=previous_session,
+            prior.append(dict(status='UNVERIFIED', reported_status=previous_result.get('status', 'unknown'), session=previous_session,
                               model=execution.get('model'),
                               coverage=manifest.get('coverage'), usage=previous_result.get('summary'),
                               budget=(previous.get('prepared') or {}).get('budget'),
                               command=previous.get('command'), reasoning_effort='unverified',
-                              findings=prior_findings, limitation=previous_result.get('message')))
+                              warnings=previous_result.get('warnings'), findings=prior_findings,
+                              limitation=previous_result.get('message')))
         else:
             prior.append(dict(status='FAILED', limitation='Prior OCR output unavailable.'))
     evidence = state.get('ocr')
@@ -355,6 +356,7 @@ def optional_ocr(state, binding, review):
         return dict(status='FAILED', prior_attempts=prior, limitation='Malformed OCR findings; independent inspection required.')
     prepared = evidence.get('prepared') or state.get('prepared')
     try:
+        require(evidence.get('exit_code', 0) == 0, 'OCR process failed')
         require(isinstance(prepared, dict), 'OCR preview unavailable')
         summary = validate_ocr(result, prepared['preview'], binding, prepared['budget'])
     except (GateError, ValueError, KeyError, TypeError, AttributeError) as exc:
@@ -560,7 +562,7 @@ def main():
                     result = decode(result_path.read_text())
                 except (ValueError, OSError):
                     result = None
-                state['ocr'] = dict(result=result, command=argv, prepared=prepared,
+                state['ocr'] = dict(result=result, command=argv, prepared=prepared, exit_code=process.returncode,
                                     limitation=f'OCR exit {process.returncode}; inspect private attempt evidence')
                 write_state(state_path, state)
                 require(process.returncode == 0 and result is not None, f'OCR CLI failed; inspect private result/log at {directory}')
