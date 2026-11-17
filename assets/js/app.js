@@ -23,13 +23,19 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/new_you"
+import {DesignSystem} from "./design_system"
 import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-const liveSocket = new LiveSocket("/live", Socket, {
+const guide = document.querySelector("#design-system[data-live-socket]")
+if (guide) {
+  // Only bounded display choices reach the guide's sessionless connection.
+  window.history.replaceState(window.history.state, "", guide.dataset.liveUrl + window.location.hash)
+}
+const liveSocket = new LiveSocket(guide ? guide.dataset.liveSocket : "/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...colocatedHooks, DesignSystem},
 })
 
 // Show progress bar on live navigation and form submits

@@ -1,0 +1,70 @@
+/* Hallmark · theme: locked DESIGN.md · shape: app screen · genre: modern-minimal · scope: app · signature: allocated-space specimens · v2.0.0 */
+/* Critique: actual grids expose fitting and gutter ownership with shared recipes for the registration pilot. */
+
+.ds-layout-lab { @apply min-w-0 mt-design-2xl; }
+.ds-layout-lab h3 { @apply text-design-heading-sm font-design-medium mb-design-base; }
+.ds-layout-example { @apply min-w-0 mt-design-xl; }
+.ds-layout-example h4 { @apply text-design-body-xs font-design-medium; }
+.ds-layout-example > p { @apply text-design-button-md my-design-base; max-inline-size: 65ch; }
+.ds-layout-stage { inline-size: 100%; min-inline-size: 0; }
+.ds-layout-lab[data-allocation="narrow"] .ds-layout-stage { max-inline-size: var(--design-layout-narrow); }
+.ds-layout-cell {
+  @apply p-design-sm bg-design-surface border border-design-hairline rounded-design-sm;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.ds-layout-cell > span { @apply text-design-button-md font-design-medium; }
+.ds-layout-cell > p { @apply text-design-button-md; }
+.ds-layout-cell img { display: block; max-inline-size: 100%; block-size: auto; }
+.ds-auto-grid,
+.ds-layout-auto {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--grid-gap);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(var(--design-grid-min, var(--design-layout-min)), calc((100% - (var(--design-grid-columns, var(--design-layout-columns)) - 1) * var(--grid-gap)) / var(--design-grid-columns, var(--design-layout-columns))))), 1fr));
+}
+.ds-layout-auto[data-flow="fill"] {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(var(--design-grid-min, var(--design-layout-min)), calc((100% - (var(--design-grid-columns, var(--design-layout-columns)) - 1) * var(--grid-gap)) / var(--design-grid-columns, var(--design-layout-columns))))), 1fr));
+}
+.ds-layout-container-stage { background-color: var(--hairline); }
+.ds-container,
+.ds-layout-container {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: var(--design-container-max, var(--content-width));
+  @apply mx-auto;
+  padding-inline: min(var(--gutter), 50%);
+}
+.ds-layout-container { background-color: var(--canvas); }
+.ds-stack { display: flex; flex-direction: column; min-inline-size: 0; gap: var(--content-gap); }
+.ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--control-gap); min-inline-size: 0; }
+.ds-layout-nested { @apply py-design-base bg-design-surface; min-inline-size: 0; overflow-wrap: anywhere; }
+.ds-layout-nested > p { @apply px-design-sm; }
+.ds-layout-breakout {
+  display: grid;
+  min-inline-size: 0;
+  column-gap: 0;
+  row-gap: var(--space-sm);
+  grid-template-columns:
+    [full-start] minmax(min(var(--gutter), 50%), 1fr)
+    [feature-max-start] minmax(0, var(--space-2xl))
+    [feature-start] minmax(0, var(--space-lg))
+    [content-start] min(calc(var(--content-width) * var(--design-layout-content-ratio)), max(0px, 100% - 2 * var(--gutter)))
+    [content-end] minmax(0, var(--space-lg))
+    [feature-end] minmax(0, var(--space-2xl))
+    [feature-max-end] minmax(min(var(--gutter), 50%), 1fr) [full-end];
+}
+.ds-layout-breakout > * { grid-column: content; min-inline-size: 0; overflow-wrap: anywhere; }
+.ds-layout-breakout > [data-zone="feature"] { grid-column: feature; }
+.ds-layout-breakout > [data-zone="feature-max"] { grid-column: feature-max; }
+.ds-layout-breakout > [data-zone="full"],
+.ds-layout-breakout > [data-zone="full-safe"] { grid-column: full; }
+.ds-layout-breakout > [data-zone="full-safe"] { padding-inline: min(var(--gutter), 50%); }
+.ds-layout-band { @apply bg-design-surface border-y border-design-hairline px-design-sm py-design-sm text-design-button-md; }
+.ds-layout-band > span { @apply block text-design-button-md; }
+.ds-layout-measurement { @apply flex flex-wrap gap-design-lg mt-design-sm text-design-button-md; }
+.ds-layout-measurement > div { @apply flex flex-wrap gap-design-sm; }
+.ds-layout-measurement dt { @apply text-design-ink-muted; }
+.ds-layout-measurement dd { @apply tabular-nums; overflow-wrap: anywhere; }
+.ds-layout-inputs { @apply grid gap-design-base my-design-lg text-design-button-md; }
+.ds-layout-inputs > div { @apply flex flex-wrap justify-between gap-design-sm; }

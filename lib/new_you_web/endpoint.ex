@@ -16,6 +16,14 @@ defmodule NewYouWeb.Endpoint do
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]
 
+  if Mix.env() in [:dev, :test] do
+    # The guide has no business authority or cookie session. Bind its transport
+    # to the requesting origin even when DEV's general origin check is disabled.
+    socket "/dev/design-system/live", Phoenix.LiveView.Socket,
+      websocket: [connect_info: [], check_origin: :conn],
+      longpoll: [connect_info: [], check_origin: :conn]
+  end
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # When code reloading is disabled (e.g., in production),
