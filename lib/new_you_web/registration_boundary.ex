@@ -141,6 +141,13 @@ defmodule NewYouWeb.RegistrationBoundary do
   defp dispatch(%Plug.Conn{method: "GET", request_path: "/legal/privacy"} = conn, _opts),
     do: dispatch_browser_request(conn, :privacy)
 
+  if Mix.env() in [:dev, :test] do
+    defp dispatch(%Plug.Conn{method: "GET", request_path: path} = conn, _opts)
+         when path in ["/dev/design-system", "/dev/design-system/preview"] do
+      NewYouWeb.DesignSystemBoundary.render(conn)
+    end
+  end
+
   # Every current browser route is dispatched above. A Router fallback would
   # expose session-bearing connections through dispatch or error telemetry.
   defp dispatch(%Plug.Conn{} = conn, _opts), do: fail_closed_response(conn, 404)

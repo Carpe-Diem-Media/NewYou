@@ -1,92 +1,661 @@
-/* Hallmark · theme: locked DESIGN.md · scope: existing system · surface: absolute · change: text-input height alias */
-/* Critique: preserve the approved palette, typography and component dimensions. */
-/* Hallmark · waive 7b · DESIGN.md locks the absolute surface values · the magic-login form needs the approved paper contrast */
-/* Hallmark · waive 37 · DESIGN.md defines one Inter family with numeric weights · the magic-login input keeps the locked text face */
-/* Hallmark · waive 39b · DESIGN.md specifies a 58px text-input height · preserve the existing component geometry and touch target */
-/* Executable token layer mapped from the root DESIGN.md. */
+/* Hallmark · theme: locked DESIGN.md · shape: app screen · genre: modern-minimal · scope: app · surface: absolute · v2.0.0 */
+/* Critique: the reference shows live tokens and reusable components within NewYou's existing design. */
+/* Hallmark · waive 7b · DESIGN.md locks the exact black and white swatches · the reference tokens keep NewYou's approved palette values */
+/* Hallmark · waive 37 · numeric weight tokens are not extra font families · the Development Platform registration and design guide retain the approved Inter family */
+/* Executable token values mapped from DESIGN.md. Edit here; canonical Tailwind consumers share these values. */
+:root {
+  /* Brand source values are authored once; semantic roles retain their existing names. */
+  --palette-primary-srgb: #0061ef;
+  --palette-primary-hover-srgb: #0000ee;
+  --palette-secondary-srgb: #2d2c2b;
+  --palette-ink-strong-srgb: #141313;
+  --palette-ink-soft-srgb: #44423f;
+  --palette-ink-muted-srgb: #4b4c4d;
+  --palette-ink-meta-srgb: #63605d;
+  --palette-canvas-srgb: #f9f4f2;
+  --palette-surface-srgb: #ffffff;
+  --palette-hairline-srgb: #e2ded9;
+  --palette-hairline-cool-srgb: #d2d5de;
+  --palette-on-primary-srgb: #ffffff;
+  --palette-on-canvas-srgb: #000000;
+  --palette-orb-saffron-srgb: #ffce00;
+  --palette-orb-pink-srgb: #ffa1cc;
+  --palette-orb-aqua-srgb: #00a4ff;
+  --palette-orb-grass-srgb: #02873e;
+  --palette-orb-ultraviolet-srgb: #3b197f;
+  --primary: var(--palette-primary-srgb);
+  --primary-hover: var(--palette-primary-hover-srgb);
+  --secondary: var(--palette-secondary-srgb);
+  --ink-strong: var(--palette-ink-strong-srgb);
+  --ink-soft: var(--palette-ink-soft-srgb);
+  --ink-muted: var(--palette-ink-muted-srgb);
+  --ink-meta: var(--palette-ink-meta-srgb);
+  --canvas: var(--palette-canvas-srgb);
+  --surface: var(--palette-surface-srgb);
+  --hairline: var(--palette-hairline-srgb);
+  --hairline-cool: var(--palette-hairline-cool-srgb);
+  --on-primary: var(--palette-on-primary-srgb);
+  --on-canvas: var(--palette-on-canvas-srgb);
+  --orb-saffron: var(--palette-orb-saffron-srgb);
+  --orb-pink: var(--palette-orb-pink-srgb);
+  --orb-aqua: var(--palette-orb-aqua-srgb);
+  --orb-grass: var(--palette-orb-grass-srgb);
+  --orb-ultraviolet: var(--palette-orb-ultraviolet-srgb);
+  /* Site-wide font selection. Change --font-body once; headings follow by default. */
+  --font-body: Inter, sans-serif;
+  --font-display: var(--font-body);
+  /* Compatibility aliases carry no independent family values. */
+  --ny-font-body: var(--font-body);
+  --ny-font-display: var(--font-display);
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-bold: 700;
+  --text-display-xl: 64px;
+  --leading-display-xl: 1.05;
+  --tracking-display-xl: -1.92px;
+  --text-display-lg: 52px;
+  --leading-display-lg: 1.155;
+  --tracking-display-lg: -1.56px;
+  --text-display-md: 40px;
+  --leading-display-md: 1.2075;
+  --tracking-display-md: -1.2px;
+  --text-display-sm: 32px;
+  --leading-display-sm: 1.26;
+  --tracking-display-sm: -0.96px;
+  --text-heading-md: 32px;
+  --leading-heading-md: 1.26;
+  --tracking-heading-md: -0.96px;
+  --text-heading-sm: 24px;
+  --leading-heading-sm: 1.3965;
+  --tracking-heading-sm: -0.6px;
+  --text-body-lg: 24px;
+  --leading-body-lg: 1.26;
+  --tracking-body-lg: -0.72px;
+  --text-body-md: 20px;
+  --leading-body-md: 1.575;
+  --tracking-body-md: -0.2px;
+  --text-body-sm: 18px;
+  --leading-body-sm: 1.512;
+  --tracking-body-sm: -0.18px;
+  --text-body-xs: 16px;
+  --leading-body-xs: 1.575;
+  --tracking-body-xs: 0;
+  --text-button-md: 14px;
+  --leading-button-md: 1.155;
+  --tracking-button-md: 0;
+  --text-caption: 12px;
+  --leading-caption: 1.2075;
+  --tracking-caption: -0.12px;
+  --radius-sm: 8px;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-full: 800px;
+  --space-xxs: 4px;
+  --space-xs: 6px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-base: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-button-block: 14.3px;
+  --space-button-inline: 24px;
+  --space-button-height: 48px;
+  --space-input-height: 58px;
+  --box-shadow: none;
+  --content-width: 1280px;
+  --measure: 65ch;
+  --gutter: var(--space-lg);
+  --grid-gap: var(--space-lg);
+  --content-gap: var(--space-lg);
+  --section-space: var(--space-2xl);
+  --control-gap: var(--space-base);
+  --card-content-gap: var(--space-base);
+  --card-action-gap: var(--space-base);
+  --design-content-width: var(--content-width);
+  --design-gutter: var(--gutter);
+  --design-grid-gap: var(--grid-gap);
+  --design-preview-phone: 390px;
+  --design-preview-tablet: var(--breakpoint-design-tablet);
+  --design-preview-desktop: var(--breakpoint-design-desktop);
+  --design-preview-wide: var(--breakpoint-design-wide);
+  --design-preview-height: 480px;
+  --design-preview-scale: 1;
+  --design-border-width: 1px;
+
+  /* Layout dimensions shared by guide specimens and the bounded registration pilot. */
+  --design-layout-min: 12rem;
+  --design-layout-columns: 3;
+  --design-layout-narrow: 18rem;
+  --design-layout-content-ratio: 0.5;
+
+  /* Overhead lighting candidates. Solid fallbacks preserve usable controls. */
+  --surface-canvas-shade: 4%;
+  --surface-panel-mix: 50%;
+  --edge-highlight-strength: 70%;
+  --edge-side-strength: 10%;
+  --edge-shade-strength: 18%;
+  --shadow-flat: none;
+  --shadow-ink: transparent;
+  --shadow-strength: 8%;
+  --action-light-strength: 14%;
+  --action-shine-height: 12px;
+  --action-shade-strength: 6%;
+  --action-edge-light-strength: 22%;
+  --action-edge-dark-strength: 18%;
+  --action-primary-gradient: none;
+  --action-primary-hover-gradient: none;
+  --system-button-face: ButtonFace;
+  --system-button-text: ButtonText;
+  --system-disabled-text: GrayText;
+  --system-canvas: Canvas;
+  --system-canvas-text: CanvasText;
+  --system-link-text: LinkText;
+
+  /* Candidate surfaces, used only by labelled development specimens. */
+  --design-tint-strength: 12%;
+  --design-shade-strength: 12%;
+  --design-overlay-strength: 72%;
+  --design-surface-tint: var(--canvas);
+  --design-surface-shade: var(--hairline);
+  --design-overlay: var(--secondary);
+  --design-gradient-angle: 135deg;
+  --design-gradient-soft: linear-gradient(var(--design-gradient-angle), var(--canvas), var(--hairline));
+  --design-noise-opacity: 0.06;
+  --design-noise-size: 128px;
+  --design-noise-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 128 128'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='17' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cpath d='M0 0h128v128H0z' filter='url(%23grain)'/%3E%3C/svg%3E");
+  --design-treatment-height: 10rem;
+
+  /* Guide-only modular comparison inputs; production typography above is unchanged. */
+  --type-body-base-min: 1rem;
+  --type-body-base-max: 1.125rem;
+  --type-body-ratio-min: 1.2;
+  --type-body-ratio-max: 1.333;
+  --type-heading-base-min: 1.5rem;
+  --type-heading-base-max: 1.6875rem;
+  --type-heading-ratio-min: 1.2;
+  --type-heading-ratio-max: 1.333;
+
+  /* Reference candidates. Fixed application typography and spacing remain unchanged. */
+  --fluid-vmin: 30rem;
+  --fluid-vmax: 75rem;
+  --fluid: 0;
+  --fluid-method: static;
+  --fluid-display-min: 2.5rem;
+  --fluid-display-max: 4rem;
+  --fluid-body-min: 1rem;
+  --fluid-body-max: 1.125rem;
+  --fluid-space-min: 1rem;
+  --fluid-space-max: 3rem;
+  --fluid-gutter-min: 1rem;
+  --fluid-gutter-max: 1.5rem;
+  --fluid-display: calc(var(--fluid-display-min) + var(--fluid) * (var(--fluid-display-max) - var(--fluid-display-min)));
+  --fluid-body: calc(var(--fluid-body-min) + var(--fluid) * (var(--fluid-body-max) - var(--fluid-body-min)));
+  --fluid-space: calc(var(--fluid-space-min) + var(--fluid) * (var(--fluid-space-max) - var(--fluid-space-min)));
+  --fluid-gutter: calc(var(--fluid-gutter-min) + var(--fluid) * (var(--fluid-gutter-max) - var(--fluid-gutter-min)));
+
+}
+
+/* Rebind derived candidates only at explicit typography scope boundaries. */
+:root,
+:where(.ds-type-scope) {
+  --type-body-xs-min: var(--design-type-body-xs-min, calc(var(--type-body-base-min) / var(--type-body-ratio-min) / var(--type-body-ratio-min)));
+  --type-body-xs-max: var(--design-type-body-xs-max, calc(var(--type-body-base-max) / var(--type-body-ratio-max) / var(--type-body-ratio-max)));
+  --type-body-xs: calc(var(--type-body-xs-min) + var(--fluid) * (var(--type-body-xs-max) - var(--type-body-xs-min)));
+  --type-body-s-min: var(--design-type-body-s-min, calc(var(--type-body-base-min) / var(--type-body-ratio-min)));
+  --type-body-s-max: var(--design-type-body-s-max, calc(var(--type-body-base-max) / var(--type-body-ratio-max)));
+  --type-body-s: calc(var(--type-body-s-min) + var(--fluid) * (var(--type-body-s-max) - var(--type-body-s-min)));
+  --type-body-m-min: var(--design-type-body-m-min, var(--type-body-base-min));
+  --type-body-m-max: var(--design-type-body-m-max, var(--type-body-base-max));
+  --type-body-m: calc(var(--type-body-m-min) + var(--fluid) * (var(--type-body-m-max) - var(--type-body-m-min)));
+  --type-body-l-min: var(--design-type-body-l-min, calc(var(--type-body-base-min) * var(--type-body-ratio-min)));
+  --type-body-l-max: var(--design-type-body-l-max, calc(var(--type-body-base-max) * var(--type-body-ratio-max)));
+  --type-body-l: calc(var(--type-body-l-min) + var(--fluid) * (var(--type-body-l-max) - var(--type-body-l-min)));
+  --type-body-xl-min: var(--design-type-body-xl-min, calc(var(--type-body-base-min) * var(--type-body-ratio-min) * var(--type-body-ratio-min)));
+  --type-body-xl-max: var(--design-type-body-xl-max, calc(var(--type-body-base-max) * var(--type-body-ratio-max) * var(--type-body-ratio-max)));
+  --type-body-xl: calc(var(--type-body-xl-min) + var(--fluid) * (var(--type-body-xl-max) - var(--type-body-xl-min)));
+  --type-body-xxl-min: var(--design-type-body-xxl-min, calc(var(--type-body-base-min) * var(--type-body-ratio-min) * var(--type-body-ratio-min) * var(--type-body-ratio-min)));
+  --type-body-xxl-max: var(--design-type-body-xxl-max, calc(var(--type-body-base-max) * var(--type-body-ratio-max) * var(--type-body-ratio-max) * var(--type-body-ratio-max)));
+  --type-body-xxl: calc(var(--type-body-xxl-min) + var(--fluid) * (var(--type-body-xxl-max) - var(--type-body-xxl-min)));
+  --type-heading-xs-min: var(--design-type-heading-xs-min, calc(var(--type-heading-base-min) / var(--type-heading-ratio-min) / var(--type-heading-ratio-min)));
+  --type-heading-xs-max: var(--design-type-heading-xs-max, calc(var(--type-heading-base-max) / var(--type-heading-ratio-max) / var(--type-heading-ratio-max)));
+  --type-heading-xs: calc(var(--type-heading-xs-min) + var(--fluid) * (var(--type-heading-xs-max) - var(--type-heading-xs-min)));
+  --type-heading-s-min: var(--design-type-heading-s-min, calc(var(--type-heading-base-min) / var(--type-heading-ratio-min)));
+  --type-heading-s-max: var(--design-type-heading-s-max, calc(var(--type-heading-base-max) / var(--type-heading-ratio-max)));
+  --type-heading-s: calc(var(--type-heading-s-min) + var(--fluid) * (var(--type-heading-s-max) - var(--type-heading-s-min)));
+  --type-heading-m-min: var(--design-type-heading-m-min, var(--type-heading-base-min));
+  --type-heading-m-max: var(--design-type-heading-m-max, var(--type-heading-base-max));
+  --type-heading-m: calc(var(--type-heading-m-min) + var(--fluid) * (var(--type-heading-m-max) - var(--type-heading-m-min)));
+  --type-heading-l-min: var(--design-type-heading-l-min, calc(var(--type-heading-base-min) * var(--type-heading-ratio-min)));
+  --type-heading-l-max: var(--design-type-heading-l-max, calc(var(--type-heading-base-max) * var(--type-heading-ratio-max)));
+  --type-heading-l: calc(var(--type-heading-l-min) + var(--fluid) * (var(--type-heading-l-max) - var(--type-heading-l-min)));
+  --type-heading-xl-min: var(--design-type-heading-xl-min, calc(var(--type-heading-base-min) * var(--type-heading-ratio-min) * var(--type-heading-ratio-min)));
+  --type-heading-xl-max: var(--design-type-heading-xl-max, calc(var(--type-heading-base-max) * var(--type-heading-ratio-max) * var(--type-heading-ratio-max)));
+  --type-heading-xl: calc(var(--type-heading-xl-min) + var(--fluid) * (var(--type-heading-xl-max) - var(--type-heading-xl-min)));
+  --type-heading-xxl-min: var(--design-type-heading-xxl-min, calc(var(--type-heading-base-min) * var(--type-heading-ratio-min) * var(--type-heading-ratio-min) * var(--type-heading-ratio-min)));
+  --type-heading-xxl-max: var(--design-type-heading-xxl-max, calc(var(--type-heading-base-max) * var(--type-heading-ratio-max) * var(--type-heading-ratio-max) * var(--type-heading-ratio-max)));
+  --type-heading-xxl: calc(var(--type-heading-xxl-min) + var(--fluid) * (var(--type-heading-xxl-max) - var(--type-heading-xxl-min)));
+  --type-candidate-display-xl: var(--type-heading-xxl);
+  --type-candidate-display-lg: var(--type-heading-xl);
+  --type-candidate-display-md: var(--type-heading-l);
+  --type-candidate-display-sm: var(--type-heading-m);
+  --type-candidate-heading-md: var(--type-heading-m);
+  --type-candidate-heading-sm: var(--type-heading-s);
+  --type-candidate-body-lg: max(var(--text-body-xs), var(--type-body-l));
+  --type-candidate-body-md: max(var(--text-body-xs), var(--type-body-m));
+  --type-candidate-body-sm: max(var(--text-body-xs), var(--type-body-m));
+  --type-candidate-body-xs: max(var(--text-body-xs), var(--type-body-m));
+  --type-candidate-button-md: var(--text-button-md);
+  --type-candidate-caption: var(--text-caption);
+}
+
+/* This isolated specimen demonstrates an endpoint override, not an adopted value. */
+.ds-type-scope[data-type-example="local"] {
+  --design-type-heading-xxl-max: var(--text-display-md);
+}
+
+/* Border purposes resolve locally. Optional --border-{purpose}-{width|style|color}
+   inputs stay unset so existing local --design-border-width overrides still work.
+   Edit/add purpose inputs in canonical CSS; these shorthands are derived outputs. */
+:root, :where(.ds-design-card) {
+  --border-decorative: var(--border-decorative-width, var(--design-border-width)) var(--border-decorative-style, solid) var(--border-decorative-color, var(--hairline));
+}
+:root, :where(.ds-design-field-input, .ds-floating-control) {
+  --border-control: var(--border-control-width, var(--design-border-width)) var(--border-control-style, solid) var(--border-control-color, var(--ink-meta));
+  --design-control-invalid-width: calc(2 * var(--border-control-width, var(--design-border-width)));
+}
+:root, :where(.ds-divider, .ds-divided) {
+  --border-separator: var(--divider-width, var(--border-separator-width, var(--design-border-width))) var(--divider-style, var(--border-separator-style, solid)) var(--divider-color, var(--border-separator-color, var(--hairline)));
+}
+
+/* Shared lighting relationships resolve against each root or component's inputs. */
+:root,
+:where(.ds-design-button),
+:where(.ds-design-card),
+:where(.ds-surface),
+:where(.ds-design-icon) {
+  --design-lit-border-width: var(--border-lit-width, var(--design-border-width));
+  --design-lit-border-style: var(--border-lit-style, solid);
+  --design-icon-border: var(--design-lit-border-width) var(--design-lit-border-style) var(--edge-side);
+  --surface-canvas: var(--canvas);
+  --surface-panel: var(--surface);
+  --surface-raised: var(--surface);
+  --edge-highlight: var(--surface);
+  --edge-side: var(--hairline);
+  --edge-shade: var(--hairline);
+  --action-primary-top: var(--primary);
+  --action-primary-bottom: var(--primary);
+  --action-primary-edge-light: var(--primary);
+  --action-primary-edge-dark: var(--primary-hover);
+  --action-primary-hover-top: var(--primary-hover);
+  --action-primary-hover-bottom: var(--primary-hover);
+  --action-primary-hover-edge-light: var(--primary-hover);
+  --action-primary-hover-edge-dark: var(--primary-hover);
+  --shadow-control: 0 1px 2px var(--shadow-ink);
+  --shadow-raised: 0 3px 8px var(--shadow-ink);
+  --edge-inset-shadow: inset 0 1px 2px var(--edge-shade), inset 0 -1px 0 var(--edge-highlight);
+  --action-primary-shadow: inset 0 1px 0 var(--action-primary-edge-light), var(--shadow-control);
+  --action-primary-hover-shadow: inset 0 1px 0 var(--action-primary-hover-edge-light), var(--shadow-control);
+  --action-primary-pressed-shadow: inset 0 1px 2px var(--action-primary-hover-edge-dark), inset 0 -1px 0 var(--action-primary-hover-edge-light);
+}
+
+/* Complete opaque profiles. Optional profile inputs stay unset; edit them here,
+   not the derived --context-* outputs. Each boundary recomputes every role. */
+:root, :where(.ds-surface[data-surface="plain"]) {
+  --context-background: var(--surface-plain-bg, var(--surface));
+  --context-heading: var(--surface-plain-heading, var(--secondary));
+  --context-body: var(--surface-plain-body, var(--secondary));
+  --context-muted: var(--surface-plain-muted, var(--ink-meta));
+  --context-link: var(--surface-plain-link, var(--secondary));
+  --context-link-hover: var(--surface-plain-link-hover, var(--secondary));
+  --context-focus: var(--surface-plain-focus, var(--primary));
+}
+:where(.ds-surface[data-surface="canvas"]) {
+  --context-background: var(--surface-canvas-bg, var(--surface-canvas));
+  --context-heading: var(--surface-canvas-heading, var(--secondary));
+  --context-body: var(--surface-canvas-body, var(--secondary));
+  --context-muted: var(--surface-canvas-muted, var(--ink-meta));
+  --context-link: var(--surface-canvas-link, var(--secondary));
+  --context-link-hover: var(--surface-canvas-link-hover, var(--secondary));
+  --context-focus: var(--surface-canvas-focus, var(--primary));
+}
+:where(.ds-surface[data-surface="panel"]) {
+  --context-background: var(--surface-panel-bg, var(--surface-panel));
+  --context-heading: var(--surface-panel-heading, var(--secondary));
+  --context-body: var(--surface-panel-body, var(--secondary));
+  --context-muted: var(--surface-panel-muted, var(--ink-meta));
+  --context-link: var(--surface-panel-link, var(--secondary));
+  --context-link-hover: var(--surface-panel-link-hover, var(--secondary));
+  --context-focus: var(--surface-panel-focus, var(--primary));
+}
+:where(.ds-surface[data-surface="raised"]) {
+  --context-background: var(--surface-raised-bg, var(--surface-raised));
+  --context-heading: var(--surface-raised-heading, var(--secondary));
+  --context-body: var(--surface-raised-body, var(--secondary));
+  --context-muted: var(--surface-raised-muted, var(--ink-meta));
+  --context-link: var(--surface-raised-link, var(--secondary));
+  --context-link-hover: var(--surface-raised-link-hover, var(--secondary));
+  --context-focus: var(--surface-raised-focus, var(--primary));
+}
+@media (forced-colors: active) {
+  :root, :where(.ds-surface[data-surface]) {
+    --context-background: var(--system-canvas);
+    --context-heading: var(--system-canvas-text);
+    --context-body: var(--system-canvas-text);
+    --context-muted: var(--system-canvas-text);
+    --context-link: var(--system-link-text);
+    --context-link-hover: var(--system-link-text);
+    --context-focus: var(--system-canvas-text);
+  }
+}
+
+/* Component relationships resolve on the consumer. Optional override inputs stay
+   unset by default, so ancestor overrides and local source-token edits both work. */
+:where(.ds-design-card) {
+  --design-card-border-width: var(--border-decorative-width, var(--design-border-width));
+  --design-card-inset-radius-x: max(0px, calc(var(--radius) - var(--design-card-border-width) - var(--design-card-padding-inline, var(--space-lg))));
+  --design-card-inset-radius-y: max(0px, calc(var(--radius) - var(--design-card-border-width) - var(--design-card-padding-block, var(--space-lg))));
+}
+:where(.ds-design-card[data-variant="raised"]) {
+  --design-card-border-width: var(--design-lit-border-width);
+}
+:where(.ds-design-icon) {
+  --design-icon-glyph-size: var(--design-icon-size, var(--space-lg));
+}
+:where(.ds-design-icon[data-size="sm"]) {
+  --design-icon-glyph-size: var(--design-icon-size, var(--space-base));
+}
+:where(.ds-design-icon[data-size="lg"]) {
+  --design-icon-glyph-size: var(--design-icon-size, var(--space-xl));
+}
+/* Labelled guide override, not a new global radius or padding default. */
+#contract-card-local {
+  --radius: var(--radius-xl);
+  --design-card-padding-inline: var(--space-base);
+  --design-card-padding-block: var(--space-md);
+}
+
+/* Optional content inputs resolve locally; they have no root alias defaults. */
+:where(.ds-design-field) {
+  --design-field-gap: var(--field-gap, var(--space-sm));
+}
+/* Floating controls reserve a real label row. Optional inputs resolve locally. */
+:where(.ds-floating-control) {
+  --design-field-padding-inline: var(--field-padding-inline, var(--space-base));
+  --design-field-padding-block: var(--field-padding-block, var(--space-sm));
+  --design-field-label-scale: tan(atan2(var(--field-label-size, var(--text-caption)), var(--text-body-xs)));
+  --design-field-label-offset: 0.5lh;
+  --design-field-label-duration: var(--field-label-duration, 160ms);
+}
+:where(.ds-design-choice) {
+  --design-choice-gap: var(--choice-gap, var(--design-field-gap));
+  --design-choice-label-weight: var(--choice-label-weight, var(--weight-regular));
+}
+#registration-age-field { --choice-label-weight: var(--weight-medium); }
+#registration-privacy-field { --choice-gap: var(--content-gap); }
+#forms-local { --field-gap: var(--space-base); --choice-gap: var(--space-md); }
+#native-forms .ds-form-examples {
+  --design-grid-columns: 2;
+  --design-grid-min: var(--design-layout-narrow);
+}
+
+:where(.ds-prose) {
+  --design-prose-flow: var(--prose-flow-space, var(--content-gap));
+  --design-prose-heading-gap: max(var(--design-prose-flow), var(--prose-heading-space, var(--space-xl)));
+  --design-prose-list-gap: var(--prose-list-space, var(--space-sm));
+  --design-prose-indent: var(--prose-indent, var(--space-lg));
+  --design-prose-caption-gap: var(--prose-caption-space, var(--space-sm));
+}
+:where(.ds-divider, .ds-divided) {
+  --design-divider-space: var(--divider-gap, calc(var(--content-gap) / 2));
+  --design-divider-border: var(--border-separator);
+}
+/* Labelled border lab overrides retain existing scale/ink values. */
+#border-divider-local {
+  --divider-width: calc(2 * var(--design-border-width));
+  --divider-style: dashed;
+  --divider-color: var(--secondary);
+}
+#border-divided-inner { --divider-gap: var(--space-sm); }
+/* Surface comparison inputs use existing colours and dimensions, not new values. */
+#surface-pairings .ds-pair-examples {
+  --design-grid-columns: 2;
+  --design-grid-min: var(--design-layout-narrow);
+}
+#pair-local {
+  --surface-canvas-muted: var(--secondary);
+  --surface-canvas-link: var(--primary);
+  --surface-canvas-link-hover: var(--primary-hover);
+}
+/* Labelled local guide override. Existing scale values remain the only sizes. */
+#prose-local {
+  --prose-flow-space: var(--space-sm);
+  --prose-heading-space: var(--space-lg);
+  --prose-list-space: var(--space-xxs);
+  --prose-caption-space: var(--space-xxs);
+}
+/* Explicit nested prose boundaries own their internal flow, independently of the outer block. */
+#prose-en-nested, #prose-af-nested { --prose-flow-space: var(--space-sm); }
+/* Shared card role overrides affect neither padding nor unrelated control rows. */
+#content-card-local {
+  --card-content-gap: var(--space-sm);
+  --card-action-gap: var(--space-lg);
+}
+/* Preserve the registration pilot's existing 24px space on either side of its separator. */
+#registration-legal-items { --divider-gap: var(--content-gap); }
+
+/* The guide and actual page consume the same container/grid recipes. */
+.ds-layout-container {
+  --design-container-max: calc(var(--content-width) * var(--design-layout-content-ratio));
+}
+.ds-registration-intro,
+.ds-registration-form {
+  --design-grid-columns: 2;
+}
+
+/* Identity conversion preserves exact brand colors without rounded OKLCH constants. */
+@supports (color: oklch(from red l c h)) {
+  :root {
+    --primary: oklch(from var(--palette-primary-srgb) l c h);
+    --primary-hover: oklch(from var(--palette-primary-hover-srgb) l c h);
+    --secondary: oklch(from var(--palette-secondary-srgb) l c h);
+    --ink-strong: oklch(from var(--palette-ink-strong-srgb) l c h);
+    --ink-soft: oklch(from var(--palette-ink-soft-srgb) l c h);
+    --ink-muted: oklch(from var(--palette-ink-muted-srgb) l c h);
+    --ink-meta: oklch(from var(--palette-ink-meta-srgb) l c h);
+    --canvas: oklch(from var(--palette-canvas-srgb) l c h);
+    --surface: oklch(from var(--palette-surface-srgb) l c h);
+    --hairline: oklch(from var(--palette-hairline-srgb) l c h);
+    --hairline-cool: oklch(from var(--palette-hairline-cool-srgb) l c h);
+    --on-primary: oklch(from var(--palette-on-primary-srgb) l c h);
+    --on-canvas: oklch(from var(--palette-on-canvas-srgb) l c h);
+    --orb-saffron: oklch(from var(--palette-orb-saffron-srgb) l c h);
+    --orb-pink: oklch(from var(--palette-orb-pink-srgb) l c h);
+    --orb-aqua: oklch(from var(--palette-orb-aqua-srgb) l c h);
+    --orb-grass: oklch(from var(--palette-orb-grass-srgb) l c h);
+    --orb-ultraviolet: oklch(from var(--palette-orb-ultraviolet-srgb) l c h);
+  }
+}
+
+@supports (color: color-mix(in oklab, red, white)) {
+  :root,
+  :where(.ds-design-button),
+  :where(.ds-design-card),
+  :where(.ds-surface),
+  :where(.ds-design-icon) {
+    --surface-canvas: color-mix(in oklab, var(--secondary) var(--surface-canvas-shade), var(--canvas));
+    --surface-panel: color-mix(in oklab, var(--canvas) var(--surface-panel-mix), var(--surface));
+    --edge-highlight: color-mix(in oklab, var(--surface) var(--edge-highlight-strength), transparent);
+    --edge-side: color-mix(in oklab, var(--secondary) var(--edge-side-strength), transparent);
+    --edge-shade: color-mix(in oklab, var(--secondary) var(--edge-shade-strength), transparent);
+    --shadow-ink: color-mix(in oklab, var(--secondary) var(--shadow-strength), transparent);
+    --action-primary-top: color-mix(in oklab, var(--surface) var(--action-light-strength), var(--primary));
+    --action-primary-bottom: color-mix(in oklab, var(--secondary) var(--action-shade-strength), var(--primary));
+    --action-primary-edge-light: color-mix(in oklab, var(--surface) var(--action-edge-light-strength), var(--primary));
+    --action-primary-edge-dark: color-mix(in oklab, var(--secondary) var(--action-edge-dark-strength), var(--primary));
+    --action-primary-hover-top: color-mix(in oklab, var(--surface) var(--action-light-strength), var(--primary-hover));
+    --action-primary-hover-bottom: color-mix(in oklab, var(--secondary) var(--action-shade-strength), var(--primary-hover));
+    --action-primary-hover-edge-light: color-mix(in oklab, var(--surface) var(--action-edge-light-strength), var(--primary-hover));
+    --action-primary-hover-edge-dark: color-mix(in oklab, var(--secondary) var(--action-edge-dark-strength), var(--primary-hover));
+    --action-primary-gradient: linear-gradient(180deg, var(--action-primary-top), var(--primary) var(--action-shine-height), var(--action-primary-bottom));
+    --action-primary-hover-gradient: linear-gradient(180deg, var(--action-primary-hover-top), var(--primary-hover) var(--action-shine-height), var(--action-primary-hover-bottom));
+    --design-surface-tint: color-mix(in oklab, var(--primary) var(--design-tint-strength), var(--surface));
+    --design-surface-shade: color-mix(in oklab, var(--secondary) var(--design-shade-strength), var(--canvas));
+    --design-overlay: color-mix(in oklab, var(--secondary) var(--design-overlay-strength), transparent);
+  }
+}
+
+@supports (background-image: linear-gradient(135deg in oklab, red, white)) {
+  :root {
+    --design-gradient-soft: linear-gradient(var(--design-gradient-angle) in oklab, var(--canvas), var(--design-surface-tint));
+  }
+}
+
+/* Both operands have length units, so atan2 removes units without typed division. */
+@supports (width: calc(100px * tan(atan2(1px, 1px)))) {
+  :root {
+    --fluid: clamp(0, tan(atan2(calc(100vw - var(--fluid-vmin)), calc(var(--fluid-vmax) - var(--fluid-vmin)))), 1);
+    --fluid-method: trigonometric;
+  }
+}
+
+@supports (width: calc(100px * progress(50px, 0px, 100px))) {
+  :root {
+    --fluid: clamp(0, progress(100vw, var(--fluid-vmin), var(--fluid-vmax)), 1);
+    --fluid-method: native-progress;
+  }
+}
+
+@theme static inline {
+  --text-design-candidate-display-xl: var(--type-candidate-display-xl);
+  --text-design-candidate-display-lg: var(--type-candidate-display-lg);
+  --text-design-candidate-display-md: var(--type-candidate-display-md);
+  --text-design-candidate-display-sm: var(--type-candidate-display-sm);
+  --text-design-candidate-heading-md: var(--type-candidate-heading-md);
+  --text-design-candidate-heading-sm: var(--type-candidate-heading-sm);
+  --text-design-candidate-body-lg: var(--type-candidate-body-lg);
+  --text-design-candidate-body-md: var(--type-candidate-body-md);
+  --text-design-candidate-body-sm: var(--type-candidate-body-sm);
+  --text-design-candidate-body-xs: var(--type-candidate-body-xs);
+  --text-design-candidate-button-md: var(--type-candidate-button-md);
+  --text-design-candidate-caption: var(--type-candidate-caption);
+  --spacing-design-icon-glyph: var(--design-icon-glyph-size);
+  --background-image-design-wash: var(--design-gradient-soft);
+  --color-design-primary: var(--primary);
+  --color-design-primary-deep: var(--primary-hover);
+  --color-design-ink: var(--secondary);
+  --color-design-ink-strong: var(--ink-strong);
+  --color-design-ink-soft: var(--ink-soft);
+  --color-design-ink-muted: var(--ink-muted);
+  --color-design-ink-meta: var(--ink-meta);
+  --color-design-canvas: var(--canvas);
+  --color-design-surface: var(--surface);
+  --color-design-hairline: var(--hairline);
+  --color-design-hairline-cool: var(--hairline-cool);
+  --color-design-on-primary: var(--on-primary);
+  --color-design-on-canvas: var(--on-canvas);
+  --color-design-orb-saffron: var(--orb-saffron);
+  --color-design-orb-pink: var(--orb-pink);
+  --color-design-orb-aqua: var(--orb-aqua);
+  --color-design-orb-grass: var(--orb-grass);
+  --color-design-orb-ultraviolet: var(--orb-ultraviolet);
+
+  --font-weight-design-regular: var(--weight-regular);
+  --font-weight-design-medium: var(--weight-medium);
+  --font-weight-design-bold: var(--weight-bold);
+
+  --text-design-display-xl: var(--text-display-xl);
+  --leading-design-display-xl: var(--leading-display-xl);
+  --tracking-design-display-xl: var(--tracking-display-xl);
+  --text-design-display-lg: var(--text-display-lg);
+  --leading-design-display-lg: var(--leading-display-lg);
+  --tracking-design-display-lg: var(--tracking-display-lg);
+  --text-design-display-md: var(--text-display-md);
+  --leading-design-display-md: var(--leading-display-md);
+  --tracking-design-display-md: var(--tracking-display-md);
+  --text-design-display-sm: var(--text-display-sm);
+  --leading-design-display-sm: var(--leading-display-sm);
+  --tracking-design-display-sm: var(--tracking-display-sm);
+  --text-design-heading-md: var(--text-heading-md);
+  --leading-design-heading-md: var(--leading-heading-md);
+  --tracking-design-heading-md: var(--tracking-heading-md);
+  --text-design-heading-sm: var(--text-heading-sm);
+  --leading-design-heading-sm: var(--leading-heading-sm);
+  --tracking-design-heading-sm: var(--tracking-heading-sm);
+  --text-design-body-lg: var(--text-body-lg);
+  --leading-design-body-lg: var(--leading-body-lg);
+  --tracking-design-body-lg: var(--tracking-body-lg);
+  --text-design-body-md: var(--text-body-md);
+  --leading-design-body-md: var(--leading-body-md);
+  --tracking-design-body-md: var(--tracking-body-md);
+  --text-design-body-sm: var(--text-body-sm);
+  --leading-design-body-sm: var(--leading-body-sm);
+  --tracking-design-body-sm: var(--tracking-body-sm);
+  --text-design-body-xs: var(--text-body-xs);
+  --leading-design-body-xs: var(--leading-body-xs);
+  --tracking-design-body-xs: var(--tracking-body-xs);
+  --text-design-button-md: var(--text-button-md);
+  --leading-design-button-md: var(--leading-button-md);
+  --tracking-design-button-md: var(--tracking-button-md);
+  --text-design-caption: var(--text-caption);
+  --leading-design-caption: var(--leading-caption);
+  --tracking-design-caption: var(--tracking-caption);
+
+  --radius-design-sm: var(--radius-sm);
+  --radius-design-md: var(--radius);
+  --radius-design-lg: var(--radius-lg);
+  --radius-design-xl: var(--radius-xl);
+  --radius-design-full: var(--radius-full);
+
+  --spacing-design-xxs: var(--space-xxs);
+  --spacing-design-xs: var(--space-xs);
+  --spacing-design-sm: var(--space-sm);
+  --spacing-design-md: var(--space-md);
+  --spacing-design-base: var(--space-base);
+  --spacing-design-lg: var(--space-lg);
+  --spacing-design-xl: var(--space-xl);
+  --spacing-design-2xl: var(--space-2xl);
+  --spacing-design-content: var(--content-gap);
+  --spacing-design-section: var(--section-space);
+  --spacing-design-control: var(--control-gap);
+  --spacing-design-card-content: var(--card-content-gap);
+  --spacing-design-card-action: var(--card-action-gap);
+
+  --spacing-design-button-block: var(--space-button-block);
+  --spacing-design-button-inline: var(--space-button-inline);
+  --spacing-design-button-height: var(--space-button-height);
+  --spacing-design-input-height: var(--space-input-height);
+
+  --shadow-design: var(--box-shadow);
+
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
+  --font-design-sans: var(--font-body);
+  --font-design-display: var(--font-display);
+}
+
 @theme static {
-  --color-design-primary: #0061ef;
-  --color-design-primary-deep: #0000ee;
-  --color-design-ink: #2d2c2b;
-  --color-design-ink-strong: #141313;
-  --color-design-ink-soft: #44423f;
-  --color-design-ink-muted: #4b4c4d;
-  --color-design-ink-meta: #63605d;
-  --color-design-canvas: #f9f4f2;
-  --color-design-surface: #ffffff;
-  --color-design-hairline: #e2ded9;
-  --color-design-hairline-cool: #d2d5de;
-  --color-design-on-primary: #ffffff;
-  --color-design-on-canvas: #000000;
-  --color-design-orb-saffron: #ffce00;
-  --color-design-orb-pink: #ffa1cc;
-  --color-design-orb-aqua: #00a4ff;
-  --color-design-orb-grass: #02873e;
-  --color-design-orb-ultraviolet: #3b197f;
-
-  --font-design-sans: Inter, sans-serif;
-  --font-weight-design-regular: 400;
-  --font-weight-design-medium: 500;
-  --font-weight-design-bold: 700;
-
-  --text-design-display-xl: 64px;
-  --leading-design-display-xl: 1.05;
-  --tracking-design-display-xl: -1.92px;
-  --text-design-display-lg: 52px;
-  --leading-design-display-lg: 1.155;
-  --tracking-design-display-lg: -1.56px;
-  --text-design-display-md: 40px;
-  --leading-design-display-md: 1.2075;
-  --tracking-design-display-md: -1.2px;
-  --text-design-display-sm: 32px;
-  --leading-design-display-sm: 1.26;
-  --tracking-design-display-sm: -0.96px;
-  --text-design-heading-md: 32px;
-  --leading-design-heading-md: 1.26;
-  --tracking-design-heading-md: -0.96px;
-  --text-design-heading-sm: 24px;
-  --leading-design-heading-sm: 1.3965;
-  --tracking-design-heading-sm: -0.6px;
-  --text-design-body-lg: 24px;
-  --leading-design-body-lg: 1.26;
-  --tracking-design-body-lg: -0.72px;
-  --text-design-body-md: 20px;
-  --leading-design-body-md: 1.575;
-  --tracking-design-body-md: -0.2px;
-  --text-design-body-sm: 18px;
-  --leading-design-body-sm: 1.512;
-  --tracking-design-body-sm: -0.18px;
-  --text-design-body-xs: 16px;
-  --leading-design-body-xs: 1.575;
-  --tracking-design-body-xs: 0;
-  --text-design-button-md: 14px;
-  --leading-design-button-md: 1.155;
-  --tracking-design-button-md: 0;
-  --text-design-caption: 12px;
-  --leading-design-caption: 1.2075;
-  --tracking-design-caption: -0.12px;
-
-  --radius-design-sm: 8px;
-  --radius-design-md: 16px;
-  --radius-design-lg: 24px;
-  --radius-design-xl: 32px;
-  --radius-design-full: 800px;
-
-  --spacing-design-xxs: 4px;
-  --spacing-design-xs: 6px;
-  --spacing-design-sm: 8px;
-  --spacing-design-md: 12px;
-  --spacing-design-base: 16px;
-  --spacing-design-lg: 24px;
-  --spacing-design-xl: 32px;
-  --spacing-design-2xl: 48px;
-
-  --spacing-design-button-block: 14.3px;
-  --spacing-design-button-inline: 24px;
-  --spacing-design-button-height: 48px;
-  --spacing-design-input-height: 58px;
-
   --breakpoint-design-tablet: 744px;
   --breakpoint-design-desktop: 1128px;
   --breakpoint-design-wide: 1441px;
+}
+
+/* Register the asset once. UI family selection belongs to the tokens above. */
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/inter/InterVariable.woff2") format("woff2");
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
 }

@@ -1,0 +1,170 @@
+/* Hallmark · theme: locked DESIGN.md · shape: component · genre: modern-minimal · scope: component · surface: absolute · v2.0.0 */
+/* Critique: opt-in overhead lighting adds depth through fine edges and short shadows; flat defaults remain available. */
+/* Hallmark · waive 39b · DESIGN.md locks 58px native input height · registration retains the approved field geometry and enlarged touch area */
+
+@layer components {
+  .ds-design-field { @apply grid content-start; gap: var(--design-field-gap); min-inline-size: 0; }
+  .ds-design-field > label { @apply text-design-body-xs leading-design-body-xs font-design-medium; }
+  .ds-design-fieldset > legend { min-inline-size: 0; max-inline-size: 100%; overflow-wrap: anywhere; }
+  .ds-field-help { @apply text-design-body-xs leading-design-body-xs; }
+  .ds-design-choice { gap: var(--design-choice-gap); }
+  .ds-design-check {
+    @apply flex items-start gap-design-md py-design-sm;
+    min-block-size: var(--space-button-height);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+    font-weight: var(--design-choice-label-weight);
+  }
+  .ds-design-check > span { min-inline-size: 0; }
+  .ds-design-choice > .ds-row > .ds-design-check:only-child { inline-size: 100%; }
+  .ds-design-check > input { @apply mt-design-xxs size-design-base shrink-0; accent-color: var(--primary); }
+  .ds-design-check > input:focus-visible { @apply outline-2 outline-offset-2 outline-design-primary; }
+  .ds-design-field-input {
+    @apply min-h-design-input-height px-design-base py-design-md rounded-design-sm text-design-body-xs leading-design-body-xs bg-design-surface text-design-ink-strong;
+    box-sizing: border-box;
+    min-inline-size: 0;
+    inline-size: 100%;
+    font-family: var(--font-body);
+    border: var(--border-control);
+    caret-color: var(--primary);
+  }
+  .ds-design-field-input[aria-invalid="true"] { border-width: var(--design-control-invalid-width); }
+  .ds-design-field-input:focus-visible { @apply outline-2 outline-offset-2 outline-design-primary; }
+  .ds-design-field-input:disabled { cursor: not-allowed; }
+  .ds-field-error { @apply pl-design-sm text-design-body-xs leading-design-body-xs font-design-medium text-design-ink; border-inline-start: calc(2 * var(--design-border-width)) solid var(--secondary); }
+
+  .ds-design-card {
+    border-radius: var(--radius);
+    border: var(--border-decorative);
+    border-width: var(--design-card-border-width);
+    padding-inline: var(--design-card-padding-inline, var(--space-lg));
+    padding-block: var(--design-card-padding-block, var(--space-lg));
+    overflow-wrap: anywhere;
+  }
+  .ds-design-card > .ds-design-card-inset {
+    @apply p-design-base text-design-body-xs leading-design-body-xs;
+    min-width: 0;
+    border-radius: var(--design-card-inset-radius-x) / var(--design-card-inset-radius-y);
+    background: var(--surface-panel);
+    overflow: clip;
+  }
+  .ds-design-card > .ds-design-card-actions {
+    @apply flex flex-wrap items-center gap-design-card-action;
+    margin-block-start: auto;
+  }
+  .ds-design-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    vertical-align: middle;
+    color: inherit;
+  }
+  .ds-design-icon > .ds-design-icon-glyph {
+    flex: none;
+  }
+  .ds-design-icon[data-treatment="boxed"] {
+    padding: var(--design-icon-padding, var(--space-sm));
+    border: var(--design-icon-border);
+    border-radius: var(--design-icon-radius, var(--radius-sm));
+    background: var(--surface-panel);
+  }
+
+  .ds-design-button[data-treatment="lit"] {
+    @apply gap-design-sm;
+    max-width: 100%;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    border-width: var(--design-lit-border-width);
+    border-style: var(--design-lit-border-style);
+  }
+
+  .ds-design-button[data-treatment="lit"][data-variant="primary"] {
+    color: var(--on-primary);
+    background-color: var(--primary);
+    background-image: var(--action-primary-gradient);
+    border-color: var(--action-primary-edge-dark);
+    border-top-color: var(--action-primary-edge-light);
+    box-shadow: var(--action-primary-shadow);
+  }
+
+  @media (hover: hover) {
+    .ds-design-button[data-treatment="lit"][data-variant="primary"]:enabled:hover {
+      background-color: var(--primary-hover);
+      background-image: var(--action-primary-hover-gradient);
+      border-color: var(--action-primary-hover-edge-dark);
+      border-top-color: var(--action-primary-hover-edge-light);
+      box-shadow: var(--action-primary-hover-shadow);
+    }
+  }
+
+  .ds-design-button[data-treatment="lit"][data-variant="primary"]:enabled:active {
+    background-color: var(--primary-hover);
+    background-image: var(--action-primary-hover-gradient);
+    border-color: var(--action-primary-hover-edge-dark);
+    border-bottom-color: var(--action-primary-hover-edge-light);
+    box-shadow: var(--action-primary-pressed-shadow);
+  }
+
+  .ds-design-button[data-treatment="lit"][data-variant="secondary"] {
+    color: var(--secondary);
+    background-color: var(--surface-panel);
+    border-color: var(--edge-side);
+    border-top-color: var(--edge-highlight);
+    border-bottom-color: var(--edge-shade);
+    box-shadow: var(--shadow-control);
+  }
+
+  .ds-design-button[data-treatment="lit"][data-variant="secondary"]:enabled:active {
+    border-top-color: var(--edge-shade);
+    border-bottom-color: var(--edge-highlight);
+    box-shadow: var(--edge-inset-shadow);
+  }
+
+  .ds-design-button[data-treatment="lit"]:disabled {
+    box-shadow: var(--shadow-flat);
+  }
+
+  .ds-design-card[data-variant="raised"] {
+    border-style: var(--design-lit-border-style);
+    background-color: var(--context-background);
+    border-color: var(--edge-side);
+    border-top-color: var(--edge-highlight);
+    border-bottom-color: var(--edge-shade);
+    box-shadow: var(--shadow-raised);
+  }
+
+  @media (forced-colors: active) {
+    /* Opt only the mask out of forced background replacement. Keep system ink. */
+    .ds-design-icon > .ds-design-icon-glyph {
+      color: var(--system-button-text);
+      forced-color-adjust: none;
+    }
+    @supports (forced-color-adjust: preserve-parent-color) {
+      .ds-design-icon > .ds-design-icon-glyph {
+        color: inherit;
+        forced-color-adjust: preserve-parent-color;
+      }
+    }
+    .ds-design-button[data-treatment="lit"][data-variant],
+    .ds-design-button[data-treatment="lit"][data-variant]:enabled:hover,
+    .ds-design-button[data-treatment="lit"][data-variant]:enabled:active {
+      color: var(--system-button-text);
+      background-color: var(--system-button-face);
+      background-image: none;
+      border-color: var(--system-button-text);
+      box-shadow: var(--shadow-flat);
+    }
+    .ds-design-button[data-treatment="lit"][data-variant]:disabled {
+      color: var(--system-disabled-text);
+      border-color: var(--system-disabled-text);
+    }
+    .ds-design-icon[data-treatment="boxed"],
+    .ds-design-card[data-variant="raised"] {
+      border-color: var(--system-button-text);
+      box-shadow: var(--shadow-flat);
+    }
+  }
+}

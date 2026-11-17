@@ -35,7 +35,7 @@ defmodule NewYouWeb.MagicLoginControllerTest do
       assert get_resp_header(page, "referrer-policy") == ["no-referrer"]
 
       assert get_resp_header(page, "content-security-policy") == [
-               "default-src 'none'; style-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+               "default-src 'none'; style-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
              ]
 
       assert page.resp_body =~ NewYouWeb.MagicLoginCopy.text!("request.title", locale)
@@ -219,7 +219,7 @@ defmodule NewYouWeb.MagicLoginControllerTest do
       assert get_resp_header(conn, "referrer-policy") == ["no-referrer"]
 
       assert get_resp_header(conn, "content-security-policy") == [
-               "default-src 'none'; style-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+               "default-src 'none'; style-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
              ]
     end
 

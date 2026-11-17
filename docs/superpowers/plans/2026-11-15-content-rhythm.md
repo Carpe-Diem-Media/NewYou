@@ -1,0 +1,28 @@
+# Content rhythm implementation plan
+
+Continue WELL-112 / draft PR #227 from `9c95f8cc0e68a8597d5a5451a53ad22af66117aa`. The owner accepted the proposed contextual-spacing, scoped-prose and divider batch by asking to continue. Use the existing branch/worktree and preserve the WELL-114 continuation exception. This is an existing design-system extension, not a new composition or participant journey.
+
+For implementation, follow ticket-implement and execute this bounded plan. Independent review follows requesting-code-review after source and generated history are committed.
+
+## Approved working design and acceptance criteria
+
+1. Add `--content-gap`, `--section-space` and `--control-gap` roles in canonical design-tokens.css, mapped to existing 24/48/16px scale values. Expose consuming Tailwind spacing utilities and use the roles in shared stack/row and registration section composition. Retain existing card padding inputs rather than creating competing aliases. Root role edits and explicit local role overrides must work; local primitive changes do not promise to rebind root-authored aliases.
+2. Add opt-in `.ds-prose` block flow with bounded readable measure, direct-child sibling spacing, larger heading separation, nested list rhythm/indent, quotations and native underlined/focused links. Preserve semantic HTML and heading hierarchy. No global reset, gap plus margin doubling, truncation or clipping. Optional prose overrides remain unset by default and resolve at each consumer in canonical CSS.
+3. Add `.ds-divider` for a semantic native hr and `.ds-divided` for decorative separators between direct children. One wrapper owns separator spacing. The divided stack has zero flex gap; adjacent edge distance is two divider spaces plus the border. Direct children retain internal layout. Optional divider gap/width/style/color resolve locally. No new colors, shadows, radius tiers or lighting values.
+4. Add a Content section to the existing guide using EN/AF internal specimens, actual shared text links, token readouts, prose/list/quote examples, semantic hr and divided groups. Preview remains bounded and excludes the lab. The registration pilot is the application consumer: a semantic safety divider, scoped safety/privacy copy and shared legal-item dividers. Preserve current default geometry, all exact copy, form/state behavior and release gates. Legal routes serve hash-checked raw artifacts and must remain byte-identical. No controller, Domain, copy registry, legal artifact or broader WELL-131 change.
+5. Prove semantics/composition before implementation through focused failing LiveView/controller tests and an absent browser lab. Then prove actual spacing equations, first/last children, nested lists, scope/sibling isolation, root/local role propagation, local optional overrides, native focus, narrow parent/320px reflow, doubled/long EN/AF/unbroken text, forced colors, reduced motion and no-JavaScript content. Retain registration/layout/card/lighting regressions. Report actual browser engines; no unsupported compatibility claim.
+6. Document source findings, relationships, valid inputs, recipes/consumers and exclusions in a Phase5 addendum and developer guide. Generate PR history before exact-head independent review. Run assets/design checks, required canonical TEST mix check and check.deep, applicable Python/Node checks and supported Hallmark targets. Record all failures and inherited certification/conflict/hosted-CI gaps. No merge, Done transition or full delivery certification.
+
+## Execution steps and files
+
+- [ ] Add focused guide and registration assertions in `test/new_you_web/live/design_system_live_test.exs` and `test/new_you_web/controllers/registration_controller_test.exs`. Run and observe missing composition failures. Add `test/assets/design_content_browser.mjs`; observe absent lab failure.
+- [ ] Add roles and optional consumer-derived inputs in `assets/css/design-tokens.css`; shared CSS in `assets/css/design-content.css`; import from app.css. Update stack/row and bounded registration classes only.
+- [ ] Add `lib/new_you_web/live/design_system_content.ex`, import/render it on the normal guide and add its navigation entry. Keep specimen copy ordinary internal Class C. Use existing semantic components for actions.
+- [ ] Update the actual registration template's safety/privacy/Terms wrappers. Compare exact copy and legal artifact tests. Do not expand into a second journey.
+- [ ] Build assets; run focused tests, browser proof and existing relevant browser regressions; inspect captures and Hallmark findings. Fix introduced defects without weakening enforcement or changing approved appearance.
+- [ ] Write `docs/development/research/acss-4.0.3-inventory/phase5-content.md` and update developer/inventory entry points. Presentation-only helpers/recipes change no business interface/lifecycle/schema, so record the existing semantic-map exemption and focused proof addendum.
+- [ ] Commit/push source and generated PR history, then independently review exact head and run canonical gates. Reconcile Plane/PR with exact observed outcomes and a clean worktree. Leave inherited gaps open.
+
+## Commands
+
+Use `ERL_FLAGS='+S 4:4' mise exec -- devcore-project run test --` for TEST mix commands. Build through `devcore-project run dev -- mix assets.build`. Browser runners use the existing 4237 server, `BROWSER_TOOLS_ROOT=/tmp/newyou-refinement-tools`, system Chrome and no application dependency. Resolve installed Hallmark scripts/flags; preserve the existing UI and do not run a redesign/audit workflow. No database reset, trigger cleanup or credentials printing is authorized.

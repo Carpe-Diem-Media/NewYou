@@ -1,0 +1,1360 @@
+{
+  "schema_version": 1,
+  "scope": "Phase 1 source inventory; proposed decisions, no implementation approval",
+  "issue": "WELL-112",
+  "baseline_sha": "4967b498d7413b7530303a64b4027e139e0b6d46",
+  "archive": {
+    "name": "automatic.css-4.0.3.zip",
+    "root": "automatic-css/",
+    "sha256": "17ee65acfd7e045e73b68f2373a2e4fba5e46ab3fd22ec5cc451472a7f5d63b5",
+    "entries": 947,
+    "execution": "none; read-only source inspection"
+  },
+  "source_reference_contract": {
+    "line_numbers": "1-based inclusive",
+    "acss": "bytes from the archive under its root",
+    "newyou": "git blob at baseline_sha",
+    "hash_scope": "whole file, not selected range",
+    "semantic_limit": "hashes establish source identity, not correctness of conclusions",
+    "locator_fields": "archive_member resolves inside archive.root; git_blob_path resolves at baseline_sha. Neither asserts a live repository link."
+  },
+  "decisions": {
+    "adopt": "keep the existing narrow pattern; no blanket selector or value adoption",
+    "adapt": "reuse a relationship through native CSS and existing components after required proof",
+    "defer": "inventory complete; implementation has no established current consumer"
+  },
+  "shared_entry_refs": [
+    {
+      "source": "acss:automatic-css.php",
+      "start": 9,
+      "end": 18,
+      "role": "plugin version and declared license"
+    },
+    {
+      "source": "acss:assets/scss/automatic-imports.scss",
+      "start": 1,
+      "end": 95,
+      "role": "shared variables, maps and mixins import chain"
+    },
+    {
+      "source": "acss:assets/scss/automatic.scss",
+      "start": 1,
+      "end": 79,
+      "role": "layered feature/utility output and unlayered content grid"
+    },
+    {
+      "source": "acss:assets/scss/automatic-tokens.scss",
+      "start": 1,
+      "end": 4,
+      "role": "inline token entry"
+    },
+    {
+      "source": "acss:assets/scss/automatic-variables.scss",
+      "start": 1,
+      "end": 5,
+      "role": "variable stylesheet entry"
+    },
+    {
+      "source": "acss:assets/scss/modules/_tokens.scss",
+      "start": 1,
+      "end": 93,
+      "role": "module token import chain"
+    },
+    {
+      "source": "acss:assets/scss/helpers/_mixins.scss",
+      "start": 1,
+      "end": 6,
+      "role": "auto-grid mixin import"
+    },
+    {
+      "source": "acss:assets/scss/helpers/_mixins.scss",
+      "start": 133,
+      "end": 143,
+      "role": "inline token output gates"
+    },
+    {
+      "source": "acss:classes/Framework/Core/Core.php",
+      "start": 271,
+      "end": 339,
+      "role": "settings metadata and stored values transformed before compilation"
+    }
+  ],
+  "newyou_baseline_refs": [
+    {
+      "source": "newyou:assets/css/design-tokens.css",
+      "start": 89,
+      "end": 140,
+      "role": "canonical shapes, widths, gaps and lighting inputs"
+    },
+    {
+      "source": "newyou:assets/css/design-tokens.css",
+      "start": 175,
+      "end": 244,
+      "role": "conditional lighting derivation and fallback"
+    },
+    {
+      "source": "newyou:assets/css/design-components.css",
+      "start": 1,
+      "end": 88,
+      "role": "current component variants and state styles"
+    },
+    {
+      "source": "newyou:assets/css/design-system.css",
+      "start": 1,
+      "end": 47,
+      "role": "guide intrinsic layout and container"
+    },
+    {
+      "source": "newyou:assets/css/design-system.css",
+      "start": 157,
+      "end": 249,
+      "role": "guide grid alignment and breakpoints"
+    },
+    {
+      "source": "newyou:lib/new_you_web/components/design/card.ex",
+      "start": 1,
+      "end": 36,
+      "role": "current semantic card contract"
+    },
+    {
+      "source": "newyou:lib/new_you_web/components/design/button.ex",
+      "start": 1,
+      "end": 80,
+      "role": "owned button attributes and native states"
+    },
+    {
+      "source": "newyou:lib/new_you_web/components/core_components.ex",
+      "start": 428,
+      "end": 450,
+      "role": "existing icon wrapper"
+    },
+    {
+      "source": "newyou:test/new_you_web/design_system_infrastructure_test.exs",
+      "start": 87,
+      "end": 190,
+      "role": "existing card/attribute coverage"
+    },
+    {
+      "source": "newyou:docs/development/research/design_math_browser.mjs",
+      "start": 84,
+      "end": 131,
+      "role": "existing grid geometry proof implementation"
+    },
+    {
+      "source": "newyou:docs/development/research/design_math_reference.py",
+      "start": 1,
+      "end": 30,
+      "role": "existing independent arithmetic reference"
+    },
+    {
+      "source": "newyou:docs/governance/supporting/FRONTEND_EXPERIENCE_SYSTEM_v1.0.1.md",
+      "start": 1,
+      "end": 20,
+      "role": "frontend authority identity"
+    },
+    {
+      "source": "newyou:DESIGN.md",
+      "start": 466,
+      "end": 485,
+      "role": "approved radius roles"
+    },
+    {
+      "source": "newyou:DESIGN.md",
+      "start": 560,
+      "end": 572,
+      "role": "existing elevation constraints"
+    },
+    {
+      "source": "newyou:docs/development/research/design_math_browser.mjs",
+      "start": 21,
+      "end": 84,
+      "role": "existing gutter candidate root-size, descending endpoint and fallback-tier proof"
+    }
+  ],
+  "modules": [
+    {
+      "id": "grid",
+      "decision": "adapt",
+      "current_status": "partial",
+      "dependencies": [
+        "--content-width",
+        "--space-xxl",
+        "--grid-gap"
+      ],
+      "missing_proof": [
+        "LAY-GRID-01",
+        "LAY-GRID-02",
+        "LAY-GRID-03"
+      ],
+      "detail_document": "layout.md",
+      "source_refs": [
+        {
+          "source": "acss:assets/scss/modules/grid/traditional-grid/_vars.scss",
+          "start": 1,
+          "end": 2,
+          "role": "grid and variable feature gates"
+        },
+        {
+          "source": "acss:assets/scss/modules/grid/traditional-grid/_maps.scss",
+          "start": 1,
+          "end": 52,
+          "role": "equal grids and premade ratios"
+        },
+        {
+          "source": "acss:assets/scss/modules/grid/traditional-grid/_tokens.scss",
+          "start": 1,
+          "end": 10,
+          "role": "root grid variables"
+        },
+        {
+          "source": "acss:assets/scss/modules/grid/variable-grid/_output.scss",
+          "start": 1,
+          "end": 10,
+          "role": "intrinsic variable grid output"
+        },
+        {
+          "source": "acss:assets/scss/modules/grid/variable-grid/_vars.scss",
+          "start": 1,
+          "end": 1,
+          "role": "variable-grid default gate"
+        },
+        {
+          "source": "acss:assets/scss/modules/columns/_columns.scss",
+          "start": 48,
+          "end": 53,
+          "role": "col-span is multicolumn, not CSS grid placement"
+        }
+      ]
+    },
+    {
+      "id": "auto-grid",
+      "decision": "adapt",
+      "current_status": "partial",
+      "dependencies": [
+        "--content-width",
+        "--grid-gap"
+      ],
+      "missing_proof": [
+        "LAY-AUTO-01",
+        "LAY-AUTO-02",
+        "LAY-AUTO-03"
+      ],
+      "detail_document": "layout.md",
+      "source_refs": [
+        {
+          "source": "acss:assets/scss/modules/grid/auto-grid/_mixins.scss",
+          "start": 1,
+          "end": 17,
+          "role": "mixin inputs, calculation, host and child styles"
+        },
+        {
+          "source": "acss:assets/scss/modules/grid/auto-grid/_tokens.scss",
+          "start": 1,
+          "end": 9,
+          "role": "global auto-grid token output"
+        },
+        {
+          "source": "acss:assets/scss/modules/grid/auto-grid/_vars.scss",
+          "start": 1,
+          "end": 17,
+          "role": "feature defaults and grid counts"
+        },
+        {
+          "source": "newyou:assets/css/design-system.css",
+          "start": 19,
+          "end": 19,
+          "role": "existing guide-only auto-fit"
+        }
+      ]
+    },
+    {
+      "id": "shadows",
+      "decision": "adapt",
+      "current_status": "partial",
+      "dependencies": [
+        "family variable-output options",
+        "configured slot values",
+        "box utility output path unresolved",
+        "NewYou lighting roles and component opt-in attributes"
+      ],
+      "missing_proof": [
+        "SHAPE-SHADOW-ROLE",
+        "SHAPE-SHADOW-SILHOUETTE",
+        "SHAPE-SHADOW-STATE",
+        "SHAPE-SHADOW-FALLBACK"
+      ],
+      "detail_document": "shape.md",
+      "source_refs": [
+        {
+          "source": "acss:assets/scss/modules/shadows/_box-shadow-vars.scss",
+          "start": 1,
+          "end": 26,
+          "role": "box shadow defaults and per-family option"
+        },
+        {
+          "source": "acss:assets/scss/modules/shadows/_text-shadow-vars.scss",
+          "start": 1,
+          "end": 13,
+          "role": "text shadow defaults and null upper slots"
+        },
+        {
+          "source": "acss:assets/scss/modules/shadows/_drop-shadow-vars.scss",
+          "start": 1,
+          "end": 13,
+          "role": "drop shadow filter arguments and defaults"
+        },
+        {
+          "source": "acss:assets/scss/modules/shadows/_box-shadow-tokens.scss",
+          "start": 1,
+          "end": 14,
+          "role": "conditional box shadow root token emission"
+        },
+        {
+          "source": "acss:assets/scss/modules/shadows/_text-shadow-tokens.scss",
+          "start": 1,
+          "end": 14,
+          "role": "conditional text shadow root token emission"
+        },
+        {
+          "source": "acss:assets/scss/modules/shadows/_drop-shadow-tokens.scss",
+          "start": 1,
+          "end": 14,
+          "role": "conditional filter token emission"
+        },
+        {
+          "source": "acss:assets/scss/modules/shadows/_cheatsheet.json",
+          "start": 1,
+          "end": 26,
+          "role": "advertised box shadow utility names and feature gate"
+        },
+        {
+          "source": "acss:classes/Model/Config/Framework.php",
+          "start": 196,
+          "end": 218,
+          "role": "class registry and legacy modifier detection"
+        },
+        {
+          "source": "acss:classes/Model/Config/Framework.php",
+          "start": 243,
+          "end": 272,
+          "role": "configured box shadow name mapping"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_mixins.scss",
+          "start": 86,
+          "end": 89,
+          "role": "card box shadow consumer"
+        }
+      ]
+    },
+    {
+      "id": "radius",
+      "decision": "adapt",
+      "current_status": "partial",
+      "dependencies": [
+        "radius variable gate",
+        "rounded utility gate",
+        "optional size-token gate",
+        "auto-radius selector list",
+        "card padding and radius",
+        "component selector scope",
+        "pseudo-element stacking for inverted radius"
+      ],
+      "missing_proof": [
+        "SHAPE-RADIUS-SCALE",
+        "SHAPE-RADIUS-AUTO-SCOPE",
+        "SHAPE-RADIUS-CONCENTRIC",
+        "SHAPE-RADIUS-INVERTED"
+      ],
+      "detail_document": "shape.md",
+      "source_refs": [
+        {
+          "source": "acss:assets/scss/modules/borders/_vars.scss",
+          "start": 26,
+          "end": 40,
+          "role": "base, scale factor, derived sizes, auto radius inputs"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/_maps.scss",
+          "start": 1,
+          "end": 15,
+          "role": "named size and special radius map"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/_tokens.scss",
+          "start": 1,
+          "end": 28,
+          "role": "radius token emission gates"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/_classes.scss",
+          "start": 27,
+          "end": 58,
+          "role": "named radius utility selector gates"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/_auto-radius.scss",
+          "start": 1,
+          "end": 5,
+          "role": "configured selector-driven base radius"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/radius/_cheatsheet.json",
+          "start": 1,
+          "end": 34,
+          "role": "advertised radius utilities and option"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_vars.scss",
+          "start": 24,
+          "end": 32,
+          "role": "card radius, padding, minimum and mode inputs"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_mixins.scss",
+          "start": 1,
+          "end": 7,
+          "role": "standard and reverse concentric formulas"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_mixins.scss",
+          "start": 27,
+          "end": 55,
+          "role": "card and descendant media radius application"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_classes.scss",
+          "start": 1,
+          "end": 11,
+          "role": "default card selector output gate"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/inverted-radius/_vars.scss",
+          "start": 1,
+          "end": 1,
+          "role": "inverted radius feature gate"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/inverted-radius/_utilities.scss",
+          "start": 1,
+          "end": 41,
+          "role": "cutout base, positioning, stacking and shadow inputs"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/inverted-radius/_utilities.scss",
+          "start": 143,
+          "end": 201,
+          "role": "corner selectors and pseudo-element output"
+        }
+      ]
+    },
+    {
+      "id": "gutter",
+      "decision": "adapt",
+      "current_status": "partial",
+      "dependencies": [
+        "fluidClamp helper",
+        "viewport bounds",
+        "section style options"
+      ],
+      "missing_proof": [
+        "LAY-GUTTER-01",
+        "LAY-GUTTER-02",
+        "LAY-GUTTER-03"
+      ],
+      "detail_document": "layout.md",
+      "source_refs": [
+        {
+          "source": "acss:assets/scss/modules/spacing/_vars.scss",
+          "start": 1,
+          "end": 14,
+          "role": "spacing and gutter source defaults"
+        },
+        {
+          "source": "acss:assets/scss/modules/spacing/_tokens.scss",
+          "start": 1,
+          "end": 31,
+          "role": "gutter, spacing and contextual token gates"
+        },
+        {
+          "source": "acss:assets/scss/modules/sections/_defaults.scss",
+          "start": 1,
+          "end": 18,
+          "role": "default section and header/footer padding"
+        },
+        {
+          "source": "acss:assets/scss/modules/sections/_utilities.scss",
+          "start": 1,
+          "end": 20,
+          "role": "section and header padding utilities"
+        },
+        {
+          "source": "acss:assets/scss/helpers/_functions.scss",
+          "start": 21,
+          "end": 30,
+          "role": "gutter fluidClamp slope/intercept and rem conversion"
+        },
+        {
+          "source": "acss:assets/scss/modules/sections/_vars.scss",
+          "start": 1,
+          "end": 4,
+          "role": "default section and padding gates"
+        },
+        {
+          "source": "acss:assets/scss/modules/spacing/_maps.scss",
+          "start": 49,
+          "end": 53,
+          "role": "contextual content/container/grid gap aliases"
+        },
+        {
+          "source": "acss:assets/scss/modules/contextual-colors/_contextual-vars.scss",
+          "start": 1,
+          "end": 8,
+          "role": "contextual gap defaults"
+        },
+        {
+          "source": "acss:assets/scss/modules/breakpoints/_vars.scss",
+          "start": 1,
+          "end": 5,
+          "role": "gutter interpolation viewport inputs"
+        },
+        {
+          "source": "acss:assets/scss/modules/text/_text-vars.scss",
+          "start": 9,
+          "end": 9,
+          "role": "source root font default"
+        }
+      ]
+    },
+    {
+      "id": "content-width",
+      "decision": "adapt",
+      "current_status": "partial",
+      "dependencies": [
+        "viewport settings",
+        "--gutter",
+        "width map"
+      ],
+      "missing_proof": [
+        "LAY-WIDTH-01",
+        "LAY-WIDTH-02",
+        "LAY-WIDTH-03"
+      ],
+      "detail_document": "layout.md",
+      "source_refs": [
+        {
+          "source": "acss:assets/scss/modules/breakpoints/_vars.scss",
+          "start": 1,
+          "end": 5,
+          "role": "viewport and content-width source defaults"
+        },
+        {
+          "source": "acss:assets/scss/modules/sections/_tokens.scss",
+          "start": 1,
+          "end": 7,
+          "role": "content width token gate and safe formula"
+        },
+        {
+          "source": "acss:assets/scss/modules/width/_vars.scss",
+          "start": 1,
+          "end": 2,
+          "role": "independent width selector/token gates"
+        },
+        {
+          "source": "acss:assets/scss/modules/width/_output.scss",
+          "start": 1,
+          "end": 56,
+          "role": "width utilities and centered content containers"
+        },
+        {
+          "source": "acss:assets/scss/modules/width/_width-maps.scss",
+          "start": 1,
+          "end": 14,
+          "role": "fraction map including the distinct full entry"
+        },
+        {
+          "source": "acss:assets/scss/modules/width/_tokens.scss",
+          "start": 1,
+          "end": 8,
+          "role": "width token emission"
+        }
+      ]
+    },
+    {
+      "id": "breakout",
+      "decision": "defer",
+      "current_status": "missing",
+      "dependencies": [
+        "--gutter",
+        "--content-width",
+        "section padding options",
+        "page-specific lane values"
+      ],
+      "missing_proof": [
+        "LAY-BREAKOUT-01",
+        "LAY-BREAKOUT-02",
+        "LAY-BREAKOUT-03"
+      ],
+      "detail_document": "layout.md",
+      "source_refs": [
+        {
+          "source": "acss:assets/scss/modules/grid/content-grid/_options.scss",
+          "start": 1,
+          "end": 2,
+          "role": "content-grid feature gates"
+        },
+        {
+          "source": "acss:assets/scss/modules/grid/content-grid/_vars.scss",
+          "start": 1,
+          "end": 5,
+          "role": "feature lane source defaults"
+        },
+        {
+          "source": "acss:assets/scss/modules/grid/content-grid/_mixins.scss",
+          "start": 1,
+          "end": 40,
+          "role": "named content lanes and default child placement"
+        },
+        {
+          "source": "acss:assets/scss/modules/grid/content-grid/_index.scss",
+          "start": 1,
+          "end": 67,
+          "role": "marker selectors and optional section defaults"
+        }
+      ]
+    },
+    {
+      "id": "icons",
+      "decision": "adapt",
+      "current_status": "partial",
+      "dependencies": [
+        "ACSS feature option dashboard/options",
+        "Shared radius, transition, color, and icon tokens",
+        "Host-provided SVG, i, or link markup",
+        "No icon asset library is supplied by this styling module"
+      ],
+      "missing_proof": [
+        "COMP-ICONS-001"
+      ],
+      "detail_document": "components.md",
+      "source_refs": [
+        {
+          "source": "acss:assets/scss/modules/icons/_vars.scss",
+          "start": 3,
+          "end": 93,
+          "role": "feature gate, configurable attribute, style defaults, size maps, list options, and token map inputs"
+        },
+        {
+          "source": "acss:assets/scss/modules/icons/_mixins.scss",
+          "start": 1,
+          "end": 66,
+          "role": "host element styling, font glyph support, boxed treatment, and hover propagation"
+        },
+        {
+          "source": "acss:assets/scss/modules/icons/_classes.scss",
+          "start": 1,
+          "end": 51,
+          "role": "declared selector families, list treatment, variants, and hover selectors"
+        },
+        {
+          "source": "acss:assets/scss/modules/icons/_tokens.scss",
+          "start": 1,
+          "end": 23,
+          "role": "conditional token declarations"
+        },
+        {
+          "source": "acss:assets/scss/modules/icons/_vars.scss",
+          "start": 8,
+          "end": 51,
+          "role": "icon size, padding, radius, border, list, and nullable defaults"
+        },
+        {
+          "source": "acss:assets/scss/modules/icons/_vars.scss",
+          "start": 53,
+          "end": 93,
+          "role": "exact style and size map keys and size-value construction"
+        },
+        {
+          "source": "acss:assets/scss/modules/icons/_mixins.scss",
+          "start": 59,
+          "end": 66,
+          "role": "boxed icon fallback values"
+        },
+        {
+          "source": "acss:assets/scss/modules/icons/_classes.scss",
+          "start": 6,
+          "end": 23,
+          "role": "finite size and boxed/plain attribute values"
+        }
+      ]
+    },
+    {
+      "id": "cards",
+      "decision": "adapt",
+      "current_status": "partial",
+      "dependencies": [
+        "Shared spacing, typography, border, radius, color, and transition tokens",
+        "Icon module boxed-style mixin",
+        "Button module btn mixin",
+        "Configured target selectors, initially .card"
+      ],
+      "missing_proof": [
+        "COMP-CARDS-001"
+      ],
+      "detail_document": "components.md",
+      "source_refs": [
+        {
+          "source": "acss:assets/scss/modules/cards/_vars.scss",
+          "start": 1,
+          "end": 99,
+          "role": "feature gate, target selectors, defaults, configurable values, and card style map"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_mixins.scss",
+          "start": 1,
+          "end": 110,
+          "role": "card layout and coupled media, avatar, heading, link, icon, and button behavior"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_classes.scss",
+          "start": 1,
+          "end": 11,
+          "role": "feature-gated class target and color-scheme selectors"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_tokens.scss",
+          "start": 1,
+          "end": 10,
+          "role": "conditional card token declarations"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_vars.scss",
+          "start": 9,
+          "end": 59,
+          "role": "exact card defaults, null inputs, and cross-token dependencies"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_vars.scss",
+          "start": 61,
+          "end": 99,
+          "role": "finite card token map keys, including duplicate icon-radius key"
+        },
+        {
+          "source": "newyou:test/new_you_web/design_system_infrastructure_test.exs",
+          "start": 87,
+          "end": 190,
+          "role": "NewYou flat/raised variants, native metadata, caller override rejection, and invalid variant tests"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_mixins.scss",
+          "start": 18,
+          "end": 74,
+          "role": "card layout defaults and media/overflow fallback behavior"
+        }
+      ]
+    },
+    {
+      "id": "data-attributes",
+      "decision": "adopt",
+      "current_status": "partial",
+      "dependencies": [
+        "Meaning and ownership are local to each component/module",
+        "NewYou Phoenix components own visual variant attributes",
+        "Native HTML and ARIA attributes carry applicable state",
+        "JavaScript hooks use narrow behavior selectors"
+      ],
+      "missing_proof": [
+        "COMP-DATA-ATTRIBUTES-001"
+      ],
+      "detail_document": "components.md",
+      "source_refs": [
+        {
+          "source": "acss:assets/scss/modules/icons/_vars.scss",
+          "start": 3,
+          "end": 6,
+          "role": "configurable icon attribute name and feature gate"
+        },
+        {
+          "source": "acss:assets/scss/modules/icons/_classes.scss",
+          "start": 1,
+          "end": 51,
+          "role": "visual attribute selectors declared by the icon module"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_mixins.scss",
+          "start": 44,
+          "end": 110,
+          "role": "card descendant class conventions and data-icon styling relationship"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/inverted-radius/_utilities.scss",
+          "start": 1,
+          "end": 4,
+          "role": "feature-gated attribute selectors"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/inverted-radius/_utilities.scss",
+          "start": 44,
+          "end": 140,
+          "role": "position attribute value catalog"
+        },
+        {
+          "source": "acss:assets/scss/modules/borders/inverted-radius/_utilities.scss",
+          "start": 144,
+          "end": 201,
+          "role": "slice value catalog and pseudo-element behavior"
+        },
+        {
+          "source": "acss:assets/scss/modules/spacing/gap/_auto-gap.scss",
+          "start": 16,
+          "end": 31,
+          "role": "optional Etch data attribute adapter"
+        },
+        {
+          "source": "acss:assets/scss/modules/offset-content/_offset-content.scss",
+          "start": 1,
+          "end": 18,
+          "role": "sticky-header attribute exclusion and layout offset"
+        },
+        {
+          "source": "acss:assets/scss/modules/cards/_classes.scss",
+          "start": 4,
+          "end": 8,
+          "role": "class-based light/dark scheme selectors"
+        },
+        {
+          "source": "acss:assets/scss/modules/icons/_classes.scss",
+          "start": 26,
+          "end": 51,
+          "role": "list, hover, and nested icon hooks"
+        },
+        {
+          "source": "newyou:assets/js/design_system.js",
+          "start": 54,
+          "end": 120,
+          "role": "NewYou behavior selectors and theme observation"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "acss:assets/scss/automatic-imports.scss",
+      "origin": "acss",
+      "sha256": "64f7307555d4eaf40c9fafa8a09b04114ea623efa3468bb3de9108fe1fc3e072",
+      "line_count": 95,
+      "archive_member": "assets/scss/automatic-imports.scss"
+    },
+    {
+      "id": "acss:assets/scss/automatic-tokens.scss",
+      "origin": "acss",
+      "sha256": "f1dafa50815643976094a659e06bd6c7976804c95a8e75203b2c01b1f0e188dc",
+      "line_count": 4,
+      "archive_member": "assets/scss/automatic-tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/automatic-variables.scss",
+      "origin": "acss",
+      "sha256": "5df6f0ca0cc02044d6a9ece7233d4fdf8eb378c7fc16c75e7e0a35c06d6a77e7",
+      "line_count": 5,
+      "archive_member": "assets/scss/automatic-variables.scss"
+    },
+    {
+      "id": "acss:assets/scss/automatic.scss",
+      "origin": "acss",
+      "sha256": "f83c957ed87709e902029095218f1f2595dcb22ffa1d27f0767fb490c63e27c2",
+      "line_count": 80,
+      "archive_member": "assets/scss/automatic.scss"
+    },
+    {
+      "id": "acss:assets/scss/helpers/_functions.scss",
+      "origin": "acss",
+      "sha256": "c29013aec6d8a43c24c9261f018dc0d81cdb9ed1dbd478ffb7c888e935d26ec1",
+      "line_count": 175,
+      "archive_member": "assets/scss/helpers/_functions.scss"
+    },
+    {
+      "id": "acss:assets/scss/helpers/_mixins.scss",
+      "origin": "acss",
+      "sha256": "6fd6a7b93dd3355d473def01078f05790220cdc062ba29df487e87661381108d",
+      "line_count": 143,
+      "archive_member": "assets/scss/helpers/_mixins.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/_tokens.scss",
+      "origin": "acss",
+      "sha256": "4bcf47ae65f7f5e0df424de222e4022a6f1d668c6f32b40df458bb18460e34d0",
+      "line_count": 108,
+      "archive_member": "assets/scss/modules/_tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/borders/_auto-radius.scss",
+      "origin": "acss",
+      "sha256": "172d926d678054a315485c8720bbc0239838b7f6dc155cd5a4aaaf630d2e0111",
+      "line_count": 5,
+      "archive_member": "assets/scss/modules/borders/_auto-radius.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/borders/_classes.scss",
+      "origin": "acss",
+      "sha256": "0bdd4cc20ec73168547ff36f99bde8b8aec566e0f772d606e4de7fd7e7f1631b",
+      "line_count": 58,
+      "archive_member": "assets/scss/modules/borders/_classes.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/borders/_maps.scss",
+      "origin": "acss",
+      "sha256": "5992bca1743e43db22a652b8ab32ae35f137f258fde710ecb8820772d35b0c4d",
+      "line_count": 15,
+      "archive_member": "assets/scss/modules/borders/_maps.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/borders/_tokens.scss",
+      "origin": "acss",
+      "sha256": "1ec14f80b6a59d4c495dfad815aee52b997c51d8599130aae71b6c3bc74912f3",
+      "line_count": 41,
+      "archive_member": "assets/scss/modules/borders/_tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/borders/_vars.scss",
+      "origin": "acss",
+      "sha256": "fe9ef6fcc8235ed1a263a5201a25591d0dc778ada8ecdb3a394be78e5c06c62e",
+      "line_count": 51,
+      "archive_member": "assets/scss/modules/borders/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/borders/inverted-radius/_utilities.scss",
+      "origin": "acss",
+      "sha256": "2515324f829ae7a765bae4e8c686b051067644eee14a64d9461b2e0d32c88956",
+      "line_count": 202,
+      "archive_member": "assets/scss/modules/borders/inverted-radius/_utilities.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/borders/inverted-radius/_vars.scss",
+      "origin": "acss",
+      "sha256": "89e147332a5b28cede9ff604194138b437ba50517be35143aee745d5919b2f5d",
+      "line_count": 2,
+      "archive_member": "assets/scss/modules/borders/inverted-radius/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/borders/radius/_cheatsheet.json",
+      "origin": "acss",
+      "sha256": "633a57d569ac24b4df209aec42bf87a8a057a519eb0ce560c8dfa9f108c29e41",
+      "line_count": 34,
+      "archive_member": "assets/scss/modules/borders/radius/_cheatsheet.json"
+    },
+    {
+      "id": "acss:assets/scss/modules/breakpoints/_vars.scss",
+      "origin": "acss",
+      "sha256": "e6fff459593202d8c235f107443102f147c4dfd52217a80ead8c06f476eade8b",
+      "line_count": 5,
+      "archive_member": "assets/scss/modules/breakpoints/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/cards/_classes.scss",
+      "origin": "acss",
+      "sha256": "e9afa850549b47c1c9160db2674057cdd4a1078a2ed2c34c6f031606280af4b5",
+      "line_count": 11,
+      "archive_member": "assets/scss/modules/cards/_classes.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/cards/_mixins.scss",
+      "origin": "acss",
+      "sha256": "ef3ce9d8e32d86678cf7512222b3aff1c8690da27446699d1a99392ccdef6f17",
+      "line_count": 111,
+      "archive_member": "assets/scss/modules/cards/_mixins.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/cards/_tokens.scss",
+      "origin": "acss",
+      "sha256": "4d0ba7409835c289ff084285c01432bead1247911afc46ce40b476263f2be81b",
+      "line_count": 10,
+      "archive_member": "assets/scss/modules/cards/_tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/cards/_vars.scss",
+      "origin": "acss",
+      "sha256": "0e8b55df9dedb7ba7cc597a5f58e057cfbb6ae78616094de81912a5369a686d7",
+      "line_count": 99,
+      "archive_member": "assets/scss/modules/cards/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/columns/_columns.scss",
+      "origin": "acss",
+      "sha256": "e414c875510f111fde01f6e3d373ad9b8fd0e5a21959ac170a638a3297eeccc2",
+      "line_count": 65,
+      "archive_member": "assets/scss/modules/columns/_columns.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/contextual-colors/_contextual-vars.scss",
+      "origin": "acss",
+      "sha256": "a851bf7c50e0bfe4b2f5700d6ca5379fef2faf6663db0848974ffb9574712d09",
+      "line_count": 20,
+      "archive_member": "assets/scss/modules/contextual-colors/_contextual-vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/auto-grid/_mixins.scss",
+      "origin": "acss",
+      "sha256": "15ad7dd4394028efc795d65011540e61eb8a0cbba9ab338568fa9d6874047213",
+      "line_count": 17,
+      "archive_member": "assets/scss/modules/grid/auto-grid/_mixins.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/auto-grid/_tokens.scss",
+      "origin": "acss",
+      "sha256": "609020c01bdefe77a0ba90af4893ee37ee2708742d18166f50fb3c95d46f490f",
+      "line_count": 9,
+      "archive_member": "assets/scss/modules/grid/auto-grid/_tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/auto-grid/_vars.scss",
+      "origin": "acss",
+      "sha256": "3df94252973756478805587dad2b1ca02b1c2f40e70e16554b5ddd88b2406431",
+      "line_count": 17,
+      "archive_member": "assets/scss/modules/grid/auto-grid/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/content-grid/_index.scss",
+      "origin": "acss",
+      "sha256": "45d5b740973503b6a1692f863030663b85fd9c5e9af3cc138fc17460e9191973",
+      "line_count": 67,
+      "archive_member": "assets/scss/modules/grid/content-grid/_index.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/content-grid/_mixins.scss",
+      "origin": "acss",
+      "sha256": "17753ac14c1e5ca617a05d4bd26e22d68c2c840d8545a439fce964d204e2f9f6",
+      "line_count": 40,
+      "archive_member": "assets/scss/modules/grid/content-grid/_mixins.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/content-grid/_options.scss",
+      "origin": "acss",
+      "sha256": "4e6016d8d61303941d25bbd1d3ae679f6f7f04104ca5aa826a3f8570c90e209f",
+      "line_count": 2,
+      "archive_member": "assets/scss/modules/grid/content-grid/_options.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/content-grid/_vars.scss",
+      "origin": "acss",
+      "sha256": "f4702ae92b8f305c8e434d64b8a275f197e6be603b5491a0620c8d6032cdf0ba",
+      "line_count": 5,
+      "archive_member": "assets/scss/modules/grid/content-grid/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/traditional-grid/_maps.scss",
+      "origin": "acss",
+      "sha256": "2e2b19244839fb9ffd16ca8f4c34f963155282ce03004a9858cd7cc35fd9ffa3",
+      "line_count": 52,
+      "archive_member": "assets/scss/modules/grid/traditional-grid/_maps.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/traditional-grid/_tokens.scss",
+      "origin": "acss",
+      "sha256": "cb31aff5b866c152277fd6f9964eeadb66850f5c3c60011f433859dded45e08c",
+      "line_count": 10,
+      "archive_member": "assets/scss/modules/grid/traditional-grid/_tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/traditional-grid/_vars.scss",
+      "origin": "acss",
+      "sha256": "160c32f22a76a8c6b64245feae4ecc4da5e644a9424c3d4772d867e915d6d8cb",
+      "line_count": 2,
+      "archive_member": "assets/scss/modules/grid/traditional-grid/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/variable-grid/_output.scss",
+      "origin": "acss",
+      "sha256": "de59875d340d371fadc78838b838f628a57bb3cecfdb9992e855c5b1efa38419",
+      "line_count": 10,
+      "archive_member": "assets/scss/modules/grid/variable-grid/_output.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/grid/variable-grid/_vars.scss",
+      "origin": "acss",
+      "sha256": "0a959ad5c1f663d42dd1a6482b30df5ca777506f2a3c76bf2e8330db733d9f05",
+      "line_count": 1,
+      "archive_member": "assets/scss/modules/grid/variable-grid/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/icons/_classes.scss",
+      "origin": "acss",
+      "sha256": "838ed7a5aca2621f0316921b3b6fc00d69bb057d8f8a612eec5a44bdcbe7f9ce",
+      "line_count": 52,
+      "archive_member": "assets/scss/modules/icons/_classes.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/icons/_mixins.scss",
+      "origin": "acss",
+      "sha256": "725b774193773880d31fd420d0f22520013b9c721de90162a65db70fd9dd9029",
+      "line_count": 66,
+      "archive_member": "assets/scss/modules/icons/_mixins.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/icons/_tokens.scss",
+      "origin": "acss",
+      "sha256": "ae4a1c254b4e83f2133f785c13ce2a023dcb62418034eaa7e0c2880b3291631c",
+      "line_count": 23,
+      "archive_member": "assets/scss/modules/icons/_tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/icons/_vars.scss",
+      "origin": "acss",
+      "sha256": "27035a3d30f90e4768d653a4eea42735a6d91941a232355b5bc4e5f0b556d940",
+      "line_count": 93,
+      "archive_member": "assets/scss/modules/icons/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/offset-content/_offset-content.scss",
+      "origin": "acss",
+      "sha256": "47f434a6706bb6dd4e4b1aa55def6e201a90601cca6d32acf7c5f62e9dc76fed",
+      "line_count": 20,
+      "archive_member": "assets/scss/modules/offset-content/_offset-content.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/sections/_defaults.scss",
+      "origin": "acss",
+      "sha256": "316fbb97770982783a58d5b3fa487066dffee6765e2ba5326abef834a51b5e6d",
+      "line_count": 19,
+      "archive_member": "assets/scss/modules/sections/_defaults.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/sections/_tokens.scss",
+      "origin": "acss",
+      "sha256": "71ad37bccd21e35ca6d572b89e6e573d5700f2adccf9df59b2cdbd7651a28ab1",
+      "line_count": 7,
+      "archive_member": "assets/scss/modules/sections/_tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/sections/_utilities.scss",
+      "origin": "acss",
+      "sha256": "2b9af800d44ec20f3ccba1d0d6f22ab1d0ff21712f3a4e0762bfcc4c1bde564d",
+      "line_count": 21,
+      "archive_member": "assets/scss/modules/sections/_utilities.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/sections/_vars.scss",
+      "origin": "acss",
+      "sha256": "5dcfb2af6e49572827c32a53ab200a9c1562ffb6bd3970e3949426e8305700d1",
+      "line_count": 4,
+      "archive_member": "assets/scss/modules/sections/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/shadows/_box-shadow-tokens.scss",
+      "origin": "acss",
+      "sha256": "cfd195490b023116afa91677d57c72fb6cb87472f810f58813d6107b72da277e",
+      "line_count": 14,
+      "archive_member": "assets/scss/modules/shadows/_box-shadow-tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/shadows/_box-shadow-vars.scss",
+      "origin": "acss",
+      "sha256": "4e43ad2ea5da1adec26dcfbfa3ede1d184400dde35a48dae6a0744ba00261cc5",
+      "line_count": 26,
+      "archive_member": "assets/scss/modules/shadows/_box-shadow-vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/shadows/_cheatsheet.json",
+      "origin": "acss",
+      "sha256": "651a5e92cc9219dc2a9af245d5fd0a413233859d91bc0e750aa8a12a0d2339c4",
+      "line_count": 26,
+      "archive_member": "assets/scss/modules/shadows/_cheatsheet.json"
+    },
+    {
+      "id": "acss:assets/scss/modules/shadows/_drop-shadow-tokens.scss",
+      "origin": "acss",
+      "sha256": "365ade1860f31a9b38952ece85ca747e70bb2af012d127a85556a5c4a864164f",
+      "line_count": 14,
+      "archive_member": "assets/scss/modules/shadows/_drop-shadow-tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/shadows/_drop-shadow-vars.scss",
+      "origin": "acss",
+      "sha256": "d7b5db1eaf9af89fee5c638d4e96f7642a84ea52398434f3c8ce9d5e472032a1",
+      "line_count": 13,
+      "archive_member": "assets/scss/modules/shadows/_drop-shadow-vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/shadows/_text-shadow-tokens.scss",
+      "origin": "acss",
+      "sha256": "66fb0528299ec1ef2fdd32d3357e5fdfbe3f6ef323b58fe9244d515f20905496",
+      "line_count": 14,
+      "archive_member": "assets/scss/modules/shadows/_text-shadow-tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/shadows/_text-shadow-vars.scss",
+      "origin": "acss",
+      "sha256": "cc52275dda9b3a3f9ebc90af8fbf2e23023cc84ffecfbad3f7ba33e26b221e3f",
+      "line_count": 13,
+      "archive_member": "assets/scss/modules/shadows/_text-shadow-vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/spacing/_maps.scss",
+      "origin": "acss",
+      "sha256": "93286c10d1a47c97a8f69a084451bc7b6ef8d61cb634232400a23150e6eea8b6",
+      "line_count": 53,
+      "archive_member": "assets/scss/modules/spacing/_maps.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/spacing/_tokens.scss",
+      "origin": "acss",
+      "sha256": "f0d7282155ea4e1138c09830d902ac80511959bc1d86739c76060fae72ce4a79",
+      "line_count": 32,
+      "archive_member": "assets/scss/modules/spacing/_tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/spacing/_vars.scss",
+      "origin": "acss",
+      "sha256": "dd22f9c0d1cdde75501dde8f03032f1d8c12221f8f49e3952f35a509cff269e5",
+      "line_count": 48,
+      "archive_member": "assets/scss/modules/spacing/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/spacing/gap/_auto-gap.scss",
+      "origin": "acss",
+      "sha256": "d5a0a1784839bf8485be5471bbe813fb2b75763088fd5061a295b569d19be75f",
+      "line_count": 40,
+      "archive_member": "assets/scss/modules/spacing/gap/_auto-gap.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/text/_text-vars.scss",
+      "origin": "acss",
+      "sha256": "bb66598e6727b16166f33e238d0b4705e4510f496b5614b4e44657431789675e",
+      "line_count": 66,
+      "archive_member": "assets/scss/modules/text/_text-vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/width/_output.scss",
+      "origin": "acss",
+      "sha256": "1f3597aa556463b47bbc2eb4e7d863796392d9b7865db98451a35aaac42cfbc4",
+      "line_count": 56,
+      "archive_member": "assets/scss/modules/width/_output.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/width/_tokens.scss",
+      "origin": "acss",
+      "sha256": "da70aea836966880c94498471e117ba333e345b1af94806436c472d867f59deb",
+      "line_count": 8,
+      "archive_member": "assets/scss/modules/width/_tokens.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/width/_vars.scss",
+      "origin": "acss",
+      "sha256": "d378b52528f2e9d46af5723bc6fcff51cb42520f5bca7466172e6693ee0280dd",
+      "line_count": 2,
+      "archive_member": "assets/scss/modules/width/_vars.scss"
+    },
+    {
+      "id": "acss:assets/scss/modules/width/_width-maps.scss",
+      "origin": "acss",
+      "sha256": "7b3fe7d41bf73f14819d64fe12daf298a25cd8380b247c2568a6d40ab59436f2",
+      "line_count": 14,
+      "archive_member": "assets/scss/modules/width/_width-maps.scss"
+    },
+    {
+      "id": "acss:automatic-css.php",
+      "origin": "acss",
+      "sha256": "dc90bbd6f73bb80664a38d00fca1953c2723de2009636326cab9875406e574ef",
+      "line_count": 55,
+      "archive_member": "automatic-css.php"
+    },
+    {
+      "id": "acss:classes/Framework/Core/Core.php",
+      "origin": "acss",
+      "sha256": "3eca160e0eb92f9e18277a94ea04bdea54d67df50c3b0053c5670534f4f550fd",
+      "line_count": 422,
+      "archive_member": "classes/Framework/Core/Core.php"
+    },
+    {
+      "id": "acss:classes/Model/Config/Framework.php",
+      "origin": "acss",
+      "sha256": "a8472895adcbb77def02573ac95260629bdf6df24e80a78cf9e3101bab77b152",
+      "line_count": 465,
+      "archive_member": "classes/Model/Config/Framework.php"
+    },
+    {
+      "id": "newyou:DESIGN.md",
+      "origin": "newyou",
+      "sha256": "6ef32e0f5e52429c0bf509c109a6330e3d094503dd2940311f8f9eab2f428ea1",
+      "line_count": 581,
+      "git_blob_path": "DESIGN.md"
+    },
+    {
+      "id": "newyou:assets/css/design-components.css",
+      "origin": "newyou",
+      "sha256": "9a9cc0017fa5f0d66fe389c57dd00de81583dfa4d84509778d91d4f264371d31",
+      "line_count": 88,
+      "git_blob_path": "assets/css/design-components.css"
+    },
+    {
+      "id": "newyou:assets/css/design-system.css",
+      "origin": "newyou",
+      "sha256": "b673b9b1c2b6ea856c449442ea45f00a1d925572f88a2fedca4b9098e1bbb0e4",
+      "line_count": 301,
+      "git_blob_path": "assets/css/design-system.css"
+    },
+    {
+      "id": "newyou:assets/css/design-tokens.css",
+      "origin": "newyou",
+      "sha256": "851335469d545f79ec7b13cfce75c995257e33f7e39e811e8024b0f93799f129",
+      "line_count": 385,
+      "git_blob_path": "assets/css/design-tokens.css"
+    },
+    {
+      "id": "newyou:assets/js/design_system.js",
+      "origin": "newyou",
+      "sha256": "871d6f35f340428ab6bb187ab8d21ddc79d40099bd9e855b744e7ee419f3ceb6",
+      "line_count": 138,
+      "git_blob_path": "assets/js/design_system.js"
+    },
+    {
+      "id": "newyou:docs/development/research/design_math_browser.mjs",
+      "origin": "newyou",
+      "sha256": "f9dac05cd890eca2e5f7835548d0ad9bede256d5992b44b0c7a94cac3db200c5",
+      "line_count": 132,
+      "git_blob_path": "docs/development/research/design_math_browser.mjs"
+    },
+    {
+      "id": "newyou:docs/development/research/design_math_reference.py",
+      "origin": "newyou",
+      "sha256": "25f84ac647ca9c727c1eb1cf8807a6dd760c157ccaa0169b9390aa1a9f9bf707",
+      "line_count": 150,
+      "git_blob_path": "docs/development/research/design_math_reference.py"
+    },
+    {
+      "id": "newyou:docs/governance/supporting/FRONTEND_EXPERIENCE_SYSTEM_v1.0.1.md",
+      "origin": "newyou",
+      "sha256": "4b600169a15eaa1e20c3c085478c455402042a2b4e36fdffeca930b8a2c8efa3",
+      "line_count": 724,
+      "git_blob_path": "docs/governance/supporting/FRONTEND_EXPERIENCE_SYSTEM_v1.0.1.md"
+    },
+    {
+      "id": "newyou:lib/new_you_web/components/core_components.ex",
+      "origin": "newyou",
+      "sha256": "6e18b23c1c73a90d9aa034dede86ee851fa520edb10618bf84523168c7e5e4e1",
+      "line_count": 501,
+      "git_blob_path": "lib/new_you_web/components/core_components.ex"
+    },
+    {
+      "id": "newyou:lib/new_you_web/components/design/button.ex",
+      "origin": "newyou",
+      "sha256": "e7e28ed73fdcc5da76bfdd94bc9b43e52f8d401383be37fe4f01333d08983f8d",
+      "line_count": 83,
+      "git_blob_path": "lib/new_you_web/components/design/button.ex"
+    },
+    {
+      "id": "newyou:lib/new_you_web/components/design/card.ex",
+      "origin": "newyou",
+      "sha256": "b850f531c8d538661762b9010b710d0f3514d396c33a2499182d4707c8382fef",
+      "line_count": 37,
+      "git_blob_path": "lib/new_you_web/components/design/card.ex"
+    },
+    {
+      "id": "newyou:test/new_you_web/design_system_infrastructure_test.exs",
+      "origin": "newyou",
+      "sha256": "3cc94fc3d3fb4b55a5f41ca87703612ef3cccbca5af8323d0670a08c00974794",
+      "line_count": 649,
+      "git_blob_path": "test/new_you_web/design_system_infrastructure_test.exs"
+    }
+  ]
+}
