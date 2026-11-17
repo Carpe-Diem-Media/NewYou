@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "pr": 262,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/262",
+  "base_sha": "fbfc85271cdc5021b388d1c908eade0279b0f850",
+  "range_base_sha": "fbfc85271cdc5021b388d1c908eade0279b0f850",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/262/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/262/commits",
+  "files": [
+    {
+      "path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "old_path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "status": "modified",
+      "mode": "100644",
+      "old_mode": "100644",
+      "blob": "6d20f3b10d1e1508facb0273b7ddaac67f3f7f6a",
+      "old_blob": "f19d9ac26ccadb71288634c24a78f12bcac46810",
+      "sha256": "078d5f32c7c222849b530303d121e8cc84cd099fa00f26944a2becd6f002a03a",
+      "old_sha256": "58587f73c64c34ece401ddeda6b76dbf309293ef76a8c26adeac08915633a3a6"
+    },
+    {
+      "path": "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "old_path": null,
+      "status": "added",
+      "mode": "100644",
+      "old_mode": null,
+      "blob": "98084a12153f888b4de75000fefd857fe7bdca52",
+      "old_blob": null,
+      "sha256": "e640e07d3baf6bc03cdb4df9944f696ba4a022cefa60284154468d1876450b19",
+      "old_sha256": null
+    },
+    {
+      "path": "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_BROWSER_COPY_LOCK_v0.1.1.md",
+      "old_path": null,
+      "status": "added",
+      "mode": "100644",
+      "old_mode": null,
+      "blob": "0117d0a8f23654f4c48681642633dc5f6352a021",
+      "old_blob": null,
+      "sha256": "1d27152cdf9d90e253d0e8de29799fe12cf5d96a3fd19d03b53228cda7ce7fc3",
+      "old_sha256": null
+    }
+  ],
+  "migrations": [],
+  "symbols": [],
+  "tests": [],
+  "tickets": [
+    "WELL-21"
+  ]
+}

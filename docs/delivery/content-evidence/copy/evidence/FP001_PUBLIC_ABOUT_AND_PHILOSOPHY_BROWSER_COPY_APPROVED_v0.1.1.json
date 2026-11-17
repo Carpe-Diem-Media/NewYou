@@ -1,0 +1,480 @@
+{
+  "packet_id": "FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_CANONICAL_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY",
+  "prepared_on": "2026-11-17",
+  "repository": "Carpe-Diem-Media/NewYou",
+  "verified_main_sha_at_reconnaissance": "fbfc85271cdc5021b388d1c908eade0279b0f850",
+  "purpose": "Owner-approved exact English/Afrikaans public About-page wording and philosophy for bounded future non-production development; no publication or release permission.",
+  "scope": "Public About/philosophy, temperament, values, Bible-based motivation, source-book context, FAQ and governed availability composition; immutable exact copy evidence only.",
+  "content_owner": "Content & Media",
+  "business_truth_owners": [
+    "Content & Media",
+    "Identity & Access (account/verification statements)",
+    "Safety & Eligibility (reuse existing safety notice without rewording)"
+  ],
+  "copy_risk": "Class B candidate brand/public experience text. Reused safety/privacy/identity boundaries retain their own authority and exact-copy restrictions.",
+  "source_material": [
+    "User-supplied Verloor_gewig_op_jou_manier_Bookkart_v2.epub: voorwoord, hoofstuk 5 (temperament), hoofstuk 7 (faith), slot (small steps and restart)",
+    "docs/governance/product/PROJECT_NORTH_STAR_AND_MVP_v1.3.0.md §§2–5",
+    "docs/governance/product/00_PLATFORM_v1.18.0.md §§1, 21E, 21J and 21L",
+    "docs/delivery/feature-contracts/fp-001/FP-001_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md §§B–D",
+    "docs/delivery/content-evidence/copy/COPY_INVENTORY.md and COPY_REGISTRY.json, GOVERNANCE.md, STYLE_GUIDE.md, GLOSSARY.md",
+    "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED_v0.1.1.json"
+  ],
+  "positioning_decision": "Owner requests understated Christian-based positioning: do not put Christian/Christelike in the main hero; disclose Bible/Christian-values content in a secondary, plainly named section.",
+  "copy_items": [
+    {
+      "key": "public.about.hero.eyebrow",
+      "family": "hero",
+      "class": "B",
+      "en": {
+        "text": "About our approach",
+        "sha256": "23bd45c55223acf7a982140191432fd4d5bc5f05a4c1ee7c4be0b58a4e766c9c"
+      },
+      "af": {
+        "text": "Meer oor ons benadering",
+        "sha256": "42f1374135ff87e3a5871f1f0a0a8cd4c79dbe1dabdd9339b6b2088ae244acff"
+      }
+    },
+    {
+      "key": "public.about.hero.title",
+      "family": "hero",
+      "class": "B",
+      "en": {
+        "text": "A healthier way of living begins with understanding yourself.",
+        "sha256": "6fb4d4d35b5f5c6424001e542c22c2a2b6efb130fa63b1af39bd6a371650ed0a"
+      },
+      "af": {
+        "text": "’n Gesonder manier van leef begin wanneer jy jouself verstaan.",
+        "sha256": "03c5e021486c3a6cb96470e6761440aa16c0693013e59a01f84069d8e796377c"
+      }
+    },
+    {
+      "key": "public.about.hero.body",
+      "family": "hero",
+      "class": "B",
+      "en": {
+        "text": "We help adult women look beyond quick fixes, understand their everyday patterns and take manageable steps towards better health and wellbeing.",
+        "sha256": "1236404db1c89a9f50c3d72c2917b36f2a646dd0bf02613d41ccd6c4ffe53314"
+      },
+      "af": {
+        "text": "Ons help volwasse vroue om verder as kitsoplossings te kyk, hul alledaagse patrone te verstaan en haalbare stappe na beter gesondheid en welstand te neem.",
+        "sha256": "4a213ff36f49ba59c8a4df7a7982165366ff0a372f68c90a2f1caba8f72f1915"
+      }
+    },
+    {
+      "key": "public.about.purpose.title",
+      "family": "purpose",
+      "class": "B",
+      "en": {
+        "text": "Why we exist",
+        "sha256": "965ea3625f54573ac94c12245779f52c9070f9fae4df880e72087774f549cf28"
+      },
+      "af": {
+        "text": "Waarom ons hier is",
+        "sha256": "ea0df97e76c4ca4db07004a4fe129766215b257739dc0cfc768373c6aabe969a"
+      }
+    },
+    {
+      "key": "public.about.purpose.body",
+      "family": "purpose",
+      "class": "B",
+      "en": {
+        "text": "You are more than a number on a scale or a list of things you think you should get right. Our purpose is to help you understand yourself, make informed choices and build habits that fit real life.",
+        "sha256": "73c50fb89ee804243603860dca0f88c1891968386252a46c19b5c1255fe409d2"
+      },
+      "af": {
+        "text": "Jy is meer as ’n syfer op die skaal of ’n lys dinge wat jy dink jy moet regkry. Ons doel is om jou te help om jouself beter te verstaan, ingeligte keuses te maak en gewoontes te bou wat by die werklike lewe pas.",
+        "sha256": "894f091b0f8dd397453916594ca277fa3851e60ddca3a83197c81fa462f83dd4"
+      }
+    },
+    {
+      "key": "public.about.difference.title",
+      "family": "difference",
+      "class": "B",
+      "en": {
+        "text": "Not one answer for everyone",
+        "sha256": "434b0293641606e42eb936e5e6903daf1c373d93478eca9689d20f0bbbb1f983"
+      },
+      "af": {
+        "text": "Nie een antwoord vir almal nie",
+        "sha256": "a6ba91a489a07bc9a05df7c55557a3cc742a6864722e61980ab7df0b2da111db"
+      }
+    },
+    {
+      "key": "public.about.difference.body",
+      "family": "difference",
+      "class": "B",
+      "en": {
+        "text": "Your circumstances, strengths and daily pressures are your own. We believe useful guidance starts by recognising those differences rather than expecting everyone to follow the same routine.",
+        "sha256": "3ef0b53c39862df844553e883642a4cb85928ffd17bcd6ae4a18fc6897e869d1"
+      },
+      "af": {
+        "text": "Jou omstandighede, sterkpunte en daaglikse druk is eie aan jou. Ons glo bruikbare leiding begin wanneer ons daardie verskille raaksien, nie wanneer ons verwag dat almal dieselfde roetine moet volg nie.",
+        "sha256": "00cab62c85648228548e8d1e1fe71d364ef4d455af5bfed196f2d1fd45893c96"
+      }
+    },
+    {
+      "key": "public.about.whole_person.title",
+      "family": "whole_person",
+      "class": "B",
+      "en": {
+        "text": "We look at the bigger picture",
+        "sha256": "0cd725645c963ebe38a91c6537c329f24e59346c2188239d60cf88a768aaff78"
+      },
+      "af": {
+        "text": "Ons kyk na die groter prentjie",
+        "sha256": "f13f24b384efb81ab9844aebb5937b6943975cb207d05abfedf141be27a8b1da"
+      }
+    },
+    {
+      "key": "public.about.whole_person.body",
+      "family": "whole_person",
+      "class": "B",
+      "en": {
+        "text": "Food, sleep, movement, stress, emotions and habits can all influence everyday choices. We look at the whole person rather than reducing health to a meal plan or a weight goal.",
+        "sha256": "f8dc703b635617ab057eae41e20b27cfbafb481d0017c7bd6ceab7198a0c9f8f"
+      },
+      "af": {
+        "text": "Kos, slaap, beweging, stres, emosies en gewoontes kan almal alledaagse keuses beïnvloed. Ons kyk na die hele mens eerder as om gesondheid tot ’n eetplan of gewigsdoelwit te beperk.",
+        "sha256": "bbc41916a82df6885f6fcf47a12bdb655be04ef1a4aec2ea19143c3b07269651"
+      }
+    },
+    {
+      "key": "public.about.approach.title",
+      "family": "approach",
+      "class": "B",
+      "en": {
+        "text": "How we approach change",
+        "sha256": "cbabfc21b53386a7c7f35ed4f4814720a7739f04af5a198ac569f9610ed8ea6f"
+      },
+      "af": {
+        "text": "Hoe ons verandering benader",
+        "sha256": "08b66a3369ad9e2b82f73b325341e320769a5c1d52cfc107984c0e445fd66b34"
+      }
+    },
+    {
+      "key": "public.about.approach.understanding.title",
+      "family": "approach",
+      "class": "B",
+      "en": {
+        "text": "Start with understanding",
+        "sha256": "baa15e3303ca7181dd2a0b760da6676fdec659cfe13c746511fcad2c17c6ae62"
+      },
+      "af": {
+        "text": "Begin deur jouself te verstaan",
+        "sha256": "f1c3d0b75079f6700824ce64e4e1226e6f513f9c0a49e463ca798b48b52d08c1"
+      }
+    },
+    {
+      "key": "public.about.approach.understanding.body",
+      "family": "approach",
+      "class": "B",
+      "en": {
+        "text": "Notice what helps you and what gets in your way before deciding what to change.",
+        "sha256": "e1002db18b364debbc86b1dc7f03a8993282c92cb0cf15be95aa37974ae957d7"
+      },
+      "af": {
+        "text": "Let op wat jou help en wat in jou pad staan voordat jy besluit wat om te verander.",
+        "sha256": "c46a3cda58714410de7bf18820d4204fa4f743d90765e0a251a8917da754391f"
+      }
+    },
+    {
+      "key": "public.about.approach.practical.title",
+      "family": "approach",
+      "class": "B",
+      "en": {
+        "text": "Make it practical",
+        "sha256": "a0df92b81176d19d8333acd1af6002b1bceda65c1ac58fbb2bc9d29757fcc35f"
+      },
+      "af": {
+        "text": "Hou dit prakties",
+        "sha256": "ed61cce439857acd412675b342b341c8013040c3d7f3a03e5971752827e1e15c"
+      }
+    },
+    {
+      "key": "public.about.approach.practical.body",
+      "family": "approach",
+      "class": "B",
+      "en": {
+        "text": "Small steps are easier to repeat when they fit around your responsibilities and routines.",
+        "sha256": "4fb55be98817bba8df3092730bb2a5d4f1ff31cfdea8326ed024becabafb9364"
+      },
+      "af": {
+        "text": "Klein treë is makliker om te herhaal wanneer dit by jou verantwoordelikhede en roetines inpas.",
+        "sha256": "d7046795ca6296834598cdfccebf26fe1eb6a0f651c2c1150d076d68fadd30e6"
+      }
+    },
+    {
+      "key": "public.about.approach.restart.title",
+      "family": "approach",
+      "class": "B",
+      "en": {
+        "text": "Make room to begin again",
+        "sha256": "c54896d038fbf37a5d70a9d57f6246f13f5957bd2f659e7a6b89ebd9c7d55655"
+      },
+      "af": {
+        "text": "Maak ruimte om weer te begin",
+        "sha256": "ea7a5f1a618e4a25ac5764b1b67e3ce7f42d9be3039559295c33ecd309f2aa13"
+      }
+    },
+    {
+      "key": "public.about.approach.restart.body",
+      "family": "approach",
+      "class": "B",
+      "en": {
+        "text": "A difficult day does not undo your whole journey. What matters is finding a helpful next step.",
+        "sha256": "dd67df565d26d4e9931aed9e219afa1222c92fbe972465a5c0863256b8958b56"
+      },
+      "af": {
+        "text": "’n Moeilike dag maak nie jou hele reis ongedaan nie. Wat saak maak, is om ’n volgende tree te vind wat jou help.",
+        "sha256": "52b0b47328eabac303c08441048b1c5a155339211d1a7899bbe471eb575651d8"
+      }
+    },
+    {
+      "key": "public.about.values.title",
+      "family": "values",
+      "class": "B",
+      "en": {
+        "text": "The values behind our work",
+        "sha256": "97f938b577332bac9e4bf2cb60fcf710c91f78fe0a716e101f094ab1a22d7389"
+      },
+      "af": {
+        "text": "Die waardes agter ons werk",
+        "sha256": "963b1070605ab4016ee2538204a544e3e760a715f94e9d4e3c7461b12d6a7406"
+      }
+    },
+    {
+      "key": "public.about.values.body",
+      "family": "values",
+      "class": "B",
+      "en": {
+        "text": "We value dignity, honesty, compassion and progress without shame. Your health journey should never be a measure of your worth.",
+        "sha256": "1e09a5100ad68f91a52987aedce86497738e208474bc14aebf7d351010504c3b"
+      },
+      "af": {
+        "text": "Ons heg waarde aan waardigheid, eerlikheid, deernis en vordering sonder skaamte. Jou gesondheidsreis behoort nooit ’n maatstaf van jou waarde te wees nie.",
+        "sha256": "c0d46915acd6249aa227c0117f162824ee85fc3633f149c86fc037cc9a1c951d"
+      }
+    },
+    {
+      "key": "public.about.faith.title",
+      "family": "faith",
+      "class": "B",
+      "en": {
+        "text": "Where faith fits",
+        "sha256": "a61f2b2b62725679509b821f365da1cfb466df3148efbb42981f7ad3fba191dd"
+      },
+      "af": {
+        "text": "Waar geloof inpas",
+        "sha256": "0afeb0d949fab0540938b23178e9fbf46844e67d73e502c3fe5135b4679a59c0"
+      }
+    },
+    {
+      "key": "public.about.faith.body",
+      "family": "faith",
+      "class": "B",
+      "en": {
+        "text": "Christian values form part of our foundation. Some of our content and encouragement draw on the Bible, with themes such as grace, hope and caring for others.",
+        "sha256": "f3ea39922dcf8b6d44d9e790c252175f6fa402fa76546f927748bed484f48e11"
+      },
+      "af": {
+        "text": "Christelike waardes vorm deel van ons grondslag. Sommige van ons inhoud en bemoediging put uit die Bybel, met temas soos genade, hoop en omgee vir ander.",
+        "sha256": "904fc120c21709ad03087cc4da56bbdab6458c327683c10448a596a41f4f8979"
+      }
+    },
+    {
+      "key": "public.about.book.title",
+      "family": "book",
+      "class": "B",
+      "en": {
+        "text": "Inspired by the book",
+        "sha256": "174d247b905d21c0a4fefc2788a6d5d8fe8df4601663364e5e80672eb64f1bd3"
+      },
+      "af": {
+        "text": "Geïnspireer deur die boek",
+        "sha256": "974df041c47be30027d0053b93c59038499ae543ae8c3a407cb3d7d69cfcf0b3"
+      }
+    },
+    {
+      "key": "public.about.book.body",
+      "family": "book",
+      "class": "B",
+      "en": {
+        "text": "Our content foundation includes *Verloor gewig op jou manier*, which explores health, temperament, emotions, habits and faith. We build on its central idea: understand yourself, then take practical steps that fit your life.",
+        "sha256": "760b9121d56600e416946e4bb8d6ad7d2f9d4211bfd9fe44372128c05ed934a1"
+      },
+      "af": {
+        "text": "Ons inhoudsgrondslag sluit *Verloor gewig op jou manier* in, wat gesondheid, temperament, emosies, gewoontes en geloof verken. Ons bou op die kernidee voort: verstaan jouself en neem dan praktiese stappe wat by jou lewe pas.",
+        "sha256": "2de41dffed046ff11e15568360f3638b4b68ed09584aca6efc56503e97d5a0d9"
+      }
+    },
+    {
+      "key": "public.about.audience.title",
+      "family": "audience",
+      "class": "B",
+      "en": {
+        "text": "Who this is for",
+        "sha256": "6f7e69bb1fddc7c6321a2258ed4d4d90d193821828e954b969190c15ff63d411"
+      },
+      "af": {
+        "text": "Vir wie dit bedoel is",
+        "sha256": "9dcbbd6381f764bd1c1cb4612a7b9ee846c99c264f7e1482a24d0e2fe342367f"
+      }
+    },
+    {
+      "key": "public.about.expect.title",
+      "family": "expect",
+      "class": "B",
+      "en": {
+        "text": "What you can expect from us",
+        "sha256": "c126577ee8a03977a969f3b48e59aca34ade018e77811ce94c540b0a673be6c1"
+      },
+      "af": {
+        "text": "Wat jy van ons kan verwag",
+        "sha256": "026a956ad991762111a97798a70acc2d47f9539806a57ba9238c1b11903fd916"
+      }
+    },
+    {
+      "key": "public.about.expect.body",
+      "family": "expect",
+      "class": "B",
+      "en": {
+        "text": "Clear explanations, a thoughtful approach and encouragement that respects your circumstances. We do not promise quick fixes or one perfect path for everyone.",
+        "sha256": "4a99e1bedf8cdf60c9efdd03280d99e5dc0d9bc5123ca0a87e4b3dffd4680de8"
+      },
+      "af": {
+        "text": "Duidelike verduidelikings, ’n deurdagte benadering en bemoediging wat jou omstandighede respekteer. Ons belowe nie kitsoplossings of een volmaakte pad vir almal nie.",
+        "sha256": "ceda27598cf822762c9bca321b1398283cbc35d698f089a59ea167ad900fb9e9"
+      }
+    },
+    {
+      "key": "public.about.faq.title",
+      "family": "faq",
+      "class": "B",
+      "en": {
+        "text": "A few common questions",
+        "sha256": "5e6611d1c3302ea258806c0bd98033687b7cca37d8481f2a6e18b4757961fd3a"
+      },
+      "af": {
+        "text": "’n Paar algemene vrae",
+        "sha256": "798e6ae2f829630fe1e5e4929a542f4ba0dbd44114080450bd5ec6b9fa1d2272"
+      }
+    },
+    {
+      "key": "public.about.faq.diet.question",
+      "family": "faq",
+      "class": "B",
+      "en": {
+        "text": "Is this just a diet programme?",
+        "sha256": "b9060b7b3f89a08d5040e05fbd534d4c862b85fd177d94f202f17d84d11a1868"
+      },
+      "af": {
+        "text": "Is dit net ’n dieetprogram?",
+        "sha256": "a2b74a9c7c1d3997c2f3e504603e6caf8a1db23dfbef5acc6cfa0f59188acda6"
+      }
+    },
+    {
+      "key": "public.about.faq.diet.answer",
+      "family": "faq",
+      "class": "B",
+      "en": {
+        "text": "No. Our approach looks beyond food choices to temperament, daily habits and general wellbeing. Any particular programme or service has its own scope and access requirements.",
+        "sha256": "829bb9c0bf4701bcc1f2605efec288b18df06ef095ef8c724474b707cb61253e"
+      },
+      "af": {
+        "text": "Nee. Ons benadering kyk verder as koskeuses en sluit temperament, alledaagse gewoontes en algemene welstand in. Enige spesifieke program of diens het sy eie omvang en toegangsvereistes.",
+        "sha256": "dc60af42034154b852abe7a3f073fd297aec24d5169784085f9e89ab94f85562"
+      }
+    },
+    {
+      "key": "public.about.faq.temperament.question",
+      "family": "faq",
+      "class": "B",
+      "en": {
+        "text": "Do I need to know my temperament before I can explore?",
+        "sha256": "5cfa71d751924999165b46db02a599ecd6e267ba32176ee38781f9df608c309b"
+      },
+      "af": {
+        "text": "Moet ek my temperament ken voordat ek kan rondkyk?",
+        "sha256": "ab316f36b643d1719c41d535dbaafb2a9b0d91a68b66e905069e5ebf8a5868db"
+      }
+    },
+    {
+      "key": "public.about.faq.temperament.answer",
+      "family": "faq",
+      "class": "B",
+      "en": {
+        "text": "No. You can explore public information without completing an assessment. Access to any assessment or tailored experience depends on what is available and its requirements.",
+        "sha256": "bb004284d718b32e4abca68ee04fd0b9385e75e57a349a7f5c3322df4802e1ea"
+      },
+      "af": {
+        "text": "Nee. Jy kan openbare inligting verken sonder om ’n assessering te voltooi. Toegang tot enige assessering of aangepaste ervaring hang af van wat beskikbaar is en die vereistes daarvoor.",
+        "sha256": "89d17a40d647b3f5050c48bd6a4169d7038ac25ae8994f0c797bf52fe91b932b"
+      }
+    },
+    {
+      "key": "public.about.next.title",
+      "family": "next",
+      "class": "B",
+      "en": {
+        "text": "Keep exploring",
+        "sha256": "5dac0b47f5529b70e77633f3c54c99c155af11ff9185f5fd88a80f2765c3eccc"
+      },
+      "af": {
+        "text": "Verken verder",
+        "sha256": "7be9aac4a460022b5952a2980fd3b915774b826648bcd433cae482743a9db036"
+      }
+    }
+  ],
+  "reuse_existing_keys_unchanged": [
+    "public.home.temperament.title",
+    "public.home.temperament.body",
+    "public.home.faq.audience.answer",
+    "public.home.faq.browse.question",
+    "public.home.faq.browse.answer",
+    "public.home.faq.care.question",
+    "public.home.getting_started.body",
+    "public.home.availability.section.title",
+    "public.home.availability.section.body",
+    "public.entry.safety.body",
+    "shared.navigation.home",
+    "shared.navigation.create_account",
+    "shared.navigation.help"
+  ],
+  "composition_notes": [
+    "The About page uses the newly proposed intro plus the already approved public.home.temperament.title/body for the temperament explainer; no duplicate translation key.",
+    "The already approved public.entry.safety.body remains the exact general wellness/medical-care boundary; no new clinical or urgent-care claims are drafted here.",
+    "For age, browsing and availability states, compose the exact approved public.home FAQ and availability keys rather than creating near-duplicates.",
+    "Faith wording belongs in a lower-priority supporting section, not the prominent hero, and does not imply any religious requirement to register.",
+    "The book is identified as content foundation; no unverified authorship, qualification, service availability, launch schedule, pricing or outcomes are claimed.",
+    "Do not use public.entry.launch.body as prominent About intro without separate owner review; its older Christian/Christelike emphasis remains unchanged in the existing copy registry."
+  ],
+  "presentation_guards": [
+    "Owner-approved exact copy may be considered for bounded non-production development only after canonical integration; separate implementation and runtime gates remain.",
+    "Do not display features, paid assessments, personalised plans, professionals or programme benefits as already available.",
+    "Do not present a 4-colour temperament reflection as diagnosis, clinical entitlement or a completed paid digital assessment.",
+    "No silent fallback for required EN/AF language presentation.",
+    "Only show sign-up links where the owning Identity implementation confirms availability.",
+    "Do not add team bios, qualifications, customer testimonials, success percentages, health claims, clinical advice or legal claims without distinct evidence and appropriate review.",
+    "Existing governing product and safety sources override any candidate wording."
+  ],
+  "explicitly_excluded": [
+    "Application implementation, source routing, runtime eligibility, public/production release, and merge authorisation. A content-only PR is separately authorised by the owner.",
+    "New health or safety warning text, clinical claims, guarantees or pricing",
+    "Final brand naming decision, SEO/social metadata and editorial article bodies"
+  ],
+  "verified_main_sha": "fbfc85271cdc5021b388d1c908eade0279b0f850",
+  "source_candidate": {
+    "filename": "FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+    "sha256": "9d0a2ae3659308a9adbc95041ce7182dcbdc364ecec5647aff82aa85a7fccf15",
+    "source_status": "CANDIDATE_NOT_OWNER_APPROVED"
+  },
+  "approval": {
+    "approved_on": "2026-11-17",
+    "decision": "All 31 new EN/AF semantic keys (62 strings) approved as-is, with 13 existing semantic keys reused unchanged.",
+    "authority": "Direct content owner approval in conversation",
+    "pr_creation_authorisation": "Explicit owner authorisation to open a content-only PR; no merge or implementation authorisation."
+  }
+}
