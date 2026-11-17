@@ -221,7 +221,16 @@ defmodule NewYou.Proof.TB001IntegrationTest do
     assert broken["verdict"] == "FAIL"
     assert broken["invariant_id"] == "p805.post_commit_recovery"
     assert broken["cut_point"] == "transaction.after_commit"
-    assert "assertion.failed" in broken["reason_codes"]
+
+    failed_cases =
+      for entry <- artifact["results"],
+          item <- entry["cases"],
+          item["status"] != "not_run" and item["verdict"] != "PASS",
+          do: Map.take(item, ["case_id", "status", "reason_codes"])
+
+    assert "assertion.failed" in broken["reason_codes"],
+           "negative proof stopped before the intended callback: #{inspect(failed_cases)}"
+
     assert artifact["cleanup"]["verdict"] == "PASS"
     assert :ok = NewYou.Proof.Result.validate(artifact, mode: :tb001)
     if status == 2, do: assert("source.dirty" in artifact["reason_codes"])

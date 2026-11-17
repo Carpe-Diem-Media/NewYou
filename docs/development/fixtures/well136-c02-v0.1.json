@@ -1,0 +1,315 @@
+{
+  "version": "WELL-136-C02-BROWSER-v0.1",
+  "status": "development_approved",
+  "scope": "bounded WELL-136 non-production browser development only",
+  "source_packet_sha256": "254172559424c0cc17f3e36627eb14b9cf6a186effdac099a39e77ba5edc8e2d",
+  "derivation": "Exact table text from attributable Plane approval; this derived file is not the original 22259-byte approval packet.",
+  "approval_comments": [
+    "b1d747b2-6855-4b83-8e43-725ab16adda2",
+    "3a064b46-5e02-4426-93ac-ea23d24f5911",
+    "b26de88a-7c76-4977-8d44-3f121373dd61",
+    "b2b71975-302f-49a3-8956-899db86756f7",
+    "4f40a60f-74b6-4f2f-8c36-18b787504119"
+  ],
+  "entries": {
+    "identity.login.forgot_password": {
+      "class": "B",
+      "en": {
+        "text": "Forgot your password?",
+        "bytes": 21,
+        "sha256": "afd25fdf17c7f534649b98afa8673ef6c78d83355950192912a5cadcbd56eb39"
+      },
+      "af": {
+        "text": "Wagwoord vergeet?",
+        "bytes": 17,
+        "sha256": "735a5a9a5f945a2a3a93557fcce3af2a7d96f428b15e2b34456e9ae5c0b76977"
+      }
+    },
+    "identity.password_reset.navigation.back_to_login": {
+      "class": "B",
+      "en": {
+        "text": "Back to login",
+        "bytes": 13,
+        "sha256": "3e3806ff17302cbacbd9a4d29022558ed71334907a93083490ca2bf2dcb176b3"
+      },
+      "af": {
+        "text": "Terug na die aanmeldbladsy",
+        "bytes": 26,
+        "sha256": "7483b4843be10667a15a00cbdbd937c0b1a5701abb886a46f18a2cc748c99f1b"
+      }
+    },
+    "identity.password_reset.request.title": {
+      "class": "B",
+      "en": {
+        "text": "Reset your password",
+        "bytes": 19,
+        "sha256": "59fa4379be1f3398d540b1330f0d7c96c62e4def43b2faba97fc1bd234e57f18"
+      },
+      "af": {
+        "text": "Wysig jou wagwoord",
+        "bytes": 18,
+        "sha256": "7ec17e0d6e483b0abebf1836bb25194e8a958678b160794e6129f050787dfeeb"
+      }
+    },
+    "identity.password_reset.request.body": {
+      "class": "B",
+      "en": {
+        "text": "Enter your email address to request a password reset link.",
+        "bytes": 58,
+        "sha256": "27d4231a7f61b6101be1715bbe4927743bd166e4d2fb5574dcc5980a9afcffd5"
+      },
+      "af": {
+        "text": "Voer jou e-posadres in om ’n skakel vir ’n nuwe wagwoord aan te vra.",
+        "bytes": 72,
+        "sha256": "f4d6df077addde99249a0b831e8c3ed34acfdc55c3b0c5f1fc1a9082020e1c7d"
+      }
+    },
+    "identity.login.email.label": {
+      "class": "B",
+      "en": {
+        "text": "Email address",
+        "bytes": 13,
+        "sha256": "f2488fd4ef4adbc6ac61300083f2c33980e48bb4bbf3c540ad760d61fc36f420"
+      },
+      "af": {
+        "text": "E-posadres",
+        "bytes": 10,
+        "sha256": "34870301420d88ae63ced4c24bee08ed1d682682c6086ed333ed04b81940c8d0"
+      }
+    },
+    "identity.password_reset.request.action": {
+      "class": "B",
+      "en": {
+        "text": "Request reset link",
+        "bytes": 18,
+        "sha256": "1b7f64657209d7c71cbe1675dd903c76510d7b7c04c280edf531b95b92fb2f8d"
+      },
+      "af": {
+        "text": "Vra ’n wagwoordskakel aan",
+        "bytes": 27,
+        "sha256": "5360f520bd668cc3c078d2348735f0b0a137f3f6db88b157e9db26f6610f07ec"
+      }
+    },
+    "identity.password_reset.request.processing": {
+      "class": "B",
+      "en": {
+        "text": "Processing your request…",
+        "bytes": 26,
+        "sha256": "5f8d425d74e72836e5fe4e74a6d367e354b5376d0b86221601164ffe36b23bad"
+      },
+      "af": {
+        "text": "Besig om jou versoek te verwerk…",
+        "bytes": 34,
+        "sha256": "f2a1ebb6ac0d8727d978ab1213ea80a29e3124e53e04ee7cf82b79131b1df926"
+      }
+    },
+    "identity.password_reset.request.accepted.title": {
+      "class": "B",
+      "en": {
+        "text": "Check your email",
+        "bytes": 16,
+        "sha256": "7732287944e204a9b51ad6c271126f3e0140974f66936e21caed22f0d9c792fd"
+      },
+      "af": {
+        "text": "Gaan jou e-pos na",
+        "bytes": 17,
+        "sha256": "cd360e7684225c59df6ae28f953a2ba56b79315b52041bd307867487bb66c043"
+      }
+    },
+    "identity.password_reset.request.accepted.body": {
+      "class": "A",
+      "en": {
+        "text": "If a password reset link can be sent to this address, check your email. Delivery may take a little while.",
+        "bytes": 105,
+        "sha256": "b1999041ccd3658a593b6cb9e5254f372d4e8f51ef2b8d0715a451bef1e44b07"
+      },
+      "af": {
+        "text": "As ’n skakel om jou wagwoord te wysig na hierdie adres gestuur kan word, gaan jou e-pos na. Dit kan ’n rukkie neem.",
+        "bytes": 119,
+        "sha256": "67b2c8c3d2ef29e4686b551bee352fca5ea08b8f6552e8f1fde815aaaba27138"
+      }
+    },
+    "identity.password_reset.confirm.title": {
+      "class": "B",
+      "en": {
+        "text": "Choose a new password",
+        "bytes": 21,
+        "sha256": "833b8512168fcc8844457a5355c6db45c59f0f18850b1be02e636f22be9ff429"
+      },
+      "af": {
+        "text": "Kies ’n nuwe wagwoord",
+        "bytes": 23,
+        "sha256": "c27cb16de4a22e5e311ed33abbc78a6a1e7eb6a5d11f09438b0bc4f4f20425cc"
+      }
+    },
+    "identity.password_reset.confirm.password.label": {
+      "class": "B",
+      "en": {
+        "text": "New password",
+        "bytes": 12,
+        "sha256": "3dd9df4441fb348f669bdae9739d50a873549c30e3344415f6ea098d9050db81"
+      },
+      "af": {
+        "text": "Nuwe wagwoord",
+        "bytes": 13,
+        "sha256": "eeab0e887bc734a8df45cc912d17b57c44f69f2745e060933c809ecd7479f52f"
+      }
+    },
+    "identity.password_reset.confirm.action": {
+      "class": "B",
+      "en": {
+        "text": "Save new password",
+        "bytes": 17,
+        "sha256": "1a145dd7125ddedc864d511895136d8af6e3a9e727d916967b94a637b71a731c"
+      },
+      "af": {
+        "text": "Stoor nuwe wagwoord",
+        "bytes": 19,
+        "sha256": "18c39f44964a5bee09fd9d96d1d6d1ec4f0a9a5df30099807b9df3142de85a6e"
+      }
+    },
+    "identity.password_reset.confirm.processing": {
+      "class": "B",
+      "en": {
+        "text": "Updating your password…",
+        "bytes": 25,
+        "sha256": "12c040920e4bbac456f347e63123e510bd5eb40e1bbe6b1653be099bba3f203b"
+      },
+      "af": {
+        "text": "Besig om jou wagwoord te wysig…",
+        "bytes": 33,
+        "sha256": "a334696dfab045f51a7f6c94632df85b0f5d00ef3aaf22823faa4774a4b1393e"
+      }
+    },
+    "identity.password_reset.confirm.body": {
+      "class": "A",
+      "en": {
+        "text": "Only continue if you requested this password reset. If your link is valid, saving your new password will also end your existing sign-in sessions.",
+        "bytes": 145,
+        "sha256": "fde1cd4fdbfb513817f519104f0c77751af60969957ffdc9162b9340c60af0f5"
+      },
+      "af": {
+        "text": "Gaan net voort as jy self hierdie wagwoordverandering aangevra het. As jou skakel geldig is, sal die stoor van jou nuwe wagwoord ook jou bestaande aanmeldsessies beëindig.",
+        "bytes": 172,
+        "sha256": "1b6eccdefac5363cd971e56e527f4d6018e64f7a5d349eac6205ffef6ed2cf30"
+      }
+    },
+    "identity.password_reset.confirm.complete.title": {
+      "class": "A",
+      "en": {
+        "text": "Your password has been changed",
+        "bytes": 30,
+        "sha256": "d347c1068473bdb9d24faaeecab8851dc5551047b09dbfd80e8429dbd65209e3"
+      },
+      "af": {
+        "text": "Jou wagwoord is gewysig",
+        "bytes": 23,
+        "sha256": "e16df79d9a59e600761ef1b73ab9d5f95e5360130d23ec6ab47dd9becb95d92f"
+      }
+    },
+    "identity.password_reset.confirm.complete.body": {
+      "class": "A",
+      "en": {
+        "text": "Your previous sign-in sessions have been ended. Log in with your new password to continue.",
+        "bytes": 90,
+        "sha256": "3fddbe81931403e22a017ea442ca42a6ab6a18a887767234be236cd6a23aa299"
+      },
+      "af": {
+        "text": "Jou vorige aanmeldsessies is beëindig. Meld met jou nuwe wagwoord aan om voort te gaan.",
+        "bytes": 88,
+        "sha256": "86a960da53718a4b0d6e8d9f00518445a727ee71f7808a3969eb6f7a5113b43d"
+      }
+    },
+    "identity.login.submit": {
+      "class": "B",
+      "en": {
+        "text": "Log in",
+        "bytes": 6,
+        "sha256": "c189840cf7e2d6f6fdeefde1ac59dfdf50bb75642eb569b4e38a5614d6f12ac2"
+      },
+      "af": {
+        "text": "Meld aan",
+        "bytes": 8,
+        "sha256": "69a8b09db2f59e0bd846273e36db485337fad31cb1ca7169388cd4515727753f"
+      }
+    },
+    "identity.password_reset.confirm.unavailable.title": {
+      "class": "A",
+      "en": {
+        "text": "Unable to reset your password",
+        "bytes": 29,
+        "sha256": "4075c9ed73b08cbfc82ec0c09a670349def5fb9f48e4870876ccd68447486d30"
+      },
+      "af": {
+        "text": "Jou wagwoord kan nie gewysig word nie",
+        "bytes": 37,
+        "sha256": "0a630c9d75379cbf987579fbe61ca34908b49ece12d293b7c54bd5647631015c"
+      }
+    },
+    "identity.password_reset.confirm.unavailable.body": {
+      "class": "A",
+      "en": {
+        "text": "This link may have expired, been used already, or is no longer available. Request a new link to try again.",
+        "bytes": 106,
+        "sha256": "78a49e2e1f68a79ebc29bbf6c21cff5a3e3fa89986ac2e126d64759154b34938"
+      },
+      "af": {
+        "text": "Hierdie skakel het dalk verval, is reeds gebruik of is nie meer beskikbaar nie. Vra ’n nuwe skakel aan om weer te probeer.",
+        "bytes": 124,
+        "sha256": "4398711723fd98bd882650f56814d0f34b801a6f6027e4e425beed3c1fe61bc4"
+      }
+    },
+    "identity.password_reset.request.again.action": {
+      "class": "B",
+      "en": {
+        "text": "Request a new reset link",
+        "bytes": 24,
+        "sha256": "6ff84c62212ae676da6284e48aefb83b1bdf637c6a0684ebd6e9ef6d6154ac04"
+      },
+      "af": {
+        "text": "Vra ’n nuwe wagwoordskakel aan",
+        "bytes": 32,
+        "sha256": "510d3daa5b9850f211c2d5237a0a80576de7891823b4e633d15bed8af61ff88e"
+      }
+    },
+    "identity.password_reset.uncertain.title": {
+      "class": "A",
+      "en": {
+        "text": "We couldn't confirm the result",
+        "bytes": 30,
+        "sha256": "2ed98d3697c84678b3f67a3af4d5d92b5ceb72254dec93a4f64470938c234b0c"
+      },
+      "af": {
+        "text": "Ons kon nie die resultaat bevestig nie",
+        "bytes": 38,
+        "sha256": "76a67172c180b649f653f36358b9664958216f3174c7956837abb8d1afa58f0b"
+      }
+    },
+    "identity.password_reset.uncertain.body": {
+      "class": "A",
+      "en": {
+        "text": "Your request may have been completed. Try logging in with your new password. If that doesn't work, you can request another reset link.",
+        "bytes": 134,
+        "sha256": "81df68f012ca4d6178e1b1ac496d7a95861072d54badb7176a7debdaf12f00cd"
+      },
+      "af": {
+        "text": "Jou versoek is moontlik reeds voltooi. Probeer met jou nuwe wagwoord aanmeld. As dit nie werk nie, kan jy ’n nuwe wagwoordskakel aanvra.",
+        "bytes": 138,
+        "sha256": "35e2dd09bf8efbbababfa284b11452e2c6b9132cae72b54736280831f7a3ffd0"
+      }
+    },
+    "identity.password_reset.service_unavailable.body": {
+      "class": "A",
+      "en": {
+        "text": "Password reset isn't available right now. Please try again later.",
+        "bytes": 65,
+        "sha256": "19d0fca430837e704061c00b03cb8e8ad17e3b43241ad05706f011993657f29a"
+      },
+      "af": {
+        "text": "Jy kan nie tans jou wagwoord wysig nie. Probeer asseblief later weer.",
+        "bytes": 69,
+        "sha256": "d7366ad567f524c37ef56b4804ebdc14259123afafd321bf72076a9a313183e9"
+      }
+    }
+  }
+}

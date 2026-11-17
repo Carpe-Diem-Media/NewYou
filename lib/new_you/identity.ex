@@ -107,14 +107,26 @@ defmodule NewYou.Identity do
 
   defp recovery_action(_, _), do: {:error, :recovery_unavailable}
 
-  @doc "Request a password-reset link through the neutral, bounded development boundary. No Account or Session is created."
+  @doc "Request a historical P8-12 password-reset link through the neutral, bounded development boundary. No Account or Session is created."
   @spec request_password_reset(term(), term(), term()) :: :ok
   def request_password_reset(email, locale, operation_id),
     do: NewYou.Identity.PasswordReset.request(email, locale, operation_id)
 
-  @doc "Explicitly replace a password using current reset proof. A retry of the committed confirmation operation returns its prior outcome without applying new input. No login occurs."
+  @doc """
+  Request a reset link in an explicit, server-selected development context.
+
+  WELL-136 callers must select `:well136`; missing Phase-9 Content eligibility
+  never falls back to P8-12. Context is not selected from participant form input.
+  All outcomes are neutral, including invalid contexts. No Account or Session is
+  created, and an unchanged operation retry never creates another obligation.
+  """
+  @spec request_password_reset(term(), term(), term(), :p8_12 | :well136) :: :ok
+  def request_password_reset(email, locale, operation_id, context),
+    do: NewYou.Identity.PasswordReset.request(email, locale, operation_id, context)
+
+  @doc "Explicitly replace a password using current reset proof. A committed-operation retry returns its prior outcome without applying new input. An unconfirmed transaction returns reset_uncertain, never a confirmed failure. No login occurs."
   @spec reset_password(term(), term(), term()) ::
-          {:ok, :reset | :already_reset} | {:error, :reset_unavailable}
+          {:ok, :reset | :already_reset} | {:error, :reset_unavailable | :reset_uncertain}
   def reset_password(proof, password, operation_id)
       when is_binary(proof) and byte_size(proof) in 1..8192 do
     Account
@@ -126,10 +138,12 @@ defmodule NewYou.Identity do
     |> Ash.run_action()
     |> case do
       {:ok, outcome} when outcome in [:reset, :already_reset] -> {:ok, outcome}
-      _ -> {:error, :reset_unavailable}
+      {:ok, outcome} when outcome in [:reset_unavailable, :reset_uncertain] -> {:error, outcome}
+      {:error, %Ash.Error.Invalid{}} -> {:error, :reset_unavailable}
+      _ -> {:error, :reset_uncertain}
     end
   rescue
-    _ -> {:error, :reset_unavailable}
+    _ -> {:error, :reset_uncertain}
   end
 
   def reset_password(_, _, _), do: {:error, :reset_unavailable}

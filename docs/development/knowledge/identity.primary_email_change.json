@@ -9,7 +9,7 @@
   ],
   "implementation_revision": {
     "git_sha": "a2fd19007ad855c5d098f84197f33be0afd31d6d",
-    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged."
+    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1357,7 +1357,7 @@
       "id": "identity_api",
       "path": "lib/new_you/identity.ex",
       "symbol": "def request_primary_email_change",
-      "sha256": "2ccafe5ad95aff2ef46b468e11debc580a402625daddd5b133b6684553399137"
+      "sha256": "0a2fc564c87ab0e36a46d055e25270cdc12f9b86d5ac4628dbf59a0180d20fbe"
     },
     {
       "id": "account",
@@ -1387,25 +1387,25 @@
       "id": "password_reset",
       "path": "lib/new_you/identity/password_reset.ex",
       "symbol": "defp revoke_sessions",
-      "sha256": "464342751261e0c0e6ee37e265eb4ce50b6b1265982dfaa82599d9e1ded2b473"
+      "sha256": "f5f2e615c9ef51de0eba319c9bf38d713d2cd318c76d1445f4fb80216be342ed"
     },
     {
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def establish_primary_email_change_confirmation",
-      "sha256": "f67d7daa27c991b86d2cb98f92b2823689e86fcb35fe7e0e59c7ce0cd8bf3d90"
+      "sha256": "b1dff58da7f739e9baf68f3ff33f9e4659662aa5e07dc64295bdd29d2ef99d54"
     },
     {
       "id": "message_intent",
       "path": "lib/new_you/communications/message_intent.ex",
       "symbol": "email_change_confirmation",
-      "sha256": "c0c5d3743c9d833a887a8ccc9a3d1a21adceedf865590566cedc8675866cb42a"
+      "sha256": "e18bbffa7c33a57d060d717898aa6b4ada142a2a6a38bff8a4e19eadd1cbad37"
     },
     {
       "id": "executor",
       "path": "lib/new_you/communications/executor.ex",
       "symbol": "source_eligibility",
-      "sha256": "f5f3c35b6cae76a397f6d1b138e803a2215f8a99a167c1ca96f79c0c198b6b1a"
+      "sha256": "14d7b714ad7620df1edef309f7d616c5efb47f9987e36d1d0c43d2132c11619d"
     },
     {
       "id": "content",
