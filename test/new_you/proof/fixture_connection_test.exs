@@ -48,6 +48,24 @@ defmodule NewYou.Proof.FixtureConnectionTest do
     end)
   end
 
+  test "a timed out bounded worker does not disconnect the fixture owner" do
+    capture_log(fn ->
+      P805.with_fixture(fn ->
+        callback =
+          NewYou.Proof.RegistrationSeam.inherit(fn ->
+            Repo.query!("SELECT pg_sleep(1)", [], timeout: 25)
+          end)
+
+        task =
+          Task.Supervisor.async_nolink(NewYou.Identity.MagicLogin.RequestSupervisor, callback)
+
+        assert {:exit, _reason} = Task.yield(task, 2_000)
+        assert %{rows: [[1]]} = Repo.query!("SELECT 1")
+        refute Repo.in_transaction?()
+      end)
+    end)
+  end
+
   test "fixture guardian retries a transient teardown failure" do
     attempts = :atomics.new(1, [])
     parent = self()
