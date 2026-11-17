@@ -440,7 +440,14 @@ defmodule NewYou.ManagedSlotProbe do
 
   defp valid_email?(email), do: is_binary(email) and Regex.match?(@email, email)
 
-  defp emit(prefix, receipt), do: IO.puts(prefix <> Jason.encode!(receipt))
+  @doc false
+  def emit(prefix, receipt) do
+    IO.puts(prefix <> Jason.encode!(receipt))
+    # DevCore retains a secret-sized suffix between output chunks. This public,
+    # fixed padding lets a complete non-secret receipt reach the controller
+    # before the probe waits for its next input. NewYou job secrets are 64 bytes.
+    IO.puts(String.duplicate(".", 256))
+  end
 
   defp fail(reason) do
     IO.puts(:stderr, "MANAGED_SLOT_ERROR=#{reason}")

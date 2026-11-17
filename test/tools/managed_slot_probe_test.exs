@@ -6,6 +6,14 @@ Code.require_file("../proof/managed_slot_probe.exs", __DIR__)
 defmodule NewYou.ManagedSlotProbeTest do
   use ExUnit.Case, async: true
 
+  test "a receipt line survives the managed stream's secret lookbehind" do
+    output =
+      ExUnit.CaptureIO.capture_io(fn -> NewYou.ManagedSlotProbe.emit("READY=", %{count: 1}) end)
+
+    forwarded = binary_part(output, 0, max(byte_size(output) - 64, 0))
+    assert forwarded =~ "READY={\"count\":1}\n"
+  end
+
   test "a fresh script invocation rejects DEV before reading input or starting a Repo" do
     expression = "Mix.start(); Code.require_file(\"test/proof/managed_slot_probe.exs\")"
 
