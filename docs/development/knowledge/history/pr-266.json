@@ -1,0 +1,39 @@
+{
+  "base_sha": "07ba77b4a93e469dda16b3428334b5ca8aab8067",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/266/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/266/commits",
+  "files": [
+    {
+      "blob": "02771ee8df4900a2e505e4eb21c41a42d646fa02",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".agents/skills/pr-merge-closeout/SKILL.md",
+      "sha256": "e622d327045e26e2b43a1ea802a71a92f269b33fb9865176b196a4f5e29013f4",
+      "status": "added"
+    },
+    {
+      "blob": "655b98d23a8b6ef4c55ca1fa2c766c808e01aed0",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": ".agents/skills/pr-merge-closeout/agents/openai.yaml",
+      "sha256": "b7814bb1da2ff355ff98455e3c20c0b6c086de2f4926f00b04d4d18a99e27066",
+      "status": "added"
+    }
+  ],
+  "migrations": [],
+  "pr": 266,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/266",
+  "range_base_sha": "07ba77b4a93e469dda16b3428334b5ca8aab8067",
+  "schema_version": 1,
+  "symbols": [],
+  "tests": [],
+  "tickets": [
+    "WELL-150"
+  ]
+}
