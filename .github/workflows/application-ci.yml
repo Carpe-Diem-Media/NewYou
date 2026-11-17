@@ -23,6 +23,9 @@ permissions:
 
 env:
   MIX_ENV: test
+  # The runner owns its ephemeral legacy-shaped TEST database. Local worktrees
+  # require live managed markers once SLOT_POOL is declared.
+  NEW_YOU_DATABASE_MODE: ci
 
 jobs:
   mix-check:

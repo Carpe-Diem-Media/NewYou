@@ -1,3 +1,5 @@
+{:ok, _postgresql_version} = NewYou.Proof.Result.capture_postgresql()
+
 input = IO.gets("") |> Jason.decode!()
 
 Application.put_env(

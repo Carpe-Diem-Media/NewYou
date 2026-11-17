@@ -1,3 +1,5 @@
+{:ok, _postgresql_version} = NewYou.Proof.Result.capture_postgresql()
+
 [mode, obligation_id] = System.argv()
 :ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo, sandbox: false)
 

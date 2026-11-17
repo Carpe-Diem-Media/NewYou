@@ -1,3 +1,5 @@
+{:ok, _postgresql_version} = NewYou.Proof.Result.capture_postgresql()
+
 # Synthetic P8-17 restart probe. Credentials arrive only through the anonymous
 # pipe and the proof-purpose switch exists only in this fresh test VM.
 input = IO.gets("") |> Jason.decode!()

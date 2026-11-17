@@ -1,0 +1,171 @@
+# WELL-147 managed local slots
+
+Implement the reviewed DevCore consumer contract after WELL-145 resulting main
+`1a46dcc54d3ac37fa554955e20c45555c0e08f5b`. NewYou base is
+`87a9c6306cc08bea5accb5518692842c115a463b`. This branch owns no WELL-144 or
+WELL-136 changes. This plan itself grants no installation, activation, existing
+ACL change, database reset or destructive cleanup authorization. Separate owner
+authorizations and their observed results are recorded below.
+
+## Implementation sequence
+
+1. Extend LocalConfig at its existing pure environment seam. Verify a complete
+   live managed job through canonical DevCore, then compare every endpoint,
+   identity, generation, worktree, profile and HTTP assignment. Declared managed
+   mode rejects absent markers, including an older installed executable's legacy
+   environment. Preserve deliberate legacy consumers and the existing CI-owned
+   database contract. Production retains its separate path.
+2. Reuse Proof.Result's existing LocalConfig comparison. Audit actual child BEAM,
+   browser, migration, restart and production-probe launchers. Preserve loopback
+   binds and ephemeral helper ports. Prove actual child database identity.
+3. Add the exact opt-in pool declaration, source/version preflight and narrow
+   wrappers. Coordinate mutable builds per worktree, without serializing separate
+   worktrees or isolated focused tests. Keep secrets with DevCore.
+4. Prepare toolchain/input-keyed shared core PLTs behind a cache-specific lock,
+   use worktree-local mutable copies for Dialyxir, and release the shared lock
+   before analysis or database suites. Preserve CI cache behavior.
+5. Maintain one source-linked capability map and operational instructions.
+   Preserve legacy booking instructions until activation and proof finish.
+6. Make code and exact installation/cleanup/ACL procedures reviewable before
+   requesting those separate authorizations. Then run the authorized two-worktree
+   synthetic business-fixture, failed-retain, clean-reuse, child and PLT proofs,
+   measure expensive-suite concurrency, and complete unchanged final gates/OCR,
+   exact-head CI, independent review and resulting-main reconciliation.
+
+## Behaviour and proof matrix
+
+Risk is HIGH for database identity and cleanup propagation. Reuse DevCore's
+reviewed lifecycle and ownership authority; introduce no parallel allocator or
+application database owner. This infrastructure change adds no business schema,
+action or entitlement. Ash is not applicable to configuration validation, but
+real synthetic business fixtures must use existing owning Ash interfaces.
+
+- Managed identity: start with a valid complete live-verifier response and
+  canonical binding. Accept it; independently vary each marker, endpoint,
+  database/role, slot/port and profile. Reject without database connection or
+  secret disclosure. Cover stale/failed/malformed verification and missing
+  markers under declared opt-in. Test injected external verifier failures only
+  at that boundary. Run the pure LocalConfig ExUnit file with pinned Elixir;
+  this proof needs no Repo, test-helper startup or shared TEST access.
+- Legacy compatibility: preserve exact DEV/TEST targets and existing worktree
+  port restrictions only in deliberately supported legacy mode. CI retains its
+  fixed disposable allocation. A partial managed context always rejects,
+  regardless of compatibility mode. Verify old-DevCore failure before any
+  NewYou database startup.
+- Child propagation: observe actual server database/current role, not just
+  strings. Verify regular tests, migrations, child BEAMs, restart, production
+  probes and browser paths. Missing or substituted context must reject. Preserve
+  helper port 0 and loopback locality.
+- Cache concurrency: distinct worktrees have local builds/deps/project PLTs.
+  Concurrent cold requests serialize shared preparation only; after preparation
+  independent analyses overlap and have local mutable cores. Faults release
+  locks safely or retain an unavailable incomplete cache, never publish dirty
+  content. Existing active caches are preserved.
+- Real data isolation/reuse: after exact target authorizations, migrate each
+  fresh generation from its branch, commit distinct synthetic fixtures through
+  business interfaces, prove cross-slot denial and absence of the other marker.
+  Retain a deliberate failure and its logs; prove exact release/reacquisition
+  has no previous rows and stale credentials cannot access the new generation.
+- Final proof: unchanged `mix check` and `mix check.deep`, current handoff helper,
+  capability/history checks, bounded local OCR with disclosed coverage/errors,
+  exact-head hosted CI, owner review and independent resulting-main binding.
+  No production/load/restore experiment is implied by this local tooling task.
+
+## Initial observed baseline
+
+`mise current` resolves OTP 29.1.2, Elixir 1.20.5-otp-29 and Node 26.2.0.
+`mise exec -- elixir --version` confirms OTP 29 / Elixir 1.20.5.
+`mise exec -- elixir -r lib/new_you/local_config.ex -e 'ExUnit.start(); Code.require_file("test/new_you/local_config_test.exs")'`
+passed all six existing pure tests. No Mix/Repo startup or database operation ran.
+Read-only listener inspection found port 4237 occupied on loopback; it is
+unavailable. No open holder was reported for the legacy lock at that instant.
+Neither observation authorizes use of shared TEST or reclaiming a listener.
+
+## Source checkpoint evidence
+
+NewYou `origin/main` was refreshed and remained
+`87a9c6306cc08bea5accb5518692842c115a463b` before this source checkpoint.
+Checks apply to this branch's inspected source bytes, not a final PR candidate.
+
+- `mise exec -- elixir -r lib/new_you/local_config.ex -e 'ExUnit.start(); Code.require_file("test/new_you/local_config_test.exs")'`
+  passed 18 tests. The initial managed behavior tests failed for absent guards
+  before implementation. Final coverage includes all 20 receipt-bound ports,
+  stale/partial/substituted context, strict endpoint identities and deliberate
+  legacy/CI compatibility. It starts no Repo.
+- `python3 -m unittest tests.test_local_session tests.test_local_plt_cache tests.test_foundation_lane_routing tests.test_phase8_proof_workflow -v`
+  passed 64 tests. Admission and cache tests use temporary metadata and owned
+  temporary processes. They cover concurrent cache preparation, private copies,
+  failed publication, tamper rejection, old-version rejection, redaction,
+  same-worktree exclusion, cancellation and real Mise/Bash exec descriptor
+  inheritance until a launcher-orphaned child finishes. They do not provision DBs.
+- `mise exec -- mix deps.get` passed without changing `mix.lock`.
+  `mise exec -- mix deps.compile jason dialyxir` passed; compiling those selected
+  dependencies before Erlex produced undefined-Erlex warnings. The later complete
+  `mise exec -- mix compile --warnings-as-errors` passed and compiled the actual
+  application and task. Neither compile starts the application or Repo.
+- `mise exec -- elixir -pa _build/dev/lib/jason/ebin -pa _build/dev/lib/dialyxir/ebin -e 'Mix.start(); Code.require_file("mix.exs"); Code.require_file("lib/mix/tasks/local_dialyzer.ex"); ExUnit.start(); Code.require_file("test/tools/dialyzer_cache_test.exs")'`
+  passed seven pure task/configuration tests. This also runs the nine-test Python
+  cache adapter suite. Missing-input guards had observed failing tests before
+  implementation. No PLT analysis or database is part of these tests.
+- The changed Elixir paths passed `mise exec -- mix format --check-formatted`
+  after removing one extra final newline reported by its first check.
+- `mise exec -- /usr/bin/time -v mix dialyzer --plt` passed real cold preparation
+  and private project/core PLT creation, wall time `2:58.40`, maximum RSS `3692448`
+  KiB, no swaps. It used the new cache namespace without a TEST lease or legacy
+  TEST/PLT lock. This is not the final TEST-profile `mix check.deep` gate.
+- `mise exec -- /usr/bin/time -v mix dialyzer --format dialyxir` failed with 20
+  DEV-profile warnings. Two were introduced unknown-function warnings from the
+  new task calling Dialyxir, which was absent from the project PLT. Focused
+  configuration tests first failed, then passed after adding the already pinned
+  `:dialyxir` to `plt_add_apps`. Fresh analysis of that changed input, the same
+  command, failed with 18 warnings, none from LocalDialyzer. Communications and
+  Privacy warnings remain unclassified against base and the required TEST-profile
+  gate. No warnings were suppressed and neither analysis is a passing check.
+
+Temporary native review identified a conditional CI-compatibility concern.
+`NEW_YOU_DATABASE_MODE=ci` plus both CI flags is deliberately supported legacy
+configuration, not authentication of hosted origin. The local wrapper rejects
+that override, and partial managed markers always reject. The operating guide
+forbids using those flags to bypass local allocation. Independent Master Gate
+must assess this documented boundary; author judgment is not reviewer approval.
+The review's descriptor-inheritance uncertainty has a passing real exec-chain
+regression, but real DevCore supervisor failure remains covered by the separate
+allocator contract and still requires the application pilot.
+
+## Authorized workstation checkpoint
+
+The owner separately approved the exact 1.2.0 source artifact installation,
+the manifest-bounded disposable-generation contract and the guarded legacy TEST
+ACL REVOKE in this task on 2026-11-17. The installer observed executable SHA-256
+`e76cb9206d6e00226ab9549bfa2a342c4da867f2a7d21956240035b1bf65d93a`
+and retained a backup matching previous 1.1.0 SHA-256
+`df7dd3263197d33416b99699b5f09ee2b37bb4a45f55cc2a7bb4164dbbff9568`.
+The working source/installer files were compared with resulting main before use.
+
+The guarded transaction changed only
+`REVOKE CONNECT ON DATABASE new_you_test FROM PUBLIC;`, with TEST container
+identity, database OID `4687800`, owner identity, original ACL, NOCREATEDB,
+NOSUPERUSER, zero memberships and no unknown connection roles checked before
+mutation. A private receipt preserves original ACL and before/after identities.
+Owner CONNECT remained true, PUBLIC CONNECT became false, existing owner
+connections remained and no rows or databases were removed. Authenticated DEV
+and TEST `mise exec -- devcore-project doctor` passed after installation/ACL.
+
+The installed `slots manifest` contract equals reviewed digest
+`3fb71d0ed24dfc4ab8ef75226916da624f5ca4a18343695a154733eb2a93e556`.
+It reports 24 logical CPUs, `33562959872` memory bytes, provisional heavy cap two
+and occupied port `4237`. No listener was stopped. Enable still requires the
+owner's authenticated exact GitHub approval comment. No managed database has
+been provisioned, and no routine cleanup has run on this workstation.
+
+## Remaining verification
+
+WELL-147 is not review-ready. Required live migrations, two-worktree committed
+business fixture isolation, child/restart/browser/prod-probe execution,
+intentional failed test retention and fresh clean reuse remain unverified.
+Real independent analysis concurrency and full-suite resource measurements are
+also pending. After the authenticated manifest approval enables the bounded
+pilot, finish that proof, then run the stable final `mix check` and
+`mix check.deep` through the required executor. Only passing local gates permit
+bounded OCR, authenticated separate NewYou PR/history generation, exact-head CI
+and independent Master Gate. No NewYou merge or Done claim is made here.

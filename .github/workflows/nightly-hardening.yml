@@ -13,6 +13,7 @@ permissions:
 
 env:
   MIX_ENV: test
+  NEW_YOU_DATABASE_MODE: ci
 
 jobs:
   foundation-full:

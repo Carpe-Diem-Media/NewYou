@@ -1,3 +1,5 @@
+{:ok, _postgresql_version} = NewYou.Proof.Result.capture_postgresql()
+
 defmodule NewYou.Proof.P816Restart do
   @moduledoc false
 

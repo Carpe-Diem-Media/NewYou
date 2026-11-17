@@ -2,6 +2,23 @@
 
 NewYou uses existing shared DEV and TEST PostgreSQL allocations. Each checkout/worktree has its own Git-ignored `.env.dev.local` and `.env.test.local` files. A new worktree may lack those files without any database or credential fault. The T3 Code worktree bootstrap may render them before an agent starts; verify in the actual worktree regardless.
 
+WELL-147 adds an opt-in managed TEST pool through `SLOT_POOL=.devcore/slots.json`.
+It is not activated by this source change. After the separately approved installation,
+cleanup contract and legacy TEST connection boundary are in place, use this worktree's
+automatic entry point:
+
+```sh
+mise exec -- tools/newyou-local test -- mix test test/new_you/local_config_test.exs
+mise exec -- tools/newyou-local test -- mix check
+mise exec -- tools/newyou-local test -- mix check.deep
+mise exec -- tools/newyou-local dev -- mix phx.server
+```
+
+See [the staged operating procedure](../docs/development/managed-local-slots.md).
+This worktree rejects old DevCore and missing managed context before Repo starts.
+Existing worktrees without the declaration retain their existing contract and
+legacy shared TEST coordination until their owners consent to migration.
+
 The canonical startup policy is in [AGENTS.md](../AGENTS.md). If doctor passes initially, proceed without render.
 
 From the current worktree root:
