@@ -48,25 +48,25 @@
       "status": "added"
     },
     {
-      "blob": "ea82eab3527f471dd37e2fb0638bc510ee80377d",
+      "blob": "3358f6937b75c0ff386e45cf5799a74bc210e574",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "docs/development/knowledge/identity.password_reset.json",
-      "sha256": "c37d0f110e089cf7fe46b408b4cf2311cc5437c9f2ba94443bc822f1f8ef04fc",
+      "sha256": "6c68f34af4654ff7f3709e067b7b2a3e7a84377d4cbc8e80f14c064398daf8f2",
       "status": "added"
     },
     {
-      "blob": "d6648c8f5de24bcb2a8697bdebeb05d6af0e546b",
+      "blob": "b1dddd2b81c9062c726269c30f32e7b4e6162abc",
       "mode": "100644",
       "old_blob": "6dc3caf67974abb254d82cbb973d338db3ed5069",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.primary_email_change.json",
       "old_sha256": "054a16cf4a4ca2247f7ac8d0015bb65bda5b4b434e80a01a079e6f659a8c1c4d",
       "path": "docs/development/knowledge/identity.primary_email_change.json",
-      "sha256": "b7b3232bf03b9393a40be4220250c949fc20ea2e97a25b736b67ba825176d328",
+      "sha256": "c9beb38e53aba865c5e4416288d9d147e1a5026183dd9a7c17e85405ee3f33cd",
       "status": "modified"
     },
     {
@@ -169,14 +169,14 @@
       "status": "modified"
     },
     {
-      "blob": "f3a93cda249ffd7eb7029918c625f7900c96ac22",
+      "blob": "07e209efc0e5a764ef0ba2d1f3475cd218bc0700",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "lib/new_you/content/password_reset_browser_copy.ex",
-      "sha256": "f59734e090290d10dea0b2ff268415e18c8bcb8a1423ac863a1c69cd90d52584",
+      "sha256": "1cf18ca159b476b402ebb77bdf3ae0182ae30e415b2bbb3dd917cf3b8710b2a1",
       "status": "added"
     },
     {
@@ -213,14 +213,14 @@
       "status": "modified"
     },
     {
-      "blob": "0f9db5d8899bbed54eb69806341272547966fa44",
+      "blob": "2a497b28ce9c783931e69d20951f7386b9a7feb4",
       "mode": "100644",
       "old_blob": "e524eb29d9a23b99af61c885eb4cd14c752ed13f",
       "old_mode": "100644",
       "old_path": "lib/new_you/identity/password_reset.ex",
       "old_sha256": "464342751261e0c0e6ee37e265eb4ce50b6b1265982dfaa82599d9e1ded2b473",
       "path": "lib/new_you/identity/password_reset.ex",
-      "sha256": "65c9fb4b9c24e936915a1639ed69e00142d4d238b158a448f65bb49d759425ca",
+      "sha256": "f5f2e615c9ef51de0eba319c9bf38d713d2cd318c76d1445f4fb80216be342ed",
       "status": "modified"
     },
     {
@@ -235,14 +235,14 @@
       "status": "modified"
     },
     {
-      "blob": "5aa47d0a353cd90fef06f3f5112ac666d2a56f2d",
+      "blob": "a7704100b855249c689a17081593ae49972c2176",
       "mode": "100644",
       "old_blob": "6396fa3dda39a0c2a337c1c2a8644b81e8bf8718",
       "old_mode": "100644",
       "old_path": "lib/new_you_web/controllers/password_reset_controller.ex",
       "old_sha256": "58b350a6b32964beb7dac6541e2f69095355f33ab89484f4df9c20cae35e0984",
       "path": "lib/new_you_web/controllers/password_reset_controller.ex",
-      "sha256": "ce34c445b571bed87264420817653d48d4353f7e51c0e58d9dc40439a74466b2",
+      "sha256": "34c17c5881843dd818be87f8d604f06c59f19f76535f014f627245355460cf19",
       "status": "modified"
     },
     {
@@ -400,14 +400,14 @@
       "status": "added"
     },
     {
-      "blob": "b16607729faa350409a847e8c04e1a8a165c1ed7",
+      "blob": "c3579d6afda7547fd69a2a49dbf74c187b0b4eb1",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/content/password_reset_browser_copy_test.exs",
-      "sha256": "3c0c95d5a62b50d6f4c12a88f0efae03d6d4cbf2b32dafd3d12455386f86abcc",
+      "sha256": "816d0a154fc3b0a6cabea9c2abcee91476a018aaecb18cff80fa961dee0a41ea",
       "status": "added"
     },
     {
@@ -499,6 +499,17 @@
       "status": "added"
     },
     {
+      "blob": "872e4465da9e0658e101dcd50ce2bfc8730eff0a",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "d5eacac00822a3eb8741f6e64536282ff24dc8df46c212d7bd79034d4467df74",
+      "status": "added"
+    },
+    {
       "blob": "8a03bc9857e0f6485ccb4f5567500924cc1bcc9a",
       "mode": "100644",
       "old_blob": null,
@@ -532,14 +543,14 @@
       "status": "modified"
     },
     {
-      "blob": "6c1da154ee6541c9ceb8f7586793ae9470dde297",
+      "blob": "730c9342465649fccca6970387c02996ce154e0f",
       "mode": "100644",
       "old_blob": "90a74828a60fca5dae58abebe8a894969cc708fd",
       "old_mode": "100644",
       "old_path": "test/support/proof/registration_seam.ex",
       "old_sha256": "d3d3268ae5d2c5b8bfd92970f009b902151a89dda438a7e6382fd1278fc49cf2",
       "path": "test/support/proof/registration_seam.ex",
-      "sha256": "7d96fce3a39c548f2eb7be1edfdde7fe3c83816c3fc3bbc3e88a946227e42ac9",
+      "sha256": "431c99c9274aa7fadc1539f80210356beeb9f90853f540d89c886e8688a60ad2",
       "status": "modified"
     },
     {
@@ -748,88 +759,11 @@
     },
     {
       "arity": null,
-      "change": "added",
-      "kind": "module",
-      "module": "NewYou.Content.PasswordResetBrowserCopy",
-      "name": null,
-      "old_sha256": null,
-      "path": "lib/new_you/content/password_reset_browser_copy.ex",
-      "sha256": "ea2677d828e3ce2ad38eaf426cb61d7fba8b9d39bc1b18eebb1d51650eb9740e",
-      "status": "parsed"
-    },
-    {
-      "arity": 0,
-      "change": "added",
-      "declaration": "def",
-      "kind": "function",
-      "module": "NewYou.Content.PasswordResetBrowserCopy",
-      "name": "artifact_path",
-      "old_sha256": null,
-      "path": "lib/new_you/content/password_reset_browser_copy.ex",
-      "sha256": "b7defb41d7767556c6ea069b87fedbad988c4e9f3ffccd44bfc6f636eeef5b43",
-      "status": "parsed",
-      "visibility": "public"
-    },
-    {
-      "arity": 0,
-      "change": "added",
-      "declaration": "def",
-      "kind": "function",
-      "module": "NewYou.Content.PasswordResetBrowserCopy",
-      "name": "available?",
-      "old_sha256": null,
-      "path": "lib/new_you/content/password_reset_browser_copy.ex",
-      "sha256": "e5c6e7b88a6a4b17eac8ea61ebd6aa1093b49e8eb9482da8e0332d16f9c0a473",
-      "status": "parsed",
-      "visibility": "public"
-    },
-    {
-      "arity": 2,
-      "change": "added",
-      "declaration": "defp",
-      "kind": "function",
-      "module": "NewYou.Content.PasswordResetBrowserCopy",
-      "name": "current_file?",
-      "old_sha256": null,
-      "path": "lib/new_you/content/password_reset_browser_copy.ex",
-      "sha256": "a4b0c8cc390e6b93a997b6c698aaa07fda04e7bea64a625354e4cfd89619e3e1",
-      "status": "parsed",
-      "visibility": "private"
-    },
-    {
-      "arity": 2,
-      "change": "added",
-      "declaration": "def",
-      "kind": "function",
-      "module": "NewYou.Content.PasswordResetBrowserCopy",
-      "name": "text!",
-      "old_sha256": null,
-      "path": "lib/new_you/content/password_reset_browser_copy.ex",
-      "sha256": "f72eff09958eb90b36acc0ae0c74733db5d9adc032608567d13d96ee0045ed8c",
-      "status": "parsed",
-      "visibility": "public"
-    },
-    {
-      "arity": 1,
-      "change": "added",
-      "declaration": "def",
-      "kind": "function",
-      "module": "NewYou.Content.PasswordResetBrowserCopy",
-      "name": "valid_artifact?",
-      "old_sha256": null,
-      "path": "lib/new_you/content/password_reset_browser_copy.ex",
-      "sha256": "35c519f19d15de02d5571c33486302b08ea63917e6407e72a066b426170358b3",
-      "status": "parsed",
-      "visibility": "public"
-    },
-    {
-      "arity": null,
       "change": "unknown",
-      "kind": "unknown",
       "module": null,
       "name": null,
       "path": "lib/new_you/content/password_reset_browser_copy.ex",
-      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "reason": "module expression may generate declarations; expressions are not evaluated; module namespace may depend on aliases or macro expansion",
       "status": "unknown"
     },
     {
@@ -952,7 +886,7 @@
       "name": null,
       "old_sha256": "e2383e3a66afb4c62f0564237a57d491144687bb5eee2e0bbb0dc00bea4e29d7",
       "path": "lib/new_you/identity/password_reset.ex",
-      "sha256": "7606b6302f595d50308c9a8607843e33207531cf5c35fe66b51b915440705925",
+      "sha256": "36e4951566fe2ec38f46ec6f8cb156758bf881a0672842cda6f3c233f7e6a19a",
       "status": "parsed"
     },
     {
@@ -1007,7 +941,7 @@
       "name": null,
       "old_sha256": "62940c6df2fe0d405b04bfeac297cc94b9541529519a2814a64e627b8d08f405",
       "path": "lib/new_you_web/controllers/password_reset_controller.ex",
-      "sha256": "44228501a9867feeb4c29fc782359795e9bd8fb46c7d059fa0779c06b57551f0",
+      "sha256": "25bff29947937e8f0f6858cf3f09c4d411dd3cdd4fa2b4ab1ebd817c256cbe6b",
       "status": "parsed"
     },
     {
@@ -1084,7 +1018,7 @@
       "name": "render_context_page",
       "old_sha256": null,
       "path": "lib/new_you_web/controllers/password_reset_controller.ex",
-      "sha256": "4baf72477aec7f7b4ee8458df2aeebf38b24e46683c987f7304980d884af8246",
+      "sha256": "9bdf418b18c851f585d3fd656c8fba8d859414fd4b8659391a555eb1a27db070",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1312,7 +1246,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/content/password_reset_browser_copy_test.exs",
-      "sha256": "c08a01d44f45e8410096e917e1362fc69133b4a800fdc8849e86f9d795113666",
+      "sha256": "56382ffa0ff738c059c9d221ec874324f57d55757318aa0e00f4304d20b7d698",
       "status": "parsed"
     },
     {
@@ -1653,6 +1587,170 @@
       "arity": null,
       "change": "added",
       "kind": "module",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": null,
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "4ea05374d7138c343380b2f14631ea992e08a5bf608c5af4051a8da00417b369",
+      "status": "parsed"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "approved_result",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "a8bbe30acb59d3e70d21fdf2b9daa8907587d5a2326d4af9dea858afe1aa0425",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 6,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "assert_consequences",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "76c03990cf1f1c43d8409a63e7df389c6e856d3f14819923ec161cb7790182f1",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "assert_queued_unchanged",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "196585a1301c727b930cda937b34b69edd81844235188e62aa21751f05bef5c9",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "assert_replay_rejected",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "63cf15684f303c714b27f776319285f95c6107ab2618abb397ae3fc42eaa2e54",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "audit",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "3811741792adcbc6f3f4421472fea503774ae3f5a7037ed5943318cd0145b29d",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "copy_path",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "963a5942711d0ff84974fae8c9bb563d0d54e0ed805e1cd277e3052b8fe2eb5a",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "intent",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "e85092b6d3f3e378cb6f83944f477bfae9dff61cabd8e6fa02917755dace6cc3",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 5,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "mutation_input",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "501a3f5462cb720cfe596df39ddcee336037823ddfc0fd4610838b933cfd41fc",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 0,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "operation",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "96ff7232b6641cfb64bd611cfd8b71fecb405163bdb8556ad9d8a6257c084310",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "proof",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "e98a091f4edd76f6da75e7bdd0a5cb081f08e50dcc41d4fe5815e200a24aa14f",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYouWeb.PasswordResetRenderRaceTest",
+      "name": "snapshot",
+      "old_sha256": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "sha256": "88127daf3d3c3f88248fc9e972499cf7d210eed0b39562061f12329d8ff14999",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/new_you_web/controllers/password_reset_render_race_test.exs",
+      "reason": "module expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
+      "change": "added",
+      "kind": "module",
       "module": "NewYouWeb.Well136BrowserTest",
       "name": null,
       "old_sha256": null,
@@ -1699,7 +1797,7 @@
       "name": null,
       "old_sha256": "ee8696e2638a20d976d32c62ba5ca15568aa7622f2136df700e51c5df7622111",
       "path": "test/support/proof/registration_seam.ex",
-      "sha256": "d9391a00f7cc1f4029def0439e4793741eefd435d7bd984dd10c923bea2baae0",
+      "sha256": "a5845990ac130c25d8956abb3c6962305304cc798face5bf1d7f452a965972cb",
       "status": "parsed"
     },
     {
@@ -1712,6 +1810,19 @@
       "old_sha256": "53a78ec857efb85682a4351d951f3524864bc977f61e637b2259b857f2dd0fab",
       "path": "test/support/proof/registration_seam.ex",
       "sha256": "1b9c329592738e5fa79d2d63ec4c719da363076b36e024c6898b6f4313fbac82",
+      "status": "parsed",
+      "visibility": "public"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.RegistrationSeam",
+      "name": "reset_result",
+      "old_sha256": null,
+      "path": "test/support/proof/registration_seam.ex",
+      "sha256": "7bc09528b2661a248fca8677a3637710aef1830cc45014f45e4679e9f32186a1",
       "status": "parsed",
       "visibility": "public"
     },
@@ -1937,6 +2048,7 @@
     "test/new_you/proof/well136_browser_setup_test.exs",
     "test/new_you_web/controllers/ordinary_password_reset_test.exs",
     "test/new_you_web/controllers/password_reset_content_context_test.exs",
+    "test/new_you_web/controllers/password_reset_render_race_test.exs",
     "test/new_you_web/controllers/well136_browser_test.exs",
     "test/proof/p8_05_browser.mjs",
     "test/support/proof/p8_05.ex",
