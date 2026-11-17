@@ -173,7 +173,7 @@ and occupied port `4237`. No listener was stopped. Enable still requires the
 owner's authenticated exact GitHub approval comment. No managed database has
 been provisioned, and no routine cleanup has run on this workstation.
 
-## Remaining verification
+## Historical pre-pilot verification gap
 
 WELL-147 is not review-ready. Required live migrations, two-worktree committed
 business fixture isolation, child/restart/browser/prod-probe execution,
@@ -190,7 +190,7 @@ entry attempt exited 1 with `ERROR: slot activation and disposable cleanup autho
 It launched no Mix child and provisioned no database. The owner's chat consent is
 recorded; the missing authenticated GitHub artifact is the remaining enable guard.
 
-## Checkpoint assessment
+## Historical pre-pilot assessment
 
 Task type IMPLEMENTATION, author self-assessment of WELL-147 only. Against the
 seven live acceptance groups, PASS 0/7 in full: groups 1, 2, 3 and 6 are UNVERIFIED
@@ -214,3 +214,89 @@ against the owner's exact authenticated comment, then prove migrations, business
 fixtures, child paths, retention/reuse and heavy capacity. Finish the required
 executor gates, OCR, exact-head CI and independent Master Gate before reassessing.
 No additional routine-operation consent is needed inside the approved contract.
+
+
+## Corrective checkpoint after independent review, 2026-11-17
+
+The earlier pre-pilot sections above are historical. The authenticated approval
+artifact is now present and was accepted by installed DevCore 1.2.0. It is no
+longer the activation blocker. WELL-147 remains Changes Requested.
+
+At source `c5096feabd8c4bc482aaa0d79b87893eecf6b4f4`, based on
+`87a9c6306cc08bea5accb5518692842c115a463b`, R1-R3 have permanent regressions:
+
+- R1 duplicates the inheritable worktree lock descriptor above DevCore's heredoc
+  descriptor. The regression kills the identified Bash launcher while the actual
+  installed supervisor is blocked before job registration; admission stays locked.
+- R2 uses the distinct `new_you_ci_test` CI database and role. Direct LocalConfig
+  rejects workstation shared TEST even with both caller-controlled CI flags.
+- R3 opens cache manifests without following symlinks and without blocking, then
+  requires an owned regular file. FIFO, socket, directory, symlink, wrong-owner
+  and interrupted-copy tests preserve the resource and release the cache lock.
+
+Observed focused commands and results:
+
+- `python3 -m unittest tests.test_local_session tests.test_local_plt_cache tests.test_foundation_lane_routing tests.test_phase8_proof_workflow -q`
+  passed 72 tests. Log `/tmp/newyou-well147-corrections-final.log`.
+- The focused LocalConfig run passed 19 tests. Cache and admission counts within
+  the Python result are 14 and 11 respectively.
+- `mise exec -- env ERL_FLAGS='+S 4:4' elixir -e 'Path.wildcard("_build/test/lib/*/ebin") |> Enum.each(&Code.append_path/1); Code.require_file("test/tools/managed_slot_probe_test.exs")'`
+  passed eight pure probe tests. Log `/tmp/newyou-well147-probe-framing-green.log`.
+- `mise exec -- python3 -m unittest tests.test_capability_knowledge tests.test_knowledge_capture -q`
+  passed 34 tests in 11.755 seconds. Log `/tmp/newyou-well147-corrected-knowledge.log`.
+- During the approved pilot, `mise exec -- env ERL_FLAGS='+S 4:4' tools/newyou-local test -- mix test test/new_you/bootstrap_test.exs test/new_you/proof/result_test.exs`
+  ran current-branch migrations and passed 35 tests after two hard-coded legacy
+  identity assertions were corrected. The original failing run and its diagnosis
+  were retained before exact-target release. Log of the corrected run:
+  `/tmp/newyou-well147-managed-tests-corrected.log`. This is focused proof, not a
+  full application gate or a two-worktree isolation result.
+
+The first parallel pilot failed one private environment preparation. Its generic
+error did not retain the underlying renderer stderr. Independent temporary-state
+reproduction then proved a canonical DevCore contention bug and descriptor
+failure-path double-close. Separate WELL-154 corrects those defects in DevCore
+1.2.1 source. The correction has passing contention, parallel-binding, timeout,
+cancellation and full local suite evidence, but is not installed or integrated.
+This NewYou source now rejects installed 1.2.0 before acquiring another slot.
+
+A diagnostic staggered pilot reached two READY receipts with different databases,
+one owned synthetic account each, zero peer accounts and browser login completed.
+Its protocol then stalled behind DevCore's output redactor. The probe now frames
+its receipt output, with a regression, but no subsequent live run is claimed.
+Only the identified pilot controller was cancelled. Supervisor ownership later
+became uncertain. Acquisition was disabled and guarded recovery quarantined both
+generations. The preserved exact database targets are:
+
+- Slot 01, lease `8cc90b5589204c89a5928c7b41bc446a`, generation
+  `81b50e14dc024b308b420ef58e2ac679`, database
+  `dc_new_you_s01_g81b50e14dc024b308b420ef58e2ac679`.
+- Slot 02, lease `7b031a3f06e546578436ad5f01a67df7`, generation
+  `3d5284ee0b1945f6b36d6b166f7c41f6`, database
+  `dc_new_you_s02_g3d5284ee0b1945f6b36d6b166f7c41f6`.
+
+Each recorded runtime role is the exact database name plus `_r`. Private receipt
+`/tmp/newyou-well147-preserved-quarantine.json` and pilot directory
+`/tmp/newyou-well147-pilot-dd1cb5cb454247fc96b2795beeb92786` retain diagnostics.
+No database, secret entry or registry record was removed to bypass quarantine.
+Existing DEV, shared TEST, active agents and the port 4237 listener were preserved.
+
+Next, integrate and verify WELL-154, obtain exact authorization for its new
+executable installation, and review an exact-target reconciliation procedure.
+Do not treat the earlier 1.2.0 installation approval as covering 1.2.1. Do not
+force release or edit quarantine records. After safe workstation preparation,
+complete the automatic parallel pilot, child/restart/prod-probe paths, cross-slot
+CONNECT denial, intentional failure retention and fresh generation reuse. Measure
+heavy capacity and run the authorised final `mix check` and `mix check.deep`
+executor, then NewYou OCR, Draft PR/history, exact-head CI and fresh Master Gate.
+
+Current assessment: IMPLEMENTATION, author self-assessment of WELL-147. PASS 0/7
+live acceptance groups in full. Groups 1, 2, 3 and 6 are UNVERIFIED with partial
+proof; groups 4, 5 and 7 are NOT_DONE. Implementation Score 5/10 = requirements
+2/4 + verification 1/3 + correctness/risk 1.5/2 + handoff 0.5/1. Confidence 85%
+in this assessment, supported by focused regressions and observed managed
+migrations. Verification Status BLOCKED for the live feature. Merge readiness
+NOT_VERIFIED_FOR_MERGE. The principal uncertainty remains complete application
+isolation and recovery/reuse under real child processes. The three-point gap to
+8/10 requires the live proof and final gates above, then independent review;
+planned work earns no points. DevCore's separate evidence does not complete a
+NewYou acceptance group.

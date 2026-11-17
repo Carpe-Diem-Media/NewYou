@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "e583d5cd22c42b7850711ecf07c15a27702bd85b",
-    "semantics": "WELL-147 staged source after the DevCore prerequisite integrated. Pure configuration/admission/cache tests, source compilation and real PLT preparation passed. Two TEST-profile analyses overlapped successfully with the shared cache lock available. DEV analysis retains 18 Communications/Privacy warnings after correcting two introduced build-tool input warnings. Live NewYou managed DB/child/isolation/reuse proof, required final local executor gates, bounded OCR, hosted CI, independent Master Gate and resulting main remain unverified."
+    "git_sha": "c5096feabd8c4bc482aaa0d79b87893eecf6b4f4",
+    "semantics": "WELL-147 corrective source after independent R1-R3 review. Focused guards, actual installed descriptor handoff, cache special-file/replacement recovery and managed migrations plus 35 bootstrap/result tests passed. Initial parallel and diagnostic staggered pilots did not complete; two generations are preserved in quarantine after supervisor loss. New acquisition is disabled, and local admission now requires the separate WELL-154 DevCore 1.2.1 correction, which is not installed. Full application isolation/reuse, heavy measurements, final executor gates, bounded OCR, hosted CI and independent merge review remain unverified."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -161,7 +161,7 @@
       ]
     },
     {
-      "summary": "Before Repo startup, LocalConfig rejects partial markers, verifies the live managed job receipt, checks the exact slot and generation-derived database and role, validates environment binding, and rejects TEST partitions. Missing or mismatched managed context fails closed when the managed pool is declared.",
+      "summary": "Before Repo startup, LocalConfig rejects partial markers, verifies the live managed job receipt, checks the exact slot and generation-derived database and role, validates environment binding, and rejects TEST partitions. Missing or mismatched managed context fails closed when the managed pool is declared. Hosted CI requires both runner flags and uses its separate ephemeral database and role; caller-controlled flags cannot select workstation shared TEST.",
       "source_ids": [
         "config",
         "pool"
@@ -176,7 +176,7 @@
       ]
     },
     {
-      "summary": "Restart-child scripts invoke the existing read-only Proof.Result.capture_postgresql preflight before fixture operations. The production exclusion probe validates inherited TEST configuration while starting no Repo and keeping its private production build worktree-local. Actual managed subprocess execution remains unverified.",
+      "summary": "Restart-child scripts invoke the existing read-only Proof.Result.capture_postgresql preflight before fixture operations. The production exclusion probe validates inherited TEST configuration while starting no Repo and keeping its private production build worktree-local. The managed-slot probe requires TEST, complete managed markers, a live verified receipt and the generation-specific managed database before fixture or child operations. The two-worktree pilot stopped without passing; acquisition is disabled and both generations remain quarantined.",
       "source_ids": [
         "restart",
         "production_probe",
@@ -302,7 +302,7 @@
       ]
     },
     {
-      "summary": "NewYou keeps shared DEV fixed at its legacy endpoint and identity. Managed jobs can select TEST only through the verified generation-specific TEST receipt. TEST partitioning remains unsupported.",
+      "summary": "NewYou keeps shared DEV fixed at its legacy endpoint and identity. Managed jobs can select TEST only through the verified generation-specific TEST receipt. Hosted CI uses a separate ephemeral database and role. Caller-controlled CI flags do not authorize workstation shared TEST, and TEST partitioning remains unsupported.",
       "source_ids": [
         "config",
         "config_tests",
@@ -319,7 +319,7 @@
       ]
     },
     {
-      "summary": "The explicit ci compatibility mode preserves the runner-owned legacy allocation shape. Caller-controlled flags do not authenticate CI. The local entry point rejects this override and managed markers never fall back through it.",
+      "summary": "The explicit ci mode is accepted only when both GITHUB_ACTIONS and CI equal true, and selects the dedicated hosted-CI database and role. These flags do not authenticate hosted origin. Workstation shared TEST is rejected whenever the managed pool is declared, even if callers set both flags; partial managed markers also reject. The normal local entry point does not permit the ci override.",
       "source_ids": [
         "config",
         "config_tests",
@@ -336,7 +336,7 @@
       ]
     },
     {
-      "summary": "The PLT preparation lock is keyed to one cache identity and covers baseline validation or creation and atomic publication. The helper releases it before copying into a worktree path; Dialyzer analysis runs without holding the shared-cache lock, so separate worktrees use separate mutable PLT copies.",
+      "summary": "The PLT preparation lock is keyed to one cache identity and covers baseline validation or creation and atomic publication. The helper releases it before copying into a worktree path; Dialyzer analysis runs without holding the shared-cache lock, so separate worktrees use separate mutable PLT copies. Manifest reads require an owned regular file opened without following symlinks; FIFO, directory, socket, symlink and wrong-owner manifests reject without blocking and release the cache lock.",
       "source_ids": [
         "cache",
         "cache_tests",
@@ -375,10 +375,10 @@
       "cases": [
         "Every slot 1 through 20 selects its exact generation-specific TEST identity and verified port.",
         "Partial markers, missing or stale verification, mismatched endpoint and forged receipt fields fail closed.",
-        "Managed pool declaration rejects marker-free local context by default; only explicit CI mode retains its legacy runner contract.",
+        "Managed pool declaration rejects marker-free local context by default; hosted CI requires runner flags and binds to its separate database and role.",
         "DEV and TEST remain distinct and TEST partitions are rejected."
       ],
-      "proves": "Pure configuration decisions against injected environment and verifier functions.",
+      "proves": "Pure configuration decisions against injected environment and verifier functions, including distinct hosted-CI identity selection.",
       "limits": "Injected positive verifier responses prove pure decisions, not an actual lease. The default verifier rejects forged context against the installed executable. No Repo or database starts.",
       "source_ids": [
         "config_tests"
@@ -407,9 +407,10 @@
         "Reject incomplete or modified baselines and recover after producer failure.",
         "Concurrent thread and process requests prepare one baseline and create separate local destinations.",
         "Release the cache lock before preparation returns and pass a private staging path to the producer.",
-        "Reject a symlinked build ancestor without touching the external sentinel."
+        "Reject a symlinked build ancestor without touching the external sentinel.",
+        "Reject FIFO, directory, symlink, socket and wrong-owner manifests without blocking or retaining the cache lock."
       ],
-      "proves": "Cache helper behavior with synthetic PLT bytes, temporary paths, and process/thread contention.",
+      "proves": "Cache helper behavior with synthetic PLT bytes, temporary paths, and process/thread contention. Manifest object type and ownership rejection.",
       "limits": "Does not produce real Dialyxir core PLTs, run Dialyzer, or prove analysis succeeds on the pinned runtime.",
       "source_ids": [
         "cache_tests"
@@ -428,6 +429,24 @@
       "limits": "Does not execute the preparation task or Dialyzer analysis.",
       "source_ids": [
         "dialyzer_tests"
+      ]
+    },
+    {
+      "path": "test/tools/managed_slot_probe_test.exs",
+      "cases": [
+        "A fresh script invocation rejects DEV before reading input or starting a Repo.",
+        "The psql boundary uses supported options and keeps credentials out of arguments.",
+        "Probe validation rejects non-TEST execution, partial markers and malformed identifiers.",
+        "Input accepts only synthetic slot-proof addresses, and continuation requires a different allocated slot database.",
+        "Reject a fresh DEV invocation before input or Repo startup.",
+        "Use supported psql options and environment-only credential injection.",
+        "Forward a complete non-secret receipt before waiting behind the stream redaction buffer."
+      ],
+      "proves": "Seven pure and subprocess regression cases for probe input, marker, environment, child invocation and psql argument boundaries.",
+      "limits": "Does not prove live lease verification, real two-worktree database isolation, child receipt propagation, failure retention, clean reuse or completion of the active pilot.",
+      "source_ids": [
+        "managed_probe_tests",
+        "managed_probe"
       ]
     }
   ],
@@ -498,26 +517,29 @@
     }
   ],
   "proof_limitations": [
-    "No NewYou managed database was provisioned or contacted and no managed child command was launched. Positive live lease verification and real two-worktree fixture isolation, failed retention and clean reuse remain unverified.",
-    "Real cold preparation passed on OTP 29.1.2 / Elixir 1.20.5, first DEV 2:58.40 / 3692448 KiB max RSS; TEST preparation plus analysis 4:25.69 / 3465708 KiB, and peer TEST preparation 4:11.22 / 4087804 KiB. Two subsequent TEST analyses passed with zero errors and 17.385 seconds of overlapping analysis at source e583d5cd22c42b7850711ecf07c15a27702bd85b while the shared cache lock was free. Full-suite capacity remains unmeasured. Final pure tests: cache 10, admission 9, LocalConfig 18, Dialyzer configuration 8; compilation and 34 knowledge tests passed.",
+    "Managed migrations and 35 bootstrap/result tests passed after correcting two legacy-only identity assertions. Both diagnostic worktrees emitted own-count 1 and peer-count 0 after synthetic registration and browser login, but their receipt/barrier protocol stalled and supervisor ownership was lost. No completed two-worktree child/cross-slot-denial or cleanup/reuse proof is claimed. Guarded recovery quarantined the two exact generations; their databases and records remain preserved. New acquisitions are disabled.",
+    "Real cold PLT preparation passed on OTP 29.1.2 / Elixir 1.20.5, first DEV 2:58.40 / 3692448 KiB max RSS; TEST preparation plus analysis 4:25.69 / 3465708 KiB, and peer TEST preparation 4:11.22 / 4087804 KiB. Two subsequent TEST analyses passed with zero errors and 17.385 seconds of overlapping analysis at source e583d5cd22c42b7850711ecf07c15a27702bd85b while the shared cache lock was free. Full-suite capacity remains unmeasured. Latest pure tests: cache 14, admission 11, LocalConfig 19; eight probe guard/adapter tests passed. Earlier compilation and 34 knowledge tests passed; final knowledge checks are refreshed separately.",
     "DEV-profile analysis failed with 20 warnings, then 18 after adding pinned :dialyxir to project PLT inputs. No LocalDialyzer unknown-function warnings remain. TEST-profile static analysis passed with zero errors/skips, so the observed DEV failure does not establish failure in the required TEST compile profile. The unchanged Communications/Privacy sources were not compared in a separate base DEV run; those DEV warnings are not certified as baseline.",
-    "Explicit CI compatibility flags are caller controlled, not authentication of hosted origin. The normal local entry point rejects that mode and any partial managed context rejects. Independent Master Gate must assess this deliberate legacy compatibility boundary.",
-    "The regular mix check, final TEST-profile mix check.deep, hosted CI, bounded OCR, final independent Master Gate, NewYou merge and resulting-main checks remain unverified. This checkpoint is not review-ready.",
-    "The required persistence locator points to the DevCore slot allocation JSON because this capability has no NewYou migration or table. Its slots/database_prefix fields configure allocation. DevCore owns lease lifecycle and cleanup; this map describes consumer checks only."
+    "Hosted CI uses the separate new_you_ci_test database and role on port 55433. Caller-controlled flags do not authenticate CI, and workstation shared TEST rejects these flags even when both are present. Exact-head hosted CI remains unverified.",
+    "WELL-154 corrects canonical renderer contention and a failure-path double-close. Its 1.2.1 source passed temporary contention/parallel/timeout/cancellation tests and the full local DevCore suite, but is not installed or integrated. This worktree rejects installed 1.2.0 before allocation. Prior exact manifest consent is preserved; a new executable installation and any quarantine reconciliation need their own reviewed exact targets.",
+    "The regular mix check, final TEST-profile mix check.deep, bounded OCR, exact-head hosted CI, final independent Master Gate, NewYou merge and resulting-main checks remain unverified. This checkpoint is not review-ready.",
+    "The persistence locator points to the DevCore slot allocation JSON because this capability has no NewYou migration or table. Its slots/database_prefix fields configure allocation. DevCore owns lease lifecycle and cleanup; this map describes consumer checks only."
   ],
-  "follow_up_tickets": [],
+  "follow_up_tickets": [
+    "WELL-154"
+  ],
   "sources": [
     {
       "id": "config",
       "path": "lib/new_you/local_config.ex",
       "symbol": "def repo(env",
-      "sha256": "68bbf945202d2b145492998b3417fa81d77a8a44f832a8231599301891305901"
+      "sha256": "fdc5c5609e87939d04e5c1026c7f7395e177a44a4b41fa43bd079a65c2042ede"
     },
     {
       "id": "session",
       "path": "tools/local_session.py",
       "symbol": "def main(arguments=None)",
-      "sha256": "5988a2ae579d9a06d142ffd0438b6348b8a05e04019833959026d343e4e6fff1"
+      "sha256": "f702c17a0d55e5a8fea3b3231320c21b8c3bfc157816a0c3bf155a3c4b899641"
     },
     {
       "id": "launcher",
@@ -547,7 +569,7 @@
       "id": "cache",
       "path": "tools/local_plt_cache.py",
       "symbol": "class Cache:",
-      "sha256": "123710e6ad194a58e89a9274148163d8f87b7c5451bc504d570e32ae649df091"
+      "sha256": "ab651827dc1ca224f0944b0c80f0c6312d1b6b3a2010d402a6d1ee552824270d"
     },
     {
       "id": "producer",
@@ -559,19 +581,19 @@
       "id": "config_tests",
       "path": "test/new_you/local_config_test.exs",
       "symbol": "test \"a verified managed job selects its isolated TEST identity and slot 20 port\"",
-      "sha256": "34668dc489755c99b21c493ce1484e8b92aead17cdd4406008dc6824cf74bdc3"
+      "sha256": "d9d965c14dd515d5085f98330c460de417a7f7a979ebc1c9bbf6a3fedc48fa0a"
     },
     {
       "id": "session_tests",
       "path": "tests/test_local_session.py",
       "symbol": "class LocalSessionTests(unittest.TestCase):",
-      "sha256": "6fe1fda2fb0db8da3d81e20bdde5637b907d23aae8c4dae1db755ddf96476016"
+      "sha256": "159d0cb0dc60fc1328ba0ba0db879f35452724adcea904338562c194db0a5bb3"
     },
     {
       "id": "cache_tests",
       "path": "tests/test_local_plt_cache.py",
       "symbol": "class LocalPltCacheTest(unittest.TestCase):",
-      "sha256": "5e93ba4936e3dc5ea08fc23e67d10625986569f25f6ae666381770ba4265e1d9"
+      "sha256": "736d0254ec5d67d971405d676878e58a6680e180098790185375400a009a715e"
     },
     {
       "id": "dialyzer_tests",
@@ -590,6 +612,18 @@
       "path": "test/proof/self_test.exs",
       "symbol": "NewYou.LocalConfig.repo(:test)",
       "sha256": "8e13d6026f146665e0712f4b64e66936afcd37f4a80753db90d3e4c8a09754c0"
+    },
+    {
+      "id": "managed_probe",
+      "path": "test/proof/managed_slot_probe.exs",
+      "symbol": "defmodule NewYou.ManagedSlotProbe do",
+      "sha256": "ce2e15c30b1af752b38e06cc93c6b83fc75f08947097a61992592a2d099dfd9b"
+    },
+    {
+      "id": "managed_probe_tests",
+      "path": "test/tools/managed_slot_probe_test.exs",
+      "symbol": "defmodule NewYou.ManagedSlotProbeTest do",
+      "sha256": "e0791af179e1f4ab9e35cf9f6dfb03466d6539b446deee1984a24e365d4cbb13"
     }
   ]
 }

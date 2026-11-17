@@ -1,7 +1,7 @@
 # Managed local TEST slots
 
 WELL-147 consumes DevCore's WELL-145 source capability. This implementation is
-pending live proof and activation. Existing databases, active agents and legacy
+pending successful live proof and integration. Existing active agents and legacy
 worktrees have not been migrated. Keep legacy TEST booking and its cooperating
 `/tmp/newyou-shared-test-plt.lock` protocol for those worktrees.
 
@@ -67,9 +67,29 @@ changed. Managed-role denial against legacy TEST still needs the live pilot.
 
 The owner also authorized the exact disposable-generation contract in chat. The
 [authenticated approval](https://github.com/Carpe-Diem-Media/devcore-project/pull/6#issuecomment-6952421506)
-now supplies the exact required text. Enable and the live pilot must follow the
-R1–R3 corrections requested by independent checkpoint review. No managed database
-has yet been provisioned on this workstation.
+now supplies the exact required text. The R1–R3 corrections requested by
+independent checkpoint review have focused passing
+regressions. Enable accepted that comment and exact digest for the bounded pilot.
+Fresh current-branch migrations and 35 bootstrap/result tests passed, and their
+generations were cleaned through the approved exact-target procedure. The first
+run's two legacy-only assertions failed before being corrected; its diagnosis is
+preserved rather than counted as a pass.
+
+The parallel pilot has not passed. One attempt failed private environment
+rendering while the other progressed. A diagnostic staggered attempt committed
+distinct synthetic fixtures and completed browser login, but the probe protocol
+stalled behind the output redactor. Its supervisor ownership was later lost;
+guarded recovery quarantined both generations. Their databases and records remain
+preserved, and new acquisitions are disabled. No successful two-worktree child,
+cross-slot-denial or clean-reuse claim follows from these attempts.
+
+WELL-154 contains the separate canonical DevCore 1.2.1 rendering correction.
+Installed 1.2.0 is unchanged. This worktree now requires reviewed installation of
+1.2.1 before managed admission. Re-enable only after that correction is reviewed,
+integrated, separately authorized for installation and verified on the workstation.
+The earlier 1.2.0 installation approval does not cover the new artifact. Quarantine
+reconciliation requires an independently reviewed procedure for its exact targets;
+do not erase registry records or bypass the recovery guards.
 
 ## Routine commands after activation
 
@@ -90,7 +110,7 @@ devcore-project slots status
 
 The wrapper admits one mutable build command per worktree. Other worktrees have
 independent locks. It rejects unresolved prior jobs before starting new work and
-requires reviewed DevCore 1.2 or compatible 1.x. DevCore supplies command-local
+requires reviewed DevCore 1.2.1 or compatible 1.x. DevCore supplies command-local
 environment snapshots, verifies mutable build/dependency paths remain within the
 canonical worktree, and owns the lease and every managed descendant. Running
 children retain ownership after launcher loss. Do not rewrite environment files
