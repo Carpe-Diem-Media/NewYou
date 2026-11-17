@@ -44,6 +44,14 @@ If the gate fails, do not modify application code. Record the exact blocker/evid
 
 ## 2. Perform focused reconnaissance
 
+### Feature-level discovery
+
+Before substantial-feature planning, inspect existing capabilities, Domain ownership, Resources, major interfaces, `mix.exs`, `mix.lock` and relevant Ash extensions. Identify reusable fit, important gaps and justified candidates for introduction. Use the proportional `/grilling`, `to-spec` and `to-tickets` routes in `AGENTS.md` only where needed.
+
+### Ready-ticket discovery
+
+Do not restart feature planning for ordinary JIT implementation choices. Verify the approved outcome against current code: exact modules, functions, Ash actions and Resources, callers, consumers, tests, constraints, migrations, configuration and pinned dependency behaviour. Inspect framework return types and DSL compatibility against `mix.exs`, `mix.lock` and installed/version-matched sources before choosing a mechanism.
+
 Inspect only what is needed to implement the ticket correctly:
 
 - `AGENTS.md`, then the current documentation entrypoint and routers it names;
@@ -70,6 +78,8 @@ Before coding, state a concise working plan containing:
 - the test strategy, including failure/concurrency/idempotency cases where applicable;
 - the likely files/resources/migrations to touch;
 - documentation impact under `docs/development/implementation-handoff-standard.md`: canonical capability map update, proof update/addendum, or justified semantic-map exemption.
+
+For material behaviour, derive the TDD skill's proportionate Behaviour and Proof Matrix inside this existing implementation plan, from acceptance criteria and invariants. Include valid fixture prerequisites, permitted and forbidden outcomes, observable and durable consequences, applicable proof obligations and focused test evidence. Respect `LOW` / `STANDARD` / `HIGH`; justify non-applicable HIGH proof-menu items under Engineering Standards.
 
 Create or maintain the required canonical capability JSON in the same implementation PR. Do not author a duplicate Markdown handoff. Record the implementation SHA, link real source symbols and tests, and distinguish observed evidence from future obligations. Material follow-up changes maintain the existing map. Apply prospectively after WELL-96 integration; do not retroactively block completed work or already-active WELL-7. These maps are descriptive, never governing or live execution authority.
 
@@ -98,6 +108,10 @@ When multiple compliant JIT options exist, choose using this order:
 7. prefer the design that is easiest to prove with focused tests.
 
 Do not ask the human to choose among ordinary compliant alternatives.
+
+Record material implementation choices and reasons in the existing plan or ticket/PR evidence as `REUSE`, `EXTEND`, `COMPOSE`, `INTRODUCE` or `REPLACE`. Reuse first, but fitness, single authoritative Domain ownership, compatibility and approved authority determine the choice. Justified new Resources, modules, dependencies and mechanisms remain allowed. Introduction requires an identified gap; replacement also addresses migration and compatibility consequences. Evaluate potential Ash extensions, not just installed packages, under `AGENTS.md` dependency authority.
+
+Prefer cohesive implementations behind intentional owning Ash interfaces. Split modules when responsibilities or reasons to change differ. Avoid forwarding wrappers that add no contract or behaviour, and do not split cohesive code to meet arbitrary line limits.
 
 ### Distinguish execution blockers from governance contradictions
 
@@ -136,16 +150,11 @@ Do not create a separate governance document merely to record these implementati
 
 Follow `AGENTS.md` "Verification stages and failure diagnosis" throughout implementation. Use focused checks while developing. Diagnose a failed broad command before another broad run; record command/SHA, classify the cause, reproduce narrowly, correct and prove the correction before returning to the stable-candidate gate. Do not repeat expensive gates on unchanged inputs without a recorded diagnostic reason.
 
-For each material behaviour:
+**REQUIRED SUB-SKILL:** load `.agents/skills/tdd/SKILL.md` and its `tests.md` and `mocking.md` references for material Elixir/Ash behaviour implementation and regression fixes. Use its RED → GREEN → REFACTOR loop and proof-quality techniques; do not copy or create a competing TDD workflow.
 
-1. write the smallest focused test that expresses the required behaviour;
-2. run it and confirm it fails for the expected reason;
-3. implement the smallest compliant change that makes it pass;
-4. rerun the test;
-5. refactor while keeping it green;
-6. repeat for the next behaviour.
+Ensure negative tests isolate the intended guard with every unrelated prerequisite valid. Prove material state, side-effect, authorization and lifecycle consequences, with risk-proportional concurrency, idempotency, retry, failure and recovery proof. For selected high-consequence guards, follow TDD's isolated test sensitivity verification, restore correct code and rerun focused proof before committing.
 
-Include negative/failure-path tests and, where material, concurrency, idempotency, retry, rollback, authorization, and recovery tests.
+For proven non-executable documentation, use applicable instruction/document checks; do not force database-backed ExUnit or the Elixir TDD technique.
 
 For defects/regressions, reproduce the failure first where technically possible.
 
@@ -183,7 +192,7 @@ Do not mutate Product/Architecture/Domain/Roadmap or semantic contracts merely t
 
 ## 8. Automatic knowledge capture before review
 
-After applicable local checks, commit the stable source and run the existing OCR checkpoint against that committed SHA. If needed, open a Draft PR after the identity preflight below and push the source checkpoint. At the review checkpoint, generate the PR history record from live PR metadata and the WELL ticket already identified in implementation context. Export metadata with `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` and run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/pr.json --ticket WELL-N`. The ticket argument is explicit; the tool does not infer it from the PR title or body. GitHub metadata validates repository, PR, base, head and URL. The record does not copy PR prose, author details or Plane state. Do not add a manual receipt or Plane-unavailable explanation.
+After focused development checks pass, commit the stable source. Where the authorised helper applies, prepare its required clean committed candidate before its final `local` stage; let `code-change-verification` coordinate that stage once. Only after applicable final local checks pass, run the existing OCR checkpoint against that committed SHA, or record a permitted scope-specific exemption. Then, if needed, open a Draft PR after the identity preflight below and push the source checkpoint. At the review checkpoint, generate the PR history record from live PR metadata and the WELL ticket already identified in implementation context. Export metadata with `gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER` and run `mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/pr.json --ticket WELL-N`. The ticket argument is explicit; the tool does not infer it from the PR title or body. GitHub metadata validates repository, PR, base, head and URL. The record does not copy PR prose, author details or Plane state. Do not add a manual receipt or Plane-unavailable explanation.
 
 Commit `docs/development/knowledge/history/pr-NUMBER.json` before final review. Regenerate it if source or base changes, then request fresh review and CI. Do not regenerate for prose, author or Plane-state changes. Foundation Integrity checks the exact event binding and record with `mise exec -- python3 -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"`; when `--ticket` is omitted, check uses stable tickets in the committed record. If supplied, the ticket must agree. Keep the mechanical record and canonical capability map; do not create a duplicate PR dossier. A final approval must never be followed by a generated commit.
 
@@ -191,10 +200,14 @@ Commit `docs/development/knowledge/history/pr-NUMBER.json` before final review. 
 
 **REQUIRED SUB-SKILL:** use `code-change-verification` before claiming the ticket is ready for review.
 
+TDD owns focused test-first development. `ticket-implement` coordinates implementation, consumer discovery and stable-candidate preparation; it does not independently execute final broad gates. `code-change-verification` owns applicable final verification and handoff. The independent Master Gate separately inspects actual code, authority, tests, the exact PR diff and CI evidence.
+
+Preserve local verification → local OCR → exact-head hosted CI → independent Master Gate. The verification skill selects the authorised executor, including the existing WELL-125 helper where installed and applicable. Do not run broad checks here and then invoke that workflow to repeat them. Reuse proof only under its input-validity rules; focused development runs do not automatically satisfy final committed-candidate obligations.
+
 At minimum:
 
 - run focused tests while iterating;
-- run the repository-required engineering checks from `AGENTS.md` and the verification skill;
+- delegate repository-required final engineering checks to the verification skill;
 - inspect generated migrations/constraints and persistence semantics;
 - run architecture/code-generation checks when applicable;
 - run `git diff --check` or the repository equivalent;
@@ -203,6 +216,8 @@ At minimum:
 - resolve the exact base and head SHAs;
 - verify no secrets/sensitive payloads leaked into code, logs, fixtures, jobs, or evidence;
 - **after applicable local checks pass**, complete the independent OCR checkpoint in `code-change-verification` for material engineering changes, preserving findings and coverage exclusions without automatically editing code. Document a reasoned exemption for trivial/cosmetic or documentation-only changes.
+
+Before stable-candidate verification, identify affected existing contract tests, action allowlists, proof catalogs, security scans, consumer interfaces and capability knowledge maps. For browser/subprocess tests, verify prerequisites exist in hosted CI rather than depending on developer-local generated files. Keep this preflight focused; it is not another full-suite invocation.
 
 For DB-dependent commands, use the DevCore workflow in `AGENTS.md` when configured.
 
