@@ -7,7 +7,7 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "cb106a9f493f5712e4a9c9f0ead355feb9a8e668",
+    "git_sha": "2070ff9362583d503fcf51b198527c5305dec425",
     "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1385,7 +1385,7 @@
       "id": "password_reset",
       "path": "lib/new_you/identity/password_reset.ex",
       "symbol": "defp revoke_sessions",
-      "sha256": "65c9fb4b9c24e936915a1639ed69e00142d4d238b158a448f65bb49d759425ca"
+      "sha256": "f5f2e615c9ef51de0eba319c9bf38d713d2cd318c76d1445f4fb80216be342ed"
     },
     {
       "id": "communications",
