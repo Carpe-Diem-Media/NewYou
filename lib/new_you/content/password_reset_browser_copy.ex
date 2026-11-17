@@ -7,8 +7,9 @@ defmodule NewYou.Content.PasswordResetBrowserCopy do
   23 literal source-table strings per locale and their UTF-8 bytes/digests.
   It is not a reconstruction of the original approved JSON serialization. It
   grants no runtime role, authentication, publication or participant-release
-  authority. Both pinned files are verified before text is embedded; changed,
-  withdrawn or missing runtime artifacts stop new consumption.
+  authority. Only DEV/TEST builds load and embed the verified pinned files.
+  Production builds contain denial stubs without the approved payload. Changed,
+  withdrawn or missing runtime artifacts stop new development consumption.
   """
 
   defmodule UnavailableError do
@@ -78,8 +79,8 @@ defmodule NewYou.Content.PasswordResetBrowserCopy do
 
     if Mix.env() == :test do
       @repo_root Path.expand("../../..", __DIR__)
-      # Mirrors the email reader's isolated TEST evidence scope. DEV and PROD
-      # always use the fixed pinned paths; no request can select an evidence root.
+      # Mirrors the email reader's isolated TEST evidence scope. DEV uses fixed
+      # pinned paths; production compiles denial stubs with no evidence reads.
       defp current_path(path) do
         case Process.get({__MODULE__, :evidence_root}, @repo_root) do
           root when is_binary(root) -> Path.join(root, Path.relative_to(path, @repo_root))
