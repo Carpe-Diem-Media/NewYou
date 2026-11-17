@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "purpose": "Bounded safe author evidence, not independent certification or live execution authority",
+  "application_css_source_sha": "86461db98051fbd901b1e6b6953af42eb76b732b",
+  "proof_script_path": "test/assets/design_floating_fields_browser.mjs",
+  "proof_script_sha256": "df926ea30a18361d72277e5bd81d58076c30df95550545dec4c4082a480d91df",
+  "installed_linter": {
+    "version": "2.0.0",
+    "workstation_locator": "/home/jcschoeman96/.agents/skills/hallmark/scripts/sloplint-render.mjs",
+    "locator_scope": "External workstation installation, not a checked-in repository file reference",
+    "sha256": "3af79afa100a9804f248ade24d5128cea4fde1ef6d1a279f1dd935bfe6dc41cd",
+    "modified": false
+  },
+  "commands": {
+    "chrome": "BROWSER_TOOLS_ROOT=/home/jcschoeman96/.local/share/mise/installs/node/26.2.0/lib node test/assets/design_floating_fields_browser.mjs",
+    "firefox": "BROWSER_TOOLS_ROOT=/home/jcschoeman96/.local/share/mise/installs/node/26.2.0/lib DESIGN_BROWSER=firefox FIREFOX_PROFILE_ROOT=/home/jcschoeman96/snap/firefox/common FIREFOX_PATH=/usr/bin/firefox node test/assets/design_floating_fields_browser.mjs",
+    "host_probe": "BROWSER_TOOLS_ROOT=/home/jcschoeman96/.local/share/mise/installs/node/26.2.0/lib node /tmp/newyou-hallmark-focus-host-probe.cjs"
+  },
+  "browser_runs": [
+    {
+      "engine": "chrome",
+      "result": {
+        "status": "PASS",
+        "checks": 100,
+        "browser": "Chrome/155.0.8059.84",
+        "nativeAutofill": true,
+        "posts": 0,
+        "productPageErrors": 0,
+        "devToolbarErrors": 2
+      },
+      "minimum_outside_edge_ratio": 5.726313338485735,
+      "geometry_samples": [
+        {
+          "id": "floating-long",
+          "width": 1440,
+          "contrast": 5.726313338485735,
+          "background": [
+            0.9764705882352941,
+            0.9568627450980393,
+            0.9490196078431372,
+            1
+          ],
+          "inputHeight": 25.1875,
+          "wrapperHeight": 93.5625,
+          "hallmarkCanReachWrapper": false
+        },
+        {
+          "id": "floating-long",
+          "width": 1440,
+          "textScale": 2,
+          "contrast": 5.726313338485735,
+          "background": [
+            0.9764705882352941,
+            0.9568627450980393,
+            0.9490196078431372,
+            1
+          ],
+          "inputHeight": 50.390625,
+          "wrapperHeight": 169.171875,
+          "hallmarkCanReachWrapper": false
+        }
+      ],
+      "log_path": "/tmp/newyou-floating-outside-chrome-final.log",
+      "log_sha256": "79fec84776e5a0de1e2bd74946c8c797b83b6480c765a2de01d98dd7265460d8"
+    },
+    {
+      "engine": "firefox",
+      "result": {
+        "status": "PASS",
+        "checks": 98,
+        "browser": "firefox/160.0",
+        "nativeAutofill": false,
+        "posts": 0,
+        "productPageErrors": 0,
+        "devToolbarErrors": 0
+      },
+      "minimum_outside_edge_ratio": 5.726313338485735,
+      "geometry_samples": [
+        {
+          "id": "floating-long",
+          "width": 1440,
+          "contrast": 5.726313338485735,
+          "background": [
+            0.9764705882352941,
+            0.9568627450980393,
+            0.9490196078431372,
+            1
+          ],
+          "inputHeight": 25.199996948242188,
+          "wrapperHeight": 93.60000610351562,
+          "hallmarkCanReachWrapper": false
+        },
+        {
+          "id": "floating-long",
+          "width": 1440,
+          "textScale": 2,
+          "contrast": 5.726313338485735,
+          "background": [
+            0.9764705882352941,
+            0.9568627450980393,
+            0.9490196078431372,
+            1
+          ],
+          "inputHeight": 50.399993896484375,
+          "wrapperHeight": 169.1999969482422,
+          "hallmarkCanReachWrapper": false
+        }
+      ],
+      "log_path": "/tmp/newyou-floating-outside-firefox-final.log",
+      "log_sha256": "26607856d9f1ed22c458e7fe27e27615de1add637d147477d36c6deaa965f39f"
+    }
+  ],
+  "negative_control": {
+    "red_log_path": "/tmp/newyou-floating-outside-red.log",
+    "red_log_sha256": "dd5bb09864507b490cea0e9199325854b66384e7c1c474a15c4d82be1c3f607f",
+    "observed_result": "FAIL outside-edge measurement rejects a boundary invisible against its surroundings before the new comparator existed",
+    "green": "Both complete browser runners pass the negative control and restored baseline"
+  },
+  "focus_host_probe": {
+    "result": {
+      "rows": [
+        {
+          "step": 13,
+          "hostTag": "BUTTON",
+          "hostId": "registration-submit",
+          "hostWidth": 154.71875,
+          "hostHeight": 48,
+          "leafTag": "BUTTON",
+          "leafId": "registration-submit",
+          "leafFocusVisible": true,
+          "leafOutline": "solid",
+          "leafOutlineWidth": "2px",
+          "hallmarkSubstitute": "BUTTON"
+        },
+        {
+          "step": 14,
+          "hostTag": "DIV",
+          "hostId": "tidewave-toolbar",
+          "hostWidth": 1440,
+          "hostHeight": 0,
+          "leafTag": "BUTTON",
+          "leafId": "base-ui-_r_1_",
+          "leafFocusVisible": true,
+          "leafOutline": "auto",
+          "leafOutlineWidth": "1px",
+          "hallmarkSubstitute": "BODY"
+        },
+        {
+          "step": 15,
+          "hostTag": "DIV",
+          "hostId": "tidewave-toolbar",
+          "hostWidth": 1440,
+          "hostHeight": 0,
+          "leafTag": "BUTTON",
+          "leafId": "base-ui-_r_3_",
+          "leafFocusVisible": true,
+          "leafOutline": "auto",
+          "leafOutlineWidth": "1px",
+          "hallmarkSubstitute": "BODY"
+        },
+        {
+          "step": 16,
+          "hostTag": "BODY",
+          "hostId": "",
+          "hostWidth": 1440,
+          "hostHeight": 1641.546875,
+          "leafTag": "BODY",
+          "leafId": "",
+          "leafFocusVisible": false,
+          "leafOutline": "none",
+          "leafOutlineWidth": "3px",
+          "hallmarkSubstitute": "BODY"
+        }
+      ],
+      "posts": 0
+    },
+    "script_sha256": "a699f83305d755bc6aa0b4ca074cd33c180050dc8f1140627e28f5a7e70a710b",
+    "log_sha256": "9ffa0b8e225d7e1510d641323d512f1eaa7ad73bce2f9243f4e2463071b36592"
+  },
+  "proof_limits": [
+    "Opaque solid backgrounds and opaque solid borders only; image/translucent/filter/opacity/blend contexts are not scored",
+    "Computed browser color and geometry proof, not arbitrary screenshot-image contrast certification",
+    "Firefox autofill, WebKit, screen readers and true browser zoom are not certified",
+    "External Tidewave autofill diagnostics are reported separately, not suppressed",
+    "Installed Hallmark FAILs remain open; no Floor waiver or lint modification",
+    "No new application gate, OCR scan, merge approval or resulting-main certification claimed"
+  ],
+  "alpha_refusal_regression": {
+    "red_log_path": "/tmp/newyou-floating-alpha-red.log",
+    "red_log_sha256": "b77a08ed2f65ebabc00fba0787b7a84275c88a9647d66f745cd56d23023ee067",
+    "observed_result": "FAIL translucent border paint is explicitly unscored before the opaque-border guard existed",
+    "green": "Both complete browser runners pass explicit refusal and restore the original border style"
+  }
+}

@@ -50,6 +50,8 @@ class PasswordResetMessageEvidenceTests(unittest.TestCase):
             Path("docs/governance/CURRENT_GOVERNANCE_ROUTER.json"),
             Path("docs/governance/product/00_PLATFORM_v1.14.0.md"),
             Path("docs/governance/product/01_DECISIONS_v1.14.0.md"),
+            Path("docs/governance/product/00_PLATFORM_v1.18.0.md"),
+            Path("docs/governance/product/01_DECISIONS_v1.18.0.md"),
             Path("docs/governance/product/proposals/well-98"),
             ROUTER_REL,
             PACKET_REL.parent,

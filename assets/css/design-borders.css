@@ -1,0 +1,11 @@
+/* Hallmark · theme: locked DESIGN.md · shape: app screen · genre: modern-minimal · scope: app · signature: purpose-owned edges · v2.0.0 */
+/* Critique: the guide compares existing components without changing their palette or lighting. */
+.ds-border-tokens { @apply mt-design-lg; }
+.ds-border-tokens > div { @apply flex flex-wrap justify-between gap-design-control; min-inline-size: 0; }
+.ds-border-tokens dd { overflow-wrap: anywhere; min-inline-size: 0; }
+.ds-border-examples { @apply mt-design-xl; }
+.ds-border-subheading { @apply text-design-heading-sm font-design-bold leading-design-heading-sm tracking-design-heading-sm; }
+#borders .ds-note { max-inline-size: var(--measure); }
+#borders :where(p) { overflow-wrap: anywhere; }
+#borders .ds-border-examples .ds-note { margin-block: 0; }
+.ds-border-actions > button { max-inline-size: 100%; }

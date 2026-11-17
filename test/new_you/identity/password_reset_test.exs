@@ -73,6 +73,7 @@ defmodule NewYou.Identity.PasswordResetTest do
         |> Ash.read_one!(authorize?: false)
 
       assert intent.role == :password_reset
+      assert intent.render_schema == "password-reset-v1"
 
       assert intent.translation_version_id ==
                "NEWYOU-CONTENTTRANSLATIONVERSION-PASSWORD-RESET-MESSAGE-EMAIL-AF-V2"
@@ -113,6 +114,92 @@ defmodule NewYou.Identity.PasswordResetTest do
       assert bound.state == :tombstoned
       assert bound.password_verifier == nil
       assert bound.created_account_id == nil
+    end)
+  end
+
+  test "an unconfirmed transaction exception remains uncertain and can retry its operation" do
+    P805.with_fixture(fn ->
+      {request, registration} = account()
+      :ok = request_reset(request.email, "af", operation())
+      proof = current_proof(registration.account_id)
+      {:ok, bearer} = materialize(:password_reset_delivery, proof, request.email)
+      confirmation = operation()
+      initial = Ash.get!(Account, registration.account_id, authorize?: false)
+
+      Process.put(
+        NewYou.Proof.RegistrationSeam,
+        {:observe, fn -> raise "synthetic reset interruption" end}
+      )
+
+      try do
+        assert Identity.reset_password(bearer, "retry replacement", confirmation) ==
+                 {:error, :reset_uncertain}
+      after
+        Process.delete(NewYou.Proof.RegistrationSeam)
+      end
+
+      assert Ash.get!(Account, initial.id, authorize?: false) == initial
+      assert Ash.get!(Token, proof.jti, authorize?: false).purpose == "password_reset"
+      assert {:ok, :reset} = Identity.reset_password(bearer, "retry replacement", confirmation)
+
+      assert {:ok, :already_reset} =
+               Identity.reset_password(bearer, "ignored retry password", confirmation)
+    end)
+  end
+
+  test "queued WELL-136 delivery rechecks withdrawal and can safely retry after evidence recovery" do
+    P805.with_fixture(fn ->
+      {request, registration} = account()
+      :ok = Identity.request_password_reset(request.email, "af", operation(), :well136)
+      proof = current_proof(registration.account_id)
+
+      intent =
+        MessageIntent
+        |> Ash.Query.filter(source_reference == ^proof.jti)
+        |> Ash.read_one!(authorize?: false)
+
+      root = Path.join(System.tmp_dir!(), "well136-queued-#{Ecto.UUID.generate()}")
+      File.mkdir_p!(root)
+      File.cp_r!("docs", Path.join(root, "docs"))
+
+      path =
+        Path.join(
+          root,
+          "docs/delivery/content-evidence/content_media/password_reset_messages/PASSWORD_RESET_MESSAGE_WELL136_PHASE9_ELIGIBILITY_v0.3.0.json"
+        )
+
+      original = File.read!(path)
+      parent = self()
+      reference = make_ref()
+
+      Process.put(:p810_provider, fn _, _ ->
+        send(parent, {reference, :provider})
+        :delivered
+      end)
+
+      Process.put({NewYou.Content.PasswordResetMessage, :evidence_root}, root)
+
+      try do
+        File.write!(
+          path,
+          Jason.encode!(put_in(Jason.decode!(original), ["lifecycle", "state"], "withdrawn"))
+        )
+
+        assert {:ok, :held} = NewYou.Communications.execute(intent.id)
+        assert Ash.get!(MessageIntent, intent.id, authorize?: false).dispatch_disposition == :held
+        refute_received {^reference, :provider}
+        assert Ash.get!(Token, proof.jti, authorize?: false).purpose == "password_reset"
+        File.write!(path, original)
+        assert {:ok, :processed} = NewYou.Communications.execute(intent.id)
+        assert_received {^reference, :provider}
+
+        assert Ash.get!(Account, registration.account_id, authorize?: false).credential_version ==
+                 1
+      after
+        Process.delete(:p810_provider)
+        Process.delete({NewYou.Content.PasswordResetMessage, :evidence_root})
+        File.rm_rf!(root)
+      end
     end)
   end
 

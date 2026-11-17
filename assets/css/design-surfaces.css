@@ -1,0 +1,34 @@
+/* Hallmark · theme: locked DESIGN.md · shape: app screen · genre: modern-minimal · scope: app · signature: complete color boundaries · v2.0.0 */
+/* Critique: opaque profiles reset foreground roles without adding new palette values or changing CTA lighting. */
+@layer components {
+  .ds-surface { background-color: var(--context-background); color: var(--context-body); }
+  .ds-design-link { color: var(--context-link); }
+  .ds-design-link:hover { color: var(--context-link-hover); }
+}
+.ds-surface :where(h1, h2, h3, h4, h5, h6) { color: var(--context-heading); }
+.ds-surface :where(.ds-context-muted) { color: var(--context-muted); }
+.ds-surface :where(a) { color: var(--context-link); }
+.ds-surface :where(a):hover { color: var(--context-link-hover); }
+.ds-surface :is(a, button, input, select, textarea, summary):focus-visible { outline-color: var(--context-focus); }
+.ds-surface .ds-floating-control:has(> input:focus-visible) { outline-color: var(--context-focus); }
+.ds-pair-examples { @apply mt-design-xl; }
+.ds-pair-example { @apply p-design-lg; min-inline-size: 0; overflow-wrap: anywhere; }
+.ds-pair-example > .ds-stack { align-items: start; }
+.ds-pair-example :where(h3) { @apply text-design-heading-sm font-design-bold leading-design-heading-sm; }
+.ds-pair-example :where(p, dl) { max-inline-size: var(--measure); }
+.ds-pair-readouts { @apply text-design-button-md leading-design-body-xs; inline-size: 100%; }
+.ds-pair-readouts > div { @apply flex flex-wrap justify-between gap-design-control; }
+.ds-pair-readouts dd { overflow-wrap: anywhere; min-inline-size: 0; }
+.ds-pair-probe[data-pair-role="heading"] { color: var(--context-heading); }
+.ds-pair-probe[data-pair-role="body"] { color: var(--context-body); }
+.ds-pair-probe[data-pair-role="muted"] { color: var(--context-muted); }
+.ds-pair-probe[data-pair-role="link"] { color: var(--context-link); }
+.ds-pair-probe[data-pair-role="link-hover"] { color: var(--context-link-hover); }
+.ds-pair-probe[data-pair-role="focus"] {
+  color: var(--context-focus);
+  display: inline-block;
+  inline-size: var(--space-base);
+  block-size: var(--space-base);
+  background-color: var(--context-focus);
+}
+#surface-pairings .ds-note { max-inline-size: var(--measure); }

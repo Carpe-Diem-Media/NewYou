@@ -497,9 +497,19 @@ defmodule NewYou.Proof.P815 do
 
   def reset_vs_recovery_race do
     P805.with_fixture(fn ->
-      {request, _registration, _recovery, recovery_bearer} = pending_recovery()
+      {foreign_request, foreign_registration} = account()
+      :ok = Identity.request_password_reset(foreign_request.email, "af", operation())
+
+      foreign_proof =
+        Token
+        |> Ash.Query.filter(
+          account_id == ^foreign_registration.account_id and purpose == "password_reset"
+        )
+        |> Ash.read_one!(authorize?: false)
+
+      {request, registration, _recovery, recovery_bearer} = pending_recovery()
       assert Identity.submit_recovery_proof(recovery_bearer, operation()) == {:ok, :accepted}
-      reset_bearer = password_reset_delivery(request)
+      reset_bearer = password_reset_delivery(request, registration.account_id)
       parent = self()
       reference = make_ref()
       scenario = Scenario.start()
@@ -551,6 +561,7 @@ defmodule NewYou.Proof.P815 do
         await_normal(completion_monitor)
         await_normal(reset_monitor)
         assert account_version_by_email(request.email) == 2
+        assert Ash.get!(Token, foreign_proof.jti, authorize?: false) == foreign_proof
       after
         :ok = Scenario.stop(scenario)
       end
@@ -681,12 +692,12 @@ defmodule NewYou.Proof.P815 do
     {:ok, bearer}
   end
 
-  defp password_reset_delivery(request) do
+  defp password_reset_delivery(request, account_id) do
     :ok = Identity.request_password_reset(request.email, "af", operation())
 
     proof =
       Token
-      |> Ash.Query.filter(purpose == "password_reset")
+      |> Ash.Query.filter(account_id == ^account_id and purpose == "password_reset")
       |> Ash.read_one!(authorize?: false)
 
     {:ok, {:ok, bearer}} =

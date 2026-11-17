@@ -299,7 +299,7 @@ defmodule NewYou.Communications.Executor do
 
   defp password_reset_payload(intent) do
     with :ok <- source_eligibility(intent),
-         {:ok, bytes} <- NewYou.Content.PasswordResetMessage.eligible(intent),
+         {:ok, bytes} <- password_reset_content(intent),
          true <- valid_password_reset_render?(intent),
          {:ok, bearer} <-
            NewYou.Identity.password_reset_delivery(
@@ -352,13 +352,21 @@ defmodule NewYou.Communications.Executor do
     digest =
       :crypto.hash(
         :sha256,
-        :erlang.term_to_binary({"password-reset-v1", intent.platform_name}, [:deterministic])
+        :erlang.term_to_binary({intent.render_schema, intent.platform_name}, [:deterministic])
       )
       |> Base.encode16(case: :lower)
 
-    intent.render_schema == "password-reset-v1" and
+    intent.render_schema in ["password-reset-v1", "password-reset-well136-v1"] and
       intent.render_provenance == "application_platform_name" and intent.render_digest == digest
   end
+
+  defp password_reset_content(%{render_schema: "password-reset-v1"} = intent),
+    do: NewYou.Content.PasswordResetMessage.eligible(intent)
+
+  defp password_reset_content(%{render_schema: "password-reset-well136-v1"} = intent),
+    do: NewYou.Content.PasswordResetMessage.eligible(intent, :well136)
+
+  defp password_reset_content(_), do: {:error, :content_ineligible}
 
   defp capability(intent) do
     with {:ok, %ProtectedEnvelope{} = envelope} <-

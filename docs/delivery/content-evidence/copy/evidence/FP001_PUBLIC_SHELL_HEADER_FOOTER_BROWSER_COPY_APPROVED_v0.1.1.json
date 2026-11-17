@@ -1,0 +1,576 @@
+{
+  "packet_id": "FP001_PUBLIC_SHELL_HEADER_FOOTER_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_NEWYOU_PLATFORM_COPY; BOUNDED_DEVELOPMENT_AFTER_CANONICAL_INTEGRATION; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY",
+  "prepared_on": "2026-11-17",
+  "repository": "Carpe-Diem-Media/NewYou",
+  "verified_main_sha_at_reconnaissance": "b028ab729e84dc3dfdff31fe9fde208a971a999a",
+  "scope": "Public website header, footer, language, accessible navigation and truthful availability presentation for bounded FP-001 entry; no actual page or link implementation.",
+  "source_authority": [
+    "docs/governance/CURRENT_GOVERNANCE_ROUTER.json (current Product, Architecture, Domain and Roadmap)",
+    "docs/governance/product/00_PLATFORM_v1.18.0.md §§21E.1, 21E.7, 21E.18, 21L.2–21L.4",
+    "docs/delivery/feature-contracts/fp-001/FP-001_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md §§D–G",
+    "docs/delivery/content-evidence/copy/GOVERNANCE.md, GLOSSARY.md, STYLE_GUIDE.md, COPY_INVENTORY.md",
+    "docs/delivery/content-evidence/copy/pages/public/public-shell.yaml",
+    "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED_v0.1.1.json",
+    "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_ABOUT_AND_PHILOSOPHY_BROWSER_COPY_APPROVED_v0.1.1.json"
+  ],
+  "content_owner": "Content & Media",
+  "copy_classification": "25 Class B public UI keys; 2 Class A legal-link status/notice keys",
+  "copy_items": [
+    {
+      "key": "public.shell.header.main_navigation.label",
+      "family": "header",
+      "class": "B",
+      "en": {
+        "text": "Main navigation",
+        "sha256": "eb355944b92d10582856f8aea34b3e319ba465b8aa4c294973cf53f665399a2c"
+      },
+      "af": {
+        "text": "Hoofnavigasie",
+        "sha256": "2904dc5ffeaeadbac418ecbe3963c01e03d0b982f7b3800132684b04aa6983f9"
+      }
+    },
+    {
+      "key": "public.shell.header.brand.home.aria_label",
+      "family": "header",
+      "class": "B",
+      "en": {
+        "text": "Go to the {{platform_name}} home page",
+        "sha256": "9c806dc28dd3c5387692fb1e9087f6033999f2dd77ca6e423c6dcb4753c70d2d"
+      },
+      "af": {
+        "text": "Gaan na {{platform_name}} se tuisblad",
+        "sha256": "c1999143f519f9766e058c8b489acc70ee526b0dcc8d71288e9f1c9136e96893"
+      }
+    },
+    {
+      "key": "public.shell.header.menu.title",
+      "family": "header",
+      "class": "B",
+      "en": {
+        "text": "Menu",
+        "sha256": "99af6606ff9d6cd5154d4d4e9c21e325086d3e904677cdb41d363c8a3480f862"
+      },
+      "af": {
+        "text": "Kieslys",
+        "sha256": "bf0e74ff6e1a82b4a297696ce4a282356731ec8ae485a2a5c0e5ab31c1db5607"
+      }
+    },
+    {
+      "key": "public.shell.header.account.title",
+      "family": "header",
+      "class": "B",
+      "en": {
+        "text": "Your account",
+        "sha256": "dbb5f6371b6a2a677f09c24d17fdc581132a41881a818469a92b58588e8764bc"
+      },
+      "af": {
+        "text": "Jou rekening",
+        "sha256": "91acf464f895cd9b080be0125e1cbdfed68943fe2f774129b2be60e91a05d156"
+      }
+    },
+    {
+      "key": "public.shell.header.account.checking",
+      "family": "header",
+      "class": "B",
+      "en": {
+        "text": "Checking your sign-in status…",
+        "sha256": "2d762c4ea1e696c4eff21561e7ae07a5a38ffa435072d0ee950ff577ca208512"
+      },
+      "af": {
+        "text": "Besig om jou aanmeldstatus na te gaan…",
+        "sha256": "2a201b799ff36a7b37d764a480f64c1a776e8f61a62dad60ba4f1f42e3a8918b"
+      }
+    },
+    {
+      "key": "public.shell.header.account.unavailable",
+      "family": "header",
+      "class": "B",
+      "en": {
+        "text": "We can’t confirm your sign-in status right now. You can still explore available public pages.",
+        "sha256": "fdd830c425c6314c0c18670ea1d71936b52e15967e5b83414aed512990294d7f"
+      },
+      "af": {
+        "text": "Ons kan nie tans jou aanmeldstatus bevestig nie. Jy kan steeds beskikbare openbare bladsye verken.",
+        "sha256": "ea728083621bb540dc56aced5f5ee24a76e6d8ac1ffe7e721df47bce6ac12475"
+      }
+    },
+    {
+      "key": "public.shell.header.account.retry.action",
+      "family": "header",
+      "class": "B",
+      "en": {
+        "text": "Check sign-in status again",
+        "sha256": "23d66d682cdfefe6cbc4f7b1606062fb7b8d8547b177a95b8813e5788265ba00"
+      },
+      "af": {
+        "text": "Gaan aanmeldstatus weer na",
+        "sha256": "6b360d3ca774c0226f5fe3a52fda98131be9c76f72998eca88f659b49b43f58f"
+      }
+    },
+    {
+      "key": "public.shell.header.language.label",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "Website language",
+        "sha256": "dcdd2d4c15caffd2404464436ed63bb30fd570e89f1a25ea8675debbfafc830a"
+      },
+      "af": {
+        "text": "Webwerftaal",
+        "sha256": "2a5d074ad6d00c7f399f82abd93161e5d6ac5c5bad997aef2a8011d3adb1097b"
+      }
+    },
+    {
+      "key": "public.shell.header.language.help",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "Choose Afrikaans or English for this website.",
+        "sha256": "25dfaea7cb580911959a34eb2b44d770f6e674cecf16840236bb9b8312746fef"
+      },
+      "af": {
+        "text": "Kies Afrikaans of Engels vir hierdie webwerf.",
+        "sha256": "b9f409b965e8a5501fcb6eee2c25b9e394f3bbdb8e77d354a54c7b39c933222f"
+      }
+    },
+    {
+      "key": "public.shell.header.language.current.announcement",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "Current language: {{language_name}}",
+        "sha256": "26276543511f64f5bdab8c902bdf2d08a6c04a72f90daa9fc232696ee01726b7"
+      },
+      "af": {
+        "text": "Huidige taal: {{language_name}}",
+        "sha256": "5790e3d2b8715e4878b6be4d118d45c98d7985d54e7b1f10f5660680c1c24088"
+      }
+    },
+    {
+      "key": "public.shell.header.language.changing",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "Changing language…",
+        "sha256": "f2f736b2366df19024c26b697dbbff876768778d101f30cad8a61adfde6fadec"
+      },
+      "af": {
+        "text": "Besig om taal te verander…",
+        "sha256": "fffd1daf1de90ac8b5c0a61f65fbf5aa57158426c2f32a9f38b1ae762ca1717b"
+      }
+    },
+    {
+      "key": "public.shell.header.language.failed",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "Your language choice could not be applied. Try again.",
+        "sha256": "37a0d67c0692313afb030211fcac2b9c1d3f7d4d8fa4dadd0858cf7208810bd5"
+      },
+      "af": {
+        "text": "Jou taalkeuse kon nie toegepas word nie. Probeer weer.",
+        "sha256": "d8e88f3762eab986a66f1e7040cef0312b3c1bcfea6437968251e0efc85ec779"
+      }
+    },
+    {
+      "key": "public.shell.header.language.uncertain",
+      "family": "language",
+      "class": "B",
+      "en": {
+        "text": "We can’t confirm whether your language choice was applied. Check the language shown before continuing.",
+        "sha256": "8b7398bd782858492914b2b244596ca271059a4bce8f4bafa95644fe21553c03"
+      },
+      "af": {
+        "text": "Ons kan nie bevestig of jou taalkeuse toegepas is nie. Gaan die taal wat vertoon word na voordat jy voortgaan.",
+        "sha256": "6da9d7f86a9be43e17d724e24e47417fcfdb48a36ce6e32eb83a92e2ff145fa0"
+      }
+    },
+    {
+      "key": "public.shell.navigation.breadcrumb.label",
+      "family": "navigation",
+      "class": "B",
+      "en": {
+        "text": "Breadcrumb navigation",
+        "sha256": "a9b1755c9576923f43960768a2e7f34edaaeacb2c75b047b7a84b8c44e997d9f"
+      },
+      "af": {
+        "text": "Broodkrummelnavigasie",
+        "sha256": "83be3d24b1217077b7d36bac1b26731463a2c765a07842362916c9ddb7c4a8aa"
+      }
+    },
+    {
+      "key": "public.shell.navigation.current_page.announcement",
+      "family": "navigation",
+      "class": "B",
+      "en": {
+        "text": "Current page: {{page_title}}",
+        "sha256": "30d6355f2c5bb9af1bded87483e279e39afb539170e58be6780dd2e47d164308"
+      },
+      "af": {
+        "text": "Huidige bladsy: {{page_title}}",
+        "sha256": "f7abdb773c8f536fd55a73d454b4e2ca21915022fa3a9e46b48398cfe70050b4"
+      }
+    },
+    {
+      "key": "public.shell.navigation.unavailable",
+      "family": "navigation",
+      "class": "B",
+      "en": {
+        "text": "Navigation is temporarily unavailable. Refresh this page to try again.",
+        "sha256": "b315e28b03a35a3e90db3bb19aec362d999b25e254a110bb15750a210ec13141"
+      },
+      "af": {
+        "text": "Navigasie is tydelik nie beskikbaar nie. Herlaai hierdie bladsy om weer te probeer.",
+        "sha256": "2fa315f3324254c45ca1f6d6adfa03f2ed3e4038263ed5b03a90221f294a63d8"
+      }
+    },
+    {
+      "key": "public.shell.footer.tagline",
+      "family": "footer",
+      "class": "B",
+      "en": {
+        "text": "Understand yourself. Build habits that fit real life.",
+        "sha256": "06535722d34d93d29a40f8cb925f95459612ee73e83087c09b9c9cbae6b7ef35"
+      },
+      "af": {
+        "text": "Verstaan jouself. Bou gewoontes wat by jou lewe pas.",
+        "sha256": "a0c9e3912b9334d4f65812c566381bdfcf8567362c3d9729d4d327ece99f946a"
+      }
+    },
+    {
+      "key": "public.shell.footer.explore.title",
+      "family": "footer",
+      "class": "B",
+      "en": {
+        "text": "Explore",
+        "sha256": "3b73900b8d29f963dece78edd4bd9529d855e50f2a3fcc39b3d66cd657630905"
+      },
+      "af": {
+        "text": "Ontdek",
+        "sha256": "146d525cc1308abf6dbca5d5321da3913a785df8a892605d69bf0c23af1ac697"
+      }
+    },
+    {
+      "key": "public.shell.footer.account.title",
+      "family": "footer",
+      "class": "B",
+      "en": {
+        "text": "Account",
+        "sha256": "7e1b0d5641f2640ce9a953ec231eea2c27a2a7633f7d3c273e5735e2b30c10b7"
+      },
+      "af": {
+        "text": "Rekening",
+        "sha256": "8fabcea13008040c36da1eaef71fbb297b6d89a2b4e767d4840bd1d1abb4ba2d"
+      }
+    },
+    {
+      "key": "public.shell.footer.help.title",
+      "family": "footer",
+      "class": "B",
+      "en": {
+        "text": "Help and support",
+        "sha256": "3e382536ad47e7061699b75601b055f27cd046e5afe7c10ceb956d949d87a8b7"
+      },
+      "af": {
+        "text": "Hulp en ondersteuning",
+        "sha256": "08ccf027b0cf9cfb61968487d23744e5b301793893b36bb7df3918e6f90e56b0"
+      }
+    },
+    {
+      "key": "public.shell.footer.legal.title",
+      "family": "footer",
+      "class": "B",
+      "en": {
+        "text": "Legal information",
+        "sha256": "8c14d709f2771423f4415bd0b096d155d930e413810dc7537fe73a7d138fff00"
+      },
+      "af": {
+        "text": "Regsinligting",
+        "sha256": "19762c2d21b56070f08b6c9153d2f30a2b05bf7306c3c15838b5f79ad020f9f8"
+      }
+    },
+    {
+      "key": "public.shell.footer.terms.link",
+      "family": "footer",
+      "class": "B",
+      "en": {
+        "text": "Terms and Conditions",
+        "sha256": "34e6faf15abddcd4b73e84117be7debf724f4ab10110bbef9fc5c6ed7eb0da60"
+      },
+      "af": {
+        "text": "Bepalings en Voorwaardes",
+        "sha256": "2b0ac1546b64ce58c2c25f5ae0464d4644e6d53545f996c787205a0835957daa"
+      }
+    },
+    {
+      "key": "public.shell.footer.privacy.link",
+      "family": "footer",
+      "class": "B",
+      "en": {
+        "text": "Privacy Notice",
+        "sha256": "840b0e9da5da5f14cf42eeea78c05f0af49d0112cf77e6f398e4d60177ceb484"
+      },
+      "af": {
+        "text": "Privaatheidsbeleid",
+        "sha256": "7baede401a03c3ac05f58f995e38c19f325c721866b5a69cbe6eb2d14de8b855"
+      }
+    },
+    {
+      "key": "public.shell.footer.legal.language_notice",
+      "family": "footer",
+      "class": "A",
+      "en": {
+        "text": "The governing Terms and Privacy Notice are available in English.",
+        "sha256": "6d347f41ddc32b268f7afe8ed98a079a44a8e42af7dd3f242cd84cd93520ec6f"
+      },
+      "af": {
+        "text": "Die geldende Bepalings en Voorwaardes en Privaatheidsbeleid is in Engels beskikbaar.",
+        "sha256": "ceb7e8b12b7ed95131eda1419031588831e098352ce2d80955925083e66d6434"
+      }
+    },
+    {
+      "key": "public.shell.footer.help.body",
+      "family": "footer",
+      "class": "B",
+      "en": {
+        "text": "Looking for help? See what guidance is available on the Help page.",
+        "sha256": "0c89a1cda3abc95e71ed51468a1f2114d5d50647502c652fcb055a0678ea9eb1"
+      },
+      "af": {
+        "text": "Soek jy hulp? Kyk watter leiding op die Hulp-blad beskikbaar is.",
+        "sha256": "c27335478ca64f8eefb4ef00d57770f09f464b22d3d66fcc7b6446d43117f6e6"
+      }
+    },
+    {
+      "key": "public.shell.footer.back_to_top.action",
+      "family": "footer",
+      "class": "B",
+      "en": {
+        "text": "Back to top",
+        "sha256": "b05d95c62372213f56757332ef42e74f20cbf3b186d1a6cd37eab373d09c3b97"
+      },
+      "af": {
+        "text": "Terug na bo",
+        "sha256": "0c1d5e1461ea41036f5476287873d167d0fade373a6f12cd9e16aa41b6949816"
+      }
+    },
+    {
+      "key": "public.shell.footer.legal.unavailable",
+      "family": "footer",
+      "class": "A",
+      "en": {
+        "text": "{{document_name}} is not available right now. Try again later.",
+        "sha256": "02496c714585b45efd5f54882adce6e3aa51af9e5fe181bdd822112b824ae5a1"
+      },
+      "af": {
+        "text": "{{document_name}} is tans nie beskikbaar nie. Probeer later weer.",
+        "sha256": "d76af2fb4d4703b9b495878f4d7e6a6f1f6a2daf5f6c7af8268e53347bf6be85"
+      }
+    }
+  ],
+  "reuse_existing_keys_unchanged": [
+    {
+      "key": "shared.navigation.home",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.content",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.programmes",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.products",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.about",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.help",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.contact",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.search",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.create_account",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.login",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.logout",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.profile",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.settings",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.language.afrikaans",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.language.english",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.language.change",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.language.saved",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.language.required_unavailable",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.accessibility.skip",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.accessibility.open_menu",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.accessibility.close_menu",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.action.contact_support",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "public.home.availability.section.title",
+      "source": "FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "source_status_unchanged": "owner_approved"
+    },
+    {
+      "key": "public.home.availability.section.body",
+      "source": "FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "source_status_unchanged": "owner_approved"
+    }
+  ],
+  "presentation_guards": [
+    "The header/footer is a composition of available destinations, not permission to publish or surface unfinished products, programmes, paid services, assessment, health intake, plans or other gated areas.",
+    "Only present a link when the corresponding target route actually exists and is approved/eligible for the current environment; never route to development-only legal baselines for public/production use.",
+    "Registration, signed-in account, profile and settings links depend on current Identity state and actual allowed routes; a stale browser or unknown session state is not access authority.",
+    "An unknown sign-in status never means signed out; public-safe navigation may remain visible but protected actions must fail closed until current authority is known.",
+    "Required core bilingual/legal/safety presentation must not silently fall back to an unapproved locale; optional low-risk public content can offer an explicitly identified available language only where authorized.",
+    "The English governing Terms and Privacy document bodies remain singular; Afrikaans UI uses the approved descriptor Privaatheidsbeleid, not a purported Afrikaans legal body.",
+    "The legal-link unavailable state is a truthful UI projection, not a substitute for approved Terms/Privacy or consent and not permission to create an Account.",
+    "The footer tagline is thematic, not a promise of active assessments, plans, memberships, support response times or clinical outcomes.",
+    "Do not add brand-specific copyright ownership, dates, address, opening hours, social accounts, accessibility statement links or contact details until their factual provenance and launch eligibility are verified.",
+    "Do not use Christian/Christelike in the prominent header/footer tagline; approved secondary faith content on homepage/About remains unchanged.",
+    "This exact wording is a non-production review candidate, not a production, release, legal approval, or code change."
+  ],
+  "component_state_contract": {
+    "menu": {
+      "states": [
+        "closed",
+        "open"
+      ],
+      "transitions": [
+        "closed → open on the accessible open-menu action",
+        "open → closed on the accessible close-menu action, Escape or navigation"
+      ],
+      "guard": "Only actual eligible menu destinations are shown; mobile/desktop presentations use the same canonical key identities.",
+      "side_effect": "Presentation and focus management only; opening a menu never changes identity, entitlements or account authority."
+    },
+    "language_choice": {
+      "states": [
+        "current",
+        "changing",
+        "applied",
+        "failed",
+        "uncertain"
+      ],
+      "transitions": [
+        "current → changing on explicit locale selection",
+        "changing → applied only after locale application is confirmed",
+        "changing → failed when application is known to fail",
+        "changing → uncertain when confirmation is unavailable"
+      ],
+      "guard": "Both required interface locales have approved content when necessary; no silent forbidden fallback.",
+      "side_effect": "Display/persistence of language preference via the owning application interface, never silent substitution of restricted content.",
+      "recovery": "After uncertainty, re-read the currently displayed/persisted language instead of inventing confirmation."
+    },
+    "account_navigation": {
+      "states": [
+        "checking",
+        "known_public",
+        "known_authenticated",
+        "unavailable"
+      ],
+      "transitions": [
+        "checking → known_public when Identity confirms no usable authenticated access",
+        "checking → known_authenticated when Identity confirms usable authenticated access",
+        "checking → unavailable when status cannot be established",
+        "unavailable → checking on retry"
+      ],
+      "guard": "Protected account navigation requires current Identity-derived authorization; unknown status is not a denial or grant by itself.",
+      "side_effect": "Navigation projection only; no credential, session, Account or grant is mutated.",
+      "recovery": "A fresh check reconciles the UI with owner state; never treat a cached view as source authority."
+    }
+  },
+  "explicitly_excluded": [
+    "Production/public runtime use, page implementation, merge and release.",
+    "Legal document body, legal sign-off, consent gate implementation or publication authority",
+    "Contact details, operational hours, copyright owner, social URLs and unverified external links",
+    "New website sections or navigation to unfinished product spaces",
+    "New medical or safety advice, or altered existing approved homepage and About copy"
+  ],
+  "verified_main_sha": "b028ab729e84dc3dfdff31fe9fde208a971a999a",
+  "source_candidate": {
+    "filename": "FP001_PUBLIC_SHELL_HEADER_FOOTER_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+    "sha256": "1d32ed9ad2e2646160c186f99b51710a92b6af8f9b3924e40f482f51bf5d0e09",
+    "source_status": "CANDIDATE_NOT_OWNER_APPROVED"
+  },
+  "approval": {
+    "approved_on": "2026-11-17",
+    "decision": "All 27 new EN/AF copy keys (54 locale strings) approved as-is; 24 existing keys referenced unchanged.",
+    "authority": "Direct content-owner approval in conversation.",
+    "pr_creation_authorisation": "Explicit authorisation to open a content-only PR; not merge, implementation, publication or release authority."
+  }
+}
