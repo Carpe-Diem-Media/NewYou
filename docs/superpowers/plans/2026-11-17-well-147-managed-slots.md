@@ -300,3 +300,22 @@ isolation and recovery/reuse under real child processes. The three-point gap to
 8/10 requires the live proof and final gates above, then independent review;
 planned work earns no points. DevCore's separate evidence does not complete a
 NewYou acceptance group.
+
+
+## DevCore source integration checkpoint
+
+WELL-154 PR #7 has independent full-diff approval for exact head
+`520c8a4db118d4d946a3ecb5096461b57a584b34`. Both hosted checks passed in run
+`44125681091`, including five PostgreSQL integration-lane tests. All six OCR
+exclusions were independently reviewed. The normal head-bound merge produced
+`cc57a70c54478f93bf7a68cac5935486c58ee25a`. Its ordered parents equal reviewed
+base/head, and its complete tree equals tested candidate
+`889023ed0cdbca1a378fcdd5756e83ebe1f2ce60`. This is exact tested-tree reuse,
+not a claim that separate main run `44132976402` passed; that run was pending.
+
+The new executable SHA-256 is
+`2ed9f8bba9abd3775b578bf159bb1c01787dac33cbbc668d71849752171916b7`.
+It is staged from resulting main but not installed. Source approval expressly
+excludes installation and quarantine cleanup. NewYou acquisition remains disabled
+and its two quarantines remain preserved. WELL-147's implementation assessment
+and outstanding live/final gates above are unchanged.

@@ -83,10 +83,13 @@ guarded recovery quarantined both generations. Their databases and records remai
 preserved, and new acquisitions are disabled. No successful two-worktree child,
 cross-slot-denial or clean-reuse claim follows from these attempts.
 
-WELL-154 contains the separate canonical DevCore 1.2.1 rendering correction.
-Installed 1.2.0 is unchanged. This worktree now requires reviewed installation of
-1.2.1 before managed admission. Re-enable only after that correction is reviewed,
-integrated, separately authorized for installation and verified on the workstation.
+WELL-154 supplies the separate canonical DevCore 1.2.1 rendering correction.
+PR #7 was independently approved at `520c8a4` and merged at
+`cc57a70c54478f93bf7a68cac5935486c58ee25a`. Its resulting tree equals the tested
+candidate; the separate main CI run remains pending at this checkpoint. Installed
+1.2.0 is unchanged. This worktree requires separately authorized, verified
+installation of 1.2.1 before managed admission. Re-enable only after that boundary
+and the exact-target quarantine reconciliation are satisfied.
 The earlier 1.2.0 installation approval does not cover the new artifact. Quarantine
 reconciliation requires an independently reviewed procedure for its exact targets;
 do not erase registry records or bypass the recovery guards.
