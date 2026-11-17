@@ -1,0 +1,809 @@
+{
+  "packet_id": "PUBLIC_CONTENT_DISCOVERY_BROWSER_COPY_APPROVED",
+  "version": "0.1.1",
+  "status": "OWNER_APPROVED_WORDING_ONLY; FUTURE_GATED_NONPRODUCTION_CONTENT_EVIDENCE; NO_IMPLEMENTATION_PUBLICATION_OR_RELEASE_AUTHORITY",
+  "prepared_on": "2026-11-17",
+  "repository": "Carpe-Diem-Media/NewYou",
+  "verified_main_sha_at_reconnaissance": "6b92ba6d2b51be4f15af27c66a9d24dcf73640f8",
+  "scope": "Owner-approved English/Afrikaans wording for proposed public editorial discovery; future-gated/JIT-only, not active FP-001 public library or runtime permission.",
+  "content_owner": "Content & Media",
+  "copy_risk": "Class B UI wording only; individual editorial and health content retains independent risk-based approvals.",
+  "source_authority": [
+    "docs/README.md; docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+    "docs/governance/product/00_PLATFORM_v1.18.0.md §§21E.1–21E.8, 21L.4",
+    "docs/governance/roadmap/05_ROADMAP_v1.2.5.md (FP-001 public entry vs later library/content delivery)",
+    "docs/delivery/feature-contracts/fp-001/FP-001_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md §§D–E",
+    "docs/delivery/content-evidence/copy/COPY_INVENTORY.md; GOVERNANCE.md; STYLE_GUIDE.md; GLOSSARY.md",
+    "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+    "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED_v0.1.1.json",
+    "docs/delivery/content-evidence/copy/evidence/FP001_PUBLIC_SHELL_HEADER_FOOTER_BROWSER_COPY_APPROVED_v0.1.1.json"
+  ],
+  "copy_items": [
+    {
+      "key": "public.discovery.hero.eyebrow",
+      "family": "introduction",
+      "class": "B",
+      "en": {
+        "text": "Ideas for everyday wellbeing",
+        "sha256": "1f5c04771ea720d3d9b514a61c40cf83fe31ee5137b44d20afb2da8ec1f60093"
+      },
+      "af": {
+        "text": "Idees vir alledaagse welstand",
+        "sha256": "3d60b6b9eef25ca8f8f6d1ab378f1b2f7f4563d804921638e3dd8a324687a373"
+      }
+    },
+    {
+      "key": "public.discovery.hero.title",
+      "family": "introduction",
+      "class": "B",
+      "en": {
+        "text": "Explore what matters to you",
+        "sha256": "82fec7098b76268ee8376623dff00b353aff443908eb9fc52c9aed86317bb22c"
+      },
+      "af": {
+        "text": "Verken wat vir jou saak maak",
+        "sha256": "d4edebadbc6090afbac12ef12534654d1520a9e8ce7000d735bb330fe2636fc6"
+      }
+    },
+    {
+      "key": "public.discovery.hero.body",
+      "family": "introduction",
+      "class": "B",
+      "en": {
+        "text": "Browse articles and practical ideas for everyday wellbeing, at your own pace.",
+        "sha256": "4699da4e5907b9297e6446168a18df7813d0061a660ac5bede79a370d103e019"
+      },
+      "af": {
+        "text": "Verken artikels en praktiese idees vir alledaagse welstand, teen jou eie pas.",
+        "sha256": "5de322c26a402f98313f354dee5b4b4cb84b5fade5a056487ea21087d7ffa106"
+      }
+    },
+    {
+      "key": "public.discovery.search.label",
+      "family": "search",
+      "class": "B",
+      "en": {
+        "text": "Search public content",
+        "sha256": "2b5087d7627ded56ec20498f7a36bb57ece28387504becaf45a1ef0c80ca1e60"
+      },
+      "af": {
+        "text": "Soek openbare inhoud",
+        "sha256": "37fa7ef882566d8633d58afea9b5615ffcb3515c014b174a3b3fa1f24df3eec6"
+      }
+    },
+    {
+      "key": "public.discovery.search.placeholder",
+      "family": "search",
+      "class": "B",
+      "en": {
+        "text": "Search by topic or keyword",
+        "sha256": "8db9034207b0d3f8a0dea7471e594abfd01fee5f54d9445d488c77615fe53502"
+      },
+      "af": {
+        "text": "Soek volgens onderwerp of sleutelwoord",
+        "sha256": "cc364258b9b0ed8d821b38c294a9c56f56eac36da5669a8a991350e84f708775"
+      }
+    },
+    {
+      "key": "public.discovery.search.results.title",
+      "family": "search",
+      "class": "B",
+      "en": {
+        "text": "Search results",
+        "sha256": "e978b00de465a271a13bf2f6b9d74d67fdfaa7d973a37378fa32f988c3280599"
+      },
+      "af": {
+        "text": "Soekresultate",
+        "sha256": "9e3f202fb20c13bc345896cc0e117e23651ec6cb2e5cdc022430b95a07d46c1e"
+      }
+    },
+    {
+      "key": "public.discovery.search.results.count",
+      "family": "search",
+      "class": "B",
+      "en": {
+        "text": "Results: {{count}}",
+        "sha256": "e1a5787d81a6cee655dfbdf7706b636d4b9961a85c4e9522c887011bbb372c99"
+      },
+      "af": {
+        "text": "Resultate: {{count}}",
+        "sha256": "af0da3fa8c583075daab31e47d767e33632fddf61ebdcfdf7f9e4cdcd66973b6"
+      }
+    },
+    {
+      "key": "public.discovery.search.no_results.title",
+      "family": "search",
+      "class": "B",
+      "en": {
+        "text": "Nothing matched your search",
+        "sha256": "b4d4be3a607b2a4b6473e7497b8f866496aa53052b02cd5974551588a7d9931b"
+      },
+      "af": {
+        "text": "Geen inhoud pas by jou soektog nie",
+        "sha256": "9279a4f8cca95f1c48c12731193c79c2081c9f69a6839345dc597b2640788e99"
+      }
+    },
+    {
+      "key": "public.discovery.search.no_results.body",
+      "family": "search",
+      "class": "B",
+      "en": {
+        "text": "Try another word or clear your filters.",
+        "sha256": "701fc911628a8525aab2a19fcfd59ccbd03e471c97c534458cc84fb44d3f3589"
+      },
+      "af": {
+        "text": "Probeer ’n ander woord of verwyder jou filters.",
+        "sha256": "81374ea38762de68c980891099312d3ea220e335148d8cbafa1a77373a21cdf9"
+      }
+    },
+    {
+      "key": "public.discovery.search.unavailable.title",
+      "family": "search",
+      "class": "B",
+      "en": {
+        "text": "Search is unavailable",
+        "sha256": "ca3f2b79e2c1849f914fc3a7bc5827cd88f418c74bbb93c92e6dff847b341183"
+      },
+      "af": {
+        "text": "Soekfunksie nie beskikbaar nie",
+        "sha256": "96573e6d8c373a5e965b775402839a718a4befb38da1b8fbe2ef7d5b6eaae279"
+      }
+    },
+    {
+      "key": "public.discovery.search.unavailable.body",
+      "family": "search",
+      "class": "B",
+      "en": {
+        "text": "You can still explore the topics shown here.",
+        "sha256": "389ca9366d40e77119e3dc8fd89c8a8c139f614b30ca6144f133d9375e5c1f8a"
+      },
+      "af": {
+        "text": "Jy kan steeds die onderwerpe wat hier gewys word, verken.",
+        "sha256": "7f161e089268a4a8cfe2808aa3275f2e83f96370169763fdb8c6d38097b7bcf2"
+      }
+    },
+    {
+      "key": "public.discovery.topics.title",
+      "family": "browse",
+      "class": "B",
+      "en": {
+        "text": "Explore by topic",
+        "sha256": "79e9300610dc60a1b3d75630af3bd5e00f8f2762facabec29c5fc2053c2120cd"
+      },
+      "af": {
+        "text": "Verken volgens onderwerp",
+        "sha256": "f53afa4e54f66ea6258733d355591bc5eb00166dfb206ae51cbcaf37edce6cfe"
+      }
+    },
+    {
+      "key": "public.discovery.topics.all.action",
+      "family": "browse",
+      "class": "B",
+      "en": {
+        "text": "All topics",
+        "sha256": "29366ff59789ad75e8be838b5b51222981b3da8a2a8f50d47684de7e55f81156"
+      },
+      "af": {
+        "text": "Alle onderwerpe",
+        "sha256": "d7b05f5fa8c0e8fa936dfe0f8796962b783f6875519f79211001bf3ac21a9215"
+      }
+    },
+    {
+      "key": "public.discovery.topics.current.announcement",
+      "family": "browse",
+      "class": "B",
+      "en": {
+        "text": "Showing content for {{topic_name}}",
+        "sha256": "6011b4443e71ab2bb53f8175d4d58819b7831904de7e584905c8846c19419c17"
+      },
+      "af": {
+        "text": "Inhoud vir {{topic_name}} word gewys",
+        "sha256": "0922b09eddfd7bd4c8a2670ec03f8be5840a770e427d8d93df86d3d32061d59f"
+      }
+    },
+    {
+      "key": "public.discovery.filters.applied.title",
+      "family": "filters",
+      "class": "B",
+      "en": {
+        "text": "Active filters",
+        "sha256": "213a9822c38a965c8d62cca37b9e726d52fd1106cc69a065c48a1203274b0458"
+      },
+      "af": {
+        "text": "Aktiewe filters",
+        "sha256": "fdd02e22844a6413ba8acba7494bc3d1ac2fab34ade9076b946c37198d9fd733"
+      }
+    },
+    {
+      "key": "public.discovery.filters.clear.action",
+      "family": "filters",
+      "class": "B",
+      "en": {
+        "text": "Clear filters",
+        "sha256": "7179ea0035fca783ec62b7185659b68c75f2a7c12b909306a57183dc9b3fa44b"
+      },
+      "af": {
+        "text": "Verwyder filters",
+        "sha256": "b29db03dbea2efef00adff91704aff2e8c5886ee21bb6d07eee346bc6077cfa6"
+      }
+    },
+    {
+      "key": "public.discovery.filters.no_matches.body",
+      "family": "filters",
+      "class": "B",
+      "en": {
+        "text": "No published content matches these filters. Choose another topic or clear your filters.",
+        "sha256": "831d59b8e9c9cb72c729af712d57f31c1e01759ae939cffe37ea41291564f2a1"
+      },
+      "af": {
+        "text": "Geen gepubliseerde inhoud pas by hierdie filters nie. Kies ’n ander onderwerp of verwyder jou filters.",
+        "sha256": "d0e577e712cee6394cfe6718c6615fdd2ae9a4d6c0750037bef5fdd9a855ef48"
+      }
+    },
+    {
+      "key": "public.discovery.sort.label",
+      "family": "sorting",
+      "class": "B",
+      "en": {
+        "text": "Sort content",
+        "sha256": "5d45de1be17714285bf21c0f36c228e5aa491a469707570a527c63df0145d4ce"
+      },
+      "af": {
+        "text": "Sorteer inhoud",
+        "sha256": "16b1d3f0cb23b5b77dbde2157fce878c71da8f1c141780532c9955a911f3a420"
+      }
+    },
+    {
+      "key": "public.discovery.sort.newest.action",
+      "family": "sorting",
+      "class": "B",
+      "en": {
+        "text": "Newest first",
+        "sha256": "ffb6f5764bddb68c49177c75a9b4a9638878f862bd5d3b1375b8eb1d40538e15"
+      },
+      "af": {
+        "text": "Nuutste eerste",
+        "sha256": "9857e6a859a156b31450c54fd575326fa75446b335ccc8c6a2a031c0c5164383"
+      }
+    },
+    {
+      "key": "public.discovery.sort.oldest.action",
+      "family": "sorting",
+      "class": "B",
+      "en": {
+        "text": "Oldest first",
+        "sha256": "6e2ebdab3c02a3e6afd09432dbb9508b46e3174dfbf752e6b80d4b645189078c"
+      },
+      "af": {
+        "text": "Oudste eerste",
+        "sha256": "4e0b00ea3696ddfff607dc96f3f36e53deb603ec98742e078af23bf13708e0ba"
+      }
+    },
+    {
+      "key": "public.discovery.featured.title",
+      "family": "collections",
+      "class": "B",
+      "en": {
+        "text": "Featured reading",
+        "sha256": "39b40ea8d3ad26dc8ace9daf869d3270777d4e32b47af21b36b8e1a5913f60a6"
+      },
+      "af": {
+        "text": "Uitgeligte leesstof",
+        "sha256": "36179194963aa465963bd550d61afd558b97507f571755ed2a799514cad09e3a"
+      }
+    },
+    {
+      "key": "public.discovery.latest.title",
+      "family": "collections",
+      "class": "B",
+      "en": {
+        "text": "Recently published",
+        "sha256": "5eda7c0bf89ec3c4166f99bdb3512d00486af84e236fc97243fe9f26a29f5c08"
+      },
+      "af": {
+        "text": "Onlangs gepubliseer",
+        "sha256": "447ab6d2d1cac5a138efa1c0585f78e2e3ad61a4899fbea97aab2ebfbf9b8e57"
+      }
+    },
+    {
+      "key": "public.discovery.article.read.action",
+      "family": "article",
+      "class": "B",
+      "en": {
+        "text": "Read article",
+        "sha256": "5cba5417a8cb35898d2892ce03f27bea13ba970fa9dcff02535b584572cad248"
+      },
+      "af": {
+        "text": "Lees artikel",
+        "sha256": "62ef13ebecbb986ad55e04ea3d6fe915e8fff0d4550f225413050d751aacbf8f"
+      }
+    },
+    {
+      "key": "public.discovery.article.reading_time",
+      "family": "article",
+      "class": "B",
+      "en": {
+        "text": "{{minutes}} min read",
+        "sha256": "b68dfe75771919d94a13385dd16bbd61d16af44a0e20e5e3781d702b2ae4aa2c"
+      },
+      "af": {
+        "text": "Leestyd: {{minutes}} min",
+        "sha256": "aaa0b6b541e96090cc494afe9959859c1597d9fab9ba8dff3e56baee63818ce8"
+      }
+    },
+    {
+      "key": "public.discovery.article.byline",
+      "family": "article",
+      "class": "B",
+      "en": {
+        "text": "By {{author_name}}",
+        "sha256": "969d8fed0517d688f4967b634cab1889107f98c6d0b989c1e60b8e8b78e5879a"
+      },
+      "af": {
+        "text": "Deur {{author_name}}",
+        "sha256": "81e2e951e5d9faf27532ef6a1be9ff27c3f444f7131071f9b8ab6f328c33ad8a"
+      }
+    },
+    {
+      "key": "public.discovery.article.published_date",
+      "family": "article",
+      "class": "B",
+      "en": {
+        "text": "Published on {{date}}",
+        "sha256": "cd745bbe5722b81dd69bd577adeb6a63b9d3159cfdd0c070a20245830f41340b"
+      },
+      "af": {
+        "text": "Gepubliseer op {{date}}",
+        "sha256": "193cadf75de0962382d5330ca75dbd3e8bf0a0b8a69988ac89595b21e4a13f0e"
+      }
+    },
+    {
+      "key": "public.discovery.article.language",
+      "family": "article",
+      "class": "B",
+      "en": {
+        "text": "Language: {{language_name}}",
+        "sha256": "5ff575b3a35a04fbf64909e5024e5a26a0ee611002a5c16cf2326ed20dd8e57a"
+      },
+      "af": {
+        "text": "Taal: {{language_name}}",
+        "sha256": "7b1cfb795c9e684b411396ada8b7263917cd2bb109bf815ad744db6b3a0ec4bc"
+      }
+    },
+    {
+      "key": "public.discovery.related.title",
+      "family": "article",
+      "class": "B",
+      "en": {
+        "text": "More to explore",
+        "sha256": "b6014b3736f8e355d892d61cdd48718561bee751dbd720d46971252f28e722da"
+      },
+      "af": {
+        "text": "Nog om te verken",
+        "sha256": "1976b9b7ce7b8cb56ceb0fb89bc1e966b6713f12683bea4e9a6e48405f47877e"
+      }
+    },
+    {
+      "key": "public.discovery.article.back.action",
+      "family": "article",
+      "class": "B",
+      "en": {
+        "text": "Back to public content",
+        "sha256": "e1d01debfd5c366393670358827f68a2c73e73d23fdb928651d4175f5d68ac52"
+      },
+      "af": {
+        "text": "Terug na openbare inhoud",
+        "sha256": "50561e35608a6a534e9d5b5cc730e1af631f7dfbc672189f78f7ada0027aa5f3"
+      }
+    },
+    {
+      "key": "public.discovery.article.unavailable.title",
+      "family": "availability",
+      "class": "B",
+      "en": {
+        "text": "This article is unavailable",
+        "sha256": "40c2673ff13f34995cdc8c098874411093a2657096fb8c9de989b1c6228b6255"
+      },
+      "af": {
+        "text": "Hierdie artikel is nie beskikbaar nie",
+        "sha256": "23714c4549105a05003ae7c29b36073c49b699ce56f0303a7a98d17565be91d5"
+      }
+    },
+    {
+      "key": "public.discovery.article.unavailable.body",
+      "family": "availability",
+      "class": "B",
+      "en": {
+        "text": "This article isn't available to read right now. You can return to public content.",
+        "sha256": "3dba1b06a70d8f28499db3bb6d11b86ba55028969cf167c561e9037a137013a2"
+      },
+      "af": {
+        "text": "Hierdie artikel is tans nie beskikbaar om te lees nie. Jy kan teruggaan na openbare inhoud.",
+        "sha256": "85ade7433115f41f8caadfa0593113b598f1d0559f5d5c9b32d194e3db2543ac"
+      }
+    },
+    {
+      "key": "public.discovery.translation.unavailable.title",
+      "family": "translation",
+      "class": "B",
+      "en": {
+        "text": "Not available in the selected language",
+        "sha256": "6176c3e51885770b9580fea94553b5ed12dae11db442eb6c18ad2c5fe259fc4c"
+      },
+      "af": {
+        "text": "Nie in die gekose taal beskikbaar nie",
+        "sha256": "c2c5fda0d49dd9a4e0ff168f4edfa0a5c4bc12c52f9d1fdb32f235e10a11d703"
+      }
+    },
+    {
+      "key": "public.discovery.translation.unavailable.body",
+      "family": "translation",
+      "class": "B",
+      "en": {
+        "text": "This article isn't available in {{selected_language}}. You can choose {{available_language}} to read it.",
+        "sha256": "2de4152270600c1df3c3bca0031052e91ae1619ede2d723a6b4fec5fc5353c20"
+      },
+      "af": {
+        "text": "Hierdie artikel is nie in {{selected_language}} beskikbaar nie. Jy kan {{available_language}} kies om dit te lees.",
+        "sha256": "e06f9c7a533fc121b6e4f46b296f6d2e1f2c052e883ca8b9de51d36974921b1c"
+      }
+    },
+    {
+      "key": "public.discovery.translation.switch.action",
+      "family": "translation",
+      "class": "B",
+      "en": {
+        "text": "Read in {{available_language}}",
+        "sha256": "11646f96fe202dd1e1de9a64210eb70ba7a9a27d5ca314d80290f4e8c4827f81"
+      },
+      "af": {
+        "text": "Lees in {{available_language}}",
+        "sha256": "3094bf1f08b7374223d7a3ce86f6a9408a2cc075887d5e6dc5c3fd77af514068"
+      }
+    },
+    {
+      "key": "public.discovery.empty.title",
+      "family": "availability",
+      "class": "B",
+      "en": {
+        "text": "No public content to explore yet",
+        "sha256": "2fd5214cea6ad99e068ddef087e40b2637bd9459649f63a52312296e9d17a97a"
+      },
+      "af": {
+        "text": "Nog geen openbare inhoud om te verken nie",
+        "sha256": "d38c4c4dfcdb41c2811880f6deb65458bfe3f780542409cc5a7aeff6a170a539"
+      }
+    },
+    {
+      "key": "public.discovery.empty.body",
+      "family": "availability",
+      "class": "B",
+      "en": {
+        "text": "There's no published public content here yet. You can return to the homepage.",
+        "sha256": "4f11822f1fc21c52005c6b068b556b983f23de8b4f1207eb16af70e936281bf6"
+      },
+      "af": {
+        "text": "Daar is nog geen gepubliseerde openbare inhoud hier nie. Jy kan na die tuisblad teruggaan.",
+        "sha256": "c1e94fe9a27e9bfaca578ff6f48a71f30ee85510716893909e133c97998a67b3"
+      }
+    },
+    {
+      "key": "public.discovery.loading.announcement",
+      "family": "state",
+      "class": "B",
+      "en": {
+        "text": "Loading public content…",
+        "sha256": "ef51947e406e8d829a79ca641f662fac78a01b55c1c0297130ffa42a565c19c5"
+      },
+      "af": {
+        "text": "Besig om openbare inhoud te laai…",
+        "sha256": "0720e5bc2d90bf1ac12cf3dea9f06f6a9e3634311b569eec842f1c02031d95df"
+      }
+    },
+    {
+      "key": "public.discovery.load_error.title",
+      "family": "state",
+      "class": "B",
+      "en": {
+        "text": "Content couldn't be loaded",
+        "sha256": "102647a5039df76d48e7fa3529c88d05d79609dca873598b83e70a85deaece78"
+      },
+      "af": {
+        "text": "Inhoud kon nie gelaai word nie",
+        "sha256": "c1edb0456dde9e338c4a2097011f1a49e4e5195ec30973ae99ab46c84edceecc"
+      }
+    },
+    {
+      "key": "public.discovery.load_error.body",
+      "family": "state",
+      "class": "B",
+      "en": {
+        "text": "We couldn't load this content. Please try again.",
+        "sha256": "b20c3982b727cd77383be720120c4794d8ec74ce8693290ca36845cde0900762"
+      },
+      "af": {
+        "text": "Ons kon nie hierdie inhoud laai nie. Probeer asseblief weer.",
+        "sha256": "008af926558240c2f5a518e253d8f58631f8ca069e12b9f3aa46abb99df0b24c"
+      }
+    },
+    {
+      "key": "public.discovery.pagination.more.action",
+      "family": "pagination",
+      "class": "B",
+      "en": {
+        "text": "Show more",
+        "sha256": "f5c9bd131486e793ee105bd81f001fc25cdc2dac9c1d9f636ac7d43a10efc7e6"
+      },
+      "af": {
+        "text": "Wys meer",
+        "sha256": "911b003f88686e5f12eb8f2fbe586c05866830d115c114ce733819e450633796"
+      }
+    },
+    {
+      "key": "public.discovery.pagination.loading",
+      "family": "pagination",
+      "class": "B",
+      "en": {
+        "text": "Loading more content…",
+        "sha256": "e4b7d59cf284d67a9729a000fb57ba2a45ab8da735ed14a7da7c635eaa1751cc"
+      },
+      "af": {
+        "text": "Besig om meer inhoud te laai…",
+        "sha256": "1ce3c3a4e92a6e83df4a52dff51972552b5a8dc9580adf5bf8e02a0a4f637029"
+      }
+    },
+    {
+      "key": "public.discovery.pagination.end.announcement",
+      "family": "pagination",
+      "class": "B",
+      "en": {
+        "text": "You've reached the end of these results.",
+        "sha256": "a44657bf5644f0837b2ced027845674a189fa61d18a39ae7edfd14edce4df40b"
+      },
+      "af": {
+        "text": "Jy het die einde van hierdie resultate bereik.",
+        "sha256": "6fb7a72100be57a068558946c7aa592a1000a1b1e773d265633ed32a2b1a4b81"
+      }
+    }
+  ],
+  "reuse_existing_keys_unchanged": [
+    {
+      "key": "shared.navigation.content",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.home",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.about",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.navigation.search",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.action.search",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.action.filter",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.action.sort",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.action.clear",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.action.retry",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.language.english",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.language.afrikaans",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "shared.empty.no_results",
+      "source": "COPY_REGISTRY.json",
+      "source_status_unchanged": "candidate"
+    },
+    {
+      "key": "public.shell.navigation.breadcrumb.label",
+      "source": "FP001_PUBLIC_SHELL_HEADER_FOOTER_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "source_status_unchanged": "owner_approved"
+    },
+    {
+      "key": "public.shell.header.language.label",
+      "source": "FP001_PUBLIC_SHELL_HEADER_FOOTER_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "source_status_unchanged": "owner_approved"
+    },
+    {
+      "key": "public.home.availability.section.title",
+      "source": "FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "source_status_unchanged": "owner_approved"
+    },
+    {
+      "key": "public.home.availability.section.body",
+      "source": "FP001_PUBLIC_HOMEPAGE_FIRST_VISIT_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "source_status_unchanged": "owner_approved"
+    }
+  ],
+  "composition_guards": [
+    "This public discovery page and its navigation are only presented when the actual governed public editorial capability and relevant routes are enabled; candidate copy does not establish feature availability.",
+    "Show only Content & Media publication-eligible public items and their approved translation versions; never display drafts, withdrawn/superseded-only items, paid libraries or personal/private material in public search.",
+    "No invented topic categories, article bodies, featured items, recommendations, bylines, reading times, dates, counts, URLs or publication claims; dynamic values must come from the owning Content source.",
+    "Display featured/latest/related headings only if eligible items for those sections actually exist; a headline alone does not imply any real content.",
+    "Render result count, topic name, author, language, reading duration and published date only from authoritative material and with appropriate locale formatting; never fabricate a value.",
+    "The `Read article` action applies to a genuinely available, published public article only. Other governed content types must receive separate appropriate labels rather than misrepresent a recipe or lesson as an article.",
+    "The optional one-language message applies only to low-risk public editorial content with an actual approved available-language version. Offer an explicit language selection; never silently switch or machine translate.",
+    "For mandatory bilingual safety, paid, assessment, personalised-plan or consent content, block display when an approved required locale is unavailable. Do not reuse the optional-article fallback.",
+    "Do not conflate an empty public catalogue, a zero-result search, filtered-out results, temporarily failed loading, an unavailable or withdrawn article, and missing translation.",
+    "Show a browse-by-topic alternative after a search failure only when the topic listing remains available; do not suggest a route that is broken.",
+    "Sorting by age requires real publication timestamps; neither featured placement nor relevance may imply unsupported recommendation/ranking semantics.",
+    "Saved-content actions, personalised feeds, newsletters/marketing opt-ins, social sharing and paid-content previews remain outside this candidate until their owning feature and privacy/entitlement mechanics exist.",
+    "No hardcoded public brand; use existing shared navigation/status keys as references, not new duplicate strings. Their candidate statuses remain candidate."
+  ],
+  "display_states": [
+    {
+      "state": "not_enabled",
+      "display": "Do not expose content-discovery navigation or live controls; an existing approved unavailable section may be shown only where the product actually needs it.",
+      "terminal": false
+    },
+    {
+      "state": "loading",
+      "display": "Loading announcement only while a public-content lookup is genuinely pending.",
+      "terminal": false
+    },
+    {
+      "state": "available",
+      "display": "Render eligible articles, categories and real metadata only.",
+      "terminal": false
+    },
+    {
+      "state": "catalogue_empty",
+      "display": "Use public.discovery.empty.* only when a successful authoritative lookup found zero published eligible public items.",
+      "terminal": false
+    },
+    {
+      "state": "query_no_results",
+      "display": "Use public.discovery.search.no_results.* only after a completed search returns no matches.",
+      "terminal": false
+    },
+    {
+      "state": "filtered_out",
+      "display": "Use public.discovery.filters.no_matches.body only when filters caused the zero-match result.",
+      "terminal": false
+    },
+    {
+      "state": "search_unavailable",
+      "display": "Show search error and usable topic browsing only if the latter works.",
+      "terminal": false
+    },
+    {
+      "state": "read_unavailable",
+      "display": "Show article-unavailable state without claiming a withdrawal cause.",
+      "terminal": false
+    },
+    {
+      "state": "translation_unavailable_optional",
+      "display": "Explicit approved available language only, requiring visitor choice.",
+      "terminal": false
+    },
+    {
+      "state": "loading_failed",
+      "display": "Show loading failure and retry; do not claim empty catalogue.",
+      "terminal": false
+    }
+  ],
+  "explicitly_excluded": [
+    "Application implementation, public route activation, PR merge, runtime publication, production release or actual Content & Media publication/withdrawal decisions.",
+    "Actual article/recipe/devotional text, images, medical or Bible-based guidance, editorial categories and author credentials.",
+    "Paid library, purchase, entitlement, personalised feed, saving or dismissal, programme, practitioner or assessment promises.",
+    "Newsletter collection, marketing consent, personalised communications, tracking and external/social link configuration.",
+    "A technical search, indexing, content model, translation, ranking, pagination or routing implementation."
+  ],
+  "presentation_transition_contract": {
+    "authority": "Derived, non-durable UI observations only. Content & Media retains authoritative content and translation publication/withdrawal lifecycles.",
+    "transitions": [
+      {
+        "from": "not_enabled",
+        "to": "loading",
+        "guard": "The owning public-discovery implementation explicitly enables the route and an authorised public query is initiated."
+      },
+      {
+        "from": "loading",
+        "to": "available",
+        "guard": "Successful authoritative lookup returns at least one eligible published public item."
+      },
+      {
+        "from": "loading",
+        "to": "catalogue_empty",
+        "guard": "Successful authoritative unfiltered lookup returns zero eligible published public items."
+      },
+      {
+        "from": "loading",
+        "to": "loading_failed",
+        "guard": "Lookup fails or times out; do not infer catalogue emptiness."
+      },
+      {
+        "from": "loading_failed",
+        "to": "loading",
+        "guard": "Visitor explicitly retries or a new permitted read starts."
+      },
+      {
+        "from": "available",
+        "to": "query_no_results",
+        "guard": "A completed search returns zero matching eligible items; not a timeout."
+      },
+      {
+        "from": "available",
+        "to": "filtered_out",
+        "guard": "A completed filtered query returns zero eligible items."
+      },
+      {
+        "from": "available",
+        "to": "search_unavailable",
+        "guard": "Search is unavailable; offer alternate browsing only when that path works."
+      },
+      {
+        "from": "available",
+        "to": "read_unavailable",
+        "guard": "An authoritative content recheck denies access to the selected item."
+      },
+      {
+        "from": "available",
+        "to": "translation_unavailable_optional",
+        "guard": "Low-risk public editorial version is absent in selected locale and a separately approved available-language version exists."
+      },
+      {
+        "from": "translation_unavailable_optional",
+        "to": "available",
+        "guard": "Visitor explicitly selects the approved available-language version; no silent locale change."
+      },
+      {
+        "from": "available",
+        "to": "not_enabled",
+        "guard": "Feature is withdrawn or the route becomes unavailable; no stale cached item should be displayed."
+      }
+    ],
+    "side_effects": "Read-only UI state and explicit navigation; no content publication, consent, entitlement, saved-content or account writes.",
+    "terminal_states": "None for this ephemeral UI presentation. Published content and translations have separate authoritative terminal states under governing Product Law.",
+    "concurrency_retry_reconciliation": "Repeated searches/retries do not create business effects. Use fresh authorised Content state and invalidate stale results after withdrawal, permission changes or locale/version changes.",
+    "failure_recovery": "Keep unsuccessful fetch, empty result and unavailable translation distinct; show safe retry or public navigation only if those actions work."
+  },
+  "verified_main_sha": "6b92ba6d2b51be4f15af27c66a9d24dcf73640f8",
+  "source_candidate": {
+    "filename": "PUBLIC_CONTENT_DISCOVERY_EN_AF_COPY_CANDIDATE_v0.1.1.json",
+    "sha256": "6485e9ca34a90794eab96f6a84bb20613510594307e5ab13ed8e9052c2b4b3f3",
+    "source_status": "CANDIDATE_NOT_OWNER_APPROVED; FUTURE_GATED_PUBLIC_EDITORIAL_DISCOVERY",
+    "provenance": "User-approved exact candidate, with original metadata preserved in the source SHA-256; this approved packet contains the same 42 EN/AF key pairs."
+  },
+  "approval": {
+    "approved_on": "2026-11-17",
+    "decision": "Explicit approval of the complete v0.1.1 candidate: 42 new semantic keys / 84 EN/AF strings, with 16 reused references unchanged. Approved exactly by the source candidate JSON SHA-256.",
+    "authority": "Direct accountable owner approval in conversation for the exact v0.1.1 JSON SHA-256.",
+    "source_sha256": "6485e9ca34a90794eab96f6a84bb20613510594307e5ab13ed8e9052c2b4b3f3",
+    "pr_creation_authorisation": "Authorised to open bounded copy-only PR; DO NOT MERGE. No application implementation, public publication, production use or release authorisation.",
+    "no_runtime_activation": true
+  }
+}
