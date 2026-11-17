@@ -435,6 +435,6 @@ defmodule NewYou.ManagedSlotProbe do
   end
 end
 
-if not Process.get(:managed_slot_probe_test_load) do
+unless Process.get(:managed_slot_probe_test_load, false) do
   NewYou.ManagedSlotProbe.main()
 end

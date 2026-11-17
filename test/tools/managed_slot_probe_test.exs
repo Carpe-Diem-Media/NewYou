@@ -6,6 +6,25 @@ Code.require_file("../proof/managed_slot_probe.exs", __DIR__)
 defmodule NewYou.ManagedSlotProbeTest do
   use ExUnit.Case, async: true
 
+  test "a fresh script invocation rejects DEV before reading input or starting a Repo" do
+    expression = "Mix.start(); Code.require_file(\"test/proof/managed_slot_probe.exs\")"
+
+    {executable, arguments} =
+      case System.find_executable("mise") do
+        nil -> {System.find_executable("elixir"), ["-e", expression]}
+        mise -> {mise, ["exec", "--", "elixir", "-e", expression]}
+      end
+
+    {output, status} =
+      System.cmd(executable, arguments,
+        env: [{"MIX_ENV", "dev"}, {"ERL_FLAGS", "+S 2:2"}],
+        stderr_to_stdout: true
+      )
+
+    assert status == 2
+    assert output =~ "MANAGED_SLOT_ERROR=test_environment_required"
+  end
+
   test "psql boundary uses supported options and keeps credentials out of arguments" do
     directory = Path.join(System.tmp_dir!(), "slot-psql-#{System.unique_integer([:positive])}")
     File.mkdir!(directory)
