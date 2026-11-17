@@ -43,11 +43,24 @@ defmodule NewYou.Proof.RegistrationSeam do
     checkpoint = Process.get(__MODULE__)
     content_key = {NewYou.Content.PasswordResetMessage, :evidence_root}
     content_root = Process.get(content_key)
+    unboxed_fixture? = Process.get({NewYou.Proof.P805, :fixture_checked_out}) == true
 
     fn ->
       Process.put(__MODULE__, checkpoint)
       if is_binary(content_root), do: Process.put(content_key, content_root)
-      callback.()
+
+      if unboxed_fixture? do
+        # A timed-out worker must not disconnect the fixture owner's lease.
+        :ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo, sandbox: false)
+
+        try do
+          callback.()
+        after
+          Ecto.Adapters.SQL.Sandbox.checkin(NewYou.Repo)
+        end
+      else
+        callback.()
+      end
     end
   end
 end
