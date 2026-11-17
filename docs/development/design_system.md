@@ -914,3 +914,77 @@ checks, current-head CI, OCR and independent Master Gate remain mandatory. This
 is not approval of a new visual value, production adoption or integration.
 The [diagnosis](research/acss-4.0.3-inventory/quality-gate-diagnosis.md) records the
 scope and the corrected external-tool locator used by the evidence schema.
+
+## Floating-field composition corrections
+
+Independent review of `5699038` reproduced two defects that the individual token
+and component proofs missed. A floating label paints the control border and
+focus outline, while its inner input retains native interaction. Derived border
+values had resolved on root/input, and the surface focus selector reached only
+the native input. Default appearance worked, but component-local border edits
+and surrounding surface focus overrides did not reach the visible paint owner.
+
+`assets/css/design-tokens.css` now resolves `--border-control` and
+`--design-control-invalid-width` on `.ds-floating-control` as well as stacked
+inputs. Edit the optional `--border-control-width`, `--border-control-style` and
+`--border-control-color` inputs on the wrapper or an inherited scope. Invalid
+width remains twice the selected control width. The existing local
+`--design-border-width` fallback still works; a local edit must not change a
+sibling or unrelated stacked field.
+
+`assets/css/design-surfaces.css` separately selects the floating wrapper when its
+direct native input matches `:focus-visible`. Its outline uses inherited
+`--context-focus` from the nearest surface. Plain and nested profile boundaries
+retain their existing reset rules. The native-control selector is unchanged;
+the additional `:has()` selector is a separate rule so lack of selector support
+cannot invalidate native focus styling. No palette, dimensions, animation,
+native label semantics or premium button treatment changed.
+
+`test/assets/design_floating_composition_contract.mjs` is invoked by the existing
+floating-field browser runner in both engines. Its computed-style checks cover
+all four painted borders, local/ancestor/root inputs, style/color, invalid
+doubling, the legacy width fallback and sibling/stacked isolation. Actual Tab
+navigation checks nested profile resets, inherited/local focus inputs and every
+supported surface profile. Temporary styles, attributes, DOM placement and
+viewport position are restored. The first integrated run found scroll-position
+pollution from the new test helper; cleanup was corrected and a restoration
+assertion added without weakening the original movement assertion.
+
+Both defect tests failed against the unchanged compiled CSS before their
+respective corrections. Focused Chrome proof then passed 14 border and 22
+keyboard/surface assertions. The complete connected runner passed 137 Chromium
+and 135 Firefox checks, with no POSTs or product page errors. Native Chromium
+autofill, reduced motion, long EN/AF text, no-script behavior, local tokens,
+LiveView patch/reconnect and 320/390/744/1440px checks remain in that runner.
+Minimum outside-border contrast remains 5.7263:1. Firefox autofill, WebKit,
+screen readers and true browser zoom remain outside this proof.
+
+The broader border and surface runners initially stopped at Puppeteer's
+unsupported `forced-colors` media-feature API. They now use the lighting runner's
+existing CDP pattern, explicitly assert activation/reset, and retain every
+fallback assertion. Their complete reruns pass 324 border and 2,317 surface
+assertions. Registration keyboard proof passes 458 checks; the focused
+Foundation/routing/capability/history Python suite passes 96 tests. These results
+do not substitute for the final canonical/deep gate or exact-head hosted CI.
+
+Repeat with a running DEV guide using the existing browser tooling:
+
+```sh
+BROWSER_TOOLS_ROOT=/home/jcschoeman96/.local/share/mise/installs/node/26.2.0/lib mise exec -- node test/assets/design_floating_fields_browser.mjs
+BROWSER_TOOLS_ROOT=/home/jcschoeman96/.local/share/mise/installs/node/26.2.0/lib DESIGN_BROWSER=firefox FIREFOX_PATH=/snap/bin/firefox FIREFOX_PROFILE_ROOT="$HOME/snap/firefox/common" mise exec -- node test/assets/design_floating_fields_browser.mjs
+```
+
+The supported four-file Hallmark guide render retains the same gate-40 inner-input
+FAIL covered by the owner's scoped detector exception, with zero open REFLEX or
+rejected waivers. Its two WARNs concern the existing gradient endpoint and a
+heading rule whose wrapping is supplied elsewhere. Default UI inputs and the
+measured detector geometry remain unchanged. This is not Hallmark-green proof
+or an extension of the exception to other findings.
+
+The two local contract corrections do not resolve OCR's provider failure or the
+independent overlapping 889/892 canonical attempt. That failed attempt remains
+recorded under WELL-114's fixture-interference investigation. Fresh applicable
+engineering/hosted proof and renewed exact-head independent review remain
+separate obligations, recorded in PR/Plane. No unrelated fixture repair or
+production adoption is included. Documentation impact is a focused addendum to
+the existing UI contract; no Domain/interface/schema/lifecycle map is added.

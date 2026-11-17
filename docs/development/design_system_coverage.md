@@ -3,7 +3,7 @@
 This is the current implementation index for WELL-112. It describes application
 and guide source inspected at `86461db98051fbd901b1e6b6953af42eb76b732b`.
 The associated [PR #227](https://github.com/Carpe-Diem-Media/NewYou/pull/227) is
-Draft. This index is descriptive documentation beneath [DESIGN.md](../../DESIGN.md),
+Draft at that recorded checkpoint. This index is descriptive documentation beneath [DESIGN.md](../../DESIGN.md),
 not visual approval, live execution authority or release certification. Plane
 owns current delivery state. Recheck source and proof before reuse.
 
@@ -154,6 +154,10 @@ ACSS before this foundation can be finished and adopted.
   motion and no-script behavior have browser proof. Source:
   [Field](../../lib/new_you_web/components/design/field.ex),
   [floating-label notes](design_system.md#opt-in-floating-labels).
+  The later [composition correction](design_system.md#floating-field-composition-corrections)
+  resolves local borders on the painted wrapper and applies surrounding surface
+  focus roles to that wrapper's keyboard outline. Its permanent browser contract
+  combines those recipes; the earlier individual proofs missed this interaction.
 - **Decorative backgrounds, guide candidate:** gradients, seeded noise and
   overlays have tokens/specimens and usage limits. Their presence does not
   approve text pairings or image-overlay contrast.

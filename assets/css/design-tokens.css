@@ -261,7 +261,7 @@
 :root, :where(.ds-design-card) {
   --border-decorative: var(--border-decorative-width, var(--design-border-width)) var(--border-decorative-style, solid) var(--border-decorative-color, var(--hairline));
 }
-:root, :where(.ds-design-field-input) {
+:root, :where(.ds-design-field-input, .ds-floating-control) {
   --border-control: var(--border-control-width, var(--design-border-width)) var(--border-control-style, solid) var(--border-control-color, var(--ink-meta));
   --design-control-invalid-width: calc(2 * var(--border-control-width, var(--design-border-width)));
 }

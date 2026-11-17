@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {createRequire} from 'node:module'
 import {resolve,join} from 'node:path'
 import {mkdtemp,rm} from 'node:fs/promises'
+import {verifyFloatingBorders,verifyFloatingSurfaceFocus} from './design_floating_composition_contract.mjs'
 const require=createRequire(resolve(process.env.BROWSER_TOOLS_ROOT || '.', 'package.json'))
 const base=process.env.DESIGN_SYSTEM_URL || 'http://127.0.0.1:4237'
 const engine=process.env.DESIGN_BROWSER || 'chrome'
@@ -72,7 +73,11 @@ try {
   await page.goto(`${base}/dev/design-system`,{waitUntil:'networkidle0'})
   await page.evaluate(()=>document.fonts.ready)
   check(await page.$('#floating-labels label.ds-floating-control'),'shared floating specimens exist')
+  checks+=(await page.evaluate(verifyFloatingBorders)).checks
+  const scrollBefore=await page.evaluate(()=>({x:scrollX,y:scrollY}))
+  await verifyFloatingSurfaceFocus(page,check)
   await settle(page)
+  check(await page.evaluate(({x,y})=>scrollX===x && scrollY===y,scrollBefore),'composition proof restores the original viewport position')
   const rest=await page.evaluate(state,'floating-name')
   check(rest.offset>0 && rest.scale===1,'empty unfocused label rests inside')
   check(rest.edgeContrast>=3 && rest.borderWidth>=1,'the actual full control boundary has measured contrast and a visible border')

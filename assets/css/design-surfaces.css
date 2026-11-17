@@ -10,6 +10,7 @@
 .ds-surface :where(a) { color: var(--context-link); }
 .ds-surface :where(a):hover { color: var(--context-link-hover); }
 .ds-surface :is(a, button, input, select, textarea, summary):focus-visible { outline-color: var(--context-focus); }
+.ds-surface .ds-floating-control:has(> input:focus-visible) { outline-color: var(--context-focus); }
 .ds-pair-examples { @apply mt-design-xl; }
 .ds-pair-example { @apply p-design-lg; min-inline-size: 0; overflow-wrap: anywhere; }
 .ds-pair-example > .ds-stack { align-items: start; }

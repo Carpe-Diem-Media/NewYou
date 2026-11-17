@@ -1,10 +1,15 @@
 # Hallmark field-boundary and DEV focus diagnosis
 
 WELL-112 / Draft [PR #227](https://github.com/Carpe-Diem-Media/NewYou/pull/227).
-Application/CSS source is unchanged from `86461db98051fbd901b1e6b6953af42eb76b732b`.
-This continuation improves one standalone browser proof and documents detector
-limits. It does not change approved appearance, native semantics, installed lint,
+The original diagnosis used unchanged application/CSS source from
+`86461db98051fbd901b1e6b6953af42eb76b732b`. That continuation improved one standalone
+browser proof and documented detector limits. It did not change approved appearance, native semantics, installed lint,
 waivers, governed copy, application behavior or database fixtures.
+
+The later [floating-field composition corrections](../../design_system.md#floating-field-composition-corrections)
+change two CSS selectors and extend the permanent browser runner. The hashes and
+counts in this original diagnosis/evidence JSON describe its recorded checkpoint,
+not the later runner. Current delivery status belongs in Plane and the PR.
 
 The [evidence JSON](quality-gate-diagnosis-evidence.json) retains safe measured
 results, exact commands and local log/tool hashes. Raw private reports are not

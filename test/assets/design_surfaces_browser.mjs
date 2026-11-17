@@ -73,7 +73,10 @@ try {
   }
   await page.emulateMediaFeatures([{name:"prefers-reduced-motion",value:"reduce"}])
   check(await page.$$eval("#surface-pairings .ds-surface",nodes=>nodes.every(n=>{const s=getComputedStyle(n);return s.animationName==="none" && s.transitionDuration==="0s"})),"surface boundaries remain static under reduced motion")
-  await page.emulateMediaFeatures([{name:"forced-colors",value:"active"}])
+  // Match the lighting runner's supported Chrome protocol, not Puppeteer's allowlist.
+  const mediaSession=await page.createCDPSession()
+  await mediaSession.send("Emulation.setEmulatedMedia",{features:[{name:"forced-colors",value:"active"}]})
+  check(await page.evaluate(()=>matchMedia("(forced-colors: active)").matches),"forced colors actually active")
   check(await page.$$eval("#surface-pairings .ds-surface",nodes=>nodes.every(n=>{
     const s=getComputedStyle(n),canvas=document.createElement("div")
     canvas.style.backgroundColor="Canvas";canvas.style.color="CanvasText";document.body.append(canvas)
@@ -83,7 +86,9 @@ try {
   await page.focus("#pair-nested-link");await backTab(page);await page.keyboard.press("Tab")
   check(await page.$eval("#pair-nested-link",n=>n.matches(":focus-visible") && parseFloat(getComputedStyle(n).outlineWidth)>=2),"forced colors retains actual keyboard focus")
   check(await page.$$eval("#surface-pairings .ds-design-card",nodes=>nodes.every(n=>getComputedStyle(n).boxShadow==="none")),"forced colors retains existing card shadow removal")
-  await page.emulateMediaFeatures([])
+  await mediaSession.send("Emulation.setEmulatedMedia",{features:[]})
+  check(await page.evaluate(()=>!matchMedia("(forced-colors: active)").matches),"forced colors reset after proof")
+  await mediaSession.detach()
   const removed=await page.evaluate(()=>{
     const trim=container=>{let count=0;for(let i=container.cssRules.length-1;i>=0;i--){const r=container.cssRules[i];if((r.conditionText||"").includes("color-mix(")){container.deleteRule(i);count++}else if(r.cssRules)count+=trim(r)}return count}
     return [...document.styleSheets].reduce((n,s)=>n+trim(s),0)

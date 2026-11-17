@@ -72,13 +72,18 @@ try {
   check(await page.evaluate(()=>document.activeElement.id!=="border-action-pending"),"disabled pending CTA excluded from keyboard order")
   await page.emulateMediaFeatures([{name:"prefers-reduced-motion",value:"reduce"}])
   check(await ready.evaluate(n=>{const s=getComputedStyle(n);return s.animationName==="none" && s.transitionDuration==="0s"}),"static treatment under reduced motion")
-  await page.emulateMediaFeatures([{name:"forced-colors",value:"active"}])
+  // Puppeteer's allowlist omits forced-colors; Chrome exposes it through CDP.
+  const mediaSession=await page.createCDPSession()
+  await mediaSession.send("Emulation.setEmulatedMedia",{features:[{name:"forced-colors",value:"active"}]})
+  check(await page.evaluate(()=>matchMedia("(forced-colors: active)").matches),"forced colors actually active")
   for(const id of ["border-action-ready","border-action-pending","border-card-lit"]) {
     check(await page.$eval(`#${id}`,n=>{const s=getComputedStyle(n);return s.backgroundImage==="none" && s.boxShadow==="none" && s.borderTopStyle!=="none" && parseFloat(s.borderTopWidth)>=1}),`forced colors retains native boundary ${id}`)
   }
   await page.focus("#border-field-control");await page.keyboard.press("Tab")
   check(await page.$eval("#border-field-invalid",n=>{const s=getComputedStyle(n);return n.matches(":focus-visible") && s.outlineStyle!=="none" && parseFloat(s.outlineWidth)>0}),"forced colors preserves field keyboard outline")
-  await page.emulateMediaFeatures([])
+  await mediaSession.send("Emulation.setEmulatedMedia",{features:[]})
+  check(await page.evaluate(()=>!matchMedia("(forced-colors: active)").matches),"forced colors reset after proof")
+  await mediaSession.detach()
   await page.setViewport({width:320,height:1000})
   await page.$eval("#borders",n=>n.scrollIntoView())
   await page.screenshot({path:"/tmp/newyou-borders-320.png",fullPage:false})
