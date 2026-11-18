@@ -8,8 +8,8 @@
     "WELL-153"
   ],
   "implementation_revision": {
-    "git_sha": "586ede724ce4bdf6cd33b93c512d513a726e12fb",
-    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-153 changes TEST-only recovery restart diagnostics and proof; Identity and password-reset business semantics remain unchanged."
+    "git_sha": "41b7b5bd6cae3c19c09b5366b8347516ade2e6a1",
+    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-153 changes TEST-only recovery restart diagnostics and proof; Identity and password-reset business semantics remain unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -994,13 +994,14 @@
     {
       "path": "test/new_you/proof/p8_15_port_test.exs",
       "cases": [
-        "Safe bounded child status and marker classification, startup failure, output overflow, deadline, and process-group cleanup."
+        "Safe bounded child status and marker classification, startup failure, output overflow, deadlines, cancellation, and process-group cleanup."
       ],
       "proves": "TEST-only subprocess outcomes and bounded cleanup under exercised Linux process conditions.",
       "limits": "Does not reconstruct the lost historical child status or certify production recovery.",
       "source_ids": [
         "restart_port",
-        "restart_port_test"
+        "restart_port_test",
+        "restart_fixture"
       ]
     }
   ],
@@ -1072,7 +1073,8 @@
     "Historical PR #217, PR #228 and Markdown handoffs remain historical evidence. The current WELL-20 candidate requires its own exact-head proof, CI and independent review.",
     "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations.",
     "WELL-136 verification corrected only the P815 reset-versus-recovery fixture lookup to its own Account. The strengthened case creates an unrelated reset proof through Identity and asserts that Token remains unchanged after contention. Deterministic RED failed at the previous global-purpose lookup; GREEN passed all 13 recovery-concurrency tests with seed 441709 and four schedulers. No recovery business API or lifecycle was changed and no retained shared records were deleted. Full gate results remain separately required.",
-    "WELL-153 observes checkpoint and connection loss in the new restart proof; the original seed 38448 child exit, output and timing remain unknown. A later pass does not establish the historical cause."
+    "WELL-153 observes checkpoint and connection loss in the new restart proof; the original seed 38448 child exit, output and timing remain unknown. A later pass does not establish the historical cause.",
+    "Fixture cleanup waits for registered restart workers; unconfirmed worker cleanup fails closed. Tests use synthetic fixtures and Linux process groups, and do not certify deployed recovery."
   ],
   "follow_up_tickets": [
     "WELL-17",
@@ -1223,7 +1225,7 @@
       "id": "concurrency_test",
       "path": "test/new_you/identity/recovery_concurrency_test.exs",
       "symbol": "defmodule ",
-      "sha256": "070db1400c259920801d0777654468f970a283a3c4babe77ee3546dca8b9b5dd"
+      "sha256": "7dd15c6695a0728ef89bc9b42a2dcd39cc49978335023c91c402777285b5bf4a"
     },
     {
       "id": "delivery_test",
@@ -1355,13 +1357,19 @@
       "id": "restart_port",
       "path": "test/support/proof/p8_15_port.ex",
       "symbol": "defmodule NewYou.Proof.P815Port",
-      "sha256": "07b1c76452c39c512d4667a0c29f21fbd2d7939bd917cb2c6634c9753080ee58"
+      "sha256": "afaa4bc55f7e9376105aac23b38fdc653eff16c25d0c624587f1a8426edff042"
     },
     {
       "id": "restart_port_test",
       "path": "test/new_you/proof/p8_15_port_test.exs",
       "symbol": "defmodule NewYou.Proof.P815PortTest",
-      "sha256": "297e927e69faad6ab4ccaead3ec55df6813aab4f0a50f5112d434d32853b3de1"
+      "sha256": "c1d4e2ed5a51e641ee7fb7ea278e8274eb6fcec430150d14bb7047cdea193592"
+    },
+    {
+      "id": "restart_fixture",
+      "path": "test/support/proof/p8_05.ex",
+      "symbol": "defmodule NewYou.Proof.P805",
+      "sha256": "1be335a43bfce95c3e603c618dfb6e3224685a9cd400a5896336b3410572d20c"
     }
   ]
 }
