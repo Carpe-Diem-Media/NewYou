@@ -20,12 +20,7 @@ defmodule NewYou.Proof.P815RestartRequest do
           {:halt, :interruption_not_proven}
 
         Atom.to_string(state) == input["expected_state"] ->
-          result =
-            if input["rollback_request_once"] == true and attempt > 1,
-              do: :request_retried,
-              else: :requested
-
-          {:halt, result}
+          {:halt, requested_result(input, attempt)}
 
         true ->
           IO.puts("P815_REQUEST_UNCOMMITTED")
@@ -33,6 +28,11 @@ defmodule NewYou.Proof.P815RestartRequest do
       end
     end)
   end
+
+  defp requested_result(%{"rollback_request_once" => true}, attempt) when attempt > 1,
+    do: :request_retried
+
+  defp requested_result(_input, _attempt), do: :requested
 
   defp request(input) do
     Sandbox.unboxed_run(Repo, fn ->
