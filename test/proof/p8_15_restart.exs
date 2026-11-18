@@ -9,14 +9,29 @@ defmodule NewYou.Proof.P815RestartRequest do
     end)
 
     interrupt_once(input)
-    request(input)
-    state = current_state(input)
+    attempts = if input["interrupt_request"] == true, do: 1, else: 3
 
-    cond do
-      input["interrupt_request"] == true -> :interruption_not_proven
-      Atom.to_string(state) == input["expected_state"] -> :requested
-      true -> :request_uncommitted
-    end
+    Enum.reduce_while(1..attempts, :request_uncommitted, fn attempt, _ ->
+      request(input)
+      state = current_state(input)
+
+      cond do
+        input["interrupt_request"] == true ->
+          {:halt, :interruption_not_proven}
+
+        Atom.to_string(state) == input["expected_state"] ->
+          result =
+            if input["rollback_request_once"] == true and attempt > 1,
+              do: :request_retried,
+              else: :requested
+
+          {:halt, result}
+
+        true ->
+          IO.puts("P815_REQUEST_UNCOMMITTED")
+          {:cont, :request_uncommitted}
+      end
+    end)
   end
 
   defp request(input) do
@@ -45,6 +60,18 @@ defmodule NewYou.Proof.P815RestartRequest do
          receive do
            :release_checkpoint -> :ok
          end
+       end}
+    )
+  end
+
+  defp interrupt_once(%{"rollback_request_once" => true}) do
+    Process.put(
+      NewYou.Proof.RegistrationSeam,
+      {:observe,
+       fn ->
+         Process.delete(NewYou.Proof.RegistrationSeam)
+         IO.puts("P815_ROLLBACK_CHECKPOINT")
+         raise "TEST-only recovery resume transaction rollback"
        end}
     )
   end

@@ -167,8 +167,7 @@ defmodule NewYou.Proof.P815 do
       {:ok, registration} = Identity.register(request)
       id = operation()
       before_account = Ash.get!(Account, registration.account_id, authorize?: false)
-      :ok = Identity.request_recovery(request.email, "af", id)
-      [recovery] = cases(registration.account_id)
+      recovery = request_unverified_case(registration.account_id, request.email, id, 3)
       secret = Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
 
       input = %{
@@ -219,7 +218,18 @@ defmodule NewYou.Proof.P815 do
       end
 
       # Retry in a fresh VM with exactly the original operation and case IDs.
-      assert restart_call(Map.put(input, :expected_state, "proof_pending")) == :requested
+      rollback_once? = Keyword.get(opts, :rollback_resume_once?, false)
+
+      resumed_request =
+        restart_call(
+          Map.merge(input, %{
+            expected_state: "proof_pending",
+            rollback_request_once: rollback_once?
+          })
+        )
+
+      expected_request = if rollback_once?, do: :request_retried, else: :requested
+      assert resumed_request == expected_request
 
       resumed = Ash.get!(RecoveryCase, recovery.id, authorize?: false)
       assert resumed.operation_id == id
@@ -246,6 +256,28 @@ defmodule NewYou.Proof.P815 do
 
       :ok
     end)
+  end
+
+  # A neutral public acknowledgement does not promise a committed fixture.
+  # Establish the valid zero-assurance prerequisite through the same operation,
+  # without retrying an interruption proof or changing its deadline.
+  defp request_unverified_case(account_id, email, operation_id, attempts) do
+    :ok = Identity.request_recovery(email, "af", operation_id)
+
+    case cases(account_id) do
+      [recovery] ->
+        assert recovery.operation_id == operation_id
+        assert recovery.state == :held_manual_review
+        assert recovery.proof_jti == nil
+        recovery
+
+      [] when attempts > 1 ->
+        IO.puts(:stderr, "P815_FIXTURE_REQUEST_UNCOMMITTED")
+        request_unverified_case(account_id, email, operation_id, attempts - 1)
+
+      [] ->
+        flunk("recovery fixture request did not commit after 3 bounded attempts")
+    end
   end
 
   # P8-16 has no apply interface on this base. This fixture models an earlier
@@ -839,11 +871,24 @@ defmodule NewYou.Proof.P815 do
       %{status: :ok, cleanup: :confirmed, marker: marker, started?: true, operation?: true} =
           diagnostic ->
         if Map.get(fields, :interrupt_request, false),
-          do: {:restart_failed, diagnostic},
-          else: marker
+          do: restart_failed(diagnostic),
+          else: requested_marker(fields, marker, diagnostic)
 
       diagnostic ->
-        {:restart_failed, diagnostic}
+        restart_failed(diagnostic)
     end
+  end
+
+  defp requested_marker(%{rollback_request_once: true}, marker, diagnostic) do
+    if diagnostic.rollback_checkpoint?, do: marker, else: restart_failed(diagnostic)
+  end
+
+  defp requested_marker(_fields, marker, _diagnostic), do: marker
+
+  defp restart_failed(diagnostic) do
+    # This map contains only P815Port's fixed markers/stages and bounded status
+    # values. Retain it when the aggregate runner hides exception details.
+    IO.puts(:stderr, "P815_RESTART_FAILED " <> inspect(diagnostic))
+    {:restart_failed, diagnostic}
   end
 end

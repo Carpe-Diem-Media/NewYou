@@ -472,6 +472,7 @@ defmodule NewYou.Proof.P815Port do
       operation?: "P815_OPERATION" in lines,
       checkpoint?: "P815_CHECKPOINT" in lines,
       connection_lost?: "P815_CONNECTION_LOST" in lines,
+      rollback_checkpoint?: "P815_ROLLBACK_CHECKPOINT" in lines,
       failure_class: failure_class(lines),
       phases: phases(lines)
     }

@@ -19,6 +19,51 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.unverified_restart_proof() == :ok
   end
 
+  test "restart fixture requires a committed case after a neutral request rolls back" do
+    failure = make_ref()
+
+    NewYou.Proof.RecoverySeam.observe(fn stage ->
+      if stage == :transaction_entered and not Process.get(failure, false) do
+        Process.put(failure, true)
+        raise "TEST-only recovery fixture transaction interruption"
+      end
+    end)
+
+    try do
+      assert P815.unverified_restart_proof() == :ok
+      assert Process.get(failure) == true
+    after
+      Process.delete({NewYou.Proof.RecoverySeam, :observer})
+      Process.delete(failure)
+    end
+  end
+
+  test "restart fixture fails closed when no bounded setup request commits" do
+    attempts = make_ref()
+
+    NewYou.Proof.RecoverySeam.observe(fn stage ->
+      if stage == :transaction_entered do
+        Process.put(attempts, Process.get(attempts, 0) + 1)
+        raise "TEST-only recovery fixture transaction interruption"
+      end
+    end)
+
+    try do
+      assert_raise ExUnit.AssertionError, ~r/did not commit after 3 bounded attempts/, fn ->
+        P815.unverified_restart_proof()
+      end
+
+      assert Process.get(attempts) == 3
+    after
+      Process.delete({NewYou.Proof.RecoverySeam, :observer})
+      Process.delete(attempts)
+    end
+  end
+
+  test "fresh resume retries a proven pre-commit rollback with one final proof and intent" do
+    assert P815.unverified_restart_proof(rollback_resume_once?: true) == :ok
+  end
+
   test "restarted recovery rolls back an observed checkpoint cut before retrying the same case" do
     assert P815.unverified_restart_proof(interrupt_resume?: true) == :ok
   end
