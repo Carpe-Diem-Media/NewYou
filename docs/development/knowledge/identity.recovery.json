@@ -8,7 +8,7 @@
     "WELL-153"
   ],
   "implementation_revision": {
-    "git_sha": "580a92e7dad7acee0be35bcbb508f75c03c8e548",
+    "git_sha": "1669390c809be302c68c373b789980355ad77478",
     "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-153 changes TEST-only recovery restart diagnostics and proof; Identity and password-reset business semantics remain unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1384,19 +1384,19 @@
       "id": "restart_fixture",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defmodule NewYou.Proof.P805",
-      "sha256": "0ccace3322661dfe781bc438cd43ff24ae0f567c39d60ddf1fb9c29581a1394a"
+      "sha256": "62391f8a42350fad06131721cfab0ddce38b2e5833622f3f1e16fad977e2e79e"
     },
     {
       "id": "fixture_ownership",
       "path": "test/support/proof/p8_05_fixture.ex",
       "symbol": "defmodule NewYou.Proof.P805Fixture",
-      "sha256": "54e0a7d6e6224965187fed09b2d22870f7c6df9693546ad28b3e1825f7dcd940"
+      "sha256": "cb87d323e91b6263c47654315f7f96c9d6245a75433d6445daf05b13802a0f53"
     },
     {
       "id": "fixture_lifecycle_test",
       "path": "test/new_you/proof/fixture_lifecycle_test.exs",
       "symbol": "defmodule NewYou.Proof.FixtureLifecycleTest",
-      "sha256": "2c9f9c76684b993b6e950bbff8014de79cd3528686dbabc751c9245c1dac49e6"
+      "sha256": "a1c8ebb450c3d25801bc52b2035cad3e485a4bbd17b40d825f0c983fd624bc43"
     },
     {
       "id": "fixture_connection_test",
