@@ -210,16 +210,16 @@ defmodule NewYou.Proof.P805Fixture do
     locked(fn ->
       case current() do
         %{reference: ^reference, external_launch: %{reference: ^launch}} = fixture ->
-          case callback.(fixture) do
-            {:error, _} = error -> error
-            updated -> store(updated)
-          end
+          store_launch_update(callback.(fixture))
 
         _ ->
           {:error, :stale_launch}
       end
     end)
   end
+
+  defp store_launch_update({:error, _} = error), do: error
+  defp store_launch_update(updated), do: store(updated)
 
   defp current, do: :persistent_term.get(@key, nil)
   defp store(fixture), do: :persistent_term.put(@key, fixture)
