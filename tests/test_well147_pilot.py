@@ -198,16 +198,17 @@ class PilotTests(unittest.TestCase):
                 jobs={job:{}}, state='quarantined', manifest=hashlib.sha256(b'{}').hexdigest(),
                 catalog=dict(database_oid=db_oid, role_oid=role_oid)))
         pending=dict(lease='e'*32, generation='f'*32, preparer=dict(pid=10,start='1',boot='boot'))
-        row=dict(slot=3, worktree=pilot.WORKTREES[0], lease_id=pending['lease'],
+        row=dict(slot=3, port=4223, worktree=pilot.WORKTREES[0], lease_id=pending['lease'],
                  generation=pending['generation'], preparer=pending['preparer'].copy(), jobs={},state='preparing')
         rows.append(row)
+        conflicts=[]
         def read(argv, cwd):
             if argv[0]=='git':
                 if '--show-toplevel' in argv: return cwd
                 if 'HEAD' in argv: return 'a'*40
                 return ''
             if '--version' in argv: return 'devcore-project 1.2.1'
-            if argv[-1]=='manifest': return json.dumps(dict(manifest={},sha256=pilot.MANIFEST,heavy_limit=2,port_conflicts=[]))
+            if argv[-1]=='manifest': return json.dumps(dict(manifest={},sha256=pilot.MANIFEST,heavy_limit=2,port_conflicts=conflicts))
             return json.dumps(rows)
         with patch.object(pilot,'CHECKSUM',hashlib.sha256(b'fake').hexdigest()), \
              patch.object(pilot,'MANIFEST',hashlib.sha256(b'{}').hexdigest()), \
@@ -215,6 +216,17 @@ class PilotTests(unittest.TestCase):
             with self.assertRaises(pilot.Refused): pilot.preflight(read,'/fake',expected_source='a'*40)
             result=pilot.preflight(read,'/fake',expected_source='a'*40,pending_jobs={pilot.WORKTREES[0]:pending})
             self.assertFalse(result['execution_clearance'])
+            conflicts.append(4223)
+            with self.assertRaises(pilot.Refused):
+                pilot.preflight(read,'/fake',expected_source='a'*40,pending_jobs={pilot.WORKTREES[0]:pending},listener_check=lambda *args:True)
+            row['state']='ready'
+            with self.assertRaises(pilot.Refused):
+                pilot.preflight(read,'/fake',expected_source='a'*40,pending_jobs={pilot.WORKTREES[0]:pending})
+            result=pilot.preflight(read,'/fake',expected_source='a'*40,pending_jobs={pilot.WORKTREES[0]:pending},
+                listener_check=lambda process,port: process==pending['preparer'] and port==4223)
+            self.assertFalse(result['execution_clearance'])
+            with self.assertRaises(pilot.Refused):
+                pilot.preflight(read,'/fake',expected_source='a'*40,pending_jobs={pilot.WORKTREES[0]:pending},listener_check=lambda *args:False)
             row['preparer']=dict(pending['preparer'],start='wrong')
             with self.assertRaisesRegex(pilot.Refused,'pending pair'):
                 pilot.preflight(read,'/fake',expected_source='a'*40,pending_jobs={pilot.WORKTREES[0]:pending})
@@ -405,6 +417,32 @@ class CompositionTests(unittest.TestCase):
                 '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-U', 'devcore_admin', '-d', 'postgres']
         with self.assertRaisesRegex(pilot.Refused, 'command refused'):
             reads.command(argv, pilot.WORKTREES[0], stdin='BEGIN READ ONLY;\nSELECT 1;\nROLLBACK;\n')
+
+class ListenerTests(unittest.TestCase):
+    def test_actual_loopback_socket_belongs_to_captured_process(self):
+        import socket
+        with socket.socket() as held:
+            held.bind(('127.0.0.1',0)); held.listen(1)
+            metadata=pilot.process_metadata()[os.getpid()]
+            identity={k:metadata[k] for k in ('pid','start','boot')}
+            self.assertTrue(pilot.owned_listener(identity,held.getsockname()[1]))
+            with self.assertRaises(pilot.Refused):
+                pilot.owned_listener(dict(identity,start='wrong'),held.getsockname()[1])
+
+
+    def test_foreign_loopback_socket_is_rejected(self):
+        import sys
+        child=subprocess.Popen([sys.executable,'-c',
+            'import socket,sys; s=socket.socket(); s.bind(("127.0.0.1",0)); s.listen(1); print(s.getsockname()[1],flush=True); sys.stdin.buffer.read()'],
+            stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        try:
+            port=int(child.stdout.readline())
+            metadata=pilot.process_metadata()[os.getpid()]
+            with self.assertRaises(pilot.Refused):
+                pilot.owned_listener({k:metadata[k] for k in ('pid','start','boot')},port)
+        finally:
+            child.stdin.close();child.wait(timeout=3);child.stdout.close();child.stderr.close()
+
 
 class PrerequisiteReadTests(unittest.TestCase):
     def test_timed_out_read_has_private_survivor_receipt(self):

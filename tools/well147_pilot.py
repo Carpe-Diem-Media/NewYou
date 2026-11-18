@@ -59,7 +59,7 @@ def quarantine_check(rows):
                 and row.get('manifest') == MANIFEST, 'quarantine drift')
 
 
-def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None, owned_jobs=None, pending_jobs=None):
+def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None, owned_jobs=None, pending_jobs=None, listener_check=None):
     """Read adapter returns bounded stdout for explicit argv/cwd. No launch calls."""
     require(isinstance(expected_source, str) and len(expected_source) == 40
             and all(c in '0123456789abcdef' for c in expected_source), 'explicit expected source required')
@@ -74,7 +74,7 @@ def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None, owned_jo
     manifest = json.loads(read([str(tool), 'slots', 'manifest'], WORKTREES[0]))
     digest = hashlib.sha256(json.dumps(manifest['manifest'], sort_keys=True).encode()).hexdigest()
     require(manifest.get('sha256') == MANIFEST and digest == MANIFEST, 'manifest drift')
-    require(manifest.get('heavy_limit') == 2 and not manifest.get('port_conflicts'), 'capacity contract drift')
+    require(manifest.get('heavy_limit') == 2 and isinstance(manifest.get('port_conflicts'), list), 'capacity contract drift')
     rows = json.loads(read([str(tool), 'slots', 'status'], WORKTREES[0]))
     quarantine_check(rows)
     for row in rows:
@@ -89,6 +89,19 @@ def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None, owned_jo
                 require(expected is not None and row.get('lease_id') == expected['lease']
                         and row.get('generation') == expected['generation']
                         and set(row.get('jobs', {})) == {expected['job']}, 'prior pair allocation')
+    for port in manifest['port_conflicts']:
+        require(type(port) is int and 4221 <= port <= 4240, 'invalid conflict port')
+        matches = [row for row in rows if row.get('port') == port and row.get('worktree') in worktrees]
+        require(len(matches) == 1 and listener_check is not None, 'foreign port conflict')
+        row = matches[0]
+        expected = (owned_jobs or {}).get(row['worktree'])
+        pending = (pending_jobs or {}).get(row['worktree'])
+        if expected is not None:
+            process = row['jobs'][expected['job']]['supervisor']
+        else:
+            require(pending is not None and row.get('state') == 'ready', 'unproven port owner')
+            process = pending['preparer']
+        require(listener_check(process, port) is True, 'foreign port conflict')
     return {'mode': 'dryrun', 'source': expected_source, 'manifest': MANIFEST,
             'worktrees': list(worktrees), 'argv': list(ARGV), 'max_jobs': 2,
             'execution_clearance': False}
@@ -210,6 +223,38 @@ def process_metadata():
     return result
 
 
+def owned_listener(identity, port):
+    """Bind the TEST reservation to the exact captured supervisor and loopback."""
+    try:
+        pid = identity['pid']
+        def current():
+            fields = Path('/proc', str(pid), 'stat').read_text().rsplit(')', 1)[1].split()
+            return dict(pid=pid, start=fields[19], boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip())
+        require(current() == identity, 'listener process drift')
+        inodes = set()
+        for table in ('tcp', 'tcp6'):
+            for line in Path('/proc/net', table).read_text().splitlines()[1:]:
+                fields = line.split()
+                address, number = fields[1].split(':')
+                if int(number, 16) == port and fields[3] == '0A':
+                    require(table == 'tcp' and address == '0100007F', 'nonloopback listener')
+                    inodes.add(fields[9])
+        require(bool(inodes), 'listener missing')
+        owned = set()
+        for path in Path('/proc', str(pid), 'fd').iterdir():
+            try:
+                target = os.readlink(path)
+                match = re.fullmatch(r'socket:\[(\d+)\]', target)
+                if match:
+                    owned.add(match[1])
+            except FileNotFoundError:
+                continue
+        require(inodes <= owned and current() == identity, 'foreign listener')
+        return True
+    except Exception:
+        raise Refused('listener ownership unavailable') from None
+
+
 class PilotReads:
     """Finite read admission. SQL is accepted only during an observer call.
 
@@ -325,7 +370,7 @@ class ComposedAdapter:
                     self.identity(WORKTREES[record['index']], process)
             owned = {root: record[0] for root, record in self.observer.observed.items()}
             preflight(self.reads.command, self.reads.tool, expected_source=self.source,
-                      owned_jobs=owned, pending_jobs=self.observer.pending)
+                      owned_jobs=owned, pending_jobs=self.observer.pending, listener_check=owned_listener)
             rows = json.loads(self.reads.command(['devcore-project', 'slots', 'status'], WORKTREES[0]))
             foreign = [row for row in rows if row.get('worktree') not in WORKTREES]
             require(self.foreign is None or foreign == self.foreign, 'foreign allocation drift')
