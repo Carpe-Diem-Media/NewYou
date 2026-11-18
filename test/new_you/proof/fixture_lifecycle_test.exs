@@ -166,7 +166,7 @@ defmodule NewYou.Proof.FixtureLifecycleTest do
     diagnostic =
       P815Port.run(
         System.find_executable("mix"),
-        ["run", "test/proof/p8_15_launch_failure.exs", scenario],
+        ["run", "test/support/proof/p8_15_launch_failure.exs", scenario],
         ""
       )
 
