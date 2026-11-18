@@ -198,7 +198,10 @@ FROM pg_database d JOIN pg_roles r ON r.rolname={r} JOIN pg_roles a ON a.rolname
                     require(row['state'] == 'retained')
                     self._catalog(row, idle=True)
                     log = self._file(self.registry / 'runs' / identity['job'] / 'output.log')
-                    require('reports the seeded fixture failure for managed lease retention' in log and 'assert 1 == 0' in log and '1 test, 1 failure' in log)
+                    require('reports the seeded fixture failure for managed lease retention' in log
+                            and 'assert 1 == 0' in log
+                            and re.search(r'^Result: 0/1 passed\s*$', log, re.M)
+                            and re.search(r'^Failed: 1 test\s*$', log, re.M))
                     require(self._sql(f"SELECT count(*) FILTER (WHERE email::text={literal(self.emails[1])}) || '|' || count(*) FILTER (WHERE email::text={literal(self.emails[0])}) FROM public.accounts WHERE email::text IN ({literal(self.emails[0])},{literal(self.emails[1])});", identity['database']) == '1|0')
             return True
         except Exception:

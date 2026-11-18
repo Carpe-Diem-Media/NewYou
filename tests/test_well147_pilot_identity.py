@@ -127,7 +127,7 @@ class ObserverTests(unittest.TestCase):
         ids = self.prepare_finish()
         log_path = '/registry/runs/' + ids[1]['job'] + '/output.log'
         self.read.files[log_path] = ('reports the seeded fixture failure for managed lease retention\n'
-                                     'assert 1 == 0\n1 test, 1 failure')
+                                     'assert 1 == 0\nResult: 0/1 passed\nFailed: 1 test')
         self.assertTrue(self.observer.finish(ids,[0,1]))
         for fixture in ('0|0','1|1','2|0'):
             self.read.fixture = fixture
@@ -138,7 +138,7 @@ class ObserverTests(unittest.TestCase):
         with self.assertRaises(m.Refused):
             self.observer.finish(ids,[0,1])
         self.read.files[log_path] = ('reports the seeded fixture failure for managed lease retention '
-                                     'assert 1 == 0 1 test, 1 failure')
+                                     'assert 1 == 0\nResult: 0/1 passed\nFailed: 1 test')
         receipt_path = '/registry/runs/' + ids[1]['job'] + '/result.json'
         receipt = json.loads(self.read.files[receipt_path])
         for key,value in [('children_reaped',False),('generation','0'*32),('exit',0)]:
@@ -151,6 +151,13 @@ class ObserverTests(unittest.TestCase):
         self.read.rows[-1]['generation'] = '0'*32
         with self.assertRaises(m.Refused):
             self.observer.finish(ids,[0,1])
+
+    def test_finish_accepts_pinned_exunit_failure_format(self):
+        ids = self.prepare_finish()
+        self.read.files['/registry/runs/' + ids[1]['job'] + '/output.log'] = (
+            'reports the seeded fixture failure for managed lease retention\n'
+            'assert 1 == 0\nResult: 0/1 passed\nFailed: 1 test\n')
+        self.assertTrue(self.observer.finish(ids, [0, 1]))
 
     def test_finish_rejects_missing_barrier(self):
         ids = self.prepare_finish()
