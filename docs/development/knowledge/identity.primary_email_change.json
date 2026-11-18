@@ -8,8 +8,8 @@
     "WELL-112"
   ],
   "implementation_revision": {
-    "git_sha": "a2fd19007ad855c5d098f84197f33be0afd31d6d",
-    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
+    "git_sha": "78550cdd6ee31581a55a51e9095087c82fb453d3",
+    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-159 refreshes the shared Recovery source after compile-time TEST-only fixed phase diagnostics. Email-change business semantics and interfaces remain unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1381,7 +1381,7 @@
       "id": "recovery",
       "path": "lib/new_you/identity/recovery.ex",
       "symbol": "def finish(",
-      "sha256": "15b4c7283c65d701e1016001b34e5c80a0bc97f121803f43d255582c53f83752"
+      "sha256": "cc40a1be9383599904a5d3684cdc99f15c3d371a83c948787b6545f691f4d0e3"
     },
     {
       "id": "password_reset",
