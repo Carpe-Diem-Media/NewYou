@@ -46,7 +46,7 @@ defmodule NewYou.Proof.P805Fixture do
   def track(reference, :email, email),
     do: update(reference, &%{&1 | emails: Enum.uniq([email | &1.emails])})
 
-  # Registered workers must register external launches through P805.open_port/2.
+  # Registered workers must launch externals through P805.open_restart_port/3.
   # A BEAM DOWN alone never settles a recorded external process group.
   def worker(reference, worker),
     do: update(reference, &%{&1 | workers: Enum.uniq([worker | &1.workers])})
@@ -83,13 +83,21 @@ defmodule NewYou.Proof.P805Fixture do
   def reconcile(reference, cleanup) do
     locked(fn ->
       case current() do
-        %{reference: ^reference, phase: :quarantined} = fixture ->
-          do_finish(fixture, cleanup)
+        %{reference: ^reference} = fixture ->
+          reconcile_current(fixture, cleanup)
 
         _ ->
           {:error, :not_quarantined}
       end
     end)
+  end
+
+  defp reconcile_current(fixture, cleanup) do
+    if fixture.phase == :quarantined or not Process.alive?(fixture.owner) do
+      do_finish(fixture, cleanup)
+    else
+      {:error, :not_quarantined}
+    end
   end
 
   def finish(reference, cleanup) when is_reference(reference) do

@@ -451,7 +451,8 @@ defmodule NewYou.Proof.P805 do
   end
 
   defp open_tracked_port(state, worker, executable, options) do
-    if worker in Map.values(state.monitors) and P805Fixture.owned?(state.fixture) do
+    if worker in Map.values(state.monitors) and Process.alive?(state.owner) and
+         P805Fixture.owned?(state.fixture) do
       :ok = P805Fixture.begin_external(state.fixture)
       port = Port.open({:spawn_executable, executable}, options)
       {:os_pid, pid} = Port.info(port, :os_pid)

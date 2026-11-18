@@ -4,6 +4,37 @@ defmodule NewYou.Proof.FixtureLifecycleTest do
   alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.Proof.{P805, P815Port}
 
+  test "an admission orphaned before guardian attachment has an explicit recovery path" do
+    parent = self()
+    prior = Application.fetch_env(:new_you, :p8_15_browser_development_fixtures)
+
+    {owner, monitor} =
+      spawn_monitor(fn ->
+        reference =
+          NewYou.Proof.P805Fixture.acquire(
+            [:p8_15_browser_development_fixtures],
+            "p817_test_" <> Ecto.UUID.generate(),
+            nil
+          )
+
+        send(parent, {:admission, reference})
+        receive do: (:finish -> :ok)
+      end)
+
+    assert_receive {:admission, reference}, 1_000
+    assert {:error, :not_quarantined} = P805.reconcile_fixture(reference)
+
+    assert_raise RuntimeError, "P8-05 fixture already active or quarantined", fn ->
+      P805.with_fixture(fn -> :unexpected end)
+    end
+
+    Process.exit(owner, :kill)
+    assert_receive {:DOWN, ^monitor, :process, ^owner, :killed}, 1_000
+    assert :ok = P805.reconcile_fixture(reference)
+    assert P805.fixture_status() == :available
+    assert Application.fetch_env(:new_you, :p8_15_browser_development_fixtures) == prior
+  end
+
   test "simultaneous contenders admit exactly one fixture owner" do
     parent = self()
 
