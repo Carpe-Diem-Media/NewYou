@@ -28,6 +28,8 @@ defmodule NewYou.Proof.DevelopmentEntryRecoveryTest do
         assert Application.fetch_env(:new_you, :fp001_development_entry) == {:ok, true}
         finish_owner(owner, completion)
         assert_receive {:DOWN, ^monitor, :process, ^owner, _}, 5_000
+        # Our monitor cannot settle the controller's independent death ledger.
+        assert :ok = Scenario.request(scenario, {:await_owned_down, [owner], 5_000})
         result = Scenario.stop(scenario)
 
         assert result == expected_result(completion)
