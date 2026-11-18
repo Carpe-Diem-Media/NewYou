@@ -135,11 +135,17 @@ defmodule NewYou.Proof.P805 do
          previous,
          previous_projection_key
        ) do
-    if await_registered_workers(guardian, guardian_monitor) == :confirmed do
-      perform_fixture_cleanup(checked_out?, projection_key)
-      :confirmed
-    else
-      :unconfirmed
+    case await_registered_workers(guardian, guardian_monitor) do
+      :confirmed ->
+        perform_fixture_cleanup(checked_out?, projection_key)
+        :confirmed
+
+      :pending ->
+        Process.put({__MODULE__, :guardian_contained}, true)
+        :unconfirmed
+
+      :unconfirmed ->
+        :unconfirmed
     end
   rescue
     _ -> recover_fixture_cleanup(checked_out?, guardian, guardian_monitor)
@@ -171,19 +177,23 @@ defmodule NewYou.Proof.P805 do
   defp recover_fixture_cleanup(_checked_out?, _guardian, _monitor), do: :unconfirmed
 
   defp restore_fixture_runtime(guardian, guardian_monitor, previous, previous_projection_key) do
-    if is_pid(guardian) and is_reference(guardian_monitor),
-      do: stop_fixture_guardian(guardian, guardian_monitor)
-  after
-    restore_environment(previous)
+    contained? = Process.delete({__MODULE__, :guardian_contained}) == true
 
-    restore_process_value(
-      {NewYou.Analytics, :p817_test_projection_key},
-      previous_projection_key
-    )
+    try do
+      if not contained? and is_pid(guardian) and is_reference(guardian_monitor),
+        do: stop_fixture_guardian(guardian, guardian_monitor)
+    after
+      unless contained?, do: restore_environment(previous)
 
-    Process.delete({__MODULE__, :guardian})
-    Process.delete({__MODULE__, :guardian_monitor})
-    Process.delete({__MODULE__, :setup_checkpoint})
+      restore_process_value(
+        {NewYou.Analytics, :p817_test_projection_key},
+        previous_projection_key
+      )
+
+      Process.delete({__MODULE__, :guardian})
+      Process.delete({__MODULE__, :guardian_monitor})
+      Process.delete({__MODULE__, :setup_checkpoint})
+    end
   end
 
   defp record_fixture_cleanup(true, cleanup_result) do
@@ -200,10 +210,20 @@ defmodule NewYou.Proof.P805 do
     send(guardian, {:recover_fixture, self(), reference})
 
     receive do
-      {:fixture_recovered, ^reference, :ok} -> :confirmed
-      {:fixture_recovered, ^reference, _failure} -> :unconfirmed
+      {:fixture_recovered, ^reference, :ok} ->
+        :confirmed
+
+      {:fixture_recovered, ^reference, :pending} ->
+        Process.put({__MODULE__, :guardian_contained}, true)
+        :unconfirmed
+
+      {:fixture_recovered, ^reference, _failure} ->
+        :unconfirmed
     after
-      15_000 -> :unconfirmed
+      15_000 ->
+        send(guardian, :contain_fixture)
+        Process.put({__MODULE__, :guardian_contained}, true)
+        :unconfirmed
     end
   end
 
@@ -308,7 +328,9 @@ defmodule NewYou.Proof.P805 do
         send(self(), event)
         :unconfirmed
     after
-      5_000 -> :unconfirmed
+      5_000 ->
+        send(guardian, :contain_fixture)
+        :pending
     end
   end
 
@@ -360,15 +382,19 @@ defmodule NewYou.Proof.P805 do
         result = wait_fixture_workers(System.monotonic_time(:millisecond) + 4_000)
         send(owner, {:cleanup_workers_finished, reference, result})
 
-        fixture_guardian(
-          owner,
-          owner_monitor,
-          previous,
-          projection_key,
-          cleanup_hook,
-          operations,
-          emails
-        )
+        if result == :pending do
+          contain_fixture_workers(previous, projection_key, cleanup_hook, operations, emails)
+        else
+          fixture_guardian(
+            owner,
+            owner_monitor,
+            previous,
+            projection_key,
+            cleanup_hook,
+            operations,
+            emails
+          )
+        end
 
       {:track, ^owner, reference, :operation, operation} ->
         send(owner, {:fixture_tracked, reference})
@@ -412,9 +438,13 @@ defmodule NewYou.Proof.P805 do
       {:recover_fixture, ^owner, reference} ->
         result =
           try do
-            if wait_fixture_workers(System.monotonic_time(:millisecond) + 4_000) == :confirmed,
-              do: cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook),
-              else: :unconfirmed
+            case wait_fixture_workers(System.monotonic_time(:millisecond) + 4_000) do
+              :confirmed ->
+                cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook)
+
+              other ->
+                other
+            end
           rescue
             error -> {:error, error.__struct__}
           catch
@@ -423,28 +453,29 @@ defmodule NewYou.Proof.P805 do
 
         send(owner, {:fixture_recovered, reference, result})
 
-        fixture_guardian(
-          owner,
-          owner_monitor,
-          previous,
-          projection_key,
-          cleanup_hook,
-          operations,
-          emails
-        )
+        if result == :pending do
+          contain_fixture_workers(previous, projection_key, cleanup_hook, operations, emails)
+        else
+          fixture_guardian(
+            owner,
+            owner_monitor,
+            previous,
+            projection_key,
+            cleanup_hook,
+            operations,
+            emails
+          )
+        end
+
+      :contain_fixture ->
+        contain_fixture_workers(previous, projection_key, cleanup_hook, operations, emails)
 
       :fixture_complete ->
         Process.demonitor(owner_monitor, [:flush])
         :ok
 
       {:DOWN, ^owner_monitor, :process, ^owner, _reason} ->
-        try do
-          if wait_fixture_workers(System.monotonic_time(:millisecond) + 4_000) == :confirmed,
-            do: cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook),
-            else: exit(:fixture_worker_cleanup_unconfirmed)
-        after
-          restore_environment(previous)
-        end
+        contain_fixture_workers(previous, projection_key, cleanup_hook, operations, emails)
 
       {:DOWN, worker_monitor, :process, _worker, reason} ->
         record_fixture_worker_down(worker_monitor, reason)
@@ -475,22 +506,31 @@ defmodule NewYou.Proof.P805 do
   defp wait_fixture_workers(deadline) do
     state = Process.get({__MODULE__, :fixture_workers})
 
-    cond do
-      state.failed? ->
-        :unconfirmed
-
-      map_size(state.monitors) == 0 ->
-        :confirmed
-
-      true ->
-        receive do
-          {:DOWN, monitor, :process, _worker, reason} when is_map_key(state.monitors, monitor) ->
-            record_fixture_worker_down(monitor, reason)
-            wait_fixture_workers(deadline)
-        after
-          max(deadline - System.monotonic_time(:millisecond), 0) -> :unconfirmed
-        end
+    if map_size(state.monitors) == 0 do
+      if state.failed?, do: :unconfirmed, else: :confirmed
+    else
+      receive do
+        {:DOWN, monitor, :process, _worker, reason} when is_map_key(state.monitors, monitor) ->
+          record_fixture_worker_down(monitor, reason)
+          wait_fixture_workers(deadline)
+      after
+        worker_wait_timeout(deadline) -> :pending
+      end
     end
+  end
+
+  defp worker_wait_timeout(:infinity), do: :infinity
+  defp worker_wait_timeout(deadline), do: max(deadline - System.monotonic_time(:millisecond), 0)
+
+  # After the bounded wait expires, retain the guardian and global fixture
+  # environment until every registered worker has actually stopped.
+  defp contain_fixture_workers(previous, projection_key, cleanup_hook, operations, emails) do
+    case wait_fixture_workers(:infinity) do
+      :confirmed -> cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook)
+      :unconfirmed -> exit(:fixture_worker_cleanup_unconfirmed)
+    end
+  after
+    restore_environment(previous)
   end
 
   defp restore_environment(previous) do

@@ -151,6 +151,75 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     end)
   end
 
+  test "a failed fixture worker does not release the guardian while another worker is live" do
+    parent = self()
+
+    {owner, owner_monitor} =
+      spawn_monitor(fn ->
+        try do
+          NewYou.Proof.P805.with_fixture(fn ->
+            guardian = Process.get({NewYou.Proof.P805, :guardian})
+            failed = spawn(fn -> receive do: (:fail -> exit(:cleanup_unconfirmed)) end)
+            live = spawn(fn -> receive do: (:finish -> :ok) end)
+            :ok = NewYou.Proof.P805.register_cleanup_worker(failed)
+            :ok = NewYou.Proof.P805.register_cleanup_worker(live)
+            failed_monitor = Process.monitor(failed)
+            send(failed, :fail)
+            receive do: ({:DOWN, ^failed_monitor, :process, ^failed, _} -> :ok)
+            send(parent, {:fixture_workers, guardian, live})
+          end)
+        rescue
+          error -> send(parent, {:fixture_result, Exception.message(error)})
+        end
+      end)
+
+    assert_receive {:fixture_workers, guardian, live}, 5_000
+    on_exit(fn -> Process.exit(live, :kill) end)
+    refute_receive {:fixture_result, _}, 300
+    assert Process.alive?(guardian)
+    assert Process.alive?(live)
+    send(live, :finish)
+    assert_receive {:fixture_result, "P8-05 fixture cleanup unconfirmed"}, 5_000
+    assert_receive {:DOWN, ^owner_monitor, :process, ^owner, :normal}, 1_000
+  end
+
+  test "fixture worker timeout retains guardian and environment until the worker stops" do
+    parent = self()
+    previous = Application.fetch_env(:new_you, :p8_15_browser_development_fixtures)
+    Application.put_env(:new_you, :p8_15_browser_development_fixtures, :before_fixture)
+
+    on_exit(fn ->
+      case previous do
+        {:ok, value} -> Application.put_env(:new_you, :p8_15_browser_development_fixtures, value)
+        :error -> Application.delete_env(:new_you, :p8_15_browser_development_fixtures)
+      end
+    end)
+
+    spawn(fn ->
+      try do
+        NewYou.Proof.P805.with_fixture(fn ->
+          guardian = Process.get({NewYou.Proof.P805, :guardian})
+          worker = spawn(fn -> receive do: (:finish -> :ok) end)
+          :ok = NewYou.Proof.P805.register_cleanup_worker(worker)
+          send(parent, {:timeout_worker, guardian, worker})
+        end)
+      rescue
+        error -> send(parent, {:timeout_result, Exception.message(error)})
+      end
+    end)
+
+    assert_receive {:timeout_worker, guardian, worker}, 5_000
+    on_exit(fn -> Process.exit(worker, :kill) end)
+    guardian_monitor = Process.monitor(guardian)
+    assert_receive {:timeout_result, "P8-05 fixture cleanup unconfirmed"}, 6_000
+    assert Process.alive?(guardian)
+    assert Process.alive?(worker)
+    assert Application.get_env(:new_you, :p8_15_browser_development_fixtures) == true
+    send(worker, :finish)
+    assert_receive {:DOWN, ^guardian_monitor, :process, ^guardian, _}, 5_000
+    assert Application.get_env(:new_you, :p8_15_browser_development_fixtures) == :before_fixture
+  end
+
   test "fixture cleanup uncertainty is not hidden by a callback failure" do
     assert_raise RuntimeError, "P8-05 fixture cleanup unconfirmed after callback failure", fn ->
       NewYou.Proof.P805.with_fixture(fn ->
