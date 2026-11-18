@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "c5096feabd8c4bc482aaa0d79b87893eecf6b4f4",
-    "semantics": "WELL-147 corrective source after independent R1-R3 review. Focused guards, actual installed descriptor handoff, cache special-file/replacement recovery and managed migrations plus 35 bootstrap/result tests passed. Initial parallel and diagnostic staggered pilots did not complete; two generations are preserved in quarantine after supervisor loss. New acquisition is disabled, and local admission now requires the separate WELL-154 DevCore 1.2.1 correction, merged at cc57a70c54478f93bf7a68cac5935486c58ee25a but not installed. Full application isolation/reuse, heavy measurements, final executor gates, bounded OCR, hosted CI and independent merge review remain unverified."
+    "git_sha": "e3202ef61f1a4bbdbbf45436638c5b7a6b92ae56",
+    "semantics": "WELL-147 continuation integrates current main while preserving newer restart/fixture semantics. Probe readiness uses bounded private control files independent of redacted stdout, with phase and lease/generation/job/worktree/database/role acknowledgements before successful completion. Verification command consumers select managed admission for opt-in worktrees and verified DevCore nested reuse inside an existing job, with no legacy fallback. Installed DevCore 1.2.1 checksum and manifest were rechecked read-only. Acquisition remains disabled and both supervisor-loss generations remain quarantined. Standalone protocol and Python tooling tests pass; actual child/SQL, paired Dialyzer, full-suite capacity, final fast/deep and hosted CI, independent Master Gate, resulting-main and activation remain unverified."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -438,13 +438,28 @@
         "The psql boundary uses supported options and keeps credentials out of arguments.",
         "Probe validation rejects non-TEST execution, partial markers and malformed identifiers.",
         "Input accepts only synthetic slot-proof addresses, and continuation requires a different allocated slot database.",
-        "Forward a complete non-secret receipt before waiting behind the stream redaction buffer."
+        "Publish bounded control records independently of withheld stdout; reject duplicate publication, malformed/EOF/oversized input, mismatched phase or identity, cancellation and timeout; keep completion waiting for acknowledgement."
       ],
-      "proves": "Eight pure and subprocess regression tests for probe input, managed markers, fresh invocation, psql arguments and framed output.",
+      "proves": "Thirteen standalone pure and subprocess tests for probe guards and control helpers; root reran after assembly.",
       "limits": "Does not prove live lease verification, real two-worktree database isolation, child receipt propagation, failure retention, clean reuse or completion of the active pilot.",
       "source_ids": [
         "managed_probe_tests",
-        "managed_probe"
+        "managed_probe",
+        "managed_control"
+      ]
+    },
+    {
+      "path": "tests/test_managed_handoff_commands.py",
+      "cases": [
+        "Select managed admission for opt-in worktrees and preserve legacy non-opt-in routing.",
+        "Reject partial markers and unsupported declarations without fallback.",
+        "Keep focused targets and route final fast/deep commands through the existing executor."
+      ],
+      "proves": "Synthetic command-selection and failure behavior against mocked subprocesses.",
+      "limits": "Does not execute live DevCore admission or authenticate a nested job.",
+      "source_ids": [
+        "handoff_tests",
+        "handoff_executor"
       ]
     }
   ],
@@ -516,11 +531,11 @@
   ],
   "proof_limitations": [
     "Managed migrations and 35 bootstrap/result tests passed after correcting two legacy-only identity assertions. Both diagnostic worktrees emitted own-count 1 and peer-count 0 after synthetic registration and browser login, but their receipt/barrier protocol stalled and supervisor ownership was lost. No completed two-worktree child/cross-slot-denial or cleanup/reuse proof is claimed. Guarded recovery quarantined the two exact generations; their databases and records remain preserved. New acquisitions are disabled.",
-    "Real cold PLT preparation passed on OTP 29.1.2 / Elixir 1.20.5, first DEV 2:58.40 / 3692448 KiB max RSS; TEST preparation plus analysis 4:25.69 / 3465708 KiB, and peer TEST preparation 4:11.22 / 4087804 KiB. Two subsequent TEST analyses passed with zero errors and 17.385 seconds of overlapping analysis at source e583d5cd22c42b7850711ecf07c15a27702bd85b while the shared cache lock was free. Full-suite capacity remains unmeasured. Latest pure tests: cache 14, admission 11, LocalConfig 19; eight probe guard/adapter tests passed. Earlier compilation passed. The corrected map passed nine-map validation and all 34 knowledge tests; validation does not prove its semantic claims.",
+    "Historical evidence only: Real cold PLT preparation passed on OTP 29.1.2 / Elixir 1.20.5, first DEV 2:58.40 / 3692448 KiB max RSS; TEST preparation plus analysis 4:25.69 / 3465708 KiB, and peer TEST preparation 4:11.22 / 4087804 KiB. Two subsequent TEST analyses passed with zero errors and 17.385 seconds of overlapping analysis at source e583d5cd22c42b7850711ecf07c15a27702bd85b while the shared cache lock was free. Full-suite capacity remains unmeasured. Latest pure tests: cache 14, admission 11, LocalConfig 19; eight probe guard/adapter tests passed. Earlier compilation passed. The corrected map passed nine-map validation and all 34 knowledge tests; validation does not prove its semantic claims. Current continuation independently reran disposable four-process synthetic cache proof, but actual paired analysis remains unverified. At assembled source e3202ef6, 124 focused Python tests and 13 standalone protocol tests passed. Database-free compilation passed at prior checkpoint 43c1f8e3 after fetching Plug 1.20.4 already locked on main, without changing mix.lock. These observations do not certify final engineering gates.",
     "DEV-profile analysis failed with 20 warnings, then 18 after adding pinned :dialyxir to project PLT inputs. No LocalDialyzer unknown-function warnings remain. TEST-profile static analysis passed with zero errors/skips, so the observed DEV failure does not establish failure in the required TEST compile profile. The unchanged Communications/Privacy sources were not compared in a separate base DEV run; those DEV warnings are not certified as baseline.",
     "Hosted CI uses the separate new_you_ci_test database and role on port 55433. Caller-controlled flags do not authenticate CI, and workstation shared TEST rejects these flags even when both are present. Exact-head hosted CI remains unverified.",
-    "WELL-154 corrects canonical renderer contention and a failure-path double-close. Its 1.2.1 source passed temporary contention/parallel/timeout/cancellation tests and the full local DevCore suite, and was independently approved at 520c8a4db118d4d946a3ecb5096461b57a584b34 and integrated at cc57a70c54478f93bf7a68cac5935486c58ee25a. Its resulting tree matches the CI-tested candidate. Fresh resulting-main CI run 44132976402 passed both checks, and WELL-154 source integration is complete. It is not installed. This worktree rejects installed 1.2.0 before allocation. Prior exact manifest consent is preserved; a new executable installation and any quarantine reconciliation need their own reviewed exact targets.",
-    "The regular mix check, final TEST-profile mix check.deep, bounded OCR, exact-head hosted CI, final independent Master Gate, NewYou merge and resulting-main checks remain unverified. This checkpoint is not review-ready.",
+    "WELL-154 DevCore 1.2.1 was integrated at cc57a70c54478f93bf7a68cac5935486c58ee25a and separately installed with owner authorization. Read-only continuation checks observed version 1.2.1 and SHA-256 2ed9f8bba9abd3775b578bf159bb1c01787dac33cbbc668d71849752171916b7. Both quarantine catalog identity pairs and the legacy CONNECT boundary matched the plan, with no quarantine clients at inspection. Process/permit ownership remains unresolved; acquisition is disabled. The authenticated original manifest approval excludes supervisor-loss reconciliation and does not authorize a new pilot.",
+    "Final mix check/check.deep, exact-head hosted CI, independent Master Gate, merge/resulting-main and activation remain unverified. OCR is optional and NOT_RUN in this continuation. This checkpoint is not review-ready.",
     "The persistence locator points to the DevCore slot allocation JSON because this capability has no NewYou migration or table. Its slots/database_prefix fields configure allocation. DevCore owns lease lifecycle and cleanup; this map describes consumer checks only."
   ],
   "follow_up_tickets": [
@@ -615,13 +630,31 @@
       "id": "managed_probe",
       "path": "test/proof/managed_slot_probe.exs",
       "symbol": "defmodule NewYou.ManagedSlotProbe do",
-      "sha256": "ce2e15c30b1af752b38e06cc93c6b83fc75f08947097a61992592a2d099dfd9b"
+      "sha256": "aa26b5cb04bed32ca903417c567905feabf89e6742f07d7c65ca0778735d3060"
     },
     {
       "id": "managed_probe_tests",
       "path": "test/tools/managed_slot_probe_test.exs",
       "symbol": "defmodule NewYou.ManagedSlotProbeTest do",
-      "sha256": "e0791af179e1f4ab9e35cf9f6dfb03466d6539b446deee1984a24e365d4cbb13"
+      "sha256": "b50d56583b043633a0d531f9c80e3130d931ea8130efc4174d47d3493694cd21"
+    },
+    {
+      "id": "managed_control",
+      "path": "test/proof/managed_slot_control.exs",
+      "symbol": "defmodule NewYou.ManagedSlotControl do",
+      "sha256": "2cd49f18d313e6c3134a0dee2ddf459efa71cffd0338f0d4c52f2948be3b98ce"
+    },
+    {
+      "id": "handoff_executor",
+      "path": ".agents/skills/code-change-verification/scripts/handoff.py",
+      "symbol": "def test_prefix():",
+      "sha256": "da9d15cfff0b7cf70a47845cb11725e0af70a5c6c37fb814d45bd64ff1ed65c2"
+    },
+    {
+      "id": "handoff_tests",
+      "path": "tests/test_managed_handoff_commands.py",
+      "symbol": "class ManagedCommandsTests(unittest.TestCase):",
+      "sha256": "77e05fb02da0003e1d348d80d9c38ec8e34aaa9dc5fdc3bbdc2b5c5cd345c066"
     }
   ]
 }
