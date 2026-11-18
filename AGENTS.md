@@ -480,7 +480,9 @@ If ".devcore/project.conf" exists:
 
 If doctor passes initially, proceed without render. Rendering is allowed automatically only for the missing/stale local-file case above; a healthy worktree needs no recovery.
 
-Managed TEST adoption is staged under WELL-147. A worktree declaring
+Managed TEST adoption is staged under WELL-147. DevCore 1.2.1 installation is
+recorded separately from activation, which remains pending. The canonical
+operating procedure and command-selection rules are in the guide below. A worktree declaring
 "SLOT_POOL=.devcore/slots.json" must follow
 "docs/development/managed-local-slots.md" and, after the required activation
 authorizations and proof, enter normal local work through

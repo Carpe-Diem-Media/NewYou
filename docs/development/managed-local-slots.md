@@ -14,7 +14,7 @@ passed both checks, including real disposable PostgreSQL isolation and reuse.
 That source evidence does not prove NewYou's migrations or business fixtures.
 
 The owner separately authorized installation on 2026-11-17. The checksum-verifying
-installer installed source version 1.2.0; its observed executable SHA-256 is
+installer initially installed source version 1.2.0; its historical executable SHA-256 is
 `e76cb9206d6e00226ab9549bfa2a342c4da867f2a7d21956240035b1bf65d93a`.
 The retained installer backup matches the previous 1.1.0 checksum
 `df7dd3263197d33416b99699b5f09ee2b37bb4a45f55cc2a7bb4164dbbff9568`.
@@ -86,13 +86,38 @@ cross-slot-denial or clean-reuse claim follows from these attempts.
 WELL-154 supplies the separate canonical DevCore 1.2.1 rendering correction.
 PR #7 was independently approved at `520c8a4` and merged at
 `cc57a70c54478f93bf7a68cac5935486c58ee25a`. Its resulting tree equals the tested
-candidate; the separate main CI run `44132976402` passed both checks. Installed
-1.2.0 is unchanged. This worktree requires separately authorized, verified
-installation of 1.2.1 before managed admission. Re-enable only after that boundary
-and the exact-target quarantine reconciliation are satisfied.
-The earlier 1.2.0 installation approval does not cover the new artifact. Quarantine
-reconciliation requires an independently reviewed procedure for its exact targets;
+candidate; the separate main CI run `44132976402` passed both checks.
+Live WELL-147 comment `7532bb56-a394-4dc9-8db1-e9a0edb58b66` records the
+separately verified installation of 1.2.1 with executable SHA-256
+`2ed9f8bba9abd3775b578bf159bb1c01787dac33cbbc668d71849752171916b7`.
+This is recorded installation evidence, not a fresh checksum observation by
+this source change. Installation does not establish activation. Acquisition was
+last recorded disabled, with two quarantined generations preserved. Re-enable
+only after the exact-target reconciliation and authorized pilot gates below.
+Quarantine reconciliation requires an independently reviewed procedure for its exact targets;
 do not erase registry records or bypass the recovery guards.
+
+## Verification consumers
+
+This bounded consumer update changes command routing and instructions only.
+The root integrator maintains the existing capability map for the assembled
+WELL-147 implementation; this package does not create a second map.
+
+This file is the canonical operating guide for command selection. The
+code-change-verification skill remains the owner of final engineering gates;
+its handoff executor selects both focused Mix tests and broad gates using this
+worktree's declaration. An opted-in worktree enters through `tools/newyou-local`.
+The wrapper and DevCore must validate admission and activation before execution.
+A disabled pool or invalid proof stops the command without shared TEST fallback.
+Inside an existing managed job, the executor uses `devcore-project run test`.
+DevCore verifies live ownership and descendant membership before reusing that
+assignment, without acquiring another lease. Partial managed markers fail closed.
+The wrapper owns mutable-build admission for that job, including nested commands.
+Do not start concurrent mutable builds inside it.
+
+Non-opt-in worktrees retain `mise exec -- devcore-project run dev|test -- ...`,
+manual legacy port coordination and the shared TEST/PLT lock protocol until they
+consent and cut over. Existing agents must not switch during active jobs.
 
 ## Routine commands after activation
 

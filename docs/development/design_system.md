@@ -988,3 +988,9 @@ engineering/hosted proof and renewed exact-head independent review remain
 separate obligations, recorded in PR/Plane. No unrelated fixture repair or
 production adoption is included. Documentation impact is a focused addendum to
 the existing UI contract; no Domain/interface/schema/lifecycle map is added.
+
+For current local execution, follow the
+[managed-slots operating guide](managed-local-slots.md). The recorded commands
+and fixed ports above describe their original legacy evidence. Opted-in worktrees
+use automatic port assignment after authorized activation; do not copy a recorded
+port or manual reservation into a managed job. Rollout remains pending.

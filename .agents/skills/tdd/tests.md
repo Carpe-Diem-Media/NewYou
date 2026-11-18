@@ -90,3 +90,8 @@ mise exec -- devcore-project run test -- mix test test/new_you/identity/password
 ```
 
 Use the actual line/path from the current checkout. A focused proof is not a substitute for the final canonical local checks and exact-head hosted CI.
+
+Local command examples use legacy syntax. For opted-in worktrees, select the
+wrapper or verified nested reuse command from
+[the canonical operating guide](../../../docs/development/managed-local-slots.md).
+Final broad gates remain owned by code-change-verification. Activation is pending.

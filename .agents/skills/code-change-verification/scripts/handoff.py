@@ -380,6 +380,42 @@ def write_state(path, state):
     temporary.replace(path)
 
 
+LEGACY_TEST_PREFIX = ['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--']
+MANAGED_TEST_PREFIX = ['mise', 'exec', '--', 'tools/newyou-local', 'test', '--']
+
+
+def test_prefix():
+    """Select admission; DevCore remains responsible for live verification.
+
+    Nested runs use DevCore's verified descendant path, never the admission
+    wrapper. Disabled admission or stale job proof fails there without fallback.
+    Marker presence alone never establishes that a job is verified.
+    """
+    declaration = ROOT / '.devcore/project.conf'
+    lines = declaration.read_text().splitlines() if declaration.exists() else []
+    pools = [line.split('=', 1)[1].strip() for line in lines
+             if re.match(r'^\s*SLOT_POOL\s*=', line)]
+    markers = any(key.startswith('DEVCORE_SLOT_') for key in os.environ)
+    if not pools:
+        require(not markers, 'managed job requires worktree opt-in; no legacy fallback')
+        return list(LEGACY_TEST_PREFIX)
+    require(pools == ['.devcore/slots.json'], 'unsupported managed declaration; no legacy fallback')
+    if markers:
+        required = ('JOB', 'LEASE', 'GENERATION', 'PROJECT', 'WORKTREE')
+        require(all(os.environ.get('DEVCORE_SLOT_' + key) for key in required),
+                'partial managed identity; no legacy fallback or acquisition')
+        return list(LEGACY_TEST_PREFIX)
+    return list(MANAGED_TEST_PREFIX)
+
+
+def select_test_command(argv):
+    """Normalize supported Mix commands without altering their test targets."""
+    for prefix in (LEGACY_TEST_PREFIX, MANAGED_TEST_PREFIX):
+        if argv[:len(prefix)] == prefix:
+            return test_prefix() + argv[len(prefix):]
+    return argv
+
+
 def focused_kind(argv):
     """Recognize repository test commands; supplemental checks are not tests."""
     require(argv, 'empty focused command')
@@ -389,8 +425,10 @@ def focused_kind(argv):
         require(targets and all(re.fullmatch(r'tests\.test_[A-Za-z0-9_]+(?:\.[A-Za-z_][A-Za-z0-9_]*)*', t)
                                 for t in targets), 'focused unittest requires only explicit repository test targets')
         return 'python-test'
-    if argv[:9] == ['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'test']:
-        targets = argv[9:]
+    prefix = next((p for p in (LEGACY_TEST_PREFIX, MANAGED_TEST_PREFIX)
+                   if argv[:len(p) + 2] == p + ['mix', 'test']), None)
+    if prefix:
+        targets = argv[len(prefix) + 2:]
         test_root = (ROOT / 'test').resolve()
         require(targets and test_root.is_relative_to(ROOT.resolve()), 'focused Mix requires repository test files')
         for target in targets:
@@ -434,9 +472,10 @@ def local(state_path, binding, paths, focused, deep=False):
     commands = [shlex.split(c) for c in focused]
     kinds = [focused_kind(c) for c in commands]
     require(any(k.endswith('-test') for k in kinds), 'focused verification requires an explicit repository test command')
-    commands.append(['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'check'])
+    commands = [select_test_command(c) for c in commands]
+    commands.append(test_prefix() + ['mix', 'check'])
     if deep or classify_deep_application_changes(paths):
-        commands.append(['mise', 'exec', '--', 'devcore-project', 'run', 'test', '--', 'mix', 'check.deep'])
+        commands.append(test_prefix() + ['mix', 'check.deep'])
     results = []
     for index, argv in enumerate(commands):
         log = state_path.parent / f'local-{index}.log'
