@@ -9,7 +9,7 @@
     "WELL-157"
   ],
   "implementation_revision": {
-    "git_sha": "171f7671b921ca1ff8381ed1348f6586d59f6f78",
+    "git_sha": "9ee49e1f02fede8825ffeab39013f53952af1dc2",
     "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-159 refreshes the shared Recovery source after compile-time TEST-only fixed phase diagnostics. Email-change business semantics and interfaces remain unchanged. WELL-157 adds the approved WELL-156-only non-production Phase-9 applicability evidence for the four existing immutable email versions. It leaves the content reader and delivery path unchanged; this map does not claim runtime eligibility or delivery activation."
   },
   "authoritative_domain": "NewYou.Identity",
