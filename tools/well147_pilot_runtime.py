@@ -224,7 +224,7 @@ class OwnedProcesses:
         require((tuple(argv), str(cwd)) in self.read_specs, 'read command not allowed')
         require(type(timeout) in (int, float) and 0 < timeout <= 10, 'bounded read deadline required')
         require(input is None or isinstance(input, bytes) and len(input) <= 4096, 'bounded read input required')
-        require(sum(r['kind'] == 'read' for r in self.records) < 64, 'read command bound exceeded')
+        require(sum(r['kind'] == 'read' for r in self.records) < 1024, 'read command bound exceeded')
         process, record = self._start(argv, cwd, 'read', None)
         deadline = time.monotonic() + timeout
         def feed():

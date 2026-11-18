@@ -1,9 +1,7 @@
 """Bounded WELL-147 pilot candidate. No operational clearance is implied.
 
-The CLI validates read-only prerequisites by default. Execution is deliberately
-blocked until root integrates a reviewed independent live identity/catalog and
-retained-failure verifier. `orchestrate` is testable with owned synthetic streams;
-it is not a production admission API. No resource reconciliation is performed.
+Dry run is the default. Execute requires externally approved references and a
+private receipt bound to trusted CLI expectations. No reconciliation is performed.
 """
 import argparse
 import hashlib
@@ -13,6 +11,18 @@ import os
 from pathlib import Path
 import subprocess
 import time
+import copy
+import re
+import stat
+import threading
+import tempfile
+import sys
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from tools import well147_pilot_identity as observer_module
+from tools import well147_pilot_runtime as runtime
 
 MANIFEST = '3fb71d0ed24dfc4ab8ef75226916da624f5ca4a18343695a154733eb2a93e556'
 CHECKSUM = '2ed9f8bba9abd3775b578bf159bb1c01787dac33cbbc668d71849752171916b7'
@@ -24,6 +34,7 @@ QUARANTINES = (
 )
 ARGV = ('mise', 'exec', '--', 'tools/newyou-local', 'test', '--heavy', '--',
         'mix', 'do', 'ecto.migrate,', 'run', 'test/proof/managed_slot_probe.exs')
+ROOT = str(Path(__file__).resolve().parents[1])
 KEYS = ('lease', 'generation', 'job', 'worktree', 'database', 'role')
 
 
@@ -48,7 +59,7 @@ def quarantine_check(rows):
                 and row.get('manifest') == MANIFEST, 'quarantine drift')
 
 
-def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None):
+def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None, owned_jobs=None):
     """Read adapter returns bounded stdout for explicit argv/cwd. No launch calls."""
     require(isinstance(expected_source, str) and len(expected_source) == 40
             and all(c in '0123456789abcdef' for c in expected_source), 'explicit expected source required')
@@ -66,7 +77,12 @@ def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None):
     require(manifest.get('heavy_limit') == 2 and not manifest.get('port_conflicts'), 'capacity contract drift')
     rows = json.loads(read([str(tool), 'slots', 'status'], WORKTREES[0]))
     quarantine_check(rows)
-    require(not any(r.get('worktree') in worktrees for r in rows), 'prior pair allocation')
+    for row in rows:
+        if row.get('worktree') in worktrees:
+            expected = (owned_jobs or {}).get(row['worktree'])
+            require(expected is not None and row.get('lease_id') == expected['lease']
+                    and row.get('generation') == expected['generation']
+                    and set(row.get('jobs', {})) == {expected['job']}, 'prior pair allocation')
     return {'mode': 'dryrun', 'source': expected_source, 'manifest': MANIFEST,
             'worktrees': list(worktrees), 'argv': list(ARGV), 'max_jobs': 2,
             'execution_clearance': False}
@@ -94,7 +110,7 @@ def orchestrate(adapter, directories, coordinator=None, timeout=280):
     Adapter launch owns the process and must bound/redact output; identity must
     verify live supervisor, in_use job/test profile and catalog binding independently
     of control files. finish must prove deliberate failure and retained diagnosis.
-    This module supplies no live adapter. On failure, only owned stdin is cancelled;
+    The composed adapter binds these checks to owned process metadata. On failure, only owned stdin is cancelled;
     surviving processes and all evidence remain the caller's responsibility.
     """
     require(len(directories) == 2 and len(set(directories)) == 2, 'exact control pair required')
@@ -123,7 +139,8 @@ def orchestrate(adapter, directories, coordinator=None, timeout=280):
                 if record:
                     check_record(record, identity, phase)
                     return identity
-            adapter.pause(.01)
+            adapter.revalidate()
+            adapter.pause(.2)
 
     try:
         for index in range(2):
@@ -151,6 +168,8 @@ def orchestrate(adapter, directories, coordinator=None, timeout=280):
             return False
 
         c.coordinate(directories, identities, [p.stdin for p in processes], timeout=remaining(), cancelled=cancelled)
+        if hasattr(adapter, 'completed'):
+            adapter.completed(identities)
         exits = [p.wait(timeout=remaining()) for p in processes]
         require(exits == [0, 1], 'unexpected process exits')
         require(adapter.finish(identities, exits) is True, 'deliberate failure or retained diagnosis unproved')
@@ -169,31 +188,311 @@ def orchestrate(adapter, directories, coordinator=None, timeout=280):
         raise
 
 
-def read_command(argv, cwd):
-    result = subprocess.run(argv, cwd=cwd, capture_output=True, timeout=10)
-    require(result.returncode == 0 and len(result.stdout) <= 1024*1024, 'read-only prerequisite failed')
-    return result.stdout.decode()
+def process_metadata():
+    """Read kernel identities only, without command lines or environments."""
+    boot = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    result = {}
+    for path in Path('/proc').iterdir():
+        if not path.name.isdigit():
+            continue
+        try:
+            fields = (path / 'stat').read_text().rsplit(')', 1)[1].split()
+            pid = int(path.name)
+            result[pid] = dict(pid=pid, start=fields[19], boot=boot, ppid=int(fields[1]))
+        except (FileNotFoundError, ProcessLookupError):
+            continue
+    return result
+
+
+class PilotReads:
+    """Finite read admission. SQL is accepted only during an observer call.
+
+    The observer is the sole SQL producer. Exact generated bytes are registered
+    for one synchronous call, never accepted as operator input.
+    """
+    def __init__(self, tool, runner, registry, processes=process_metadata):
+        self.tool, self.runner = str(tool), runner
+        self.registry = Path(registry)
+        self.processes = processes
+        self.observer = None
+        self.sql_admission = None
+        self.cache = {}
+        self.calls = 0
+
+    def invalidate(self):
+        self.cache.clear()
+
+    def command(self, argv, cwd, stdin=None, limit=65536):
+        require(cwd in (*WORKTREES, ROOT) and 0 < limit <= runtime.LIMIT, 'read scope refused')
+        argv = tuple(argv)
+        if argv[0] == 'devcore-project':
+            argv = (self.tool, *argv[1:])
+        fixed = {(self.tool, '--version'), (self.tool, 'slots', 'manifest'),
+                 (self.tool, 'slots', 'status')}
+        fixed.update(('git', *tail) for tail in (
+            ('rev-parse', '--show-toplevel'), ('rev-parse', 'HEAD'), ('status', '--porcelain')))
+        container = observer_module.CONTAINER
+        fixed.update({('docker', 'inspect', '-f', '{{.Id}}', container),
+                      ('docker', 'inspect', '-f', '{{.State.Running}}', container),
+                      ('docker', 'port', container, '5432/tcp')})
+        is_sql = self.sql_admission == (argv, stdin) and stdin is not None
+        require((cwd in WORKTREES or argv[0] == 'git') and (is_sql or argv in fixed and stdin is None), 'read command refused')
+        key = (argv, cwd, stdin)
+        cached = self.cache.get(key)
+        if cached and time.monotonic() - cached[0] < 5:
+            return cached[1]
+        # 280 seconds / 5-second refresh, at most 18 fixed/catalog reads per
+        # interval for two jobs, plus phase transitions. Exhaustion refuses.
+        require(self.calls < 1024, 'read lifetime budget exhausted')
+        self.calls += 1
+        value = self.runner(argv, cwd, input=stdin.encode() if stdin else None)
+        require(isinstance(value, str) and len(value.encode()) <= limit, 'read capture exceeded')
+        self.cache[key] = (time.monotonic(), value)
+        return value
+
+    def file(self, path, *, limit):
+        path = Path(path)
+        jobs = {record[0]['job'] for record in self.observer.observed.values()}
+        require(path.parent.parent == self.registry / 'runs' and path.parent.name in jobs
+                and path.name in ('result.json', 'output.log'), 'result path refused')
+        parent = os.open(self.registry, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            for part in ('runs', path.parent.name):
+                child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent)
+                os.close(parent)
+                parent = child
+            fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+            with os.fdopen(fd, 'rb') as stream:
+                info = os.fstat(stream.fileno())
+                require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid()
+                        and stat.S_IMODE(info.st_mode) == 0o600 and info.st_nlink == 1, 'unsafe result file')
+                value = stream.read(limit + 1)
+            require(len(value) <= limit, 'result too large')
+            return value.decode()
+        finally:
+            os.close(parent)
+
+
+class ComposedObserver(observer_module.IdentityObserver):
+    def _sql(self, sql, database='postgres'):
+        if database != 'postgres':
+            require(any(database == record[0]['database'] for record in self.observed.values()), 'unobserved database')
+            require(re.fullmatch(r'dc_new_you_s(?:0[3-9]|1[0-9]|20)_g[0-9a-f]{32}', database), 'invalid generation')
+        argv = ('docker', 'exec', '-i', observer_module.CONTAINER, 'psql', '-X', '-qAt',
+                '-v', 'ON_ERROR_STOP=1', '-U', 'devcore_admin', '-d', database)
+        self._endpoint()
+        reads = self.read._pilot_reads
+        reads.sql_admission = (argv, 'BEGIN READ ONLY;\n' + sql + '\nROLLBACK;\n')
+        try:
+            return self._command(list(argv), reads.sql_admission[1])
+        finally:
+            reads.sql_admission = None
+
+
+class ComposedAdapter:
+    """Bind launch ownership, kernel identity, window and observer completion."""
+    now = staticmethod(time.monotonic)
+    pause = staticmethod(time.sleep)
+
+    def __init__(self, owner, reads, window, source):
+        self.owner, self.reads, self.window, self.source = owner, reads, window, source
+        self.captured = {}
+        self.barrier = None
+        self.last_check = float('-inf')
+        self.failure = threading.Event()
+        adapters = observer_module.ReadAdapters(reads.command, reads.processes, reads.file, WORKTREES[0])
+        adapters._pilot_reads = reads
+        self.foreign = None
+        self.observer = ComposedObserver(adapters, WORKTREES, reads.registry,
+                                        done_barrier=lambda identities: self.barrier == identities)
+        reads.observer = self.observer
+
+    def revalidate(self, force=False):
+        require(not self.failure.is_set(), 'owned output failed')
+        if force or self.now() - self.last_check >= 5:
+            self.reads.invalidate()
+            owned = {root: record[0] for root, record in self.observer.observed.items()}
+            verify_driver_source(self.reads.command, self.source)
+            preflight(self.reads.command, self.reads.tool, expected_source=self.source, owned_jobs=owned)
+            rows = json.loads(self.reads.command(['devcore-project', 'slots', 'status'], WORKTREES[0]))
+            foreign = [row for row in rows if row.get('worktree') not in WORKTREES]
+            require(self.foreign is None or foreign == self.foreign, 'foreign allocation drift')
+            self.foreign = copy.deepcopy(foreign)
+            self.window.revalidate()
+            self.last_check = self.now()
+
+    def launch(self, argv, cwd, index):
+        self.revalidate(force=True)
+        process = self.owner.launch(argv, cwd, index)
+        metadata = self.reads.processes().get(process.pid)
+        require(metadata is not None, 'launched identity unavailable')
+        self.captured[process.pid] = {k: metadata[k] for k in ('pid', 'start', 'boot')}
+        self.owner.records[-1]['identity'] = self.captured[process.pid]
+        self.reads.invalidate()
+        return process
+
+    def identity(self, worktree, process):
+        captured = self.captured[process.pid]
+        current = self.reads.processes().get(process.pid, {})
+        require(all(current.get(k) == v for k, v in captured.items()), 'launched identity drift')
+        return self.observer.identity(worktree, captured)
+
+    def completed(self, identities):
+        require(self.barrier is None, 'duplicate barrier')
+        self.barrier = copy.deepcopy(identities)
+        self.reads.invalidate()
+
+    def finish(self, identities, exits):
+        self.reads.invalidate()
+        require(not self.failure.is_set(), 'owned output failed')
+        for record in self.owner.records:
+            record['_thread'].join(2)
+            require(record['drained'] and not record['error'], 'owned drains incomplete')
+        return self.observer.finish(identities, exits)
+
+
+def verify_driver_source(read, source):
+    require(read(['git', 'rev-parse', '--show-toplevel'], ROOT).strip() == ROOT,
+            'driver root drift')
+    require(read(['git', 'rev-parse', 'HEAD'], ROOT).strip() == source, 'driver source drift')
+    require(not read(['git', 'status', '--porcelain'], ROOT).strip(), 'dirty driver source')
+
+
+def bounded_read(argv, cwd, input=None):
+    """Bound capture during the read. Timeout leaves an explicit failure."""
+    with tempfile.TemporaryFile() as output:
+        process = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        errors = []
+        def drain():
+            total = 0
+            try:
+                while True:
+                    chunk = process.stdout.read(8192)
+                    if not chunk:
+                        break
+                    total += len(chunk)
+                    if total <= runtime.LIMIT:
+                        output.write(chunk)
+                if total > runtime.LIMIT:
+                    errors.append(True)
+            except Exception:
+                errors.append(True)
+        thread = threading.Thread(target=drain, daemon=True)
+        thread.start()
+        if input:
+            process.stdin.write(input)
+        process.stdin.close()
+        process.wait(timeout=10)
+        thread.join(1)
+        require(not thread.is_alive() and not errors and process.returncode == 0, 'read command failed')
+        output.seek(0)
+        return output.read().decode()
+
+
+def capacity_check(references, registry, owned=()):
+    """Conservative pilot headroom only; external clearance covers unknown owners."""
+    require(all(references.values()), 'clearance references missing')
+    memory = dict(line.split(':', 1) for line in Path('/proc/meminfo').read_text().splitlines())
+    require(int(memory['MemAvailable'].split()[0]) >= 12 * 1024 * 1024, 'insufficient current headroom')
+    pressure = Path('/proc/pressure/memory').read_text().splitlines()
+    require(len(pressure) == 2 and all(float(field.split('=')[1]) == 0
+            for line in pressure for field in line.split()[1:4]), 'memory pressure')
+    heavy = Path(registry) / 'heavy'
+    # Unknown receipt ownership is never waived by a reference.
+    require(not heavy.is_symlink(), 'unsafe heavy receipts')
+    if heavy.exists():
+        for path in heavy.iterdir():
+            require(path.name in ('0', '1', '0.json', '1.json'), 'unknown heavy receipt')
+            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            with os.fdopen(fd, 'rb') as stream:
+                info = os.fstat(stream.fileno())
+                require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid()
+                        and stat.S_IMODE(info.st_mode) == 0o600, 'unsafe heavy receipt')
+                raw = stream.read(4097)
+            require(len(raw) <= 4096, 'heavy receipt oversized')
+            if path.suffix != '.json':
+                require(not raw, 'unexpected permit contents')
+                continue
+            receipt = json.loads(raw)
+            require(receipt.get('state') == 'free' or any(
+                receipt.get('state') == 'active' and receipt.get('lease_id') == row['lease']
+                and receipt.get('generation') == row['generation']
+                and receipt.get('supervisor') == row['supervisor'] for row in owned),
+                'unreviewed heavy receipts')
+    return True
 
 
 def main(arguments=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--execute', action='store_true')
-    parser.add_argument('--expected-source', help='Exact independently reviewed candidate SHA; never inferred from a prior run')
-    parser.add_argument('--owner-authorization-reference')
-    parser.add_argument('--exclusive-window-reference')
+    parser.add_argument('--expected-source')
+    for name in runtime.WindowGuard.REFERENCES:
+        parser.add_argument('--' + name.replace('_', '-'))
+    parser.add_argument('--window-receipt')
+    parser.add_argument('--evidence-root')
     args = parser.parse_args(arguments)
+    owner = None
     try:
-        if args.execute:
-            require(args.owner_authorization_reference and args.exclusive_window_reference, 'owner authorization and exclusive legacy-owner/capacity window references required')
-            raise Refused('execution blocked: root must integrate reviewed independent live identity/catalog, bounded redacted output, window and retained-failure adapters; references do not grant authority')
-        print(json.dumps(preflight(read_command, Path.home() / '.local/bin/devcore-project', expected_source=args.expected_source)))
+        tool = Path.home() / '.local/bin/devcore-project'
+        registry = Path.home() / '.config/dev-core/slots/new_you'
+        reads = PilotReads(tool, bounded_read, registry)
+        if not args.execute:
+            print(json.dumps(preflight(reads.command, tool, expected_source=args.expected_source)))
+            return 0
+        require(args.window_receipt and args.evidence_root and all(getattr(args, k)
+                for k in runtime.WindowGuard.REFERENCES), 'execution references and private paths required')
+        preflight(reads.command, tool, expected_source=args.expected_source)
+        verify_driver_source(reads.command, args.expected_source)
+        expected = dict(source_sha=args.expected_source, manifest=MANIFEST, worktrees=list(WORKTREES),
+                        tool_checksum=CHECKSUM, coordinator_pid=os.getpid())
+        expected.update({k: getattr(args, k) for k in runtime.WindowGuard.REFERENCES})
+        adapter = None
+        window = runtime.WindowGuard(args.window_receipt, expected=expected,
+                identity_reader=lambda: dict(
+                    source_sha=reads.command(['git', 'rev-parse', 'HEAD'], ROOT).strip(),
+                    manifest=json.loads(reads.command(['devcore-project', 'slots', 'manifest'], WORKTREES[0]))['sha256'],
+                    worktrees=[reads.command(['git', 'rev-parse', '--show-toplevel'], root).strip() for root in WORKTREES],
+                    tool_checksum=hashlib.sha256(tool.read_bytes()).hexdigest(), coordinator_pid=os.getpid()),
+                capacity_reader=lambda refs: capacity_check(refs, registry,
+                    [dict(r[0], supervisor=r[1]['jobs'][r[0]['job']]['supervisor'])
+                     for r in adapter.observer.observed.values()] if adapter else ()))
+        window.revalidate()
+        failure = threading.Event()
+        require(Path(args.evidence_root).is_absolute() and str(Path(args.evidence_root).resolve()) == args.evidence_root, 'canonical evidence root required')
+        owner = runtime.OwnedProcesses(args.evidence_root, argv=ARGV, worktrees=WORKTREES,
+                cancel_callback=lambda diagnosis: failure.set(), sources=expected)
+        adapter = ComposedAdapter(owner, reads, window, args.expected_source)
+        adapter.failure = failure
+        def owned_read(argv, cwd, input=None):
+            owner.read_specs.add((tuple(argv), str(cwd)))
+            return owner.read_command(argv, cwd, input=input)
+        reads.runner = owned_read
+        directories = [owner.root / name for name in ('a', 'b')]
+        for directory in directories:
+            directory.mkdir(mode=0o700)
+        print(json.dumps(orchestrate(adapter, directories)))
         return 0
-    except Refused as error:
-        print(str(error))
+    except Exception:
+        print('Pilot refused. Preserve resources and private evidence for independent review.')
         return 125
-    except (OSError, ValueError, KeyError, subprocess.SubprocessError):
-        print('Pilot blocked. Preserve resources. Independent live adapters and current prerequisites require root review.')
-        return 125
+    finally:
+        if owner is not None:
+            # Only the main thread writes protocol cancellation, including a
+            # launch whose immediate metadata capture failed before admission.
+            for record in owner.records:
+                process = record.get('_process')
+                if record['kind'] == 'job' and process and process.poll() is None:
+                    try:
+                        load_coordinator().send(process.stdin, {'cancel': True}, time.monotonic() + .1)
+                        process.wait(timeout=.2)
+                    except (OSError, ValueError, TimeoutError, subprocess.TimeoutExpired):
+                        pass
+            try:
+                owner.finalize(timeout=2)
+            except Exception:
+                print('Private receipt finalization failed. Preserve the evidence root and owned survivors.')
+                return 125
 
 
 if __name__ == '__main__':
