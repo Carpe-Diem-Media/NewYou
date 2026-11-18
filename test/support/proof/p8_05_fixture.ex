@@ -30,7 +30,7 @@ defmodule NewYou.Proof.P805Fixture do
         emails: [],
         workers: [],
         ports: %{},
-        external_pending?: false
+        external_launch: nil
       }
 
       store(fixture)
@@ -51,12 +51,50 @@ defmodule NewYou.Proof.P805Fixture do
   def worker(reference, worker),
     do: update(reference, &%{&1 | workers: Enum.uniq([worker | &1.workers])})
 
-  def begin_external(reference),
-    do: update(reference, &%{&1 | external_pending?: true})
+  # The guardian launches sequentially. An unresolved attempt must never be
+  # replaced, even if its worker has exited or its Port has already closed.
+  def begin_external(reference) do
+    locked(fn ->
+      case current() do
+        %{reference: ^reference, phase: :owned, external_launch: nil} = fixture ->
+          launch = make_ref()
+          store(%{fixture | external_launch: %{reference: launch, port: nil}})
+          {:ok, launch}
 
-  def port(reference, port, pid) do
-    update(reference, fn fixture ->
-      %{fixture | external_pending?: false, ports: Map.put(fixture.ports, port, pid)}
+        _ ->
+          {:error, :launch_unavailable}
+      end
+    end)
+  end
+
+  def opened(reference, launch, port) when is_port(port) do
+    update_launch(reference, launch, fn fixture ->
+      case fixture.external_launch do
+        %{port: nil} = reservation ->
+          %{fixture | external_launch: %{reservation | port: port}}
+
+        _ ->
+          {:error, :invalid_launch_transition}
+      end
+    end)
+  end
+
+  def port(reference, launch, port, pid) when is_integer(pid) and pid > 1 do
+    update_launch(reference, launch, fn fixture ->
+      if fixture.external_launch.port == port and not Map.has_key?(fixture.ports, port),
+        do: %{fixture | ports: Map.put(fixture.ports, port, pid)},
+        else: {:error, :invalid_launch_transition}
+    end)
+  end
+
+  def settle_external(reference, launch, outcome) when outcome in [:not_started, :started] do
+    update_launch(reference, launch, fn fixture ->
+      port = fixture.external_launch.port
+
+      if (outcome == :not_started and is_nil(port)) or
+           (outcome == :started and is_port(port) and Map.has_key?(fixture.ports, port)),
+         do: %{fixture | external_launch: nil},
+         else: {:error, :invalid_launch_transition}
     end)
   end
 
@@ -128,11 +166,19 @@ defmodule NewYou.Proof.P805Fixture do
   end
 
   defp safe?(fixture) do
-    not fixture.external_pending? and
+    launch_settled?(fixture) and
       Enum.all?(fixture.workers, &(not Process.alive?(&1))) and
       Enum.all?(fixture.ports, fn {port, pid} ->
         is_nil(Port.info(port)) and NewYou.Proof.P815Port.external_stopped?(pid)
       end)
+  end
+
+  defp launch_settled?(%{external_launch: nil}), do: true
+
+  defp launch_settled?(fixture) do
+    # An interrupted transfer can reconcile only through its recorded OS target.
+    # A reservation without that identity stays quarantined, even after Port exit.
+    Map.has_key?(fixture.ports, fixture.external_launch.port)
   end
 
   defp retain(fixture, reason) do
@@ -156,6 +202,21 @@ defmodule NewYou.Proof.P805Fixture do
 
         _ ->
           {:error, :stale_fixture}
+      end
+    end)
+  end
+
+  defp update_launch(reference, launch, callback) do
+    locked(fn ->
+      case current() do
+        %{reference: ^reference, external_launch: %{reference: ^launch}} = fixture ->
+          case callback.(fixture) do
+            {:error, _} = error -> error
+            updated -> store(updated)
+          end
+
+        _ ->
+          {:error, :stale_launch}
       end
     end)
   end

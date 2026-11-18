@@ -2,7 +2,126 @@ defmodule NewYou.Proof.FixtureLifecycleTest do
   use ExUnit.Case, async: false
 
   alias Ecto.Adapters.SQL.Sandbox
-  alias NewYou.Proof.{P805, P815Port}
+  alias NewYou.Proof.{P805, P805Fixture, P815Port}
+
+  test "a proven Port opening failure permits fixture cleanup and sequential reuse" do
+    parent = self()
+    prior = Application.fetch_env(:new_you, :p8_15_browser_development_fixtures)
+
+    {owner, monitor} =
+      spawn_monitor(fn ->
+        result =
+          try do
+            value =
+              P805.with_fixture(fn ->
+                guardian = Process.get({P805, :guardian})
+
+                for {executable, options} <- [
+                      {System.find_executable("sh"), [:invalid_p815_option]},
+                      {"/definitely-missing-p815-launcher", [:binary, :exit_status]}
+                    ] do
+                  worker =
+                    spawn(fn ->
+                      receive do
+                        :launch ->
+                          result = P805.open_restart_port(guardian, executable, options)
+                          send(parent, {:opening_failure, result})
+                      end
+                    end)
+
+                  :ok = P805.register_cleanup_worker(worker)
+                  worker_monitor = Process.monitor(worker)
+                  send(worker, :launch)
+
+                  receive do
+                    {:DOWN, ^worker_monitor, :process, ^worker, reason} ->
+                      assert reason == :normal
+                  after
+                    5_000 -> flunk("failed launch worker did not stop")
+                  end
+                end
+
+                :completed
+              end)
+
+            {:ok, value}
+          rescue
+            error -> {:error, Exception.message(error)}
+          end
+
+        send(parent, {:fixture_result, result})
+      end)
+
+    assert_receive {:opening_failure, {:error, :not_started}}, 5_000
+    assert_receive {:opening_failure, {:error, :not_started}}, 5_000
+    assert_receive {:fixture_result, result}, 5_000
+    assert_receive {:DOWN, ^monitor, :process, ^owner, :normal}, 1_000
+    assert result == {:ok, :completed}
+    assert P805.fixture_status() == :available
+    assert Application.fetch_env(:new_you, :p8_15_browser_development_fixtures) == prior
+    assert :next = P805.with_fixture(fn -> :next end)
+  end
+
+  test "only the current launch reservation can settle and admit its successor" do
+    fixture = P805Fixture.acquire([], "p815-launch-reservations", nil)
+
+    try do
+      assert {:ok, first} = P805Fixture.begin_external(fixture)
+      snapshot = P805.fixture_status()
+      assert {:error, :launch_unavailable} = P805Fixture.begin_external(fixture)
+
+      assert {:error, :stale_launch} =
+               P805Fixture.settle_external(fixture, make_ref(), :not_started)
+
+      assert P805.fixture_status() == snapshot
+      assert :ok = P805Fixture.settle_external(fixture, first, :not_started)
+
+      assert {:ok, second} = P805Fixture.begin_external(fixture)
+      refute first == second
+      snapshot = P805.fixture_status()
+      assert {:error, :stale_launch} = P805Fixture.settle_external(fixture, first, :not_started)
+
+      assert {:error, :invalid_launch_transition} =
+               P805Fixture.settle_external(fixture, second, :started)
+
+      assert P805.fixture_status() == snapshot
+      assert :ok = P805Fixture.settle_external(fixture, second, :not_started)
+      assert :ok = P805Fixture.settling(fixture)
+      assert {:error, :launch_unavailable} = P805Fixture.begin_external(fixture)
+    after
+      # No Port is opened in this transition test. Settle only its actual current reservation.
+      case P805.fixture_status() do
+        %{reference: ^fixture, external_launch: %{reference: launch, port: nil}} ->
+          P805Fixture.settle_external(fixture, launch, :not_started)
+
+        _ ->
+          :ok
+      end
+
+      assert :ok = P805Fixture.finish(fixture, fn _ -> :ok end)
+    end
+  end
+
+  test "successful sequential launches reuse one fixture without losing earlier targets" do
+    prior = Application.fetch_env(:new_you, :p8_15_browser_development_fixtures)
+
+    P805.with_fixture(fn ->
+      for count <- 1..3 do
+        assert %{status: :ok, marker: :requested, cleanup: :confirmed} =
+                 P815Port.run(
+                   System.find_executable("sh"),
+                   ["-c", "printf 'P815_REQUESTED\\n'"],
+                   ""
+                 )
+
+        assert %{external_launch: nil, ports: ports} = P805.fixture_status()
+        assert map_size(ports) == count
+      end
+    end)
+
+    assert P805.fixture_status() == :available
+    assert Application.fetch_env(:new_you, :p8_15_browser_development_fixtures) == prior
+  end
 
   test "an admission orphaned before guardian attachment has an explicit recovery path" do
     parent = self()
@@ -33,6 +152,25 @@ defmodule NewYou.Proof.FixtureLifecycleTest do
     assert :ok = P805.reconcile_fixture(reference)
     assert P805.fixture_status() == :available
     assert Application.fetch_env(:new_you, :p8_15_browser_development_fixtures) == prior
+  end
+
+  test "an interrupted post-open launch is never classified as not started" do
+    assert_launch_failure_proof("classification")
+  end
+
+  test "a second launch cannot overwrite an unidentified opened launch" do
+    assert_launch_failure_proof("second_launch")
+  end
+
+  defp assert_launch_failure_proof(scenario) do
+    diagnostic =
+      P815Port.run(
+        System.find_executable("mix"),
+        ["run", "test/proof/p8_15_launch_failure.exs", scenario],
+        ""
+      )
+
+    assert %{status: :ok, marker: :accepted, cleanup: :confirmed} = diagnostic
   end
 
   test "simultaneous contenders admit exactly one fixture owner" do

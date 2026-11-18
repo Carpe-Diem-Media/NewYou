@@ -289,6 +289,7 @@ defmodule NewYou.Proof.P805 do
 
   defp start_fixture_guardian(fixture) do
     owner = self()
+    launch_checkpoint = Process.get({__MODULE__, :launch_checkpoint})
 
     spawn_monitor(fn ->
       Process.flag(:trap_exit, true)
@@ -300,6 +301,7 @@ defmodule NewYou.Proof.P805 do
         owner_monitor: owner_monitor,
         monitors: %{},
         failed?: false,
+        launch_checkpoint: launch_checkpoint,
         ports: %{}
       }
 
@@ -333,7 +335,7 @@ defmodule NewYou.Proof.P805 do
     receive do
       {:restart_port, ^reference, result} -> result
     after
-      5_000 -> :error
+      5_000 -> {:error, :unconfirmed}
     end
   end
 
@@ -451,19 +453,51 @@ defmodule NewYou.Proof.P805 do
   end
 
   defp open_tracked_port(state, worker, executable, options) do
-    if worker in Map.values(state.monitors) and Process.alive?(state.owner) and
-         P805Fixture.owned?(state.fixture) do
-      :ok = P805Fixture.begin_external(state.fixture)
-      port = Port.open({:spawn_executable, executable}, options)
-      {:os_pid, pid} = Port.info(port, :os_pid)
-      :ok = P805Fixture.port(state.fixture, port, pid)
-      result = transfer_fixture_port(port, worker)
-      {result, %{state | ports: Map.put(state.ports, port, worker)}}
+    with true <- worker in Map.values(state.monitors) and Process.alive?(state.owner),
+         {:ok, launch} <- P805Fixture.begin_external(state.fixture) do
+      open_reserved_port(state, worker, launch, executable, options)
     else
-      {:error, state}
+      _ -> {{:error, :unconfirmed}, state}
     end
   rescue
-    _ -> {:error, state}
+    _ -> {{:error, :unconfirmed}, state}
+  catch
+    _, _ -> {{:error, :unconfirmed}, state}
+  end
+
+  defp open_reserved_port(state, worker, launch, executable, options) do
+    case open_external_port(executable, options) do
+      {:ok, port} ->
+        :ok = P805Fixture.opened(state.fixture, launch, port)
+        launch_checkpoint(state, :opened, port)
+        {:os_pid, pid} = Port.info(port, :os_pid)
+        :ok = P805Fixture.port(state.fixture, launch, port, pid)
+        {:ok, ^port} = transfer_fixture_port(port, worker)
+        :ok = P805Fixture.settle_external(state.fixture, launch, :started)
+        {{:ok, port}, %{state | ports: Map.put(state.ports, port, worker)}}
+
+      {:error, :not_started} ->
+        :ok = P805Fixture.settle_external(state.fixture, launch, :not_started)
+        {{:error, :not_started}, state}
+    end
+  end
+
+  defp open_external_port(executable, options) do
+    {:ok, Port.open({:spawn_executable, executable}, options)}
+  rescue
+    # Synchronous validation and missing/non-executable files prove no child started.
+    # Exceptions in later registration/transfer must retain this reservation.
+    ArgumentError ->
+      {:error, :not_started}
+
+    error in ErlangError ->
+      if error.original in [:enoent, :eacces],
+        do: {:error, :not_started},
+        else: reraise(error, __STACKTRACE__)
+  end
+
+  defp launch_checkpoint(state, stage, port) do
+    if is_function(state.launch_checkpoint, 2), do: state.launch_checkpoint.(stage, port)
   end
 
   defp transfer_fixture_port(port, worker) do
@@ -497,7 +531,7 @@ defmodule NewYou.Proof.P805 do
           wait_fixture_workers(record_fixture_worker_down(state, monitor, reason), deadline)
 
         {:open_restart_port, worker, reference, _executable, _options} ->
-          send(worker, {:restart_port, reference, :error})
+          send(worker, {:restart_port, reference, {:error, :unconfirmed}})
           wait_fixture_workers(state, deadline)
       after
         max(deadline - System.monotonic_time(:millisecond), 0) -> {:pending, state}
@@ -537,7 +571,7 @@ defmodule NewYou.Proof.P805 do
           contain_fixture_workers(record_fixture_worker_down(state, monitor, reason))
 
         {:open_restart_port, worker, reference, _executable, _options} ->
-          send(worker, {:restart_port, reference, :error})
+          send(worker, {:restart_port, reference, {:error, :unconfirmed}})
           contain_fixture_workers(state)
       end
     end

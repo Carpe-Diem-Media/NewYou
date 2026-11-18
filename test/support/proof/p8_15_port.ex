@@ -111,12 +111,13 @@ defmodule NewYou.Proof.P815Port do
             {:ok, Port.open({:spawn_executable, shell}, options)}
         end
       rescue
-        _ -> :error
+        _ -> {:error, :unconfirmed}
       end
 
     case opened do
       {:ok, port} -> run_port(port, ps, payload, timeout, started)
-      :error -> result(:startup_failure, "", started, :not_started, nil)
+      {:error, :not_started} -> result(:startup_failure, "", started, :not_started, nil)
+      _ -> result(:harness_failure, "", started, :unconfirmed, nil)
     end
   end
 
