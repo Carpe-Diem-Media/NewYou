@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "8c8f2ae42ea487e11e3f3e930a97639783745de9",
-    "semantics": "WELL-147 continuation integrates current main while preserving newer restart/fixture semantics. Probe readiness uses bounded private control files independent of redacted stdout, with phase and lease/generation/job/worktree/database/role acknowledgements before successful completion. Verification command consumers select managed admission for opt-in worktrees and verified DevCore nested reuse inside an existing job, with no legacy fallback. Installed DevCore 1.2.1 checksum and manifest were rechecked read-only. Acquisition remains disabled and both supervisor-loss generations remain quarantined. Standalone protocol and Python tooling tests pass; actual child/SQL, paired Dialyzer, full-suite capacity, final fast/deep and hosted CI, independent Master Gate, resulting-main and activation remain unverified. Corrective B source factors the actual production seed barriers for subprocess testing with synthetic adapters, bounds initial stdin and implements private directory-descriptor control records through the Python coordinator. Permanent tests remove actual ready/done acknowledgement calls and require the lifecycle regressions to fail. The coordinator accepts only already-owned streams and performs no resource lifecycle actions. Live application integration remains unverified. The actual Port collector now drains and counts output after its receipt until child exit, preserves an absolute deadline and rejects nonzero exits. Direct collector subprocess regressions cover success, bounded diagnostics, receipt-then-failure, missing/mismatched identity/counts, timeout and post-receipt flooding; isolated exit-status and output-bound mutations demonstrate sensitivity."
+    "git_sha": "561d507c08924aa123ed6b362c61153c13d8d77e",
+    "semantics": "WELL-147 continuation integrates current main while preserving newer restart/fixture semantics. Probe readiness uses bounded private control files independent of redacted stdout, with phase and lease/generation/job/worktree/database/role acknowledgements before successful completion. Verification command consumers select managed admission for opt-in worktrees and verified DevCore nested reuse inside an existing job, with no legacy fallback. Installed DevCore 1.2.1 checksum and manifest were rechecked read-only. Acquisition remains disabled and both supervisor-loss generations remain quarantined. Standalone protocol and Python tooling tests pass; actual child/SQL, paired Dialyzer, full-suite capacity, final fast/deep and hosted CI, independent Master Gate, resulting-main and activation remain unverified. Corrective B source factors the actual production seed barriers for subprocess testing with synthetic adapters, bounds initial stdin and implements private directory-descriptor control records through the Python coordinator. Permanent tests remove actual ready/done acknowledgement calls and require the lifecycle regressions to fail. The coordinator accepts only already-owned streams and performs no resource lifecycle actions. Live application integration remains unverified. The actual Port collector now drains and counts output after its receipt until child exit, preserves an absolute deadline and rejects nonzero exits. Direct collector subprocess regressions cover success, bounded diagnostics, receipt-then-failure, missing/mismatched identity/counts, timeout and post-receipt flooding; isolated exit-status and output-bound mutations demonstrate sensitivity. Explicit TEST heavy admission for compound commands now routes through the existing build-locked wrapper to DevCore slots run --heavy test. Normal DEV/TEST syntax and verified nested reuse remain intact. Root ran the full 16-test local-session suite, including the installed DevCore temporary-registry handoff regression, plus86 related command-consumer/routing tests. Real heavy admission remains unverified."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -391,10 +391,12 @@
         "Redact failed status output and launch no command.",
         "Model inherited lock ownership until a child exits.",
         "Reject unresolved same-worktree jobs while permitting sibling worktrees.",
-        "Reject symlink locks and preserve lock permissions."
+        "Reject symlink locks and preserve lock permissions.",
+        "Route explicit TEST-only --heavy through the existing lock and guards, preserving the inherited descriptor in a real synthetic child.",
+        "Reject unsupported/misplaced options, nested markers, malformed status and prior jobs without fallback."
       ],
-      "proves": "Wrapper behavior against mocks and temporary files/processes.",
-      "limits": "The ownership test models descriptor inheritance; it does not run DevCore, attach to managed descendants, or prove recovery from a real supervisor failure.",
+      "proves": "Sixteen temporary-metadata tests, including an installed DevCore status handoff against an isolated temporary registry, plus explicit heavy routing against synthetic exec adapters.",
+      "limits": "The installed status regression uses temporary private metadata and no real allocation or database. Explicit heavy tests do not execute actual managed capacity admission.",
       "source_ids": [
         "session_tests"
       ]
@@ -558,7 +560,8 @@
     "The persistence locator points to the DevCore slot allocation JSON because this capability has no NewYou migration or table. Its slots/database_prefix fields configure allocation. DevCore owns lease lifecycle and cleanup; this map describes consumer checks only.",
     "Actual focused PLT experiments at NewYou heads 28b0925a8a5cabfb8ca21944ae07d90cbf63e551 and 1e71a0ba675abda3c1ddd88af40c5ee901406004, with identical mix.lock/mix.exs/PLT task/helper inputs and pinned Elixir 1.20.5 / OTP 29.1.2: cold/preparation pair exited zero with zero Dialyzer errors/skips but zero analysis overlap. A separate prepared-state pair exited zero with zero errors/skips and 14.61 seconds sampled analysis overlap. Private local core files have distinct inodes; the disposable cache lock was available during observed analysis and the baseline hashes still match its manifest. Peak sampled combined process-tree RSS was 5332416 KiB in the prepared pair. Raw receipts are /tmp/well147-actual-plt-wmivgqpy/receipt.json and /tmp/well147-actual-plt-9xq3lsp2/receipt.json. These local artifacts may expire. Independent additional review supports success, private core and project PLTs, baseline integrity and sampled overlap. Overlap uses log-marker/process-end sampling, not exact Dialyzer entry/return. RSS may miss peaks, double-count shared pages or omit descendants outside the sampled ancestry. Historical receipts lack a complete dirty-tree/environment/BEAM manifest, so selected-input equivalence is not whole-source or artifact equivalence. The inspected task path shows no application startup or TEST booking, but no syscall/database audit certifies absolute absence of incidental activity. Root reran synthetic proof with a structured receipt at /tmp/well147-synthetic-cache-receipt.json. Scripts, receipts and logs are also preserved privately under the implementation worktree Git metadata well147-evidence directory; active cache/PLT files were not copied. This is focused PLT evidence, not final executor check.deep, full-suite capacity, OOM certification, or an admission-policy decision. Later material source changes invalidate affected candidate proof.",
     "B corrections at bda8587c and canonical test integration exercise real seed ready/done barriers with synthetic prepare/finish adapters; root observed 7 protocol tests, 13 standalone probe tests and affected formatting passing. Actual production child collection and live SQL integration still require authorized proof. Independent correction review remains pending. Earlier focused PLT evidence is historical and is not final-candidate certification.",
-    "Independent re-review found missing actual collector regression proof and unbounded output after the first receipt. Root reproduced receipt-then-flood acceptance in a failing focused test, corrected the output bound through child exit and added real Port collector regressions with exit-status/output-guard sensitivity. Root observed10 protocol tests,13 standalone probe tests and focused formatting passing. Fresh exact-source review is pending. No live execution or final engineering/hosted gate is certified."
+    "Independent re-review found missing actual collector regression proof and unbounded output after the first receipt. Root reproduced receipt-then-flood acceptance in a failing focused test, corrected the output bound through child exit and added real Port collector regressions with exit-status/output-guard sensitivity. Root observed10 protocol tests,13 standalone probe tests and focused formatting passing. Fresh exact-source review is pending. No live execution or final engineering/hosted gate is certified.",
+    "The bounded coexistence proposal exposed that mix do is not classified automatically as heavy. Source561d507c adds explicit TEST heavy wrapper routing rather than a manual capacity exception. Actual migration/probe execution requires separate owner authorization, current legacy-owner clearance and revised operational review. The pilot driver is not yet assembled or reviewed; no operational pass is claimed."
   ],
   "follow_up_tickets": [
     "WELL-154"
@@ -574,7 +577,7 @@
       "id": "session",
       "path": "tools/local_session.py",
       "symbol": "def main(arguments=None)",
-      "sha256": "f702c17a0d55e5a8fea3b3231320c21b8c3bfc157816a0c3bf155a3c4b899641"
+      "sha256": "a7f0b53d2dce7bffd1dad3ccffc6d22a0724dbf71763e3c5df1525e2491ca45a"
     },
     {
       "id": "launcher",
@@ -622,7 +625,7 @@
       "id": "session_tests",
       "path": "tests/test_local_session.py",
       "symbol": "class LocalSessionTests(unittest.TestCase):",
-      "sha256": "159d0cb0dc60fc1328ba0ba0db879f35452724adcea904338562c194db0a5bb3"
+      "sha256": "3596d56d98bf110df7a0787e4768455693c2c51e8a5555e98da96a1649231108"
     },
     {
       "id": "cache_tests",

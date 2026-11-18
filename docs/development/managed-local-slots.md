@@ -157,6 +157,21 @@ never kill an unknown listener. Temporary browser servers keep loopback port 0.
 Managed TEST databases are independent. DEV still writes the shared
 `new_you_dev` database, so simultaneous DEV writes need their existing care.
 
+Compound TEST commands that the automatic classifier cannot recognize must
+request the same heavy gate explicitly through the wrapper:
+
+```sh
+mise exec -- tools/newyou-local test --heavy -- mix do ecto.migrate, run test/proof/managed_slot_probe.exs
+```
+
+This syntax is TEST-only and still requires the separate operational pilot
+authorization. The wrapper retains its build lock and prior-job checks before
+calling DevCore `slots run --heavy test -- ...`. It accepts no generic option
+forwarding. Arguments after the separator belong to the child command. Existing
+DEV/TEST commands retain their behavior, and nested managed jobs continue to use
+the verified DevCore reuse path. A direct allocator invocation is not a substitute
+for the wrapper's build admission.
+
 The automatic expensive-command capacity is provisionally at most two, bounded
 further by CPU and memory. Focused tests in different worktrees do not share that
 gate. Workstation suite memory/throughput and the final capacity remain unmeasured;
