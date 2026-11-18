@@ -23,6 +23,52 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.unverified_restart_proof(interrupt_resume?: true) == :ok
   end
 
+  test "restart proof rejects a retry when the interruption checkpoint was not reached" do
+    owner = self()
+
+    Process.put({NewYou.Proof.P805, :fixture_cleanup_hook}, fn ->
+      send(
+        owner,
+        {:cleanup_identifiers, Process.get({NewYou.Proof.P805, :emails}, []),
+         Process.get({NewYou.Proof.P805, :operations}, [])}
+      )
+    end)
+
+    try do
+      error =
+        assert_raise ExUnit.AssertionError, ~r/interruption_not_proven/, fn ->
+          P815.unverified_restart_proof(interrupt_resume?: true, skip_interrupt?: true)
+        end
+
+      assert Exception.message(error) =~ "operation?: true"
+      assert Exception.message(error) =~ "checkpoint?: false"
+      assert Exception.message(error) =~ "connection_lost?: false"
+
+      assert_receive {:cleanup_identifiers, [_ | _] = emails, [_ | _] = operations}
+
+      Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
+        %{rows: [[count]]} =
+          NewYou.Repo.query!("SELECT count(*) FROM accounts WHERE email = ANY($1::text[])", [
+            emails
+          ])
+
+        assert count == 0
+        ids = Enum.map(operations, &Ecto.UUID.dump!/1)
+
+        %{rows: [[cases, intents]]} =
+          NewYou.Repo.query!(
+            "SELECT (SELECT count(*) FROM recovery_cases WHERE operation_id = ANY($1::uuid[])), (SELECT count(*) FROM message_intents WHERE source_operation_id = ANY($1::uuid[]))",
+            [ids]
+          )
+
+        assert cases == 0
+        assert intents == 0
+      end)
+    after
+      Process.delete({NewYou.Proof.P805, :fixture_cleanup_hook})
+    end
+  end
+
   test "recovery waits for an earlier email fixture commit and rejects its stale binding" do
     assert P815.prior_email_commit_race()
   end
