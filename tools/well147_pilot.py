@@ -81,7 +81,8 @@ def load_coordinator():
 
 def check_record(record, identity, phase):
     require({k: record.get(k) for k in KEYS} == identity, 'independent identity mismatch')
-    require(record.get('own_count') == 1 and record.get('peer_count') == 0, 'fixture counts')
+    require(type(record.get('own_count')) is int and type(record.get('peer_count')) is int
+            and record['own_count'] == 1 and record['peer_count'] == 0, 'fixture counts')
     if phase == 'done':
         require(record.get('cross_slot_denied') is True and record.get('legacy_denied') is True, 'denial proof missing')
 

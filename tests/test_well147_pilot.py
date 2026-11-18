@@ -151,6 +151,14 @@ class PilotTests(unittest.TestCase):
             with self.assertRaises(pilot.Refused):
                 pilot.check_record(record, identity, 'done')
 
+    def test_boolean_fixture_counts_are_not_integer_proof(self):
+        identity = self.adapter.identities[0]
+        for change in ({'own_count': True}, {'peer_count': False}):
+            record = dict(identity, own_count=1, peer_count=0)
+            record.update(change)
+            with self.assertRaisesRegex(pilot.Refused, 'fixture counts'):
+                pilot.check_record(record, identity, 'ready')
+
     def test_execute_never_launches_even_with_references(self):
         with patch.object(pilot.subprocess, 'run', side_effect=AssertionError('no actions')):
             self.assertEqual(pilot.main(['--execute']), 125)
