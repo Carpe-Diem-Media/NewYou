@@ -162,6 +162,33 @@ further by CPU and memory. Focused tests in different worktrees do not share tha
 gate. Workstation suite memory/throughput and the final capacity remain unmeasured;
 twenty configured slots do not establish capacity for twenty heavy suites.
 
+## Probe control for an authorized pilot
+
+The probe input requires an absolute `control_directory` for seed and empty
+modes. The coordinator supplies a fresh directory owned by the invoking user
+with mode `0700`, without symlinked path components. Records are exclusive
+`0600` files, bounded to 4096 payload bytes. A complete record ends in a newline;
+stdout remains diagnostic and must not drive readiness.
+
+`test/proof/managed_slot_coordinator.py` exposes `coordinate(directories,
+identities, inputs, timeout=30, cancelled=...)` for two already-owned probe
+stdin streams. The caller supplies independently verified exact lease,
+generation, job, worktree, database and role identities. The coordinator waits
+for both `ready.json` records before sending ready acknowledgements with peer
+database names, then waits for both `done.json` records before acknowledging
+completion. The probe validates every acknowledgement against its identity.
+The caller must check actual process exits and preserve their logs and receipts.
+The coordinator does not acquire, release, retain, enable or clean resources.
+
+Malformed, oversized, replaced or unsafe records, wrong identity, cancellation
+or timeout stop coordination. Cancellation is sent to the owned streams where
+possible; evidence stays in place and process/lease disposition remains with the
+single database coordinator. A failed acknowledgement or child exit must retain
+the managed run for diagnosis. These controls do not authorize a pilot or
+supervisor-loss reconciliation. Standalone subprocess tests exercise the actual
+seed barriers with synthetic adapters; live SQL and child execution still need
+the authorized application proof.
+
 ## Retention, release and recovery
 
 Successful commands release their generation after all children finish and
@@ -237,4 +264,4 @@ NewYou database isolation. Before activation claims, WELL-147 still requires
 two independent worktrees with their own migrations and distinguishable committed
 synthetic fixtures, child/restart/browser paths, failure retention and clean
 reuse, measured heavy capacity,
-full repository gates, bounded OCR, exact-head CI and independent review.
+full repository gates, an optional OCR disposition, exact-head CI and independent review.

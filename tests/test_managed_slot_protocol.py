@@ -8,7 +8,7 @@ import tempfile
 import time
 import unittest
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 HELPER = ROOT / 'test/proof/managed_slot_coordinator.py'
 
 def identity(n):
@@ -173,7 +173,7 @@ class ProtocolTest(unittest.TestCase):
                 self.assertEqual(source.count(target),1)
                 Path(d,'probe.exs').write_text(source.replace(target,replacement))
                 result=subprocess.run(['python3','-m','unittest',
-                    'tools.tests.test_managed_slot_protocol.ProtocolTest.test_lifecycle_each_ack_and_failures'],
+                    'tests.test_managed_slot_protocol.ProtocolTest.test_lifecycle_each_ack_and_failures'],
                     cwd=ROOT,env={**os.environ,'PROBE_SOURCE':d+'/probe.exs'},capture_output=True,timeout=45)
                 self.assertNotEqual(result.returncode,0)
                 self.assertIn(b'exited before required ack',result.stderr)
