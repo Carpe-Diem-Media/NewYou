@@ -4,11 +4,12 @@
   "purpose": "Bounded Phase-8 graduated recovery through Identity, Communications, Content and Audit owners. Ordinary verified-email recovery and proof-backed stronger manual recovery are distinct from password reset; zero-factor completion is denied.",
   "implementing_tickets": [
     "WELL-16",
-    "WELL-112"
+    "WELL-112",
+    "WELL-153"
   ],
   "implementation_revision": {
-    "git_sha": "95d733bb8069a77d5ec7a58edc3c8e10ef36d9e8",
-    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
+    "git_sha": "bed38c1ecf63e42fcac48e832fe3c3535f305d45",
+    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-153 changes TEST-only recovery restart diagnostics and proof; Identity and password-reset business semantics remain unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -869,6 +870,14 @@
         "content",
         "executor"
       ]
+    },
+    {
+      "summary": "The TEST guardian admits one correlated outstanding launch. It records the Port before OS identity lookup and completes the matching reservation after transfer. Proven no-child failures settle that reservation; an interrupted launch without recorded identity remains quarantined and rejects later launches. An interrupted transfer with a recorded target can reconcile only after existing worker, Port and OS-group checks pass.",
+      "source_ids": [
+        "fixture_ownership",
+        "fixture_lifecycle_test",
+        "launch_failure_probe"
+      ]
     }
   ],
   "tests": [
@@ -989,6 +998,37 @@
       "source_ids": [
         "audit_test"
       ]
+    },
+    {
+      "path": "test/new_you/proof/p8_15_port_test.exs",
+      "cases": [
+        "Safe bounded child status and marker classification, startup failure, output overflow, deadlines, cancellation, and process-group cleanup."
+      ],
+      "proves": "TEST-only subprocess outcomes and bounded cleanup under exercised Linux process conditions.",
+      "limits": "Does not reconstruct the lost historical child status or certify production recovery.",
+      "source_ids": [
+        "restart_port",
+        "restart_port_test",
+        "restart_fixture"
+      ]
+    },
+    {
+      "path": "test/new_you/proof/fixture_lifecycle_test.exs",
+      "cases": [
+        "Competing admission and rejection before any global environment snapshot; ownership retained during cleanup.",
+        "Real external child surviving worker death retains Account, RecoveryCase and recovery intent, denies new fixtures and rejects unsafe reconciliation.",
+        "Guardian death preserves the exact target; verified process-group absence permits scoped cleanup and restoration; stale reconciliation cannot release another fixture.",
+        "Proven no-child launch failure settles safely; stale settlement and overlapping reservation are rejected; successful sequential launches preserve all recorded targets.",
+        "A real post-open interruption in a separate TEST BEAM reports harness failure and unconfirmed cleanup, denies the next launch and retains quarantine after the exact child has stopped."
+      ],
+      "proves": "TEST fixture ownership, exact-target quarantine and actual database cleanup after independently observed external termination. Correlated sequential launch reservation settlement and truthful post-open diagnostics.",
+      "limits": "VM-local coordination and controlled Linux process groups; no claim to reconstruct the lost historical failure or certify production Recovery.",
+      "source_ids": [
+        "fixture_ownership",
+        "fixture_lifecycle_test",
+        "fixture_connection_test",
+        "launch_failure_probe"
+      ]
     }
   ],
   "safe_extensions": [
@@ -1058,7 +1098,9 @@
     "WELL-111 accepts proof-backed manual positive proof and zero-factor negative proof for Phase 8. Successful lost-all-factor recovery is unimplemented and remains a pre-release obligation under WELL-115; privileged hardening remains WELL-65.",
     "Historical PR #217, PR #228 and Markdown handoffs remain historical evidence. The current WELL-20 candidate requires its own exact-head proof, CI and independent review.",
     "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations.",
-    "WELL-136 verification corrected only the P815 reset-versus-recovery fixture lookup to its own Account. The strengthened case creates an unrelated reset proof through Identity and asserts that Token remains unchanged after contention. Deterministic RED failed at the previous global-purpose lookup; GREEN passed all 13 recovery-concurrency tests with seed 441709 and four schedulers. No recovery business API or lifecycle was changed and no retained shared records were deleted. Full gate results remain separately required."
+    "WELL-136 verification corrected only the P815 reset-versus-recovery fixture lookup to its own Account. The strengthened case creates an unrelated reset proof through Identity and asserts that Token remains unchanged after contention. Deterministic RED failed at the previous global-purpose lookup; GREEN passed all 13 recovery-concurrency tests with seed 441709 and four schedulers. No recovery business API or lifecycle was changed and no retained shared records were deleted. Full gate results remain separately required.",
+    "WELL-153 observes checkpoint and connection loss in the new restart proof; the original seed 38448 child exit, output and timing remain unknown. A later pass does not establish the historical cause.",
+    "WELL-153 fixture ownership and retained targets are local to the running TEST BEAM. They survive guardian failure, not termination of the whole VM. External evidence is limited to recorded Linux process groups from the controlled restart launcher. Missing launch identity or uncertain process state remains fail-closed; reconciliation has no assertion-based or force-release override. This is not deployed recovery certification."
   ],
   "follow_up_tickets": [
     "WELL-17",
@@ -1185,7 +1227,7 @@
       "id": "concurrent_helper",
       "path": "test/support/proof/p8_15.ex",
       "symbol": "defmodule NewYou.Proof.P815",
-      "sha256": "96d5037117c038f7ce0f117b4d6ec1b4fc0fbc9c27e6ea96420cab122e2e0c74"
+      "sha256": "5a1328d033d3997874249a34a5fc73c1092b1d7e0f3a9536b5d97c9a07a951dd"
     },
     {
       "id": "lifecycle_test",
@@ -1209,7 +1251,7 @@
       "id": "concurrency_test",
       "path": "test/new_you/identity/recovery_concurrency_test.exs",
       "symbol": "defmodule ",
-      "sha256": "dca26068b191e9d69b031577ea4457ecffa2b6a69f0cf79e3237a0090e071905"
+      "sha256": "cc90f2547b50cb6d66dd1a325bd64e453d726e9c2da497d45a2ebde3d114d61e"
     },
     {
       "id": "delivery_test",
@@ -1330,6 +1372,54 @@
       "path": "test/support/proof/web_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.WebScenarios",
       "sha256": "d33e18605b1495218a788d5e000c47977f410811a2af11cc2c480d9387df7a58"
+    },
+    {
+      "id": "restart_child",
+      "path": "test/proof/p8_15_restart.exs",
+      "symbol": "defmodule NewYou.Proof.P815RestartRequest",
+      "sha256": "a44b8f59b2f2557229b5f325df2c87523c4bea08149a193872f325736885c991"
+    },
+    {
+      "id": "restart_port",
+      "path": "test/support/proof/p8_15_port.ex",
+      "symbol": "defmodule NewYou.Proof.P815Port",
+      "sha256": "88ca3a138fd17d5ee586e8a0cc7eabcf3044ea622a4909ba48da119be64a9609"
+    },
+    {
+      "id": "restart_port_test",
+      "path": "test/new_you/proof/p8_15_port_test.exs",
+      "symbol": "defmodule NewYou.Proof.P815PortTest",
+      "sha256": "c1d4e2ed5a51e641ee7fb7ea278e8274eb6fcec430150d14bb7047cdea193592"
+    },
+    {
+      "id": "restart_fixture",
+      "path": "test/support/proof/p8_05.ex",
+      "symbol": "defmodule NewYou.Proof.P805",
+      "sha256": "8aaa9d13c63fb85fe4237df73a2b013678b46f4c6da61d68b424868d8cbaf19a"
+    },
+    {
+      "id": "fixture_ownership",
+      "path": "test/support/proof/p8_05_fixture.ex",
+      "symbol": "defmodule NewYou.Proof.P805Fixture",
+      "sha256": "dcb563ce358341a683181934702b39e789ecf1894f783ce6e92d4277de5307f5"
+    },
+    {
+      "id": "fixture_lifecycle_test",
+      "path": "test/new_you/proof/fixture_lifecycle_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureLifecycleTest",
+      "sha256": "d0142caa336b8cde113f8fcec74cca8547671a45cb02f99dbb15e07fd73ed2fc"
+    },
+    {
+      "id": "fixture_connection_test",
+      "path": "test/new_you/proof/fixture_connection_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureConnectionTest",
+      "sha256": "3fdd74cc7c689429e706738eefff0e5f2b27b393d52444769a6a479c53bcb5d4"
+    },
+    {
+      "id": "launch_failure_probe",
+      "path": "test/support/proof/p8_15_launch_failure.exs",
+      "symbol": "# An intentionally unidentified launch must keep its fixture quarantined.",
+      "sha256": "c861107d07265ee509a9aade45e61a87437273789f385b0ffe2462535151c5ea"
     }
   ]
 }

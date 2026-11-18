@@ -6,7 +6,7 @@ defmodule NewYou.Proof.P805 do
   """
   alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.{Audit, Communications, Identity, Repo}
-  alias NewYou.Proof.{CutPoints, Scenario, SelfTest, RegistrationSeam}
+  alias NewYou.Proof.{CutPoints, Scenario, SelfTest, RegistrationSeam, P805Fixture}
 
   require Ash.Query
 
@@ -19,26 +19,25 @@ defmodule NewYou.Proof.P805 do
 
   @doc false
   def with_fixture(callback) when is_function(callback, 0) do
-    previous = Map.new(@environment, &{&1, Application.fetch_env(:new_you, &1)})
     projection_key = "p817_test_" <> Ecto.UUID.generate()
     previous_projection_key = Process.get({NewYou.Analytics, :p817_test_projection_key}, :missing)
-    SelfTest.cleanup_manifest!(connections_released: false, locks_released: false)
+    cleanup_hook = Process.get({__MODULE__, :fixture_cleanup_hook})
+    fixture = P805Fixture.acquire(@environment, projection_key, cleanup_hook)
+    Process.put({__MODULE__, :fixture}, fixture)
 
     outcome =
       try do
         Process.put({NewYou.Analytics, :p817_test_projection_key}, projection_key)
         Process.put({__MODULE__, :operations}, [])
         Process.put({__MODULE__, :emails}, [])
-        configure()
-        fixture_setup_checkpoint(:configured)
-
-        cleanup_hook = Process.get({__MODULE__, :fixture_cleanup_hook})
-
-        {guardian, guardian_monitor} =
-          start_fixture_guardian(previous, projection_key, cleanup_hook)
+        SelfTest.cleanup_manifest!(connections_released: false, locks_released: false)
+        {guardian, guardian_monitor} = start_fixture_guardian(fixture)
+        :ok = P805Fixture.attach(fixture, guardian)
 
         Process.put({__MODULE__, :guardian}, guardian)
         Process.put({__MODULE__, :guardian_monitor}, guardian_monitor)
+        configure()
+        fixture_setup_checkpoint(:configured)
         fixture_setup_checkpoint(:guardian_started)
         :ok = NewYou.Proof.Scenario.register_cleanup_guardian(guardian)
         :ok = Sandbox.checkout(Repo, sandbox: false)
@@ -52,15 +51,23 @@ defmodule NewYou.Proof.P805 do
 
     cleanup_result =
       try do
-        finish_fixture(previous, projection_key, previous_projection_key)
+        finish_fixture(fixture, projection_key, previous_projection_key)
       catch
         _, _ -> :unconfirmed
       end
 
     case outcome do
-      {:returned, value} when cleanup_result == :confirmed -> value
-      {:returned, _value} -> raise "P8-05 fixture cleanup unconfirmed"
-      {:raised, kind, reason, stacktrace} -> :erlang.raise(kind, reason, stacktrace)
+      {:returned, value} when cleanup_result == :confirmed ->
+        value
+
+      {:returned, _value} ->
+        raise "P8-05 fixture cleanup unconfirmed"
+
+      {:raised, kind, reason, stacktrace} when cleanup_result == :confirmed ->
+        :erlang.raise(kind, reason, stacktrace)
+
+      {:raised, _, _, _} ->
+        raise "P8-05 fixture cleanup unconfirmed after callback failure"
     end
   end
 
@@ -92,7 +99,7 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
-  defp finish_fixture(previous, projection_key, previous_projection_key) do
+  defp finish_fixture(fixture, projection_key, previous_projection_key) do
     clear_fixture_execution_state()
     checked_out? = fixture_checked_out?()
     guardian = Process.get({__MODULE__, :guardian})
@@ -104,7 +111,7 @@ defmodule NewYou.Proof.P805 do
         projection_key,
         guardian,
         guardian_monitor,
-        previous,
+        fixture,
         previous_projection_key
       )
 
@@ -124,18 +131,42 @@ defmodule NewYou.Proof.P805 do
          projection_key,
          guardian,
          guardian_monitor,
-         previous,
+         fixture,
          previous_projection_key
        ) do
-    perform_fixture_cleanup(checked_out?, projection_key)
-    :confirmed
+    :ok = P805Fixture.settling(fixture)
+    workers = await_registered_workers(guardian, guardian_monitor)
+
+    cleanup = fn _ ->
+      perform_fixture_cleanup(checked_out?, projection_key)
+      :ok
+    end
+
+    if workers == :pending do
+      :ok = P805Fixture.quarantine(fixture)
+      :unconfirmed
+    else
+      case P805Fixture.finish(fixture, cleanup) do
+        :ok ->
+          worker_cleanup_result(workers)
+
+        {:error, :cleanup_failed} ->
+          recover_fixture_cleanup(checked_out?, guardian, guardian_monitor)
+
+        {:error, _} ->
+          :unconfirmed
+      end
+    end
   rescue
     _ -> recover_fixture_cleanup(checked_out?, guardian, guardian_monitor)
   catch
     _, _ -> recover_fixture_cleanup(checked_out?, guardian, guardian_monitor)
   after
-    restore_fixture_runtime(guardian, guardian_monitor, previous, previous_projection_key)
+    restore_fixture_runtime(guardian, guardian_monitor, fixture, previous_projection_key)
   end
+
+  defp worker_cleanup_result(:confirmed), do: :confirmed
+  defp worker_cleanup_result(_), do: :unconfirmed
 
   defp perform_fixture_cleanup(true, projection_key) do
     # Teardown needs its own live connection if a cancelled worker
@@ -158,29 +189,25 @@ defmodule NewYou.Proof.P805 do
 
   defp recover_fixture_cleanup(_checked_out?, _guardian, _monitor), do: :unconfirmed
 
-  defp restore_fixture_runtime(guardian, guardian_monitor, previous, previous_projection_key) do
-    if is_pid(guardian) and is_reference(guardian_monitor),
-      do: stop_fixture_guardian(guardian, guardian_monitor)
+  defp restore_fixture_runtime(guardian, guardian_monitor, fixture, previous_projection_key) do
+    if P805Fixture.active?(fixture) do
+      :ok = P805Fixture.quarantine(fixture)
+      if is_pid(guardian), do: send(guardian, :contain_fixture)
+    else
+      if is_pid(guardian) and is_reference(guardian_monitor),
+        do: stop_fixture_guardian(guardian, guardian_monitor)
+    end
   after
-    restore_environment(previous)
-
-    restore_process_value(
-      {NewYou.Analytics, :p817_test_projection_key},
-      previous_projection_key
-    )
-
+    restore_process_value({NewYou.Analytics, :p817_test_projection_key}, previous_projection_key)
+    Process.delete({__MODULE__, :fixture})
     Process.delete({__MODULE__, :guardian})
     Process.delete({__MODULE__, :guardian_monitor})
     Process.delete({__MODULE__, :setup_checkpoint})
   end
 
-  defp record_fixture_cleanup(true, cleanup_result) do
+  defp record_fixture_cleanup(_checked_out?, cleanup_result) do
     confirmed? = cleanup_result == :confirmed
     SelfTest.cleanup_manifest!(connections_released: confirmed?, locks_released: confirmed?)
-  end
-
-  defp record_fixture_cleanup(false, _cleanup_result) do
-    SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
   end
 
   defp recover_fixture_guardian(guardian) do
@@ -188,10 +215,18 @@ defmodule NewYou.Proof.P805 do
     send(guardian, {:recover_fixture, self(), reference})
 
     receive do
-      {:fixture_recovered, ^reference, :ok} -> :confirmed
-      {:fixture_recovered, ^reference, _failure} -> :unconfirmed
+      {:fixture_recovered, ^reference, :ok} ->
+        :confirmed
+
+      {:fixture_recovered, ^reference, :pending} ->
+        :unconfirmed
+
+      {:fixture_recovered, ^reference, _failure} ->
+        :unconfirmed
     after
-      15_000 -> :unconfirmed
+      15_000 ->
+        send(guardian, :contain_fixture)
+        :unconfirmed
     end
   end
 
@@ -252,17 +287,101 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
-  defp start_fixture_guardian(previous, projection_key, cleanup_hook) do
+  defp start_fixture_guardian(fixture) do
     owner = self()
+    launch_checkpoint = Process.get({__MODULE__, :launch_checkpoint})
 
-    {pid, monitor} =
-      spawn_monitor(fn ->
-        owner_monitor = Process.monitor(owner)
-        fixture_guardian(owner, owner_monitor, previous, projection_key, cleanup_hook, [], [])
-      end)
+    spawn_monitor(fn ->
+      Process.flag(:trap_exit, true)
+      owner_monitor = Process.monitor(owner)
 
-    {pid, monitor}
+      state = %{
+        fixture: fixture,
+        owner: owner,
+        owner_monitor: owner_monitor,
+        monitors: %{},
+        failed?: false,
+        launch_checkpoint: launch_checkpoint,
+        ports: %{}
+      }
+
+      fixture_guardian(state)
+    end)
   end
+
+  @doc false
+  def register_cleanup_worker(worker) when is_pid(worker) do
+    guardian = Process.get({__MODULE__, :guardian})
+
+    if is_pid(guardian) do
+      reference = make_ref()
+      send(guardian, {:track_cleanup_worker, self(), reference, worker})
+
+      receive do
+        {:cleanup_worker_tracked, ^reference} -> :ok
+      after
+        5_000 -> raise "P8-05 fixture guardian did not register cleanup worker"
+      end
+    else
+      :ok
+    end
+  end
+
+  @doc false
+  def open_restart_port(guardian, executable, options) when is_pid(guardian) do
+    reference = make_ref()
+    send(guardian, {:open_restart_port, self(), reference, executable, options})
+
+    receive do
+      {:restart_port, ^reference, result} -> result
+    after
+      5_000 -> {:error, :unconfirmed}
+    end
+  end
+
+  @doc "Safe diagnostic view of the current TEST fixture's retained synthetic scope."
+  def fixture_status, do: P805Fixture.info()
+
+  @doc "Reconcile the exact quarantined fixture only after recorded workers and OS groups have stopped."
+  def reconcile_fixture(reference) when is_reference(reference) do
+    guardian =
+      case P805Fixture.info() do
+        %{reference: ^reference, guardian: guardian} -> guardian
+        _ -> nil
+      end
+
+    result = P805Fixture.reconcile(reference, &cleanup_retained_fixture/1)
+    if result == :ok and is_pid(guardian), do: send(guardian, :fixture_reconciled)
+    result
+  end
+
+  defp cleanup_retained_fixture(fixture) do
+    cleanup_orphaned_fixture(
+      fixture.operations,
+      fixture.emails,
+      fixture.projection_key,
+      fixture.cleanup_hook
+    )
+  end
+
+  defp await_registered_workers(guardian, monitor)
+       when is_pid(guardian) and is_reference(monitor) do
+    reference = make_ref()
+    send(guardian, {:await_cleanup_workers, self(), reference})
+
+    receive do
+      {:cleanup_workers_finished, ^reference, result} ->
+        result
+
+      {:DOWN, ^monitor, :process, ^guardian, _} = event ->
+        send(self(), event)
+        :unconfirmed
+    after
+      5_000 -> :pending
+    end
+  end
+
+  defp await_registered_workers(_, _), do: :confirmed
 
   defp stop_fixture_guardian(guardian, monitor) do
     send(guardian, :fixture_complete)
@@ -274,106 +393,195 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
-  defp fixture_guardian(
-         owner,
-         owner_monitor,
-         previous,
-         projection_key,
-         cleanup_hook,
-         operations,
-         emails
-       ) do
+  defp fixture_guardian(state) do
     receive do
-      {:track, ^owner, reference, :operation, operation} ->
+      {:track_cleanup_worker, owner, reference, worker} when owner == state.owner ->
+        :ok = P805Fixture.worker(state.fixture, worker)
+        monitor = Process.monitor(worker)
+        send(owner, {:cleanup_worker_tracked, reference})
+        fixture_guardian(%{state | monitors: Map.put(state.monitors, monitor, worker)})
+
+      {:open_restart_port, worker, reference, executable, options} ->
+        {result, state} = open_tracked_port(state, worker, executable, options)
+        send(worker, {:restart_port, reference, result})
+        fixture_guardian(state)
+
+      {:await_cleanup_workers, owner, reference} when owner == state.owner ->
+        {result, state} = wait_fixture_workers(state, System.monotonic_time(:millisecond) + 4_000)
+        send(owner, {:cleanup_workers_finished, reference, result})
+        fixture_guardian(state)
+
+      {:track, owner, reference, kind, value} when owner == state.owner ->
+        :ok = P805Fixture.track(state.fixture, kind, value)
         send(owner, {:fixture_tracked, reference})
+        fixture_guardian(state)
 
-        fixture_guardian(
-          owner,
-          owner_monitor,
-          previous,
-          projection_key,
-          cleanup_hook,
-          [operation | operations],
-          emails
-        )
+      {:fixture_values, owner, reference} when owner == state.owner ->
+        fixture = P805Fixture.info()
+        send(owner, {:fixture_values, reference, fixture.operations, fixture.emails})
+        fixture_guardian(state)
 
-      {:track, ^owner, reference, :email, email} ->
-        send(owner, {:fixture_tracked, reference})
+      {:recover_fixture, owner, reference} when owner == state.owner ->
+        {result, state} = wait_fixture_workers(state, System.monotonic_time(:millisecond) + 4_000)
+        recovered = if result == :pending, do: :pending, else: settle_retained_fixture(state)
+        send(owner, {:fixture_recovered, reference, recovered})
+        fixture_guardian(state)
 
-        fixture_guardian(
-          owner,
-          owner_monitor,
-          previous,
-          projection_key,
-          cleanup_hook,
-          operations,
-          [email | emails]
-        )
+      :contain_fixture ->
+        contain_fixture_workers(state)
 
-      {:fixture_values, ^owner, reference} ->
-        send(owner, {:fixture_values, reference, Enum.uniq(operations), Enum.uniq(emails)})
-
-        fixture_guardian(
-          owner,
-          owner_monitor,
-          previous,
-          projection_key,
-          cleanup_hook,
-          operations,
-          emails
-        )
-
-      {:recover_fixture, ^owner, reference} ->
-        result =
-          try do
-            cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook)
-          rescue
-            error -> {:error, error.__struct__}
-          catch
-            kind, _reason -> {:error, kind}
-          end
-
-        send(owner, {:fixture_recovered, reference, result})
-
-        fixture_guardian(
-          owner,
-          owner_monitor,
-          previous,
-          projection_key,
-          cleanup_hook,
-          operations,
-          emails
-        )
-
-      :fixture_complete ->
-        Process.demonitor(owner_monitor, [:flush])
+      :fixture_reconciled ->
         :ok
 
-      {:DOWN, ^owner_monitor, :process, ^owner, _reason} ->
-        try do
-          cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook)
-        after
-          restore_environment(previous)
-        end
+      :fixture_complete ->
+        if P805Fixture.active?(state.fixture), do: contain_fixture_workers(state), else: :ok
+
+      {:DOWN, monitor, :process, owner, _reason}
+      when monitor == state.owner_monitor and owner == state.owner ->
+        contain_fixture_workers(state)
+
+      {:DOWN, monitor, :process, _worker, reason} ->
+        fixture_guardian(record_fixture_worker_down(state, monitor, reason))
+
+      {port, _event} = event when is_port(port) ->
+        if worker = state.ports[port], do: send(worker, event)
+        fixture_guardian(state)
+
+      {:EXIT, _port, _reason} ->
+        fixture_guardian(state)
     end
   end
 
-  defp restore_environment(previous) do
-    Enum.each(previous, fn
-      {key, {:ok, value}} -> Application.put_env(:new_you, key, value)
-      {key, :error} -> Application.delete_env(:new_you, key)
-    end)
+  defp open_tracked_port(state, worker, executable, options) do
+    with true <- worker in Map.values(state.monitors) and Process.alive?(state.owner),
+         {:ok, launch} <- P805Fixture.begin_external(state.fixture) do
+      open_reserved_port(state, worker, launch, executable, options)
+    else
+      _ -> {{:error, :unconfirmed}, state}
+    end
+  rescue
+    _ -> {{:error, :unconfirmed}, state}
+  catch
+    _, _ -> {{:error, :unconfirmed}, state}
+  end
+
+  defp open_reserved_port(state, worker, launch, executable, options) do
+    case open_external_port(executable, options) do
+      {:ok, port} ->
+        :ok = P805Fixture.opened(state.fixture, launch, port)
+        launch_checkpoint(state, :opened, port)
+        {:os_pid, pid} = Port.info(port, :os_pid)
+        :ok = P805Fixture.port(state.fixture, launch, port, pid)
+        {:ok, ^port} = transfer_fixture_port(port, worker)
+        :ok = P805Fixture.settle_external(state.fixture, launch, :started)
+        {{:ok, port}, %{state | ports: Map.put(state.ports, port, worker)}}
+
+      {:error, :not_started} ->
+        :ok = P805Fixture.settle_external(state.fixture, launch, :not_started)
+        {{:error, :not_started}, state}
+    end
+  end
+
+  defp open_external_port(executable, options) do
+    {:ok, Port.open({:spawn_executable, executable}, options)}
+  rescue
+    # Synchronous validation and missing/non-executable files prove no child started.
+    # Exceptions in later registration/transfer must retain this reservation.
+    ArgumentError ->
+      {:error, :not_started}
+
+    error in ErlangError ->
+      if error.original in [:enoent, :eacces],
+        do: {:error, :not_started},
+        else: reraise(error, __STACKTRACE__)
+  end
+
+  defp launch_checkpoint(state, stage, port) do
+    if is_function(state.launch_checkpoint, 2), do: state.launch_checkpoint.(stage, port)
+  end
+
+  defp transfer_fixture_port(port, worker) do
+    true = Port.connect(port, worker)
+    Process.unlink(port)
+    {:ok, port}
+  rescue
+    _ ->
+      if Port.info(port), do: Port.close(port)
+      :error
+  end
+
+  defp record_fixture_worker_down(state, monitor, reason) do
+    if Map.has_key?(state.monitors, monitor) do
+      %{
+        state
+        | monitors: Map.delete(state.monitors, monitor),
+          failed?: state.failed? or reason != :normal
+      }
+    else
+      state
+    end
+  end
+
+  defp wait_fixture_workers(state, deadline) do
+    if map_size(state.monitors) == 0 do
+      {if(state.failed?, do: :unconfirmed, else: :confirmed), state}
+    else
+      receive do
+        {:DOWN, monitor, :process, _worker, reason} when is_map_key(state.monitors, monitor) ->
+          wait_fixture_workers(record_fixture_worker_down(state, monitor, reason), deadline)
+
+        {:open_restart_port, worker, reference, _executable, _options} ->
+          send(worker, {:restart_port, reference, {:error, :unconfirmed}})
+          wait_fixture_workers(state, deadline)
+      after
+        max(deadline - System.monotonic_time(:millisecond), 0) -> {:pending, state}
+      end
+    end
+  end
+
+  defp settle_retained_fixture(state) do
+    case P805Fixture.finish(state.fixture, &cleanup_retained_fixture/1) do
+      :ok -> :ok
+      {:error, _} -> :unconfirmed
+    end
+  end
+
+  defp contain_fixture_workers(state) do
+    failed_cleanup? = match?(%{quarantine_reason: :cleanup_failed}, P805Fixture.info())
+
+    case P805Fixture.quarantine(state.fixture) do
+      :ok -> contain_active_fixture_workers(state, failed_cleanup?)
+      {:error, :stale_fixture} -> :ok
+    end
+  end
+
+  defp contain_active_fixture_workers(state, failed_cleanup?) do
+    {result, state} = wait_fixture_workers(state, System.monotonic_time(:millisecond) + 4_000)
+
+    if not failed_cleanup? and result != :pending and settle_retained_fixture(state) == :ok do
+      :ok
+    else
+      # No polling or assertion-based override. A new explicit reconciliation
+      # rechecks the retained workers/OS targets and retries this exact scope.
+      receive do
+        :fixture_reconciled ->
+          :ok
+
+        {:DOWN, monitor, :process, _worker, reason} ->
+          contain_fixture_workers(record_fixture_worker_down(state, monitor, reason))
+
+        {:open_restart_port, worker, reference, _executable, _options} ->
+          send(worker, {:restart_port, reference, {:error, :unconfirmed}})
+          contain_fixture_workers(state)
+      end
+    end
   end
 
   defp cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook) do
-    :ok = Sandbox.checkout(Repo, sandbox: false)
-
-    try do
+    Sandbox.unboxed_run(Repo, fn ->
       cleanup(operations, emails, projection_key, cleanup_hook)
       :ok = SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
-    after
-      :ok = Sandbox.checkin(Repo)
-    end
+    end)
   end
 
   def check(case_id, assertion, observed, expected \\ true) do
