@@ -185,21 +185,25 @@ defmodule NewYou.Proof.P815 do
       assert Ash.get!(Account, registration.account_id, authorize?: false) == before_account
       assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).satisfied_assurance == 0
       assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+      verified_account = Ash.get!(Account, registration.account_id, authorize?: false)
       interrupted? = Keyword.get(opts, :interrupt_resume?, false)
       expected = if interrupted?, do: :request_retried, else: :requested
 
       assert restart_call(
                Map.merge(input, %{
                  expected_state: "proof_pending",
-                 interrupt_request: interrupted?
+                 interrupt_request: interrupted?,
+                 skip_interrupt: Keyword.get(opts, :skip_interrupt?, false)
                })
              ) == expected
 
       resumed = Ash.get!(RecoveryCase, recovery.id, authorize?: false)
+      assert resumed.operation_id == id
       assert resumed.state == :proof_pending
       assert resumed.required_assurance == 2
       assert resumed.satisfied_assurance == 0
       assert Enum.map(cases(registration.account_id), & &1.id) == [recovery.id]
+      assert Ash.get!(Account, registration.account_id, authorize?: false) == verified_account
 
       assert P805.scalar("SELECT count(*) FROM tokens WHERE recovery_case_id=$1", [
                Ecto.UUID.dump!(recovery.id)
@@ -789,48 +793,28 @@ defmodule NewYou.Proof.P815 do
 
   defp restart_call(fields) do
     payload = Jason.encode!(fields)
-    executable = System.find_executable("mix") || raise "mix unavailable"
+    executable = System.find_executable("mix")
 
-    port =
-      Port.open({:spawn_executable, executable}, [
-        :binary,
-        :exit_status,
-        args: ["run", "test/proof/p8_15_restart.exs"],
-        env: [{~c"MIX_ENV", ~c"test"}, {~c"ERL_FLAGS", ~c"+S 2:2"}]
-      ])
+    case NewYou.Proof.P815Port.run(executable, ["run", "test/proof/p8_15_restart.exs"], payload) do
+      %{
+        status: :ok,
+        cleanup: :confirmed,
+        marker: :request_retried,
+        started?: true,
+        operation?: true,
+        checkpoint?: true,
+        connection_lost?: true
+      } ->
+        :request_retried
 
-    true = Port.command(port, payload <> "\n")
-    read_restart(port, "", System.monotonic_time(:millisecond) + 30_000)
-  end
+      %{status: :ok, cleanup: :confirmed, marker: marker, started?: true, operation?: true} =
+          diagnostic ->
+        if Map.get(fields, :interrupt_request, false),
+          do: {:restart_failed, diagnostic},
+          else: marker
 
-  defp read_restart(port, output, deadline) do
-    receive do
-      {^port, {:data, bytes}} when byte_size(output) + byte_size(bytes) < 8_192 ->
-        read_restart(port, output <> bytes, deadline)
-
-      {^port, {:exit_status, 0}} ->
-        Enum.find_value(
-          [
-            :requested,
-            :request_retried,
-            :delivery_matches,
-            :accepted,
-            :completed,
-            :already_completed
-          ],
-          :error,
-          fn result ->
-            marker = "P815_" <> (Atom.to_string(result) |> String.upcase())
-            if String.contains?(output, marker), do: result
-          end
-        )
-
-      {^port, {:exit_status, _}} ->
-        :error
-    after
-      max(deadline - System.monotonic_time(:millisecond), 0) ->
-        Port.close(port)
-        :error
+      diagnostic ->
+        {:restart_failed, diagnostic}
     end
   end
 end

@@ -12,10 +12,17 @@ defmodule NewYou.Proof.P815RestartRequest do
       request(input)
       state = current_state(input)
 
-      if Atom.to_string(state) == input["expected_state"] do
-        {:halt, requested_result(input, attempt)}
-      else
-        {:cont, :request_uncommitted}
+      cond do
+        attempt == 1 and input["interrupt_request"] == true and
+            (Process.get({__MODULE__, :interruption}) != :connection_lost or
+               state != :held_manual_review) ->
+          {:halt, :interruption_not_proven}
+
+        Atom.to_string(state) == input["expected_state"] ->
+          {:halt, requested_result(input, attempt)}
+
+        true ->
+          {:cont, :request_uncommitted}
       end
     end)
   end
@@ -37,13 +44,24 @@ defmodule NewYou.Proof.P815RestartRequest do
 
   defp requested_result(_input, _attempt), do: :requested
 
-  defp interrupt_once(%{"interrupt_request" => true}) do
+  defp interrupt_once(%{"interrupt_request" => true, "skip_interrupt" => false}) do
     Process.put(
       NewYou.Proof.RegistrationSeam,
       {:observe,
        fn ->
          Process.delete(NewYou.Proof.RegistrationSeam)
+         Process.put({__MODULE__, :interruption}, :checkpoint_reached)
+         IO.puts("P815_CHECKPOINT")
          Process.sleep(400)
+
+         try do
+           Repo.query!("SELECT 1")
+         rescue
+           error in [DBConnection.ConnectionError] ->
+             Process.put({__MODULE__, :interruption}, :connection_lost)
+             IO.puts("P815_CONNECTION_LOST")
+             reraise error, __STACKTRACE__
+         end
        end}
     )
   end
@@ -51,12 +69,15 @@ defmodule NewYou.Proof.P815RestartRequest do
   defp interrupt_once(_), do: :ok
 end
 
+IO.puts("P815_STARTED")
 input = IO.gets("") |> Jason.decode!()
 secret = Base.decode64!(input["signing_secret"])
 Application.put_env(:new_you, :identity_token_signing_secret, secret)
 
 Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
   try do
+    IO.puts("P815_OPERATION")
+
     result =
       case input["mode"] do
         "request" ->
