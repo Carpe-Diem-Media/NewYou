@@ -192,4 +192,64 @@ class ProtocolTest(unittest.TestCase):
                 if p.poll() is None: p.kill()
                 p.communicate()
 
+
+class CollectorTest(unittest.TestCase):
+    def run_collector(self, mode, source=None):
+        child = """import sys,json
+mode=sys.argv[1]; receipt=json.loads(sys.argv[2])
+if mode=='missing': sys.exit(0)
+if mode=='mismatch': receipt['job']='f'*32
+if mode=='counts': receipt['own_count']=2
+sys.stdout.write('MANAGED_SLOT_CHILD='+json.dumps(receipt)+'\\n'); sys.stdout.flush()
+ack=sys.stdin.buffer.readline()
+if mode=='failure': sys.exit(7)
+if mode=='timeout': sys.stdin.buffer.read(); sys.exit(0)
+if mode=='flood': sys.stdout.write('x'*20000); sys.stdout.flush()
+if mode=='suffix': sys.stdout.write('diagnostic'); sys.stdout.flush()
+"""
+        expected={**identity(1), 'own_count':1, 'peer_count':0}
+        expression = """defmodule Jason do
+          def encode!(v), do: :json.encode(v) |> IO.iodata_to_binary()
+          def decode(v) do
+            try do {:ok, :json.decode(v)} rescue _ -> {:error, :json} end
+          end
+        end
+        Process.put(:managed_slot_probe_test_load, true)
+        """
+        expression += 'Code.require_file('+json.dumps(str(source or ROOT/'test/proof/managed_slot_probe.exs'))+')\n'
+        expression += 'expected = :json.decode('+json.dumps(json.dumps(expected))+')\n'
+        expression += 'p = Port.open({:spawn_executable, System.find_executable("python3")}, [:binary, :exit_status, :use_stdio, :stderr_to_stdout, args: ["-c", '+json.dumps(child)+', '+json.dumps(mode)+', '+json.dumps(json.dumps(expected))+']])\n'
+        expression += 'result = NewYou.ManagedSlotProbe.collect_child(p, "", System.monotonic_time(:millisecond)+500, expected)\n'
+        expression += 'if result != expected, do: System.halt(3)\n'
+        return subprocess.run(['mise','exec','--','elixir','-e',expression], cwd=ROOT,
+                              env={**os.environ,'ERL_FLAGS':'+S 2:2'},capture_output=True,timeout=8)
+
+    def test_actual_collector_exit_identity_deadline_and_output_bound(self):
+        for mode in ['success','suffix','failure','missing','mismatch','counts','timeout','flood']:
+            with self.subTest(mode=mode):
+                result=self.run_collector(mode)
+                self.assertEqual(result.returncode==0,mode in ['success','suffix'], result.stderr.decode())
+
+    def test_nonzero_exit_guard_sensitivity(self):
+        source=(ROOT/'test/proof/managed_slot_probe.exs').read_text()
+        target='NewYou.ManagedSlotControl.child_result(status, receipt)'
+        self.assertEqual(source.count(target),1)
+        with tempfile.TemporaryDirectory() as d:
+            for name in ['managed_slot_control.exs','managed_slot_coordinator.py']:
+                Path(d,name).write_bytes((ROOT/'test/proof'/name).read_bytes())
+            p=Path(d,'probe.exs');p.write_text(source.replace(target,'NewYou.ManagedSlotControl.child_result(0, receipt)'))
+            result=self.run_collector('failure',p)
+            self.assertEqual(result.returncode,0, 'mutation did not accept receipt followed by nonzero exit')
+
+    def test_output_bound_guard_sensitivity(self):
+        source=(ROOT/'test/proof/managed_slot_probe.exs').read_text()
+        target='when bytes + byte_size(data) <= 16_384'
+        self.assertEqual(source.count(target),1)
+        with tempfile.TemporaryDirectory() as d:
+            for name in ['managed_slot_control.exs','managed_slot_coordinator.py']:
+                Path(d,name).write_bytes((ROOT/'test/proof'/name).read_bytes())
+            p=Path(d,'probe.exs');p.write_text(source.replace(target,'when is_binary(data)'))
+            result=self.run_collector('flood',p)
+            self.assertEqual(result.returncode,0, 'mutation did not remove the post-receipt output bound')
+
 if __name__ == '__main__': unittest.main()

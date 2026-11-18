@@ -341,7 +341,9 @@ defmodule NewYou.ManagedSlotProbe do
     _ -> fail(:child_probe_failed)
   end
 
-  defp collect_child(port, output, deadline, expected) do
+  @doc false
+  @spec collect_child(port(), binary(), integer(), map()) :: map()
+  def collect_child(port, output, deadline, expected) do
     remaining = max(deadline - System.monotonic_time(:millisecond), 0)
 
     receive do
@@ -362,7 +364,8 @@ defmodule NewYou.ManagedSlotProbe do
             await_child_exit(
               port,
               receipt,
-              max(deadline - System.monotonic_time(:millisecond), 0)
+              deadline,
+              byte_size(output) + byte_size(data)
             )
 
           :pending ->
@@ -385,15 +388,29 @@ defmodule NewYou.ManagedSlotProbe do
     end
   end
 
-  defp await_child_exit(port, receipt, timeout) do
+  defp await_child_exit(port, receipt, deadline, bytes) do
+    remaining = max(deadline - System.monotonic_time(:millisecond), 0)
+
+    if remaining == 0 do
+      Port.close(port)
+      fail(:child_probe_timeout)
+    end
+
     receive do
+      {^port, {:data, data}} when bytes + byte_size(data) <= 16_384 ->
+        await_child_exit(port, receipt, deadline, bytes + byte_size(data))
+
+      {^port, {:data, _data}} ->
+        Port.close(port)
+        fail(:child_output_too_large)
+
       {^port, {:exit_status, status}} ->
         case NewYou.ManagedSlotControl.child_result(status, receipt) do
           {:ok, value} -> value
           _ -> fail(:child_probe_failed)
         end
     after
-      timeout ->
+      remaining ->
         Port.close(port)
         fail(:child_probe_timeout)
     end
