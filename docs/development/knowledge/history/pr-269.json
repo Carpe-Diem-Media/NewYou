@@ -4,58 +4,58 @@
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/269/commits",
   "files": [
     {
-      "blob": "564c7920654017e62d991c0f5d6f66a8ceef6144",
+      "blob": "9d7c94299d774667b2d800bccc004bdb71f90dc8",
       "mode": "100644",
       "old_blob": "c355b0a12f4bb00c81459751270a5485c58232fb",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.password_reset.json",
       "old_sha256": "03103c812f70c7d8cfa96c9b90f27ed0ce53357af4d7d097a1c67a965d1a381a",
       "path": "docs/development/knowledge/identity.password_reset.json",
-      "sha256": "e780a24d5f4eaf20ff26499e957ed353a578c691b4e6657f9f4a0eb59bc95eb4",
+      "sha256": "f604f6c4e5b1cfa37f1fa1c6a1000f839557e4dc66635494a859f3e0ca8cbc29",
       "status": "modified"
     },
     {
-      "blob": "3c2a8ef35e21f8467e06c5aaf457b72976355cfd",
+      "blob": "0260c5ec89df68990c0cbc4d7eff5cfeca1caafa",
       "mode": "100644",
       "old_blob": "aff0839e7df6ed6a2f1bcb5bfe0e985aded850c0",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.recovery.json",
       "old_sha256": "21cc6dfff6138006a5ff057b763a083b391cf43340ee9970b4f6c01ee631b193",
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "a6a9f8b1c4dbecfeb2e0e515699e6baf303a0b536239a9cc13b21b6bb1710da5",
+      "sha256": "64e9f8b779a9bc6c821f22f62c8da1056b4f580a90928c98a2c51b09c51afcf7",
       "status": "modified"
     },
     {
-      "blob": "5adf1cfd0f1a15d51ea27302d91e85b2765082a3",
+      "blob": "233a8300aef889498697dffdb2f8af5a6a7f4200",
       "mode": "100644",
       "old_blob": "c180d0a413fc1a58805d1901cfd39b1fc85462ce",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
       "old_sha256": "7ba361e4cec58aabf383b112ee76b212586cb31b7043d8f50da3d08e9d2b2203",
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "8641aa5c251622625b83be316b634181dcfcc0794a602b413d23523ea95faf7d",
+      "sha256": "c926f05ec997cc994ab57c5e123304831d6b9b53e8ab0e9b46700e44e44c0c29",
       "status": "modified"
     },
     {
-      "blob": "923b47f49658c5da257683cfbea91a285de3a52d",
+      "blob": "c083df70abd20e1a80a933c3c640f7497e0e0c18",
       "mode": "100644",
       "old_blob": "598c66ab615ceabea7a153b0f102256d9e6dec9c",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/proof.tb001.json",
       "old_sha256": "5b41113576f44e26dd18b7772e61836162f698f9a38dc0a475a695810d4b31ef",
       "path": "docs/development/knowledge/proof.tb001.json",
-      "sha256": "2531aa880fd8414dc3976ce1726761d90613a2baf7c8bf25875bcf40b9420475",
+      "sha256": "b6e5e9e1f795910dfd1e703be99164d5c9698720af9e8df727ccafb73a7fc6ac",
       "status": "modified"
     },
     {
-      "blob": "881d6a69e1610160327e9a3eba7d3bc093e7709e",
+      "blob": "0c94f44a4bcc174a11e3910ca3c5452af34ef2b6",
       "mode": "100644",
       "old_blob": "8a16d5ae55b0582c5c17ceba2320c59d816c98fc",
       "old_mode": "100644",
       "old_path": "test/new_you/identity/recovery_concurrency_test.exs",
       "old_sha256": "dca26068b191e9d69b031577ea4457ecffa2b6a69f0cf79e3237a0090e071905",
       "path": "test/new_you/identity/recovery_concurrency_test.exs",
-      "sha256": "7dd15c6695a0728ef89bc9b42a2dcd39cc49978335023c91c402777285b5bf4a",
+      "sha256": "5eea7c7b288982d1f2d89e3c933ce632d3f2e60a4a58c4d60ae165d84e2be6c9",
       "status": "modified"
     },
     {
@@ -81,14 +81,14 @@
       "status": "modified"
     },
     {
-      "blob": "ff64351a36b2bb8abc66ce53d1233208f3c010f5",
+      "blob": "6ecaffced96697eb6ecdf9f85ffdbf09656c4259",
       "mode": "100644",
       "old_blob": "3fc7b57c34f591176785c8e8c22d78222a5ad85b",
       "old_mode": "100644",
       "old_path": "test/support/proof/p8_05.ex",
       "old_sha256": "b95b22b6c828563a9144268b72baeed6c37bcfbb0dea87e5c57df32ce235655a",
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "1be335a43bfce95c3e603c618dfb6e3224685a9cd400a5896336b3410572d20c",
+      "sha256": "201f1a69b4da68fe71de77599b1b1f6d12090777d2dde59e1e501b5ab96f6fb4",
       "status": "modified"
     },
     {
@@ -128,7 +128,7 @@
       "name": null,
       "old_sha256": "b820464f369278be579c09c5570b8ff3e72ff9480fa19db0df72ead7db51215e",
       "path": "test/new_you/identity/recovery_concurrency_test.exs",
-      "sha256": "fe980d42842b2046371039be05d65e704f2e9c5b824ea633bfb45d9d56b5aa08",
+      "sha256": "8517e6959ef58fdb62fd243fdec4cb045b78d12a0cad544f608cf7755a06e455",
       "status": "parsed"
     },
     {
@@ -292,7 +292,7 @@
       "name": null,
       "old_sha256": "3ca676be56b1b2d1b6686134a4f67f368ff396e480ced808f90a28e6d258099e",
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "801bb1c78bd84402f95c852ceaafdddf61c92ecb0eb3224cffbb0e3a06f32abf",
+      "sha256": "739abef7c09bff4f613b1d46c0cc919090a5d245340c782bbbe9817286b96e09",
       "status": "parsed"
     },
     {
@@ -304,7 +304,7 @@
       "name": "attempt_fixture_cleanup",
       "old_sha256": "232105965892370ed77614235a1465382a1c5af05e6853bd04d24c23b292dc07",
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "043ca92be7d6788255e8e97d4b5885bdf695c50a6eed4b7126b02a68f10bee68",
+      "sha256": "75369ef99e3c8d0fc4573c09279635063f4a25a83628196dfd88f94a34f8ee90",
       "status": "parsed",
       "visibility": "private"
     },
@@ -317,7 +317,20 @@
       "name": "await_registered_workers",
       "old_sha256": null,
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "b53c677f4fa7be1de3a32f97442dbb0ada9de3747e26662ab169fd89c66a7c89",
+      "sha256": "dea1e8e393ec73b33b979c1a15e31c192ea0c06739cb563cf97bc7cc16bbc672",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 5,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "contain_fixture_workers",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "7cdee06eeafbd77c9b740e755bf8182186d378c1a7e8140548e0a796c23ac31e",
       "status": "parsed",
       "visibility": "private"
     },
@@ -330,7 +343,7 @@
       "name": "fixture_guardian",
       "old_sha256": "9ee79b636b1424032fb57163261e35ac5b4ef1ba9f8f903a9917108bd29def90",
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "68c4cff2f5113e85fad15a6b20715e4c69cea705be11c0aebc16b254bc719eec",
+      "sha256": "311269e40119be847e018a5efc0e30ccff335e7eb91b6b091956d72d27e2120e",
       "status": "parsed",
       "visibility": "private"
     },
@@ -349,6 +362,19 @@
     },
     {
       "arity": 1,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "recover_fixture_guardian",
+      "old_sha256": "5b8c02fe088982a826f107c2fa02276681ca8d1f54034c0d605114668d6df849",
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "32e61686a8db975001615de7313a87b69a8c9327bbcd0df5513365188a1ec2bb",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
       "change": "added",
       "declaration": "def",
       "kind": "function",
@@ -359,6 +385,19 @@
       "sha256": "c0cd5435269016d982818b872e701655cdc1ddde10a8108031b43ee3da5be691",
       "status": "parsed",
       "visibility": "public"
+    },
+    {
+      "arity": 4,
+      "change": "changed",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "restore_fixture_runtime",
+      "old_sha256": "9024e4038f347e8e4e4d16dda748a731e229ecb7109ac1a55c0e4e82aa0eaef4",
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "a914b679372d7f0bea6f037fd305b7c36df04b7398a9d52d81bca95c024c6209",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": 3,
@@ -382,7 +421,7 @@
       "name": "wait_fixture_workers",
       "old_sha256": null,
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "2f5a97c210a5ce66fdaaf523631d983477bb2933765ef57f8858d13e31250034",
+      "sha256": "0acf79b1a06a0b7cb2b2c92f7c57168858e78674f3e15f3250630ac8732cfa59",
       "status": "parsed",
       "visibility": "private"
     },
@@ -398,6 +437,19 @@
       "sha256": "5a75aa1a89ab4403c6716a50de522f1e423a6c5e8a2fd1807e6948008b17a0c1",
       "status": "parsed",
       "visibility": "public"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "worker_wait_timeout",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "095f22d30e838ab8c537181da6885b97912cbcb560f4fa661110b018f2097d53",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": null,
