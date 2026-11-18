@@ -136,6 +136,15 @@ defmodule NewYou.ManagedSlotProbe do
   end
 
   defp execute(_args, %{mode: :seed} = probe, receipt) do
+    adapters = %{
+      prepare: &prepare_seed/1,
+      finish: &finish_seed/2
+    }
+
+    run_seed(probe, receipt, adapters)
+  end
+
+  defp prepare_seed(probe) do
     before = account_counts(probe)
     require_counts!(before, own: 0, peer: 0)
     request = seed!(probe)
@@ -144,8 +153,14 @@ defmodule NewYou.ManagedSlotProbe do
 
     if probe.browser?, do: browser_login!(request)
 
+    after_seed
+  end
+
+  @doc false
+  def run_seed(probe, receipt, adapters, timeout \\ @barrier_timeout) do
+    after_seed = adapters.prepare.(probe)
     publish!(probe, "ready", Map.merge(receipt, after_seed))
-    acknowledgement = acknowledge!("ready", receipt)
+    acknowledgement = acknowledge!("ready", receipt, timeout)
 
     {:ok, peer_database} =
       validate_continue(
@@ -153,6 +168,27 @@ defmodule NewYou.ManagedSlotProbe do
         receipt["database"]
       )
 
+    :ok = adapters.finish.(probe, {receipt, peer_database})
+    final = after_seed
+
+    publish!(
+      probe,
+      "done",
+      Map.merge(
+        receipt,
+        Map.merge(final, %{"cross_slot_denied" => true, "legacy_denied" => true})
+      )
+    )
+
+    # Both peer databases must survive until each has completed its connection
+    # denial checks. A final controller acknowledgement releases this barrier.
+    acknowledge!("done", receipt, timeout)
+
+    if probe.fail_after_commit?, do: run_retained_failure_test!()
+    :ok
+  end
+
+  defp finish_seed(probe, {receipt, peer_database}) do
     final = account_counts(probe)
     require_counts!(final, own: 1, peer: 0)
 
@@ -166,20 +202,6 @@ defmodule NewYou.ManagedSlotProbe do
 
     verify_cross_slot_denial!(receipt["database"], peer_database, receipt["role"])
 
-    publish!(
-      probe,
-      "done",
-      Map.merge(
-        receipt,
-        Map.merge(final, %{"cross_slot_denied" => true, "legacy_denied" => true})
-      )
-    )
-
-    # Both peer databases must survive until each has completed its connection
-    # denial checks. A final controller acknowledgement releases this barrier.
-    acknowledge!("done", receipt)
-
-    if probe.fail_after_commit?, do: run_retained_failure_test!()
     :ok
   end
 
@@ -397,11 +419,11 @@ defmodule NewYou.ManagedSlotProbe do
     end
   end
 
-  defp acknowledge!(phase, receipt) do
+  defp acknowledge!(phase, receipt, timeout \\ @barrier_timeout) do
     with {:ok, line} <-
            NewYou.ManagedSlotControl.await(
              fn -> NewYou.ManagedSlotControl.read_line() end,
-             @barrier_timeout
+             timeout
            ),
          {:ok, value} <- Jason.decode(line),
          :ok <- NewYou.ManagedSlotControl.acknowledge(value, phase, receipt) do
@@ -462,12 +484,14 @@ defmodule NewYou.ManagedSlotProbe do
   defp valid_slot_database?(database),
     do: is_binary(database) and Regex.match?(~r/\Adc_new_you_s\d{2}_g[0-9a-f]{32}\z/, database)
 
-  defp read_input do
-    case IO.gets("") do
-      input when is_binary(input) and byte_size(input) <= @input_limit -> Jason.decode(input)
-      input when is_binary(input) -> {:error, :input_too_large}
-      _ -> {:error, :input_too_large}
-    end
+  @doc false
+  def read_input(device \\ :stdio, timeout \\ @barrier_timeout) do
+    with {:ok, input} <-
+           NewYou.ManagedSlotControl.await(
+             fn -> NewYou.ManagedSlotControl.bounded_line(device, @input_limit) end,
+             timeout
+           ),
+         do: Jason.decode(input)
   rescue
     _ -> {:error, :invalid_json}
   end

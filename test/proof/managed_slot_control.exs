@@ -44,29 +44,27 @@ defmodule NewYou.ManagedSlotControl do
   end
 
   def publish(directory, phase, payload) when phase in ~w(ready done empty child) do
-    with true <- is_binary(payload) and byte_size(payload) <= @limit,
-         {:ok, %{type: :directory, mode: mode}} <- File.lstat(directory),
-         true <- Bitwise.band(mode, 0o777) == 0o700,
-         {:ok, file} <-
-           File.open(Path.join(directory, phase <> ".json"), [:write, :exclusive, :binary]) do
-      try do
-        with :ok <- IO.binwrite(file, payload <> "\n"), do: :file.sync(file)
-      after
-        File.close(file)
-      end
-    else
+    helper = Path.join(__DIR__, "managed_slot_coordinator.py")
+
+    case System.cmd("python3", [helper, "publish", directory, phase, payload],
+           stderr_to_stdout: true
+         ) do
+      {_, 0} -> :ok
       _ -> {:error, :control_write_failed}
     end
+  rescue
+    _ -> {:error, :control_write_failed}
   end
 
-  def read_line(device \\ :stdio), do: read_line(device, "")
-  defp read_line(_device, buffer) when byte_size(buffer) > @limit, do: {:error, :too_large}
+  def read_line(device \\ :stdio), do: bounded_line(device, @limit)
+  def bounded_line(device, limit), do: read_bytes(device, "", limit)
+  defp read_bytes(_device, buffer, limit) when byte_size(buffer) > limit, do: {:error, :too_large}
 
-  defp read_line(device, buffer) do
+  defp read_bytes(device, buffer, limit) do
     case IO.binread(device, 1) do
       "\n" -> {:ok, buffer}
       :eof -> {:error, :eof}
-      byte when is_binary(byte) -> read_line(device, buffer <> byte)
+      byte when is_binary(byte) -> read_bytes(device, buffer <> byte, limit)
       _ -> {:error, :read_failed}
     end
   end
