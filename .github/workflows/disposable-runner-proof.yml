@@ -1,0 +1,44 @@
+name: Disposable runner proof
+
+# Separate, bounded proving route. Existing required and scheduled jobs stay hosted.
+# The trusted host controller owns VM teardown after this single job.
+on:
+  push:
+    branches: [well-93-proving-run]
+    paths: [.github/workflows/disposable-runner-proof.yml]
+
+permissions: {}
+
+concurrency:
+  group: well-93-disposable-runner-proof
+  cancel-in-progress: false
+
+jobs:
+  harmless-proof:
+    if: github.repository == 'JCSchoeman96/NewYou' && github.actor == 'JCSchoeman96'
+    runs-on: [newyou-well93-proving]
+    timeout-minutes: 5
+    steps:
+      - name: Verify the disposable VM and unprivileged account
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(id -un)" = runner
+          test "$(id -u)" -ne 0
+          ! id -nG | grep -Eq 'sudo|docker|libvirt'
+          test "$(systemd-detect-virt)" = kvm
+          test ! -S /var/run/docker.sock
+          test ! -e "$HOME/.config/gh"
+          test ! -e "$HOME/.config/dev-core"
+          python3 - <<'PY'
+          import os, pathlib, socket
+          assert socket.gethostname().startswith('newyou-w93-')
+          path = pathlib.Path(os.environ['RUNNER_TEMP']) / 'one-job-marker'
+          assert not path.exists()
+          path.write_text('must disappear with this VM\n')
+          print('Disposable KVM identity:', socket.gethostname())
+          print('Harmless proof completed; controller must independently verify teardown.')
+          PY
+      - name: Controlled failure-drill window
+        if: contains(github.event.head_commit.message, '[well93-drill]')
+        run: sleep 120
