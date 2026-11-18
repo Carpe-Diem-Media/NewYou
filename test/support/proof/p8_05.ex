@@ -58,9 +58,17 @@ defmodule NewYou.Proof.P805 do
       end
 
     case outcome do
-      {:returned, value} when cleanup_result == :confirmed -> value
-      {:returned, _value} -> raise "P8-05 fixture cleanup unconfirmed"
-      {:raised, kind, reason, stacktrace} -> :erlang.raise(kind, reason, stacktrace)
+      {:returned, value} when cleanup_result == :confirmed ->
+        value
+
+      {:returned, _value} ->
+        raise "P8-05 fixture cleanup unconfirmed"
+
+      {:raised, kind, reason, stacktrace} when cleanup_result == :confirmed ->
+        :erlang.raise(kind, reason, stacktrace)
+
+      {:raised, _, _, _} ->
+        raise "P8-05 fixture cleanup unconfirmed after callback failure"
     end
   end
 
@@ -127,8 +135,12 @@ defmodule NewYou.Proof.P805 do
          previous,
          previous_projection_key
        ) do
-    perform_fixture_cleanup(checked_out?, projection_key)
-    :confirmed
+    if await_registered_workers(guardian, guardian_monitor) == :confirmed do
+      perform_fixture_cleanup(checked_out?, projection_key)
+      :confirmed
+    else
+      :unconfirmed
+    end
   rescue
     _ -> recover_fixture_cleanup(checked_out?, guardian, guardian_monitor)
   catch
@@ -258,17 +270,56 @@ defmodule NewYou.Proof.P805 do
     {pid, monitor} =
       spawn_monitor(fn ->
         owner_monitor = Process.monitor(owner)
+        Process.put({__MODULE__, :fixture_workers}, %{monitors: %{}, failed?: false})
         fixture_guardian(owner, owner_monitor, previous, projection_key, cleanup_hook, [], [])
       end)
 
     {pid, monitor}
   end
 
+  @doc false
+  def register_cleanup_worker(worker) when is_pid(worker) do
+    guardian = Process.get({__MODULE__, :guardian})
+
+    if is_pid(guardian) do
+      reference = make_ref()
+      send(guardian, {:track_cleanup_worker, self(), reference, worker})
+
+      receive do
+        {:cleanup_worker_tracked, ^reference} -> :ok
+      after
+        5_000 -> raise "P8-05 fixture guardian did not register cleanup worker"
+      end
+    else
+      :ok
+    end
+  end
+
+  defp await_registered_workers(guardian, monitor)
+       when is_pid(guardian) and is_reference(monitor) do
+    reference = make_ref()
+    send(guardian, {:await_cleanup_workers, self(), reference})
+
+    receive do
+      {:cleanup_workers_finished, ^reference, result} ->
+        result
+
+      {:DOWN, ^monitor, :process, ^guardian, _} = event ->
+        send(self(), event)
+        :unconfirmed
+    after
+      5_000 -> :unconfirmed
+    end
+  end
+
+  defp await_registered_workers(_, _), do: :confirmed
+
   defp stop_fixture_guardian(guardian, monitor) do
     send(guardian, :fixture_complete)
 
     receive do
-      {:DOWN, ^monitor, :process, ^guardian, _reason} -> :ok
+      {:DOWN, ^monitor, :process, ^guardian, _reason} ->
+        :ok
     after
       10_000 -> raise "P8-05 fixture guardian did not stop"
     end
@@ -284,6 +335,41 @@ defmodule NewYou.Proof.P805 do
          emails
        ) do
     receive do
+      {:track_cleanup_worker, ^owner, reference, worker} ->
+        state = Process.get({__MODULE__, :fixture_workers})
+        worker_monitor = Process.monitor(worker)
+
+        Process.put(
+          {__MODULE__, :fixture_workers},
+          put_in(state, [:monitors, worker_monitor], worker)
+        )
+
+        send(owner, {:cleanup_worker_tracked, reference})
+
+        fixture_guardian(
+          owner,
+          owner_monitor,
+          previous,
+          projection_key,
+          cleanup_hook,
+          operations,
+          emails
+        )
+
+      {:await_cleanup_workers, ^owner, reference} ->
+        result = wait_fixture_workers(System.monotonic_time(:millisecond) + 4_000)
+        send(owner, {:cleanup_workers_finished, reference, result})
+
+        fixture_guardian(
+          owner,
+          owner_monitor,
+          previous,
+          projection_key,
+          cleanup_hook,
+          operations,
+          emails
+        )
+
       {:track, ^owner, reference, :operation, operation} ->
         send(owner, {:fixture_tracked, reference})
 
@@ -326,7 +412,9 @@ defmodule NewYou.Proof.P805 do
       {:recover_fixture, ^owner, reference} ->
         result =
           try do
-            cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook)
+            if wait_fixture_workers(System.monotonic_time(:millisecond) + 4_000) == :confirmed,
+              do: cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook),
+              else: :unconfirmed
           rescue
             error -> {:error, error.__struct__}
           catch
@@ -351,9 +439,56 @@ defmodule NewYou.Proof.P805 do
 
       {:DOWN, ^owner_monitor, :process, ^owner, _reason} ->
         try do
-          cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook)
+          if wait_fixture_workers(System.monotonic_time(:millisecond) + 4_000) == :confirmed,
+            do: cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook),
+            else: exit(:fixture_worker_cleanup_unconfirmed)
         after
           restore_environment(previous)
+        end
+
+      {:DOWN, worker_monitor, :process, _worker, reason} ->
+        record_fixture_worker_down(worker_monitor, reason)
+
+        fixture_guardian(
+          owner,
+          owner_monitor,
+          previous,
+          projection_key,
+          cleanup_hook,
+          operations,
+          emails
+        )
+    end
+  end
+
+  defp record_fixture_worker_down(monitor, reason) do
+    state = Process.get({__MODULE__, :fixture_workers})
+
+    if Map.has_key?(state.monitors, monitor) do
+      Process.put({__MODULE__, :fixture_workers}, %{
+        monitors: Map.delete(state.monitors, monitor),
+        failed?: state.failed? or reason != :normal
+      })
+    end
+  end
+
+  defp wait_fixture_workers(deadline) do
+    state = Process.get({__MODULE__, :fixture_workers})
+
+    cond do
+      state.failed? ->
+        :unconfirmed
+
+      map_size(state.monitors) == 0 ->
+        :confirmed
+
+      true ->
+        receive do
+          {:DOWN, monitor, :process, _worker, reason} when is_map_key(state.monitors, monitor) ->
+            record_fixture_worker_down(monitor, reason)
+            wait_fixture_workers(deadline)
+        after
+          max(deadline - System.monotonic_time(:millisecond), 0) -> :unconfirmed
         end
     end
   end

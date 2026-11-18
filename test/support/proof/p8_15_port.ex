@@ -20,14 +20,66 @@ defmodule NewYou.Proof.P815Port do
 
   def run(executable, args, payload, timeout) when is_binary(executable) do
     started = System.monotonic_time(:millisecond)
+    owner = self()
+    reference = make_ref()
+
+    {worker, monitor} =
+      spawn_monitor(fn ->
+        owner_monitor = Process.monitor(owner)
+        Process.put({__MODULE__, :owner_monitor}, owner_monitor)
+
+        receive do
+          {^reference, :start} ->
+            diagnostic = run_child(executable, args, payload, timeout, started)
+            send(owner, {reference, diagnostic})
+            if diagnostic.cleanup == :unconfirmed, do: exit(:cleanup_unconfirmed)
+
+          {:DOWN, ^owner_monitor, :process, ^owner, _} ->
+            :ok
+        end
+      end)
+
+    try do
+      if Process.get({NewYou.Proof.P805, :fixture_checked_out}) == true,
+        do: NewYou.Proof.P805.register_cleanup_worker(worker)
+
+      send(worker, {reference, :start})
+    rescue
+      error ->
+        Process.exit(worker, :kill)
+        receive do: ({:DOWN, ^monitor, :process, ^worker, _} -> :ok)
+        reraise error, __STACKTRACE__
+    end
+
+    receive do
+      {^reference, diagnostic} ->
+        receive do
+          {:DOWN, ^monitor, :process, ^worker, :normal} ->
+            diagnostic
+
+          {:DOWN, ^monitor, :process, ^worker, _} ->
+            diagnostic
+        end
+
+      {:DOWN, ^monitor, :process, ^worker, _} ->
+        result(:harness_failure, "", started, :unconfirmed, nil)
+    end
+  end
+
+  defp run_child(executable, args, payload, timeout, started) do
     shell = System.find_executable("sh")
     ps = System.find_executable("ps")
     kill = System.find_executable("kill")
 
-    if shell && ps && kill do
-      launch(shell, ps, executable, args, payload, timeout, started)
-    else
-      result(:startup_failure, "", started, :not_started, nil)
+    cond do
+      System.monotonic_time(:millisecond) >= started + timeout ->
+        result(:timeout, "", started, :not_started, nil)
+
+      shell && ps && kill ->
+        launch(shell, ps, executable, args, payload, timeout, started)
+
+      true ->
+        result(:startup_failure, "", started, :not_started, nil)
     end
   end
 
@@ -78,24 +130,26 @@ defmodule NewYou.Proof.P815Port do
   end
 
   defp start(port, supervisor_pid, ps, output, payload, started, deadline) do
+    owner_monitor = Process.get({__MODULE__, :owner_monitor})
+
     receive do
+      {:DOWN, ^owner_monitor, :process, _, _} ->
+        cancel_owner(port, supervisor_pid, nil)
+
       {^port, {:data, bytes}} ->
         output = output <> bytes
 
         cond do
+          System.monotonic_time(:millisecond) >= deadline ->
+            {cleanup, exit_status} = terminate(port, supervisor_pid, nil)
+            result(:timeout, prefix(output), started, cleanup, exit_status)
+
           byte_size(output) >= @limit ->
-            {cleanup, exit_status} = terminate(port, supervisor_pid, group(output))
-            result(:output_overflow, "", started, cleanup, exit_status)
+            {cleanup, exit_status} = terminate(port, supervisor_pid, nil)
+            result(:output_overflow, prefix(output), started, cleanup, exit_status)
 
           group_pid = group(output) ->
-            if group_pid != supervisor_pid or not isolated_group?(ps, group_pid) do
-              {cleanup, exit_status} = terminate(port, supervisor_pid, nil)
-              result(:startup_failure, output, started, cleanup, exit_status)
-            else
-              Process.put({__MODULE__, port}, group_pid)
-              true = Port.command(port, "GO\n")
-              ready(port, supervisor_pid, output, payload, started, deadline)
-            end
+            start_group(port, supervisor_pid, ps, group_pid, output, payload, started, deadline)
 
           :binary.match(output, "\n") != :nomatch ->
             {cleanup, exit_status} = terminate(port, supervisor_pid, nil)
@@ -107,11 +161,32 @@ defmodule NewYou.Proof.P815Port do
 
       {^port, {:exit_status, code}} ->
         drain(port)
-        result({:exit, code}, output, started, :unconfirmed, code)
+
+        status =
+          if System.monotonic_time(:millisecond) >= deadline, do: :timeout, else: {:exit, code}
+
+        result(status, output, started, :unconfirmed, code)
     after
       max(deadline - System.monotonic_time(:millisecond), 0) ->
         {cleanup, exit_status} = terminate(port, supervisor_pid, nil)
         result(:timeout, output, started, cleanup, exit_status)
+    end
+  end
+
+  defp start_group(port, supervisor_pid, ps, group_pid, output, payload, started, deadline) do
+    if group_pid != supervisor_pid or not isolated_group?(ps, group_pid) do
+      {cleanup, exit_status} = terminate(port, supervisor_pid, nil)
+      result(:startup_failure, output, started, cleanup, exit_status)
+    else
+      Process.put({__MODULE__, port}, group_pid)
+
+      if System.monotonic_time(:millisecond) >= deadline do
+        {cleanup, exit_status} = terminate(port, supervisor_pid, group_pid)
+        result(:timeout, output, started, cleanup, exit_status)
+      else
+        true = Port.command(port, "GO\n")
+        ready(port, supervisor_pid, output, payload, started, deadline)
+      end
     end
   end
 
@@ -123,14 +198,23 @@ defmodule NewYou.Proof.P815Port do
   end
 
   defp ready(port, pid, output, payload, started, deadline) do
+    owner_monitor = Process.get({__MODULE__, :owner_monitor})
+
     receive do
+      {:DOWN, ^owner_monitor, :process, _, _} ->
+        cancel_owner(port, pid, group(output))
+
       {^port, {:data, bytes}} ->
         output = output <> bytes
 
         cond do
+          System.monotonic_time(:millisecond) >= deadline ->
+            {cleanup, status} = terminate(port, pid, group(output))
+            result(:timeout, prefix(output), started, cleanup, status)
+
           byte_size(output) >= @limit ->
             {cleanup, status} = terminate(port, pid, group(output))
-            result(:output_overflow, "", started, cleanup, status)
+            result(:output_overflow, prefix(output), started, cleanup, status)
 
           "P815_READY" in :binary.split(output, "\n", [:global]) ->
             if payload != "", do: true = Port.command(port, payload <> "\n")
@@ -142,7 +226,11 @@ defmodule NewYou.Proof.P815Port do
 
       {^port, {:exit_status, code}} ->
         drain(port)
-        result({:exit, code}, output, started, cleanup_group(group(output)), code)
+
+        status =
+          if System.monotonic_time(:millisecond) >= deadline, do: :timeout, else: {:exit, code}
+
+        result(status, output, started, cleanup_group(group(output)), code)
     after
       max(deadline - System.monotonic_time(:millisecond), 0) ->
         {cleanup, status} = terminate(port, pid, group(output))
@@ -151,19 +239,40 @@ defmodule NewYou.Proof.P815Port do
   end
 
   defp read(port, pid, output, started, deadline) do
+    owner_monitor = Process.get({__MODULE__, :owner_monitor})
+
     receive do
+      {:DOWN, ^owner_monitor, :process, _, _} ->
+        cancel_owner(port, pid, group(output))
+
       {^port, {:data, bytes}} ->
-        if byte_size(output) + byte_size(bytes) >= @limit do
-          {cleanup, exit_status} = terminate(port, pid, group(output <> bytes))
-          result(:output_overflow, output, started, cleanup, exit_status)
-        else
-          read(port, pid, output <> bytes, started, deadline)
+        output = output <> bytes
+
+        cond do
+          System.monotonic_time(:millisecond) >= deadline ->
+            {cleanup, exit_status} = terminate(port, pid, group(output))
+            result(:timeout, prefix(output), started, cleanup, exit_status)
+
+          byte_size(output) >= @limit ->
+            {cleanup, exit_status} = terminate(port, pid, group(output))
+            result(:output_overflow, prefix(output), started, cleanup, exit_status)
+
+          true ->
+            read(port, pid, output, started, deadline)
         end
 
       {^port, {:exit_status, code}} ->
         drain(port)
         marker = marker(output)
-        status = if code == 0, do: if(marker, do: :ok, else: :missing_marker), else: {:exit, code}
+
+        status =
+          cond do
+            System.monotonic_time(:millisecond) >= deadline -> :timeout
+            code != 0 -> {:exit, code}
+            marker -> :ok
+            true -> :missing_marker
+          end
+
         result(status, output, started, cleanup_group(group(output)), code)
     after
       max(deadline - System.monotonic_time(:millisecond), 0) ->
@@ -179,6 +288,14 @@ defmodule NewYou.Proof.P815Port do
       {:ok, code} -> {cleanup_group(group_pid), code}
       :timeout -> force_terminate(port, supervisor_pid, group_pid)
     end
+  end
+
+  defp cancel_owner(port, supervisor_pid, group_pid) do
+    {cleanup, exit_status} = terminate(port, supervisor_pid, group_pid)
+
+    if cleanup == :confirmed or (is_nil(group_pid) and is_integer(exit_status)),
+      do: exit(:normal),
+      else: exit(:cleanup_unconfirmed)
   end
 
   defp force_terminate(port, supervisor_pid, group_pid) do
@@ -325,4 +442,6 @@ defmodule NewYou.Proof.P815Port do
   defp marker(output) do
     output |> :binary.split("\n", [:global]) |> Enum.find_value(&Map.get(@markers, &1))
   end
+
+  defp prefix(output), do: binary_part(output, 0, min(byte_size(output), @limit - 1))
 end

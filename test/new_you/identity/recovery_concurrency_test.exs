@@ -69,6 +69,118 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     end
   end
 
+  test "fixture guardian waits for the restart child after owner death" do
+    parent = self()
+
+    path =
+      Path.join(
+        System.tmp_dir!(),
+        "p815-fixture-#{Base.url_encode64(:crypto.strong_rand_bytes(12), padding: false)}"
+      )
+
+    on_exit(fn ->
+      case File.read(path) do
+        {:ok, pid} -> System.cmd("kill", ["-KILL", String.trim(pid)], stderr_to_stdout: true)
+        _ -> :ok
+      end
+
+      File.rm(path)
+    end)
+
+    scenario = NewYou.Proof.Scenario.start()
+
+    {owner, monitor} =
+      NewYou.Proof.Scenario.spawn(scenario, :restart_owner, fn ->
+        Process.put({NewYou.Proof.P805, :fixture_cleanup_hook}, fn ->
+          send(parent, :fixture_cleanup_started)
+        end)
+
+        NewYou.Proof.P805.with_fixture(fn ->
+          request = NewYou.Proof.P805.request()
+          {:ok, _} = NewYou.Identity.register(request)
+          send(parent, {:fixture_email, request.email})
+
+          NewYou.Proof.P815Port.run(
+            System.find_executable("sh"),
+            ["-c", "trap '' TERM; echo $$ > \"$1\"; exec sleep 5", "sh", path],
+            "",
+            5_000
+          )
+        end)
+      end)
+
+    try do
+      assert_receive {:fixture_email, email}, 5_000
+      assert wait_for_restart_file(path, System.monotonic_time(:millisecond) + 3_000)
+      pid = path |> File.read!() |> String.trim()
+      Process.exit(owner, :kill)
+      assert_receive {:DOWN, ^monitor, :process, ^owner, :killed}, 1_000
+      assert_receive :fixture_cleanup_started, 3_000
+      assert {_, 1} = System.cmd("kill", ["-0", pid], stderr_to_stdout: true)
+      assert {:error, [:worker_failed]} = NewYou.Proof.Scenario.stop(scenario)
+
+      Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
+        assert %{rows: [[0]]} =
+                 NewYou.Repo.query!("SELECT count(*) FROM accounts WHERE email = $1", [email])
+      end)
+
+      File.rm!(path)
+    after
+      if Process.alive?(scenario.controller), do: NewYou.Proof.Scenario.stop(scenario)
+    end
+  end
+
+  test "fixture cleanup fails closed when a registered worker exits unconfirmed" do
+    previous = Application.fetch_env(:new_you, :p8_15_browser_development_fixtures)
+
+    assert_raise RuntimeError, "P8-05 fixture cleanup unconfirmed", fn ->
+      NewYou.Proof.P805.with_fixture(fn ->
+        {worker, monitor} =
+          spawn_monitor(fn -> receive do: (:stop -> exit(:cleanup_unconfirmed)) end)
+
+        :ok = NewYou.Proof.P805.register_cleanup_worker(worker)
+        send(worker, :stop)
+        assert_receive {:DOWN, ^monitor, :process, ^worker, :cleanup_unconfirmed}, 1_000
+      end)
+    end
+
+    assert Application.fetch_env(:new_you, :p8_15_browser_development_fixtures) == previous
+
+    Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
+      assert %{rows: [[1]]} = NewYou.Repo.query!("SELECT 1")
+    end)
+  end
+
+  test "fixture cleanup uncertainty is not hidden by a callback failure" do
+    assert_raise RuntimeError, "P8-05 fixture cleanup unconfirmed after callback failure", fn ->
+      NewYou.Proof.P805.with_fixture(fn ->
+        {worker, monitor} =
+          spawn_monitor(fn -> receive do: (:stop -> exit(:cleanup_unconfirmed)) end)
+
+        :ok = NewYou.Proof.P805.register_cleanup_worker(worker)
+        send(worker, :stop)
+        assert_receive {:DOWN, ^monitor, :process, ^worker, :cleanup_unconfirmed}, 1_000
+        raise "synthetic callback failure"
+      end)
+    end
+  end
+
+  defp wait_for_restart_file(path, deadline) do
+    cond do
+      File.exists?(path) ->
+        true
+
+      System.monotonic_time(:millisecond) >= deadline ->
+        false
+
+      true ->
+        receive do
+        after
+          10 -> wait_for_restart_file(path, deadline)
+        end
+    end
+  end
+
   test "recovery waits for an earlier email fixture commit and rejects its stale binding" do
     assert P815.prior_email_commit_race()
   end
