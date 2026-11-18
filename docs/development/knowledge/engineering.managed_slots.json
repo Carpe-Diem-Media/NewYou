@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "5e9d66a92e39fa9b6c3ac9208de99655f324b30c",
-    "semantics": "WELL-147 continuation integrates current main while preserving newer restart/fixture semantics. Probe readiness uses bounded private control files independent of redacted stdout, with phase and lease/generation/job/worktree/database/role acknowledgements before successful completion. Verification command consumers select managed admission for opt-in worktrees and verified DevCore nested reuse inside an existing job, with no legacy fallback. Installed DevCore 1.2.1 checksum and manifest were rechecked read-only. Acquisition remains disabled and both supervisor-loss generations remain quarantined. Standalone protocol and Python tooling tests pass; actual child/SQL, paired Dialyzer, full-suite capacity, final fast/deep and hosted CI, independent Master Gate, resulting-main and activation remain unverified. Corrective B source factors the actual production seed barriers for subprocess testing with synthetic adapters, bounds initial stdin and implements private directory-descriptor control records through the Python coordinator. Permanent tests remove actual ready/done acknowledgement calls and require the lifecycle regressions to fail. The coordinator accepts only already-owned streams and performs no resource lifecycle actions. Live application integration remains unverified. The actual Port collector now drains and counts output after its receipt until child exit, preserves an absolute deadline and rejects nonzero exits. Direct collector subprocess regressions cover success, bounded diagnostics, receipt-then-failure, missing/mismatched identity/counts, timeout and post-receipt flooding; isolated exit-status and output-bound mutations demonstrate sensitivity. Explicit TEST heavy admission for compound commands now routes through the existing build-locked wrapper to DevCore slots run --heavy test. Normal DEV/TEST syntax and verified nested reuse remain intact. Root ran the full 16-test local-session suite, including the installed DevCore temporary-registry handoff regression, plus86 related command-consumer/routing tests. Real heavy admission remains unverified. A partial dry-run pilot driver now models bounded two-stream orchestration and rejects execute even when references are supplied. Root added strict integer fixture-count validation after reproducing boolean acceptance. Concrete live identity/catalog, bounded output, window and retained-failure adapters remain absent from this source checkpoint; no executable pilot readiness is claimed. Pilot preflight now requires an explicit exact reviewed-source SHA rather than reusing a historical source pin; this source binding is not owner authorization. A runtime module now supplies private window-receipt structure/freshness guards, two exact owned process launches, bounded output drainers and allowlisted read callbacks. It requires root-supplied independently approved identity/capacity/reference expectations and protocol cancellation. These components do not confer live authority; driver execute remains blocked until composition and review. IdentityObserver now derives live identities from status/process ancestry and read-only container/catalog checks, and verifies exact result receipts, retained synthetic counts and deliberate-failure evidence through injected bounded readers. Root corrected its ExUnit failure-summary check against installed Elixir1.20.5 source and an observed standalone intentional failure. Driver composition remains incomplete; no live run is certified."
+    "git_sha": "748759f51ae0dc00262f831284795604b10fcf6a",
+    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined; no pilot, cleanup, unrestricted activation, PR approval or merge is certified."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -488,11 +488,14 @@
       "cases": [
         "Validate exact command routing, two-process sequencing and injected independent identities.",
         "Reject source/manifest/quarantine drift, early failure, wrong counts, unbounded pair/timeouts and absent deliberate-retention proof.",
-        "Reject boolean fixture counts and refuse every execute request until concrete live adapters exist.",
-        "Require an explicit valid candidate SHA before any prerequisite reads; never reuse a historical source pin."
+        "Require an explicit valid candidate SHA before any prerequisite reads; never reuse a historical source pin.",
+        "Reject boolean fixture counts and bind an explicit reviewed candidate SHA.",
+        "Observe only captured owned preparing/ready rows through same-generation job startup.",
+        "Treat occupied TEST reservation ports as owned only with exact supervisor kernel identity, socket inode and loopback binding; reject foreign sockets.",
+        "Preserve bounded private survivor receipts for prerequisite read timeouts."
       ],
-      "proves": "Seventeen pure injected-adapter tests passed; no operational clearance or live driver execution.",
-      "limits": "Production runtime adapters are missing; CLI execute deliberately refuses. Explicit candidate binding does not authenticate owner approval or clear the legacy capacity window.",
+      "proves": "Pure component/composition tests plus synthetic owned sockets/processes; assembled driver/cache/admission/routing selection passed137 tests.",
+      "limits": "Actual managed execution, external approval and current operational clearance remain unverified. Synthetic CLI tests exercise real composition with injected OS/status/catalog transport.",
       "source_ids": [
         "pilot_driver",
         "pilot_driver_tests"
@@ -507,7 +510,7 @@
         "Bound allowlisted readcallbacks and close/finalize deadlines; preserve liveownedPIDs in private receipts."
       ],
       "proves": "Eleven synthetic tests independently rerun by root; real synthetic children and injected observers only.",
-      "limits": "Integrated source/identity/capacity readers, approval expectations and cancellation remain caller obligations. No live managed action or operational clearance is tested.",
+      "limits": "Root composition now supplies callers; real managed command execution and external operational clearance remain unverified.",
       "source_ids": [
         "pilot_runtime",
         "pilot_runtime_tests"
@@ -519,13 +522,31 @@
         "Derive unique managed job identity from independent status, captured process ancestry, exact endpoint and catalog ownership/privilege checks.",
         "Reject forged or changed identities, endpoints, OIDs/comments, duplicate jobs and nonowned/reused processes.",
         "Verify completed barrier, exact result receipts, successful-generation removal and retained synthetic fixture with deliberate-failure evidence.",
-        "Recognize the actual pinned ExUnit Result: 0/1 passed and Failed: 1 test summary."
+        "Recognize the actual pinned ExUnit Result: 0/1 passed and Failed: 1 test summary.",
+        "Wait for an owned preparer before catalog publication, then require unchanged lease/generation and job ancestry."
       ],
       "proves": "Eleven injected observer tests rerun by root; separate standalone ExUnit intentional failure exited1 with the pinned summary. Combined driver/runtime/observer component suite39/39 passed.",
-      "limits": "No actual container/catalog/managed action ran. Root still must compose bounded I/O, approved window and completed-barrier evidence; live compatibility and retained proof remain unverified.",
+      "limits": "Live compatibility, actual retained fixture and administrative read-only connection behavior remain unverified; tests use injected readers.",
       "source_ids": [
         "pilot_identity",
         "pilot_identity_tests"
+      ]
+    },
+    {
+      "path": "tests/test_well147_pilot_cli.py",
+      "cases": [
+        "Drive main execute through real WindowGuard, ComposedAdapter, IdentityObserver and coordinator using synthetic owned transport/status/catalog fixtures.",
+        "Require positive exits/removal/retention, completed acknowledgements, fixture count query and private final receipt.",
+        "Default dry-run launches no managed jobs; missing refs/window refuse.",
+        "Identity/catalog/retention/count/absence/output/finalization failures refuse and preserve evidence, cancelling only owned streams."
+      ],
+      "proves": "Four end-to-end synthetic CLI composition tests independently rerun by root. Real component classes are used while external I/O is intercepted.",
+      "limits": "Does not execute DevCore, Docker, PostgreSQL, Mix or actual managed commands; no live admission authority or operational completion.",
+      "source_ids": [
+        "pilot_cli_tests",
+        "pilot_driver",
+        "pilot_runtime",
+        "pilot_identity"
       ]
     }
   ],
@@ -606,7 +627,8 @@
     "Actual focused PLT experiments at NewYou heads 28b0925a8a5cabfb8ca21944ae07d90cbf63e551 and 1e71a0ba675abda3c1ddd88af40c5ee901406004, with identical mix.lock/mix.exs/PLT task/helper inputs and pinned Elixir 1.20.5 / OTP 29.1.2: cold/preparation pair exited zero with zero Dialyzer errors/skips but zero analysis overlap. A separate prepared-state pair exited zero with zero errors/skips and 14.61 seconds sampled analysis overlap. Private local core files have distinct inodes; the disposable cache lock was available during observed analysis and the baseline hashes still match its manifest. Peak sampled combined process-tree RSS was 5332416 KiB in the prepared pair. Raw receipts are /tmp/well147-actual-plt-wmivgqpy/receipt.json and /tmp/well147-actual-plt-9xq3lsp2/receipt.json. These local artifacts may expire. Independent additional review supports success, private core and project PLTs, baseline integrity and sampled overlap. Overlap uses log-marker/process-end sampling, not exact Dialyzer entry/return. RSS may miss peaks, double-count shared pages or omit descendants outside the sampled ancestry. Historical receipts lack a complete dirty-tree/environment/BEAM manifest, so selected-input equivalence is not whole-source or artifact equivalence. The inspected task path shows no application startup or TEST booking, but no syscall/database audit certifies absolute absence of incidental activity. Root reran synthetic proof with a structured receipt at /tmp/well147-synthetic-cache-receipt.json. Scripts, receipts and logs are also preserved privately under the implementation worktree Git metadata well147-evidence directory; active cache/PLT files were not copied. This is focused PLT evidence, not final executor check.deep, full-suite capacity, OOM certification, or an admission-policy decision. Later material source changes invalidate affected candidate proof.",
     "B corrections at bda8587c and canonical test integration exercise real seed ready/done barriers with synthetic prepare/finish adapters; root observed 7 protocol tests, 13 standalone probe tests and affected formatting passing. Actual production child collection and live SQL integration still require authorized proof. Independent correction review remains pending. Earlier focused PLT evidence is historical and is not final-candidate certification.",
     "Independent re-review found missing actual collector regression proof and unbounded output after the first receipt. Root reproduced receipt-then-flood acceptance in a failing focused test, corrected the output bound through child exit and added real Port collector regressions with exit-status/output-guard sensitivity. Root observed10 protocol tests,13 standalone probe tests and focused formatting passing. Fresh exact-source review is pending. No live execution or final engineering/hosted gate is certified.",
-    "The bounded coexistence proposal exposed that mix do is not classified automatically as heavy. Source561d507c adds explicit TEST heavy wrapper routing rather than a manual capacity exception. Actual migration/probe execution requires separate owner authorization, current legacy-owner clearance and revised operational review. The pilot driver is not yet assembled or reviewed; no operational pass is claimed."
+    "The bounded coexistence proposal exposed that mix do is not classified automatically as heavy. Source561d507c adds explicit TEST heavy wrapper routing rather than a manual capacity exception. Actual migration/probe execution requires separate owner authorization, current legacy-owner clearance and revised operational review. The pilot driver is not yet assembled or reviewed; no operational pass is claimed.",
+    "Current source composes the previously missing runtime adapters. Root reproduced/fixed legitimate preparing-state rejection and recognizes only independently verified owned loopback TEST reservations during repeated preflight. An assembled selection passed137 Python tests; four synthetic CLI composition tests passed. Earlier records describing always-refused execute or missing runtime adapters are historical checkpoint evidence, not this current implementation. Source review and revised operational review remain pending; execution has never been invoked on real managed resources."
   ],
   "follow_up_tickets": [
     "WELL-154"
@@ -742,19 +764,19 @@
       "id": "pilot_driver",
       "path": "tools/well147_pilot.py",
       "symbol": "def orchestrate(",
-      "sha256": "861b8eb302fb176fc33358867cea58615d41686f2e66ba05cc1cc4890580cf0f"
+      "sha256": "d4cfa2eb1c5eab1ce8f31f0368e6cd85cac3c5f66af95579e3689b62abbac130"
     },
     {
       "id": "pilot_driver_tests",
       "path": "tests/test_well147_pilot.py",
       "symbol": "class PilotTests(unittest.TestCase):",
-      "sha256": "c0d4c9d5c75d3f362a0896cd0c8fb86cd8452ccc93395a75920163a3b210d725"
+      "sha256": "ac35c92f657aab7c7afde851bebfcdd615aec580efaec77e397f846a5b9fe49c"
     },
     {
       "id": "pilot_runtime",
       "path": "tools/well147_pilot_runtime.py",
       "symbol": "class WindowGuard:",
-      "sha256": "0f5d27c9628075b0dd2ca64c2145a9ff741e4af217ffae10510cbed1286f43d6"
+      "sha256": "633c9f09b3797c21542dae1bc4b3a8ccb94f69120aa554d8460bf5e5874671eb"
     },
     {
       "id": "pilot_runtime_tests",
@@ -766,13 +788,19 @@
       "id": "pilot_identity",
       "path": "tools/well147_pilot_identity.py",
       "symbol": "class IdentityObserver:",
-      "sha256": "51d4ea21925a701ff8250b9ef425fbf333f4a0f67056e84578ad08ebc41c3ec1"
+      "sha256": "058e52697d01f4c4a3acc17ca92217d2749ed61af90c4373fe40cdd1538c0f6e"
     },
     {
       "id": "pilot_identity_tests",
       "path": "tests/test_well147_pilot_identity.py",
       "symbol": "class ObserverTests(unittest.TestCase):",
-      "sha256": "df45e1e53d44010368e23c55cbb536807e434413af7fa5879609ab2145f9c3b4"
+      "sha256": "ce8deb2e1563c2c388f3a5b03670e5b57c9915e0d774b0c63cefaada83860fc0"
+    },
+    {
+      "id": "pilot_cli_tests",
+      "path": "tests/test_well147_pilot_cli.py",
+      "symbol": "class CliCompositionTests(unittest.TestCase):",
+      "sha256": "f0d67b1f7a30a12940582973ec9b798ae89cff5bc9d1c416b253eb7351ef2e36"
     }
   ]
 }

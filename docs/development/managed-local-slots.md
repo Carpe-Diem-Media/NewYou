@@ -204,6 +204,38 @@ supervisor-loss reconciliation. Standalone subprocess tests exercise the actual
 seed barriers with synthetic adapters; live SQL and child execution still need
 the authorized application proof.
 
+### Reviewed pilot driver
+
+`python3 tools/well147_pilot.py --expected-source REVIEWED_SHA` performs read-only
+prerequisite checks by default. It binds the exact two pilot worktrees, source,
+installed tool and manifest. Dry-run success grants no execution authority.
+
+The execute path requires `--execute`, the reviewed source SHA, a fresh private
+`--evidence-root`, an owned `0600` `--window-receipt`, and separate owner,
+exclusive-window, legacy-owner-clearance and capacity references. These references
+are externally approved evidence, not authority authenticated by the program.
+The receipt binds all references, the exact worktrees, manifest and tool checksum,
+coordinator PID, UTC expiry of at most 30 minutes and maximum two heavy jobs.
+An authorized coordinator must prepare it in the same process before invoking
+`main`, or preserve that PID through exec. The driver never creates approval.
+
+The driver launches the fixed migration/probe commands through explicit heavy
+wrapper admission, queues initial input immediately and verifies independent
+status/process/catalog identity before advancing barriers. It accepts the known
+owned preparation states while waiting for a job. Occupied TEST reservation ports
+must belong to the captured supervisor and bind loopback. Foreign allocations,
+listeners, source drift, unknown capacity or failed window checks refuse.
+Completion requires actual process exits, exact job receipts, successful cleanup
+of the successful new generation, and the deliberately retained synthetic failure.
+
+The driver cannot enable, disable, acquire directly, release retained generations,
+recover quarantines, change ACLs or terminate supervisors. Enabling admission and
+its closeout require separate owner authorization and independent operational
+review. Failures send only protocol cancellation to owned streams, wait boundedly,
+and preserve private logs, control records, read diagnostics and surviving PID
+receipts. Do not retry an acquisition or remove retained resources automatically.
+Current synthetic source tests do not establish live readiness or suite capacity.
+
 ## Retention, release and recovery
 
 Successful commands release their generation after all children finish and
