@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "e3202ef61f1a4bbdbbf45436638c5b7a6b92ae56",
-    "semantics": "WELL-147 continuation integrates current main while preserving newer restart/fixture semantics. Probe readiness uses bounded private control files independent of redacted stdout, with phase and lease/generation/job/worktree/database/role acknowledgements before successful completion. Verification command consumers select managed admission for opt-in worktrees and verified DevCore nested reuse inside an existing job, with no legacy fallback. Installed DevCore 1.2.1 checksum and manifest were rechecked read-only. Acquisition remains disabled and both supervisor-loss generations remain quarantined. Standalone protocol and Python tooling tests pass; actual child/SQL, paired Dialyzer, full-suite capacity, final fast/deep and hosted CI, independent Master Gate, resulting-main and activation remain unverified."
+    "git_sha": "893c637656c0ff9e5fbe0de86c66f348cf55e2c1",
+    "semantics": "WELL-147 continuation integrates current main while preserving newer restart/fixture semantics. Probe readiness uses bounded private control files independent of redacted stdout, with phase and lease/generation/job/worktree/database/role acknowledgements before successful completion. Verification command consumers select managed admission for opt-in worktrees and verified DevCore nested reuse inside an existing job, with no legacy fallback. Installed DevCore 1.2.1 checksum and manifest were rechecked read-only. Acquisition remains disabled and both supervisor-loss generations remain quarantined. Standalone protocol and Python tooling tests pass; actual child/SQL, paired Dialyzer, full-suite capacity, final fast/deep and hosted CI, independent Master Gate, resulting-main and activation remain unverified. Corrective B source factors the actual production seed barriers for subprocess testing with synthetic adapters, bounds initial stdin and implements private directory-descriptor control records through the Python coordinator. Permanent tests remove actual ready/done acknowledgement calls and require the lifecycle regressions to fail. The coordinator accepts only already-owned streams and performs no resource lifecycle actions. Live application integration remains unverified."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -461,6 +461,24 @@
         "handoff_tests",
         "handoff_executor"
       ]
+    },
+    {
+      "path": "tests/test_managed_slot_protocol.py",
+      "cases": [
+        "Drive actual seed lifecycle in subprocesses with synthetic database and external-child adapters; require exact ready/done acknowledgements before successful exit.",
+        "Require failures after removing either production acknowledgement call.",
+        "Reject oversized unterminated initial input, EOF and a silent open writer within bounded time.",
+        "Create owner-only records under permissive umask and reject symlink/foreign-owner substitutions.",
+        "Coordinate two existing probe stdin streams with complete bounded records and cancellation/timeout retention."
+      ],
+      "proves": "Seven standalone Python tests including subprocess scenarios and permanent acknowledgement mutation checks; canonical-path root run passed in 28.550 seconds.",
+      "limits": "Synthetic adapters do not run real Ash/database or production child collection. No live managed resource/release/retention proof or founder approval.",
+      "source_ids": [
+        "protocol_tests",
+        "managed_probe",
+        "managed_control",
+        "managed_coordinator"
+      ]
     }
   ],
   "safe_extensions": [
@@ -537,7 +555,8 @@
     "WELL-154 DevCore 1.2.1 was integrated at cc57a70c54478f93bf7a68cac5935486c58ee25a and separately installed with owner authorization. Read-only continuation checks observed version 1.2.1 and SHA-256 2ed9f8bba9abd3775b578bf159bb1c01787dac33cbbc668d71849752171916b7. Both quarantine catalog identity pairs and the legacy CONNECT boundary matched the plan, with no quarantine clients at inspection. Process/permit ownership remains unresolved; acquisition is disabled. The authenticated original manifest approval excludes supervisor-loss reconciliation and does not authorize a new pilot.",
     "Final mix check/check.deep, exact-head hosted CI, independent Master Gate, merge/resulting-main and activation remain unverified. OCR is optional and NOT_RUN in this continuation. This checkpoint is not review-ready.",
     "The persistence locator points to the DevCore slot allocation JSON because this capability has no NewYou migration or table. Its slots/database_prefix fields configure allocation. DevCore owns lease lifecycle and cleanup; this map describes consumer checks only.",
-    "Actual focused PLT experiments at NewYou heads 28b0925a8a5cabfb8ca21944ae07d90cbf63e551 and 1e71a0ba675abda3c1ddd88af40c5ee901406004, with identical mix.lock/mix.exs/PLT task/helper inputs and pinned Elixir 1.20.5 / OTP 29.1.2: cold/preparation pair exited zero with zero Dialyzer errors/skips but zero analysis overlap. A separate prepared-state pair exited zero with zero errors/skips and 14.61 seconds sampled analysis overlap. Private local core files have distinct inodes; the disposable cache lock was available during observed analysis and the baseline hashes still match its manifest. Peak sampled combined process-tree RSS was 5332416 KiB in the prepared pair. Raw receipts are /tmp/well147-actual-plt-wmivgqpy/receipt.json and /tmp/well147-actual-plt-9xq3lsp2/receipt.json. These local artifacts may expire. Independent additional review supports success, private core and project PLTs, baseline integrity and sampled overlap. Overlap uses log-marker/process-end sampling, not exact Dialyzer entry/return. RSS may miss peaks, double-count shared pages or omit descendants outside the sampled ancestry. Historical receipts lack a complete dirty-tree/environment/BEAM manifest, so selected-input equivalence is not whole-source or artifact equivalence. The inspected task path shows no application startup or TEST booking, but no syscall/database audit certifies absolute absence of incidental activity. Root reran synthetic proof with a structured receipt at /tmp/well147-synthetic-cache-receipt.json. Scripts, receipts and logs are also preserved privately under the implementation worktree Git metadata well147-evidence directory; active cache/PLT files were not copied. This is focused PLT evidence, not final executor check.deep, full-suite capacity, OOM certification, or an admission-policy decision. Later material source changes invalidate affected candidate proof."
+    "Actual focused PLT experiments at NewYou heads 28b0925a8a5cabfb8ca21944ae07d90cbf63e551 and 1e71a0ba675abda3c1ddd88af40c5ee901406004, with identical mix.lock/mix.exs/PLT task/helper inputs and pinned Elixir 1.20.5 / OTP 29.1.2: cold/preparation pair exited zero with zero Dialyzer errors/skips but zero analysis overlap. A separate prepared-state pair exited zero with zero errors/skips and 14.61 seconds sampled analysis overlap. Private local core files have distinct inodes; the disposable cache lock was available during observed analysis and the baseline hashes still match its manifest. Peak sampled combined process-tree RSS was 5332416 KiB in the prepared pair. Raw receipts are /tmp/well147-actual-plt-wmivgqpy/receipt.json and /tmp/well147-actual-plt-9xq3lsp2/receipt.json. These local artifacts may expire. Independent additional review supports success, private core and project PLTs, baseline integrity and sampled overlap. Overlap uses log-marker/process-end sampling, not exact Dialyzer entry/return. RSS may miss peaks, double-count shared pages or omit descendants outside the sampled ancestry. Historical receipts lack a complete dirty-tree/environment/BEAM manifest, so selected-input equivalence is not whole-source or artifact equivalence. The inspected task path shows no application startup or TEST booking, but no syscall/database audit certifies absolute absence of incidental activity. Root reran synthetic proof with a structured receipt at /tmp/well147-synthetic-cache-receipt.json. Scripts, receipts and logs are also preserved privately under the implementation worktree Git metadata well147-evidence directory; active cache/PLT files were not copied. This is focused PLT evidence, not final executor check.deep, full-suite capacity, OOM certification, or an admission-policy decision. Later material source changes invalidate affected candidate proof.",
+    "B corrections at bda8587c and canonical test integration exercise real seed ready/done barriers with synthetic prepare/finish adapters; root observed 7 protocol tests, 13 standalone probe tests and affected formatting passing. Actual production child collection and live SQL integration still require authorized proof. Independent correction review remains pending. Earlier focused PLT evidence is historical and is not final-candidate certification."
   ],
   "follow_up_tickets": [
     "WELL-154"
@@ -631,7 +650,7 @@
       "id": "managed_probe",
       "path": "test/proof/managed_slot_probe.exs",
       "symbol": "defmodule NewYou.ManagedSlotProbe do",
-      "sha256": "aa26b5cb04bed32ca903417c567905feabf89e6742f07d7c65ca0778735d3060"
+      "sha256": "f83f883795946a595e5ac1dd6b96be2c1c693fe0196ce38f7fa05f7b2e013bef"
     },
     {
       "id": "managed_probe_tests",
@@ -643,7 +662,7 @@
       "id": "managed_control",
       "path": "test/proof/managed_slot_control.exs",
       "symbol": "defmodule NewYou.ManagedSlotControl do",
-      "sha256": "2cd49f18d313e6c3134a0dee2ddf459efa71cffd0338f0d4c52f2948be3b98ce"
+      "sha256": "dcda21192dc1bf6414f0c0f65af31226e57cd64d552c1e2472bc7f590c8b6d53"
     },
     {
       "id": "handoff_executor",
@@ -656,6 +675,18 @@
       "path": "tests/test_managed_handoff_commands.py",
       "symbol": "class ManagedCommandsTests(unittest.TestCase):",
       "sha256": "77e05fb02da0003e1d348d80d9c38ec8e34aaa9dc5fdc3bbdc2b5c5cd345c066"
+    },
+    {
+      "id": "managed_coordinator",
+      "path": "test/proof/managed_slot_coordinator.py",
+      "symbol": "def coordinate(",
+      "sha256": "1056b3a1342cb3be1a45713180ce38c49ff427c9b1ec8fc66c1491028f714921"
+    },
+    {
+      "id": "protocol_tests",
+      "path": "tests/test_managed_slot_protocol.py",
+      "symbol": "class ProtocolTest(unittest.TestCase):",
+      "sha256": "e48eacc043f254e9cced285d65a4f9ef4ec0a7a53324ca59633da987a9a38871"
     }
   ]
 }
