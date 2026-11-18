@@ -266,7 +266,7 @@ defmodule NewYou.Proof.P815Port do
             {cleanup, exit_status} = terminate(port, pid, group(output))
             result(:output_overflow, prefix(output), started, cleanup, exit_status)
 
-          interrupt_ready?(output) and Port.info(port) != nil ->
+          interrupt_ready?(port, output) ->
             # Only an explicit, complete checkpoint handshake permits a cut.
             # Cleanup targets the process group verified before stdin delivery.
             {cleanup, exit_status} = terminate(port, pid, group(output))
@@ -296,13 +296,14 @@ defmodule NewYou.Proof.P815Port do
     end
   end
 
-  defp interrupt_ready?(output) do
+  defp interrupt_ready?(port, output) do
     complete_lines = output |> :binary.split("\n", [:global]) |> Enum.drop(-1)
 
-    Enum.all?(
-      ["P815_STARTED", "P815_OPERATION", "P815_CHECKPOINT", "P815_INTERRUPT_READY"],
-      &(&1 in complete_lines)
-    )
+    Port.info(port) != nil and
+      Enum.all?(
+        ["P815_STARTED", "P815_OPERATION", "P815_CHECKPOINT", "P815_INTERRUPT_READY"],
+        &(&1 in complete_lines)
+      )
   end
 
   defp terminate(port, supervisor_pid, group_pid) do
