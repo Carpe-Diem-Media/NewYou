@@ -8,7 +8,7 @@
     "WELL-153"
   ],
   "implementation_revision": {
-    "git_sha": "afe9f350dda605d98deb95999653d7fdd472bd28",
+    "git_sha": "bed38c1ecf63e42fcac48e832fe3c3535f305d45",
     "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-153 changes TEST-only recovery restart diagnostics and proof; Identity and password-reset business semantics remain unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1407,7 +1407,7 @@
       "id": "fixture_lifecycle_test",
       "path": "test/new_you/proof/fixture_lifecycle_test.exs",
       "symbol": "defmodule NewYou.Proof.FixtureLifecycleTest",
-      "sha256": "54a81e878003ee79d63ba8a1a229e6c9ccba866d6943c0205549e62402cf00f1"
+      "sha256": "d0142caa336b8cde113f8fcec74cca8547671a45cb02f99dbb15e07fd73ed2fc"
     },
     {
       "id": "fixture_connection_test",
@@ -1417,7 +1417,7 @@
     },
     {
       "id": "launch_failure_probe",
-      "path": "test/proof/p8_15_launch_failure.exs",
+      "path": "test/support/proof/p8_15_launch_failure.exs",
       "symbol": "# An intentionally unidentified launch must keep its fixture quarantined.",
       "sha256": "c861107d07265ee509a9aade45e61a87437273789f385b0ffe2462535151c5ea"
     }
