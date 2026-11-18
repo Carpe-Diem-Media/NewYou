@@ -54,6 +54,7 @@ class IdentityObserver:
         require(len(self.emails) == 2 and len(set(self.emails)) == 2)
         require(all(EMAIL.fullmatch(e) for e in self.emails))
         self.observed = {}
+        self.pending = {}
 
     def _call(self, method, *args, **kwargs):
         try:
@@ -91,14 +92,15 @@ class IdentityObserver:
         require(isinstance(rows, list))
         return rows
 
-    def _row(self, row):
+    def _row(self, row, *, catalog=True):
         require(row.get('project') == 'new_you' and type(row.get('slot')) is int)
         require(row['slot'] in range(3, 21))
         require(all(isinstance(row.get(k), str) and HEX.fullmatch(row[k]) for k in ('lease_id', 'generation')))
         name = f"dc_new_you_s{row['slot']:02d}_g{row['generation']}"
         require(row.get('database') == name and row.get('role') == name + '_r')
         require(row.get('manifest') == MANIFEST and row.get('test_host') == '127.0.0.1' and row.get('test_port') == 55433)
-        require(row.get('catalog', {}).get('container_id') == CONTAINER)
+        if catalog:
+            require(row.get('catalog', {}).get('container_id') == CONTAINER)
 
     def _catalog(self, row, idle=False):
         d, r = literal(row['database']), literal(row['role'])
@@ -145,8 +147,15 @@ FROM pg_database d JOIN pg_roles r ON r.rolname={r} JOIN pg_roles a ON a.rolname
                 return None
             require(len(matches) == 1)
             row = matches[0]
-            self._row(row)
-            if not row.get('jobs') and row.get('state') in ('preparing','ready'):
+            preparing = not row.get('jobs') and row.get('state') in ('preparing', 'ready')
+            self._row(row, catalog=row.get('state') != 'preparing')
+            if preparing:
+                require(worktree not in self.observed)
+                self._owned(self._call('processes'), row['preparer'], launched_process)
+                pending = dict(lease=row['lease_id'], generation=row['generation'],
+                               preparer=copy.deepcopy(row['preparer']))
+                require(worktree not in self.pending or self.pending[worktree] == pending)
+                self.pending[worktree] = pending
                 return None
             require(row.get('state') == 'in_use' and len(row.get('jobs', {})) == 1)
             job, metadata = next(iter(row['jobs'].items()))
@@ -157,6 +166,11 @@ FROM pg_database d JOIN pg_roles r ON r.rolname={r} JOIN pg_roles a ON a.rolname
             self._owned(processes, metadata['supervisor'], launched_process)
             self._owned(processes, metadata['session'], metadata['supervisor'])
             self._catalog(row)
+            pending = self.pending.get(worktree)
+            require(pending is None or (pending['lease'] == row['lease_id']
+                    and pending['generation'] == row['generation']
+                    and pending['preparer'] == row['preparer']))
+            self.pending.pop(worktree, None)
             result = dict(zip(KEYS, (row['lease_id'],row['generation'],job,worktree,row['database'],row['role'])))
             require(all(other == worktree or record[2] != launched_process for other, record in self.observed.items()))
             previous = self.observed.get(worktree)

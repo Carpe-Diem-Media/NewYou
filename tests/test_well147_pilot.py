@@ -190,6 +190,35 @@ class PilotTests(unittest.TestCase):
                 pilot.preflight(read, '/fake/tool', expected_source='a'*40)
         self.assertFalse(any('slots' in call for call in calls))
 
+    def test_preflight_pending_row_requires_exact_owned_preparer(self):
+        import hashlib
+        rows=[]
+        for slot, lease, generation, job, db_oid, role_oid in pilot.QUARANTINES:
+            rows.append(dict(slot=slot, lease_id=lease, generation=generation,
+                jobs={job:{}}, state='quarantined', manifest=hashlib.sha256(b'{}').hexdigest(),
+                catalog=dict(database_oid=db_oid, role_oid=role_oid)))
+        pending=dict(lease='e'*32, generation='f'*32, preparer=dict(pid=10,start='1',boot='boot'))
+        row=dict(slot=3, worktree=pilot.WORKTREES[0], lease_id=pending['lease'],
+                 generation=pending['generation'], preparer=pending['preparer'].copy(), jobs={},state='preparing')
+        rows.append(row)
+        def read(argv, cwd):
+            if argv[0]=='git':
+                if '--show-toplevel' in argv: return cwd
+                if 'HEAD' in argv: return 'a'*40
+                return ''
+            if '--version' in argv: return 'devcore-project 1.2.1'
+            if argv[-1]=='manifest': return json.dumps(dict(manifest={},sha256=pilot.MANIFEST,heavy_limit=2,port_conflicts=[]))
+            return json.dumps(rows)
+        with patch.object(pilot,'CHECKSUM',hashlib.sha256(b'fake').hexdigest()), \
+             patch.object(pilot,'MANIFEST',hashlib.sha256(b'{}').hexdigest()), \
+             patch.object(Path,'read_bytes',return_value=b'fake'):
+            with self.assertRaises(pilot.Refused): pilot.preflight(read,'/fake',expected_source='a'*40)
+            result=pilot.preflight(read,'/fake',expected_source='a'*40,pending_jobs={pilot.WORKTREES[0]:pending})
+            self.assertFalse(result['execution_clearance'])
+            row['preparer']=dict(pending['preparer'],start='wrong')
+            with self.assertRaisesRegex(pilot.Refused,'pending pair'):
+                pilot.preflight(read,'/fake',expected_source='a'*40,pending_jobs={pilot.WORKTREES[0]:pending})
+
     def test_quarantine_drift(self):
         with self.assertRaisesRegex(pilot.Refused, 'quarantine'):
             pilot.quarantine_check([])
@@ -232,8 +261,6 @@ class PilotTests(unittest.TestCase):
             self.assertEqual(json.loads(stream.readline()), {'mode': 'seed'})
 
 
-if __name__ == '__main__':
-    unittest.main()
 
 class CompositionTests(unittest.TestCase):
     def test_command_admission_cache_and_budget(self):
@@ -345,7 +372,7 @@ class CompositionTests(unittest.TestCase):
                 if index == 0:
                     row['diagnosis'] = 'exact registered generation removed'
                 else:
-                    fixture.read.files[f'/registry/runs/{job}/output.log'] = 'reports the seeded fixture failure for managed lease retention\nassert 1 == 0\n1 test, 1 failure'
+                    fixture.read.files[f'/registry/runs/{job}/output.log'] = 'reports the seeded fixture failure for managed lease retention\nassert 1 == 0\nResult: 0/1 passed\nFailed: 1 test'
             reads.file = fixture.read.file
             adapter.observer.read.file = reads.file
             self.assertTrue(adapter.finish(identities, [0,1]))
@@ -378,3 +405,30 @@ class CompositionTests(unittest.TestCase):
                 '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-U', 'devcore_admin', '-d', 'postgres']
         with self.assertRaisesRegex(pilot.Refused, 'command refused'):
             reads.command(argv, pilot.WORKTREES[0], stdin='BEGIN READ ONLY;\nSELECT 1;\nROLLBACK;\n')
+
+class PrerequisiteReadTests(unittest.TestCase):
+    def test_timed_out_read_has_private_survivor_receipt(self):
+        import sys
+        owners = []
+        original = pilot.runtime.OwnedProcesses
+        def capture(*args, **kwargs):
+            owner = original(*args, **kwargs)
+            owners.append(owner)
+            return owner
+        with patch.object(pilot.runtime, 'OwnedProcesses', side_effect=capture):
+            try:
+                with self.assertRaises(pilot.runtime.Refused):
+                    pilot.bounded_read([sys.executable, '-c', 'import time; time.sleep(.5)'],
+                                       str(Path.cwd()), source='a'*40, timeout=.01)
+                receipt = json.loads((owners[0].root/'receipt.json').read_text())
+                self.assertTrue(receipt['surviving_pids'])
+                self.assertEqual(receipt['sources']['source_sha'], 'a'*40)
+                self.assertEqual((owners[0].root/'receipt.json').stat().st_mode & 0o777, 0o600)
+            finally:
+                for owner in owners:
+                    for record in owner.records:
+                        record['_process'].wait(timeout=3)
+                    owner.finalize(timeout=1)
+
+if __name__ == '__main__':
+    unittest.main()

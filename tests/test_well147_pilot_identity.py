@@ -78,6 +78,34 @@ class ObserverTests(unittest.TestCase):
         self.assertEqual(result['job'],'c'*32)
         self.assertTrue(all(limit == 65536 for _,_,limit in self.read.commands))
 
+    def test_owned_preparation_without_catalog_waits_for_job(self):
+        self.row.update(state='preparing', jobs={}, preparer=self.launched)
+        self.row.pop('catalog')
+        self.assertIsNone(self.observer.identity('/a', self.launched))
+        self.assertEqual(self.observer.pending['/a']['lease'], self.row['lease_id'])
+        self.row['preparer'] = dict(self.launched, start='wrong')
+        with self.assertRaises(m.Refused):
+            self.observer.identity('/a', self.launched)
+
+    def test_owned_preparation_transitions_only_to_same_generation(self):
+        original = copy.deepcopy(self.row)
+        self.row.update(state='preparing', jobs={}, preparer=self.launched)
+        self.row.pop('catalog')
+        self.assertIsNone(self.observer.identity('/a', self.launched))
+        self.row.update(original, preparer=self.launched)
+        self.assertEqual(self.observer.identity('/a', self.launched)['generation'], original['generation'])
+        self.assertNotIn('/a', self.observer.pending)
+
+    def test_owned_preparation_cannot_change_lease_before_job(self):
+        original = copy.deepcopy(self.row)
+        self.row.update(state='preparing', jobs={}, preparer=self.launched)
+        self.row.pop('catalog')
+        self.assertIsNone(self.observer.identity('/a', self.launched))
+        self.row.update(original, preparer=self.launched, lease_id='d'*32)
+        self.catalog(self.row)
+        with self.assertRaises(m.Refused):
+            self.observer.identity('/a', self.launched)
+
     def test_not_registered(self):
         self.read.rows = []
         self.assertIsNone(self.observer.identity('/a',self.launched))

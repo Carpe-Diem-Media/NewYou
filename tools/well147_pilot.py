@@ -59,7 +59,7 @@ def quarantine_check(rows):
                 and row.get('manifest') == MANIFEST, 'quarantine drift')
 
 
-def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None, owned_jobs=None):
+def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None, owned_jobs=None, pending_jobs=None):
     """Read adapter returns bounded stdout for explicit argv/cwd. No launch calls."""
     require(isinstance(expected_source, str) and len(expected_source) == 40
             and all(c in '0123456789abcdef' for c in expected_source), 'explicit expected source required')
@@ -80,9 +80,15 @@ def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None, owned_jo
     for row in rows:
         if row.get('worktree') in worktrees:
             expected = (owned_jobs or {}).get(row['worktree'])
-            require(expected is not None and row.get('lease_id') == expected['lease']
-                    and row.get('generation') == expected['generation']
-                    and set(row.get('jobs', {})) == {expected['job']}, 'prior pair allocation')
+            pending = (pending_jobs or {}).get(row['worktree'])
+            if pending is not None and not row.get('jobs') and row.get('state') in ('preparing', 'ready'):
+                require(row.get('lease_id') == pending['lease']
+                        and row.get('generation') == pending['generation']
+                        and row.get('preparer') == pending['preparer'], 'pending pair allocation drift')
+            else:
+                require(expected is not None and row.get('lease_id') == expected['lease']
+                        and row.get('generation') == expected['generation']
+                        and set(row.get('jobs', {})) == {expected['job']}, 'prior pair allocation')
     return {'mode': 'dryrun', 'source': expected_source, 'manifest': MANIFEST,
             'worktrees': list(worktrees), 'argv': list(ARGV), 'max_jobs': 2,
             'execution_clearance': False}
@@ -311,9 +317,15 @@ class ComposedAdapter:
         require(not self.failure.is_set(), 'owned output failed')
         if force or self.now() - self.last_check >= 5:
             self.reads.invalidate()
-            owned = {root: record[0] for root, record in self.observer.observed.items()}
             verify_driver_source(self.reads.command, self.source)
-            preflight(self.reads.command, self.reads.tool, expected_source=self.source, owned_jobs=owned)
+            require(hashlib.sha256(Path(self.reads.tool).read_bytes()).hexdigest() == CHECKSUM, 'tool drift')
+            for record in self.owner.records:
+                process = record.get('_process')
+                if record['kind'] == 'job' and process and process.poll() is None:
+                    self.identity(WORKTREES[record['index']], process)
+            owned = {root: record[0] for root, record in self.observer.observed.items()}
+            preflight(self.reads.command, self.reads.tool, expected_source=self.source,
+                      owned_jobs=owned, pending_jobs=self.observer.pending)
             rows = json.loads(self.reads.command(['devcore-project', 'slots', 'status'], WORKTREES[0]))
             foreign = [row for row in rows if row.get('worktree') not in WORKTREES]
             require(self.foreign is None or foreign == self.foreign, 'foreign allocation drift')
@@ -358,36 +370,21 @@ def verify_driver_source(read, source):
     require(not read(['git', 'status', '--porcelain'], ROOT).strip(), 'dirty driver source')
 
 
-def bounded_read(argv, cwd, input=None):
-    """Bound capture during the read. Timeout leaves an explicit failure."""
-    with tempfile.TemporaryFile() as output:
-        process = subprocess.Popen(argv, cwd=cwd, stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        errors = []
-        def drain():
-            total = 0
-            try:
-                while True:
-                    chunk = process.stdout.read(8192)
-                    if not chunk:
-                        break
-                    total += len(chunk)
-                    if total <= runtime.LIMIT:
-                        output.write(chunk)
-                if total > runtime.LIMIT:
-                    errors.append(True)
-            except Exception:
-                errors.append(True)
-        thread = threading.Thread(target=drain, daemon=True)
-        thread.start()
-        if input:
-            process.stdin.write(input)
-        process.stdin.close()
-        process.wait(timeout=10)
-        thread.join(1)
-        require(not thread.is_alive() and not errors and process.returncode == 0, 'read command failed')
-        output.seek(0)
-        return output.read().decode()
+def bounded_read(argv, cwd, input=None, *, source=None, timeout=10):
+    """Preserve bounded private evidence for prerequisite reads and survivors.
+
+    These calls have passed PilotReads' finite read-only admission. The fallback
+    zero source denotes an unbound standalone read, never candidate proof.
+    """
+    directory = Path(tempfile.mkdtemp(prefix='well147-prerequisite-')) / 'read'
+    owner = runtime.OwnedProcesses(directory, argv=ARGV, worktrees=WORKTREES,
+            cancel_callback=lambda diagnosis: None, read_specs=((argv, cwd),),
+            sources=dict(source_sha=source or '0' * 40, manifest=MANIFEST,
+                         tool_checksum=CHECKSUM))
+    try:
+        return owner.read_command(argv, cwd, input=input, timeout=timeout)
+    finally:
+        owner.finalize(timeout=.1)
 
 
 def capacity_check(references, registry, owned=()):
@@ -436,7 +433,8 @@ def _main(arguments=None):
     try:
         tool = Path.home() / '.local/bin/devcore-project'
         registry = Path.home() / '.config/dev-core/slots/new_you'
-        reads = PilotReads(tool, bounded_read, registry)
+        reads = PilotReads(tool, lambda argv, cwd, input=None: bounded_read(
+            argv, cwd, input, source=args.expected_source), registry)
         if not args.execute:
             print(json.dumps(preflight(reads.command, tool, expected_source=args.expected_source)))
             return 0
