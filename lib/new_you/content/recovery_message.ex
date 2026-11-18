@@ -22,13 +22,21 @@ defmodule NewYou.Content.RecoveryMessage do
       {"docs/governance/product/01_DECISIONS_v1.17.0.md",
        "1d2c3cf6ec3ea4cd318ceccda8fa0a9b2c9797eec8f934a399e8d59f93090d8b"}
   }
-  @authority %{
+  @v1_18_authority %{
     "PLATFORM_PRODUCT_LAW" =>
       {"docs/governance/product/00_PLATFORM_v1.18.0.md",
        "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f"},
     "PRODUCT_DECISIONS" =>
       {"docs/governance/product/01_DECISIONS_v1.18.0.md",
        "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0"}
+  }
+  @authority %{
+    "PLATFORM_PRODUCT_LAW" =>
+      {"docs/governance/product/00_PLATFORM_v1.19.0.md",
+       "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9"},
+    "PRODUCT_DECISIONS" =>
+      {"docs/governance/product/01_DECISIONS_v1.19.0.md",
+       "ed90a1ec6adb201de094f130fc091c10bca6145e142a6e225fc840794553f4c2"}
   }
   @predecessor_authority %{
     "PLATFORM_PRODUCT_LAW" =>
@@ -140,7 +148,7 @@ defmodule NewYou.Content.RecoveryMessage do
       case Enum.filter(router["governing_documents"], &(&1["document_id"] == id)) do
         [entry] ->
           entry["repository_path"] == path and entry["canonical_filename"] == Path.basename(path) and
-            entry["semver"] == "1.18.0" and entry["sha256"] == sha and
+            entry["semver"] == "1.19.0" and entry["sha256"] == sha and
             file_matches?(root, path, sha) and successor_lineage?(root, id, path)
 
         _ ->
@@ -150,14 +158,19 @@ defmodule NewYou.Content.RecoveryMessage do
   end
 
   defp successor_lineage?(root, id, current_path) do
+    {v1_18_path, v1_18_sha} = Map.fetch!(@v1_18_authority, id)
     {v1_17_path, v1_17_sha} = Map.fetch!(@v1_17_authority, id)
     {predecessor_path, predecessor_sha} = Map.fetch!(@predecessor_authority, id)
 
     with {:ok, current_bytes} <- read_file(root, current_path),
+         {:ok, v1_18_bytes} <- read_file(root, v1_18_path),
+         true <- digest(v1_18_bytes) == v1_18_sha,
+         true <- String.contains?(current_bytes, "**Predecessor:** `#{v1_18_path}`"),
+         true <- String.contains?(current_bytes, "**SemVer transition:** `v1.18.0 → v1.19.0`"),
          {:ok, v1_17_bytes} <- read_file(root, v1_17_path),
          true <- digest(v1_17_bytes) == v1_17_sha,
-         true <- String.contains?(current_bytes, "**Predecessor:** `#{v1_17_path}`"),
-         true <- String.contains?(current_bytes, "**SemVer transition:** `v1.17.0 → v1.18.0`"),
+         true <- String.contains?(v1_18_bytes, "**Predecessor:** `#{v1_17_path}`"),
+         true <- String.contains?(v1_18_bytes, "**SemVer transition:** `v1.17.0 → v1.18.0`"),
          {:ok, predecessor_bytes} <- read_file(root, predecessor_path),
          true <- digest(predecessor_bytes) == predecessor_sha,
          true <- String.contains?(v1_17_bytes, "**Predecessor:** `#{predecessor_path}`"),
