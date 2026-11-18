@@ -22,9 +22,11 @@ defmodule NewYou.Proof.P815Port do
     started = System.monotonic_time(:millisecond)
     owner = self()
     reference = make_ref()
+    fixture_guardian = Process.get({NewYou.Proof.P805, :guardian})
 
     {worker, monitor} =
       spawn_monitor(fn ->
+        Process.put({__MODULE__, :fixture_guardian}, fixture_guardian)
         owner_monitor = Process.monitor(owner)
         Process.put({__MODULE__, :owner_monitor}, owner_monitor)
 
@@ -101,7 +103,13 @@ defmodule NewYou.Proof.P815Port do
 
     opened =
       try do
-        {:ok, Port.open({:spawn_executable, shell}, options)}
+        case Process.get({__MODULE__, :fixture_guardian}) do
+          guardian when is_pid(guardian) ->
+            NewYou.Proof.P805.open_restart_port(guardian, shell, options)
+
+          _ ->
+            {:ok, Port.open({:spawn_executable, shell}, options)}
+        end
       rescue
         _ -> :error
       end
@@ -357,6 +365,26 @@ defmodule NewYou.Proof.P815Port do
       {_, 0} -> :present
       {message, 1} -> if String.contains?(message, "No such process"), do: :absent, else: :unknown
       _ -> :unknown
+    end
+  end
+
+  @doc false
+  def external_stopped?(pid) when is_integer(pid) and pid > 1 do
+    kill = System.find_executable("kill")
+
+    if kill do
+      case System.cmd(kill, ["-s", "0", "--", Integer.to_string(pid)],
+             stderr_to_stdout: true,
+             env: [{"LC_ALL", "C"}]
+           ) do
+        {message, 1} ->
+          String.contains?(message, "No such process") and group_state(pid) == :absent
+
+        _ ->
+          false
+      end
+    else
+      false
     end
   end
 

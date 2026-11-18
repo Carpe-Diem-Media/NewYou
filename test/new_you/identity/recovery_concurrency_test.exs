@@ -151,6 +151,63 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     end)
   end
 
+  test "abnormal worker exit does not strand synthetic account records" do
+    operation_id = Ecto.UUID.generate()
+    email = "proof-#{operation_id}@example.test"
+    recovery_operation = Ecto.UUID.generate()
+
+    on_exit(fn ->
+      NewYou.Proof.P805.with_fixture(fn ->
+        NewYou.Proof.P805.track_operation(recovery_operation)
+        NewYou.Proof.P805.request(%{operation_id: operation_id, email: email})
+      end)
+    end)
+
+    assert_raise RuntimeError, "P8-05 fixture cleanup unconfirmed", fn ->
+      NewYou.Proof.P805.with_fixture(fn ->
+        request = NewYou.Proof.P805.request(%{operation_id: operation_id, email: email})
+        {:ok, registration} = NewYou.Identity.register(request)
+        {:ok, :verified} = NewYou.Identity.verify_email(registration.verification_proof)
+        NewYou.Proof.P805.track_operation(recovery_operation)
+        :ok = NewYou.Identity.request_recovery(email, "af", recovery_operation)
+
+        assert NewYou.Proof.P805.scalar(
+                 "SELECT count(*) FROM recovery_cases WHERE account_id = $1",
+                 [Ecto.UUID.dump!(registration.account_id)]
+               ) == 1
+
+        {worker, monitor} =
+          spawn_monitor(fn -> receive do: (:fail -> exit(:cleanup_unconfirmed)) end)
+
+        :ok = NewYou.Proof.P805.register_cleanup_worker(worker)
+        send(worker, :fail)
+        assert_receive {:DOWN, ^monitor, :process, ^worker, :cleanup_unconfirmed}, 1_000
+      end)
+    end
+
+    Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
+      assert %{rows: [[0]]} =
+               NewYou.Repo.query!("SELECT count(*) FROM accounts WHERE email = $1", [email])
+
+      assert %{rows: [[0]]} =
+               NewYou.Repo.query!(
+                 "SELECT count(*) FROM message_intents WHERE source_operation_id = $1",
+                 [Ecto.UUID.dump!(operation_id)]
+               )
+
+      assert %{rows: [[0]]} =
+               NewYou.Repo.query!("SELECT count(*) FROM recovery_cases WHERE operation_id = $1", [
+                 Ecto.UUID.dump!(recovery_operation)
+               ])
+
+      assert %{rows: [[0]]} =
+               NewYou.Repo.query!(
+                 "SELECT count(*) FROM message_intents WHERE source_operation_id = $1",
+                 [Ecto.UUID.dump!(recovery_operation)]
+               )
+    end)
+  end
+
   test "a failed fixture worker does not release the guardian while another worker is live" do
     parent = self()
 
@@ -215,6 +272,11 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert Process.alive?(guardian)
     assert Process.alive?(worker)
     assert Application.get_env(:new_you, :p8_15_browser_development_fixtures) == true
+
+    assert_raise RuntimeError, ~r/fixture.*(active|quarantin)/i, fn ->
+      NewYou.Proof.P805.with_fixture(fn -> :unexpected end)
+    end
+
     send(worker, :finish)
     assert_receive {:DOWN, ^guardian_monitor, :process, ^guardian, _}, 5_000
     assert Application.get_env(:new_you, :p8_15_browser_development_fixtures) == :before_fixture

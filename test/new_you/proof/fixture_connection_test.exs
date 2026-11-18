@@ -139,11 +139,13 @@ defmodule NewYou.Proof.FixtureConnectionTest do
   test "persistent fixture teardown failure remains unconfirmed" do
     attempts = :atomics.new(1, [])
     parent = self()
+    recoverable = :atomics.new(1, [])
 
     Process.put({P805, :fixture_cleanup_hook}, fn ->
       attempt = :atomics.add_get(attempts, 1, 1)
       send(parent, {:fixture_cleanup_attempt, attempt})
-      raise "synthetic persistent teardown failure"
+      if :atomics.get(recoverable, 1) == 0, do: raise("synthetic persistent teardown failure")
+      :ok
     end)
 
     on_exit(fn -> Process.delete({P805, :fixture_cleanup_hook}) end)
@@ -155,6 +157,16 @@ defmodule NewYou.Proof.FixtureConnectionTest do
     assert_receive {:fixture_cleanup_attempt, 1}, 5_000
     assert_receive {:fixture_cleanup_attempt, 2}, 5_000
     assert :atomics.get(attempts, 1) == 2
+    fixture = P805.fixture_status()
+    assert fixture.phase == :quarantined
+
+    assert_raise RuntimeError, "P8-05 fixture already active or quarantined", fn ->
+      P805.with_fixture(fn -> :unexpected end)
+    end
+
+    :atomics.put(recoverable, 1, 1)
+    assert :ok = P805.reconcile_fixture(fixture.reference)
+    assert P805.fixture_status() == :available
   end
 
   test "setup failure before checkout restores fixture process and environment state" do
@@ -191,6 +203,7 @@ defmodule NewYou.Proof.FixtureConnectionTest do
 
     attempts = :atomics.new(1, [])
     parent = self()
+    recoverable = :atomics.new(1, [])
 
     {case_result, cleanup} =
       NewYou.Proof.SelfTest.execute_registered_case(
@@ -205,7 +218,10 @@ defmodule NewYou.Proof.FixtureConnectionTest do
               })
             end
 
-            raise "synthetic persistent teardown failure"
+            if :atomics.get(recoverable, 1) == 0,
+              do: raise("synthetic persistent teardown failure")
+
+            :ok
           end)
 
           registration.callback.()
@@ -225,11 +241,15 @@ defmodule NewYou.Proof.FixtureConnectionTest do
              ) == 1
     end)
 
-    P805.with_fixture(fn -> Enum.each(operation_ids, &P805.track_operation/1) end)
+    fixture = P805.fixture_status()
+    assert fixture.phase == :quarantined
+    assert fixture.projection_key == projection_key
+    assert Enum.sort(fixture.operations) == Enum.sort(operation_ids)
+    :atomics.put(recoverable, 1, 1)
+    assert :ok = P805.reconcile_fixture(fixture.reference)
+    assert P805.fixture_status() == :available
 
     Sandbox.unboxed_run(Repo, fn ->
-      :ok = P805.cleanup_test_analytics_projection(projection_key)
-
       assert P805.scalar(
                "SELECT count(*) FROM p817_privacy_projections WHERE projection_key = $1",
                [projection_key]
