@@ -423,7 +423,7 @@ def capacity_check(references, registry, owned=()):
     return True
 
 
-def main(arguments=None):
+def _main(arguments=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--execute', action='store_true')
     parser.add_argument('--expected-source')
@@ -492,7 +492,14 @@ def main(arguments=None):
                 owner.finalize(timeout=2)
             except Exception:
                 print('Private receipt finalization failed. Preserve the evidence root and owned survivors.')
-                return 125
+                raise Refused('private receipt finalization failed') from None
+
+
+def main(arguments=None):
+    try:
+        return _main(arguments)
+    except Refused:
+        return 125
 
 
 if __name__ == '__main__':
