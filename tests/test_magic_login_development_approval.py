@@ -91,7 +91,7 @@ class MagicLoginDevelopmentApprovalTests(unittest.TestCase):
                 after_body = after_body[:after_body.index("\n## DEC-321")]
             self.assertEqual(before_body.rstrip(), after_body.rstrip())
 
-    def test_current_authority_requires_exact_v1_15_route_and_predecessor(self):
+    def test_current_authority_requires_exact_v1_19_route_and_predecessor(self):
         for field, value in (
             ("repository_path", "docs/governance/product/00_PLATFORM_v1.14.0.md"),
             ("sha256", "0" * 64),
@@ -139,6 +139,23 @@ class MagicLoginDevelopmentApprovalTests(unittest.TestCase):
             route["sha256"] = hashlib.sha256(changed.encode()).hexdigest()
             router_path.write_text(json.dumps(router))
             self.assertTrue(validate_development(root, self.packet))
+
+    def test_current_v119_route_preserves_exact_successor_and_predecessor_digests(self):
+        # Establish a valid control so a route mismatch cannot make every
+        # changed-predecessor case appear to reject for the intended reason.
+        self.assertEqual([], validate_development(ROOT, self.packet))
+        for document in ("00_PLATFORM", "01_DECISIONS"):
+            for version in ("1.16.0", "1.17.0", "1.18.0", "1.19.0"):
+                with self.subTest(document=document, version=version), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    shutil.copytree(ROOT / "docs", root / "docs")
+                    relative = f"docs/governance/product/{document}_v{version}.md"
+                    path = root / relative
+                    path.write_bytes(path.read_bytes() + b"\n")
+                    self.assertIn(
+                        "evidence digest mismatch: " + relative,
+                        validate_development(root, self.packet),
+                    )
 
 
 if __name__ == "__main__":

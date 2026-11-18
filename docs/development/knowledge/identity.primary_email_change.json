@@ -10,7 +10,7 @@
   ],
   "implementation_revision": {
     "git_sha": "9ee49e1f02fede8825ffeab39013f53952af1dc2",
-    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-159 refreshes the shared Recovery source after compile-time TEST-only fixed phase diagnostics. Email-change business semantics and interfaces remain unchanged. WELL-157 adds the approved WELL-156-only non-production Phase-9 applicability evidence for the four existing immutable email versions. It leaves the content reader and delivery path unchanged; this map does not claim runtime eligibility or delivery activation."
+    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-159 refreshes the shared Recovery source after compile-time TEST-only fixed phase diagnostics. Email-change business semantics and interfaces remain unchanged. WELL-157 adds the approved WELL-156-only non-production Phase-9 applicability evidence for the four existing immutable email versions. It leaves the content reader and delivery path unchanged; this map does not claim runtime eligibility or delivery activation. WELL-157 also reconciles the legacy Magic Login Python approval checker with the same exact v1.19 route while retaining v1.16/v1.17/v1.18 lineage and digest checks. This changes validation compatibility only, not message scope or runtime release eligibility."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1295,6 +1295,18 @@
         "applicability_validator",
         "applicability_test"
       ]
+    },
+    {
+      "path": "tests/test_magic_login_development_approval.py",
+      "cases": [
+        "A valid current v1.19 control succeeds; changing either Product or Decision bytes at v1.16, v1.17, v1.18 or v1.19 rejects the exact digest. Existing owner-binding, idempotency/conflict, scope and predecessor rejection remain."
+      ],
+      "proves": "The related static message checker follows the new current route without discarding pinned predecessor or approval evidence.",
+      "limits": "Static validation only; no new message context, delivery/provider permission or participant runtime binding.",
+      "source_ids": [
+        "magic_approval_checker",
+        "magic_approval_test"
+      ]
     }
   ],
   "safe_extensions": [
@@ -1537,6 +1549,18 @@
       "path": "tests/test_well157_email_applicability.py",
       "symbol": "class Well157ApplicabilityTest",
       "sha256": "194c2b0ac2daa78eb94fc37d68b269305f448cbacba57f5ec60b5c65f6c999d8"
+    },
+    {
+      "id": "magic_approval_checker",
+      "path": "tools/check_magic_login_evidence.py",
+      "symbol": "def validate_development",
+      "sha256": "f46f25ae05d1652aabbe239486bff24ae8f29c3ab59edfe94ed50c47440adce4"
+    },
+    {
+      "id": "magic_approval_test",
+      "path": "tests/test_magic_login_development_approval.py",
+      "symbol": "class MagicLoginDevelopmentApprovalTests",
+      "sha256": "8f6fea2e7539f5f085473beef9f3ff4722cb38bc7a95b733f45bcee30a77c794"
     }
   ]
 }
