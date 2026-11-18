@@ -82,6 +82,8 @@ jobs:
           CREATE ROLE new_you_test LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD '${password}';
           CREATE DATABASE new_you_test OWNER new_you_test;
           SQL
+      - name: Build browser assets
+        run: mix assets.build
       - name: Run canonical fast gate
         env:
           DESIGN_SYSTEM_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}

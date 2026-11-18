@@ -9,34 +9,15 @@ Start with [identity.registration.json](identity.registration.json), the canonic
 - Interface entries require argument descriptions exactly when `arity` is nonzero. The JSON Schema expresses that relationship, and the repository's bounded validator enforces the declared schema subset.
 - The `index` and `query` commands compute a lookup view from the requested Git tree. They do not create a database or commit another index. Historical references do not certify that a past symbol still exists.
 
-## Agent capture before final review
+## CI snapshots and historical records
 
-The [ticket workflow](../../../.agents/skills/ticket-implement/SKILL.md) invokes these steps as normal agent work. The founder runs no commands. Generate once at the review checkpoint, then regenerate only when source or base changes. The check uses stable ticket identifiers in the committed record when `--ticket` is omitted; a supplied ticket must agree.
+Foundation Integrity generates an informational, nonmutating snapshot for each PR run. Open the workflow run in GitHub Actions to find its summary and the `pr-knowledge-<PR>-<run>-<attempt>` artifact. Artifacts expire after 14 days and are not authority. Snapshot failure is visible but does not block the required gate. A push, rebase or merge-based branch update produces a new run; advancing main alone does not guarantee one.
 
-1. Implement and test the ticket. Commit source changes. For a first PR, create it as a draft with its implementing WELL ticket in the title or description. Run the actual GitHub identity preflight in `AGENTS.md` before PR creation/update, using `JC-Agents`. Push the source checkpoint before fetching metadata, so GitHub's head matches the source revision.
-2. Verify the live Plane ticket and dependencies through the connected Plane integration as part of author and reviewer checks. Plane state is not copied into the historical record.
-3. At the review checkpoint, save live PR metadata and generate the record with the explicit ticket from implementation context. Replace `NUMBER` and `WELL-N` with their actual values.
-
-```sh
-gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER > /tmp/newyou-PR-metadata.json
-mise exec -- python3 -m tools.knowledge_capture generate --metadata-json /tmp/newyou-PR-metadata.json --ticket WELL-N
-```
-
-4. A mechanical history-only commit does not require another full application suite when verified application inputs are identical. Final exact-head hosted checks and provenance validation remain mandatory. Commit `pr-NUMBER.json` under `history/` and push it before requesting review. Only that record is excluded from its own mechanical payload; other history and capability changes remain visible. The record contains the exact base, merge base, source blobs and hashes, and stable PR commit/check links. It omits PR prose, author and Plane state, its own final head SHA, and CI or merge outcomes. Existing records keep their historical administrative fields and remain queryable without regeneration.
-5. Foundation Smoke independently regenerates the source fields against the event's exact PR base/head using the committed stable ticket references. Independent review verifies those references against live Plane; CI does not authenticate ticket ownership or current Plane state. It installs the parser only when changed Elixir source or extractor tooling needs it. Ordinary documentation changes still receive read-only record validation. Parsing never evaluates source. CI does not commit changes. Changed source/base, tampering, invalid linkage or a missing record requires regeneration and fresh review/CI. No generated commit follows final approval.
-
-After pushing the final history commit, refresh the metadata and run the same check locally:
-
-```sh
-gh api repos/Carpe-Diem-Media/NewYou/pulls/NUMBER > /tmp/newyou-PR-metadata.json
-mise exec -- python3 -m tools.knowledge_capture check --metadata-json /tmp/newyou-PR-metadata.json
-```
-
-GitHub's merge record binds the final PR head and merge SHA. Post-merge reconciliation checks the resulting main; it does not push another generated commit to main.
+Existing `history/pr-*.json` records remain searchable with the commands below. New PRs do not require local history generation, checks or a committed record. Use GitHub PRs and commits for newer historical changes. A changed base does not require a knowledge-record commit; current-candidate CI and independent review remain required.
 
 ## Semantic maps and mechanical refresh
 
-Create or maintain one map for meaningful capability or material Domain/interface/lifecycle/schema changes. Reuse existing interfaces and semantic copy identities. Explain non-applicable dimensions. An ordinary internal/cosmetic change needs its PR description and automatic history record, with a brief reason that no semantic map changed. Do not duplicate a JSON map in a long Markdown handoff.
+Create or maintain one map for meaningful capability or material Domain/interface/lifecycle/schema changes. Reuse existing interfaces and semantic copy identities. Explain non-applicable dimensions. An ordinary internal/cosmetic change needs a useful PR description, with a brief reason that no semantic map changed. Do not duplicate a JSON map in a long Markdown handoff.
 
 After reviewing the semantic claims and committing the referenced source, generate hashes and the implementation revision automatically:
 

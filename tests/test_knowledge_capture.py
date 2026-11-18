@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from tools import knowledge_capture as capture
 
@@ -28,6 +29,113 @@ class KnowledgeCaptureTests(unittest.TestCase):
         self.git('add', '-A')
         self.git('commit', '-qm', message)
         return self.git('rev-parse', 'HEAD')
+
+    def event(self, base, head):
+        return {'number': 224, 'repository': {'full_name': 'Carpe-Diem-Media/NewYou'},
+                'pull_request': {'number': 224, 'base': {'sha': base}, 'head': {'sha': head},
+                                 'html_url': 'https://github.com/Carpe-Diem-Media/NewYou/pull/224'}}
+
+    def test_snapshot_tracks_base_head_rebase_and_merge_without_repository_writes(self):
+        (self.repo / 'base.txt').write_text('base')
+        common = self.commit('base')
+        main = self.git('branch', '--show-current')
+        self.git('checkout', '-qb', 'feature')
+        (self.repo / 'feature.md').write_text('feature')
+        head = self.commit('feature')
+        with tempfile.TemporaryDirectory() as output:
+            out, summary = Path(output) / 'snapshot.json', Path(output) / 'summary.md'
+            first = capture.snapshot(self.repo, self.event(common, head), out, summary)
+            self.assertEqual(first['head_sha'], head)
+            self.assertEqual(first['range_base_sha'], common)
+            self.assertNotIn('tickets', first)
+            self.assertEqual(json.loads(out.read_text()), first)
+            self.assertIn('Informational', summary.read_text())
+            self.git('checkout', '-q', main)
+            (self.repo / 'main.txt').write_text('main')
+            base = self.commit('advance main')
+            advanced = capture.snapshot(self.repo, self.event(base, head), out, summary)
+            self.assertEqual([f['path'] for f in advanced['files']], ['feature.md'])
+            self.assertEqual(advanced['range_base_sha'], common)
+            self.git('checkout', '-q', 'feature')
+            (self.repo / 'another.txt').write_text('new')
+            head = self.commit('feature changes')
+            changed = capture.snapshot(self.repo, self.event(base, head), out, summary)
+            self.assertEqual({f['path'] for f in changed['files']}, {'feature.md', 'another.txt'})
+            self.git('rebase', base)
+            rebased = self.git('rev-parse', 'HEAD')
+            result = capture.snapshot(self.repo, self.event(base, rebased), out, summary)
+            self.assertEqual((result['head_sha'], result['range_base_sha']), (rebased, base))
+            self.git('checkout', '-q', main)
+            (self.repo / 'main2.txt').write_text('next')
+            next_base = self.commit('advance again')
+            self.git('checkout', '-q', 'feature')
+            self.git('merge', '--no-ff', '-qm', 'merge main', next_base)
+            merged = self.git('rev-parse', 'HEAD')
+            result = capture.snapshot(self.repo, self.event(next_base, merged), out, summary)
+            self.assertEqual((result['head_sha'], result['range_base_sha']), (merged, next_base))
+            self.assertEqual({f['path'] for f in result['files']}, {'feature.md', 'another.txt'})
+            self.assertEqual(self.git('status', '--porcelain'), '')
+            self.assertEqual(self.git('rev-parse', 'HEAD'), merged)
+            with self.assertRaises(ValueError):
+                capture.snapshot(self.repo, self.event(next_base, merged), self.repo / 'bad.json', summary)
+
+    def test_snapshot_rejects_invalid_event_identity(self):
+        (self.repo / 'base.txt').write_text('base')
+        base = self.commit('base')
+        (self.repo / 'feature.txt').write_text('feature')
+        head = self.commit('feature')
+        event = self.event(base, head)
+        with tempfile.TemporaryDirectory() as output:
+            out, summary = Path(output) / 'snapshot.json', Path(output) / 'summary.md'
+            variants = [dict(event, repository={'full_name': 'other/repo'}),
+                        dict(event, number=225),
+                        dict(event, pull_request=dict(event['pull_request'], html_url='https://example.invalid')),
+                        dict(event, pull_request=dict(event['pull_request'], head={'sha': '0' * 40})),
+                        dict(event, pull_request=dict(event['pull_request'], base={'sha': 'HEAD'}))]
+            for invalid in variants:
+                with self.subTest(event=invalid), self.assertRaises(ValueError):
+                    capture.snapshot(self.repo, invalid, out, summary)
+
+    def test_snapshot_records_renames_removals_tests_and_migrations(self):
+        (self.repo / 'old.txt').write_text('rename me')
+        (self.repo / 'removed.txt').write_text('remove me')
+        base = self.commit('base')
+        self.git('mv', 'old.txt', 'new.txt')
+        (self.repo / 'removed.txt').unlink()
+        (self.repo / 'tests').mkdir()
+        (self.repo / 'tests/check.py').write_text('assert True\n')
+        migrations = self.repo / 'priv/repo/migrations'
+        migrations.mkdir(parents=True)
+        (migrations / 'migration.sql').write_text('select 1;\n')
+        head = self.commit('changes')
+        with tempfile.TemporaryDirectory() as output:
+            with patch.object(capture, '_elixir_result', side_effect=AssertionError('unexpected parser')):
+                result = capture.snapshot(self.repo, self.event(base, head), Path(output) / 's.json', Path(output) / 's.md')
+        files = {item['path']: item for item in result['files']}
+        self.assertEqual(files['new.txt']['status'], 'renamed')
+        self.assertEqual(files['new.txt']['old_path'], 'old.txt')
+        self.assertEqual(files['removed.txt']['status'], 'deleted')
+        self.assertTrue(files['removed.txt']['old_sha256'])
+        self.assertEqual(result['tests'], ['tests/check.py'])
+        self.assertEqual(result['migrations'], ['priv/repo/migrations/migration.sql'])
+        self.assertEqual(result['symbols'], [])
+
+    def test_snapshot_cli_uses_event_metadata_without_history(self):
+        (self.repo / 'base.txt').write_text('base')
+        base = self.commit('base')
+        (self.repo / 'change.txt').write_text('changed')
+        head = self.commit('change')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            event = root / 'event.json'
+            event.write_text(json.dumps(self.event(base, head)))
+            out, summary = root / 'out.json', root / 'summary.md'
+            subprocess.run(['python3', '-m', 'tools.knowledge_capture', '--repo', str(self.repo),
+                            'snapshot', '--metadata-json', str(event), '--output', str(out),
+                            '--summary', str(summary)], check=True, capture_output=True)
+            self.assertEqual(json.loads(out.read_text())['head_sha'], head)
+            self.assertEqual(self.git('status', '--porcelain'), '')
+            self.assertEqual(self.git('rev-parse', 'HEAD'), head)
 
     def test_changed_functions_only_with_clauses_default_arity_and_nested_module(self):
         source = '''defmodule Demo do
