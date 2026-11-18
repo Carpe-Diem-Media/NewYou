@@ -14,7 +14,6 @@ from pathlib import Path
 import subprocess
 import time
 
-SOURCE = '75c4b39a6bd3e98183e1e76c232416d51526674e'
 MANIFEST = '3fb71d0ed24dfc4ab8ef75226916da624f5ca4a18343695a154733eb2a93e556'
 CHECKSUM = '2ed9f8bba9abd3775b578bf159bb1c01787dac33cbbc668d71849752171916b7'
 WORKTREES = tuple('/home/jcschoeman96/.t3/worktrees/NewYou/' + p for p in (
@@ -49,15 +48,17 @@ def quarantine_check(rows):
                 and row.get('manifest') == MANIFEST, 'quarantine drift')
 
 
-def preflight(read, tool, worktrees=WORKTREES):
+def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None):
     """Read adapter returns bounded stdout for explicit argv/cwd. No launch calls."""
+    require(isinstance(expected_source, str) and len(expected_source) == 40
+            and all(c in '0123456789abcdef' for c in expected_source), 'explicit expected source required')
     require(tuple(worktrees) == WORKTREES, 'exact pair required')
     require(hashlib.sha256(Path(tool).read_bytes()).hexdigest() == CHECKSUM, 'tool drift')
     require(read([str(tool), '--version'], WORKTREES[0]).strip() == 'devcore-project 1.2.1', 'version drift')
     for worktree in worktrees:
         require(str(Path(worktree).resolve()) == worktree, 'worktree alias')
         require(read(['git', 'rev-parse', '--show-toplevel'], worktree).strip() == worktree, 'worktree mismatch')
-        require(read(['git', 'rev-parse', 'HEAD'], worktree).strip() == SOURCE, 'source drift')
+        require(read(['git', 'rev-parse', 'HEAD'], worktree).strip() == expected_source, 'source drift')
         require(not read(['git', 'status', '--porcelain'], worktree).strip(), 'dirty source')
     manifest = json.loads(read([str(tool), 'slots', 'manifest'], WORKTREES[0]))
     digest = hashlib.sha256(json.dumps(manifest['manifest'], sort_keys=True).encode()).hexdigest()
@@ -66,7 +67,7 @@ def preflight(read, tool, worktrees=WORKTREES):
     rows = json.loads(read([str(tool), 'slots', 'status'], WORKTREES[0]))
     quarantine_check(rows)
     require(not any(r.get('worktree') in worktrees for r in rows), 'prior pair allocation')
-    return {'mode': 'dryrun', 'source': SOURCE, 'manifest': MANIFEST,
+    return {'mode': 'dryrun', 'source': expected_source, 'manifest': MANIFEST,
             'worktrees': list(worktrees), 'argv': list(ARGV), 'max_jobs': 2,
             'execution_clearance': False}
 
@@ -177,6 +178,7 @@ def read_command(argv, cwd):
 def main(arguments=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--execute', action='store_true')
+    parser.add_argument('--expected-source', help='Exact independently reviewed candidate SHA; never inferred from a prior run')
     parser.add_argument('--owner-authorization-reference')
     parser.add_argument('--exclusive-window-reference')
     args = parser.parse_args(arguments)
@@ -184,7 +186,7 @@ def main(arguments=None):
         if args.execute:
             require(args.owner_authorization_reference and args.exclusive_window_reference, 'owner authorization and exclusive legacy-owner/capacity window references required')
             raise Refused('execution blocked: root must integrate reviewed independent live identity/catalog, bounded redacted output, window and retained-failure adapters; references do not grant authority')
-        print(json.dumps(preflight(read_command, Path.home() / '.local/bin/devcore-project')))
+        print(json.dumps(preflight(read_command, Path.home() / '.local/bin/devcore-project', expected_source=args.expected_source)))
         return 0
     except Refused as error:
         print(str(error))

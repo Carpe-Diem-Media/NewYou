@@ -164,6 +164,12 @@ class PilotTests(unittest.TestCase):
             self.assertEqual(pilot.main(['--execute']), 125)
             self.assertEqual(pilot.main(['--execute', '--owner-authorization-reference', 'owner', '--exclusive-window-reference', 'window']), 125)
 
+    def test_preflight_requires_explicit_reviewed_source_before_reads(self):
+        for source in (None, '', 'old-head', 'A'*40):
+            with self.subTest(source=source), patch.object(Path, 'read_bytes', side_effect=AssertionError('no reads')):
+                with self.assertRaisesRegex(pilot.Refused, 'explicit expected source'):
+                    pilot.preflight(lambda *args: self.fail('external read'), '/fake/tool', expected_source=source)
+
     def test_dryrun_never_calls_orchestration(self):
         with patch.object(pilot, 'preflight', return_value={'mode': 'dryrun'}) as preflight, patch.object(pilot, 'orchestrate', side_effect=AssertionError('no launch')):
             self.assertEqual(pilot.main([]), 0)
@@ -181,7 +187,7 @@ class PilotTests(unittest.TestCase):
         with patch.object(pilot.hashlib, 'sha256') as digest, patch.object(Path, 'read_bytes', return_value=b'fake'):
             digest.return_value.hexdigest.return_value = pilot.CHECKSUM
             with self.assertRaisesRegex(pilot.Refused, 'source drift'):
-                pilot.preflight(read, '/fake/tool')
+                pilot.preflight(read, '/fake/tool', expected_source='a'*40)
         self.assertFalse(any('slots' in call for call in calls))
 
     def test_quarantine_drift(self):
@@ -197,14 +203,14 @@ class PilotTests(unittest.TestCase):
             if '--show-toplevel' in argv:
                 return cwd
             if 'HEAD' in argv:
-                return pilot.SOURCE
+                return 'a'*40
             if 'status' in argv:
                 return ''
             return json.dumps({'manifest': {}, 'sha256': 'wrong'})
         with patch.object(pilot.hashlib, 'sha256') as digest, patch.object(Path, 'read_bytes', return_value=b'fake'):
             digest.return_value.hexdigest.return_value = pilot.CHECKSUM
             with self.assertRaisesRegex(pilot.Refused, 'manifest drift'):
-                pilot.preflight(read, '/fake/tool')
+                pilot.preflight(read, '/fake/tool', expected_source='a'*40)
         self.assertNotIn(['/fake/tool', 'slots', 'status'], calls)
 
     def test_exact_quarantines_and_generation_drift(self):
