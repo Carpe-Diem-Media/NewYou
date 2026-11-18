@@ -1,3 +1,5 @@
+Code.require_file("managed_slot_control.exs", __DIR__)
+
 defmodule NewYou.ManagedSlotProbe do
   @moduledoc false
 
@@ -8,7 +10,6 @@ defmodule NewYou.ManagedSlotProbe do
   @identifier ~r/\A[0-9a-f]{32}\z/
   @email ~r/\Aslot-proof-[0-9a-f]{32}@example\.test\z/
   @input_limit 2_048
-  @barrier_input_limit 512
   @barrier_timeout 300_000
   @child_timeout 120_000
   @prefix "MANAGED_SLOT_CHILD="
@@ -40,13 +41,26 @@ defmodule NewYou.ManagedSlotProbe do
     own = input["own_email"]
     peer = input["peer_email"]
     mode = input["mode"]
-    allowed_keys = ["own_email", "peer_email", "mode", "browser", "fail_after_commit"]
+
+    allowed_keys = [
+      "own_email",
+      "peer_email",
+      "mode",
+      "browser",
+      "fail_after_commit",
+      "control_directory"
+    ]
+
     keys_allowed? = Enum.all?(Map.keys(input), &(&1 in allowed_keys))
 
     seed_mode? =
       mode == "seed" or (input["browser"] != true and input["fail_after_commit"] != true)
 
-    if keys_allowed? and seed_mode? and valid_email?(own) and valid_email?(peer) and own != peer and
+    directory = input["control_directory"]
+    control? = mode == "child" or (is_binary(directory) and Path.type(directory) == :absolute)
+
+    if control? and keys_allowed? and seed_mode? and valid_email?(own) and valid_email?(peer) and
+         own != peer and
          mode in ["seed", "empty", "child"] do
       {:ok,
        %{
@@ -54,7 +68,8 @@ defmodule NewYou.ManagedSlotProbe do
          peer_email: peer,
          mode: String.to_atom(mode),
          browser?: input["browser"] == true,
-         fail_after_commit?: input["fail_after_commit"] == true
+         fail_after_commit?: input["fail_after_commit"] == true,
+         control_directory: directory
        }}
     else
       {:error, :invalid_probe_input}
@@ -108,13 +123,15 @@ defmodule NewYou.ManagedSlotProbe do
     ensure_child_args!(args)
     counts = account_counts(probe)
     emit(@prefix, Map.merge(receipt, counts))
+    acknowledge!("child", receipt)
     :ok
   end
 
   defp execute(_args, %{mode: :empty} = probe, receipt) do
     counts = account_counts(probe)
     require_counts!(counts, own: 0, peer: 0)
-    emit("MANAGED_SLOT_EMPTY=", Map.merge(receipt, counts))
+    publish!(probe, "empty", Map.merge(receipt, counts))
+    acknowledge!("empty", receipt)
     :ok
   end
 
@@ -127,20 +144,31 @@ defmodule NewYou.ManagedSlotProbe do
 
     if probe.browser?, do: browser_login!(request)
 
-    emit("MANAGED_SLOT_READY=", Map.merge(receipt, after_seed))
-    {:ok, peer_database} = wait_for_continue!(receipt["database"])
+    publish!(probe, "ready", Map.merge(receipt, after_seed))
+    acknowledgement = acknowledge!("ready", receipt)
+
+    {:ok, peer_database} =
+      validate_continue(
+        %{"continue" => true, "peer_database" => acknowledgement["peer_database"]},
+        receipt["database"]
+      )
 
     final = account_counts(probe)
     require_counts!(final, own: 1, peer: 0)
-    children = [run_child!(probe), run_child!(probe)]
+
+    children = [
+      run_child!(probe, Map.merge(receipt, final)),
+      run_child!(probe, Map.merge(receipt, final))
+    ]
 
     unless Enum.all?(children, &(&1 == Map.merge(receipt, final))),
       do: fail(:child_receipt_mismatch)
 
     verify_cross_slot_denial!(receipt["database"], peer_database, receipt["role"])
 
-    emit(
-      "MANAGED_SLOT_DONE=",
+    publish!(
+      probe,
+      "done",
       Map.merge(
         receipt,
         Map.merge(final, %{"cross_slot_denied" => true, "legacy_denied" => true})
@@ -149,7 +177,7 @@ defmodule NewYou.ManagedSlotProbe do
 
     # Both peer databases must survive until each has completed its connection
     # denial checks. A final controller acknowledgement releases this barrier.
-    wait_for_finish!()
+    acknowledge!("done", receipt)
 
     if probe.fail_after_commit?, do: run_retained_failure_test!()
     :ok
@@ -179,13 +207,19 @@ defmodule NewYou.ManagedSlotProbe do
          true <- safe_config?(config) do
       markers = managed_markers()
 
-      {:ok,
-       %{
-         "lease" => markers["DEVCORE_SLOT_LEASE"],
-         "generation" => markers["DEVCORE_SLOT_GENERATION"],
-         "database" => Keyword.fetch!(config, :database),
-         "role" => Keyword.fetch!(config, :username)
-       }}
+      receipt =
+        %{
+          "lease" => markers["DEVCORE_SLOT_LEASE"],
+          "generation" => markers["DEVCORE_SLOT_GENERATION"],
+          "job" => markers["DEVCORE_SLOT_JOB"],
+          "worktree" => markers["DEVCORE_SLOT_WORKTREE"],
+          "database" => Keyword.fetch!(config, :database),
+          "role" => Keyword.fetch!(config, :username)
+        }
+
+      if NewYou.ManagedSlotControl.valid_identity?(receipt),
+        do: {:ok, receipt},
+        else: {:error, :database_preflight_failed}
     else
       _ -> {:error, :database_preflight_failed}
     end
@@ -261,7 +295,7 @@ defmodule NewYou.ManagedSlotProbe do
     end
   end
 
-  defp run_child!(probe) do
+  defp run_child!(probe, expected) do
     executable = System.find_executable("mise") || fail(:child_runtime_unavailable)
     script = Path.expand("managed_slot_probe.exs", __DIR__)
 
@@ -280,22 +314,37 @@ defmodule NewYou.ManagedSlotProbe do
       ])
 
     true = Port.command(port, input)
-    collect_child(port, "", System.monotonic_time(:millisecond) + @child_timeout)
+    collect_child(port, "", System.monotonic_time(:millisecond) + @child_timeout, expected)
   rescue
     _ -> fail(:child_probe_failed)
   end
 
-  defp collect_child(port, output, deadline) do
+  defp collect_child(port, output, deadline, expected) do
     remaining = max(deadline - System.monotonic_time(:millisecond), 0)
 
     receive do
       {^port, {:data, data}} when byte_size(output) + byte_size(data) <= 16_384 ->
         case child_receipt(output <> data) do
           {:ok, receipt} ->
-            await_child_exit(port, receipt, remaining)
+            unless receipt == expected, do: fail(:child_receipt_mismatch)
+
+            true =
+              Port.command(
+                port,
+                Jason.encode!(%{
+                  "ack" => "child",
+                  "identity" => NewYou.ManagedSlotControl.identity(receipt)
+                }) <> "\n"
+              )
+
+            await_child_exit(
+              port,
+              receipt,
+              max(deadline - System.monotonic_time(:millisecond), 0)
+            )
 
           :pending ->
-            collect_child(port, output <> data, deadline)
+            collect_child(port, output <> data, deadline, expected)
         end
 
       {^port, {:data, _data}} ->
@@ -316,8 +365,11 @@ defmodule NewYou.ManagedSlotProbe do
 
   defp await_child_exit(port, receipt, timeout) do
     receive do
-      {^port, {:exit_status, 0}} -> receipt
-      {^port, {:exit_status, _}} -> fail(:child_probe_failed)
+      {^port, {:exit_status, status}} ->
+        case NewYou.ManagedSlotControl.child_result(status, receipt) do
+          {:ok, value} -> value
+          _ -> fail(:child_probe_failed)
+        end
     after
       timeout ->
         Port.close(port)
@@ -338,30 +390,24 @@ defmodule NewYou.ManagedSlotProbe do
     end
   end
 
-  defp wait_for_continue!(own_database) do
-    task = Task.async(fn -> IO.gets("") end)
-
-    case Task.yield(task, @barrier_timeout) || Task.shutdown(task, :brutal_kill) do
-      {:ok, input} when is_binary(input) and byte_size(input) <= @barrier_input_limit ->
-        case Jason.decode(input) do
-          {:ok, value} -> validate_continue(value, own_database)
-          _ -> fail(:barrier_failed)
-        end
-
-      {:ok, input} when is_binary(input) ->
-        fail(:barrier_failed)
-
-      _ ->
-        fail(:barrier_failed)
+  defp publish!(probe, phase, receipt) do
+    case NewYou.ManagedSlotControl.publish(probe.control_directory, phase, Jason.encode!(receipt)) do
+      :ok -> :ok
+      _ -> fail(:control_write_failed)
     end
   end
 
-  defp wait_for_finish! do
-    task = Task.async(fn -> IO.gets("") end)
-
-    case Task.yield(task, @barrier_timeout) || Task.shutdown(task, :brutal_kill) do
-      {:ok, "finish\n"} -> :ok
-      _ -> fail(:finish_barrier_failed)
+  defp acknowledge!(phase, receipt) do
+    with {:ok, line} <-
+           NewYou.ManagedSlotControl.await(
+             fn -> NewYou.ManagedSlotControl.read_line() end,
+             @barrier_timeout
+           ),
+         {:ok, value} <- Jason.decode(line),
+         :ok <- NewYou.ManagedSlotControl.acknowledge(value, phase, receipt) do
+      value
+    else
+      _ -> fail(:acknowledgement_failed)
     end
   end
 
@@ -443,10 +489,6 @@ defmodule NewYou.ManagedSlotProbe do
   @doc false
   def emit(prefix, receipt) do
     IO.puts(prefix <> Jason.encode!(receipt))
-    # DevCore retains a secret-sized suffix between output chunks. This public,
-    # fixed padding lets a complete non-secret receipt reach the controller
-    # before the probe waits for its next input. NewYou job secrets are 64 bytes.
-    IO.puts(String.duplicate(".", 256))
   end
 
   defp fail(reason) do

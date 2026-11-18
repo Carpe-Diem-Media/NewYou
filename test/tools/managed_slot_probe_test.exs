@@ -6,12 +6,137 @@ Code.require_file("../proof/managed_slot_probe.exs", __DIR__)
 defmodule NewYou.ManagedSlotProbeTest do
   use ExUnit.Case, async: true
 
-  test "a receipt line survives the managed stream's secret lookbehind" do
-    output =
-      ExUnit.CaptureIO.capture_io(fn -> NewYou.ManagedSlotProbe.emit("READY=", %{count: 1}) end)
+  test "control receipt is available while the stdout secret tail is withheld" do
+    directory = Path.join(System.tmp_dir!(), "slot-control-#{System.unique_integer([:positive])}")
+    File.mkdir!(directory)
+    File.chmod!(directory, 0o700)
+    on_exit(fn -> File.rm_rf!(directory) end)
+    payload = ~s({"own_count":1})
+    old_output = "MANAGED_SLOT_READY=" <> payload <> "\n" <> String.duplicate(".", 256) <> "\n"
+    assert byte_size(old_output) < 512
+    assert binary_part(old_output, 0, max(byte_size(old_output) - 512, 0)) == ""
+    assert :ok = NewYou.ManagedSlotControl.publish(directory, "ready", payload)
+    assert File.read!(Path.join(directory, "ready.json")) == payload <> "\n"
 
-    forwarded = binary_part(output, 0, max(byte_size(output) - 64, 0))
-    assert forwarded =~ "READY={\"count\":1}\n"
+    assert {:error, :control_write_failed} =
+             NewYou.ManagedSlotControl.publish(directory, "ready", payload)
+
+    assert {:error, :control_write_failed} =
+             NewYou.ManagedSlotControl.publish(directory, "done", String.duplicate("x", 4097))
+  end
+
+  test "acknowledgements bind phase and every identity field" do
+    generation = String.duplicate("b", 32)
+    database = "dc_new_you_s01_g" <> generation
+
+    identity = %{
+      "lease" => String.duplicate("a", 32),
+      "generation" => generation,
+      "job" => String.duplicate("c", 32),
+      "worktree" => "/private/worktree",
+      "database" => database,
+      "role" => database <> "_r"
+    }
+
+    assert NewYou.ManagedSlotControl.valid_identity?(identity)
+
+    refute NewYou.ManagedSlotControl.valid_identity?(
+             Map.put(identity, "generation", String.duplicate("d", 32))
+           )
+
+    refute NewYou.ManagedSlotControl.valid_identity?(Map.put(identity, "role", "other"))
+    ack = %{"ack" => "done", "identity" => identity}
+    assert :ok = NewYou.ManagedSlotControl.acknowledge(ack, "done", identity)
+
+    ready =
+      %{ack | "ack" => "ready"}
+      |> Map.put("peer_database", "dc_new_you_s02_g" <> String.duplicate("d", 32))
+
+    assert :ok = NewYou.ManagedSlotControl.acknowledge(ready, "ready", identity)
+
+    assert {:error, :malformed} =
+             NewYou.ManagedSlotControl.acknowledge(Map.put(ack, "extra", true), "done", identity)
+
+    for key <- Map.keys(identity) do
+      wrong = put_in(ack, ["identity", key], "other")
+
+      assert {:error, :identity_mismatch} =
+               NewYou.ManagedSlotControl.acknowledge(wrong, "done", identity)
+    end
+
+    assert {:error, :wrong_phase} = NewYou.ManagedSlotControl.acknowledge(ack, "child", identity)
+
+    assert {:error, :malformed} =
+             NewYou.ManagedSlotControl.acknowledge("finish", "done", identity)
+
+    assert {:error, :cancelled} =
+             NewYou.ManagedSlotControl.acknowledge(%{"cancel" => true}, "done", identity)
+
+    assert {:error, :identity_mismatch} =
+             NewYou.ManagedSlotControl.acknowledge(
+               %{"ack" => "done", "identity" => %{}},
+               "done",
+               %{}
+             )
+  end
+
+  test "bounded input and wait reject EOF, oversized data and timeout" do
+    {:ok, device} = StringIO.open("")
+    assert {:error, :eof} = NewYou.ManagedSlotControl.read_line(device)
+    {:ok, device} = StringIO.open(String.duplicate("x", 4097))
+    assert {:error, :too_large} = NewYou.ManagedSlotControl.read_line(device)
+    {:ok, device} = StringIO.open("ack\n")
+    assert {:ok, "ack"} = NewYou.ManagedSlotControl.read_line(device)
+
+    assert {:error, :timeout} =
+             NewYou.ManagedSlotControl.await(
+               fn ->
+                 receive do
+                   :never -> :ok
+                 end
+               end,
+               0
+             )
+
+    assert {:error, :eof} = NewYou.ManagedSlotControl.await(fn -> {:error, :eof} end, 1000)
+  end
+
+  test "child failure cannot become a successful receipt" do
+    assert {:ok, %{}} = NewYou.ManagedSlotControl.child_result(0, %{})
+
+    for status <- [1, 2, 137],
+        do: assert({:error, :child_failed} = NewYou.ManagedSlotControl.child_result(status, %{}))
+  end
+
+  @tag standalone: true
+  test "standalone tests do not start the application or database dependencies" do
+    for application <- [:new_you, :ecto_sql, :postgrex, :ash],
+        not Code.ensure_loaded?(NewYou.Application) do
+      refute List.keymember?(Application.started_applications(), application, 0)
+    end
+  end
+
+  test "a successful wait cannot finish before its reader acknowledges" do
+    parent = self()
+
+    waiter =
+      Task.async(fn ->
+        NewYou.ManagedSlotControl.await(
+          fn ->
+            send(parent, {:waiting, self()})
+
+            receive do
+              :ack -> :ok
+            end
+          end,
+          1000
+        )
+      end)
+
+    assert_receive {:waiting, reader}
+    assert Task.yield(waiter, 0) == nil
+    send(reader, :ack)
+    assert Task.await(waiter) == :ok
   end
 
   test "a fresh script invocation rejects DEV before reading input or starting a Repo" do
@@ -91,14 +216,16 @@ defmodule NewYou.ManagedSlotProbeTest do
              NewYou.ManagedSlotProbe.validate_input(%{
                "own_email" => valid,
                "peer_email" => peer,
-               "mode" => "empty"
+               "mode" => "empty",
+               "control_directory" => "/private/control"
              })
 
     assert {:error, :invalid_probe_input} =
              NewYou.ManagedSlotProbe.validate_input(%{
                "own_email" => "person@example.test",
                "peer_email" => peer,
-               "mode" => "empty"
+               "mode" => "empty",
+               "control_directory" => "/private/control"
              })
   end
 
