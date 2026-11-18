@@ -4,47 +4,47 @@
   "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/269/commits",
   "files": [
     {
-      "blob": "109882e39de8ae47b1127685e1d145fae2e2339d",
+      "blob": "4c2071470d5506b280cfb8c57df1972e0826e589",
       "mode": "100644",
       "old_blob": "c355b0a12f4bb00c81459751270a5485c58232fb",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.password_reset.json",
       "old_sha256": "03103c812f70c7d8cfa96c9b90f27ed0ce53357af4d7d097a1c67a965d1a381a",
       "path": "docs/development/knowledge/identity.password_reset.json",
-      "sha256": "eaf5163ee60e2314972828d700439ba1cc80d3a180c54d3b8ab36b8b676326f5",
+      "sha256": "e3820c3d8816d5da609a39aedc77b1efef13e4c0f56935c885b12825fb4398a0",
       "status": "modified"
     },
     {
-      "blob": "7186a6ba82ed9d46e40589746de4011758bf5b9b",
+      "blob": "cf8fcd16872dbe0fc917f4c5f37d9ee55f7d1bed",
       "mode": "100644",
       "old_blob": "aff0839e7df6ed6a2f1bcb5bfe0e985aded850c0",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/identity.recovery.json",
       "old_sha256": "21cc6dfff6138006a5ff057b763a083b391cf43340ee9970b4f6c01ee631b193",
       "path": "docs/development/knowledge/identity.recovery.json",
-      "sha256": "a9ef24062c18e0956597a9d353c22e7bfe7bc71d9d585a67cba0d0ee4a7a3dae",
+      "sha256": "28a7271ed3a1a9ad42daf09c8583a1c3d26eaf531fd069cb64cf9c65a46c3769",
       "status": "modified"
     },
     {
-      "blob": "1c3248d7f64d96b61fcfe34e194d9afdebf620bd",
+      "blob": "654fc5e587e98399e6ac55b69f33e550abf16dd4",
       "mode": "100644",
       "old_blob": "c180d0a413fc1a58805d1901cfd39b1fc85462ce",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/privacy.purpose_authority.json",
       "old_sha256": "7ba361e4cec58aabf383b112ee76b212586cb31b7043d8f50da3d08e9d2b2203",
       "path": "docs/development/knowledge/privacy.purpose_authority.json",
-      "sha256": "387d5e7c256a50a8bf0f2a08f92e59b15d2b69a21099697f1498edc23a90da4a",
+      "sha256": "86401644dc560f9aa1aedb6aa903d09d823b800bbd3d57c3b6ff0f29d30db57c",
       "status": "modified"
     },
     {
-      "blob": "80ee14b383798a4e16d6378c08778036939a4732",
+      "blob": "8e5efc83cdf16f5060f0533770c79f2580bf6347",
       "mode": "100644",
       "old_blob": "598c66ab615ceabea7a153b0f102256d9e6dec9c",
       "old_mode": "100644",
       "old_path": "docs/development/knowledge/proof.tb001.json",
       "old_sha256": "5b41113576f44e26dd18b7772e61836162f698f9a38dc0a475a695810d4b31ef",
       "path": "docs/development/knowledge/proof.tb001.json",
-      "sha256": "4aa750203565f0a2a058ad247a9db040704c5153afe3c5e03d794e09314a3ce8",
+      "sha256": "45ab32ba997cdcb21d2367e0c060fe260545d96584d141eacb3bafe4b492efd6",
       "status": "modified"
     },
     {
@@ -70,14 +70,14 @@
       "status": "modified"
     },
     {
-      "blob": "fe4ec585d4ba046d3196341e049c988b48bbc929",
+      "blob": "6d3a5a1059598c05db8b5e8ad89c926028d8bfcc",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/new_you/proof/fixture_lifecycle_test.exs",
-      "sha256": "a1c8ebb450c3d25801bc52b2035cad3e485a4bbd17b40d825f0c983fd624bc43",
+      "sha256": "d0142caa336b8cde113f8fcec74cca8547671a45cb02f99dbb15e07fd73ed2fc",
       "status": "added"
     },
     {
@@ -103,25 +103,25 @@
       "status": "modified"
     },
     {
-      "blob": "fe36e9cc16f82a0fb9585441947449a9ec9c4880",
+      "blob": "f7ef199f5e2307f548b30c697140ce7a10aef5e1",
       "mode": "100644",
       "old_blob": "3fc7b57c34f591176785c8e8c22d78222a5ad85b",
       "old_mode": "100644",
       "old_path": "test/support/proof/p8_05.ex",
       "old_sha256": "b95b22b6c828563a9144268b72baeed6c37bcfbb0dea87e5c57df32ce235655a",
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "62391f8a42350fad06131721cfab0ddce38b2e5833622f3f1e16fad977e2e79e",
+      "sha256": "8aaa9d13c63fb85fe4237df73a2b013678b46f4c6da61d68b424868d8cbaf19a",
       "status": "modified"
     },
     {
-      "blob": "26cd8591019e64684df8f51cea8aa7996b58a0b1",
+      "blob": "3c455431ab3315bafae4f3ca511daee3d9d1ccbd",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_05_fixture.ex",
-      "sha256": "cb87d323e91b6263c47654315f7f96c9d6245a75433d6445daf05b13802a0f53",
+      "sha256": "dcb563ce358341a683181934702b39e789ecf1894f783ce6e92d4277de5307f5",
       "status": "added"
     },
     {
@@ -136,14 +136,25 @@
       "status": "modified"
     },
     {
-      "blob": "febe9aa746974808253d877a724b000e4f595085",
+      "blob": "b15ad441567dd82490d6178e4a46a57272948830",
+      "mode": "100644",
+      "old_blob": null,
+      "old_mode": null,
+      "old_path": null,
+      "old_sha256": null,
+      "path": "test/support/proof/p8_15_launch_failure.exs",
+      "sha256": "c861107d07265ee509a9aade45e61a87437273789f385b0ffe2462535151c5ea",
+      "status": "added"
+    },
+    {
+      "blob": "5be3accb2055130179f1b0db86f7064245bc5b42",
       "mode": "100644",
       "old_blob": null,
       "old_mode": null,
       "old_path": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_15_port.ex",
-      "sha256": "0dc37a465c122e5ed188c905d8b62a54b331bf6f80def7172f108657d2c18a56",
+      "sha256": "88ca3a138fd17d5ee586e8a0cc7eabcf3044ea622a4909ba48da119be64a9609",
       "status": "added"
     }
   ],
@@ -216,8 +227,21 @@
       "name": null,
       "old_sha256": null,
       "path": "test/new_you/proof/fixture_lifecycle_test.exs",
-      "sha256": "084db92f9f8d9c2411dbc4c0d4a2600dcad5f4ce5c4695bea8b99ca17a879517",
+      "sha256": "abf0c75ef025c3b8f8853bff4fbc2ec3729186caf221525e89c886442d4b5474",
       "status": "parsed"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.FixtureLifecycleTest",
+      "name": "assert_launch_failure_proof",
+      "old_sha256": null,
+      "path": "test/new_you/proof/fixture_lifecycle_test.exs",
+      "sha256": "fbe4f2ef6948a2ac35d3f9ce185e91dbc92200f7044a146bc8697be7674a7c36",
+      "status": "parsed",
+      "visibility": "private"
     },
     {
       "arity": 3,
@@ -406,7 +430,7 @@
       "name": null,
       "old_sha256": "3ca676be56b1b2d1b6686134a4f67f368ff396e480ced808f90a28e6d258099e",
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "4d11cb48a48cec37b574116061557053862da000cb71b21bf2c937b48d815feb",
+      "sha256": "e0ae0c2ec4d60c037140e955814ab5ce566f0123630e56c20033b5ab9b13e5ee",
       "status": "parsed"
     },
     {
@@ -470,7 +494,7 @@
       "name": "contain_active_fixture_workers",
       "old_sha256": null,
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "39f3265b260bd69c367c234767fa592491eff2e4cd11f497515bbc5a3bae641f",
+      "sha256": "da218b31365f67e2115e643982c305b8f68208ae126d9585499de14433d0d0b9",
       "status": "parsed",
       "visibility": "private"
     },
@@ -542,13 +566,52 @@
     {
       "arity": 3,
       "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "launch_checkpoint",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "0e5511b8354798e7958ee2870fae8e29a2a3e1a05c2b29bcf849f78eedc77d09",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 2,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "open_external_port",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "83924173d243aeed91f703d9d232cb6496faf372929247a04db5122fe9a341d6",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 5,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805",
+      "name": "open_reserved_port",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05.ex",
+      "sha256": "6a63ad798387df1e966bedbc8999f01e93ba3210335620f9c119efe8e59e343f",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
       "declaration": "def",
       "kind": "function",
       "module": "NewYou.Proof.P805",
       "name": "open_restart_port",
       "old_sha256": null,
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "af90b3f38459e3f5b16423812fe8db70d2b32e903800a8538f84e7bf0ffcef52",
+      "sha256": "994f0b40704fcdc389be96cd159c4188cdb47825855e35a1543030cda40ecd2a",
       "status": "parsed",
       "visibility": "public"
     },
@@ -561,7 +624,7 @@
       "name": "open_tracked_port",
       "old_sha256": null,
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "5e3e20f042859776c374f2b9688037f1d70417254097a8bba54dd1de9868311c",
+      "sha256": "ede930f91e0bc4c25f09591584a06334a495233de8e4c31af5a819fbafb30401",
       "status": "parsed",
       "visibility": "private"
     },
@@ -678,7 +741,7 @@
       "name": "start_fixture_guardian",
       "old_sha256": null,
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "8f12930570c5bf679b65893e956aa42aa49109b4153d7685a20cdbbb656dd2e8",
+      "sha256": "9968ab193da7efbea26886c42af219b216d4ef3cd5cf06f151f960c0be98242e",
       "status": "parsed",
       "visibility": "private"
     },
@@ -717,7 +780,7 @@
       "name": "wait_fixture_workers",
       "old_sha256": null,
       "path": "test/support/proof/p8_05.ex",
-      "sha256": "e75ac284a8bdfdb7e7c7f9bce9fdf7e64992e4f153c9da6e9c1677f997cf5fe9",
+      "sha256": "3fe5bf199c9004a6902746a25d2cc14a3301b841a924c97110fceaaa16dce256",
       "status": "parsed",
       "visibility": "private"
     },
@@ -765,7 +828,7 @@
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_05_fixture.ex",
-      "sha256": "4858f42cb3a4823512f190898b13dd11895de883bb7cecac7dcaa98bd629926d",
+      "sha256": "4b06865fc78b1da373256266084da45e850a8035b35f89694911794510869f2d",
       "status": "parsed"
     },
     {
@@ -777,7 +840,7 @@
       "name": "acquire",
       "old_sha256": null,
       "path": "test/support/proof/p8_05_fixture.ex",
-      "sha256": "f8d7211795ca989db6aa61cbe492cbf71219bc6a012fe39c73b7e2ef26e43116",
+      "sha256": "4b91dbcde53e1f7f3b8c0eab412aa294887d9b49bb4aa23e6a1d419d0d588c48",
       "status": "parsed",
       "visibility": "public"
     },
@@ -816,7 +879,7 @@
       "name": "begin_external",
       "old_sha256": null,
       "path": "test/support/proof/p8_05_fixture.ex",
-      "sha256": "65ccd922b780e49f97b627973084e5e93284793bd3d5638c92a0670ff2786a67",
+      "sha256": "794e65c5a74f7b83f328d8ff7d3f8400b41b97c6e5ad3740cc9418a60867bf5e",
       "status": "parsed",
       "visibility": "public"
     },
@@ -878,12 +941,38 @@
       "declaration": "defp",
       "kind": "function",
       "module": "NewYou.Proof.P805Fixture",
+      "name": "launch_settled?",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05_fixture.ex",
+      "sha256": "c0b4f711c5d6a90e9d0f014b883d0ed8871ba921e42bea40a7ca6abd1c50ed8b",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805Fixture",
       "name": "locked",
       "old_sha256": null,
       "path": "test/support/proof/p8_05_fixture.ex",
       "sha256": "85b2bb0e4ad96d2f66c99ca52ebb507313da42f0550e3f46da972a8e3d3316f8",
       "status": "parsed",
       "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.P805Fixture",
+      "name": "opened",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05_fixture.ex",
+      "sha256": "4264359de122d266bf026a14c02fdd814aeb9d20c51940158acea38ea2845c84",
+      "status": "parsed",
+      "visibility": "public"
     },
     {
       "arity": 1,
@@ -899,7 +988,7 @@
       "visibility": "public"
     },
     {
-      "arity": 3,
+      "arity": 4,
       "change": "added",
       "declaration": "def",
       "kind": "function",
@@ -907,7 +996,7 @@
       "name": "port",
       "old_sha256": null,
       "path": "test/support/proof/p8_05_fixture.ex",
-      "sha256": "6f7219b8221aba01feb501cc619782156353672190a5064ce9affdc7bf1ab946",
+      "sha256": "de03d87db4c24d62c8a2421a108d6e396384ff6eb9ea7e3adc5ef4a3f7ef42b4",
       "status": "parsed",
       "visibility": "public"
     },
@@ -985,9 +1074,22 @@
       "name": "safe?",
       "old_sha256": null,
       "path": "test/support/proof/p8_05_fixture.ex",
-      "sha256": "000ea2f060ebc0d4c61e4f60c6501a33b459e298b90aef33a1871d5a21b8e2ea",
+      "sha256": "5c348b36b681e08dd01c99bbf50391f073850f50a23bf4397958f5c7819650b9",
       "status": "parsed",
       "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "def",
+      "kind": "function",
+      "module": "NewYou.Proof.P805Fixture",
+      "name": "settle_external",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05_fixture.ex",
+      "sha256": "04285245b24623ee9a7b60e52727935cfffb8a6664eedeac0c504dc2a393ceb5",
+      "status": "parsed",
+      "visibility": "public"
     },
     {
       "arity": 1,
@@ -1016,6 +1118,19 @@
       "visibility": "private"
     },
     {
+      "arity": 1,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805Fixture",
+      "name": "store_launch_update",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05_fixture.ex",
+      "sha256": "834998d101008622377e64943d24c926b61b0b067e67edc022188f21efd47efd",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
       "arity": 3,
       "change": "added",
       "declaration": "def",
@@ -1038,6 +1153,19 @@
       "old_sha256": null,
       "path": "test/support/proof/p8_05_fixture.ex",
       "sha256": "67cc1107761536a5955aeffae2fe70515db0099591b63fba8a5685e753c429ec",
+      "status": "parsed",
+      "visibility": "private"
+    },
+    {
+      "arity": 3,
+      "change": "added",
+      "declaration": "defp",
+      "kind": "function",
+      "module": "NewYou.Proof.P805Fixture",
+      "name": "update_launch",
+      "old_sha256": null,
+      "path": "test/support/proof/p8_05_fixture.ex",
+      "sha256": "5108ba6c6482975dc3b5300571f5cab4757d58d96143fe4506ec6f4fc52fc1be",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1139,13 +1267,23 @@
     },
     {
       "arity": null,
+      "change": "unknown",
+      "kind": "unknown",
+      "module": null,
+      "name": null,
+      "path": "test/support/proof/p8_15_launch_failure.exs",
+      "reason": "top-level expression may generate declarations; expressions are not evaluated",
+      "status": "unknown"
+    },
+    {
+      "arity": null,
       "change": "added",
       "kind": "module",
       "module": "NewYou.Proof.P815Port",
       "name": null,
       "old_sha256": null,
       "path": "test/support/proof/p8_15_port.ex",
-      "sha256": "6d6977732119f91b1d03cceda424526e7c0a169099954a4c4fa43fc74c5c00ce",
+      "sha256": "c709f6bbbc718a0dff8ff29fbf6fb345f7ace0d0cfdedbf95c3075a07885465a",
       "status": "parsed"
     },
     {
@@ -1300,7 +1438,7 @@
       "name": "launch",
       "old_sha256": null,
       "path": "test/support/proof/p8_15_port.ex",
-      "sha256": "949f0e3495bac39037e9e64cdfb0c21621250810f4244a7b80e4f942fe9668c4",
+      "sha256": "db0567a1bf2c18efc0b93704083ec78e0a7caf38a19bec2ee02f1f660c4dc1ad",
       "status": "parsed",
       "visibility": "private"
     },
@@ -1506,6 +1644,7 @@
     "test/support/proof/p8_05.ex",
     "test/support/proof/p8_05_fixture.ex",
     "test/support/proof/p8_15.ex",
+    "test/support/proof/p8_15_launch_failure.exs",
     "test/support/proof/p8_15_port.ex"
   ],
   "tickets": [
