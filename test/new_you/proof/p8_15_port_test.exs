@@ -3,6 +3,62 @@ defmodule NewYou.Proof.P815PortTest do
 
   alias NewYou.Proof.P815Port
 
+  test "interrupts an owned child only after its complete transaction checkpoint signal" do
+    path = temp_path("checkpoint-interrupt")
+    on_exit(fn -> clean_pid_file(path) end)
+
+    result =
+      P815Port.run(
+        System.find_executable("sh"),
+        [
+          "-c",
+          "echo $$ > \"$1\"; printf 'P815_STARTED\\nP815_OPERATION\\nP815_CHECKPOINT\\nP815_INTERRUPT_READY\\n'; exec sleep 5",
+          "sh",
+          path
+        ],
+        "",
+        2_000
+      )
+
+    assert %{status: :interrupted, cleanup: :confirmed, checkpoint?: true} = result
+    pid = path |> File.read!() |> String.trim()
+    assert {_, 1} = System.cmd("kill", ["-0", pid], stderr_to_stdout: true)
+    assert_no_port_messages()
+    File.rm!(path)
+  end
+
+  test "an incomplete interruption signal cannot count as an observed checkpoint cut" do
+    result =
+      P815Port.run(
+        System.find_executable("sh"),
+        [
+          "-c",
+          "printf 'P815_STARTED\\nP815_OPERATION\\nP815_CHECKPOINT\\nP815_INTERRUPT_READY'; exec sleep 5"
+        ],
+        "",
+        200
+      )
+
+    assert %{status: :timeout, cleanup: :confirmed} = result
+  end
+
+  test "returns only fixed recovery phases when a transaction misses its checkpoint" do
+    result =
+      P815Port.run(
+        System.find_executable("sh"),
+        [
+          "-c",
+          "printf 'P815_STARTED\\nP815_OPERATION\\nP815_PHASE_TRANSACTION_ENTERED\\nP815_PHASE_ACCOUNT_LOCKED\\nP815_PHASE_TRANSACTION_ERROR\\nP815_PHASE_private-canary\\nP815_INTERRUPTION_NOT_PROVEN\\n'"
+        ],
+        "",
+        1_000
+      )
+
+    assert %{status: :ok, marker: :interruption_not_proven, checkpoint?: false} = result
+    assert result.phases == [:transaction_entered, :account_locked, :transaction_error]
+    refute inspect(result) =~ "private-canary"
+  end
+
   test "reports a nonzero exit without retaining arbitrary output" do
     result =
       P815Port.run(System.find_executable("sh"), ["-c", "printf secret; exit 17"], "", 1_000)

@@ -26,9 +26,20 @@ defmodule NewYou.Identity.Recovery do
     Communications.MessageIntent
   ]
 
+  defmacrop trace(stage) do
+    if Mix.env() == :test do
+      quote do: NewYou.Proof.RecoverySeam.trace(unquote(stage))
+    else
+      quote do: :ok
+    end
+  end
+
   defmacrop checkpoint do
     if Mix.env() == :test do
-      quote do: NewYou.Proof.RegistrationSeam.checkpoint()
+      quote do
+        NewYou.Proof.RecoverySeam.trace(:checkpoint)
+        NewYou.Proof.RegistrationSeam.checkpoint()
+      end
     else
       quote do: :ok
     end
@@ -43,10 +54,22 @@ defmodule NewYou.Identity.Recovery do
         with {:ok, email} <- NewYou.Identity.Email.canonicalize(email),
              true <- locale in ["en", "af"],
              {:ok, operation_id} <- Ecto.UUID.cast(operation_id) do
-          transaction(fn -> request_locked(email, locale, operation_id) end, timeout: 250)
+          result =
+            transaction(
+              fn ->
+                trace(:transaction_entered)
+                request_locked(email, locale, operation_id)
+              end,
+              timeout: 250
+            )
+
+          case result do
+            {:ok, _} -> trace(:transaction_returned)
+            _ -> trace(:transaction_error)
+          end
         end
       rescue
-        _ -> :ok
+        _ -> trace(:transaction_exception)
       after
         Process.sleep(max(500 - (System.monotonic_time(:millisecond) - started), 0))
       end
@@ -64,6 +87,7 @@ defmodule NewYou.Identity.Recovery do
            |> Ash.Query.filter(email == ^email)
            |> Ash.Query.lock(:for_update)
            |> Ash.read_one(authorize?: false),
+         :ok <- trace(:account_locked),
          true <- account.account_status == :open and account.credential_status == :active,
          {:ok, prior} <-
            RecoveryCase
@@ -130,6 +154,7 @@ defmodule NewYou.Identity.Recovery do
     if recovery.account_binding ==
          binding(%{account | email_verified?: false}, recovery.required_assurance) and
          recovery.required_assurance >= required_assurance(account) do
+      trace(:resume_verified_channel)
       issue_proof(account, recovery)
     else
       {:ok, :pending}
@@ -232,6 +257,7 @@ defmodule NewYou.Identity.Recovery do
              destination_authorized_at: proof.created_at,
              locale: recovery.locale
            }),
+         :ok <- trace(:await_proof),
          {:ok, _} <-
            transition(recovery, :await_proof, %{
              proof_jti: proof.jti,

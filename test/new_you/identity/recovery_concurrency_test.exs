@@ -19,7 +19,87 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.unverified_restart_proof() == :ok
   end
 
-  test "restarted recovery retries the same case after a bounded request loses its lease" do
+  test "restart fixture requires a committed case after a neutral request rolls back" do
+    failure = :atomics.new(1, [])
+
+    NewYou.Proof.RecoverySeam.observe(fn stage ->
+      if stage == :transaction_entered and :atomics.add_get(failure, 1, 1) == 1 do
+        raise "TEST-only recovery fixture transaction interruption"
+      end
+    end)
+
+    try do
+      assert P815.unverified_restart_proof() == :ok
+      assert :atomics.get(failure, 1) in 2..3
+    after
+      Process.delete({NewYou.Proof.RecoverySeam, :observer})
+    end
+  end
+
+  test "restart fixture fails closed when no bounded setup request commits" do
+    attempts = :atomics.new(1, [])
+
+    NewYou.Proof.RecoverySeam.observe(fn stage ->
+      if stage == :transaction_entered do
+        :atomics.add_get(attempts, 1, 1)
+        raise "TEST-only recovery fixture transaction interruption"
+      end
+    end)
+
+    try do
+      assert_raise ExUnit.AssertionError, ~r/did not commit after 3 bounded attempts/, fn ->
+        P815.unverified_restart_proof()
+      end
+
+      assert :atomics.get(attempts, 1) == 3
+    after
+      Process.delete({NewYou.Proof.RecoverySeam, :observer})
+    end
+  end
+
+  test "fresh resume retries a proven pre-commit rollback with one final proof and intent" do
+    assert P815.unverified_restart_proof(rollback_resume_once?: true) == :ok
+  end
+
+  test "a real initial request timeout cannot remove the fixture owner lease" do
+    attempts = :atomics.new(1, [])
+    parent = self()
+    reference = make_ref()
+
+    NewYou.Proof.RecoverySeam.observe(fn stage ->
+      if stage == :transaction_entered and :atomics.add_get(attempts, 1, 1) == 1 do
+        await_initial_lease_loss(parent, reference, System.monotonic_time(:millisecond) + 2_000)
+      end
+    end)
+
+    try do
+      assert P815.unverified_restart_proof() == :ok
+      assert_received {^reference, :initial_lease_expired}
+      assert :atomics.get(attempts, 1) in 2..3
+    after
+      Process.delete({NewYou.Proof.RecoverySeam, :observer})
+    end
+  end
+
+  test "a real lease timeout before Account lookup leaves no partial change" do
+    assert P815.pre_checkpoint_timeout_proof(:transaction_entered) == :ok
+  end
+
+  test "a real lease timeout after Account lock leaves the case safe for manual retry" do
+    assert P815.pre_checkpoint_timeout_proof(:account_locked) == :ok
+  end
+
+  test "a real lease timeout after partial proof work rolls back before manual retry" do
+    assert P815.pre_checkpoint_timeout_proof(:await_proof) == :ok
+  end
+
+  test "a committed request without lease expiry cannot count as a timeout proof" do
+    assert_raise ExUnit.AssertionError, ~r/timeout not proven: transaction committed/, fn ->
+      P815.pre_checkpoint_timeout_proof(:await_proof, skip_timeout?: true)
+    end
+  end
+
+  test "restarted recovery rolls back an observed checkpoint cut before retrying the same case" do
     assert P815.unverified_restart_proof(interrupt_resume?: true) == :ok
   end
 
@@ -342,5 +422,22 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
 
   test "recovery delivery and completion receipts survive fresh BEAM processes" do
     assert P815.restart_proof() == :ok
+  end
+
+  defp await_initial_lease_loss(parent, reference, deadline) do
+    assert System.monotonic_time(:millisecond) < deadline
+
+    try do
+      NewYou.Repo.query!("SELECT 1")
+    rescue
+      error in DBConnection.ConnectionError ->
+        send(parent, {reference, :initial_lease_expired})
+        reraise error, __STACKTRACE__
+    end
+
+    receive do
+    after
+      5 -> await_initial_lease_loss(parent, reference, deadline)
+    end
   end
 end
