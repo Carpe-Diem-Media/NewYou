@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "a4e753b38c0cf1c2a7898f91f00472c35f2e632e",
-    "semantics": "WELL-147 continuation integrates current main while preserving newer restart/fixture semantics. Probe readiness uses bounded private control files independent of redacted stdout, with phase and lease/generation/job/worktree/database/role acknowledgements before successful completion. Verification command consumers select managed admission for opt-in worktrees and verified DevCore nested reuse inside an existing job, with no legacy fallback. Installed DevCore 1.2.1 checksum and manifest were rechecked read-only. Acquisition remains disabled and both supervisor-loss generations remain quarantined. Standalone protocol and Python tooling tests pass; actual child/SQL, paired Dialyzer, full-suite capacity, final fast/deep and hosted CI, independent Master Gate, resulting-main and activation remain unverified. Corrective B source factors the actual production seed barriers for subprocess testing with synthetic adapters, bounds initial stdin and implements private directory-descriptor control records through the Python coordinator. Permanent tests remove actual ready/done acknowledgement calls and require the lifecycle regressions to fail. The coordinator accepts only already-owned streams and performs no resource lifecycle actions. Live application integration remains unverified. The actual Port collector now drains and counts output after its receipt until child exit, preserves an absolute deadline and rejects nonzero exits. Direct collector subprocess regressions cover success, bounded diagnostics, receipt-then-failure, missing/mismatched identity/counts, timeout and post-receipt flooding; isolated exit-status and output-bound mutations demonstrate sensitivity. Explicit TEST heavy admission for compound commands now routes through the existing build-locked wrapper to DevCore slots run --heavy test. Normal DEV/TEST syntax and verified nested reuse remain intact. Root ran the full 16-test local-session suite, including the installed DevCore temporary-registry handoff regression, plus86 related command-consumer/routing tests. Real heavy admission remains unverified. A partial dry-run pilot driver now models bounded two-stream orchestration and rejects execute even when references are supplied. Root added strict integer fixture-count validation after reproducing boolean acceptance. Concrete live identity/catalog, bounded output, window and retained-failure adapters remain absent from this source checkpoint; no executable pilot readiness is claimed. Pilot preflight now requires an explicit exact reviewed-source SHA rather than reusing a historical source pin; this source binding is not owner authorization."
+    "git_sha": "46dda75f109aaade54bd2c87345c9e5bd65d2127",
+    "semantics": "WELL-147 continuation integrates current main while preserving newer restart/fixture semantics. Probe readiness uses bounded private control files independent of redacted stdout, with phase and lease/generation/job/worktree/database/role acknowledgements before successful completion. Verification command consumers select managed admission for opt-in worktrees and verified DevCore nested reuse inside an existing job, with no legacy fallback. Installed DevCore 1.2.1 checksum and manifest were rechecked read-only. Acquisition remains disabled and both supervisor-loss generations remain quarantined. Standalone protocol and Python tooling tests pass; actual child/SQL, paired Dialyzer, full-suite capacity, final fast/deep and hosted CI, independent Master Gate, resulting-main and activation remain unverified. Corrective B source factors the actual production seed barriers for subprocess testing with synthetic adapters, bounds initial stdin and implements private directory-descriptor control records through the Python coordinator. Permanent tests remove actual ready/done acknowledgement calls and require the lifecycle regressions to fail. The coordinator accepts only already-owned streams and performs no resource lifecycle actions. Live application integration remains unverified. The actual Port collector now drains and counts output after its receipt until child exit, preserves an absolute deadline and rejects nonzero exits. Direct collector subprocess regressions cover success, bounded diagnostics, receipt-then-failure, missing/mismatched identity/counts, timeout and post-receipt flooding; isolated exit-status and output-bound mutations demonstrate sensitivity. Explicit TEST heavy admission for compound commands now routes through the existing build-locked wrapper to DevCore slots run --heavy test. Normal DEV/TEST syntax and verified nested reuse remain intact. Root ran the full 16-test local-session suite, including the installed DevCore temporary-registry handoff regression, plus86 related command-consumer/routing tests. Real heavy admission remains unverified. A partial dry-run pilot driver now models bounded two-stream orchestration and rejects execute even when references are supplied. Root added strict integer fixture-count validation after reproducing boolean acceptance. Concrete live identity/catalog, bounded output, window and retained-failure adapters remain absent from this source checkpoint; no executable pilot readiness is claimed. Pilot preflight now requires an explicit exact reviewed-source SHA rather than reusing a historical source pin; this source binding is not owner authorization. A runtime module now supplies private window-receipt structure/freshness guards, two exact owned process launches, bounded output drainers and allowlisted read callbacks. It requires root-supplied independently approved identity/capacity/reference expectations and protocol cancellation. These components do not confer live authority; driver execute remains blocked until composition and review."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -497,6 +497,21 @@
         "pilot_driver",
         "pilot_driver_tests"
       ]
+    },
+    {
+      "path": "tests/test_well147_pilot_runtime.py",
+      "cases": [
+        "Validate owned0600 bounded window receipts with exactsource/manifest/tool/worktree/coordinator/reference bindings and UTCexpiry.",
+        "Reject known legacylock conflict, unknowncapacity/identity observations, duplicatekeys, ownership/mode/symlink and drift.",
+        "Launch at mosttwo exact owned commands; cap retainedredactor output while continuing to drain and preserving diagnostics, without process termination.",
+        "Bound allowlisted readcallbacks and close/finalize deadlines; preserve liveownedPIDs in private receipts."
+      ],
+      "proves": "Eleven synthetic tests independently rerun by root; real synthetic children and injected observers only.",
+      "limits": "Integrated source/identity/capacity readers, approval expectations and cancellation remain caller obligations. No live managed action or operational clearance is tested.",
+      "source_ids": [
+        "pilot_runtime",
+        "pilot_runtime_tests"
+      ]
     }
   ],
   "safe_extensions": [
@@ -719,6 +734,18 @@
       "path": "tests/test_well147_pilot.py",
       "symbol": "class PilotTests(unittest.TestCase):",
       "sha256": "c0d4c9d5c75d3f362a0896cd0c8fb86cd8452ccc93395a75920163a3b210d725"
+    },
+    {
+      "id": "pilot_runtime",
+      "path": "tools/well147_pilot_runtime.py",
+      "symbol": "class WindowGuard:",
+      "sha256": "0f5d27c9628075b0dd2ca64c2145a9ff741e4af217ffae10510cbed1286f43d6"
+    },
+    {
+      "id": "pilot_runtime_tests",
+      "path": "tests/test_well147_pilot_runtime.py",
+      "symbol": "class WindowTests(unittest.TestCase):",
+      "sha256": "fcdd1735b63de6b70b8f7b4869586c1b0fa5e0835866c772561e6ebe96c30db6"
     }
   ]
 }
