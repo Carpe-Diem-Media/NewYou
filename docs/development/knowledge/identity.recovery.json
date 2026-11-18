@@ -8,8 +8,8 @@
     "WELL-153"
   ],
   "implementation_revision": {
-    "git_sha": "efb0d949295d75dc559b35c490b5779200ae20dc",
-    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-153 changes TEST-only recovery restart diagnostics and proof; Identity and password-reset business semantics remain unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed."
+    "git_sha": "580a92e7dad7acee0be35bcbb508f75c03c8e548",
+    "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-153 changes TEST-only recovery restart diagnostics and proof; Identity and password-reset business semantics remain unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1003,6 +1003,21 @@
         "restart_port_test",
         "restart_fixture"
       ]
+    },
+    {
+      "path": "test/new_you/proof/fixture_lifecycle_test.exs",
+      "cases": [
+        "Competing admission and rejection before any global environment snapshot; ownership retained during cleanup.",
+        "Real external child surviving worker death retains Account, RecoveryCase and recovery intent, denies new fixtures and rejects unsafe reconciliation.",
+        "Guardian death preserves the exact target; verified process-group absence permits scoped cleanup and restoration; stale reconciliation cannot release another fixture."
+      ],
+      "proves": "TEST fixture ownership, exact-target quarantine and actual database cleanup after independently observed external termination.",
+      "limits": "VM-local coordination and controlled Linux process groups; no claim to reconstruct the lost historical failure or certify production Recovery.",
+      "source_ids": [
+        "fixture_ownership",
+        "fixture_lifecycle_test",
+        "fixture_connection_test"
+      ]
     }
   ],
   "safe_extensions": [
@@ -1074,7 +1089,7 @@
     "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations.",
     "WELL-136 verification corrected only the P815 reset-versus-recovery fixture lookup to its own Account. The strengthened case creates an unrelated reset proof through Identity and asserts that Token remains unchanged after contention. Deterministic RED failed at the previous global-purpose lookup; GREEN passed all 13 recovery-concurrency tests with seed 441709 and four schedulers. No recovery business API or lifecycle was changed and no retained shared records were deleted. Full gate results remain separately required.",
     "WELL-153 observes checkpoint and connection loss in the new restart proof; the original seed 38448 child exit, output and timing remain unknown. A later pass does not establish the historical cause.",
-    "Fixture cleanup waits for all registered restart workers even after a worker fails. After a bounded wait expires, the guardian retains the fixture environment until all workers exit; cleanup remains unconfirmed. Tests use synthetic fixtures and Linux process groups, and do not certify deployed recovery."
+    "WELL-153 fixture ownership and retained targets are local to the running TEST BEAM. They survive guardian failure, not termination of the whole VM. External evidence is limited to recorded Linux process groups from the controlled restart launcher. Missing launch identity or uncertain process state remains fail-closed; reconciliation has no assertion-based or force-release override. This is not deployed recovery certification."
   ],
   "follow_up_tickets": [
     "WELL-17",
@@ -1225,7 +1240,7 @@
       "id": "concurrency_test",
       "path": "test/new_you/identity/recovery_concurrency_test.exs",
       "symbol": "defmodule ",
-      "sha256": "5eea7c7b288982d1f2d89e3c933ce632d3f2e60a4a58c4d60ae165d84e2be6c9"
+      "sha256": "cc90f2547b50cb6d66dd1a325bd64e453d726e9c2da497d45a2ebde3d114d61e"
     },
     {
       "id": "delivery_test",
@@ -1357,7 +1372,7 @@
       "id": "restart_port",
       "path": "test/support/proof/p8_15_port.ex",
       "symbol": "defmodule NewYou.Proof.P815Port",
-      "sha256": "afaa4bc55f7e9376105aac23b38fdc653eff16c25d0c624587f1a8426edff042"
+      "sha256": "0dc37a465c122e5ed188c905d8b62a54b331bf6f80def7172f108657d2c18a56"
     },
     {
       "id": "restart_port_test",
@@ -1369,7 +1384,25 @@
       "id": "restart_fixture",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defmodule NewYou.Proof.P805",
-      "sha256": "201f1a69b4da68fe71de77599b1b1f6d12090777d2dde59e1e501b5ab96f6fb4"
+      "sha256": "0ccace3322661dfe781bc438cd43ff24ae0f567c39d60ddf1fb9c29581a1394a"
+    },
+    {
+      "id": "fixture_ownership",
+      "path": "test/support/proof/p8_05_fixture.ex",
+      "symbol": "defmodule NewYou.Proof.P805Fixture",
+      "sha256": "54e0a7d6e6224965187fed09b2d22870f7c6df9693546ad28b3e1825f7dcd940"
+    },
+    {
+      "id": "fixture_lifecycle_test",
+      "path": "test/new_you/proof/fixture_lifecycle_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureLifecycleTest",
+      "sha256": "2c9f9c76684b993b6e950bbff8014de79cd3528686dbabc751c9245c1dac49e6"
+    },
+    {
+      "id": "fixture_connection_test",
+      "path": "test/new_you/proof/fixture_connection_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureConnectionTest",
+      "sha256": "3fdd74cc7c689429e706738eefff0e5f2b27b393d52444769a6a479c53bcb5d4"
     }
   ]
 }
