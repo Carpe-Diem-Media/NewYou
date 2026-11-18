@@ -120,17 +120,51 @@ defmodule NewYou.Identity.SecurityHoldTest do
   end
 
   test "a caller claim without current Session, grant and step-up cannot release a hold" do
-    request = %{
-      credentials: %{account_id: Ecto.UUID.generate(), role: :support, step_up: true},
-      grant_id: Ecto.UUID.generate(),
-      target_id: Ecto.UUID.generate(),
-      expected_version: 1,
-      operation_id: Ecto.UUID.generate(),
-      reason_code: :security_review
-    }
+    P813HoldFixture.with_fixture(fn f ->
+      valid_request = P813HoldFixture.reviewed_hold(f)
 
-    assert {:error, :security_hold_unavailable} =
-             Identity.release_security_hold(request)
+      request = %{
+        valid_request
+        | credentials: %{account_id: f.actor.id, role: :support, step_up: true},
+          grant_id: Ecto.UUID.generate(),
+          operation_id: Ecto.UUID.generate()
+      }
+
+      assert %{rows: [[1]]} = NewYou.Repo.query!("SELECT 1")
+      refute Ash.DataLayer.in_transaction?(Identity.Account)
+      before = P805.account!(f.target.id)
+      assert before.security_posture == :held
+      assert {:error, :security_hold_unavailable} = Identity.release_security_hold(request)
+      after_denial = P805.account!(f.target.id)
+      assert after_denial.security_posture == before.security_posture
+      assert after_denial.hold_version == before.hold_version
+      assert after_denial.hold_operations == before.hold_operations
+      assert admissions(request.operation_id) == []
+      assert outcomes(request.operation_id) == []
+
+      missing_session_id = Ecto.UUID.generate()
+
+      assert {:ok, nil} =
+               Identity.Session
+               |> Ash.Query.filter(id == ^missing_session_id)
+               |> Ash.read_one(authorize?: false)
+
+      missing_session = %{
+        valid_request
+        | credentials: Map.put(valid_request.credentials, :session_id, missing_session_id),
+          operation_id: Ecto.UUID.generate()
+      }
+
+      assert {:error, :security_hold_unavailable} =
+               Identity.release_security_hold(missing_session)
+
+      assert P805.account!(f.target.id).hold_operations == before.hold_operations
+      assert admissions(missing_session.operation_id) == []
+      assert outcomes(missing_session.operation_id) == []
+
+      assert {:ok, %{status: :released, version: 2}} =
+               Identity.release_security_hold(valid_request)
+    end)
   end
 
   defp admissions(operation_id) do

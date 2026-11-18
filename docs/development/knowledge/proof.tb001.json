@@ -11,8 +11,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "e55373972036124091a068116c2235822462ae4e",
-    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-112 reconciles the stronger current-main scanner scenario and adds the self-hosted-font CSP assertion in its existing shared helper. Scenario owner-state checks and the fixed TB-001 inventory remain unchanged. Source/hash refresh is not a fresh TB-001 certification. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged. WELL-147 makes the production-exclusion probe validate its inherited TEST allocation before the existing no-Repo module/flag checks, and puts its isolated production build under a random worktree-local _build path. This adds no fixed TB-001 scenario or certification. Live managed-probe execution remains unverified."
+    "git_sha": "bed38c1ecf63e42fcac48e832fe3c3535f305d45",
+    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-112 reconciles the stronger current-main scanner scenario and adds the self-hosted-font CSP assertion in its existing shared helper. Scenario owner-state checks and the fixed TB-001 inventory remain unchanged. Source/hash refresh is not a fresh TB-001 certification. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged. WELL-147 makes the production-exclusion probe validate its inherited TEST allocation before the existing no-Repo module/flag checks, and puts its isolated production build under a random worktree-local _build path. This adds no fixed TB-001 scenario or certification. Live managed-probe execution remains unverified."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
   "collaborating_domains": [
@@ -308,6 +308,14 @@
         "email_scenarios",
         "reconciliation_scenarios"
       ]
+    },
+    {
+      "summary": "The TEST guardian admits one correlated outstanding launch. It records the Port before OS identity lookup and completes the matching reservation after transfer. Proven no-child failures settle that reservation; an interrupted launch without recorded identity remains quarantined and rejects later launches. An interrupted transfer with a recorded target can reconcile only after existing worker, Port and OS-group checks pass.",
+      "source_ids": [
+        "fixture_ownership",
+        "fixture_lifecycle_test",
+        "launch_failure_probe"
+      ]
     }
   ],
   "tests": [
@@ -356,6 +364,24 @@
       "source_ids": [
         "fixture_observation_test",
         "fixture"
+      ]
+    },
+    {
+      "path": "test/new_you/proof/fixture_lifecycle_test.exs",
+      "cases": [
+        "Competing admission and rejection before any global environment snapshot; ownership retained during cleanup.",
+        "Real external child surviving worker death retains Account, RecoveryCase and recovery intent, denies new fixtures and rejects unsafe reconciliation.",
+        "Guardian death preserves the exact target; verified process-group absence permits scoped cleanup and restoration; stale reconciliation cannot release another fixture.",
+        "Proven no-child launch failure settles safely; stale settlement and overlapping reservation are rejected; successful sequential launches preserve all recorded targets.",
+        "A real post-open interruption in a separate TEST BEAM reports harness failure and unconfirmed cleanup, denies the next launch and retains quarantine after the exact child has stopped."
+      ],
+      "proves": "TEST fixture ownership, exact-target quarantine and actual database cleanup after independently observed external termination. Correlated sequential launch reservation settlement and truthful post-open diagnostics.",
+      "limits": "VM-local coordination and controlled Linux process groups; no claim to reconstruct the lost historical failure or certify production Recovery.",
+      "source_ids": [
+        "fixture_ownership",
+        "fixture_lifecycle_test",
+        "fixture_connection_test",
+        "launch_failure_probe"
       ]
     }
   ],
@@ -406,7 +432,8 @@
     "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations.",
     "WELL-114 source checkpoint 145c2be adds fixture-isolation regression coverage and assertion-preserving test corrections. See docs/superpowers/plans/2026-11-16-retained-fixture-observations.md for observed commands, test limits and current resource handling. Full applicable gates, OCR, exact-head CI and independent post-merge certification remain required. The original all-job privacy secret scan remains intentionally broad to detect incorrectly addressed leakage. The seven-file focused run passed 111/111, seed 985650. Canonical on clean 96a8455 passed 831/831, seed 813027, in 547.2 seconds under a command-scoped lock, after preserving and diagnosing a five-failure overlapping attempt and a same-seed 47/47 targeted pass. The focused plan records exact commands, fingerprints and limits. OCR, exact-final-head hosted CI and independent resulting-main certification remain separate requirements. Global maintenance tests use native Ecto sandbox checkout/checkin with signature restoration, rather than an outer Repo transaction that can be aborted by expected Ash denials.",
     "Current-base WELL-114 proof: clean 9f4b8fd1975e0b1f67b12463e01156529ce7d57b incorporates main 2736a9c6925c8c126cbba007f404b2e38ec2080d with identical executable correction. Canonical passed 831/831, seed 813027, in 508.2 seconds; content compatibility passed 34/34 and routing/knowledge/smoke checks passed 71/71. Private per-row digest multisets preserve all preexisting rows across 15 tables, including membership in growing nonce and PMR sets, with no unexpected additions. DeliveryAttempt baseline was empty; permanent synthetic own/foreign coverage is separate. The focused plan records exact commands, hashes, observed counts, review limits and lost historical raw logs. Fresh OCR, final-head CI and independent integration/resulting-main certification remain separate requirements.",
-    "WELL-112 incorporates independently integrated WELL-114 from main f72cf637453408896a5037dcb2f8d37f0d29e3af. Earlier proof notes describe their historical checkpoints; new complete branch gates, OCR and independent review remain required. The floating-label variant is opt-in and does not migrate registration or change owner lifecycles."
+    "WELL-112 incorporates independently integrated WELL-114 from main f72cf637453408896a5037dcb2f8d37f0d29e3af. Earlier proof notes describe their historical checkpoints; new complete branch gates, OCR and independent review remain required. The floating-label variant is opt-in and does not migrate registration or change owner lifecycles.",
+    "WELL-153 fixture ownership and retained targets are local to the running TEST BEAM. They survive guardian failure, not termination of the whole VM. External evidence is limited to recorded Linux process groups from the controlled restart launcher. Missing launch identity or uncertain process state remains fail-closed; reconciliation has no assertion-based or force-release override. This is not deployed recovery certification."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -438,7 +465,7 @@
       "id": "assertions",
       "path": "test/proof/self_test.exs",
       "symbol": "defmodule NewYou.Proof.SelfTest",
-      "sha256": "8e13d6026f146665e0712f4b64e66936afcd37f4a80753db90d3e4c8a09754c0"
+      "sha256": "e7f1025c567dea6bd64404286901a260894c31b4dd56498570b0e428296f7e72"
     },
     {
       "id": "result",
@@ -474,7 +501,7 @@
       "id": "fixture",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defmodule NewYou.Proof.P805",
-      "sha256": "b95b22b6c828563a9144268b72baeed6c37bcfbb0dea87e5c57df32ce235655a"
+      "sha256": "8aaa9d13c63fb85fe4237df73a2b013678b46f4c6da61d68b424868d8cbaf19a"
     },
     {
       "id": "delivery_scenarios",
@@ -595,6 +622,30 @@
       "path": "test/new_you/proof/fixture_observation_test.exs",
       "symbol": "defmodule NewYou.Proof.FixtureObservationTest",
       "sha256": "6a2608cbe5e0c9d7ac54f9783156af823040d16b5f63c81ccdbffc22a4cfae51"
+    },
+    {
+      "id": "fixture_ownership",
+      "path": "test/support/proof/p8_05_fixture.ex",
+      "symbol": "defmodule NewYou.Proof.P805Fixture",
+      "sha256": "dcb563ce358341a683181934702b39e789ecf1894f783ce6e92d4277de5307f5"
+    },
+    {
+      "id": "fixture_lifecycle_test",
+      "path": "test/new_you/proof/fixture_lifecycle_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureLifecycleTest",
+      "sha256": "d0142caa336b8cde113f8fcec74cca8547671a45cb02f99dbb15e07fd73ed2fc"
+    },
+    {
+      "id": "fixture_connection_test",
+      "path": "test/new_you/proof/fixture_connection_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureConnectionTest",
+      "sha256": "3fdd74cc7c689429e706738eefff0e5f2b27b393d52444769a6a479c53bcb5d4"
+    },
+    {
+      "id": "launch_failure_probe",
+      "path": "test/support/proof/p8_15_launch_failure.exs",
+      "symbol": "# An intentionally unidentified launch must keep its fixture quarantined.",
+      "sha256": "c861107d07265ee509a9aade45e61a87437273789f385b0ffe2462535151c5ea"
     }
   ]
 }

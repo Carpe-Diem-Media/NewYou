@@ -4,11 +4,11 @@
 
 ## One record for each purpose
 
-Every implementation PR includes one automatically generated historical change record under `docs/development/knowledge/history/`, named `pr-<number>.json`. The extractor collects files, renames, deletions, source hashes, parseable Elixir symbols, changed tests and migration paths. Generate it at the review checkpoint with live GitHub PR metadata and the explicit WELL ticket from implementation context. Metadata validates repository, PR, base, head and URL; it does not supply ticket identity or PR prose. New records omit author, intent and Plane snapshots. Legacy records remain readable; do not mass-regenerate them. GitHub supplies current review, CI and merged status. A committed record never claims a future CI result or contains its own final commit SHA.
+Permanent semantic knowledge consists of reviewed capability maps, meaningful PR handoffs and source. Mechanical change information is available in existing legacy history records, GitHub PR and commit history, and temporary informational CI snapshots. CI does not commit snapshots, and a new `pr-N.json` is not required for review or merge.
 
 A substantial capability or material Domain/interface/lifecycle/schema change also creates or maintains one canonical `<capability_id>.json` under [knowledge/](knowledge/README.md), using [the existing schema](knowledge/capability.schema.json). The agent supplies source-verified semantics that extraction cannot establish. Update only the affected sections on follow-up changes. Do not duplicate this map in an eight-section Markdown handoff. Existing Markdown handoffs remain historical references. Migrate an existing handoff only when material work on that capability warrants it.
 
-An ordinary internal, cosmetic or editorial PR needs its PR description and generated change record. State why a semantic map update is unnecessary. Proof-only work updates the relevant map's proof limits or links a focused addendum when needed.
+An ordinary internal, cosmetic or editorial PR needs a useful technical PR description. State why a semantic map update is unnecessary. Proof-only work updates the relevant map's proof limits or links a focused addendum when needed.
 
 ## Required semantic knowledge
 
@@ -27,7 +27,7 @@ Explain non-applicable dimensions. Do not invent Resources, functions or lifecyc
 
 For ordinary development, follow the development-first procedure in the [ticket workflow](../../.agents/skills/ticket-implement/SKILL.md) and this standard. ChatGPT Master Gate uses the same source-linked record and live Plane evidence during independent review; it does not create a second PR dossier.
 
-Follow the agent commands in [the knowledge guide](knowledge/README.md) before declaring a PR review-ready. Generate the PR record once at the review checkpoint with metadata and the explicit ticket, then commit it before final review. Regenerate only after a source or base change. CI checks the exact GitHub event binding and committed record. All generated changes precede final approval. No post-approval commit, post-merge main write or separate documentation task is required.
+Maintain applicable semantic maps and document the impact in the PR. Hosted CI captures an informational snapshot of the event base, real head and merge-base range. It is temporary convenience evidence; GitHub and source remain authoritative. A base advance does not require a knowledge-record commit. Exact-head CI and current-candidate verification remain mandatory.
 
 Independent Master Gate compares the complete diff, capability semantics and linked source/tests at the exact reviewed head. Missing or materially inaccurate required knowledge means `CHANGES REQUIRED`. Schema, hashes and locator validation establish mechanical consistency; they do not prove semantic claims. A changed head invalidates previous review and CI evidence. Resulting-main verification remains mandatory before Plane Done.
 

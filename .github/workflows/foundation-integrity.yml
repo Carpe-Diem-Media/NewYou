@@ -94,8 +94,19 @@ jobs:
       - name: Run knowledge capture regression tests
         if: steps.knowledge_parser.outputs.parser_required == 'true'
         run: python -m unittest tests.test_knowledge_capture -v
-      - name: Regenerate and compare committed PR knowledge
-        run: python -m tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"
+      - name: Capture informational PR knowledge snapshot
+        id: knowledge_snapshot
+        continue-on-error: true
+        run: python -m tools.knowledge_capture snapshot --metadata-json "$GITHUB_EVENT_PATH" --output "$RUNNER_TEMP/newyou-pr-knowledge.json" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload informational PR knowledge snapshot
+        if: steps.knowledge_snapshot.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-knowledge-${{ github.event.pull_request.number }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/newyou-pr-knowledge.json
+          retention-days: 14
+          if-no-files-found: error
       - name: Verify merge-gate topology
         run: python -m unittest discover -s tests -p 'test_foundation_merge_gate.py' -v
       - name: Run current authority smoke audit

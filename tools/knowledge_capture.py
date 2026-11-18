@@ -225,7 +225,7 @@ def parser_needed(repo, metadata):
                  'tests/test_knowledge_capture.py', '.tool-versions') for path in paths)
 
 
-def extract(repo=ROOT, base='HEAD^', head='HEAD', pr=0, tickets=(), metadata=None):
+def extract(repo=ROOT, base='HEAD^', head='HEAD', pr=0, tickets=(), metadata=None, *, exclude_own_history=True):
     repo = Path(repo).resolve()
     base_sha, head_sha = _resolve(repo, base), _resolve(repo, head)
     range_base_sha = _merge_base(repo, base_sha, head_sha)
@@ -235,7 +235,7 @@ def extract(repo=ROOT, base='HEAD^', head='HEAD', pr=0, tickets=(), metadata=Non
     changes = []
     symbol_records = []
     test_paths, migration_paths = set(), set()
-    excluded = f'{HISTORY}/pr-{pr}.json' if pr else None
+    excluded = f'{HISTORY}/pr-{pr}.json' if pr and exclude_own_history else None
     for status, old_path, new_path in _diff(repo, range_base_sha, head_sha):
         path = new_path or old_path
         if excluded and status not in ('renamed', 'copied') and path == excluded:
@@ -352,6 +352,41 @@ def generate(repo, base, head, pr, tickets, metadata=None, check=False):
         raise ValueError('history path resolves outside repository')
     path.write_text(json.dumps(expected, indent=2, sort_keys=True) + '\n')
     return {'status': 'WRITTEN', 'path': str(path), 'base_sha': expected['base_sha'], 'head_sha': _resolve(repo, head)}
+
+
+def snapshot(repo, metadata, output, summary):
+    """Write an informational PR snapshot outside the checkout, without GitHub writes."""
+    repo = Path(repo).resolve()
+    event_pr = metadata.get('pull_request')
+    if not isinstance(event_pr, dict) or (metadata.get('repository') or {}).get('full_name') != 'Carpe-Diem-Media/NewYou':
+        raise ValueError('snapshot requires canonical GitHub PR event metadata')
+    pr = metadata.get('number')
+    if type(pr) is not int or pr < 1:
+        raise ValueError('invalid event PR number')
+    base = (event_pr.get('base') or {}).get('sha')
+    head = (event_pr.get('head') or {}).get('sha')
+    if any(not isinstance(sha, str) or not re.fullmatch(r'[0-9a-f]{40}', sha) for sha in (base, head)):
+        raise ValueError('snapshot requires exact commit SHAs')
+    destinations = [Path(output).resolve(), Path(summary).resolve()]
+    if destinations[0] == destinations[1] or any(path == repo or repo in path.parents for path in destinations):
+        raise ValueError('snapshot output and summary must be distinct paths outside the repository')
+    record = extract(repo, base, head, pr, (), metadata, exclude_own_history=False)
+    record.pop('tickets')
+    record['head_sha'] = head
+    destinations[0].write_text(json.dumps(record, indent=2, sort_keys=True) + '\n')
+    lines = ['## Informational PR knowledge snapshot', '',
+             f"PR #{pr}: `{head}` against base `{base}` (merge base `{record['range_base_sha']}`).",
+             f"{len(record['files'])} changed files, {len(record['symbols'])} declaration changes, "
+             f"{len(record['tests'])} test paths, {len(record['migrations'])} migration paths.", '']
+    for item in record['files'][:30]:
+        path = json.dumps(item['path'][:200], ensure_ascii=True).replace('`', '\\u0060')
+        lines.append(f"- {item['status']}: `{path}`")
+    if len(record['files']) > 30:
+        lines.append(f"- ... {len(record['files']) - 30} more files in the artifact")
+    lines.append('\nInformational only; GitHub and reviewed source remain authoritative.\n')
+    with destinations[1].open('a') as stream:
+        stream.write('\n'.join(lines))
+    return record
 
 
 def query_index(repo, query, revision='HEAD'):
@@ -524,13 +559,19 @@ def main():
     needs = sub.add_parser('needs-parser')
     needs.add_argument('--metadata-json', required=True)
     needs.add_argument('--github-output')
+    snap = sub.add_parser('snapshot')
+    snap.add_argument('--metadata-json', required=True)
+    snap.add_argument('--output', required=True)
+    snap.add_argument('--summary', required=True)
     index = sub.add_parser('index')
     index.add_argument('--revision', default='HEAD')
     query = sub.add_parser('query')
     query.add_argument('--query', required=True)
     query.add_argument('--revision', default='HEAD')
     args = parser.parse_args()
-    if args.command in ('generate', 'check'):
+    if args.command == 'snapshot':
+        result = snapshot(args.repo, _loads(Path(args.metadata_json).read_text()), args.output, args.summary)
+    elif args.command in ('generate', 'check'):
         metadata = _loads(Path(args.metadata_json).read_text()) if args.metadata_json else None
         pr = args.pr or (metadata.get('number') if metadata else None)
         if metadata and 'pull_request' in metadata:

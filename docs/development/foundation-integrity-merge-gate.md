@@ -23,7 +23,7 @@ The repository path communicates the normal CI route:
 | `.agents/**`, `AGENTS.md` and normal engineering files | Smoke + applicable engineering CI |
 | unknown, empty or unclassifiable diffs | route job fails; Smoke still runs |
 
-Exact allowlisted non-executable instruction/operating documentation and the current event's generated PR-history record use Smoke without Application CI. The allowlist and unsafe-mode/deletion guards live in the single router. Smoke still checks instruction contracts and exact-event provenance; arbitrary JSON and capability maps are not exempt. See [CI routing details](foundation-integrity-ci.md#ci-routing).
+Exact allowlisted non-executable instruction/operating documentation and the current event's legacy PR-history record use Smoke without Application CI. The allowlist and unsafe-mode/deletion guards live in the single router. Smoke checks instruction contracts and current routing; arbitrary JSON and capability maps are not exempt. See [CI routing details](foundation-integrity-ci.md#ci-routing).
 
 Classification is explicit. Python regression tests retain Application CI unless explicitly classified as Foundation machinery. Foundation Full tests and tooling are named directly in the classifier so governance-owned changes can skip Application CI. No PR path selects Foundation Full. Unknown paths and unreadable ranges fail the required route job.
 
@@ -40,7 +40,7 @@ Smoke runs the path-classification regression tests and checks router identity, 
 
 ## Automatic implementation knowledge
 
-Foundation Smoke regenerates each PR's committed history record from the event's exact base/head using the pinned Elixir parser. A mismatch, invalid ticket metadata or missing record fails the existing required gate. It validates capability-map source hashes and runs extraction regressions. The job has read-only contents permission, no Plane credentials and no branch mutation. See [knowledge](knowledge/README.md) for generation, current index queries and known extraction limits. Independent review verifies semantic claims separately.
+Foundation Smoke validates capability-map source hashes and runs extraction regressions when the parser is needed. It generates an informational snapshot from the event base and real head, with failures nonblocking. The job has read-only contents permission, no Plane credentials and no branch mutation. Existing committed history remains available, but new records are not required. See [knowledge](knowledge/README.md) for snapshots, current index queries and extraction limits. Independent review verifies semantic claims separately.
 
 ## Foundation Full
 

@@ -77,19 +77,28 @@ class AgentInstructionContractTests(unittest.TestCase):
         self.assertIn('after applicable local checks pass', self.ticket)
         self.assertIn('Do not self-certify merge authority', self.ticket)
         self.assertIn('Any head change', self.ticket)
-        self.assertIn('tools.knowledge_capture check --metadata-json "$GITHUB_EVENT_PATH"', self.ticket)
-        self.assertIn('mechanical history-only commit', self.verify)
+        self.assertIn('canonical capability map', self.ticket)
+        self.assertIn('CI generates informational', self.ticket)
+        self.assertIn('No local PR-history generation is required', self.ticket)
+        self.assertIn('exact final head and current base', self.verify)
+        self.assertNotIn('tools.knowledge_capture check --metadata-json', self.ticket)
+        self.assertNotIn('mechanical history-only commit', self.verify)
+        workflow = (ROOT / '.github/workflows/foundation-integrity.yml').read_text()
+        self.assertIn('tools.knowledge_capture snapshot', workflow)
+        self.assertIn('actions/upload-artifact@v4', workflow)
+        self.assertIn('continue-on-error: true', workflow)
+        self.assertNotIn('tools.knowledge_capture check --metadata-json', workflow)
 
     def test_handoff_sequence_and_cost_controls_are_consistent(self):
         for document in (self.agents, self.ticket, self.verify):
-            self.assertIn('local verification → local OCR → exact-head hosted CI → independent Master Gate', document)
+            self.assertIn('local verification → optional OCR → required exact-head hosted CI → required independent Master Gate', document)
             self.assertIn('Draft', document)
             self.assertIn('.agents/skills/code-change-verification/scripts/handoff.py', document)
         for term in ('100,000', 'concurrency 1', 'soft', 'GitHub Actions', 'ocr.run-manifest/v1',
-                     'warnings', 'failed/waived', 'T3Code', 'source-changing correction'):
+                     'warnings', 'failed/waived', 'T3Code', 'source-changing correction', 'NOT_RUN'):
             self.assertIn(term, self.agents)
         for term in ('preview --budget 100000', '--effort low --concurrency 1', '--max-tokens-budget 100000',
-                     '--disposition-review', 'no API-key fallback', 'no eligible files', 'fresh session'):
+                     '--disposition-review', 'API-key fallback', 'no eligible files', 'fresh session', 'gpt-6-luna', 'medium'):
             self.assertIn(term.lower(), self.verify.lower())
         self.assertIn('python -m unittest tests.test_agent_handoff -v',
                       (ROOT / '.github/workflows/foundation-integrity.yml').read_text())
@@ -137,7 +146,7 @@ class AgentInstructionContractTests(unittest.TestCase):
     def test_final_verification_has_one_owner_and_preserves_helper_execution(self):
         for document in (self.ticket, self.verify):
             for term in ('TDD', 'focused', 'ticket-implement', 'code-change-verification',
-                         'independent Master Gate', 'local verification → local OCR → exact-head hosted CI → independent Master Gate'):
+                         'independent Master Gate', 'local verification → optional OCR → required exact-head hosted CI → required independent Master Gate'):
                 self.assertIn(term, document)
         for term in ('single owner', 'where installed and applicable', 'handoff.py',
                      'Do not manually run broad gates before invoking', 'local` stage twice',
@@ -157,11 +166,9 @@ class AgentInstructionContractTests(unittest.TestCase):
 
     def test_helper_final_local_stage_uses_committed_candidate_before_ocr(self):
         preparation = self.ticket.split('## 8.', 1)[1].split('## 9.', 1)[0]
-        self.assertIn('After focused development checks pass, commit the stable source', preparation)
-        self.assertIn('before its final `local` stage', preparation)
+        self.assertIn('commit it before final verification', preparation)
         self.assertIn('clean committed candidate', preparation)
-        self.assertIn('Only after applicable final local checks pass', preparation)
-        self.assertIn('run the existing OCR checkpoint', preparation)
+        self.assertIn('OCR may be selected as optional advisory evidence', preparation)
 
     def test_smoke_runs_instruction_contract_tests(self):
         self.assertIn('python -m unittest tests.test_agent_instruction_contract -v',

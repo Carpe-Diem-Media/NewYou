@@ -48,6 +48,52 @@ defmodule NewYou.Proof.FixtureConnectionTest do
     end)
   end
 
+  test "a timed out bounded worker does not disconnect the fixture owner" do
+    capture_log(fn ->
+      P805.with_fixture(fn ->
+        parent = self()
+        reference = make_ref()
+        {:ok, registration} = Identity.register(P805.request())
+        Process.put(:isolated_worker_account, registration.account_id)
+        assert %{rows: [[owner_backend]]} = Repo.query!("SELECT pg_backend_pid()")
+
+        callback =
+          NewYou.Proof.RegistrationSeam.inherit(fn ->
+            assert %{rows: [[worker_backend]]} = Repo.query!("SELECT pg_backend_pid()")
+            send(parent, {reference, :worker_ready, worker_backend})
+            Repo.query!("SELECT pg_sleep(1)", [], timeout: 25)
+          end)
+
+        task =
+          Task.Supervisor.async_nolink(NewYou.Identity.MagicLogin.RequestSupervisor, callback)
+
+        assert_receive {^reference, :worker_ready, worker_backend}, 2_000
+        refute worker_backend == owner_backend
+        assert {:exit, {error, _stacktrace}} = Task.yield(task, 2_000)
+
+        assert match?(
+                 %DBConnection.ConnectionError{message: message} when is_binary(message),
+                 error
+               ) or
+                 match?(%Postgrex.Error{postgres: %{code: :query_canceled}}, error)
+
+        if match?(%DBConnection.ConnectionError{}, error),
+          do: assert(error.message =~ "timed out")
+
+        assert %{rows: [[1]]} = Repo.query!("SELECT 1")
+        refute Repo.in_transaction?()
+      end)
+    end)
+
+    account_id = Process.delete(:isolated_worker_account)
+
+    Sandbox.unboxed_run(Repo, fn ->
+      assert P805.scalar("SELECT count(*) FROM accounts WHERE id = $1", [
+               Ecto.UUID.dump!(account_id)
+             ]) == 0
+    end)
+  end
+
   test "fixture guardian retries a transient teardown failure" do
     attempts = :atomics.new(1, [])
     parent = self()
@@ -93,11 +139,13 @@ defmodule NewYou.Proof.FixtureConnectionTest do
   test "persistent fixture teardown failure remains unconfirmed" do
     attempts = :atomics.new(1, [])
     parent = self()
+    recoverable = :atomics.new(1, [])
 
     Process.put({P805, :fixture_cleanup_hook}, fn ->
       attempt = :atomics.add_get(attempts, 1, 1)
       send(parent, {:fixture_cleanup_attempt, attempt})
-      raise "synthetic persistent teardown failure"
+      if :atomics.get(recoverable, 1) == 0, do: raise("synthetic persistent teardown failure")
+      :ok
     end)
 
     on_exit(fn -> Process.delete({P805, :fixture_cleanup_hook}) end)
@@ -109,6 +157,16 @@ defmodule NewYou.Proof.FixtureConnectionTest do
     assert_receive {:fixture_cleanup_attempt, 1}, 5_000
     assert_receive {:fixture_cleanup_attempt, 2}, 5_000
     assert :atomics.get(attempts, 1) == 2
+    fixture = P805.fixture_status()
+    assert fixture.phase == :quarantined
+
+    assert_raise RuntimeError, "P8-05 fixture already active or quarantined", fn ->
+      P805.with_fixture(fn -> :unexpected end)
+    end
+
+    :atomics.put(recoverable, 1, 1)
+    assert :ok = P805.reconcile_fixture(fixture.reference)
+    assert P805.fixture_status() == :available
   end
 
   test "setup failure before checkout restores fixture process and environment state" do
@@ -145,6 +203,7 @@ defmodule NewYou.Proof.FixtureConnectionTest do
 
     attempts = :atomics.new(1, [])
     parent = self()
+    recoverable = :atomics.new(1, [])
 
     {case_result, cleanup} =
       NewYou.Proof.SelfTest.execute_registered_case(
@@ -159,7 +218,10 @@ defmodule NewYou.Proof.FixtureConnectionTest do
               })
             end
 
-            raise "synthetic persistent teardown failure"
+            if :atomics.get(recoverable, 1) == 0,
+              do: raise("synthetic persistent teardown failure")
+
+            :ok
           end)
 
           registration.callback.()
@@ -179,11 +241,15 @@ defmodule NewYou.Proof.FixtureConnectionTest do
              ) == 1
     end)
 
-    P805.with_fixture(fn -> Enum.each(operation_ids, &P805.track_operation/1) end)
+    fixture = P805.fixture_status()
+    assert fixture.phase == :quarantined
+    assert fixture.projection_key == projection_key
+    assert Enum.sort(fixture.operations) == Enum.sort(operation_ids)
+    :atomics.put(recoverable, 1, 1)
+    assert :ok = P805.reconcile_fixture(fixture.reference)
+    assert P805.fixture_status() == :available
 
     Sandbox.unboxed_run(Repo, fn ->
-      :ok = P805.cleanup_test_analytics_projection(projection_key)
-
       assert P805.scalar(
                "SELECT count(*) FROM p817_privacy_projections WHERE projection_key = $1",
                [projection_key]
