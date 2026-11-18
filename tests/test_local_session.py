@@ -35,6 +35,135 @@ def hold_lock(path, entered, finish):
 
 
 class LocalSessionTests(unittest.TestCase):
+    def admission_adapters(self, directory, status="[]"):
+        root = Path(local_session.__file__).resolve().parent.parent
+
+        def probe(arguments, **_kwargs):
+            if arguments[0] == "git":
+                value = str(root) if "--show-toplevel" in arguments else directory
+                return SimpleNamespace(returncode=0, stdout=value)
+            self.assertEqual(arguments[-2:], ["slots", "status"])
+            self.assertFalse(lock_available(Path(directory) / "newyou-build.lock"))
+            return SimpleNamespace(returncode=0, stdout=status)
+        return probe
+
+    def test_normal_and_explicit_heavy_routes_retain_the_same_build_lock(self):
+        for prefix, route in (
+            (["test", "--"], ["run", "test", "--"]),
+            (["dev", "--"], ["run", "dev", "--"]),
+            (["test", "--heavy", "--"], ["slots", "run", "--heavy", "test", "--"]),
+        ):
+            with self.subTest(prefix=prefix), tempfile.TemporaryDirectory() as directory:
+                command = ["mix", "do", "ecto.migrate,", "run", "probe.exs", "--heavy"]
+                lock = Path(directory) / "newyou-build.lock"
+
+                def execute(program, arguments):
+                    self.assertEqual(program, "mise")
+                    self.assertEqual(arguments, ["mise", "exec", "--",
+                                                str(Path.home() / ".local/bin/devcore-project"),
+                                                *route, *command])
+                    self.assertFalse(lock_available(lock))
+                    # An exec child must retain the actual inherited lock descriptor.
+                    child = subprocess.Popen(
+                        [sys.executable, "-c",
+                         "import fcntl, os, sys; "
+                         "from pathlib import Path; "
+                         "target = os.stat(sys.argv[1]); "
+                         "fds = [int(p.name) for p in Path('/proc/self/fd').iterdir() "
+                         "if int(p.name) >= 10]; "
+                         "assert any(os.fstat(fd).st_ino == target.st_ino and "
+                         "os.fstat(fd).st_dev == target.st_dev for fd in fds); "
+                         "fd = os.open(sys.argv[1], os.O_RDWR); "
+                         "\ntry: fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)"
+                         "\nexcept BlockingIOError: sys.exit(0)"
+                         "\nraise SystemExit(1)", str(lock)],
+                        close_fds=False)
+                    child.wait(timeout=5)
+                    self.assertEqual(child.returncode, 0)
+
+                with patch.dict(os.environ, {}, clear=True), \
+                        patch.object(local_session.subprocess, "run", self.admission_adapters(directory)), \
+                        patch.object(local_session, "check_version") as version, \
+                        patch.object(local_session.os, "chdir"), \
+                        patch.object(local_session.os, "execvp", side_effect=execute) as launch:
+                    local_session.main([*prefix, *command])
+                    version.assert_called_once()
+                    launch.assert_called_once()
+                self.assertTrue(lock_available(lock))
+
+    def test_malformed_or_unsupported_wrapper_options_launch_nothing(self):
+        cases = [
+            [], ["test"], ["test", "--"], ["test", "--heavy"],
+            ["test", "--heavy", "--"], ["dev", "--heavy", "--", "true"],
+            ["--heavy", "test", "--", "true"],
+            ["test", "--heavy=true", "--", "true"],
+            ["test", "--heavy", "--heavy", "--", "true"],
+            ["test", "--retain", "--", "true"],
+            ["test", "--heavy", "--wait", "1", "--", "true"],
+            ["test", "mix", "test"],
+        ]
+        for arguments in cases:
+            with self.subTest(arguments=arguments), \
+                    patch.object(local_session.subprocess, "run") as probe, \
+                    patch.object(local_session.os, "execvp") as execute, redirect_stderr(StringIO()):
+                self.assertEqual(local_session.main(arguments), 2)
+                probe.assert_not_called()
+                execute.assert_not_called()
+
+    def test_explicit_heavy_rejects_nested_and_legacy_markers_before_admission(self):
+        for environment in ({"DEVCORE_SLOT_LEASE": "synthetic"},
+                            {"DEVCORE_SLOT_PARTIAL": ""},
+                            {"NEW_YOU_DATABASE_MODE": "legacy"}):
+            with self.subTest(environment=environment), patch.dict(os.environ, environment, clear=True), \
+                    patch.object(local_session.subprocess, "run") as probe, \
+                    patch.object(local_session.os, "execvp") as execute, redirect_stderr(StringIO()):
+                self.assertEqual(local_session.main(["test", "--heavy", "--", "true"]), 125)
+                probe.assert_not_called()
+                execute.assert_not_called()
+
+    def test_explicit_heavy_admission_failures_never_fall_back(self):
+        for failure in ("version", "declaration", "status", "exec"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as directory:
+                probe = self.admission_adapters(directory)
+                calls = []
+
+                def run(arguments, **kwargs):
+                    if failure == "status" and arguments[-2:] == ["slots", "status"]:
+                        return SimpleNamespace(returncode=1, stdout="private-placeholder")
+                    return probe(arguments, **kwargs)
+
+                def execute(*arguments):
+                    calls.append(arguments)
+                    raise OSError("private-placeholder")
+
+                output = StringIO()
+                with patch.dict(os.environ, {}, clear=True), \
+                        patch.object(local_session.subprocess, "run", run), \
+                        patch.object(local_session, "check_version",
+                                     side_effect=local_session.SessionError("unsupported version")
+                                     if failure == "version" else None), \
+                        patch.object(local_session.os, "chdir"), \
+                        patch.object(local_session.os, "execvp", execute), \
+                        patch.object(Path, "read_text", return_value="PROJECT_KEY=other"
+                                     if failure == "declaration" else
+                                     "PROJECT_KEY=new_you\nSLOT_POOL=.devcore/slots.json\n"), \
+                        redirect_stderr(output):
+                    self.assertEqual(local_session.main(["test", "--heavy", "--", "true"]), 125)
+                self.assertEqual(len(calls), 1 if failure == "exec" else 0)
+                self.assertNotIn("private-placeholder", output.getvalue())
+
+    def test_explicit_heavy_status_and_prior_jobs_fail_closed(self):
+        root = Path(local_session.__file__).resolve().parent.parent
+        for status in ('invalid json', '{}', '[null]',
+                       '[{"worktree": "' + str(root) + '", "state": "in_use", "jobs": {}}]'):
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as directory, \
+                    patch.dict(os.environ, {}, clear=True), \
+                    patch.object(local_session.subprocess, "run", self.admission_adapters(directory, status)), \
+                    patch.object(local_session, "check_version"), \
+                    patch.object(local_session.os, "execvp") as execute, redirect_stderr(StringIO()):
+                self.assertEqual(local_session.main(["test", "--heavy", "--", "true"]), 125)
+                execute.assert_not_called()
+
     def test_cancelling_a_waiter_preserves_the_current_holder(self):
         root = Path(local_session.__file__).resolve().parent.parent
         waiter = """import sys

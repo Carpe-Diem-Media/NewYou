@@ -2,6 +2,9 @@
 
 DevCore owns leases, descendants, credentials and cleanup. This wrapper owns only
 the worktree build lock and checks for unresolved prior work before admission.
+
+Usage: dev|test -- COMMAND, or test --heavy -- COMMAND for explicit heavy
+admission of compound commands through DevCore's separate capacity gate.
 """
 
 import contextlib
@@ -60,8 +63,12 @@ def check_jobs(root, rows):
 
 def main(arguments=None):
     arguments = list(sys.argv[1:] if arguments is None else arguments)
-    if len(arguments) < 3 or arguments[0] not in ("dev", "test") or arguments[1] != "--":
-        print("Usage: mise exec -- tools/newyou-local dev|test -- <command>", file=sys.stderr)
+    heavy = arguments[:3] == ["test", "--heavy", "--"]
+    command_start = 3 if heavy else 2
+    if (len(arguments) <= command_start or
+            (not heavy and (arguments[0] not in ("dev", "test") or arguments[1] != "--"))):
+        print("Usage: mise exec -- tools/newyou-local dev|test -- <command>\n"
+              "       mise exec -- tools/newyou-local test --heavy -- <command>", file=sys.stderr)
         return 2
 
     try:
@@ -93,7 +100,10 @@ def main(arguments=None):
                 raise SessionError("worktree allocation status is unavailable; no command launched")
             check_jobs(root, json.loads(status.stdout))
             os.chdir(root)
-            os.execvp("mise", ["mise", "exec", "--", str(tool), "run", arguments[0], "--", *arguments[2:]])
+            # DevCore parses run options before the profile's command remainder.
+            route = ["slots", "run", "--heavy", "test"] if heavy else ["run", arguments[0]]
+            os.execvp("mise", ["mise", "exec", "--", str(tool), *route, "--",
+                              *arguments[command_start:]])
     except KeyboardInterrupt:
         return 130
     except SessionError as error:
