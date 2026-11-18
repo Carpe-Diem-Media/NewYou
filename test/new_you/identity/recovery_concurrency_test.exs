@@ -19,7 +19,7 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.unverified_restart_proof() == :ok
   end
 
-  test "restarted recovery retries the same case after a bounded request loses its lease" do
+  test "restarted recovery rolls back an observed checkpoint cut before retrying the same case" do
     assert P815.unverified_restart_proof(interrupt_resume?: true) == :ok
   end
 

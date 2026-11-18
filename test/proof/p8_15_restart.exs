@@ -4,27 +4,19 @@ defmodule NewYou.Proof.P815RestartRequest do
   alias NewYou.{Identity, Repo}
 
   def run(input) do
-    interrupt_once(input)
-
-    Enum.reduce_while(1..3, :request_uncommitted, fn attempt, _ ->
-      # A neutral request may time out and disconnect its lease. Reacquire before
-      # observing durable state; acknowledgement alone never proves a commit.
-      request(input)
-      state = current_state(input)
-
-      cond do
-        attempt == 1 and input["interrupt_request"] == true and
-            (Process.get({__MODULE__, :interruption}) != :connection_lost or
-               state != :held_manual_review) ->
-          {:halt, :interruption_not_proven}
-
-        Atom.to_string(state) == input["expected_state"] ->
-          {:halt, requested_result(input, attempt)}
-
-        true ->
-          {:cont, :request_uncommitted}
-      end
+    NewYou.Proof.RecoverySeam.observe(fn stage ->
+      IO.puts("P815_PHASE_" <> (stage |> Atom.to_string() |> String.upcase()))
     end)
+
+    interrupt_once(input)
+    request(input)
+    state = current_state(input)
+
+    cond do
+      input["interrupt_request"] == true -> :interruption_not_proven
+      Atom.to_string(state) == input["expected_state"] -> :requested
+      true -> :request_uncommitted
+    end
   end
 
   defp request(input) do
@@ -39,28 +31,19 @@ defmodule NewYou.Proof.P815RestartRequest do
     end)
   end
 
-  defp requested_result(%{"interrupt_request" => true}, attempt) when attempt > 1,
-    do: :request_retried
-
-  defp requested_result(_input, _attempt), do: :requested
-
   defp interrupt_once(%{"interrupt_request" => true, "skip_interrupt" => false}) do
     Process.put(
       NewYou.Proof.RegistrationSeam,
       {:observe,
        fn ->
          Process.delete(NewYou.Proof.RegistrationSeam)
-         Process.put({__MODULE__, :interruption}, :checkpoint_reached)
          IO.puts("P815_CHECKPOINT")
-         Process.sleep(400)
+         IO.puts("P815_INTERRUPT_READY")
 
-         try do
-           Repo.query!("SELECT 1")
-         rescue
-           error in [DBConnection.ConnectionError] ->
-             Process.put({__MODULE__, :interruption}, :connection_lost)
-             IO.puts("P815_CONNECTION_LOST")
-             reraise error, __STACKTRACE__
+         # The parent cuts this registered child only after receiving both
+         # complete markers. Its existing deadline bounds a missing handshake.
+         receive do
+           :release_checkpoint -> :ok
          end
        end}
     )

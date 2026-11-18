@@ -266,6 +266,12 @@ defmodule NewYou.Proof.P815Port do
             {cleanup, exit_status} = terminate(port, pid, group(output))
             result(:output_overflow, prefix(output), started, cleanup, exit_status)
 
+          interrupt_ready?(output) and Port.info(port) != nil ->
+            # Only an explicit, complete checkpoint handshake permits a cut.
+            # Cleanup targets the process group verified before stdin delivery.
+            {cleanup, exit_status} = terminate(port, pid, group(output))
+            result(:interrupted, output, started, cleanup, exit_status)
+
           true ->
             read(port, pid, output, started, deadline)
         end
@@ -288,6 +294,15 @@ defmodule NewYou.Proof.P815Port do
         {cleanup, exit_status} = terminate(port, pid, group(output))
         result(:timeout, output, started, cleanup, exit_status)
     end
+  end
+
+  defp interrupt_ready?(output) do
+    complete_lines = output |> :binary.split("\n", [:global]) |> Enum.drop(-1)
+
+    Enum.all?(
+      ["P815_STARTED", "P815_OPERATION", "P815_CHECKPOINT", "P815_INTERRUPT_READY"],
+      &(&1 in complete_lines)
+    )
   end
 
   defp terminate(port, supervisor_pid, group_pid) do
@@ -456,8 +471,30 @@ defmodule NewYou.Proof.P815Port do
       operation?: "P815_OPERATION" in lines,
       checkpoint?: "P815_CHECKPOINT" in lines,
       connection_lost?: "P815_CONNECTION_LOST" in lines,
-      failure_class: failure_class(lines)
+      failure_class: failure_class(lines),
+      phases: phases(lines)
     }
+  end
+
+  defp phases(lines) do
+    # Never return arbitrary child output, identifiers or exception messages.
+    allowed = %{
+      "P815_PHASE_TRANSACTION_ENTERED" => :transaction_entered,
+      "P815_PHASE_ACCOUNT_LOCKED" => :account_locked,
+      "P815_PHASE_RESUME_VERIFIED_CHANNEL" => :resume_verified_channel,
+      "P815_PHASE_AWAIT_PROOF" => :await_proof,
+      "P815_PHASE_CHECKPOINT" => :checkpoint,
+      "P815_PHASE_TRANSACTION_RETURNED" => :transaction_returned,
+      "P815_PHASE_TRANSACTION_ERROR" => :transaction_error,
+      "P815_PHASE_TRANSACTION_EXCEPTION" => :transaction_exception
+    }
+
+    Enum.flat_map(lines, fn line ->
+      case Map.fetch(allowed, line) do
+        {:ok, phase} -> [phase]
+        :error -> []
+      end
+    end)
   end
 
   defp failure_class(lines) do

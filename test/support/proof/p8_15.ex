@@ -186,16 +186,40 @@ defmodule NewYou.Proof.P815 do
       assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).satisfied_assurance == 0
       assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
       verified_account = Ash.get!(Account, registration.account_id, authorize?: false)
+      before_resume = Ash.get!(RecoveryCase, recovery.id, authorize?: false)
       interrupted? = Keyword.get(opts, :interrupt_resume?, false)
-      expected = if interrupted?, do: :request_retried, else: :requested
 
-      assert restart_call(
-               Map.merge(input, %{
-                 expected_state: "proof_pending",
-                 interrupt_request: interrupted?,
-                 skip_interrupt: Keyword.get(opts, :skip_interrupt?, false)
-               })
-             ) == expected
+      if interrupted? do
+        assert restart_call(
+                 Map.merge(input, %{
+                   expected_state: "proof_pending",
+                   interrupt_request: true,
+                   skip_interrupt: Keyword.get(opts, :skip_interrupt?, false)
+                 })
+               ) == :request_interrupted
+
+        # A separate connection observes rollback after the registered OS group
+        # is gone, before any retry can create the final proof or intent.
+        rolled_back = Ash.get!(RecoveryCase, recovery.id, authorize?: false)
+        assert rolled_back == before_resume
+        assert rolled_back.state == :held_manual_review
+        assert rolled_back.proof_jti == nil
+        assert rolled_back.operation_id == id
+        assert rolled_back.satisfied_assurance == 0
+        assert Ash.get!(Account, registration.account_id, authorize?: false) == verified_account
+
+        assert P805.scalar("SELECT count(*) FROM tokens WHERE recovery_case_id=$1", [
+                 Ecto.UUID.dump!(recovery.id)
+               ]) == 0
+
+        assert P805.scalar(
+                 "SELECT count(*) FROM message_intents WHERE source_operation_id=$1 AND role='account_recovery'",
+                 [Ecto.UUID.dump!(id)]
+               ) == 0
+      end
+
+      # Retry in a fresh VM with exactly the original operation and case IDs.
+      assert restart_call(Map.put(input, :expected_state, "proof_pending")) == :requested
 
       resumed = Ash.get!(RecoveryCase, recovery.id, authorize?: false)
       assert resumed.operation_id == id
@@ -797,15 +821,20 @@ defmodule NewYou.Proof.P815 do
 
     case NewYou.Proof.P815Port.run(executable, ["run", "test/proof/p8_15_restart.exs"], payload) do
       %{
-        status: :ok,
+        status: :interrupted,
         cleanup: :confirmed,
-        marker: :request_retried,
         started?: true,
         operation?: true,
         checkpoint?: true,
-        connection_lost?: true
+        phases: [
+          :transaction_entered,
+          :account_locked,
+          :resume_verified_channel,
+          :await_proof,
+          :checkpoint
+        ]
       } ->
-        :request_retried
+        :request_interrupted
 
       %{status: :ok, cleanup: :confirmed, marker: marker, started?: true, operation?: true} =
           diagnostic ->
