@@ -115,22 +115,22 @@ EXPECTED_PROMOTED_GOVERNANCE = {
 }
 EXPECTED_CURRENT_GOVERNANCE = {
     "PLATFORM_PRODUCT_LAW": {
-        "repository_path": "docs/governance/product/00_PLATFORM_v1.18.0.md",
-        "sha256": "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f", "semver": "1.18.0",
+        "repository_path": "docs/governance/product/00_PLATFORM_v1.19.0.md",
+        "sha256": "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9", "semver": "1.19.0",
     },
     "PRODUCT_DECISIONS": {
-        "repository_path": "docs/governance/product/01_DECISIONS_v1.18.0.md",
-        "sha256": "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0", "semver": "1.18.0",
+        "repository_path": "docs/governance/product/01_DECISIONS_v1.19.0.md",
+        "sha256": "ed90a1ec6adb201de094f130fc091c10bca6145e142a6e225fc840794553f4c2", "semver": "1.19.0",
     },
 }
 EXPECTED_CURRENT_GOVERNANCE_PREDECESSORS = {
     "PLATFORM_PRODUCT_LAW": {
-        "repository_path": "docs/governance/product/00_PLATFORM_v1.17.0.md",
-        "sha256": "ad38c25c49ba9d1de40e90d74b494705156605af724bc0e1d5a66d38b81cc39f",
+        "repository_path": "docs/governance/product/00_PLATFORM_v1.18.0.md",
+        "sha256": "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f",
     },
     "PRODUCT_DECISIONS": {
-        "repository_path": "docs/governance/product/01_DECISIONS_v1.17.0.md",
-        "sha256": "1d2c3cf6ec3ea4cd318ceccda8fa0a9b2c9797eec8f934a399e8d59f93090d8b",
+        "repository_path": "docs/governance/product/01_DECISIONS_v1.18.0.md",
+        "sha256": "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0",
     },
 }
 RECOVERY_PROPOSAL_PATH = "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md"
@@ -1243,7 +1243,7 @@ def validate_development(root: Path) -> dict[str, Any]:
             text = successor.read_text(encoding="utf-8")
             record(
                 f"**Predecessor:** `{current_predecessor['repository_path']}`" in text
-                and f"**SemVer transition:** `v1.17.0 → v1.18.0`" in text,
+                and f"**SemVer transition:** `v1.18.0 → v1.19.0`" in text,
                 "current Product authority lineage mismatch",
                 findings,
             )

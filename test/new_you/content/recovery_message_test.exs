@@ -14,7 +14,7 @@ defmodule NewYou.Content.RecoveryMessageTest do
     {:ok, root: root}
   end
 
-  test "current v1.18 authority accepts approved content and rejects changed v1.17 lineage", %{
+  test "current v1.19 authority accepts approved content and rejects changed v1.17 lineage", %{
     root: root
   } do
     assert {:ok, _} = RecoveryMessage.binding(:account_recovery, "en")

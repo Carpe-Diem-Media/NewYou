@@ -22,7 +22,7 @@ defmodule NewYou.Content.MagicLoginMessageTest do
     {:ok, root: root}
   end
 
-  test "current v1.18 authority accepts approved content and rejects changed v1.17 lineage", %{
+  test "current v1.19 authority accepts approved content and rejects changed v1.17 lineage", %{
     root: root
   } do
     assert {:ok, _} = MagicLoginMessage.binding("en")
@@ -47,7 +47,7 @@ defmodule NewYou.Content.MagicLoginMessageTest do
     end
   end
 
-  test "preserves prior authority lineage under the current Product v1.17 successor", %{
+  test "preserves prior authority lineage under the current Product v1.19 successor", %{
     root: root
   } do
     predecessor_digests = %{

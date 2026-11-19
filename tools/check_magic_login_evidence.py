@@ -242,13 +242,6 @@ def validate_development(root: Path, packet: dict) -> list[str]:
                 "approved_amendment_path": "docs/delivery/content-evidence/content_media/email_change_messages/PRODUCT_CLASSIFICATION_PROPOSAL_v1.md",
                 "approved_amendment_sha256": "5859094922ada891cdca887cf140d457991fa0fe5fcc76ea34ff4dd32ad8a8b1",
             }
-            check(
-                route.get("repository_path") == expected_current["repository_path"]
-                and route.get("canonical_filename") == Path(expected_current["repository_path"]).name
-                and route.get("sha256") == expected_current["sha256"]
-                and route.get("semver") == expected_current["semver"],
-                "approved authority route mismatch",
-            )
             successor_bytes = load_artifact(
                 {
                     "path": expected_current["repository_path"],
@@ -273,6 +266,39 @@ def validate_development(root: Path, packet: dict) -> list[str]:
                     "path": expected_current["approved_amendment_path"],
                     "sha256": expected_current["approved_amendment_sha256"],
                 }
+            )
+            # Preserve the checked historical chain while requiring the exact
+            # current route. Later Product law does not enlarge message use.
+            for version, digests in (
+                ("1.18.0", {
+                    "PLATFORM_PRODUCT_LAW": "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f",
+                    "PRODUCT_DECISIONS": "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0",
+                }),
+                ("1.19.0", {
+                    "PLATFORM_PRODUCT_LAW": "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9",
+                    "PRODUCT_DECISIONS": "ed90a1ec6adb201de094f130fc091c10bca6145e142a6e225fc840794553f4c2",
+                }),
+            ):
+                path = prior_authority["repository_path"].replace("v1.15.0", "v" + version)
+                successor_bytes = load_artifact({"path": path, "sha256": digests[document["document_id"]]})
+                check(
+                    f"**Predecessor:** `{expected_current['repository_path']}`" in successor_bytes.decode("utf-8")
+                    and f"**SemVer transition:** `v{expected_current['semver']} → v{version}`" in successor_bytes.decode("utf-8"),
+                    "current authority successor lineage mismatch",
+                )
+                expected_current = {
+                    "repository_path": path,
+                    "sha256": digests[document["document_id"]],
+                    "semver": version,
+                }
+            load_artifact({"path": "docs/governance/product/proposals/well-157/PHASE9_EMAIL_APPLICABILITY_v0.1.0_PROPOSED.md", "sha256": "a0d9c2e2ce038bddf36386974f1b1d02f24896e336b3f5214cf537463065909e"})
+            load_artifact({"path": "docs/governance/product/proposals/well-157/EXACT_BINDINGS_v0.1.0.json", "sha256": "75aaffb695fd2e49d20f9a6f8d91350e05f0ce19ef2033aa76e9d18b4024a027"})
+            check(
+                route.get("repository_path") == expected_current["repository_path"]
+                and route.get("canonical_filename") == Path(expected_current["repository_path"]).name
+                and route.get("sha256") == expected_current["sha256"]
+                and route.get("semver") == expected_current["semver"],
+                "approved authority route mismatch",
             )
     except (KeyError, TypeError, ValueError, OSError, StopIteration, IndexError) as error:
         errors.append("malformed approval evidence: " + str(error))

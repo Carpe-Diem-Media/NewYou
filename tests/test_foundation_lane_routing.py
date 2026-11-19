@@ -106,6 +106,7 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
             "tools/check_magic_login_evidence.py",
             "tools/check_password_reset_message_evidence.py",
             "tools/check_email_change_message_evidence.py",
+            "tools/check_well157_email_applicability.py",
         ]:
             with self.subTest(path=path):
                 self.assertEqual("application", classify_path(path))

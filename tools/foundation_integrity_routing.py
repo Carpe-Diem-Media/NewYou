@@ -71,6 +71,7 @@ APPLICATION_FILES = frozenset(
         "tools/check_magic_login_evidence.py",
         "tools/check_password_reset_message_evidence.py",
         "tools/check_email_change_message_evidence.py",
+        "tools/check_well157_email_applicability.py",
         ".github/workflows/hex-security-audit.yml",
         "mix.exs",
         "mix.lock",
