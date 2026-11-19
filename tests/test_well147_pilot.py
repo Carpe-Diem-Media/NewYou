@@ -231,6 +231,37 @@ class PilotTests(unittest.TestCase):
             with self.assertRaisesRegex(pilot.Refused,'pending pair'):
                 pilot.preflight(read,'/fake',expected_source='a'*40,pending_jobs={pilot.WORKTREES[0]:pending})
 
+    def test_preflight_accepts_only_settled_free_pair_history(self):
+        import hashlib
+        rows = [dict(slot=slot, lease_id=lease, generation=generation,
+                jobs={job: {}}, state='quarantined', manifest=hashlib.sha256(b'{}').hexdigest(),
+                catalog=dict(database_oid=db_oid, role_oid=role_oid))
+                for slot, lease, generation, job, db_oid, role_oid in pilot.QUARANTINES]
+        row = dict(slot=4, worktree=pilot.WORKTREES[1], state='free', jobs={},
+                   diagnosis='exact registered generation removed')
+        rows.append(row)
+        def read(argv, cwd):
+            if argv[0] == 'git':
+                return cwd if '--show-toplevel' in argv else 'a'*40 if 'HEAD' in argv else ''
+            if '--version' in argv:
+                return 'devcore-project 1.2.1'
+            if argv[-1] == 'manifest':
+                return json.dumps(dict(manifest={}, sha256=pilot.MANIFEST, heavy_limit=2, port_conflicts=[]))
+            return json.dumps(rows)
+        with patch.object(pilot, 'CHECKSUM', hashlib.sha256(b'fake').hexdigest()), \
+             patch.object(pilot, 'MANIFEST', hashlib.sha256(b'{}').hexdigest()), \
+             patch.object(Path, 'read_bytes', return_value=b'fake'):
+            self.assertFalse(pilot.preflight(read, '/fake', expected_source='a'*40)['execution_clearance'])
+            for change in ({'jobs': {'foreign': {}}}, {'diagnosis': 'cleanup uncertain'},
+                           {'state': 'retained'}, {'state': 'quarantined'}):
+                with self.subTest(change=change):
+                    original = row.copy()
+                    row.update(change)
+                    with self.assertRaises(pilot.Refused):
+                        pilot.preflight(read, '/fake', expected_source='a'*40)
+                    row.clear()
+                    row.update(original)
+
     def test_quarantine_drift(self):
         with self.assertRaisesRegex(pilot.Refused, 'quarantine'):
             pilot.quarantine_check([])

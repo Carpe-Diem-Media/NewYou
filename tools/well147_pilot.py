@@ -81,6 +81,10 @@ def preflight(read, tool, worktrees=WORKTREES, *, expected_source=None, owned_jo
         if row.get('worktree') in worktrees:
             expected = (owned_jobs or {}).get(row['worktree'])
             pending = (pending_jobs or {}).get(row['worktree'])
+            if row.get('state') == 'free' and expected is None and pending is None:
+                require(row.get('jobs') == {} and row.get('diagnosis') ==
+                        'exact registered generation removed', 'unsettled pair history')
+                continue
             if pending is not None and not row.get('jobs') and row.get('state') in ('preparing', 'ready'):
                 require(row.get('lease_id') == pending['lease']
                         and row.get('generation') == pending['generation']
