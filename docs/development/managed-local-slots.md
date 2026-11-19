@@ -63,7 +63,7 @@ and preserving a private original-ACL receipt. Rechecks confirmed owner CONNECT
 true, PUBLIC CONNECT false and unchanged NOCREATEDB/NOSUPERUSER flags. DevCore
 doctor passed authenticated DEV and TEST reconnection afterward. Existing owner
 connections were preserved. No rows, databases, passwords or other privileges
-changed. Managed-role denial against legacy TEST still needs the live pilot.
+changed. At that checkpoint, managed-role denial against legacy TEST had not yet been verified.
 
 The owner also authorized the exact disposable-generation contract in chat. The
 [authenticated approval](https://github.com/Carpe-Diem-Media/devcore-project/pull/6#issuecomment-6952421506)
@@ -75,7 +75,7 @@ generations were cleaned through the approved exact-target procedure. The first
 run's two legacy-only assertions failed before being corrected; its diagnosis is
 preserved rather than counted as a pass.
 
-The parallel pilot has not passed. One attempt failed private environment
+The initial parallel pilot did not pass. One attempt failed private environment
 rendering while the other progressed. A diagnostic staggered attempt committed
 distinct synthetic fixtures and completed browser login, but the probe protocol
 stalled behind the output redactor. Its supervisor ownership was later lost;
@@ -96,6 +96,32 @@ last recorded disabled, with two quarantined generations preserved. Re-enable
 only after the exact-target reconciliation and authorized pilot gates below.
 Quarantine reconciliation requires an independently reviewed procedure for its exact targets;
 do not erase registry records or bypass the recovery guards.
+
+## Later bounded verification evidence
+
+At source `bbcc272a7973bf1c1099564987a326f0bebae1e6`, against base
+`fc8e12fb2b5710322f8011fdcfff4322cbfd244d`, the owner separately authorized
+one six-file diagnostic and one later canonical fast/deep invocation on
+2026-11-19. The diagnostic passed 79 tests. The canonical executor passed 139
+focused Python tests, the complete fast gate with 1,046 application tests, and
+`check.deep` with zero Dialyzer errors or skips. Each successful managed
+generation received ordinary automatic cleanup, followed by independent catalog
+and registry checks. Admission was disabled afterward. Original quarantines 1
+and 2 and retained pilot B remained unchanged. Catalog checks also confirmed the
+managed roles had no legacy TEST CONNECT privilege.
+
+The earlier browser failure did not reproduce. Existing asset files were present
+and unchanged during the diagnostic, so these results do not establish the old
+failure's cause. The full fast run placed asset executables inside the selected
+worktree build directory and left no downloader binaries in the source root.
+
+These observations supersede earlier pending-execution statements only within
+this measured scope. The recorded single-job window and resource samples do not
+certify two simultaneous full suites. Keep heavy engineering work bounded to one
+until further reviewed admission proof. No routine activation, quarantine
+reconciliation, hosted CI, founder Master Gate, merge or resulting-main proof is
+certified by these local results. The canonical capability map records the exact
+source and proof limits; raw diagnostic evidence remains private.
 
 ## Verification consumers
 
