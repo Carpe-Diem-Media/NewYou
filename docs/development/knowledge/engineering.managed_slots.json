@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "bbcc272a7973bf1c1099564987a326f0bebae1e6",
-    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined. Their reconciliation, unrestricted activation, PR approval and merge are not certified; later proof entries describe only specific separately authorized ordinary-generation operations. Later bounded source repairs extract existing configuration, PLT-input and probe predicates without changing guards or errors. Settled free allocation history requires an empty jobs map and the exact registered-cleanup diagnosis. Failure-log inspection preserves full private logs while reading a bounded final-line tail under the existing total-size ceiling. Historical pilot and failed engineering-attempt evidence do not certify this revised candidate. LocalConfig documents two independently assessed Sobelow false positives with function-scoped annotations: the workstation-owned fixed verifier command and source-relative declaration read. Runtime hint substitution and malformed identifier tests preserve those trust boundaries; the installed live-verifier test remains excluded from standalone source proof. The later exact-source local canonical results are recorded below; hosted and activation proof remain incomplete. WELL-147 maintains shared source references after bounded browser diagnostic checkpoints. The migration rollback fixture uses its session temporary namespace under existing runtime grants, and only the two new proof helpers are added to existing test-ignore filters. Existing application, Domain and migration semantics are unchanged. The authorized targeted run at bbcc272a passed 79 tests, including the repaired temporary-table fixture and both real EN/AF browser journeys. The earlier browser failure was not reproduced, so its cause remains unknown. Explicit consumer asset executable paths keep tool downloads under the selected worktree build directory with DevCore build-path overrides. The earlier engineering suite failed four tests. A later canonical invocation at bbcc272a passed 139 focused Python tests, the complete fast gate with 1046 application tests, and the deep gate with zero Dialyzer errors or skips. These are local code results, not hosted CI, Master Gate, activation or full delivery certification."
+    "git_sha": "e0743f81bcdfc9bf57aaca977650dd5d90e5aca5",
+    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined. Their reconciliation, unrestricted activation, PR approval and merge are not certified; later proof entries describe only specific separately authorized ordinary-generation operations. Later bounded source repairs extract existing configuration, PLT-input and probe predicates without changing guards or errors. Settled free allocation history requires an empty jobs map and the exact registered-cleanup diagnosis. Failure-log inspection preserves full private logs while reading a bounded final-line tail under the existing total-size ceiling. Historical pilot and failed engineering-attempt evidence do not certify this revised candidate. LocalConfig documents two independently assessed Sobelow false positives with function-scoped annotations: the workstation-owned fixed verifier command and source-relative declaration read. Runtime hint substitution and malformed identifier tests preserve those trust boundaries; the installed live-verifier test remains excluded from standalone source proof. The later exact-source local canonical results are recorded below; hosted and activation proof remain incomplete. WELL-147 maintains shared source references after bounded browser diagnostic checkpoints. The migration rollback fixture uses its session temporary namespace under existing runtime grants, and only the two new proof helpers are added to existing test-ignore filters. Existing application, Domain and migration semantics are unchanged. The authorized targeted run at bbcc272a passed 79 tests, including the repaired temporary-table fixture and both real EN/AF browser journeys. The earlier browser failure was not reproduced, so its cause remains unknown. Explicit consumer asset executable paths keep tool downloads under the selected worktree build directory with DevCore build-path overrides. The earlier engineering suite failed four tests. A later canonical invocation at bbcc272a passed 139 focused Python tests, the complete fast gate with 1046 application tests, and the deep gate with zero Dialyzer errors or skips. These are local code results, not hosted CI, Master Gate, activation or full delivery certification. Hosted verification at documentation head 356b84ff exposed missing explicit CI routes, overlapping Smoke fixture copies and external-URL reference extraction. Later CI-consumer repairs classify only the known new paths, assemble complete fixture trees before individual source files and exclude HTTP(S) URL tokens from Markdown local-file extraction. Local references, path escapes, JSON checks and unknown routing paths retain their existing rejection behavior. The mandatory Smoke job also executes the new URL-boundary regressions."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -596,6 +596,45 @@
         "asset_build_config",
         "asset_cache_tests"
       ]
+    },
+    {
+      "path": "tests/test_foundation_lane_routing.py",
+      "cases": [
+        "Route all eight new engineering paths explicitly and route the complete WELL-147 change inventory to the required application, deep and Hex lanes.",
+        "Unknown workflow and tool neighbors still fail closed, including mixed known/unknown inventories."
+      ],
+      "proves": "Focused path classification and exact inventory regression; the installed hosted run still needs fresh verification.",
+      "limits": "Explicit known paths do not authorize future tool or workflow paths. Deep classification follows existing application/dependency input rules.",
+      "source_ids": [
+        "ci_routing",
+        "ci_routing_tests"
+      ]
+    },
+    {
+      "path": "tests/test_foundation_smoke.py",
+      "cases": [
+        "Complete fixture trees are copied before exact capability source files.",
+        "Fixture files and every current capability source retain their original bytes, including nested skill sources."
+      ],
+      "proves": "Fixture assembly without directory collisions, followed by current router and local-reference Smoke checks.",
+      "limits": "Temporary fixtures do not prove hosted runner state or application behavior.",
+      "source_ids": [
+        "ci_smoke_tests"
+      ]
+    },
+    {
+      "path": "tests/test_foundation_reference_urls.py",
+      "cases": [
+        "External HTTP(S) destinations, autolinks, inline code and multiline Markdown do not become local file references.",
+        "Adjacent missing local references, traversal, absolute paths and symlink escapes remain rejected."
+      ],
+      "proves": "The Markdown extraction boundary and unchanged local resolver security behavior. The mandatory Smoke job runs these regressions.",
+      "limits": "URL recognition is lexical; remote existence and complete Markdown parsing are outside this scanner. JSON reference handling remains unchanged.",
+      "source_ids": [
+        "ci_smoke",
+        "ci_reference_tests",
+        "ci_workflow"
+      ]
     }
   ],
   "safe_extensions": [
@@ -665,6 +704,7 @@
     }
   ],
   "proof_limitations": [
+    "CI-consumer source revision e0743f81bcdfc9bf57aaca977650dd5d90e5aca5 follows application proof at bbcc272a. Hosted run 44498071629 at head 356b84ff failed routing and Smoke before Application CI could run. Root reproduced the fixture collision and external-reference findings locally. The assembled routing/fixture/parser repairs passed 76 focused Python tests, including the new mandatory CI URL-test wiring. The eight previously unclassified paths are explicit application entries; a complete PR inventory selects application, deep and Hex lanes, while unknown neighbors still fail closed. These Python checker and CI wiring changes do not change NewYou application, dependency, configuration or migration bytes, and no new local canonical invocation is claimed. Required hosted results for the repaired final head remain pending.",
     "Latest observed local proof is bound to application source bbcc272a7973bf1c1099564987a326f0bebae1e6 and base fc8e12fb2b5710322f8011fdcfff4322cbfd244d. Older entries below describe evidence availability at their historical checkpoints; their pending or not-run statements are not current execution status. The proof-only documentation commit may follow this recorded source revision without changing its application bytes.",
     "On 2026-11-19, the separately authorized six-file managed diagnostic passed 79 tests, including installed live-verifier rejection, the restricted temporary-table rollback fixture, proof-script discovery, Elixir checkpoint forwarding, both ordinary EN/AF browser journeys and asset-path configuration. Its successful registered generation was automatically cleaned; independent catalog and registry checks confirmed database/role absence, settled free state, admission disabled and original quarantines plus retained pilot B unchanged. This was not the two-worktree pilot or clean-empty reuse proof. Warm asset files were present and unchanged. The prior browser failure was not reproduced and its cause remains unverified.",
     "The subsequent single authorized canonical executor invocation at bbcc272a passed the eight-module focused Python selection, 139 tests in 2.590 seconds; complete mix check, including 1046 application tests in 675.0 seconds with seed 119736; and mix check.deep, zero Dialyzer errors, skipped warnings or unnecessary skips, analysis 11.12 seconds after PLT preparation. The full invocation took 837.836 seconds. Fast and deep used distinct registered generations sequentially with genuine automated heavy permits. Both exited zero with children reaped and ordinary automatic cleanup; independent catalog reads confirmed both database and role identity pairs absent. Admission closed within the original window, with no sampler fault, retry or manual release. The private handoff receipt binds all three successful commands to bbcc272a and fc8e12fb. Raw logs and receipts are preserved privately under the implementation worktree Git metadata well147-evidence/well147-post-diagnostic-engineering-proposal-20261119 directory, not committed here.",
@@ -902,6 +942,42 @@
       "path": "test/tools/asset_cache_test.exs",
       "symbol": "defmodule NewYou.AssetCacheTest",
       "sha256": "67d759c66fc3362036d01a3b8c90eccb3430855e5d43598cd2604d59144838df"
+    },
+    {
+      "id": "ci_routing",
+      "path": "tools/foundation_integrity_routing.py",
+      "symbol": "def classify_path(",
+      "sha256": "ca5bf1cbcb4e13eaf14b0ead30b3ca3ee1de25a340190513af5e7fa80b2689a0"
+    },
+    {
+      "id": "ci_routing_tests",
+      "path": "tests/test_foundation_lane_routing.py",
+      "symbol": "class Well147RoutingRegressionTests",
+      "sha256": "0107a84fbaeccc7ea9b32c9fcc689c2f43418ce6f52b73f8012f24b3f0381459"
+    },
+    {
+      "id": "ci_smoke",
+      "path": "tools/foundation_integrity_smoke.py",
+      "symbol": "def _check_active_document_references(",
+      "sha256": "e287b2b48c7b9ac89a52dcc25eab84f2ebc5e2c63476b7e98a737ef344adedf1"
+    },
+    {
+      "id": "ci_smoke_tests",
+      "path": "tests/test_foundation_smoke.py",
+      "symbol": "class FoundationSmokeTests",
+      "sha256": "748786a589f093ec34344f2d708c16e6c8b4b7a217f7887d27dcf76051d55e8b"
+    },
+    {
+      "id": "ci_reference_tests",
+      "path": "tests/test_foundation_reference_urls.py",
+      "symbol": "class FoundationReferenceUrlTests",
+      "sha256": "3a8cb4c0e0728d030f64c3d7fe76172168b1cb1aca7fbcc5c18cc83ec42ddc84"
+    },
+    {
+      "id": "ci_workflow",
+      "path": ".github/workflows/foundation-integrity.yml",
+      "symbol": "name: Verify document reference URL boundaries",
+      "sha256": "1e50894ac18b92341ace8f93937e8dac279696f23e001d4bb8fe338d648f1ad2"
     }
   ]
 }
