@@ -133,11 +133,15 @@ defmodule NewYou.LocalConfig do
         _ -> invalid_managed!()
       end
     else
-      if Keyword.get_lazy(options, :managed_required?, fn -> managed_declared?(get_env) end),
-        do: invalid_managed!()
-
-      nil
+      legacy_allocation(get_env, options)
     end
+  end
+
+  defp legacy_allocation(get_env, options) do
+    if Keyword.get_lazy(options, :managed_required?, fn -> managed_declared?(get_env) end),
+      do: invalid_managed!()
+
+    nil
   end
 
   defp validate_markers!(markers) do
