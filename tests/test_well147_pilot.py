@@ -319,6 +319,34 @@ class CompositionTests(unittest.TestCase):
             with self.assertRaises(pilot.Refused):
                 reads.file(directory/'secret', limit=20)
 
+    def test_cold_migration_log_keeps_bounded_failure_tail(self):
+        with tempfile.TemporaryDirectory() as root:
+            registry = Path(root)
+            job = 'a' * 32
+            directory = registry / 'runs' / job
+            directory.mkdir(parents=True)
+            class Observed:
+                observed = {'a': ({'job': job}, {}, {})}
+            reads = pilot.PilotReads('/tool', None, registry)
+            reads.observer = Observed()
+            path = directory / 'output.log'
+            summary = 'Result: 0/1 passed\nFailed: 1 test\n'
+            content = ('migration line\n' * 6000) + summary
+            path.write_text(content)
+            path.chmod(0o600)
+            value = reads.file(path, limit=65536)
+            self.assertLessEqual(len(value.encode()), 65536)
+            self.assertTrue(value.endswith(summary))
+            self.assertEqual(path.read_text(), content)
+            path.write_bytes(b'x' * (pilot.runtime.LIMIT + 1))
+            with self.assertRaisesRegex(pilot.Refused, 'result too large'):
+                reads.file(path, limit=65536)
+            result = directory / 'result.json'
+            result.write_text('x' * 65537)
+            result.chmod(0o600)
+            with self.assertRaisesRegex(pilot.Refused, 'result too large'):
+                reads.file(result, limit=65536)
+
     def test_composed_identity_and_finish_use_real_observer(self):
         import copy
         import hashlib

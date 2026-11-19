@@ -317,7 +317,16 @@ class PilotReads:
                 info = os.fstat(stream.fileno())
                 require(stat.S_ISREG(info.st_mode) and info.st_uid == os.getuid()
                         and stat.S_IMODE(info.st_mode) == 0o600 and info.st_nlink == 1, 'unsafe result file')
+                offset = 0
+                if path.name == 'output.log':
+                    # Cold migrations exceed the record limit. Keep the full
+                    # private log and inspect only its bounded final lines.
+                    require(info.st_size <= runtime.LIMIT, 'result too large')
+                    offset = max(0, info.st_size - limit)
+                    stream.seek(offset)
                 value = stream.read(limit + 1)
+                if offset:
+                    value = value.partition(b'\n')[2]
             require(len(value) <= limit, 'result too large')
             return value.decode()
         finally:

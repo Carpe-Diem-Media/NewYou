@@ -764,13 +764,13 @@
       "id": "pilot_driver",
       "path": "tools/well147_pilot.py",
       "symbol": "def orchestrate(",
-      "sha256": "d4cfa2eb1c5eab1ce8f31f0368e6cd85cac3c5f66af95579e3689b62abbac130"
+      "sha256": "456f606a1b459ab2f40865953983d1d21a5c30cbb755ef4c4e46c1fede4ec266"
     },
     {
       "id": "pilot_driver_tests",
       "path": "tests/test_well147_pilot.py",
       "symbol": "class PilotTests(unittest.TestCase):",
-      "sha256": "ac35c92f657aab7c7afde851bebfcdd615aec580efaec77e397f846a5b9fe49c"
+      "sha256": "17380d06acaf6452a9ca062503499a46f4154a13681af68addb1d4957e79b1fc"
     },
     {
       "id": "pilot_runtime",
