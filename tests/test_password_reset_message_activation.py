@@ -195,7 +195,7 @@ class PasswordResetMessageActivationTests(unittest.TestCase):
                 "docs/governance/product/00_PLATFORM_v1.16.0.md",
                 1,
             ))
-            self.assert_rejected(root, "current Product authority lineage mismatch")
+            self.assert_rejected(root, "current Product authority predecessor digest mismatch")
 
     def test_product_and_decision_successors_preserve_all_unrelated_prior_text(self):
         old_product = (ROOT / "docs/governance/product/00_PLATFORM_v1.14.0.md").read_text()

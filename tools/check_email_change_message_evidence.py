@@ -29,18 +29,18 @@ CAPACITY_SHA256 = "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225
 
 PRODUCT_DOCUMENTS = {
     "PLATFORM_PRODUCT_LAW": {
-        "path": Path("docs/governance/product/00_PLATFORM_v1.17.0.md"),
-        "sha256": "ad38c25c49ba9d1de40e90d74b494705156605af724bc0e1d5a66d38b81cc39f",
-        "predecessor": Path("docs/governance/product/00_PLATFORM_v1.16.0.md"),
-        "predecessor_sha256": "bcc26cec59b8157a4d284d6bb533ec16bf41e85b88d7c5c14ff1ec1141019174",
-        "transition": "**SemVer transition:** `v1.16.0 → v1.17.0`",
+        "path": Path("docs/governance/product/00_PLATFORM_v1.19.0.md"),
+        "sha256": "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9",
+        "predecessor": Path("docs/governance/product/00_PLATFORM_v1.18.0.md"),
+        "predecessor_sha256": "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f",
+        "transition": "**SemVer transition:** `v1.18.0 → v1.19.0`",
     },
     "PRODUCT_DECISIONS": {
-        "path": Path("docs/governance/product/01_DECISIONS_v1.17.0.md"),
-        "sha256": "1d2c3cf6ec3ea4cd318ceccda8fa0a9b2c9797eec8f934a399e8d59f93090d8b",
-        "predecessor": Path("docs/governance/product/01_DECISIONS_v1.16.0.md"),
-        "predecessor_sha256": "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8",
-        "transition": "**SemVer transition:** `v1.16.0 → v1.17.0`",
+        "path": Path("docs/governance/product/01_DECISIONS_v1.19.0.md"),
+        "sha256": "ed90a1ec6adb201de094f130fc091c10bca6145e142a6e225fc840794553f4c2",
+        "predecessor": Path("docs/governance/product/01_DECISIONS_v1.18.0.md"),
+        "predecessor_sha256": "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0",
+        "transition": "**SemVer transition:** `v1.18.0 → v1.19.0`",
     },
 }
 
@@ -155,7 +155,7 @@ def check_product_lineage(root: Path, router: dict[str, Any], errors: list[str])
             "canonical_filename": path.name,
             "repository_path": path.as_posix(),
             "sha256": expected["sha256"],
-            "semver": "1.17.0",
+            "semver": "1.19.0",
         }
         if {key: route.get(key) for key in expected_route} != expected_route:
             errors.append(f"current Product route mismatch: {document_id}")
@@ -180,6 +180,7 @@ def check_product_lineage(root: Path, router: dict[str, Any], errors: list[str])
     required_platform_text = [
         "## 21E.27 Primary-email-change message classifications",
         "## 21E.28 Bounded P8-16 development content eligibility",
+        "## 21E.30 WELL-156 bounded Phase-9 primary-email-change message applicability",
         "primary_email_change_confirmation_message",
         "primary_email_change_old_address_notice",
         "Both types are Class A with `identity_security` content risk.",
@@ -187,7 +188,7 @@ def check_product_lineage(root: Path, router: dict[str, Any], errors: list[str])
     ]
     if any(fragment not in platform for fragment in required_platform_text):
         errors.append("Product successor is missing approved WELL-122 classifications or scope")
-    if "## DEC-324 Primary-email-change message classifications and bounded development eligibility" not in decisions:
+    if "## DEC-324 Primary-email-change message classifications and bounded development eligibility" not in decisions or "## DEC-326 WELL-156 primary-email-change bounded Phase-9 development exception" not in decisions:
         errors.append("DEC-324 is missing from the Product decision successor")
 
 

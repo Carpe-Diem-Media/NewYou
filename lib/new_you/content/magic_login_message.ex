@@ -160,27 +160,66 @@ defmodule NewYou.Content.MagicLoginMessage do
       }
     ]
 
-    @current_successor_authority Enum.map(@v1_17_successor_authority, fn authority ->
-                                   {path, sha} =
-                                     case authority["document_id"] do
-                                       "PLATFORM_PRODUCT_LAW" ->
-                                         {"docs/governance/product/00_PLATFORM_v1.18.0.md",
-                                          "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f"}
+    @v1_18_successor_authority Enum.map(@v1_17_successor_authority, fn authority ->
+                                 {path, sha} =
+                                   case authority["document_id"] do
+                                     "PLATFORM_PRODUCT_LAW" ->
+                                       {"docs/governance/product/00_PLATFORM_v1.18.0.md",
+                                        "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f"}
 
-                                       "PRODUCT_DECISIONS" ->
-                                         {"docs/governance/product/01_DECISIONS_v1.18.0.md",
-                                          "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0"}
-                                     end
+                                     "PRODUCT_DECISIONS" ->
+                                       {"docs/governance/product/01_DECISIONS_v1.18.0.md",
+                                        "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0"}
+                                   end
 
-                                   Map.merge(authority, %{
-                                     "canonical_filename" => Path.basename(path),
-                                     "repository_path" => path,
-                                     "sha256" => sha,
-                                     "semver" => "1.18.0",
-                                     "predecessor_path" => authority["repository_path"],
-                                     "predecessor_sha256" => authority["sha256"]
-                                   })
-                                 end)
+                                 Map.merge(authority, %{
+                                   "canonical_filename" => Path.basename(path),
+                                   "repository_path" => path,
+                                   "sha256" => sha,
+                                   "semver" => "1.18.0",
+                                   "predecessor_path" => authority["repository_path"],
+                                   "predecessor_sha256" => authority["sha256"]
+                                 })
+                               end)
+
+    @current_successor_authority [
+      %{
+        "document_id" => "PLATFORM_PRODUCT_LAW",
+        "canonical_filename" => "00_PLATFORM_v1.19.0.md",
+        "repository_path" => "docs/governance/product/00_PLATFORM_v1.19.0.md",
+        "sha256" => "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9",
+        "semver" => "1.19.0",
+        "predecessor_path" => "docs/governance/product/00_PLATFORM_v1.18.0.md",
+        "predecessor_sha256" =>
+          "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f",
+        "approved_amendment_path" =>
+          "docs/governance/product/proposals/well-157/PHASE9_EMAIL_APPLICABILITY_v0.1.0_PROPOSED.md",
+        "approved_amendment_sha256" =>
+          "a0d9c2e2ce038bddf36386974f1b1d02f24896e336b3f5214cf537463065909e",
+        "approval_bindings_path" =>
+          "docs/governance/product/proposals/well-157/EXACT_BINDINGS_v0.1.0.json",
+        "approval_bindings_sha256" =>
+          "75aaffb695fd2e49d20f9a6f8d91350e05f0ce19ef2033aa76e9d18b4024a027"
+      },
+      %{
+        "document_id" => "PRODUCT_DECISIONS",
+        "canonical_filename" => "01_DECISIONS_v1.19.0.md",
+        "repository_path" => "docs/governance/product/01_DECISIONS_v1.19.0.md",
+        "sha256" => "ed90a1ec6adb201de094f130fc091c10bca6145e142a6e225fc840794553f4c2",
+        "semver" => "1.19.0",
+        "predecessor_path" => "docs/governance/product/01_DECISIONS_v1.18.0.md",
+        "predecessor_sha256" =>
+          "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0",
+        "approved_amendment_path" =>
+          "docs/governance/product/proposals/well-157/PHASE9_EMAIL_APPLICABILITY_v0.1.0_PROPOSED.md",
+        "approved_amendment_sha256" =>
+          "a0d9c2e2ce038bddf36386974f1b1d02f24896e336b3f5214cf537463065909e",
+        "approval_bindings_path" =>
+          "docs/governance/product/proposals/well-157/EXACT_BINDINGS_v0.1.0.json",
+        "approval_bindings_sha256" =>
+          "75aaffb695fd2e49d20f9a6f8d91350e05f0ce19ef2033aa76e9d18b4024a027"
+      }
+    ]
 
     @spec binding(String.t()) :: {:ok, map()} | {:error, :content_ineligible}
     def binding(locale) when is_binary(locale) do
@@ -358,7 +397,7 @@ defmodule NewYou.Content.MagicLoginMessage do
 
     defp current_successor_authority_matches?(root, router) do
       Enum.all?(
-        @prior_successor_authority ++ @v1_17_successor_authority,
+        @prior_successor_authority ++ @v1_17_successor_authority ++ @v1_18_successor_authority,
         &successor_lineage_matches?(root, &1)
       ) and
         Enum.all?(@current_successor_authority, &promoted_authority_matches?(root, router, &1))
@@ -408,6 +447,10 @@ defmodule NewYou.Content.MagicLoginMessage do
              file_digest(root, authority["approved_amendment_path"]) ==
                authority["approved_amendment_sha256"],
            true <-
+             is_nil(authority["approval_bindings_path"]) or
+               file_digest(root, authority["approval_bindings_path"]) ==
+                 authority["approval_bindings_sha256"],
+           true <-
              String.contains?(bytes, "**Predecessor:** `#{predecessor_path}`"),
            true <-
              String.contains?(
@@ -417,7 +460,8 @@ defmodule NewYou.Content.MagicLoginMessage do
                    "1.15.0" => "**SemVer transition:** `v1.14.0 → v1.15.0`",
                    "1.16.0" => "**SemVer transition:** `v1.15.0 → v1.16.0`",
                    "1.17.0" => "**SemVer transition:** `v1.16.0 → v1.17.0`",
-                   "1.18.0" => "**SemVer transition:** `v1.17.0 → v1.18.0`"
+                   "1.18.0" => "**SemVer transition:** `v1.17.0 → v1.18.0`",
+                   "1.19.0" => "**SemVer transition:** `v1.18.0 → v1.19.0`"
                  },
                  authority["semver"]
                )
@@ -471,6 +515,10 @@ defmodule NewYou.Content.MagicLoginMessage do
                 "docs/governance/product/01_DECISIONS_v1.17.0.md",
                 "docs/governance/product/00_PLATFORM_v1.18.0.md",
                 "docs/governance/product/01_DECISIONS_v1.18.0.md",
+                "docs/governance/product/00_PLATFORM_v1.19.0.md",
+                "docs/governance/product/01_DECISIONS_v1.19.0.md",
+                "docs/governance/product/proposals/well-157/PHASE9_EMAIL_APPLICABILITY_v0.1.0_PROPOSED.md",
+                "docs/governance/product/proposals/well-157/EXACT_BINDINGS_v0.1.0.json",
                 "docs/delivery/content-evidence/content_media/email_change_messages/PRODUCT_CLASSIFICATION_PROPOSAL_v1.md",
                 "docs/delivery/content-evidence/content_media/recovery_messages/PRODUCT_CLASSIFICATION_PROPOSALS_v0.1.0.md",
                 "docs/delivery/content-evidence/content_media/magic_login_messages/WELL-12-candidate-comment.json",

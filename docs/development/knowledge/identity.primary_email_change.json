@@ -5,11 +5,12 @@
   "implementing_tickets": [
     "WELL-17",
     "WELL-18",
-    "WELL-112"
+    "WELL-112",
+    "WELL-157"
   ],
   "implementation_revision": {
-    "git_sha": "78550cdd6ee31581a55a51e9095087c82fb453d3",
-    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-159 refreshes the shared Recovery source after compile-time TEST-only fixed phase diagnostics. Email-change business semantics and interfaces remain unchanged."
+    "git_sha": "3d675142ea91354d0cb85df731201b8c08dcc23b",
+    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-159 refreshes the shared Recovery source after compile-time TEST-only fixed phase diagnostics. Email-change business semantics and interfaces remain unchanged. WELL-157 adds the approved WELL-156-only non-production Phase-9 applicability evidence for the four existing immutable email versions. It leaves the content reader and delivery path unchanged; this map does not claim runtime eligibility or delivery activation. WELL-157 also reconciles the legacy Magic Login Python approval checker with the same exact v1.19 route while retaining v1.16/v1.17/v1.18 lineage and digest checks. This changes validation compatibility only, not message scope or runtime release eligibility."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1279,6 +1280,33 @@
         "privacy",
         "email_scenarios"
       ]
+    },
+    {
+      "path": "tests/test_well157_email_applicability.py",
+      "cases": [
+        "Exact Product/bindings digests and five separately transcribed role decisions",
+        "Only WELL-156 non-production Phase-9 context passes; production, delivery, withdrawals, altered bindings and conflicting replays fail closed",
+        "Exact decision replay is idempotent while prior packet and owner attribution digests remain pinned"
+      ],
+      "proves": "The new context-specific evidence packet preserves immutable message and historical approval records and rejects incomplete or conflicting applicability evidence.",
+      "limits": "Documentation and Python validator proof only; no runtime activation, real participant use, sender/provider permission or delivery.",
+      "source_ids": [
+        "applicability_evidence",
+        "applicability_validator",
+        "applicability_test"
+      ]
+    },
+    {
+      "path": "tests/test_magic_login_development_approval.py",
+      "cases": [
+        "A valid current v1.19 control succeeds; changing either Product or Decision bytes at v1.16, v1.17, v1.18 or v1.19 rejects the exact digest. Existing owner-binding, idempotency/conflict, scope and predecessor rejection remain."
+      ],
+      "proves": "The related static message checker follows the new current route without discarding pinned predecessor or approval evidence.",
+      "limits": "Static validation only; no new message context, delivery/provider permission or participant runtime binding.",
+      "source_ids": [
+        "magic_approval_checker",
+        "magic_approval_test"
+      ]
     }
   ],
   "safe_extensions": [
@@ -1349,7 +1377,8 @@
     "Session/logout and recovery/apply contention proof uses independent PostgreSQL transactions in the local test database; it does not model cross-region or production database failure modes.",
     "Delay and risk-review policy exercised by development tests does not select production thresholds or authorize live participant delivery.",
     "Selected E2 records carry minimal event facts only; they do not contain bearer proof or full private diagnostics.",
-    "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations."
+    "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations.",
+    "The WELL-157 applicability packet binds the exact Product v1.19 successor and five transcribed owner decisions, but it does not activate a Phase-9 runtime reader or live delivery."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -1502,6 +1531,36 @@
       "path": "test/support/proof/email_change_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
       "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
+    },
+    {
+      "id": "applicability_evidence",
+      "path": "docs/delivery/content-evidence/content_media/email_change_messages/WELL157_PHASE9_APPLICABILITY_EVIDENCE_v0.1.0.json",
+      "symbol": "new_applicability_events",
+      "sha256": "ca5a78f8a6f9073882daaa5a871aa873d72ce17c7953d72866052e16b47465aa"
+    },
+    {
+      "id": "applicability_validator",
+      "path": "tools/check_well157_email_applicability.py",
+      "symbol": "validate_packet",
+      "sha256": "ffa04a17638f876cf01fe40c5124630e24b8a66638571fce8f26c426e045bf08"
+    },
+    {
+      "id": "applicability_test",
+      "path": "tests/test_well157_email_applicability.py",
+      "symbol": "class Well157ApplicabilityTest",
+      "sha256": "194c2b0ac2daa78eb94fc37d68b269305f448cbacba57f5ec60b5c65f6c999d8"
+    },
+    {
+      "id": "magic_approval_checker",
+      "path": "tools/check_magic_login_evidence.py",
+      "symbol": "def validate_development",
+      "sha256": "f46f25ae05d1652aabbe239486bff24ae8f29c3ab59edfe94ed50c47440adce4"
+    },
+    {
+      "id": "magic_approval_test",
+      "path": "tests/test_magic_login_development_approval.py",
+      "symbol": "class MagicLoginDevelopmentApprovalTests",
+      "sha256": "8f6fea2e7539f5f085473beef9f3ff4722cb38bc7a95b733f45bcee30a77c794"
     }
   ]
 }
