@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "452b3140984e11aa471f988cb8ef6ac411b18257",
-    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined; no pilot, cleanup, unrestricted activation, PR approval or merge is certified. Later bounded source repairs extract existing configuration, PLT-input and probe predicates without changing guards or errors. Settled free allocation history requires an empty jobs map and the exact registered-cleanup diagnosis. Failure-log inspection preserves full private logs while reading a bounded final-line tail under the existing total-size ceiling. Historical pilot and failed engineering-attempt evidence do not certify this revised candidate. LocalConfig documents two independently assessed Sobelow false positives with function-scoped annotations: the workstation-owned fixed verifier command and source-relative declaration read. Runtime hint substitution and malformed identifier tests preserve those trust boundaries; the installed live-verifier test remains excluded from standalone source proof. Broad engineering verification remains incomplete. WELL-147 maintains shared source references after bounded browser diagnostic checkpoints. The migration rollback fixture uses its session temporary namespace under existing runtime grants, and only the two new proof helpers are added to existing test-ignore filters. Existing application, Domain and migration semantics are unchanged. Real browser failure diagnosis and the repaired temporary-table test still need authorized targeted runtime proof."
+    "git_sha": "def0cf385ec448038da769d136b1218b357fa0b9",
+    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined; no pilot, cleanup, unrestricted activation, PR approval or merge is certified. Later bounded source repairs extract existing configuration, PLT-input and probe predicates without changing guards or errors. Settled free allocation history requires an empty jobs map and the exact registered-cleanup diagnosis. Failure-log inspection preserves full private logs while reading a bounded final-line tail under the existing total-size ceiling. Historical pilot and failed engineering-attempt evidence do not certify this revised candidate. LocalConfig documents two independently assessed Sobelow false positives with function-scoped annotations: the workstation-owned fixed verifier command and source-relative declaration read. Runtime hint substitution and malformed identifier tests preserve those trust boundaries; the installed live-verifier test remains excluded from standalone source proof. Broad engineering verification remains incomplete. WELL-147 maintains shared source references after bounded browser diagnostic checkpoints. The migration rollback fixture uses its session temporary namespace under existing runtime grants, and only the two new proof helpers are added to existing test-ignore filters. Existing application, Domain and migration semantics are unchanged. Real browser failure diagnosis and the repaired temporary-table test still need authorized targeted runtime proof. Explicit consumer asset executable paths keep tool downloads under the selected worktree build directory with DevCore build-path overrides. The prior completed engineering suite failed four tests; deep verification and repaired runtime behavior remain unverified."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -342,6 +342,13 @@
         "cache_tests",
         "dialyzer"
       ]
+    },
+    {
+      "summary": "Asset tool executable paths are explicitly inside the selected worktree build directory. This prevents the installed wrappers from placing downloads in the source root when DevCore sets MIX_BUILD_PATH without an environment suffix. Versions, output assets and managed database policy are unchanged.",
+      "source_ids": [
+        "asset_build_config",
+        "asset_cache_tests"
+      ]
     }
   ],
   "idempotency_retry": [
@@ -575,6 +582,19 @@
         "layout_forwarding_tests",
         "browser_forwarder",
         "helper_discovery_filters"
+      ]
+    },
+    {
+      "path": "test/tools/asset_cache_test.exs",
+      "cases": [
+        "Read TEST compile configuration with root and environment-suffixed worktree build paths.",
+        "Assert installed Esbuild and Tailwind path readers select only the configured build directory, without installing or starting applications."
+      ],
+      "proves": "One pure configuration and installed-wrapper path test passes after reproducing missing explicit cache paths.",
+      "limits": "No actual asset download/build or browser result is certified by this source-only test.",
+      "source_ids": [
+        "asset_build_config",
+        "asset_cache_tests"
       ]
     }
   ],
@@ -865,6 +885,18 @@
       "path": "test/support/proof/p8_05_browser.ex",
       "symbol": "def run_port(",
       "sha256": "569818cecd42193d2ca302d5fce31017fd816054e722c8ffb4ee2e03570efa3e"
+    },
+    {
+      "id": "asset_build_config",
+      "path": "config/config.exs",
+      "symbol": "path: Path.join(Mix.Project.build_path(), \"esbuild\")",
+      "sha256": "1f78ae82845b6bf2117d547ea5db350d54f890e2312d6bd4e26e9836ace62b4d"
+    },
+    {
+      "id": "asset_cache_tests",
+      "path": "test/tools/asset_cache_test.exs",
+      "symbol": "defmodule NewYou.AssetCacheTest",
+      "sha256": "67d759c66fc3362036d01a3b8c90eccb3430855e5d43598cd2604d59144838df"
     }
   ]
 }
