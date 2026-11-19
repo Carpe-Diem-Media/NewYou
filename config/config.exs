@@ -102,8 +102,11 @@ config :phoenix_live_view,
   # the attribute set on all root tags. Used for Phoenix.LiveView.ColocatedCSS.
   root_tag_attribute: "phx-r"
 
+# Keep tool downloads inside the selected build directory when DevCore supplies
+# MIX_BUILD_PATH without a Mix environment suffix.
 # Configure esbuild (the version is required)
 config :esbuild,
+  path: Path.join(Mix.Project.build_path(), "esbuild"),
   version: "0.25.4",
   new_you: [
     args:
@@ -114,6 +117,7 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
+  path: Path.join(Mix.Project.build_path(), "tailwind"),
   version: "4.3.3",
   new_you: [
     args: ~w(
