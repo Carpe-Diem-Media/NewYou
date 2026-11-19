@@ -4,6 +4,7 @@ import fcntl
 import multiprocessing
 import os
 import select
+import shutil
 import signal
 import subprocess
 import sys
@@ -231,7 +232,50 @@ except KeyboardInterrupt:
             self.assertIn("no command launched", output.getvalue())
             execute.assert_not_called()
 
+    def handoff_environment(self, directory, installed_mise):
+        if installed_mise:
+            return dict(os.environ)
+        # This private shim models only `mise exec --` descriptor inheritance.
+        # It does not prove Mise tool selection or environment setup. Separate
+        # installed-Mise tests below exercise the actual binary when available.
+        bin_dir = Path(directory) / "bin"
+        bin_dir.mkdir()
+        for name, target in (("bash", "/bin/bash"), ("python3", sys.executable)):
+            (bin_dir / name).symlink_to(target)
+        shim = bin_dir / "mise"
+        shim.write_text(
+            f"#!{sys.executable}\n"
+            "import os, sys\n"
+            "assert sys.argv[1:3] == ['exec', '--']\n"
+            "os.execvp(sys.argv[3], sys.argv[3:])\n"
+        )
+        shim.chmod(0o700)
+        return dict(os.environ, PATH=str(bin_dir))
+
+    def test_installed_mise_bash_exec_descriptor_inheritance(self):
+        if shutil.which("mise") is None:
+            self.skipTest("installed Mise is unavailable")
+        self.assert_exec_handoff(installed_mise=True)
+
+    def test_installed_mise_fd3_heredoc_descriptor_inheritance(self):
+        if shutil.which("mise") is None:
+            self.skipTest("installed Mise is unavailable")
+        self.assert_heredoc_handoff(installed_mise=True)
+
+    def test_synthetic_handoffs_work_without_installed_mise(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for name, target in (("bash", "/bin/bash"), ("python3", sys.executable)):
+                Path(directory, name).symlink_to(target)
+            with patch.dict(os.environ, {"PATH": directory}):
+                self.assertIsNone(shutil.which("mise"))
+                for proof in (self.assert_exec_handoff, self.assert_heredoc_handoff):
+                    with self.subTest(proof=proof.__name__):
+                        proof()
+
     def test_lock_survives_mise_bash_exec_and_launcher_exit_until_child_finishes(self):
+        self.assert_exec_handoff()
+
+    def assert_exec_handoff(self, installed_mise=False):
         root = Path(local_session.__file__).resolve().parent.parent
         # This models descriptor propagation only. DevCore's descendant registry
         # and abnormal-supervisor recovery have separate allocator proofs.
@@ -249,7 +293,8 @@ except KeyboardInterrupt:
         with tempfile.TemporaryDirectory() as directory:
             lock = Path(directory) / "build.lock"
             process = subprocess.Popen([sys.executable, "-c", launcher, str(lock), supervisor, child],
-                                       cwd=root, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                       cwd=root, env=self.handoff_environment(directory, installed_mise),
+                                       stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE, start_new_session=True)
             try:
                 self.assertTrue(select.select([process.stdout], [], [], 15)[0], "exec child did not start")
@@ -274,6 +319,9 @@ except KeyboardInterrupt:
                 process.stderr.close()
 
     def test_lock_survives_devcore_fd3_heredoc_and_launcher_exit(self):
+        self.assert_heredoc_handoff()
+
+    def assert_heredoc_handoff(self, installed_mise=False):
         root = Path(local_session.__file__).resolve().parent.parent
         installed = Path.home() / ".local/bin/devcore-project"
         if installed.is_file():
@@ -309,6 +357,7 @@ os.execvp('mise', ['mise', 'exec', '--', 'bash', '-c', sys.argv[2],
                                                  root_dir / "launcher-pid")
             process = subprocess.Popen([sys.executable, "-c", launcher, str(lock), shell,
                                         str(ready), str(finish), str(launcher_pid_file)], cwd=root,
+                                       env=self.handoff_environment(directory, installed_mise),
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                        start_new_session=True)
             try:
