@@ -229,11 +229,14 @@ try {
     checks.stylesheet = await evaluate(`document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
     checks.responsive = true;
     checks.text_resize = true;
+    checkpoint = 'reset.request_reduced_motion';
     await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
     checks.reduced_motion = await evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0`);
     for (const width of [320, 375, 768, 1280, 1920]) {
       await cdp('Emulation.setDeviceMetricsOverride', {width, height: 900, deviceScaleFactor: 1, mobile: width < 768});
+      checkpoint = 'reset.request_responsive';
       checks.responsive &&= await evaluate(`document.documentElement.scrollWidth <= innerWidth`);
+      checkpoint = 'reset.request_text_resize';
       checks.text_resize &&= await evaluate(`(async () => {
         const nodes = [...document.querySelectorAll('h1,p,a,button,input:not([type="hidden"]),label')];
         const original = nodes.map(el => ({el, font: el.style.fontSize, line: el.style.lineHeight, size: parseFloat(getComputedStyle(el).fontSize), height: parseFloat(getComputedStyle(el).lineHeight)}));
@@ -246,6 +249,7 @@ try {
       })()`);
       if (!checks.text_resize) checks.resize_diagnostics = await evaluate(`globalThis.resetResizeFailures`);
     }
+    checkpoint = 'reset.request_keyboard_focus';
     for (let tab = 0; tab < 6 && !(await evaluate(`document.activeElement.id === 'email'`)); tab++) {
       await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
       await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});

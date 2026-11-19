@@ -6,9 +6,14 @@ import { boundedFailureCode } from './browser_protocol.mjs';
 const driver = readFileSync(new URL('./p8_05_browser.mjs', import.meta.url), 'utf8');
 const wrapper = readFileSync(new URL('../support/proof/p8_05_browser.ex', import.meta.url), 'utf8');
 const start = "    checkpoint = 'reset.request_layout';";
-const end = '    checks.responsive = true;';
+const end = "    checkpoint = 'reset.request_csrf';";
 const block = driver.slice(driver.indexOf(start), driver.indexOf(end, driver.indexOf(start)));
-const stages = ['reset.request_layout', 'reset.request_labels', 'reset.request_stylesheet'];
+const stages = [
+  [0, 'reset.request_layout'], [1, 'reset.request_labels'],
+  [2, 'reset.request_stylesheet'], [3, 'reset.request_reduced_motion'],
+  [4, 'reset.request_responsive'], [5, 'reset.request_text_resize'],
+  [14, 'reset.request_keyboard_focus']
+];
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
 // Execute the actual request checks with synthetic evaluators. No browser,
@@ -19,7 +24,7 @@ async function failureAt(source, failureIndex) {
     if (calls++ === failureIndex) throw new Error('browser.evaluation');
     return true;
   };
-  const result = await new AsyncFunction('evaluate', 'title', 'literal', 'boundedFailureCode', `
+  const result = await new AsyncFunction('evaluate', 'title', 'literal', 'boundedFailureCode', 'cdp', `
     let checkpoint;
     const checks = {};
     try {
@@ -28,12 +33,12 @@ async function failureAt(source, failureIndex) {
     } catch (error) {
       return {failure: boundedFailureCode(error), checkpoint};
     }
-  `)(evaluate, evaluate, () => '"synthetic-label"', boundedFailureCode);
-  assert.equal(calls, failureIndex < 0 ? 3 : failureIndex + 1);
+  `)(evaluate, evaluate, () => '"synthetic-label"', boundedFailureCode, async () => ({}));
+  assert.equal(calls, failureIndex < 0 ? 16 : failureIndex + 1);
   return result;
 }
 
-for (const [index, stage] of stages.entries()) {
+for (const [index, stage] of stages) {
   test(`evaluation failure identifies ${stage} and stops subsequent checks`, async () => {
     assert.deepEqual(await failureAt(block, index), {
       failure: 'browser.evaluation', checkpoint: stage
@@ -46,16 +51,16 @@ for (const [index, stage] of stages.entries()) {
   });
 }
 
-test('successful evaluations preserve all three existing check results', async () => {
+test('successful evaluations preserve all existing layout check results', async () => {
   assert.deepEqual(await failureAt(block, -1), {
-    checks: {approved_request: true, labels: true, stylesheet: true}
+    checks: {approved_request: true, labels: true, stylesheet: true, responsive: true, text_resize: true, reduced_motion: true, keyboard_focus: true}
   });
 });
 
-test('removing either new checkpoint loses failure precision', async () => {
-  for (const index of [1, 2]) {
-    const mutant = block.replace(`    checkpoint = '${stages[index]}';\n`, '');
+test('removing any new checkpoint loses failure precision', async () => {
+  for (const [index, stage] of stages.slice(1)) {
+    const mutant = block.replace(`    checkpoint = '${stage}';\n`, '');
     assert.notEqual(mutant, block, 'checkpoint mutation must change the executed source');
-    assert.notEqual((await failureAt(mutant, index)).checkpoint, stages[index]);
+    assert.notEqual((await failureAt(mutant, index)).checkpoint, stage);
   }
 });

@@ -18,7 +18,8 @@ defmodule NewYou.Proof.P805Browser do
   # Fixed TEST progress labels, never expression text, page state or input.
   @failure_checkpoints ~w(
     reset.public_entry reset.prior_login reset.request_entry reset.request_layout
-    reset.request_labels reset.request_stylesheet
+    reset.request_labels reset.request_stylesheet reset.request_reduced_motion
+    reset.request_responsive reset.request_text_resize reset.request_keyboard_focus
     reset.request_csrf reset.request_submit reset.delivery reset.confirm_entry
     reset.confirm_submit reset.session_revocation reset.replay_submit
     reset.retry_navigation reset.old_login reset.fresh_login reset.new_request

@@ -11,7 +11,9 @@ defmodule NewYou.Proof.BrowserProtocolTest do
           "--test",
           "test/proof/browser_protocol_test.mjs",
           "test/proof/reset_request_checkpoints_test.mjs"
-        ], stderr_to_stdout: true)
+        ],
+        stderr_to_stdout: true
+      )
 
     assert status == 0, output
   end
@@ -30,7 +32,8 @@ defmodule NewYou.Proof.BrowserProtocolTest do
     refute message =~ "private-value"
   end
 
-  for checkpoint <- ~w(reset.request_layout reset.request_labels reset.request_stylesheet) do
+  for checkpoint <-
+        ~w(reset.request_layout reset.request_labels reset.request_stylesheet reset.request_reduced_motion reset.request_responsive reset.request_text_resize reset.request_keyboard_focus) do
     test "request evaluation failure retains #{checkpoint} without private diagnostics" do
       message =
         browser_failure(%{
