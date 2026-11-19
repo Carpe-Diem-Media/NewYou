@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "748759f51ae0dc00262f831284795604b10fcf6a",
-    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined; no pilot, cleanup, unrestricted activation, PR approval or merge is certified."
+    "git_sha": "e553c9d0a93a792e761604d03971b26d7dc36b52",
+    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined; no pilot, cleanup, unrestricted activation, PR approval or merge is certified. Later bounded source repairs extract existing configuration, PLT-input and probe predicates without changing guards or errors. Settled free allocation history requires an empty jobs map and the exact registered-cleanup diagnosis. Failure-log inspection preserves full private logs while reading a bounded final-line tail under the existing total-size ceiling. Historical pilot and failed engineering-attempt evidence do not certify this revised candidate."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -638,7 +638,7 @@
       "id": "config",
       "path": "lib/new_you/local_config.ex",
       "symbol": "def repo(env",
-      "sha256": "fdc5c5609e87939d04e5c1026c7f7395e177a44a4b41fa43bd079a65c2042ede"
+      "sha256": "01c52369aa0fc0845e184825562f34fafe8b1f659170e524352f26ce1068a557"
     },
     {
       "id": "session",
@@ -668,7 +668,7 @@
       "id": "dialyzer",
       "path": "lib/mix/tasks/local_dialyzer.ex",
       "symbol": "defmodule Mix.Tasks.LocalDialyzer do",
-      "sha256": "4b69d7ad79466f0a9c25462300555d93b9a1d0d9c5e61f0b5aa4dc10352905f4"
+      "sha256": "fdb57ff6069b46f2327984ce725f252aee0306491a6f361d1435e87518bf087c"
     },
     {
       "id": "cache",
@@ -722,7 +722,7 @@
       "id": "managed_probe",
       "path": "test/proof/managed_slot_probe.exs",
       "symbol": "defmodule NewYou.ManagedSlotProbe do",
-      "sha256": "e3bcedc3378e09d47ad82559e0d73321d77e6d3931c9ce533193e89859a47ede"
+      "sha256": "36d9095caf45b573beba41c610950f622619ad1ad81d673fd815c3c6b6fc08ca"
     },
     {
       "id": "managed_probe_tests",
