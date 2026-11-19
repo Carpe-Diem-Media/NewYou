@@ -264,6 +264,43 @@ defmodule NewYou.LocalConfigTest do
     assert LocalConfig.repo(:test, env, verify: verify)[:database] == receipt["database"]
   end
 
+  test "malformed identifiers cannot reach the verifier as command arguments" do
+    for suffix <- ~w(LEASE GENERATION JOB),
+        value <- [
+          "-" <> String.duplicate("a", 31),
+          "a;echo injected",
+          "$(echo injected)",
+          String.duplicate("a", 31) <> "\n",
+          String.duplicate("A", 32)
+        ] do
+      {env, _receipt} = managed_context(%{("DEVCORE_SLOT_" <> suffix) => value})
+
+      assert_raise ArgumentError, ~r/managed/, fn ->
+        LocalConfig.repo(:test, env,
+          verify: fn _ -> flunk("malformed identifier reached verification") end
+        )
+      end
+    end
+  end
+
+  test "runtime path hints cannot replace the repository pool declaration" do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "newyou-untrusted-config-#{System.unique_integer([:positive])}"
+      )
+
+    File.mkdir_p!(Path.join(root, ".devcore"))
+    File.write!(Path.join(root, ".devcore/project.conf"), "# no managed declaration here\n")
+
+    try do
+      env = environment(%{"NEW_YOU_WORKTREE_ROOT" => root, "SLOT_POOL" => ""})
+      assert_raise ArgumentError, ~r/managed/, fn -> LocalConfig.repo(:test, env) end
+    after
+      File.rm_rf!(root)
+    end
+  end
+
   test "a verifier response must bind all identities and the exact bounded slot" do
     {env, receipt} = managed_context()
 

@@ -183,6 +183,10 @@ defmodule NewYou.LocalConfig do
     receipt
   end
 
+  # sobelow_skip ["CI.System"]
+  # The workstation user's home and installed DevCore binary are trusted inputs.
+  # Callers cannot select the executable. Validated hex identifiers are separate
+  # arguments to a fixed verify command; no shell interprets them.
   defp verify_job(markers) do
     executable = Path.join([System.user_home!(), ".local", "bin", "devcore-project"])
 
@@ -238,6 +242,9 @@ defmodule NewYou.LocalConfig do
     end
   end
 
+  # sobelow_skip ["Traversal.FileModule"]
+  # This source-relative repository path is fixed by __DIR__. Runtime settings
+  # and caller input cannot select another declaration file.
   defp declared_pool? do
     case File.read(Path.expand("../../.devcore/project.conf", __DIR__)) do
       {:ok, declaration} -> Regex.match?(~r/^SLOT_POOL=\S+/m, declaration)
