@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "e553c9d0a93a792e761604d03971b26d7dc36b52",
-    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined; no pilot, cleanup, unrestricted activation, PR approval or merge is certified. Later bounded source repairs extract existing configuration, PLT-input and probe predicates without changing guards or errors. Settled free allocation history requires an empty jobs map and the exact registered-cleanup diagnosis. Failure-log inspection preserves full private logs while reading a bounded final-line tail under the existing total-size ceiling. Historical pilot and failed engineering-attempt evidence do not certify this revised candidate."
+    "git_sha": "a2a94f723be5018e6ae48cafbbd5539a5b3042ae",
+    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined; no pilot, cleanup, unrestricted activation, PR approval or merge is certified. Later bounded source repairs extract existing configuration, PLT-input and probe predicates without changing guards or errors. Settled free allocation history requires an empty jobs map and the exact registered-cleanup diagnosis. Failure-log inspection preserves full private logs while reading a bounded final-line tail under the existing total-size ceiling. Historical pilot and failed engineering-attempt evidence do not certify this revised candidate. LocalConfig documents two independently assessed Sobelow false positives with function-scoped annotations: the workstation-owned fixed verifier command and source-relative declaration read. Runtime hint substitution and malformed identifier tests preserve those trust boundaries; the installed live-verifier test remains excluded from standalone source proof. Broad engineering verification remains incomplete."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -638,7 +638,7 @@
       "id": "config",
       "path": "lib/new_you/local_config.ex",
       "symbol": "def repo(env",
-      "sha256": "01c52369aa0fc0845e184825562f34fafe8b1f659170e524352f26ce1068a557"
+      "sha256": "f9fe5a2b2b640b84e44ca5871815de341aaad952aba3a6565c59fd5415403ef3"
     },
     {
       "id": "session",
@@ -686,7 +686,7 @@
       "id": "config_tests",
       "path": "test/new_you/local_config_test.exs",
       "symbol": "test \"a verified managed job selects its isolated TEST identity and slot 20 port\"",
-      "sha256": "d9d965c14dd515d5085f98330c460de417a7f7a979ebc1c9bbf6a3fedc48fa0a"
+      "sha256": "457a3b0b5403135a2c427d02e4f4252cea65685ae815e6af1ca59ac19b87e5d0"
     },
     {
       "id": "session_tests",
