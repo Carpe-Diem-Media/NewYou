@@ -6,8 +6,8 @@
     "WELL-147"
   ],
   "implementation_revision": {
-    "git_sha": "a2a94f723be5018e6ae48cafbbd5539a5b3042ae",
-    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined; no pilot, cleanup, unrestricted activation, PR approval or merge is certified. Later bounded source repairs extract existing configuration, PLT-input and probe predicates without changing guards or errors. Settled free allocation history requires an empty jobs map and the exact registered-cleanup diagnosis. Failure-log inspection preserves full private logs while reading a bounded final-line tail under the existing total-size ceiling. Historical pilot and failed engineering-attempt evidence do not certify this revised candidate. LocalConfig documents two independently assessed Sobelow false positives with function-scoped annotations: the workstation-owned fixed verifier command and source-relative declaration read. Runtime hint substitution and malformed identifier tests preserve those trust boundaries; the installed live-verifier test remains excluded from standalone source proof. Broad engineering verification remains incomplete."
+    "git_sha": "452b3140984e11aa471f988cb8ef6ac411b18257",
+    "semantics": "WELL-147 consumer source integrates current main with strict managed TEST validation, distinct hosted CI identity, build-locked admission and private mutable PLTs. Compound TEST commands can request DevCore heavy permits through the wrapper. The probe uses bounded private control records and identity-bound acknowledgements, and its actual Port collector requires matching receipt/exit zero while bounding output through exit. A dry-run-default pilot driver now composes independent job/process/catalog and retained-failure observers, private window/reference validation, finite read admission, bounded owned output, completed barriers and serialized cancellation. It recognizes only proven owned preparing/ready intermediates and exact supervisor loopback port reservations; unrelated jobs/listeners refuse. Timed-out prerequisite reads preserve private survivor receipts. Execution is implemented but NOT authorized by source presence, markers or references. Fresh exact-head source/operational review, owner and legacy-window clearance, and live/final gates remain required. The two supervisor-loss generations remain quarantined; no pilot, cleanup, unrestricted activation, PR approval or merge is certified. Later bounded source repairs extract existing configuration, PLT-input and probe predicates without changing guards or errors. Settled free allocation history requires an empty jobs map and the exact registered-cleanup diagnosis. Failure-log inspection preserves full private logs while reading a bounded final-line tail under the existing total-size ceiling. Historical pilot and failed engineering-attempt evidence do not certify this revised candidate. LocalConfig documents two independently assessed Sobelow false positives with function-scoped annotations: the workstation-owned fixed verifier command and source-relative declaration read. Runtime hint substitution and malformed identifier tests preserve those trust boundaries; the installed live-verifier test remains excluded from standalone source proof. Broad engineering verification remains incomplete. WELL-147 maintains shared source references after bounded browser diagnostic checkpoints. The migration rollback fixture uses its session temporary namespace under existing runtime grants, and only the two new proof helpers are added to existing test-ignore filters. Existing application, Domain and migration semantics are unchanged. Real browser failure diagnosis and the repaired temporary-table test still need authorized targeted runtime proof."
   },
   "authoritative_domain": "NewYou developer tooling. This capability owns no business Domain or participant behavior.",
   "collaborating_domains": [
@@ -548,6 +548,34 @@
         "pilot_runtime",
         "pilot_identity"
       ]
+    },
+    {
+      "path": "test/tools/architecture/analytics_projection_rollback_test.exs",
+      "cases": [
+        "Run the original migration up/down against a connection-local temporary table using its actual namespace.",
+        "Keep test-row deletion and restored aggregate constraint assertions; verify temporary persistence and unchanged public table identity."
+      ],
+      "proves": "Source-level repair for a restricted-runtime CREATE SCHEMA failure.",
+      "limits": "Runtime validation of the temporary fixture remains unverified; no database privileges were changed.",
+      "source_ids": [
+        "rollback_runtime_fixture"
+      ]
+    },
+    {
+      "path": "test/proof/reset_request_checkpoints_test.mjs",
+      "cases": [
+        "Inject evaluation failures into actual request-layout source for title, labels, stylesheet, reduced motion, responsive layout, text resize and keyboard focus.",
+        "Removing each new checkpoint loses stage precision."
+      ],
+      "proves": "29 pure Node protocol/checkpoint tests and 10 standalone Elixir forwarding tests pass; the canonical helper-discovery regression passes independently without application startup.",
+      "limits": "Synthetic evaluation and port results do not establish or fix the real EN/AF browser failure.",
+      "source_ids": [
+        "layout_driver",
+        "layout_checkpoint_tests",
+        "layout_forwarding_tests",
+        "browser_forwarder",
+        "helper_discovery_filters"
+      ]
     }
   ],
   "safe_extensions": [
@@ -801,6 +829,42 @@
       "path": "tests/test_well147_pilot_cli.py",
       "symbol": "class CliCompositionTests(unittest.TestCase):",
       "sha256": "f0d67b1f7a30a12940582973ec9b798ae89cff5bc9d1c416b253eb7351ef2e36"
+    },
+    {
+      "id": "rollback_runtime_fixture",
+      "path": "test/tools/architecture/analytics_projection_rollback_test.exs",
+      "symbol": "defmodule NewYou.Architecture.AnalyticsProjectionRollbackTest",
+      "sha256": "0436e08273d6dcfac645e13875c883f7a63e33317037f862555f5cb6982df47a"
+    },
+    {
+      "id": "helper_discovery_filters",
+      "path": "mix.exs",
+      "symbol": "test_ignore_filters:",
+      "sha256": "56fae7d19e426043a1c2aee756f24799881b91faf1f164b4ca3ee67b5f66f9da"
+    },
+    {
+      "id": "layout_driver",
+      "path": "test/proof/p8_05_browser.mjs",
+      "symbol": "checkpoint = 'reset.request_layout';",
+      "sha256": "07896ef5bc17a0fbda451bbc296956e6053e5cfc3f7d56397e355291d1463071"
+    },
+    {
+      "id": "layout_checkpoint_tests",
+      "path": "test/proof/reset_request_checkpoints_test.mjs",
+      "symbol": "async function failureAt(",
+      "sha256": "e1249cbd88dca4967dc4a64db20e8231f338f23b658f4d1b3a7170a386aae2be"
+    },
+    {
+      "id": "layout_forwarding_tests",
+      "path": "test/new_you/proof/browser_protocol_test.exs",
+      "symbol": "defmodule NewYou.Proof.BrowserProtocolTest",
+      "sha256": "4cedf9f5ab92112887f529995869935aaddf3f552145b0e29ce155f9a5bd2687"
+    },
+    {
+      "id": "browser_forwarder",
+      "path": "test/support/proof/p8_05_browser.ex",
+      "symbol": "def run_port(",
+      "sha256": "569818cecd42193d2ca302d5fce31017fd816054e722c8ffb4ee2e03570efa3e"
     }
   ]
 }
