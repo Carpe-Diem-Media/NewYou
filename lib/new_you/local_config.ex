@@ -28,14 +28,7 @@ defmodule NewYou.LocalConfig do
 
     allocation = allocation(get_env, options)
 
-    if is_nil(allocation) and env == :dev and get_env.("NEW_YOU_DATABASE_MODE") == "ci",
-      do: invalid_managed!()
-
-    if allocation do
-      validate_binding!("TEST", 55433, allocation["database"], allocation["role"], get_env)
-
-      if env == :dev and allocation["profile"] != "dev", do: invalid_managed!()
-    end
+    validate_repo_context!(env, allocation, get_env)
 
     case env do
       :dev ->
@@ -53,6 +46,17 @@ defmodule NewYou.LocalConfig do
             else: "new_you_test"
 
         validate_binding!("TEST", 55433, identity, identity, get_env)
+    end
+  end
+
+  defp validate_repo_context!(env, allocation, get_env) do
+    if is_nil(allocation) and env == :dev and get_env.("NEW_YOU_DATABASE_MODE") == "ci",
+      do: invalid_managed!()
+
+    if allocation do
+      validate_binding!("TEST", 55433, allocation["database"], allocation["role"], get_env)
+
+      if env == :dev and allocation["profile"] != "dev", do: invalid_managed!()
     end
   end
 
@@ -120,12 +124,7 @@ defmodule NewYou.LocalConfig do
     markers = Map.new(@markers, &{&1, get_env.(&1)})
 
     if Enum.any?(markers, fn {_key, value} -> not is_nil(value) end) do
-      unless markers["DEVCORE_SLOT_PROJECT"] == "new_you" and
-               Enum.all?(~w(LEASE GENERATION JOB), fn suffix ->
-                 identifier?(markers["DEVCORE_SLOT_" <> suffix])
-               end) and canonical_path?(markers["DEVCORE_SLOT_WORKTREE"]) do
-        invalid_managed!()
-      end
+      validate_markers!(markers)
 
       verify = Keyword.get(options, :verify, &verify_job/1)
 
@@ -138,6 +137,15 @@ defmodule NewYou.LocalConfig do
         do: invalid_managed!()
 
       nil
+    end
+  end
+
+  defp validate_markers!(markers) do
+    unless markers["DEVCORE_SLOT_PROJECT"] == "new_you" and
+             Enum.all?(~w(LEASE GENERATION JOB), fn suffix ->
+               identifier?(markers["DEVCORE_SLOT_" <> suffix])
+             end) and canonical_path?(markers["DEVCORE_SLOT_WORKTREE"]) do
+      invalid_managed!()
     end
   end
 
