@@ -223,7 +223,9 @@ try {
     await navigation(() => evaluate(`document.querySelector('a[href="/password/reset?locale=${input.locale}"]').click()`));
     checkpoint = 'reset.request_layout';
     checks.approved_request = await title('identity.password_reset.request.title');
+    checkpoint = 'reset.request_labels';
     checks.labels = await evaluate(`document.querySelector('label[for="email"]')?.textContent.trim() === ${literal('identity.login.email.label')} && !!document.querySelector('[name="_csrf_token"]') && document.querySelector('#email').autocomplete === 'email'`);
+    checkpoint = 'reset.request_stylesheet';
     checks.stylesheet = await evaluate(`document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
     checks.responsive = true;
     checks.text_resize = true;
