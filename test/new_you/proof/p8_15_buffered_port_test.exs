@@ -7,7 +7,8 @@ source_path = Path.expand("../../support/proof/p8_15_port.ex", __DIR__)
 
 entry =
   quote do
-    def collect_owned_port(port, started, deadline) do
+    def collect_owned_port(port, started, deadline, owner_monitor \\ nil) do
+      if owner_monitor, do: Process.put({__MODULE__, :owner_monitor}, owner_monitor)
       run_port(port, System.find_executable("ps"), "", deadline - started, started)
     end
   end
@@ -33,6 +34,10 @@ defmodule NewYou.Proof.P815BufferedPortTest do
              collect(["P815_READY\n", @signals])
   end
 
+  test "queued owner cancellation wins over buffered checkpoint signals" do
+    assert :owner_cancelled = collect(["P815_READY\n" <> @signals], 200, true)
+  end
+
   test "an incomplete final line cannot authorize interruption" do
     assert %{status: :timeout, cleanup: :confirmed} =
              collect(["P815_READY\n" <> String.trim_trailing(@signals, "\n")])
@@ -53,7 +58,7 @@ defmodule NewYou.Proof.P815BufferedPortTest do
              collect(["P815_READY\n" <> @signals <> String.duplicate("x", 8_192)])
   end
 
-  defp collect(packets, timeout \\ 200) do
+  defp collect(packets, timeout \\ 200, cancel_owner? \\ false) do
     # This test process owns the real, isolated Port. Its child emits no data,
     # so only the explicitly queued packets can advance the collector.
     port =
@@ -71,12 +76,44 @@ defmodule NewYou.Proof.P815BufferedPortTest do
     try do
       send(self(), {port, {:data, "P815_GROUP=#{pid}\n"}})
       Enum.each(packets, &send(self(), {port, {:data, &1}}))
+
+      owner_monitor =
+        if cancel_owner? do
+          owner = spawn(fn -> receive do: (:stop -> :ok) end)
+          monitor = Process.monitor(owner)
+          send(owner, :stop)
+
+          receive do
+            {:DOWN, ^monitor, :process, ^owner, :normal} = down -> send(self(), down)
+          after
+            1_000 -> flunk("owned cancellation monitor did not arrive")
+          end
+
+          monitor
+        end
+
       started = System.monotonic_time(:millisecond)
 
       result =
-        NewYou.Proof.P815BufferedCollector.collect_owned_port(port, started, started + timeout)
+        if owner_monitor do
+          assert :normal ==
+                   catch_exit(
+                     NewYou.Proof.P815BufferedCollector.collect_owned_port(
+                       port,
+                       started,
+                       started + timeout,
+                       owner_monitor
+                     )
+                   )
 
-      assert result.cleanup == if(timeout < 0, do: :unconfirmed, else: :confirmed)
+          :owner_cancelled
+        else
+          NewYou.Proof.P815BufferedCollector.collect_owned_port(port, started, started + timeout)
+        end
+
+      unless owner_monitor,
+        do: assert(result.cleanup == if(timeout < 0, do: :unconfirmed, else: :confirmed))
+
       assert NewYou.Proof.P815BufferedCollector.external_stopped?(pid)
       refute_receive {^port, _}, 0
       result

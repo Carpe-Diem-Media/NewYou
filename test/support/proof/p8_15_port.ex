@@ -248,6 +248,18 @@ defmodule NewYou.Proof.P815Port do
   end
 
   defp read(port, pid, output, started, deadline) do
+    owner_monitor = Process.get({__MODULE__, :owner_monitor})
+
+    # Preserve cancellation precedence before interpreting an existing buffer.
+    receive do
+      {:DOWN, ^owner_monitor, :process, _, _} ->
+        cancel_owner(port, pid, group(output))
+    after
+      0 -> read_buffered(port, pid, output, started, deadline)
+    end
+  end
+
+  defp read_buffered(port, pid, output, started, deadline) do
     # READY may arrive with a complete checkpoint in the same Port packet.
     # Process buffered bytes before waiting, preserving deadline/limit priority.
     cond do
