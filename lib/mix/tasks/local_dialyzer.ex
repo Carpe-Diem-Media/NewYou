@@ -135,18 +135,10 @@ defmodule Mix.Tasks.LocalDialyzer do
       ) do
     planned_apps = plt_plan |> Enum.flat_map(&elem(&1, 1)) |> Enum.uniq()
 
-    valid_core_inputs? =
-      Map.keys(core_inputs) |> Enum.sort() == Enum.sort(planned_apps) and
-        Enum.all?(planned_apps, fn app ->
-          inputs = Map.get(core_inputs, app, [])
-
-          Enum.any?(inputs, &String.ends_with?(&1, ".beam")) and
-            Enum.any?(inputs, &String.ends_with?(&1, ".app")) and
-            Enum.all?(inputs, &File.regular?/1)
-        end)
+    valid_core_inputs? = valid_core_inputs?(core_inputs, planned_apps)
 
     cond do
-      plt_plan == [] or Enum.any?(plt_plan, fn {name, apps} -> name == "" or apps == [] end) ->
+      empty_core_plan?(plt_plan) ->
         raise ArgumentError, "Dialyxir returned an empty core PLT plan"
 
       source_paths == [] or not Enum.all?(source_paths, &File.regular?/1) ->
@@ -162,6 +154,21 @@ defmodule Mix.Tasks.LocalDialyzer do
       true ->
         :ok
     end
+  end
+
+  defp empty_core_plan?(plt_plan) do
+    plt_plan == [] or Enum.any?(plt_plan, fn {name, apps} -> name == "" or apps == [] end)
+  end
+
+  defp valid_core_inputs?(core_inputs, planned_apps) do
+    Map.keys(core_inputs) |> Enum.sort() == Enum.sort(planned_apps) and
+      Enum.all?(planned_apps, fn app ->
+        inputs = Map.get(core_inputs, app, [])
+
+        Enum.any?(inputs, &String.ends_with?(&1, ".beam")) and
+          Enum.any?(inputs, &String.ends_with?(&1, ".app")) and
+          Enum.all?(inputs, &File.regular?/1)
+      end)
   end
 
   defp core_input_paths(plt_plan) do

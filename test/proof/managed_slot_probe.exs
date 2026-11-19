@@ -53,11 +53,10 @@ defmodule NewYou.ManagedSlotProbe do
 
     keys_allowed? = Enum.all?(Map.keys(input), &(&1 in allowed_keys))
 
-    seed_mode? =
-      mode == "seed" or (input["browser"] != true and input["fail_after_commit"] != true)
+    seed_mode? = valid_seed_options?(input, mode)
 
     directory = input["control_directory"]
-    control? = mode == "child" or (is_binary(directory) and Path.type(directory) == :absolute)
+    control? = valid_control_directory?(mode, directory)
 
     if control? and keys_allowed? and seed_mode? and valid_email?(own) and valid_email?(peer) and
          own != peer and
@@ -77,6 +76,14 @@ defmodule NewYou.ManagedSlotProbe do
   end
 
   def validate_input(_), do: {:error, :invalid_probe_input}
+
+  defp valid_seed_options?(input, mode) do
+    mode == "seed" or (input["browser"] != true and input["fail_after_commit"] != true)
+  end
+
+  defp valid_control_directory?(mode, directory) do
+    mode == "child" or (is_binary(directory) and Path.type(directory) == :absolute)
+  end
 
   def validate_continue(input, own_database) when is_map(input) do
     peer_database = input["peer_database"]
