@@ -248,6 +248,29 @@ defmodule NewYou.Proof.P815Port do
   end
 
   defp read(port, pid, output, started, deadline) do
+    # READY may arrive with a complete checkpoint in the same Port packet.
+    # Process buffered bytes before waiting, preserving deadline/limit priority.
+    cond do
+      System.monotonic_time(:millisecond) >= deadline ->
+        {cleanup, exit_status} = terminate(port, pid, group(output))
+        result(:timeout, prefix(output), started, cleanup, exit_status)
+
+      byte_size(output) >= @limit ->
+        {cleanup, exit_status} = terminate(port, pid, group(output))
+        result(:output_overflow, prefix(output), started, cleanup, exit_status)
+
+      interrupt_ready?(port, output) ->
+        # Only an explicit, complete checkpoint handshake permits a cut.
+        # Cleanup targets the process group verified before stdin delivery.
+        {cleanup, exit_status} = terminate(port, pid, group(output))
+        result(:interrupted, output, started, cleanup, exit_status)
+
+      true ->
+        receive_output(port, pid, output, started, deadline)
+    end
+  end
+
+  defp receive_output(port, pid, output, started, deadline) do
     owner_monitor = Process.get({__MODULE__, :owner_monitor})
 
     receive do
@@ -257,24 +280,7 @@ defmodule NewYou.Proof.P815Port do
       {^port, {:data, bytes}} ->
         output = output <> bytes
 
-        cond do
-          System.monotonic_time(:millisecond) >= deadline ->
-            {cleanup, exit_status} = terminate(port, pid, group(output))
-            result(:timeout, prefix(output), started, cleanup, exit_status)
-
-          byte_size(output) >= @limit ->
-            {cleanup, exit_status} = terminate(port, pid, group(output))
-            result(:output_overflow, prefix(output), started, cleanup, exit_status)
-
-          interrupt_ready?(port, output) ->
-            # Only an explicit, complete checkpoint handshake permits a cut.
-            # Cleanup targets the process group verified before stdin delivery.
-            {cleanup, exit_status} = terminate(port, pid, group(output))
-            result(:interrupted, output, started, cleanup, exit_status)
-
-          true ->
-            read(port, pid, output, started, deadline)
-        end
+        read(port, pid, output, started, deadline)
 
       {^port, {:exit_status, code}} ->
         drain(port)
