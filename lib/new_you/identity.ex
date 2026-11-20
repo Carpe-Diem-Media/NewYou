@@ -221,12 +221,14 @@ defmodule NewYou.Identity do
   Terminate one other currently usable Session owned by the presenting Account.
 
   Foreign, missing and self targets share a denial. A bound terminal target is
-  safe to retry. Success includes the durable Audit obligation. An unconfirmed
-  result must be reconciled by rereading the Account's current Sessions.
+  safe to retry. Success includes the durable Audit obligation. A confirmed
+  Audit rejection rolls back the transition. An unconfirmed result must be
+  reconciled by rereading the Account's current Sessions.
   """
   @spec revoke_other_session(map(), Ecto.UUID.t()) ::
           {:ok, :revoked | :already_ended | :stale}
-          | {:error, :session_unavailable | :session_result_uncertain}
+          | {:error,
+             :session_unavailable | :session_revocation_failed | :session_result_uncertain}
   def revoke_other_session(credentials, session_id),
     do: NewYou.Identity.PasswordSession.revoke_other(credentials, session_id)
 
