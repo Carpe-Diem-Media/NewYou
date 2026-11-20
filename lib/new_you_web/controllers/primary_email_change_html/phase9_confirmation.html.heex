@@ -1,0 +1,26 @@
+<.auth_shell
+  title={text(@copy, "#{@state}.title")}
+  locale={@locale}
+  heading_id="primary-email-change-confirmation-heading"
+>
+  <p role="status" class="max-w-prose text-design-body-sm leading-design-body-sm">
+    {text(@copy, "#{@state}.body")}
+  </p>
+  <.form
+    :if={@state == :confirm}
+    for={%{}}
+    action="/primary-email-change/confirmation"
+    method="post"
+    id="phase9-email-change-confirmation"
+    class="grid gap-design-base justify-items-start"
+  >
+    <input type="hidden" name="proof" value={@proof} />
+    <input type="hidden" name="locale" value={@locale} />
+    <.primary_button adaptive type="submit">{text(@copy, "confirm.action")}</.primary_button>
+  </.form>
+  <a
+    :if={@state != :confirm}
+    href={"/primary-email-change?locale=#{@locale}"}
+    class="min-h-11 w-fit content-center text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+  >{text(@copy, "start.title")}</a>
+</.auth_shell>

@@ -271,6 +271,18 @@ defmodule NewYou.Identity do
   @spec expire_due_sessions() :: {:ok, non_neg_integer()} | {:error, :authentication_unavailable}
   def expire_due_sessions, do: NewYou.Identity.PasswordSession.expire_due()
 
+  @doc "Read the current eligible Account's canonical address and email-change status."
+  @spec primary_email_change_status(map()) ::
+          {:ok, map()} | {:error, :primary_email_change_unavailable}
+  def primary_email_change_status(credentials),
+    do: NewYou.Identity.PrimaryEmailChange.status(credentials)
+
+  @doc "Apply the current Phase-9 change under the presenting operation-bound Session."
+  @spec apply_authenticated_primary_email_change(map(), Ecto.UUID.t()) ::
+          {:ok, atom()} | {:error, :primary_email_change_unavailable}
+  def apply_authenticated_primary_email_change(credentials, operation_id),
+    do: NewYou.Identity.PrimaryEmailChange.apply_authenticated(credentials, operation_id)
+
   @doc "Request an Account-owned primary-email change under the current authenticated Session."
   @spec request_primary_email_change(term(), term(), term(), term()) ::
           {:ok, :requested} | {:error, :primary_email_change_unavailable}
@@ -289,6 +301,15 @@ defmodule NewYou.Identity do
           {:ok, :confirmed} | {:error, :primary_email_change_unavailable}
   def confirm_primary_email_change(proof),
     do: NewYou.Identity.PrimaryEmailChange.confirm(proof)
+
+  @doc "Confirm an exact locale-bound WELL-156 proof without applying the change."
+  @spec confirm_phase9_primary_email_change(binary(), String.t()) ::
+          {:ok, :confirmed} | {:error, :primary_email_change_unavailable}
+  def confirm_phase9_primary_email_change(proof, locale) when locale in ["en", "af"],
+    do: NewYou.Identity.PrimaryEmailChange.confirm(proof, :well156, locale)
+
+  def confirm_phase9_primary_email_change(_proof, _locale),
+    do: {:error, :primary_email_change_unavailable}
 
   @doc "Apply a current, confirmed primary-email change after its Identity-owned guards pass."
   @spec apply_primary_email_change(term()) ::

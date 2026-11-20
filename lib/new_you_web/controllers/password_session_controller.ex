@@ -51,7 +51,7 @@ defmodule NewYouWeb.PasswordSessionController do
       locale when locale in ["en", "af"] ->
         case Identity.authorize_session(credentials(conn)) do
           {:ok, _} ->
-            render_page(conn, :protected, locale, %{})
+            render_page(conn, :protected, locale, %{email_change_copy: email_change_copy(locale)})
 
           _ ->
             conn
@@ -93,6 +93,15 @@ defmodule NewYouWeb.PasswordSessionController do
             |> put_status(:service_unavailable)
             |> render_page(:logout, locale, %{confirmed?: false})
         end
+    end
+  end
+
+  defp email_change_copy(locale) do
+    with true <- DevelopmentEntry.enabled?(),
+         {:ok, copy} <- NewYou.Content.PrimaryEmailChangeBrowserCopy.load(locale) do
+      Map.fetch!(copy, "identity.change_email.start.title")
+    else
+      _ -> nil
     end
   end
 

@@ -10,8 +10,8 @@
     "WELL-114"
   ],
   "implementation_revision": {
-    "git_sha": "bed38c1ecf63e42fcac48e832fe3c3535f305d45",
-    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-112 reconciles the stronger current-main scanner scenario and adds the self-hosted-font CSP assertion in its existing shared helper. Scenario owner-state checks and the fixed TB-001 inventory remain unchanged. Source/hash refresh is not a fresh TB-001 certification. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged."
+    "git_sha": "26295fec18db5375d95fd3b3100e9b8cdd38bf9f",
+    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-112 reconciles the stronger current-main scanner scenario and adds the self-hosted-font CSP assertion in its existing shared helper. Scenario owner-state checks and the fixed TB-001 inventory remain unchanged. Source/hash refresh is not a fresh TB-001 certification. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
   "collaborating_domains": [
@@ -494,7 +494,7 @@
       "id": "browser_script",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'spine'",
-      "sha256": "079aef336a83c074d1bf6c5c976157db418f29bc6a1c91f6df0b9f5d55556df9"
+      "sha256": "dbdabbeed34b07d95fbe5448592a1a74181061be44c25c4caedc4b9c4e820cf5"
     },
     {
       "id": "fixture",
@@ -554,19 +554,19 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "defmodule NewYou.Identity",
-      "sha256": "0a2fc564c87ab0e36a46d055e25270cdc12f9b86d5ac4628dbf59a0180d20fbe"
+      "sha256": "8091cbdf01c00c3b3588aa9058896fadf130e3f016c86cdf335a7f352c1b3dec"
     },
     {
       "id": "account",
       "path": "lib/new_you/identity/account.ex",
       "symbol": "defmodule NewYou.Identity.Account",
-      "sha256": "515114144a2ba38bd4858e2a5be297ef3d33bd9da50666a4859638f3125bc3ce"
+      "sha256": "976dac1fdc3a55bbd3808e8e9cefe3a942e4482e7263fb53120f0c1faed526fa"
     },
     {
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "defmodule NewYou.Communications",
-      "sha256": "b1dff58da7f739e9baf68f3ff33f9e4659662aa5e07dc64295bdd29d2ef99d54"
+      "sha256": "111fc6033c0a2b3b9f29cc3c7a8582b7c49dc8e8756ca9b8ee9a086dc8a7e504"
     },
     {
       "id": "intent",

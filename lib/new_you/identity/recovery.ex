@@ -8,7 +8,17 @@ defmodule NewYou.Identity.Recovery do
   import Kernel, except: [binding: 1]
   require Ash.Query
   alias AshAuthentication.{Jwt, Jwt.Config}
-  alias NewYou.Identity.{Account, Token, RecoveryCase, Session, DeviceAssurance, IdentityGrant}
+
+  alias NewYou.Identity.{
+    Account,
+    Token,
+    RecoveryCase,
+    Session,
+    DeviceAssurance,
+    IdentityGrant,
+    PrimaryEmailChange
+  }
+
   alias NewYou.{Audit, Communications, Identity}
 
   @enabled Mix.env() in [:dev, :test] and
@@ -476,6 +486,7 @@ defmodule NewYou.Identity.Recovery do
 
   defp ensure_hold(account, recovery) do
     with {:ok, held} <- Ash.update(account, %{}, action: :hold_for_recovery, authorize?: false),
+         :ok <- PrimaryEmailChange.terminalize_for_security_hold(held),
          {:ok, _} <-
            Audit.establish_identity_security_obligation(%{
              source_operation_id: recovery.operation_id,

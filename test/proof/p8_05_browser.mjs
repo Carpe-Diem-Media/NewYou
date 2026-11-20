@@ -199,6 +199,133 @@ try {
     await navigation(() => evaluate(`document.querySelector('a[href="/login?locale=${input.locale}"]').click()`));
     await passwordSubmit(input.input.password);
     checks.recovery = await hasTitle('identity.session.protected.title');
+  } else if (input.mode === 'ordinary_email_change') {
+    const packet = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED_v0.1.1.json', 'utf8'));
+    const copy = key => JSON.stringify(packet.copy_items.find(item => item.semantic_key === `identity.change_email.${key}`)[input.locale]);
+    const title = key => evaluate(`document.querySelector('h1')?.textContent.trim() === ${copy(key)}`);
+    const path = `/primary-email-change?locale=${input.locale}`;
+    const submit = selector => navigation(() => evaluate(`document.querySelector(${JSON.stringify(selector)}).requestSubmit()`));
+    const signIn = async email => {
+      await evaluate(`document.querySelector('#email').value=${JSON.stringify(email)}; document.querySelector('#password').value=${JSON.stringify(input.password)};`);
+      await submit('#password-login');
+    };
+
+    await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
+    await signIn(input.email);
+    await navigation(() => evaluate(`document.querySelector('a[href="${path}"]').click()`));
+    checks.entry = await title('start.title') && await evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)}`);
+    checks.stylesheet = await evaluate(`document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
+    checks.accessible_form = await evaluate(`!!document.querySelector('main section[aria-labelledby="primary-email-change-heading"]') && !!document.querySelector('label[for="email-change-target"]') && !!document.querySelector('input[name="_csrf_token"]')`);
+    const focus = async selector => {
+      const focused = () => evaluate(`document.activeElement.matches(${JSON.stringify(selector)}) && document.activeElement.matches(':focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+      for (let tab = 0; tab < 8 && !(await focused()); tab++) {
+        await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+        await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+      }
+      return focused();
+    };
+    const layout = async () => {
+      await cdp('Emulation.setDeviceMetricsOverride', {width: 320, height: 900, deviceScaleFactor: 1, mobile: true});
+      const reflow = await evaluate(`document.documentElement.scrollWidth <= innerWidth`);
+      const resize = await evaluate(`(() => {
+        const nodes = [...document.querySelectorAll('h1, p, a, label, button, dd, dt')];
+        const styles = nodes.map(node => ({node, size: parseFloat(getComputedStyle(node).fontSize), line: parseFloat(getComputedStyle(node).lineHeight)}));
+        try {
+          for (const {node, size, line} of styles) {
+            node.style.fontSize = (size * 2) + 'px';
+            if (Number.isFinite(line)) node.style.lineHeight = (line * 2) + 'px';
+          }
+          return document.documentElement.scrollWidth <= innerWidth && nodes.every(node => node.scrollHeight <= node.clientHeight + 1);
+        } finally { for (const {node} of styles) node.removeAttribute('style'); }
+      })()`);
+      await cdp('Emulation.clearDeviceMetricsOverride');
+      return {reflow, resize};
+    };
+    const openStatus = () => navigation(() => cdp('Page.navigate', {url: base + path}));
+    const request = async (target, operation) => {
+      await evaluate(`document.querySelector('#email-change-target').value=${JSON.stringify(target)}; document.querySelector('[name="operation_id"]').value=${JSON.stringify(operation)};`);
+      await submit('#email-change-request');
+    };
+    const advance = async () => {
+      await evaluate(`document.querySelector('#email-change-password').value=${JSON.stringify(input.password)};`);
+      await submit('#email-change-advance');
+    };
+    const proofUrl = async operation => {
+      const response = await fetch(`${base}/__well156/proof/${operation}`);
+      const {proof} = await response.json();
+      return `${base}/primary-email-change/confirmation?${new URLSearchParams({locale: input.locale, proof})}`;
+    };
+    const fixtureTransition = async (action, operation) => {
+      const response = await fetch(`${base}/__well156/${action}/${operation}`, {method: 'POST'});
+      if (response.status !== 204) throw new Error('browser.evaluation');
+    };
+    const operations = input.operations;
+    checks.keyboard_focus = await focus('#email-change-target');
+    await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+    checks.reduced_motion = await evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0`);
+    const startLayout = await layout();
+    checks.reflow = startLayout.reflow;
+    checks.text_resize = startLayout.resize;
+
+    await request(input.email, operations.cancel);
+    checks.rejected = await evaluate(`document.querySelector('#email-change-target').getAttribute('aria-invalid') === 'true' &&
+      document.querySelector('#email-change-target').getAttribute('aria-describedby') === 'email-change-error' &&
+      document.querySelector('[role="alert"]')?.textContent.includes(${copy('request.neutral')})`);
+    checks.error_focus = await focus('#email-change-target');
+    const errorLayout = await layout();
+    checks.error_layout = errorLayout.reflow && errorLayout.resize;
+
+    await request(input.target, operations.cancel);
+    checks.requested = await evaluate(`document.querySelector('[role="status"]')?.textContent.trim() === ${copy('request.neutral')}`);
+    checks.reauthentication_label = await evaluate(`document.querySelector('#email-change-advance button')?.textContent.trim() === ${JSON.stringify(input.locale === 'af' ? 'Bevestig jou identiteit' : 'Confirm your identity')}`);
+    await submit('#email-change-cancel');
+    checks.cancelled = await title('cancelled.title');
+
+    await request(input.target, operations.expire);
+    await fixtureTransition('expire', operations.expire);
+    await openStatus();
+    checks.expired = await title('uncertain.title') && await evaluate(`!!document.querySelector('#email-change-request') && !document.querySelector('#email-change-advance')`);
+
+    await request(input.target, operations.apply);
+    await advance();
+    checks.pending = await title('pending.title');
+    const confirmation = await proofUrl(operations.apply);
+    await navigation(() => cdp('Page.navigate', {url: confirmation}));
+    checks.confirm = await title('confirm.title');
+    await submit('#phase9-email-change-confirmation');
+    checks.confirmed = await title('confirmed.title') && await evaluate(`!document.querySelector('input[name="proof"]')`);
+    await navigation(() => cdp('Page.navigate', {url: confirmation}));
+    await submit('#phase9-email-change-confirmation');
+    checks.replay_unavailable = await title('unavailable.title') && await evaluate(`document.querySelector('[role="status"]')?.textContent.trim() === ${copy('unavailable.body')} && !document.querySelector('input[name="proof"]')`);
+
+    await openStatus();
+    checks.delayed = await title('review.title') && await evaluate(`!document.querySelector('#email-change-advance') && !!document.querySelector('#email-change-cancel')`);
+    await fixtureTransition('due', operations.apply);
+    await openStatus();
+    checks.review = await evaluate(`!!document.querySelector('label[for="email-change-password"]') && !!document.querySelector('#email-change-advance')`);
+    const reviewLayout = await layout();
+    checks.review_layout = reviewLayout.reflow && reviewLayout.resize && await focus('#email-change-password');
+    await advance();
+    checks.reviewed = await title('review.title') && await evaluate(`!!document.querySelector('#email-change-advance') && document.querySelector('dd').textContent.trim() === ${JSON.stringify(input.email)}`);
+    await advance();
+    checks.applied = await title('applied.title');
+    await navigation(() => evaluate(`document.querySelector('a[href="/login?locale=${input.locale}"]').click()`));
+    await signIn(input.target);
+    checks.fresh_sign_in = await evaluate(`location.pathname === '/session/protected'`);
+
+    await openStatus();
+    await request(input.email, operations.hold);
+    await advance();
+    const heldConfirmation = await proofUrl(operations.hold);
+    await fixtureTransition('hold', operations.hold);
+    await openStatus();
+    checks.held_denial = await title('uncertain.title') && await evaluate(`!!document.querySelector('a[href="/login?locale=${input.locale}"]') && !document.querySelector('form') && !document.querySelector('dd')`);
+    await navigation(() => cdp('Page.navigate', {url: heldConfirmation}));
+    await submit('#phase9-email-change-confirmation');
+    checks.held_confirmation = await title('unavailable.title');
+    await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
+    await signIn(input.target);
+    checks.held_login = await evaluate(`location.pathname === '/login' && !!document.querySelector('#password-login')`);
   } else if (input.mode === 'ordinary_reset') {
     const approved = JSON.parse(readFileSync('docs/development/fixtures/well136-c02-v0.1.json', 'utf8'));
     const text = key => approved.entries[key][input.locale].text;
