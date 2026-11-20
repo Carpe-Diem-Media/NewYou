@@ -14,6 +14,11 @@
     href={"/primary-email-change?locale=#{@locale}"}
     class="min-h-11 w-fit content-center text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
   >{@email_change_copy}</a>
+  <a
+    :if={@session_management_title}
+    href={"/session/manage?locale=#{@locale}"}
+    class="min-h-11 w-fit content-center text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+  >{@session_management_title}</a>
   <.form
     for={%{}}
     action="/session/logout"

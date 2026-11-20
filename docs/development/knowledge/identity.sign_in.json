@@ -1,17 +1,18 @@
 {
   "schema_version": 1,
   "capability_id": "identity.sign_in",
-  "purpose": "WELL-134 bounded FP-001 EN/AF development sign-in and current-session protected access. This source map grants no release or review approval.",
+  "purpose": "WELL-134 bounded FP-001 EN/AF development sign-in and current-session protected access. This source map grants no release or review approval. WELL-163 adds a current-use Session inventory and revocation of one other Session on the same Account.",
   "implementing_tickets": [
     "WELL-134",
     "WELL-112",
     "WELL-114",
     "WELL-143",
-    "WELL-86"
+    "WELL-86",
+    "WELL-163"
   ],
   "implementation_revision": {
-    "git_sha": "b070971229029c12d86fb012bae9662858763ea3",
-    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success."
+    "git_sha": "7fdf2366e5981e43e290e25c4bb04a3908474673",
+    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. WELL-163 adds a bounded EN/AF participant Session inventory and individual remote revocation with material Audit E2."
   },
   "authoritative_domain": "Identity",
   "collaborating_domains": [
@@ -32,6 +33,24 @@
       "source_ids": [
         "magic",
         "communications"
+      ]
+    },
+    {
+      "domain": "Content",
+      "interface": "NewYou.Content.SessionManagementCopy.load/1",
+      "ownership": "Exact integrated and routed WELL-163 individual-session wording, limited to the selected development locale.",
+      "source_ids": [
+        "session_inventory_copy",
+        "session_inventory_packet"
+      ]
+    },
+    {
+      "domain": "Audit",
+      "interface": "NewYou.Audit.establish_identity_security_obligation/1",
+      "ownership": "Accept and materialize one selected E2 obligation within the Identity source transaction. Session state remains Identity-owned.",
+      "source_ids": [
+        "session_revocation_audit",
+        "session_revocation_audit_interface"
       ]
     }
   ],
@@ -81,6 +100,19 @@
       "source_ids": [
         "session",
         "password"
+      ]
+    },
+    {
+      "domain": "Audit",
+      "resource": "NewYou.Audit.EvidenceObligation",
+      "actions": [
+        "establish_identity_security",
+        "materialize_registration_evidence"
+      ],
+      "caller_boundary": "Identity supplies a minimized Account-bound envelope keyed by the terminal target Session ID. AshOban executes and recovers the Audit-owned obligation.",
+      "source_ids": [
+        "password",
+        "session_revocation_audit"
       ]
     }
   ],
@@ -230,6 +262,57 @@
         "approval",
         "artifact"
       ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "list_active_sessions",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Current Session ID and transient bearer as credentials",
+        "Optional opaque keyset cursor"
+      ],
+      "returns": [
+        "{:ok, %{sessions: list, next_cursor: id_or_nil}}",
+        "{:error, :authentication_unavailable}"
+      ],
+      "side_effects": [
+        "Read-only, including for other Sessions. No idle extension."
+      ],
+      "caller_constraints": [
+        "Use only the current cookie-backed credentials. Treat position, target identifiers and all browser parameters as untrusted."
+      ],
+      "source_ids": [
+        "identity",
+        "password"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "revoke_other_session",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Current Session ID and transient bearer as credentials",
+        "Selected other Session identifier"
+      ],
+      "returns": [
+        "{:ok, :revoked | :already_ended | :stale}",
+        "{:error, :session_unavailable | :session_revocation_failed | :session_result_uncertain}"
+      ],
+      "side_effects": [
+        "One terminal Session transition clears elevated assurance and commits a selected Audit E2 obligation. A committed result is durable across restart."
+      ],
+      "caller_constraints": [
+        "Only present after explicit confirmation. Require CSRF in browser transport. Refresh Identity after an unconfirmed outcome."
+      ],
+      "source_ids": [
+        "identity",
+        "password",
+        "session",
+        "session_inventory_controller",
+        "session_revocation_audit"
+      ]
     }
   ],
   "persistence": [
@@ -291,6 +374,30 @@
       "source_ids": [
         "migration_magic"
       ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261120213204_active_session_inventory.exs",
+      "tables": [
+        "sessions"
+      ],
+      "constraints": [
+        "sessions_active_account_page"
+      ],
+      "source_ids": [
+        "session_inventory_index"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261120212924_participant_session_revocation.exs",
+      "tables": [
+        "evidence_obligations"
+      ],
+      "constraints": [
+        "evidence_obligations_evidence_type"
+      ],
+      "source_ids": [
+        "session_revocation_evidence_migration"
+      ]
     }
   ],
   "request_flow": [
@@ -347,6 +454,18 @@
         "password_web",
         "password",
         "journey_test"
+      ]
+    },
+    {
+      "summary": "WELL-163 cold start: follow the protected page link through RegistrationBoundary GET /session/manage or POST /session/manage/revoke, then SessionManagementController, Content load and Identity. List is an Account-scoped active keyset page of at most 20 rows with a linked unexpired user Token and both Session deadlines. Render only the opaque control identifier, current marker and timestamps. Cancel refreshes via GET. POST revalidates and awaits the durable result before displaying success.",
+      "source_ids": [
+        "password_web",
+        "boundary",
+        "session_inventory_controller",
+        "session_inventory_template",
+        "identity",
+        "password",
+        "session_inventory_copy"
       ]
     }
   ],
@@ -420,6 +539,22 @@
           "session",
           "journey_test"
         ]
+      },
+      {
+        "from_state": "active",
+        "to_state": "revoked",
+        "guards": [
+          "Current verified, open, normal Account and presenting Token/Session. Other target belongs to the same Account and has current user Token, Session and deadlines."
+        ],
+        "side_effects": [
+          "Set ended_at, clear step-up assurance and establish one material Audit E2 in the same transaction. Existing Token may still verify cryptographically while the Session authorizer denies it."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "session",
+          "password",
+          "session_revocation_audit"
+        ]
       }
     ]
   },
@@ -489,6 +624,15 @@
         "boundary",
         "browser_telemetry_test"
       ]
+    },
+    {
+      "summary": "The route requires bounded development, exact copy and the owning Identity interface. Foreign, unknown and self targets share an unavailable outcome. No raw credentials, JTI, device fingerprint or IP are projected; existing encryption and request telemetry exclusions still apply.",
+      "source_ids": [
+        "password",
+        "boundary",
+        "session_inventory_controller",
+        "session_inventory_copy"
+      ]
     }
   ],
   "concurrency": [
@@ -508,6 +652,15 @@
         "migration_magic",
         "magic_test"
       ]
+    },
+    {
+      "summary": "The Account lock orders remote revocation against issuance, password reset and hold. The initiating and target rows are rechecked under lock. Terminal state and the existing unique Audit source operation/type identity prevent duplicate effects; direct current logout still terminalizes under its own existing Session lock.",
+      "source_ids": [
+        "password",
+        "session",
+        "session_revocation_audit",
+        "session_inventory_test"
+      ]
     }
   ],
   "idempotency_retry": [
@@ -526,6 +679,13 @@
         "password",
         "password_test",
         "journey_test"
+      ]
+    },
+    {
+      "summary": "A retry with a current initiating Session can observe an already-ended same-Account target. Unusable but still active targets return stale without changing state. Existing terminal time is immutable. No duplicate Audit obligation or materialized record.",
+      "source_ids": [
+        "password",
+        "session_inventory_test"
       ]
     }
   ],
@@ -554,6 +714,15 @@
         "magic_web",
         "magic_test",
         "reset_test"
+      ]
+    },
+    {
+      "summary": "An Audit rejection rolls back the source and returns failure. With no confirmed transaction outcome, the browser presents uncertain copy and refreshes the current Identity read. Both source revocation and pending Audit work reconstruct from PostgreSQL.",
+      "source_ids": [
+        "password",
+        "session_revocation_audit",
+        "session_inventory_controller",
+        "session_inventory_test"
       ]
     }
   ],
@@ -681,6 +850,51 @@
       "source_ids": [
         "interrupted_issue_observation_test"
       ]
+    },
+    {
+      "path": "test/new_you/identity/session_management_test.exs",
+      "cases": [
+        "a current Session lists only its own usable Sessions with minimal metadata",
+        "the bounded page cursor continues within the authenticated Account",
+        "only one other owned Session is revoked and replay preserves its terminal result",
+        "active rows with an expired deadline or revoked token neither appear nor accept revocation",
+        "conflicting Audit evidence rolls back revocation and the list reconciles the result",
+        "independent connections arbitrate a race and fresh BEAMs observe the committed owner state"
+      ],
+      "proves": "Bounded reads, terminal owner effect, non-enumeration, stale guards, E2 idempotency and rollback, and actual BEAM reconstruction.",
+      "limits": "Synthetic TEST fixtures and the existing restart probe. Participating account and token state is independent of browser cache.",
+      "source_ids": [
+        "session_inventory_test"
+      ]
+    },
+    {
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "cases": [
+        "both locales link to a current Session list and require explicit CSRF-protected revocation",
+        "foreign and missing targets receive indistinguishable denial with a valid CSRF token",
+        "two independent Chromium Sessions complete individual revocation in en",
+        "two independent Chromium Sessions complete individual revocation in af"
+      ],
+      "proves": "Ordinary navigation with two independent browser Sessions, confirmation, cancel, CSRF, exact result, keyboard focus, responsive and reduced-motion behavior.",
+      "limits": "Local development gate with synthetic records and loopback browser only.",
+      "source_ids": [
+        "session_inventory_web_test",
+        "session_inventory_driver"
+      ]
+    },
+    {
+      "path": "test/new_you/content/session_management_copy_test.exs",
+      "cases": [
+        "loads exact eligible Session keys in both locales and excludes global and trusted-device copy",
+        "fails closed for withdrawn, superseded or conflicting routing and tampered packet bytes"
+      ],
+      "proves": "Exact supported locale selection and fail-closed routing and bytes.",
+      "limits": "No approval or publication claim.",
+      "source_ids": [
+        "session_inventory_copy_test",
+        "session_inventory_copy",
+        "session_inventory_packet"
+      ]
     }
   ],
   "safe_extensions": [
@@ -703,6 +917,16 @@
         "session",
         "boundary"
       ]
+    },
+    {
+      "summary": "EXTEND existing Ash and AshAuthentication Session authority, reuse the terminal Ash update, compose Audit E2 with the current transaction, and reuse existing Phoenix forms and shell. No new storage authority or dependency. Signals and Temporal Resources do not fit the atomic obligation and current-state read.",
+      "source_ids": [
+        "identity",
+        "password",
+        "session",
+        "session_revocation_audit",
+        "session_inventory_template"
+      ]
     }
   ],
   "prohibited_shortcuts": [
@@ -718,7 +942,7 @@
     }
   ],
   "proof_limitations": [
-    "No new migration or reversal is introduced. The linked existing migrations establish Account foreign key, unique Session/Token and magic-provenance constraints. The retention migration removes the Token foreign key so cleanup preserves Session history. Existing rollback/reconciliation guards still apply.",
+    "The linked existing migrations establish Account foreign key, unique Session/Token and magic-provenance constraints. The retention migration removes the Token foreign key so cleanup preserves Session history. Existing rollback/reconciliation guards still apply.",
     "Author proof and this map never substitute for exact-head independent Master Gate, hosted CI or resulting-main reconciliation. WELL-21 remains open.",
     "C-01 source table is archived exactly; the original canonical JSON serialization is unavailable. Derived table strings have individual byte/digest bindings, a separate artifact hash and the unchanged original canonical digest. This does not claim a fabricated reproduction of unavailable source serialization.",
     "Hallmark existing-design extension check renders 20 EN/AF normal/error/pending/confirmation/protected/reauthentication/logout states. Generated unchanged app.css reports 96 static FAILs: gate 48 x89, 10a x4, 15 x2, 20 x1. No page-level FAIL is introduced; do not describe the whole inherited stylesheet as clean.",
@@ -730,7 +954,8 @@
     "WELL-114 source checkpoint 145c2be adds fixture-isolation regression coverage and assertion-preserving test corrections. See docs/superpowers/plans/2026-11-16-retained-fixture-observations.md for observed commands, test limits and current resource handling. Full applicable gates, OCR, exact-head CI and independent post-merge certification remain required. The original all-job privacy secret scan remains intentionally broad to detect incorrectly addressed leakage. The seven-file focused run passed 111/111, seed 985650. Canonical on clean 96a8455 passed 831/831, seed 813027, in 547.2 seconds under a command-scoped lock, after preserving and diagnosing a five-failure overlapping attempt and a same-seed 47/47 targeted pass. The focused plan records exact commands, fingerprints and limits. OCR, exact-final-head hosted CI and independent resulting-main certification remain separate requirements. Global maintenance tests use native Ecto sandbox checkout/checkin with signature restoration, rather than an outer Repo transaction that can be aborted by expected Ash denials.",
     "Current-base WELL-114 proof: clean 9f4b8fd1975e0b1f67b12463e01156529ce7d57b incorporates main 2736a9c6925c8c126cbba007f404b2e38ec2080d with identical executable correction. Canonical passed 831/831, seed 813027, in 508.2 seconds; content compatibility passed 34/34 and routing/knowledge/smoke checks passed 71/71. Private per-row digest multisets preserve all preexisting rows across 15 tables, including membership in growing nonce and PMR sets, with no unexpected additions. DeliveryAttempt baseline was empty; permanent synthetic own/foreign coverage is separate. The focused plan records exact commands, hashes, observed counts, review limits and lost historical raw logs. Fresh OCR, final-head CI and independent integration/resulting-main certification remain separate requirements.",
     "WELL-112 incorporates independently integrated WELL-114 from main f72cf637453408896a5037dcb2f8d37f0d29e3af. Earlier proof notes describe their historical checkpoints; new complete branch gates, OCR and independent review remain required. The floating-label variant is opt-in and does not migrate registration or change owner lifecycles.",
-    "WELL-136 verification found a global MessageIntent counter in the timing fixture. Its deterministic retained-foreign-intent regression failed before correction; the corrected fixture delegates to the existing P805 finite observation reader. Timing and shared observation tests passed 9 with seed 441709 and four schedulers. No retained shared records were deleted and no business API or response-window assertion changed."
+    "WELL-136 verification found a global MessageIntent counter in the timing fixture. Its deterministic retained-foreign-intent regression failed before correction; the corrected fixture delegates to the existing P805 finite observation reader. Timing and shared observation tests passed 9 with seed 441709 and four schedulers. No retained shared records were deleted and no business API or response-window assertion changed.",
+    "The WELL-163 partial index and evidence-type widening retain existing rows. After revocation evidence exists, the prior Audit constraint blocks downgrade to protect append-only evidence. Global logout, device trust, MFA enrollment, support and participant release are outside WELL-163."
   ],
   "follow_up_tickets": [
     "WELL-21",
@@ -745,13 +970,13 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def authenticate_password",
-      "sha256": "8091cbdf01c00c3b3588aa9058896fadf130e3f016c86cdf335a7f352c1b3dec"
+      "sha256": "b5e9fd52bda3524e844f76a18d452dd55a7d496bbe4c9bb85f94f4ff05e5b379"
     },
     {
       "id": "password",
       "path": "lib/new_you/identity/password_session.ex",
       "symbol": "def authorize",
-      "sha256": "280a7e1c69ee0aa878349ecd810394a2588d4d285269a429f8f3bcbbdc27957f"
+      "sha256": "9c5489b1fa984c8968b92c36f69827c8a40a62f7fa90c9a39820732970b13e53"
     },
     {
       "id": "magic",
@@ -763,7 +988,7 @@
       "id": "session",
       "path": "lib/new_you/identity/session.ex",
       "symbol": "update :logout",
-      "sha256": "e59451e7a1c8341c9fa88c0d90b0c819cc58c8ca3dc1aebb2f8745b65d24d8ce"
+      "sha256": "0d83117c41e4e60dd3eecd64cb716ef22618add644b18b6206aab1a20d435264"
     },
     {
       "id": "token",
@@ -781,7 +1006,7 @@
       "id": "password_web",
       "path": "lib/new_you_web/controllers/password_session_controller.ex",
       "symbol": "def protected",
-      "sha256": "2f6fdb01f4bf97dd2475a562adb733e270e0453f29d79584805061cd93eb75cf"
+      "sha256": "b091f96c53ec454d49eac20dd4197b432616fef2befb6ee277643bde5c57c93c"
     },
     {
       "id": "magic_web",
@@ -793,7 +1018,7 @@
       "id": "boundary",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "defp dispatch_browser_request",
-      "sha256": "d005ae60a02b9ed3d68da552185c68ab1e825452f6a27fda60c6260bb0656ecf"
+      "sha256": "0cefb2894f1745067e70d44dec30ceee5f43fc3c16e511970286be34520933c9"
     },
     {
       "id": "endpoint",
@@ -877,7 +1102,7 @@
       "id": "browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'signin'",
-      "sha256": "dbdabbeed34b07d95fbe5448592a1a74181061be44c25c4caedc4b9c4e820cf5"
+      "sha256": "8f10a0f935945de65000e4b15d3372bc9261816fa054fb79b82e96576d7a7dd9"
     },
     {
       "id": "password_test",
@@ -931,7 +1156,7 @@
       "id": "restart",
       "path": "test/support/proof/p8_09.ex",
       "symbol": "\"p809.beam_restart\"",
-      "sha256": "06d8ad5d41b4dcc85cdd3ae5778852bb37c3eaa42ce214a7b546c5883c348aa8"
+      "sha256": "a5f6233949bfe95fa4022dcb225f5dc18cc4fb9731d831532823e777fde2320e"
     },
     {
       "id": "reset_test",
@@ -980,6 +1205,78 @@
       "path": "test/new_you/proof/interrupted_issue_observation_test.exs",
       "symbol": "interrupted issuance observes",
       "sha256": "08f6ed7ea526f42028f5039c6d2079f2893209f44a0528be8464d97f217c9155"
+    },
+    {
+      "id": "session_inventory_copy",
+      "path": "lib/new_you/content/session_management_copy.ex",
+      "symbol": "def load(locale)",
+      "sha256": "a39d26b58d8c90b7a13b7e60fedd931098263b5d3ad8e4a8688838855dbbd972"
+    },
+    {
+      "id": "session_inventory_packet",
+      "path": "docs/delivery/content-evidence/copy/evidence/FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json",
+      "symbol": "identity.sessions.page.title",
+      "sha256": "db49143d725bc09a16ca31490e438370377393632ebba5850ded318e67a381ef"
+    },
+    {
+      "id": "session_inventory_controller",
+      "path": "lib/new_you_web/controllers/session_management_controller.ex",
+      "symbol": "def revoke",
+      "sha256": "af85ade12a9c39f20d7e3d3ab13d1250d3b43ac9ef55e4e470c74277da2d7237"
+    },
+    {
+      "id": "session_inventory_template",
+      "path": "lib/new_you_web/controllers/session_management_html/index.html.heex",
+      "symbol": "data-session-revoke-form",
+      "sha256": "fc8578d0146528212ffa9e8cab2a99f1fa5ab392ff8e6485e2767df9647b851e"
+    },
+    {
+      "id": "session_inventory_test",
+      "path": "test/new_you/identity/session_management_test.exs",
+      "symbol": "defmodule NewYou.Identity.SessionManagementTest",
+      "sha256": "b19dbd4859e9c419b1d29247bfa4cd6c2239795d9b598bf6b5a323892eeee9dc"
+    },
+    {
+      "id": "session_inventory_web_test",
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "symbol": "two independent Chromium Sessions",
+      "sha256": "163408a1049e1ceefe93a987a44c93d612d0b7ad529002a49365824aa22b44ab"
+    },
+    {
+      "id": "session_inventory_copy_test",
+      "path": "test/new_you/content/session_management_copy_test.exs",
+      "symbol": "defmodule NewYou.Content.SessionManagementCopyTest",
+      "sha256": "7ab48dd6ac743a270871f76d182768dbdf691477a86737815ee5d68a76d0e08c"
+    },
+    {
+      "id": "session_inventory_driver",
+      "path": "test/proof/p8_05_browser.mjs",
+      "symbol": "input.mode === 'session_management'",
+      "sha256": "8f10a0f935945de65000e4b15d3372bc9261816fa054fb79b82e96576d7a7dd9"
+    },
+    {
+      "id": "session_inventory_index",
+      "path": "priv/repo/migrations/20261120213204_active_session_inventory.exs",
+      "symbol": "sessions_active_account_page",
+      "sha256": "414ebf0588ef697ef5573ce4e68efa0f94f3387aa91c2802c4a70c27be84cfb3"
+    },
+    {
+      "id": "session_revocation_evidence_migration",
+      "path": "priv/repo/migrations/20261120212924_participant_session_revocation.exs",
+      "symbol": "identity_session_revoked",
+      "sha256": "7dff72552e6205d588377beda55404f073e0eda6e7bb23543de33c567ee6684d"
+    },
+    {
+      "id": "session_revocation_audit",
+      "path": "lib/new_you/audit/evidence_obligation.ex",
+      "symbol": "create :establish_identity_security",
+      "sha256": "e189ae14b7404073b6374843be7d4169946414f7d1d30af88342f7a2d8264842"
+    },
+    {
+      "id": "session_revocation_audit_interface",
+      "path": "lib/new_you/audit.ex",
+      "symbol": "defdelegate establish_identity_security_obligation",
+      "sha256": "4c526021acbd6c1eddbe723815c2a35a7a6f0beec6ca06c2892f829386d2f0e7"
     }
   ]
 }

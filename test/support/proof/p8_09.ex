@@ -257,7 +257,8 @@ defmodule NewYou.Proof.P809 do
     end
   end
 
-  defp restart_process(credentials) do
+  @doc false
+  def restart_process(credentials) do
     payload =
       Jason.encode!(%{
         session_id: credentials.session_id,

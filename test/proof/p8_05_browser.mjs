@@ -80,13 +80,13 @@ try {
   const cdp = (method, params) => call(method, params, sessionId);
   await cdp('Page.enable');
   await cdp('Runtime.enable');
-  const evaluate = async expression => {
-    const value = await cdp('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+  const evaluate = async (expression, targetSession = sessionId) => {
+    const value = await call('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }, targetSession);
     if (value.exceptionDetails) throw new Error('browser.evaluation');
     return value.result.value;
   };
-  const navigation = async action => {
-    const key = `${sessionId}:Page.loadEventFired`;
+  const navigation = async (action, targetSession = sessionId) => {
+    const key = `${targetSession}:Page.loadEventFired`;
     let timer;
     const loaded = new Promise((resolve, reject) => {
       timer = setTimeout(() => { events.delete(key); reject(new Error('browser.navigation_timeout')); }, 20000);
@@ -199,6 +199,67 @@ try {
     await navigation(() => evaluate(`document.querySelector('a[href="/login?locale=${input.locale}"]').click()`));
     await passwordSubmit(input.input.password);
     checks.recovery = await hasTitle('identity.session.protected.title');
+  } else if (input.mode === 'session_management') {
+    const second = await createBrowserContext(call);
+    try {
+      const target = await call('Target.createTarget', {url: 'about:blank', browserContextId: second.browserContextId});
+      const attached = await call('Target.attachToTarget', {targetId: target.targetId, flatten: true});
+      const otherSession = attached.sessionId;
+      await call('Page.enable', {}, otherSession);
+      await call('Runtime.enable', {}, otherSession);
+
+      const signIn = async targetSession => {
+        await navigation(() => call('Page.navigate', {url: `${base}/login?locale=${input.locale}`}, targetSession), targetSession);
+        await evaluate(`document.querySelector('#email').value=${JSON.stringify(input.email)}; document.querySelector('#password').value=${JSON.stringify(input.password)};`, targetSession);
+        await navigation(() => evaluate(`document.querySelector('#password-login').requestSubmit()`, targetSession), targetSession);
+      };
+
+      checkpoint = "session_management.other_login";
+      await signIn(otherSession);
+      checkpoint = "session_management.initiator_login";
+      await signIn(sessionId);
+      checkpoint = "session_management.list";
+      const link = 'a[href^="/session/manage?"]';
+      checks.protected_entry = await evaluate(`location.pathname === '/session/protected' && !!document.querySelector('${link}')`);
+      await navigation(() => evaluate(`document.querySelector('${link}').click()`));
+
+      const packet = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json', 'utf8'));
+      const copy = key => JSON.stringify(packet.copy_items.find(item => item.key === 'identity.sessions.' + key)[input.locale].text);
+      checks.locale = await evaluate(`document.documentElement.lang === '${input.locale}' && document.querySelector('h1')?.textContent.trim() === ${copy('page.title')}`);
+      checks.active_list = await evaluate(`document.querySelectorAll('li').length === 2 && document.querySelectorAll('form[data-session-revoke-form]').length === 1 && [...document.querySelectorAll('h3')].some(heading => heading.textContent.trim() === ${copy('item.current.label')})`);
+
+      await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+      checks.reduced_motion = await evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0`);
+      checks.responsive = true;
+      for (const width of [320, 768, 1280]) {
+        await cdp('Emulation.setDeviceMetricsOverride', {width, height: 900, deviceScaleFactor: 1, mobile: width < 768});
+        checks.responsive &&= await evaluate(`document.documentElement.scrollWidth <= innerWidth && document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
+      }
+
+      for (let tab = 0; tab < 7 && !(await evaluate(`document.activeElement.matches('summary')`)); tab++) {
+        await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+        await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+      }
+      checks.focus = await evaluate(`document.activeElement.matches('summary:focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+      await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Enter', code: 'Enter', text: '\r', windowsVirtualKeyCode: 13});
+      await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13});
+      checks.explicit_confirm = await evaluate(`document.querySelector('details').open && document.querySelector('details h4')?.textContent.trim() === ${copy('revoke.confirm.title')}`);
+      checkpoint = 'session_management.cancel';
+      await navigation(() => evaluate(`document.querySelector('details a').click()`));
+      checks.cancel = await evaluate(`!document.querySelector('details').open`) &&
+        await evaluate(`fetch('/session/protected').then(response => response.status === 200)`, otherSession);
+
+      checkpoint = 'session_management.confirm';
+      await evaluate(`document.querySelector('details summary').click()`);
+      await navigation(() => evaluate(`document.querySelector('form[data-session-revoke-form]').requestSubmit()`));
+      checks.revoked = await evaluate(`document.querySelector('[role="status"]')?.textContent.trim() === ${copy('revoke.completed')} && !document.querySelector('form[data-session-revoke-form]')`);
+      checks.target_denied = await evaluate(`fetch('/session/protected').then(response => response.status === 401)`, otherSession);
+      checkpoint = "session_management.initiator_reload";
+      await navigation(() => cdp('Page.navigate', {url: `${base}/session/protected`}));
+      checks.initiator_survives = await evaluate(`!!document.querySelector('#session-logout')`);
+    } finally {
+      await call('Target.disposeBrowserContext', {browserContextId: second.browserContextId});
+    }
   } else if (input.mode === 'ordinary_email_change') {
     const packet = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED_v0.1.1.json', 'utf8'));
     const copy = key => JSON.stringify(packet.copy_items.find(item => item.semantic_key === `identity.change_email.${key}`)[input.locale]);
