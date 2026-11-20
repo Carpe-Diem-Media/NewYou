@@ -10,7 +10,7 @@
     "WELL-156"
   ],
   "implementation_revision": {
-    "git_sha": "26295fec18db5375d95fd3b3100e9b8cdd38bf9f",
+    "git_sha": "a57592f25106693e117663f5660b3b209f4c4f85",
     "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards."
   },
   "authoritative_domain": "NewYou.Identity",
