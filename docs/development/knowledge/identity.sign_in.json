@@ -11,7 +11,7 @@
     "WELL-163"
   ],
   "implementation_revision": {
-    "git_sha": "77ec359123b2eb839c102155cf5e08414d5011e3",
+    "git_sha": "eb8c90c1cfe7611d81eede99d6149ffeff9102f2",
     "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. WELL-163 adds a bounded EN/AF participant Session inventory and individual remote revocation with material Audit E2."
   },
   "authoritative_domain": "Identity",
@@ -976,7 +976,7 @@
       "id": "password",
       "path": "lib/new_you/identity/password_session.ex",
       "symbol": "def authorize",
-      "sha256": "4b49c100e77e478f07e332f60bc93e333ed838c319a0c9699b19af5ce141327a"
+      "sha256": "9c5489b1fa984c8968b92c36f69827c8a40a62f7fa90c9a39820732970b13e53"
     },
     {
       "id": "magic",
@@ -1210,7 +1210,7 @@
       "id": "session_inventory_copy",
       "path": "lib/new_you/content/session_management_copy.ex",
       "symbol": "def load(locale)",
-      "sha256": "bc7aa0fce55b927c05693832e1b2b488a0d4ff4cf78c68da691f312124a18d92"
+      "sha256": "a39d26b58d8c90b7a13b7e60fedd931098263b5d3ad8e4a8688838855dbbd972"
     },
     {
       "id": "session_inventory_packet",
@@ -1222,13 +1222,13 @@
       "id": "session_inventory_controller",
       "path": "lib/new_you_web/controllers/session_management_controller.ex",
       "symbol": "def revoke",
-      "sha256": "a2d8b2cb48f004e4b81bb39aa79bc5cd79066414ee5268deccaeb9be3c9f11d1"
+      "sha256": "af85ade12a9c39f20d7e3d3ab13d1250d3b43ac9ef55e4e470c74277da2d7237"
     },
     {
       "id": "session_inventory_template",
       "path": "lib/new_you_web/controllers/session_management_html/index.html.heex",
       "symbol": "data-session-revoke-form",
-      "sha256": "d088fa6c7d87082c5914b751581d04fda3261222cdeff5d412a1697a39b87b9b"
+      "sha256": "fc8578d0146528212ffa9e8cab2a99f1fa5ab392ff8e6485e2767df9647b851e"
     },
     {
       "id": "session_inventory_test",
