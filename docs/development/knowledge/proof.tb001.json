@@ -7,11 +7,12 @@
     "WELL-131",
     "WELL-134",
     "WELL-112",
-    "WELL-114"
+    "WELL-114",
+    "WELL-146"
   ],
   "implementation_revision": {
-    "git_sha": "26295fec18db5375d95fd3b3100e9b8cdd38bf9f",
-    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-112 reconciles the stronger current-main scanner scenario and adds the self-hosted-font CSP assertion in its existing shared helper. Scenario owner-state checks and the fixed TB-001 inventory remain unchanged. Source/hash refresh is not a fresh TB-001 certification. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators."
+    "git_sha": "476088c1a527b400f614a2621e0cee05e8fda208",
+    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-112 reconciles the stronger current-main scanner scenario and adds the self-hosted-font CSP assertion in its existing shared helper. Scenario owner-state checks and the fixed TB-001 inventory remain unchanged. Source/hash refresh is not a fresh TB-001 certification. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
   "collaborating_domains": [
@@ -382,6 +383,21 @@
         "fixture_connection_test",
         "launch_failure_probe"
       ]
+    },
+    {
+      "path": "test/new_you/proof/held_email_change_observation_test.exs",
+      "cases": [
+        "the held email-change scenario passes with an independent delivery attempt",
+        "the held email-change assertion detects a local attempt under the foreign parent",
+        "an owned insert without a returned UUID fails the observation"
+      ],
+      "proves": "The real held-email scenario passes with an independent attempt already committed and another inserted by a separate process during observation. An insert by the held-email fixture under the same valid foreign parent fails the held assertion. A successful Ash bulk insert without a returned UUID fails visibly. The original foreign row survives both normal and raised teardown.",
+      "limits": "Creation attribution covers the current synchronous TEST fixture and observed PostgreSQL INSERT results. Historical aggregate-failure causation remains unconfirmed.",
+      "source_ids": [
+        "email_scenarios",
+        "delivery_attempt_observation",
+        "held_email_observation_test"
+      ]
     }
   ],
   "safe_extensions": [
@@ -518,7 +534,7 @@
       "id": "email_scenarios",
       "path": "test/support/proof/email_change_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
-      "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
+      "sha256": "03dce6f3572967c637598a7f70a31a81d7db54aa884ae6c2197fbbc1ea68c58d"
     },
     {
       "id": "reconciliation_scenarios",
@@ -645,6 +661,18 @@
       "path": "test/support/proof/p8_15_launch_failure.exs",
       "symbol": "# An intentionally unidentified launch must keep its fixture quarantined.",
       "sha256": "c861107d07265ee509a9aade45e61a87437273789f385b0ffe2462535151c5ea"
+    },
+    {
+      "id": "delivery_attempt_observation",
+      "path": "test/support/proof/delivery_attempt_observation.ex",
+      "symbol": "defmodule NewYou.Proof.DeliveryAttemptObservation",
+      "sha256": "8414a0b198e176a575a40e8934af8a44cb4a18afc72c4ad6215095cc3b5c1a96"
+    },
+    {
+      "id": "held_email_observation_test",
+      "path": "test/new_you/proof/held_email_change_observation_test.exs",
+      "symbol": "defmodule NewYou.Proof.HeldEmailChangeObservationTest",
+      "sha256": "404b64082aa0ebd7c8dc3c726896804bbccfb813c43f5347c10150d9d413428c"
     }
   ]
 }
