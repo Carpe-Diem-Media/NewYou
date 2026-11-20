@@ -8,7 +8,7 @@ defmodule NewYou.Proof.EmailChangeScenarios do
   alias NewYou.{Identity, Repo}
   alias NewYou.Identity.{Account, DeviceAssurance, RecoveryCase, Session, Token}
   alias NewYou.Communications.MessageIntent
-  alias NewYou.Proof.{P805, RegistrationSeam, Scenario}
+  alias NewYou.Proof.{DeliveryAttemptObservation, P805, RegistrationSeam, Scenario}
   @endpoint NewYouWeb.Endpoint
   def scenario_request_and_fresh_password_reauthentication_create_one_pending_proof_without_changing_canonical_email() do
     P805.with_fixture(fn ->
@@ -157,6 +157,10 @@ defmodule NewYou.Proof.EmailChangeScenarios do
   end
 
   def scenario_development_only_email_change_intents_remain_held_and_never_reach_a_provider() do
+    DeliveryAttemptObservation.capture(&assert_held_email_change/1)
+  end
+
+  defp assert_held_email_change(observed_attempt_ids) do
     P805.with_fixture(fn ->
       registration_request = P805.request()
       target_request = P805.request()
@@ -191,7 +195,7 @@ defmodule NewYou.Proof.EmailChangeScenarios do
 
       try do
         assert {:ok, :held} = NewYou.Communications.execute(intent.id)
-        assert [] == Ash.read!(NewYou.Communications.DeliveryAttempt, authorize?: false)
+        assert observed_attempt_ids.() == [], "held email change created a delivery attempt"
         assert Ash.get!(MessageIntent, intent.id, authorize?: false).dispatch_disposition == :held
         account = current_account(registration.account_id)
         assert account.email == registration_request.email
