@@ -16,6 +16,10 @@ defmodule NewYou.Identity.Session do
       reference :token, ignore?: true
     end
 
+    custom_indexes do
+      index [:account_id, :id], where: "state = 'active'", name: "sessions_active_account_page"
+    end
+
     check_constraints do
       check_constraint :state, "sessions_state",
         check: "state IN ('active', 'expired', 'revoked', 'logged_out')"

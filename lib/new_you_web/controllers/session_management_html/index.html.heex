@@ -1,0 +1,98 @@
+<.auth_shell title={text(@copy, "page.title")} locale={@locale} locale_path="/session/manage">
+  <script defer src={~p"/assets/js/password_reset.js"}>
+  </script>
+  <p class="max-w-prose text-design-body-sm leading-design-body-sm">
+    {text(@copy, "page.body")}
+  </p>
+  <p :if={@message} role="status" class="max-w-prose text-design-body-sm">
+    {text(@copy, @message)}
+  </p>
+
+  <section :if={@page} class="grid max-w-prose gap-design-base" aria-labelledby="active-sessions">
+    <h2 id="active-sessions" class="font-design-bold text-design-heading-sm">
+      {text(@copy, "active.title")}
+    </h2>
+    <p :if={@page.sessions == []}>{text(@copy, "active.empty")}</p>
+    <ul :if={@page.sessions != []} class="grid gap-design-base">
+      <li
+        :for={{session, index} <- Enum.with_index(@page.sessions)}
+        class="grid min-w-0 gap-design-sm rounded-design-xl border border-design-hairline p-design-base"
+      >
+        <h3 class="font-design-bold">
+          {text(@copy, if(session.current?, do: "item.current.label", else: "item.other.label"))}
+        </h3>
+        <dl class="grid gap-design-sm text-design-body-sm">
+          <div>
+            <dt>{text(@copy, "item.created.label")}</dt>
+            <dd>
+              <time datetime={DateTime.to_iso8601(session.created_at)}>
+                {Calendar.strftime(session.created_at, "%Y-%m-%d %H:%M:%S UTC")}
+              </time>
+            </dd>
+          </div>
+          <div>
+            <dt>{text(@copy, "item.last_seen.label")}</dt>
+            <dd>
+              <time datetime={DateTime.to_iso8601(session.last_seen_at)}>
+                {Calendar.strftime(session.last_seen_at, "%Y-%m-%d %H:%M:%S UTC")}
+              </time>
+            </dd>
+          </div>
+        </dl>
+
+        <details :if={!session.current?} class="group">
+          <summary class="min-h-11 w-fit cursor-pointer content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary">
+            {text(@copy, "revoke.action")}
+          </summary>
+          <.form
+            for={%{}}
+            id={"revoke-session-#{index}"}
+            action="/session/manage/revoke"
+            method="post"
+            class="hidden gap-design-sm group-open:grid"
+            data-session-revoke-form
+            data-processing={text(@copy, "revoke.processing")}
+          >
+            <h4 class="font-design-bold">{text(@copy, "revoke.confirm.title")}</h4>
+            <p>{text(@copy, "revoke.confirm.body")}</p>
+            <input type="hidden" name="target" value={session.id} />
+            <input type="hidden" name="locale" value={@locale} />
+            <div class="flex flex-wrap items-center gap-design-base">
+              <.primary_button type="submit" adaptive>
+                {text(@copy, "revoke.confirm.action")}
+              </.primary_button>
+              <a
+                href={"/session/manage?locale=#{@locale}"}
+                class="min-h-11 content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+              >
+                {text(@copy, "active.refresh.action")}
+              </a>
+            </div>
+          </.form>
+        </details>
+      </li>
+    </ul>
+    <a
+      :if={@page.next_cursor}
+      href={"/session/manage?" <> URI.encode_query(%{locale: @locale, after: @page.next_cursor, page: @page_number + 1})}
+      rel="next"
+      class="min-h-11 w-fit content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+    >
+      {text(@copy, "active.title") <> " · " <> Integer.to_string(@page_number + 1)}
+    </a>
+    <a
+      href={"/session/manage?locale=#{@locale}"}
+      class="min-h-11 w-fit content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+    >
+      {text(@copy, "active.refresh.action")}
+    </a>
+  </section>
+
+  <a
+    :if={!@page}
+    href={"/login?locale=#{@locale}"}
+    class="min-h-11 w-fit content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+  >
+    {NewYouWeb.SignInCopy.text!("shared.navigation.login", @locale)}
+  </a>
+</.auth_shell>
