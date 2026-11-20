@@ -2,7 +2,15 @@ defmodule NewYou.Identity.SecurityHold do
   @moduledoc false
   require Ash.Query
 
-  alias NewYou.Identity.{Account, IdentityGrant, PrivilegedAccess, Session, Token}
+  alias NewYou.Identity.{
+    Account,
+    IdentityGrant,
+    PrimaryEmailChange,
+    PrivilegedAccess,
+    Session,
+    Token
+  }
+
   alias NewYou.Audit
 
   @resources [Account, Token, Session, IdentityGrant, Audit.EvidenceObligation]
@@ -139,8 +147,9 @@ defmodule NewYou.Identity.SecurityHold do
   defp apply_transition(:place_security_hold = kind, authority, request, _admission) do
     with true <- authority.target.security_posture == :normal,
          true <- authority.target.hold_version == request.expected_version,
-         :ok <- revoke_target_sessions(authority.target.id),
          {:ok, target} <- write_transition(kind, authority, request),
+         :ok <- PrimaryEmailChange.terminalize_for_security_hold(target),
+         :ok <- revoke_target_sessions(target.id),
          {:ok, _} <- establish_outcome(kind, authority, request, :succeeded, nil) do
       {:ok, %{status: :held, version: target.hold_version}}
     else

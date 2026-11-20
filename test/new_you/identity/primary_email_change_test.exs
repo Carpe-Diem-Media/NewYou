@@ -15,6 +15,80 @@ defmodule NewYou.Identity.PrimaryEmailChangeTest do
 
   @endpoint NewYouWeb.Endpoint
 
+  test "a real Support hold terminalizes the confirmed Phase-9 operation before revoked-session retries" do
+    NewYou.Proof.P813HoldFixture.with_fixture(fn fixture ->
+      alias NewYou.Proof.P813HoldFixture
+      target = fixture.target
+      before = P805.account!(target.id)
+      replacement = P805.request().email
+      id = tracked_operation()
+
+      assert {:ok, :requested} =
+               Identity.request_primary_email_change(
+                 target.credentials,
+                 replacement,
+                 {"en", :well156},
+                 id
+               )
+
+      assert {:ok, :proof_pending} =
+               Identity.reauthenticate_primary_email_change(
+                 target.credentials,
+                 target.password,
+                 id
+               )
+
+      pending = P805.account!(target.id)
+
+      assert {:ok, {:ok, proof}} =
+               Repo.transaction(fn ->
+                 Identity.primary_email_change_delivery(
+                   pending.primary_email_change_token_jti,
+                   replacement,
+                   "en"
+                 )
+               end)
+
+      assert {:ok, :confirmed} = Identity.confirm_phase9_primary_email_change(proof, "en")
+
+      assert {:ok, :ok} = P813HoldFixture.step_up(fixture.actor, :place_security_hold)
+      hold = P813HoldFixture.request(fixture, :place, 0)
+      assert {:ok, %{status: :held}} = Identity.place_security_hold(hold)
+      assert {:ok, %{status: :held}} = Identity.place_security_hold(hold)
+      assert Ash.get!(Session, target.credentials.session_id, authorize?: false).state == :revoked
+
+      for _ <- 1..2 do
+        assert {:error, :primary_email_change_unavailable} =
+                 Identity.apply_authenticated_primary_email_change(target.credentials, id)
+      end
+
+      held = P805.account!(target.id)
+      assert held.primary_email_change_state == :held
+      assert held.email == before.email
+      assert held.email_verified? == before.email_verified?
+
+      assert Ash.get!(Token, pending.primary_email_change_token_jti, authorize?: false).purpose ==
+               "email_change_confirmation_revoked"
+
+      assert {:ok, :already_held} = Identity.apply_primary_email_change(id)
+
+      evidence =
+        NewYou.Audit.EvidenceObligation
+        |> Ash.Query.filter(source_operation_id == ^id)
+        |> Ash.read!(authorize?: false)
+        |> Enum.frequencies_by(& &1.evidence_type)
+
+      assert evidence[:identity_primary_email_change_held] == 1
+      refute Map.has_key?(evidence, :identity_primary_email_change_applied)
+
+      refute MessageIntent
+             |> Ash.Query.filter(
+               source_operation_id == ^id and role == :email_change_old_address_notice
+             )
+             |> Ash.read_one!(authorize?: false)
+    end)
+  end
+
   test "request and fresh password reauthentication create one pending proof without changing canonical email" do
     NewYou.Proof.EmailChangeScenarios.scenario_request_and_fresh_password_reauthentication_create_one_pending_proof_without_changing_canonical_email()
   end

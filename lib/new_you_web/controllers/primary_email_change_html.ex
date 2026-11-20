@@ -25,7 +25,27 @@ defmodule NewYouWeb.PrimaryEmailChangeHTML do
   def body(:applied, _state), do: "applied.body"
   def body(:status, :requested), do: "request.neutral"
   def body(:status, :cancelled), do: nil
+  def body(:status, :expired), do: "start.body"
   def body(:status, state), do: String.replace_suffix(heading(:status, state), ".title", ".body")
+
+  def error_key(:request), do: "request.neutral"
+  def error_key(_), do: "uncertain.title"
+
+  # The email-change packet has no input or step labels for these controls.
+  # These JIT labels describe the control without adding an outcome claim.
+  @form_labels %{
+    password: %{"en" => "Current password", "af" => "Huidige wagwoord"},
+    code: %{"en" => "Code from your verification app", "af" => "Kode uit jou verifikasietoep"},
+    reauthenticate: %{"en" => "Confirm your identity", "af" => "Bevestig jou identiteit"},
+    review: %{"en" => "Complete security check", "af" => "Voltooi sekuriteitskontrole"},
+    apply: %{"en" => "Apply email change", "af" => "Pas e-posverandering toe"}
+  }
+
+  def form_label(key, locale), do: @form_labels |> Map.fetch!(key) |> Map.fetch!(locale)
+
+  def advance_label(%{state: :requested}), do: :reauthenticate
+  def advance_label(%{state: :delayed, requires_review?: true}), do: :review
+  def advance_label(_), do: :apply
 
   def open_request?(state),
     do: state in [:none, :applied, :cancelled, :expired, :rejected, :superseded]

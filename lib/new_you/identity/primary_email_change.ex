@@ -916,6 +916,32 @@ defmodule NewYou.Identity.PrimaryEmailChange do
 
     defp apply_current_state(_account, _operation_id), do: unavailable()
 
+    # The owner has already locked this Account and placed the hold in the same
+    # transaction. A revoked participant Session cannot make this transition.
+    @doc false
+    @spec terminalize_for_security_hold(Account.t()) ::
+            :ok | {:error, :primary_email_change_unavailable}
+    def terminalize_for_security_hold(
+          %Account{
+            security_posture: :held,
+            primary_email_change_content_context: :well156,
+            primary_email_change_state: state,
+            primary_email_change_operation_id: operation_id
+          } = account
+        )
+        when state in [
+               :requested,
+               :reauthenticated,
+               :new_address_pending,
+               :confirmed,
+               :delayed,
+               :reviewed
+             ] do
+      with {:ok, :held} <- hold_current(account, operation_id), do: :ok
+    end
+
+    def terminalize_for_security_hold(%Account{}), do: :ok
+
     defp hold_current(account, operation_id) do
       now = now_usec()
 
@@ -1508,6 +1534,7 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     end
   else
     def request(_, _, _, _), do: {:error, :primary_email_change_unavailable}
+    def terminalize_for_security_hold(_), do: :ok
     def status(_), do: {:error, :primary_email_change_unavailable}
     def apply_authenticated(_, _), do: {:error, :primary_email_change_unavailable}
     def reauthenticate(_, _, _), do: {:error, :primary_email_change_unavailable}

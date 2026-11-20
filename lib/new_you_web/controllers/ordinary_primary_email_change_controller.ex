@@ -109,7 +109,7 @@ defmodule NewYouWeb.OrdinaryPrimaryEmailChangeController do
            operation_id
          ) do
       {:ok, :requested} -> redirect_to_status(conn)
-      _ -> conn |> put_status(:unprocessable_entity) |> page(:status, status, true)
+      _ -> conn |> put_status(:unprocessable_entity) |> page(:status, status, :request)
     end
   end
 
@@ -126,7 +126,10 @@ defmodule NewYouWeb.OrdinaryPrimaryEmailChangeController do
           redirect_to_status(conn)
       end
     else
-      _ -> conn |> put_status(:unprocessable_entity) |> page(:status, status, true)
+      _ ->
+        with_status(conn, fn conn, _credentials, current ->
+          conn |> put_status(:unprocessable_entity) |> page(:status, current, :advance)
+        end)
     end
   end
 
@@ -135,7 +138,7 @@ defmodule NewYouWeb.OrdinaryPrimaryEmailChangeController do
          {:ok, _} <- Identity.cancel_primary_email_change(credentials, status.operation_id) do
       redirect_to_status(conn)
     else
-      _ -> conn |> put_status(:unprocessable_entity) |> page(:status, status, true)
+      _ -> conn |> put_status(:unprocessable_entity) |> page(:status, status, :cancel)
     end
   end
 
@@ -197,7 +200,7 @@ defmodule NewYouWeb.OrdinaryPrimaryEmailChangeController do
     |> redirect(to: "/primary-email-change?locale=#{conn.assigns.locale}")
   end
 
-  defp page(conn, view, status \\ nil, error? \\ false) do
+  defp page(conn, view, status \\ nil, error \\ nil) do
     active = status && status.content_context == :well156
     state = if active, do: status.state, else: :none
     eligible? = view == :status and messages_eligible?(conn.assigns.locale)
@@ -208,7 +211,7 @@ defmodule NewYouWeb.OrdinaryPrimaryEmailChangeController do
       view: view,
       status: status,
       state: state,
-      error?: error?,
+      error: error,
       can_request?: eligible? and PrimaryEmailChangeHTML.open_request?(state),
       can_advance?: eligible? && active && advanceable?(status),
       operation_id: Ecto.UUID.generate()

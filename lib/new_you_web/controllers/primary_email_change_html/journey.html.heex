@@ -12,12 +12,12 @@
     {text(@copy, body(@view, @state))}
   </p>
   <a
-    :if={@view in [:applied, :signed_out]}
+    :if={@view in [:applied, :signed_out, :unavailable]}
     href={"/login?locale=#{@locale}"}
     class="min-h-11 w-fit content-center text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
   >{CopyRegistry.text!("shared.navigation.login", @locale)}</a>
-  <p :if={@error?} role="alert" id="email-change-error" class="max-w-prose text-design-body-sm">
-    {text(@copy, "uncertain.title")} {text(@copy, "uncertain.body")}
+  <p :if={@error} role="alert" id="email-change-error" class="max-w-prose text-design-body-sm">
+    {text(@copy, error_key(@error))}
   </p>
   <dl :if={@view == :status} class="max-w-prose text-design-body-sm break-words">
     <dt class="font-design-bold">{text(@copy, "current.label")}</dt>
@@ -33,6 +33,9 @@
   >
     <input type="hidden" name="locale" value={@locale} />
     <input type="hidden" name="operation_id" value={@operation_id} />
+    <p id="email-change-reauthentication" class="text-design-body-sm">
+      {text(@copy, "reauthentication.body")}
+    </p>
     <label for="email-change-target" class="text-design-body-sm font-design-bold">
       {text(@copy, "new.label")}
     </label>
@@ -43,7 +46,8 @@
       type="email"
       required
       autocomplete="email"
-      aria-describedby={if @error?, do: "email-change-error"}
+      aria-invalid={if @error == :request, do: "true"}
+      aria-describedby={if @error == :request, do: "email-change-error"}
     />
     <.primary_button adaptive type="submit">{text(@copy, "request.action")}</.primary_button>
   </.form>
@@ -55,13 +59,10 @@
     id="email-change-advance"
     class="grid w-full max-w-prose gap-design-base justify-items-start"
   >
-    <p :if={@state == :requested} id="email-change-reauthentication" class="text-design-body-sm">
-      {text(@copy, "reauthentication.body")}
-    </p>
     <input type="hidden" name="locale" value={@locale} />
     <input type="hidden" name="operation_id" value={@status.operation_id} />
     <label for="email-change-password" class="text-design-body-sm font-design-bold">
-      {if @locale == "af", do: "Huidige wagwoord", else: "Current password"}
+      {form_label(:password, @locale)}
     </label>
     <input
       class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
@@ -70,14 +71,10 @@
       type="password"
       required
       autocomplete="current-password"
-      aria-describedby={
-        if @error?,
-          do: "email-change-error",
-          else: if(@state == :requested, do: "email-change-reauthentication")
-      }
+      aria-describedby={if @error == :advance, do: "email-change-error"}
     />
     <label :if={@status.mfa?} for="email-change-code" class="text-design-body-sm font-design-bold">
-      {if @locale == "af", do: "Verifikasiekode", else: "Verification code"}
+      {form_label(:code, @locale)}
     </label>
     <input
       :if={@status.mfa?}
@@ -88,18 +85,10 @@
       inputmode="numeric"
       autocomplete="one-time-code"
       required
-      aria-describedby={if @error?, do: "email-change-error"}
+      aria-describedby={if @error == :advance, do: "email-change-error"}
     />
     <.primary_button adaptive type="submit">
-      <%= if @state == :requested do %>
-        {text(@copy, "request.action")}
-      <% else %>
-        <%= if @state == :delayed && @status.requires_review? do %>
-          {if @locale == "af", do: "Voltooi sekuriteitskontrole", else: "Complete security check"}
-        <% else %>
-          {if @locale == "af", do: "Pas e-posverandering toe", else: "Apply email change"}
-        <% end %>
-      <% end %>
+      {form_label(advance_label(@status), @locale)}
     </.primary_button>
   </.form>
   <.form
