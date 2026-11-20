@@ -416,6 +416,8 @@ After LOCAL_VERIFIED, follow local verification → optional OCR → required ex
 
 APPROVED requires authenticated independent Master Gate approval for the exact final head. Before authorised integration run the read-only native candidate check. INTEGRATED requires the read-only native result check and resulting-main reconciliation. Only that proof permits Plane Done and dependent work. Merge alone never completes delivery.
 
+For the separate historical WELL-125 / PR #244 closeout only, follow section 10.1 of the current routed Delivery Governance Standard and its cross-reference in `docs/development/foundation-integrity-merge-gate.md`. The amendment itself follows the ordinary integration procedure.
+
 ### Routine PR identity preflight
 
 Before creating or updating a routine PR, run `gh api user --jq .login` and `python3 -m tools.newyou_attest pr-preflight`, adding `--pr NUMBER` for an existing PR. Require actual authenticated `JC-Agents` identity and an agent-authored existing PR. Git commit name/email is insufficient. Wrong, missing or unverifiable authentication stops PR creation/update. Never request founder credentials. `JCSchoeman96` remains the independent code-owner reviewer; do not self-approve, relax protection or merge without independent authority.

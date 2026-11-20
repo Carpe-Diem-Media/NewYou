@@ -86,6 +86,10 @@ python3 -m tools.ci_attestation native-result --pr NUMBER --reviewed-head REVIEW
 
 The result must show that `main` points to the merge commit, whose ordered parents are the reviewed base then head, and whose tree equals the tested candidate. This check writes no files and creates no status check. If GitHub shows no merge or the result check cannot establish those facts, stop completion and resolve the discrepancy before moving Plane to Done or opening dependent work.
 
+### One-time historical WELL-125 closeout
+
+The [Delivery Governance Standard v1.5.0, section 10.1](../governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.5.0.md#101-one-time-historical-closeout-for-well-125--pr-244) governs the separate closeout decision for already merged PR #244. Use its exact read-only evidence and Done guard only after the amendment has completed the ordinary merge and resulting-main procedure above. The resulting Plane record preserves the historical AC7 failure and the absence of contemporaneous native attestation evidence.
+
 ### PR #224 establishing transition
 
 PR #224 remains under the current `main` requirements and cannot use the proposed future settings to approve itself. It requires fresh complete review and successful current CI, followed by explicit owner authorization for the exact merge transition. Collection-only comment 6821263762 is not merge authorization. Do not self-approve or self-merge PR #224. Since `.github/CODEOWNERS` is read from the base branch, its proposed contents cannot enforce review on this establishing PR.
