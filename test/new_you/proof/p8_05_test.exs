@@ -1,7 +1,7 @@
 defmodule NewYou.Proof.P805Test do
   use ExUnit.Case, async: false
 
-  alias NewYou.Proof.{Catalog, FullCatalog}
+  alias NewYou.Proof.{Catalog, FullCatalog, P805Fixture}
 
   test "canonical-equivalent email contention is a registered proof case" do
     registrations = Catalog.compiled_business_registrations()
@@ -63,28 +63,7 @@ defmodule NewYou.Proof.P805Test do
     assert {:ok, observations, cleanup} =
              FullCatalog.execute(manifests, Catalog.compiled_business_registrations())
 
-    failures =
-      observations
-      |> Enum.reject(&(&1["verdict"] == "PASS"))
-      |> Enum.map(fn observation ->
-        failed_codes =
-          observation["observations"]
-          |> Enum.filter(&(&1["value"] == false))
-          |> Enum.map(& &1["code"])
-
-        observation
-        |> Map.take([
-          "case_id",
-          "verdict",
-          "status",
-          "reason_codes",
-          "duration_ms",
-          "assertion_ids"
-        ])
-        |> Map.put("failed_observations", failed_codes)
-      end)
-
-    assert failures == [], "bounded proof failures: #{inspect(failures, limit: :infinity)}"
+    assert_no_catalog_failures(observations, manifests)
 
     assert length(observations) == 133
     assert cleanup["verdict"] == "PASS"
@@ -117,6 +96,98 @@ defmodule NewYou.Proof.P805Test do
     assert result.verdict == "PASS"
     assert result.reason_codes == []
   end
+
+  test "aggregate diagnostics report a late owner callback abort without claiming assertion execution" do
+    case_id = "p819.email_notices"
+    registration = Enum.find(Catalog.compiled_business_registrations(), &(&1.case_id == case_id))
+    coverage_id = registration.coverage_id
+    family = Catalog.required().business_manifests[coverage_id]
+    manifests = %{coverage_id => %{family | cases: [registration.manifest]}}
+
+    # Force the real owner callback to abort at admission, before opening a
+    # checkout or recording its completion assertion.
+    fixture = P805Fixture.acquire([], "aggregate-diagnostics", nil)
+
+    failure =
+      try do
+        assert {:ok, [failure], %{"verdict" => "PASS"}} =
+                 FullCatalog.execute(manifests, [registration])
+
+        failure
+      after
+        assert :ok = P805Fixture.finish(fixture, fn _ -> :ok end)
+      end
+
+    assert %{
+             "case_id" => ^case_id,
+             "verdict" => "FAIL",
+             "status" => "error",
+             "reason_codes" => ["probe.failed"],
+             "assertion_ids" => [],
+             "assertions_executed" => 0
+           } = failure
+
+    earlier =
+      for index <- 1..132, do: %{"case_id" => "passing-case-#{index}", "verdict" => "PASS"}
+
+    error =
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_no_catalog_failures(earlier ++ [failure], manifests)
+      end
+
+    assert error.message =~ ~s("case_id" => "p819.email_notices")
+    assert error.message =~ ~s("status" => "error")
+    assert error.message =~ ~s("reason_codes" => ["probe.failed"])
+    assert error.message =~ ~s("unrecorded_assertions" => ["p819.email_notices.owner_assertions"])
+    assert error.message =~ ~s("failed_observations" => [])
+    refute error.message =~ "passing-case-"
+    refute error.message =~ "fixture already active or quarantined"
+    refute error.message =~ "..."
+  end
+
+  defp assert_no_catalog_failures(observations, manifests) do
+    failures =
+      observations
+      |> Enum.reject(&(&1["verdict"] == "PASS"))
+      |> Enum.map(fn observation ->
+        failed_codes =
+          observation["observations"]
+          |> Enum.filter(&(&1["value"] == false))
+          |> Enum.map(& &1["code"])
+
+        observation
+        |> Map.take([
+          "case_id",
+          "verdict",
+          "status",
+          "reason_codes",
+          "duration_ms",
+          "assertion_ids"
+        ])
+        |> Map.put("failed_observations", failed_codes)
+        |> attribute_owner_abort(manifests[observation["coverage_id"]])
+      end)
+
+    assert failures == [], "bounded proof failures: #{inspect(failures, limit: :infinity)}"
+  end
+
+  defp attribute_owner_abort(
+         %{"case_id" => case_id, "assertion_ids" => [], "reason_codes" => reasons} = failure,
+         %{cases: cases}
+       ) do
+    completion_id = case_id <> ".owner_assertions"
+
+    # The wrapper records this assertion only after the owner callback returns.
+    # Keep missing completion evidence separate from a false observation.
+    if "probe.failed" in reasons and
+         Enum.any?(cases, &(&1.case_id == case_id and &1.assertion_ids == [completion_id])) do
+      Map.put(failure, "unrecorded_assertions", [completion_id])
+    else
+      failure
+    end
+  end
+
+  defp attribute_owner_abort(failure, _manifest), do: failure
 
   test "fixture cleanup recovers committed browser provenance when operation IDs were not returned" do
     alias NewYou.Proof.P805
