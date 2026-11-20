@@ -68,6 +68,7 @@ APPLICATION_FILES = frozenset(
         "tools/hex_security_audit.py",
         "tools/ci/prepare_cached_dependencies.sh",
         "tools/ci/cache_manifest.py",
+        "tools/exunit_shadow.py",
         "tools/check_magic_login_evidence.py",
         "tools/check_password_reset_message_evidence.py",
         "tools/check_email_change_message_evidence.py",
@@ -88,6 +89,7 @@ APPLICATION_FILES = frozenset(
         "docs/README.md",
         ".github/workflows/application-ci.yml",
         ".github/workflows/application-cache.yml",
+        ".github/workflows/exunit-shadow.yml",
     }
 )
 
