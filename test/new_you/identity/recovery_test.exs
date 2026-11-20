@@ -2,9 +2,10 @@ defmodule NewYou.Identity.RecoveryTest do
   use ExUnit.Case, async: false
   import NewYou.Proof.RecoveryScenarios
   require Ash.Query
-  alias NewYou.Identity
+  import ExUnit.CaptureLog
+  alias NewYou.{Identity, Repo}
   alias NewYou.Identity.{Account, Token}
-  alias NewYou.Proof.P805
+  alias NewYou.Proof.{P805, RecoverySeam}
 
   test "non-completed terminal cases cannot retain partial completion metadata" do
     P805.with_fixture(fn ->
@@ -102,7 +103,7 @@ defmodule NewYou.Identity.RecoveryTest do
       {:ok, registered} = Identity.register(request)
       before_account = Ash.get!(Account, registered.account_id, authorize?: false)
       request_id = operation()
-      :ok = Identity.request_recovery(request.email, "af", request_id)
+      :ok = RecoverySeam.isolated_fixture_request(request.email, request_id)
       {:ok, [held]} = cases(registered.account_id)
       assert held.state == :held_manual_review
       assert held.required_assurance == 2
@@ -114,12 +115,12 @@ defmodule NewYou.Identity.RecoveryTest do
       assert after_account == before_account
       assert after_account.security_posture == :normal
 
-      :ok = Identity.request_recovery(request.email, "af", operation())
+      :ok = RecoverySeam.isolated_fixture_request(request.email, operation())
       assert {:ok, [^held]} = cases(registered.account_id)
       assert Ash.get!(Account, registered.account_id, authorize?: false) == before_account
 
       assert {:ok, :verified} = Identity.verify_email(registered.verification_proof)
-      :ok = Identity.request_recovery(request.email, "af", request_id)
+      :ok = RecoverySeam.isolated_fixture_request(request.email, request_id)
       assert {:ok, [resumed]} = cases(registered.account_id)
       assert resumed.id == held.id
       assert resumed.required_assurance == 2
@@ -137,6 +138,81 @@ defmodule NewYou.Identity.RecoveryTest do
       assert {:ok, :cancelled} = Identity.cancel_recovery(bearer, operation())
       # Case termination cannot silently release a justified Account hold.
       assert Ash.get!(Account, registered.account_id, authorize?: false).security_posture == :held
+    end)
+  end
+
+  test "a resumed recovery lease can expire without disconnecting the fixture owner" do
+    P805.with_fixture(fn ->
+      request = P805.request()
+      assert {:ok, registration} = Identity.register(request)
+      id = operation()
+      assert :ok = RecoverySeam.isolated_fixture_request(request.email, id)
+      assert {:ok, [held]} = cases(registration.account_id)
+      assert held.state == :held_manual_review
+      assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+      account = P805.account!(registration.account_id)
+      assert account.email_verified?
+      assert account.security_posture == :normal
+      owner_backend = P805.scalar("SELECT pg_backend_pid()")
+      parent = self()
+      reference = make_ref()
+
+      RecoverySeam.observe(fn
+        :checkpoint ->
+          assert {:ok, [pending]} = cases(registration.account_id)
+          assert pending.state == :proof_pending
+          assert recovery_effects(pending) == {1, 1}
+
+          %{rows: [[backend, xid]]} =
+            Repo.query!("SELECT pg_backend_pid(), pg_current_xact_id()::text")
+
+          send(parent, {reference, :checkpoint, backend, xid})
+          Repo.query!("SELECT pg_sleep(1)")
+
+        _ ->
+          :ok
+      end)
+
+      try do
+        log =
+          capture_log(fn ->
+            started = System.monotonic_time(:millisecond)
+            assert :ok = RecoverySeam.isolated_fixture_request(request.email, id)
+            assert System.monotonic_time(:millisecond) - started >= 500
+          end)
+
+        assert_receive {^reference, :checkpoint, backend, xid}
+        assert log =~ "checked out the connection for longer than 250ms"
+        assert P805.scalar("SELECT pg_backend_pid()") == owner_backend
+        refute backend == owner_backend
+        assert P805.scalar("SELECT pg_xact_status($1::text::xid8)", [xid]) == "aborted"
+        assert {:ok, [^held]} = cases(registration.account_id)
+        assert P805.account!(registration.account_id) == account
+        assert recovery_effects(held) == {0, 0}
+        assert is_nil(hold_obligation(id))
+      after
+        Process.delete({RecoverySeam, :observer})
+      end
+
+      assert :ok = RecoverySeam.isolated_fixture_request(request.email, id)
+      assert {:ok, [resumed]} = cases(registration.account_id)
+      assert resumed.id == held.id
+      assert resumed.operation_id == id
+      assert resumed.version == held.version + 1
+      assert resumed.state == :proof_pending
+      assert resumed.required_assurance == held.required_assurance
+      assert Ash.get!(Token, resumed.proof_jti, authorize?: false).purpose == "recovery"
+      assert recovery_effects(resumed) == {1, 1}
+
+      assert [%{source_reference: proof_jti, dispatch_disposition: :held}] =
+               P805.intents(id)
+
+      assert proof_jti == resumed.proof_jti
+      assert :ok = RecoverySeam.isolated_fixture_request(request.email, id)
+      assert {:ok, [^resumed]} = cases(registration.account_id)
+      assert recovery_effects(resumed) == {1, 1}
+      assert P805.account!(registration.account_id) == account
+      assert is_nil(hold_obligation(id))
     end)
   end
 
@@ -358,5 +434,15 @@ defmodule NewYou.Identity.RecoveryTest do
       assert Enum.map(email_write_actions, & &1.name) == [:apply_primary_email_change]
       refute hd(email_write_actions).public?
     end)
+  end
+
+  defp recovery_effects(recovery) do
+    tokens =
+      P805.scalar("SELECT count(*) FROM tokens WHERE recovery_case_id = $1", [
+        Ecto.UUID.dump!(recovery.id)
+      ])
+
+    intents = Enum.count(P805.intents(recovery.operation_id), &(&1.role == :account_recovery))
+    {tokens, intents}
   end
 end

@@ -227,7 +227,8 @@ defmodule NewYou.Proof.P815Port do
 
           "P815_READY" in :binary.split(output, "\n", [:global]) ->
             if payload != "", do: true = Port.command(port, payload <> "\n")
-            read(port, pid, output, started, deadline)
+            # The READY chunk can already contain the entire checkpoint.
+            read_buffer(port, pid, output, started, deadline)
 
           true ->
             ready(port, pid, output, payload, started, deadline)
@@ -255,26 +256,7 @@ defmodule NewYou.Proof.P815Port do
         cancel_owner(port, pid, group(output))
 
       {^port, {:data, bytes}} ->
-        output = output <> bytes
-
-        cond do
-          System.monotonic_time(:millisecond) >= deadline ->
-            {cleanup, exit_status} = terminate(port, pid, group(output))
-            result(:timeout, prefix(output), started, cleanup, exit_status)
-
-          byte_size(output) >= @limit ->
-            {cleanup, exit_status} = terminate(port, pid, group(output))
-            result(:output_overflow, prefix(output), started, cleanup, exit_status)
-
-          interrupt_ready?(port, output) ->
-            # Only an explicit, complete checkpoint handshake permits a cut.
-            # Cleanup targets the process group verified before stdin delivery.
-            {cleanup, exit_status} = terminate(port, pid, group(output))
-            result(:interrupted, output, started, cleanup, exit_status)
-
-          true ->
-            read(port, pid, output, started, deadline)
-        end
+        read_buffer(port, pid, output <> bytes, started, deadline)
 
       {^port, {:exit_status, code}} ->
         drain(port)
@@ -293,6 +275,27 @@ defmodule NewYou.Proof.P815Port do
       max(deadline - System.monotonic_time(:millisecond), 0) ->
         {cleanup, exit_status} = terminate(port, pid, group(output))
         result(:timeout, output, started, cleanup, exit_status)
+    end
+  end
+
+  defp read_buffer(port, pid, output, started, deadline) do
+    cond do
+      System.monotonic_time(:millisecond) >= deadline ->
+        {cleanup, exit_status} = terminate(port, pid, group(output))
+        result(:timeout, prefix(output), started, cleanup, exit_status)
+
+      byte_size(output) >= @limit ->
+        {cleanup, exit_status} = terminate(port, pid, group(output))
+        result(:output_overflow, prefix(output), started, cleanup, exit_status)
+
+      interrupt_ready?(port, output) ->
+        # Only an explicit, complete checkpoint handshake permits a cut.
+        # Cleanup targets the process group verified before stdin delivery.
+        {cleanup, exit_status} = terminate(port, pid, group(output))
+        result(:interrupted, output, started, cleanup, exit_status)
+
+      true ->
+        read(port, pid, output, started, deadline)
     end
   end
 

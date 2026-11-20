@@ -1,5 +1,6 @@
 defmodule NewYou.Proof.P815PortTest do
-  use ExUnit.Case, async: true
+  # The coalesced-handshake fixture temporarily selects a synthetic launcher via PATH.
+  use ExUnit.Case, async: false
 
   alias NewYou.Proof.P815Port
 
@@ -25,6 +26,31 @@ defmodule NewYou.Proof.P815PortTest do
     assert {_, 1} = System.cmd("kill", ["-0", pid], stderr_to_stdout: true)
     assert_no_port_messages()
     File.rm!(path)
+  end
+
+  @tag :tmp_dir
+  test "interrupts when ready and the complete checkpoint arrive in one write", %{tmp_dir: dir} do
+    {result, path} = run_checkpoint_launcher(dir, "coalesced", "")
+    assert %{status: :interrupted, cleanup: :confirmed, checkpoint?: true} = result
+    assert_child_stopped(path)
+  end
+
+  @tag :tmp_dir
+  test "waits for the rest of a checkpoint line buffered with ready", %{tmp_dir: dir} do
+    # The launcher can write the newline only after the parent sees READY
+    # and sends stdin. This guarantees a second port data message.
+    {result, path} = run_checkpoint_launcher(dir, "split", "finish")
+    assert %{status: :interrupted, cleanup: :confirmed, checkpoint?: true} = result
+    assert_child_stopped(path)
+  end
+
+  @tag :tmp_dir
+  test "does not interrupt when the coalesced final checkpoint line stays incomplete", %{
+    tmp_dir: dir
+  } do
+    {result, path} = run_checkpoint_launcher(dir, "partial", "")
+    assert %{status: :timeout, cleanup: :confirmed, checkpoint?: true} = result
+    assert_child_stopped(path)
   end
 
   test "an incomplete interruption signal cannot count as an observed checkpoint cut" do
@@ -235,6 +261,57 @@ defmodule NewYou.Proof.P815PortTest do
              System.monotonic_time(:millisecond) + 1_500
            )
 
+    File.rm!(path)
+  end
+
+  defp run_checkpoint_launcher(dir, completion, payload) do
+    path = Path.join(dir, "child.pid")
+    on_exit(fn -> clean_pid_file(path) end)
+    python = System.find_executable("python3")
+    launcher = Path.join(dir, "sh")
+
+    File.write!(
+      launcher,
+      "#!#{python}\n" <>
+        ~S"""
+        import os
+        import sys
+        import time
+
+        os.write(1, f"P815_GROUP={os.getpid()}\n".encode())
+        if sys.stdin.buffer.readline() != b"GO\n":
+            sys.exit(125)
+        with open(sys.argv[-1], "w") as pid_file:
+            pid_file.write(str(os.getpid()))
+        checkpoint = b"P815_READY\nP815_STARTED\nP815_OPERATION\nP815_CHECKPOINT\nP815_INTERRUPT_READY"
+        completion = sys.argv[-2]
+        os.write(1, checkpoint + (b"\n" if completion == "coalesced" else b""))
+        if completion == "split":
+          if sys.stdin.buffer.readline() != b"finish\n":
+              sys.exit(126)
+          os.write(1, b"\n")
+        time.sleep(5)
+        """
+    )
+
+    File.chmod!(launcher, 0o700)
+    original_path = System.fetch_env!("PATH")
+
+    result =
+      try do
+        System.put_env("PATH", dir <> ":" <> original_path)
+        P815Port.run(python, [completion, path], payload, 2_000)
+      after
+        System.put_env("PATH", original_path)
+      end
+
+    {result, path}
+  end
+
+  defp assert_child_stopped(path) do
+    pid = File.read!(path)
+    assert {_, 1} = System.cmd("kill", ["-0", pid], stderr_to_stdout: true)
+    assert_no_port_messages()
     File.rm!(path)
   end
 
