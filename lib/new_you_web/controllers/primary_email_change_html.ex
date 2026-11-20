@@ -1,6 +1,44 @@
 defmodule NewYouWeb.PrimaryEmailChangeHTML do
   use NewYouWeb, :html
+  import NewYouWeb.SignInComponents
+  alias NewYouWeb.SignInCopy
   embed_templates "primary_email_change_html/*"
+
+  def text(copy, key), do: Map.fetch!(copy, "identity.change_email." <> key)
+
+  def heading(:unavailable, _state), do: "uncertain.title"
+  def heading(:applied, _state), do: "applied.title"
+  def heading(:signed_out, _state), do: "start.title"
+  def heading(:status, :new_address_pending), do: "pending.title"
+  def heading(:status, :confirmed), do: "confirmed.title"
+  def heading(:status, state) when state in [:delayed, :reviewed], do: "review.title"
+  def heading(:status, :applied), do: "applied.title"
+  def heading(:status, :cancelled), do: "cancelled.title"
+
+  def heading(:status, state) when state in [:expired, :held, :rejected, :superseded],
+    do: "uncertain.title"
+
+  def heading(:status, _state), do: "start.title"
+
+  def body(:unavailable, _state), do: "uncertain.body"
+  def body(:applied, _state), do: "applied.body"
+  def body(:status, :requested), do: "request.neutral"
+  def body(:status, :cancelled), do: nil
+  def body(:status, state), do: String.replace_suffix(heading(:status, state), ".title", ".body")
+
+  def open_request?(state),
+    do: state in [:none, :applied, :cancelled, :expired, :rejected, :superseded]
+
+  def cancellable?(state),
+    do:
+      state in [
+        :requested,
+        :reauthenticated,
+        :new_address_pending,
+        :confirmed,
+        :delayed,
+        :reviewed
+      ]
 
   def copy(:confirm, :title, "en"), do: "Confirm your new email address"
 

@@ -2,6 +2,12 @@ import Config
 
 config :new_you, :fp001_development_entry, true
 
+# Synthetic local proof exercises both the delay and review guards.
+config :new_you, :well156_primary_email_change_proof_policy, %{
+  delay_seconds: 60,
+  requires_review?: true
+}
+
 config :new_you, :verification_development_fixtures, true
 config :new_you, :p8_05_browser_development_fixtures, true
 

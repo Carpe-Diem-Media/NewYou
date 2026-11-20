@@ -111,7 +111,8 @@ defmodule NewYou.Communications do
          {:ok, content} <-
            NewYou.Content.PrimaryEmailChangeMessage.binding(
              :email_change_confirmation,
-             attrs.locale
+             attrs.locale,
+             Map.get(attrs, :content_context, :p8_16)
            ) do
       platform_name = NewYou.platform_name()
       render_schema = "email-change-confirmation-v1"
@@ -163,7 +164,8 @@ defmodule NewYou.Communications do
          {:ok, content} <-
            NewYou.Content.PrimaryEmailChangeMessage.binding(
              :email_change_old_address_notice,
-             attrs.locale
+             attrs.locale,
+             Map.get(attrs, :content_context, :p8_16)
            ) do
       platform_name = NewYou.platform_name()
       render_schema = "email-change-old-address-notice-v1"

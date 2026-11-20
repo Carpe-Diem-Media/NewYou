@@ -78,6 +78,43 @@ defmodule NewYouWeb.RegistrationBoundary do
     dispatch_browser_request(conn, :confirm, PrimaryEmailChangeController)
   end
 
+  defp dispatch(
+         %Plug.Conn{method: "GET", request_path: "/primary-email-change/confirmation"} = conn,
+         _opts
+       ),
+       do:
+         dispatch_browser_request(
+           conn,
+           :confirmation,
+           NewYouWeb.OrdinaryPrimaryEmailChangeController
+         )
+
+  defp dispatch(
+         %Plug.Conn{method: "POST", request_path: "/primary-email-change/confirmation"} = conn,
+         _opts
+       ),
+       do:
+         dispatch_browser_request(conn, :confirm, NewYouWeb.OrdinaryPrimaryEmailChangeController)
+
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/primary-email-change"} = conn, _opts),
+    do: dispatch_browser_request(conn, :show, NewYouWeb.OrdinaryPrimaryEmailChangeController)
+
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/primary-email-change"} = conn, _opts),
+    do: dispatch_browser_request(conn, :request, NewYouWeb.OrdinaryPrimaryEmailChangeController)
+
+  defp dispatch(
+         %Plug.Conn{method: "POST", request_path: "/primary-email-change/advance"} = conn,
+         _opts
+       ),
+       do:
+         dispatch_browser_request(conn, :advance, NewYouWeb.OrdinaryPrimaryEmailChangeController)
+
+  defp dispatch(
+         %Plug.Conn{method: "POST", request_path: "/primary-email-change/cancel"} = conn,
+         _opts
+       ),
+       do: dispatch_browser_request(conn, :cancel, NewYouWeb.OrdinaryPrimaryEmailChangeController)
+
   defp dispatch(%Plug.Conn{method: "GET", request_path: "/recovery"} = conn, _opts),
     do: dispatch_browser_request(conn, :new, NewYouWeb.RecoveryController)
 

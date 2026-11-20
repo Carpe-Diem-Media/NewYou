@@ -9,6 +9,11 @@
   <p class="max-w-prose text-design-body-sm leading-design-body-sm">
     {Copy.text!("identity.session.protected.body", @locale)}
   </p>
+  <a
+    :if={@email_change_copy}
+    href={"/primary-email-change?locale=#{@locale}"}
+    class="min-h-11 w-fit content-center text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+  >{@email_change_copy}</a>
   <.form
     for={%{}}
     action="/session/logout"

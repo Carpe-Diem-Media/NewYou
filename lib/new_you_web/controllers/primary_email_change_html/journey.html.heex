@@ -1,0 +1,120 @@
+<.auth_shell
+  title={text(@copy, heading(@view, @state))}
+  locale={@locale}
+  locale_path="/primary-email-change"
+  heading_id="primary-email-change-heading"
+>
+  <p
+    :if={@view != :signed_out && body(@view, @state)}
+    role="status"
+    class="max-w-prose text-design-body-sm leading-design-body-sm"
+  >
+    {text(@copy, body(@view, @state))}
+  </p>
+  <p :if={@view == :signed_out} role="status" class="max-w-prose text-design-body-sm">
+    {SignInCopy.text!("identity.session.reauthentication_required", @locale)}
+  </p>
+  <a
+    :if={@view in [:applied, :signed_out]}
+    href={"/login?locale=#{@locale}"}
+    class="min-h-11 w-fit content-center text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+  >{SignInCopy.text!("identity.login.reauthenticate.action", @locale)}</a>
+  <p :if={@error?} role="alert" id="email-change-error" class="max-w-prose text-design-body-sm">
+    {text(@copy, "uncertain.title")} {text(@copy, "uncertain.body")}
+  </p>
+  <dl :if={@view == :status} class="max-w-prose text-design-body-sm break-words">
+    <dt class="font-design-bold">{text(@copy, "current.label")}</dt>
+    <dd>{@status.email}</dd>
+  </dl>
+  <.form
+    :if={@can_request?}
+    for={%{}}
+    action="/primary-email-change"
+    method="post"
+    id="email-change-request"
+    class="grid w-full max-w-prose gap-design-base justify-items-start"
+  >
+    <input type="hidden" name="locale" value={@locale} />
+    <input type="hidden" name="operation_id" value={@operation_id} />
+    <label for="email-change-target" class="text-design-body-sm font-design-bold">
+      {text(@copy, "new.label")}
+    </label>
+    <input
+      class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      id="email-change-target"
+      name="target"
+      type="email"
+      required
+      autocomplete="email"
+      aria-describedby={if @error?, do: "email-change-error"}
+    />
+    <.primary_button adaptive type="submit">{text(@copy, "request.action")}</.primary_button>
+  </.form>
+  <.form
+    :if={@can_advance?}
+    for={%{}}
+    action="/primary-email-change/advance"
+    method="post"
+    id="email-change-advance"
+    class="grid w-full max-w-prose gap-design-base justify-items-start"
+  >
+    <p :if={@state == :requested} id="email-change-reauthentication" class="text-design-body-sm">
+      {text(@copy, "reauthentication.body")}
+    </p>
+    <input type="hidden" name="locale" value={@locale} />
+    <input type="hidden" name="operation_id" value={@status.operation_id} />
+    <label for="email-change-password" class="text-design-body-sm font-design-bold">
+      {SignInCopy.text!("identity.login.password.label", @locale)}
+    </label>
+    <input
+      class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      id="email-change-password"
+      name="password"
+      type="password"
+      required
+      autocomplete="current-password"
+      aria-describedby={
+        if @error?,
+          do: "email-change-error",
+          else: if(@state == :requested, do: "email-change-reauthentication")
+      }
+    />
+    <label :if={@status.mfa?} for="email-change-code" class="text-design-body-sm font-design-bold">
+      {if @locale == "af", do: "Verifikasiekode", else: "Verification code"}
+    </label>
+    <input
+      :if={@status.mfa?}
+      class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      id="email-change-code"
+      name="code"
+      type="text"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      required
+      aria-describedby={if @error?, do: "email-change-error"}
+    />
+    <.primary_button adaptive type="submit">
+      <%= if @state == :requested do %>
+        {text(@copy, "request.action")}
+      <% else %>
+        <%= if @state == :delayed && @status.requires_review? do %>
+          {if @locale == "af", do: "Voltooi sekuriteitskontrole", else: "Complete security check"}
+        <% else %>
+          {if @locale == "af", do: "Pas e-posverandering toe", else: "Apply email change"}
+        <% end %>
+      <% end %>
+    </.primary_button>
+  </.form>
+  <.form
+    :if={@view == :status && cancellable?(@state)}
+    for={%{}}
+    action="/primary-email-change/cancel"
+    method="post"
+    id="email-change-cancel"
+    class="w-full max-w-prose"
+  >
+    <input type="hidden" name="locale" value={@locale} />
+    <input type="hidden" name="operation_id" value={@status.operation_id} />
+    <.primary_button adaptive type="submit">{text(@copy, "cancel.action")}</.primary_button>
+  </.form>
+</.auth_shell>

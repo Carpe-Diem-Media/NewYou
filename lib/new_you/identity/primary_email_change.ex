@@ -23,15 +23,20 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     @step_up_seconds 5 * 60
 
     @doc "Accept a new target address for the current authenticated Account."
-    def request(credentials, target, locale, operation_id) do
+    def request(credentials, target, locale, operation_id) when is_binary(locale),
+      do: request(credentials, target, {locale, :p8_16}, operation_id)
+
+    def request(credentials, target, {locale, context}, operation_id) do
       with {:ok, locator} <- session_locator(credentials),
            {:ok, target} <- Email.canonicalize(target),
-           true <- locale in ["en", "af"],
+           true <- locale in ["en", "af"] and context in [:p8_16, :well156],
            {:ok, operation_id} <- Ecto.UUID.cast(operation_id),
            result <-
              Ash.transact(
                [Account, Token, Session, EvidenceObligation],
-               fn -> request_locked(locator, credentials, target, locale, operation_id) end
+               fn ->
+                 request_locked(locator, credentials, target, {locale, context}, operation_id)
+               end
              ) do
         unwrap(result, :requested)
       else
@@ -41,6 +46,57 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       _ -> unavailable()
     catch
       _, _ -> unavailable()
+    end
+
+    def request(_, _, _, _), do: unavailable()
+
+    @doc "Project the canonical address and bounded operation state for an eligible current Session."
+    @spec status(map()) :: {:ok, map()} | {:error, :primary_email_change_unavailable}
+    def status(credentials) do
+      with {:ok, locator} <- session_locator(credentials),
+           {:ok, {:ok, result}} <-
+             Ash.transact([Account, Token, Session], fn -> status_locked(locator, credentials) end) do
+        {:ok, result}
+      else
+        _ -> unavailable()
+      end
+    rescue
+      _ -> unavailable()
+    end
+
+    defp status_locked(locator, credentials) do
+      with {:ok, account} <- lock_account(locator.account_id),
+           {:ok, _session, _token, _claims} <- lock_current_session(locator, credentials, account),
+           true <- eligible_account?(account) do
+        state = account.primary_email_change_state
+
+        active? =
+          state in [
+            :requested,
+            :reauthenticated,
+            :new_address_pending,
+            :confirmed,
+            :delayed,
+            :reviewed
+          ]
+
+        {:ok,
+         %{
+           email: account.email,
+           mfa?: account.mfa_enrollment_state == :active,
+           operation_id: account.primary_email_change_operation_id,
+           content_context: account.primary_email_change_content_context,
+           state:
+             if(active? and not before?(account.primary_email_change_expires_at),
+               do: :expired,
+               else: state
+             ),
+           apply_after: account.primary_email_change_apply_after,
+           requires_review?: account.primary_email_change_requires_review?
+         }}
+      else
+        _ -> unavailable()
+      end
     end
 
     @doc "Require fresh password and current Session assurance before issuing or refreshing proof authority."
@@ -64,14 +120,21 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     end
 
     @doc "Consume a current new-address proof only after explicit participant confirmation."
-    def confirm(bearer) when is_binary(bearer) and byte_size(bearer) in 1..8192 do
+    def confirm(bearer), do: confirm(bearer, :p8_16, nil)
+
+    @doc "Consume proof only in its bound context and, when provided, its exact locale."
+    @spec confirm(binary(), :p8_16 | :well156, String.t() | nil) ::
+            {:ok, :confirmed} | {:error, :primary_email_change_unavailable}
+    def confirm(bearer, context, locale)
+        when is_binary(bearer) and byte_size(bearer) in 1..8192 do
       with {:ok, claims} <- confirmation_claims(bearer),
+           true <- is_nil(locale) or claims["locale"] == locale,
            {:ok, operation_id} <- Ecto.UUID.cast(claims["operation_id"]),
            {:ok, proof} <- token(claims["jti"]),
            {:ok, result} <-
              Ash.transact(
                [Account, Token, EvidenceObligation],
-               fn -> confirm_locked(proof.account_id, bearer, claims, operation_id) end
+               fn -> confirm_locked(proof.account_id, bearer, claims, operation_id, context) end
              ) do
         unwrap(result, :confirmed)
       else
@@ -83,10 +146,22 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       _, _ -> unavailable()
     end
 
-    def confirm(_), do: unavailable()
+    def confirm(_, _, _), do: unavailable()
 
     @doc "Apply the Account-owned address change after current proof, version, delay and risk guards pass."
-    def apply(operation_id) do
+    def apply(operation_id), do: apply_with_authority(operation_id, :internal)
+
+    @doc "Apply only the current Phase-9 operation bound to the presenting Session."
+    @spec apply_authenticated(map(), Ecto.UUID.t()) ::
+            {:ok, atom()} | {:error, :primary_email_change_unavailable}
+    def apply_authenticated(credentials, operation_id) do
+      case session_locator(credentials) do
+        {:ok, locator} -> apply_with_authority(operation_id, {locator, credentials})
+        _ -> unavailable()
+      end
+    end
+
+    defp apply_with_authority(operation_id, authority) do
       with {:ok, operation_id} <- Ecto.UUID.cast(operation_id),
            result <-
              Ash.transact(
@@ -101,7 +176,7 @@ defmodule NewYou.Identity.PrimaryEmailChange do
                  EvidenceObligation,
                  NewYou.Privacy.PurposeAuthority
                ],
-               fn -> apply_locked(operation_id) end
+               fn -> apply_locked(operation_id, authority) end
              ) do
         unwrap_apply(result)
       else
@@ -225,30 +300,56 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       _ -> {:error, :capability_unavailable}
     end
 
-    defp request_locked(locator, credentials, target, locale, operation_id) do
+    defp request_locked(locator, credentials, target, locale_context, operation_id) do
       with {:ok, account} <- lock_account(locator.account_id),
            {:ok, session, token, claims} <- lock_current_session(locator, credentials, account),
            true <- eligible_account?(account),
            false <- secure_equal?(account.email, target),
            true <- available_target?(target, account.id) do
         checkpoint()
-        request_or_supersede(account, session, token, claims, target, locale, operation_id)
+
+        request_or_supersede(
+          account,
+          session,
+          token,
+          claims,
+          target,
+          locale_context,
+          operation_id
+        )
       else
         _ -> unavailable()
       end
     end
 
-    defp request_or_supersede(account, _session, _token, _claims, target, locale, operation_id)
+    defp request_or_supersede(
+           account,
+           _session,
+           _token,
+           _claims,
+           target,
+           {locale, context},
+           operation_id
+         )
          when account.primary_email_change_operation_id == operation_id do
       if account.primary_email_change_target == target and
-           account.primary_email_change_locale == locale do
+           account.primary_email_change_locale == locale and
+           account.primary_email_change_content_context == context do
         {:ok, :requested}
       else
         unavailable()
       end
     end
 
-    defp request_or_supersede(account, _session, _token, _claims, target, locale, operation_id) do
+    defp request_or_supersede(
+           account,
+           _session,
+           _token,
+           _claims,
+           target,
+           {locale, context},
+           operation_id
+         ) do
       now = now_usec()
 
       with :ok <- supersede_current_operation(account, now),
@@ -260,6 +361,7 @@ defmodule NewYou.Identity.PrimaryEmailChange do
                  primary_email_change_operation_id: operation_id,
                  primary_email_change_target: target,
                  primary_email_change_locale: locale,
+                 primary_email_change_content_context: context,
                  primary_email_change_requested_at: now,
                  primary_email_change_expires_at:
                    DateTime.add(now, @operation_lifetime_seconds, :second),
@@ -549,7 +651,8 @@ defmodule NewYou.Identity.PrimaryEmailChange do
                destination: account.primary_email_change_target,
                destination_provenance: "identity_primary_email_change_issuance",
                destination_authorized_at: proof.created_at,
-               locale: account.primary_email_change_locale
+               locale: account.primary_email_change_locale,
+               content_context: account.primary_email_change_content_context
              }) do
         {:ok, %{account: pending, session: session, proof: proof}}
       else
@@ -705,8 +808,9 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       )
     end
 
-    defp confirm_locked(account_id, bearer, claims, operation_id) do
+    defp confirm_locked(account_id, bearer, claims, operation_id, context) do
       with {:ok, account} <- lock_account(account_id),
+           true <- account.primary_email_change_content_context == context,
            {:ok, proof} <- token(claims["jti"], true),
            {:ok, current_claims} <- confirmation_claims(bearer),
            true <- current_claims == claims,
@@ -740,7 +844,13 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     end
 
     defp schedule_application(account, now) do
-      case Application.get_env(:new_you, :p8_16_primary_email_change_policy) do
+      policy_key =
+        case account.primary_email_change_content_context do
+          :p8_16 -> :p8_16_primary_email_change_policy
+          :well156 -> :well156_primary_email_change_proof_policy
+        end
+
+      case Application.get_env(:new_you, policy_key) do
         %{delay_seconds: seconds, requires_review?: requires_review?}
         when is_integer(seconds) and seconds >= 0 and is_boolean(requires_review?) ->
           Ash.update(
@@ -758,9 +868,23 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       end
     end
 
-    defp apply_locked(operation_id) do
+    defp apply_locked(operation_id, :internal) do
       case lock_account_by_operation(operation_id) do
-        {:ok, account} -> apply_current_state(account, operation_id)
+        {:ok, %Account{} = account} -> apply_current_state(account, operation_id)
+        _ -> unavailable()
+      end
+    end
+
+    defp apply_locked(operation_id, {locator, credentials} = authority) do
+      with {:ok, %Account{} = account} <- lock_account_by_operation(operation_id),
+           true <- account.id == locator.account_id,
+           true <- account.primary_email_change_content_context == :well156,
+           true <- account.primary_email_change_reauth_session_id == locator.session_id,
+           {:ok, %{"sub" => subject, "jti" => jti}, Account} <-
+             Jwt.verify(credentials.token, Account),
+           true <- subject == locator.subject and jti == locator.jti do
+        apply_current(account, operation_id, authority)
+      else
         _ -> unavailable()
       end
     end
@@ -786,7 +910,7 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       if account.security_posture == :held do
         hold_current(account, operation_id)
       else
-        apply_current(account, operation_id)
+        apply_current(account, operation_id, :internal)
       end
     end
 
@@ -981,7 +1105,7 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       end
     end
 
-    defp apply_current(account, operation_id) do
+    defp apply_current(account, operation_id, authority) do
       now = now_usec()
 
       with true <- account.primary_email_change_operation_id == operation_id,
@@ -989,7 +1113,9 @@ defmodule NewYou.Identity.PrimaryEmailChange do
            true <- application_reviewed?(account),
            {:ok, {session, auth_token, proof}} <- lock_apply_authority(account),
            true <- current_apply_authority?(session, auth_token, account),
+           true <- presenting_session?(authority, session, auth_token),
            true <- current_consumed_confirmation?(proof, account, operation_id, now),
+           true <- confirmation_content_current?(account),
            :ok <- current_privacy_proof_purpose(account, operation_id) do
         if available_target?(account.primary_email_change_target, account.id) do
           commit_apply(account, proof, operation_id, now)
@@ -999,6 +1125,13 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       else
         _ -> unavailable()
       end
+    end
+
+    defp presenting_session?(:internal, _session, _token), do: true
+
+    defp presenting_session?({locator, _credentials}, session, token) do
+      locator.session_id == session.id and locator.jti == token.jti and
+        locator.subject == token.subject
     end
 
     defp lock_apply_authority(account) do
@@ -1115,7 +1248,8 @@ defmodule NewYou.Identity.PrimaryEmailChange do
                destination: account.email,
                destination_provenance: "identity_primary_email_change_old_address",
                destination_authorized_at: now,
-               locale: account.primary_email_change_locale
+               locale: account.primary_email_change_locale,
+               content_context: account.primary_email_change_content_context
              }),
            {:ok, _} <-
              audit(applied, operation_id, :identity_primary_email_change_applied, now) do
@@ -1223,10 +1357,25 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       proof_matches_operation?(proof, account, operation_id, "email_change_confirmation") and
         email_change_claims_match?(proof, account, operation_id) and
         confirmation_authority_current?(proof, account) and
+        confirmation_content_current?(account) and
         proof_binding_matches?(proof, account, operation_id)
     end
 
     defp current_confirmation?(_, _), do: false
+
+    defp confirmation_content_current?(%{primary_email_change_content_context: :p8_16}),
+      do: true
+
+    defp confirmation_content_current?(account) do
+      match?(
+        {:ok, _},
+        NewYou.Content.PrimaryEmailChangeMessage.binding(
+          :email_change_confirmation,
+          account.primary_email_change_locale,
+          account.primary_email_change_content_context
+        )
+      )
+    end
 
     defp proof_matches_operation?(proof, account, operation_id, purpose) do
       proof.account_id == account.id and proof.purpose == purpose and
@@ -1255,7 +1404,7 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     defp confirmation_authority_current?(proof, account) do
       account.primary_email_change_state == :new_address_pending and
         account_change_versions_match?(account) and eligible_account?(account) and
-        before?(proof.expires_at)
+        before?(account.primary_email_change_expires_at) and before?(proof.expires_at)
     end
 
     defp account_change_versions_match?(account) do
@@ -1359,8 +1508,11 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     end
   else
     def request(_, _, _, _), do: {:error, :primary_email_change_unavailable}
+    def status(_), do: {:error, :primary_email_change_unavailable}
+    def apply_authenticated(_, _), do: {:error, :primary_email_change_unavailable}
     def reauthenticate(_, _, _), do: {:error, :primary_email_change_unavailable}
     def confirm(_), do: {:error, :primary_email_change_unavailable}
+    def confirm(_, _, _), do: {:error, :primary_email_change_unavailable}
     def apply(_), do: {:error, :primary_email_change_unavailable}
     def cancel(_, _), do: {:error, :primary_email_change_unavailable}
     def expire(_), do: {:error, :primary_email_change_unavailable}

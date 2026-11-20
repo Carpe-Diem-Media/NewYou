@@ -202,6 +202,7 @@ defmodule NewYou.Identity.Account do
         :primary_email_change_operation_id,
         :primary_email_change_target,
         :primary_email_change_locale,
+        :primary_email_change_content_context,
         :primary_email_change_requested_at,
         :primary_email_change_expires_at,
         :primary_email_change_security_version,
@@ -593,6 +594,12 @@ defmodule NewYou.Identity.Account do
 
     attribute :primary_email_change_locale, :string,
       constraints: [match: ~r/\A(en|af)\z/],
+      public?: false
+
+    attribute :primary_email_change_content_context, :atom,
+      constraints: [one_of: [:p8_16, :well156]],
+      allow_nil?: false,
+      default: :p8_16,
       public?: false
 
     attribute :primary_email_change_version, :integer,
