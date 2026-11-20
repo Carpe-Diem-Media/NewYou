@@ -5,7 +5,7 @@ defmodule NewYou.Proof.P815 do
   alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.{Identity, Repo}
   alias NewYou.Identity.{Account, RecoveryCase, Token}
-  alias NewYou.Proof.{CutPoints, P805, RegistrationSeam, Scenario}
+  alias NewYou.Proof.{CutPoints, P805, RecoverySeam, RegistrationSeam, Scenario}
   require Ash.Query
 
   def duplicate_request_race(verified? \\ true) do
@@ -528,7 +528,7 @@ defmodule NewYou.Proof.P815 do
   # Establish the valid zero-assurance prerequisite through the same operation,
   # without retrying an interruption proof or changing its deadline.
   defp request_unverified_case(account_id, email, operation_id, attempts) do
-    :ok = isolated_fixture_request(email, operation_id)
+    :ok = RecoverySeam.isolated_fixture_request(email, operation_id)
 
     case cases(account_id) do
       [recovery] ->
@@ -543,40 +543,6 @@ defmodule NewYou.Proof.P815 do
 
       [] ->
         flunk("recovery fixture request did not commit after 3 bounded attempts")
-    end
-  end
-
-  defp isolated_fixture_request(email, operation_id) do
-    parent = self()
-    reference = make_ref()
-    observer = Process.get({NewYou.Proof.RecoverySeam, :observer})
-    scenario = Scenario.start()
-
-    try do
-      {worker, monitor} =
-        Scenario.spawn(scenario, :fixture_request, fn ->
-          fixture_request_worker(parent, reference, email, operation_id, observer)
-        end)
-
-      assert await_result(reference, :fixture_request_result) == :ok
-      await_normal(monitor)
-      assert :ok = Scenario.request(scenario, {:await_owned_down, [worker], 5_000})
-      :ok
-    after
-      :ok = Scenario.stop(scenario)
-    end
-  end
-
-  defp fixture_request_worker(parent, reference, email, operation_id, observer) do
-    :ok = Sandbox.checkout(Repo, sandbox: false)
-    if is_function(observer, 1), do: NewYou.Proof.RecoverySeam.observe(observer)
-
-    try do
-      result = Identity.request_recovery(email, "af", operation_id)
-      send(parent, {reference, :fixture_request_result, result})
-    after
-      Process.delete({NewYou.Proof.RecoverySeam, :observer})
-      Sandbox.checkin(Repo)
     end
   end
 
