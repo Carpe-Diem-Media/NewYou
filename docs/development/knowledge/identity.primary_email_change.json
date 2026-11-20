@@ -7,11 +7,12 @@
     "WELL-18",
     "WELL-112",
     "WELL-157",
-    "WELL-156"
+    "WELL-156",
+    "WELL-146"
   ],
   "implementation_revision": {
-    "git_sha": "a57592f25106693e117663f5660b3b209f4c4f85",
-    "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards."
+    "git_sha": "476088c1a527b400f614a2621e0cee05e8fda208",
+    "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1462,6 +1463,21 @@
         "content",
         "executor"
       ]
+    },
+    {
+      "path": "test/new_you/proof/held_email_change_observation_test.exs",
+      "cases": [
+        "the held email-change scenario passes with an independent delivery attempt",
+        "the held email-change assertion detects a local attempt under the foreign parent",
+        "an owned insert without a returned UUID fails the observation"
+      ],
+      "proves": "The real held-email scenario passes with an independent attempt already committed and another inserted by a separate process during observation. An insert by the held-email fixture under the same valid foreign parent fails the held assertion. A successful Ash bulk insert without a returned UUID fails visibly. The original foreign row survives both normal and raised teardown.",
+      "limits": "Creation attribution covers the current synchronous TEST fixture and observed PostgreSQL INSERT results. Historical aggregate-failure causation remains unconfirmed.",
+      "source_ids": [
+        "email_scenarios",
+        "delivery_attempt_observation",
+        "held_email_observation_test"
+      ]
     }
   ],
   "safe_extensions": [
@@ -1685,7 +1701,7 @@
       "id": "email_scenarios",
       "path": "test/support/proof/email_change_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.EmailChangeScenarios",
-      "sha256": "8722549357ee72c357992e3e8335fb8a7ed35e1e029754020c953478f8fd5b21"
+      "sha256": "03dce6f3572967c637598a7f70a31a81d7db54aa884ae6c2197fbbc1ea68c58d"
     },
     {
       "id": "applicability_evidence",
@@ -1782,6 +1798,18 @@
       "path": "lib/new_you/identity/security_hold.ex",
       "symbol": "PrimaryEmailChange.terminalize_for_security_hold",
       "sha256": "0a50ef1dcfa4265dec758621d76a5c3998b652ea7eccc303f48cb418a2949b7d"
+    },
+    {
+      "id": "delivery_attempt_observation",
+      "path": "test/support/proof/delivery_attempt_observation.ex",
+      "symbol": "defmodule NewYou.Proof.DeliveryAttemptObservation",
+      "sha256": "8414a0b198e176a575a40e8934af8a44cb4a18afc72c4ad6215095cc3b5c1a96"
+    },
+    {
+      "id": "held_email_observation_test",
+      "path": "test/new_you/proof/held_email_change_observation_test.exs",
+      "symbol": "defmodule NewYou.Proof.HeldEmailChangeObservationTest",
+      "sha256": "404b64082aa0ebd7c8dc3c726896804bbccfb813c43f5347c10150d9d413428c"
     }
   ]
 }
