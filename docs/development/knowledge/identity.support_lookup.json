@@ -6,8 +6,8 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "cb106a9f493f5712e4a9c9f0ead355feb9a8e668",
-    "semantics": "WELL-18 adds an Identity-owned lookup scope and a read-only current-authority path. The map is refreshed against the committed source checkpoint; it is descriptive, not authorization or merge evidence. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged."
+    "git_sha": "150a17f756ef93317efbbdde7fcca3ed6510b52a",
+    "semantics": "WELL-18 adds an Identity-owned lookup scope and a read-only current-authority path. The map is refreshed against the committed source checkpoint; it is descriptive, not authorization or merge evidence. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -306,7 +306,7 @@
       "id": "identity_api",
       "path": "lib/new_you/identity.ex",
       "symbol": "lookup_support_identity",
-      "sha256": "0a2fc564c87ab0e36a46d055e25270cdc12f9b86d5ac4628dbf59a0180d20fbe"
+      "sha256": "8091cbdf01c00c3b3588aa9058896fadf130e3f016c86cdf335a7f352c1b3dec"
     },
     {
       "id": "lookup",
@@ -336,7 +336,7 @@
       "id": "account",
       "path": "lib/new_you/identity/account.ex",
       "symbol": "defmodule NewYou.Identity.Account",
-      "sha256": "515114144a2ba38bd4858e2a5be297ef3d33bd9da50666a4859638f3125bc3ce"
+      "sha256": "976dac1fdc3a55bbd3808e8e9cefe3a942e4482e7263fb53120f0c1faed526fa"
     },
     {
       "id": "grant_migration",

@@ -6,11 +6,12 @@
     "WELL-17",
     "WELL-18",
     "WELL-112",
-    "WELL-157"
+    "WELL-157",
+    "WELL-156"
   ],
   "implementation_revision": {
-    "git_sha": "3d675142ea91354d0cb85df731201b8c08dcc23b",
-    "semantics": "WELL-17 email-change lifecycle plus WELL-18's development/test-only, flag-controlled current Privacy proof read immediately before mutation; it adds no production purpose-consent requirement. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-112 refreshes the shared router and reachability-test evidence after adding two DEV-only guide routes. The primary-email-change route, owning interfaces and lifecycle remain unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-159 refreshes the shared Recovery source after compile-time TEST-only fixed phase diagnostics. Email-change business semantics and interfaces remain unchanged. WELL-157 adds the approved WELL-156-only non-production Phase-9 applicability evidence for the four existing immutable email versions. It leaves the content reader and delivery path unchanged; this map does not claim runtime eligibility or delivery activation. WELL-157 also reconciles the legacy Magic Login Python approval checker with the same exact v1.19 route while retaining v1.16/v1.17/v1.18 lineage and digest checks. This changes validation compatibility only, not message scope or runtime release eligibility."
+    "git_sha": "150a17f756ef93317efbbdde7fcca3ed6510b52a",
+    "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -39,6 +40,16 @@
       "source_ids": [
         "privacy",
         "privacy_proof_test"
+      ]
+    },
+    {
+      "domain": "NewYou.Content",
+      "interface": "PrimaryEmailChangeMessage.binding/3 and PrimaryEmailChangeBrowserCopy.load/1",
+      "ownership": "Owns exact locale, bytes, immutable message and token contract identities, and bounded applicability. The pinned WELL-157 successor, current Product and Decision routes, and approved browser packet are checked at use.",
+      "source_ids": [
+        "content",
+        "phase9_copy",
+        "applicability_evidence"
       ]
     }
   ],
@@ -102,7 +113,7 @@
       "arity": 4,
       "visibility": "supported",
       "arguments": [
-        "Current authenticated session credentials, requested target email, en/af locale, and caller operation UUID."
+        "Current Session credentials, target email, en/af locale (or a server-selected {locale, :well156} context), and operation UUID."
       ],
       "returns": [
         "{:ok, :requested} or {:error, :primary_email_change_unavailable}."
@@ -214,6 +225,75 @@
         "identity_api",
         "lifecycle"
       ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "primary_email_change_status",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Current Session credentials."
+      ],
+      "returns": [
+        "Current canonical email and minimal operation projection, or a generic denial."
+      ],
+      "side_effects": [
+        "Reads the owning Account and revalidates Session and Token authority under the existing lock order."
+      ],
+      "caller_constraints": [
+        "Requires a current Session for an eligible Account. Does not return a confirmation bearer or change durable state."
+      ],
+      "source_ids": [
+        "identity_api",
+        "lifecycle",
+        "phase9_controller"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "confirm_phase9_primary_email_change",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Phase-9 confirmation bearer and its exact en/af locale."
+      ],
+      "returns": [
+        "Confirmed or generic unavailability."
+      ],
+      "side_effects": [
+        "Consumes the current proof once, records confirmation and applicable synthetic delay and review policy, and creates Audit evidence."
+      ],
+      "caller_constraints": [
+        "Web callers use the explicit CSRF-protected POST. Confirmation does not apply the canonical email."
+      ],
+      "source_ids": [
+        "identity_api",
+        "lifecycle",
+        "phase9_controller"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "apply_authenticated_primary_email_change",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Presenting Session credentials and current operation UUID."
+      ],
+      "returns": [
+        "Owner apply outcome or generic unavailability."
+      ],
+      "side_effects": [
+        "Applies the same Account-owned transaction and session, device, held notice and Audit consequences as the internal interface."
+      ],
+      "caller_constraints": [
+        "Requires the eligible current Phase-9 operation and the presenting, currently bound Session. The internal owner path retains the existing lock and guard sequence."
+      ],
+      "source_ids": [
+        "identity_api",
+        "lifecycle",
+        "phase9_controller"
+      ]
     }
   ],
   "persistence": [
@@ -282,6 +362,19 @@
         "reviewed_history_migration",
         "account"
       ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261120053912_well156_email_change_context.exs",
+      "tables": [
+        "accounts"
+      ],
+      "constraints": [
+        "primary_email_change_content_context"
+      ],
+      "source_ids": [
+        "phase9_migration",
+        "account"
+      ]
     }
   ],
   "request_flow": [
@@ -328,6 +421,25 @@
         "recovery",
         "communications",
         "audit"
+      ]
+    },
+    {
+      "summary": "The existing protected Session page links to the ordinary journey. The privacy-preserving browser dispatcher applies CSRF and exact copy eligibility. Request, fresh password and applicable purpose-bound TOTP, confirmation, review, apply and cancellation use the existing owner interfaces.",
+      "source_ids": [
+        "phase9_controller",
+        "phase9_web_route",
+        "phase9_copy",
+        "identity_api"
+      ]
+    },
+    {
+      "summary": "Passive confirmation retrieval never consumes proof. The Phase-9 POST validates context and exact locale alongside the existing signed, single-use proof guards. Apply rechecks current confirmation eligibility and establishes the held old-address notice in the same transaction as the canonical email and security consequences.",
+      "source_ids": [
+        "phase9_controller",
+        "lifecycle",
+        "content",
+        "communications",
+        "executor"
       ]
     }
   ],
@@ -1307,6 +1419,34 @@
         "magic_approval_checker",
         "magic_approval_test"
       ]
+    },
+    {
+      "path": "test/new_you_web/controllers/ordinary_primary_email_change_test.exs",
+      "cases": [
+        "EN and AF authenticated entry, request retry, bad password, scanner-safe GET and HEAD, CSRF rejection, locale and context mismatch, confirmation replay, review, guarded apply, revocation and fresh sign-in.",
+        "Stale cancellation ID and idempotent cancellation.",
+        "Chromium copy, labels, keyboard focus, 320 px reflow, 200 percent text resizing, reduced motion and stylesheets."
+      ],
+      "proves": "The bilingual web routes reach the Account owner through current Sessions and explicit POST confirmation and apply actions.",
+      "limits": "The browser obtains held proof through a loopback fixture limited to a synthetic Account. This does not prove external delivery or real-participant use.",
+      "source_ids": [
+        "phase9_web_test",
+        "phase9_browser",
+        "phase9_controller"
+      ]
+    },
+    {
+      "path": "test/new_you/content/primary_email_change_message_test.exs",
+      "cases": [
+        "Exact bindings for both message roles in both locales, unsupported context and locale, and isolated withdrawal fail closed."
+      ],
+      "proves": "The current Phase-9 binder checks the exact routed successor without consuming historical approval as Phase-9 authority.",
+      "limits": "The independent held-disposition guard permanently prevents email-change delivery in the bounded journey.",
+      "source_ids": [
+        "phase9_content_test",
+        "content",
+        "executor"
+      ]
     }
   ],
   "safe_extensions": [
@@ -1378,7 +1518,7 @@
     "Delay and risk-review policy exercised by development tests does not select production thresholds or authorize live participant delivery.",
     "Selected E2 records carry minimal event facts only; they do not contain bearer proof or full private diagnostics.",
     "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations.",
-    "The WELL-157 applicability packet binds the exact Product v1.19 successor and five transcribed owner decisions, but it does not activate a Phase-9 runtime reader or live delivery."
+    "WELL-156 reads only the pinned WELL-157 applicability artifact and approved browser packet. Both email intents remain held and support contact remains unbound. The local DEV policy is synthetic and exercises a 60-second delay and separate review. It provides no production risk threshold."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -1386,19 +1526,19 @@
       "id": "identity_api",
       "path": "lib/new_you/identity.ex",
       "symbol": "def request_primary_email_change",
-      "sha256": "0a2fc564c87ab0e36a46d055e25270cdc12f9b86d5ac4628dbf59a0180d20fbe"
+      "sha256": "8091cbdf01c00c3b3588aa9058896fadf130e3f016c86cdf335a7f352c1b3dec"
     },
     {
       "id": "account",
       "path": "lib/new_you/identity/account.ex",
       "symbol": "state_machine do",
-      "sha256": "515114144a2ba38bd4858e2a5be297ef3d33bd9da50666a4859638f3125bc3ce"
+      "sha256": "976dac1fdc3a55bbd3808e8e9cefe3a942e4482e7263fb53120f0c1faed526fa"
     },
     {
       "id": "lifecycle",
       "path": "lib/new_you/identity/primary_email_change.ex",
       "symbol": "defmodule NewYou.Identity.PrimaryEmailChange",
-      "sha256": "517c5dc55343c0dec5a3f22f63112109230c6088baf4b668d1f610c97a9e69f5"
+      "sha256": "31a79f936f2c26fb965da834c1aba2db450efe63facc8a1974d7feee4ae4bb4a"
     },
     {
       "id": "token",
@@ -1422,7 +1562,7 @@
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def establish_primary_email_change_confirmation",
-      "sha256": "b1dff58da7f739e9baf68f3ff33f9e4659662aa5e07dc64295bdd29d2ef99d54"
+      "sha256": "111fc6033c0a2b3b9f29cc3c7a8582b7c49dc8e8756ca9b8ee9a086dc8a7e504"
     },
     {
       "id": "message_intent",
@@ -1440,7 +1580,7 @@
       "id": "content",
       "path": "lib/new_you/content/primary_email_change_message.ex",
       "symbol": "defmodule NewYou.Content.PrimaryEmailChangeMessage",
-      "sha256": "aebd1b655de078356e1623af125cc8c3cd3d5505752820d8d9a53105139ec51a"
+      "sha256": "3589aa038f6f6345f39db5f4fa1c18e6210cb0404b4cf9458ce7519d0bf4ed6d"
     },
     {
       "id": "controller",
@@ -1452,7 +1592,7 @@
       "id": "html",
       "path": "lib/new_you_web/controllers/primary_email_change_html.ex",
       "symbol": "defmodule NewYouWeb.PrimaryEmailChangeHTML",
-      "sha256": "da7d997f91d207e6961e80da8e82455f12eeb3d3cae161a8457bd90f72edc732"
+      "sha256": "26ea66cf46cfea538db7536f959496663f3be585bc6ac162777c20a1678e6777"
     },
     {
       "id": "route",
@@ -1561,6 +1701,48 @@
       "path": "tests/test_magic_login_development_approval.py",
       "symbol": "class MagicLoginDevelopmentApprovalTests",
       "sha256": "8f6fea2e7539f5f085473beef9f3ff4722cb38bc7a95b733f45bcee30a77c794"
+    },
+    {
+      "id": "phase9_controller",
+      "path": "lib/new_you_web/controllers/ordinary_primary_email_change_controller.ex",
+      "symbol": "defmodule NewYouWeb.OrdinaryPrimaryEmailChangeController",
+      "sha256": "1f19eb869ed46d58814df5a131ed0a89b689910642e07290132405485c2713b0"
+    },
+    {
+      "id": "phase9_web_route",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "symbol": "/primary-email-change/confirmation",
+      "sha256": "d005ae60a02b9ed3d68da552185c68ab1e825452f6a27fda60c6260bb0656ecf"
+    },
+    {
+      "id": "phase9_copy",
+      "path": "lib/new_you/content/primary_email_change_browser_copy.ex",
+      "symbol": "defmodule NewYou.Content.PrimaryEmailChangeBrowserCopy",
+      "sha256": "bd2f61525967dc0e23172da4a41b19ebc9d48f954dedb9a18275ef1e48649d1a"
+    },
+    {
+      "id": "phase9_migration",
+      "path": "priv/repo/migrations/20261120053912_well156_email_change_context.exs",
+      "symbol": "primary_email_change_content_context",
+      "sha256": "c13afffa188b6c88dd84d3743f38b324c7423a0a0911a15bd2782405df71d405"
+    },
+    {
+      "id": "phase9_web_test",
+      "path": "test/new_you_web/controllers/ordinary_primary_email_change_test.exs",
+      "symbol": "defmodule NewYouWeb.OrdinaryPrimaryEmailChangeTest",
+      "sha256": "c56e691f91d8bb89bd8ac4990adbb304c3d976f13b036b5b29ba6cc8a6d3b8b2"
+    },
+    {
+      "id": "phase9_content_test",
+      "path": "test/new_you/content/primary_email_change_message_test.exs",
+      "symbol": "defmodule NewYou.Content.PrimaryEmailChangeMessageTest",
+      "sha256": "b2c23779a44a7523228fd0e05188ea73e10e91c709ea130ca1d28c0a5ec66338"
+    },
+    {
+      "id": "phase9_browser",
+      "path": "test/support/proof/well156_browser.ex",
+      "symbol": "defmodule NewYou.Proof.Well156Browser",
+      "sha256": "229449754f9f8d317640e36e3a9a3c3b1e5c87156649fa69318c8b50c3f01782"
     }
   ]
 }
