@@ -416,6 +416,51 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.reset_vs_recovery_race()
   end
 
+  test "stale-reset recovery race preserves a valid independent owner's reset proof" do
+    assert P815.reset_vs_recovery_race(fn race ->
+             parent = self()
+             reference = make_ref()
+
+             foreign =
+               NewYou.Proof.P805.independent_fixture_task(fn ->
+                 {request, registration} = NewYou.Proof.ResetCases.account()
+                 {proof, _bearer} = NewYou.Proof.ResetCases.issue(request, registration)
+                 before = NewYou.Proof.ResetCases.reset_security_snapshot(registration.account_id)
+                 valid? = match?({:ok, _}, NewYou.Proof.ResetCases.delivery(proof, request.email))
+                 send(parent, {reference, :ready, valid?})
+
+                 receive do
+                   {^reference, :verify} ->
+                     preserved? =
+                       NewYou.Proof.ResetCases.reset_security_snapshot(registration.account_id) ==
+                         before
+
+                     valid? =
+                       match?({:ok, _}, NewYou.Proof.ResetCases.delivery(proof, request.email))
+
+                     send(parent, {reference, :preserved, preserved? and valid?})
+                     receive do: ({^reference, :release} -> :ok)
+
+                   {^reference, :release} ->
+                     :ok
+                 after
+                   15_000 -> raise "foreign reset fixture release deadline"
+                 end
+               end)
+
+             try do
+               assert_receive {^reference, :ready, true}, 5_000
+               assert race.()
+               send(foreign.pid, {reference, :verify})
+               assert_receive {^reference, :preserved, true}, 5_000
+               true
+             after
+               send(foreign.pid, {reference, :release})
+               assert :ok = Task.await(foreign, 10_000)
+             end
+           end)
+  end
+
   test "proof acceptance rolls back when its transaction worker terminates" do
     assert P815.interrupted_acceptance()
   end

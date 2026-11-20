@@ -62,6 +62,7 @@ defmodule NewYou.Proof.Scenario do
   @spec spawn(t(), worker_label(), (-> term())) :: {pid(), reference()}
   def spawn(%__MODULE__{} = scenario, label, fun) when is_function(fun, 0) do
     owner!(scenario)
+    observation = NewYou.Proof.FixtureObservation.context()
 
     {pid, monitor} =
       spawn_monitor(fn ->
@@ -75,7 +76,7 @@ defmodule NewYou.Proof.Scenario do
             Process.put(@worker_guardian_key, guardian)
 
             try do
-              fun.()
+              NewYou.Proof.FixtureObservation.with_context(observation, fun)
             after
               Process.delete(@cleanup_scope_key)
               Process.delete(@worker_guardian_key)

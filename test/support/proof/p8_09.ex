@@ -2,7 +2,7 @@ defmodule NewYou.Proof.P809 do
   @moduledoc false
   alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.{Identity, Repo}
-  alias NewYou.Proof.{P805, Scenario, CutPoints, RegistrationSeam}
+  alias NewYou.Proof.{FixtureObservation, P805, Scenario, CutPoints, RegistrationSeam}
 
   def run(id) do
     P805.with_fixture(fn ->
@@ -182,8 +182,8 @@ defmodule NewYou.Proof.P809 do
     parent = self()
     reference = make_ref()
     scenario = Scenario.start()
-    tokens_before = P805.scalar("SELECT count(*) FROM tokens")
-    sessions_before = P805.scalar("SELECT count(*) FROM sessions")
+    tokens_before = FixtureObservation.fingerprint(:tokens)
+    sessions_before = FixtureObservation.fingerprint(:sessions)
 
     try do
       :ok = CutPoints.arm(scenario, "transaction.before_commit", :login, :terminate)
@@ -226,8 +226,8 @@ defmodule NewYou.Proof.P809 do
       P805.check(
         id,
         "atomic_rollback",
-        tokens_before == P805.scalar("SELECT count(*) FROM tokens") and
-          sessions_before == P805.scalar("SELECT count(*) FROM sessions")
+        tokens_before == FixtureObservation.fingerprint(:tokens) and
+          sessions_before == FixtureObservation.fingerprint(:sessions)
       )
 
       {backend, result} =

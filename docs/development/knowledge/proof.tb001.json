@@ -8,11 +8,15 @@
     "WELL-134",
     "WELL-112",
     "WELL-114",
-    "WELL-146"
+    "WELL-146",
+    "WELL-141",
+    "WELL-142",
+    "WELL-143",
+    "WELL-86"
   ],
   "implementation_revision": {
-    "git_sha": "476088c1a527b400f614a2621e0cee05e8fda208",
-    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-112 reconciles the stronger current-main scanner scenario and adds the self-hosted-font CSP assertion in its existing shared helper. Scenario owner-state checks and the fixed TB-001 inventory remain unchanged. Source/hash refresh is not a fresh TB-001 certification. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation."
+    "git_sha": "b070971229029c12d86fb012bae9662858763ea3",
+    "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-112 reconciles the stronger current-main scanner scenario and adds the self-hosted-font CSP assertion in its existing shared helper. Scenario owner-state checks and the fixed TB-001 inventory remain unchanged. Source/hash refresh is not a fresh TB-001 certification. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. The reconciled candidate keeps the WELL-148 active/quarantined lease and WELL-146 observer. The independent worker shares the lease environment but has a separate checkout and observation scope. Fallback cleanup retains only that worker\u2019s explicit synthetic operations, emails and projection key. P809 proof remains separately attributed to WELL-86."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
   "collaborating_domains": [
@@ -398,6 +402,62 @@
         "delivery_attempt_observation",
         "held_email_observation_test"
       ]
+    },
+    {
+      "path": "test/new_you/proof/fixture_consequence_observation_test.exs",
+      "cases": [
+        "Independent fixture writes do not change the selected owner's observations.",
+        "Owned Tokens with wrong account association and parentless nonce/job writes remain observable.",
+        "Foreign retained rows survive successful and raised owner teardown.",
+        "Explicit fresh recovery ownership observes unlinked writes and excludes rolled-back rows.",
+        "An owned generated key that cannot be captured fails observation visibly.",
+        "Foreign retained rows survive abrupt owner cancellation and guardian teardown."
+      ],
+      "proves": "Bounded fixture attribution, foreign preservation and orphan sensitivity through real Ash/PostgreSQL writes and deterministic owner barriers.",
+      "limits": "Test source and focused evidence do not certify all proof callbacks, historical registration errors, canonical verification or merge readiness.",
+      "source_ids": [
+        "fixture_observation",
+        "fixture_consequence_observation_test"
+      ]
+    },
+    {
+      "path": "test/new_you/proof/fault_injection_test.exs",
+      "cases": [
+        "Prior cut setting and only owned DDL restored on return, raise, throw and exit.",
+        "Nested cuts preserve the outer reached probe.",
+        "Abrupt owner death disconnects the active SQL client and removes its temporary fault dependency."
+      ],
+      "proves": "Session-bound fault lifetime, rollback-resistant reached evidence and precise cleanup without a second runner.",
+      "limits": "Does not attribute the three historical registration failures or certify canonical gates.",
+      "source_ids": [
+        "fault_injection_test"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/password_reset_lifecycle_test.exs",
+      "cases": [
+        "Independent registration commits all expected consequences while each Audit/job reset fault stays installed.",
+        "Owned reset reaches the intended failure and preserves the full security and Audit snapshot.",
+        "Foreign fixture teardown does not invoke recovery for another owner's active trigger."
+      ],
+      "proves": "Separate backend registration isolation with valid fixture and signing-key lifetimes, without weakening existing reset rollback assertions.",
+      "limits": "Historical registration error provenance remains unknown; this is a deterministic fault-leak regression.",
+      "source_ids": [
+        "password_reset_lifecycle_test"
+      ]
+    },
+    {
+      "path": "test/new_you/proof/interrupted_issue_observation_test.exs",
+      "cases": [
+        "interrupted issuance observes foreign consequences by creation owner",
+        "interrupted issuance observes tokens consequences by creation owner",
+        "interrupted issuance observes sessions consequences by creation owner"
+      ],
+      "proves": "The real interrupted issuance callback excludes independent committed issuance while detecting unexpected owned Token and orphan Session consequences with wrong associations. Foreign fingerprints remain unchanged; terminated SQL backend absence and exact failed guard diagnostics are asserted.",
+      "limits": "Does not identify the provenance of the historical intermittent failures or replace canonical gates, OCR, CI or independent review.",
+      "source_ids": [
+        "interrupted_issue_observation_test"
+      ]
     }
   ],
   "safe_extensions": [
@@ -516,7 +576,7 @@
       "id": "fixture",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defmodule NewYou.Proof.P805",
-      "sha256": "8aaa9d13c63fb85fe4237df73a2b013678b46f4c6da61d68b424868d8cbaf19a"
+      "sha256": "1fa23bf4b5600ffa72ab2e158e74b2326abc137ba7742fe071f632fe9a9fa150"
     },
     {
       "id": "delivery_scenarios",
@@ -564,7 +624,7 @@
       "id": "matrix_test",
       "path": "test/new_you/proof/p8_05_test.exs",
       "symbol": "runner executes every reviewed obligation",
-      "sha256": "955a036e6b26b1862fdbfff0aede0d2277777824286c847601535ef527cf7678"
+      "sha256": "41c77b8bf01af02f214128f156260df91a8542f3e902600fabea16f46b85addb"
     },
     {
       "id": "identity",
@@ -642,7 +702,7 @@
       "id": "fixture_ownership",
       "path": "test/support/proof/p8_05_fixture.ex",
       "symbol": "defmodule NewYou.Proof.P805Fixture",
-      "sha256": "dcb563ce358341a683181934702b39e789ecf1894f783ce6e92d4277de5307f5"
+      "sha256": "2dcab73a0d3ece3305530e29bfafc8ca9a539c7b2ba1c0e46e88ab77d1fc4085"
     },
     {
       "id": "fixture_lifecycle_test",
@@ -673,6 +733,36 @@
       "path": "test/new_you/proof/held_email_change_observation_test.exs",
       "symbol": "defmodule NewYou.Proof.HeldEmailChangeObservationTest",
       "sha256": "404b64082aa0ebd7c8dc3c726896804bbccfb813c43f5347c10150d9d413428c"
+    },
+    {
+      "id": "fixture_observation",
+      "path": "test/support/proof/fixture_observation.ex",
+      "symbol": "defmodule NewYou.Proof.FixtureObservation",
+      "sha256": "4a6894b4d381db61022d3adf0787bfb6b71153e145502f4b04221c6d47986c49"
+    },
+    {
+      "id": "fixture_consequence_observation_test",
+      "path": "test/new_you/proof/fixture_consequence_observation_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureConsequenceObservationTest",
+      "sha256": "78ff68a0c618bfac0c53f9d638880bc61413643744a53bfc0034bd0c8d9c833d"
+    },
+    {
+      "id": "fault_injection_test",
+      "path": "test/new_you/proof/fault_injection_test.exs",
+      "symbol": "defmodule NewYou.Proof.FaultInjectionTest",
+      "sha256": "0cec4822be8f48fe3659a009b2a20c8674a32658534d9a75940352e7c209f1ed"
+    },
+    {
+      "id": "password_reset_lifecycle_test",
+      "path": "test/new_you/identity/password_reset_lifecycle_test.exs",
+      "symbol": "defmodule NewYou.Identity.PasswordResetLifecycleTest",
+      "sha256": "eeb93078e230625441bd24035d6b6729d1dcb3e520b751953cac156dc1c905b3"
+    },
+    {
+      "id": "interrupted_issue_observation_test",
+      "path": "test/new_you/proof/interrupted_issue_observation_test.exs",
+      "symbol": "interrupted issuance observes",
+      "sha256": "08f6ed7ea526f42028f5039c6d2079f2893209f44a0528be8464d97f217c9155"
     }
   ]
 }

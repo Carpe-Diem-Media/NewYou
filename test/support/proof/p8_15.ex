@@ -821,77 +821,81 @@ defmodule NewYou.Proof.P815 do
     end)
   end
 
-  def reset_vs_recovery_race do
-    P805.with_fixture(fn ->
-      {foreign_request, foreign_registration} = account()
-      :ok = Identity.request_password_reset(foreign_request.email, "af", operation())
+  def reset_vs_recovery_race(around \\ fn race -> race.() end) do
+    P805.with_fixture(fn -> around.(&reset_vs_recovery_fixture/0) end)
+  end
 
-      foreign_proof =
-        Token
-        |> Ash.Query.filter(
-          account_id == ^foreign_registration.account_id and purpose == "password_reset"
-        )
-        |> Ash.read_one!(authorize?: false)
+  defp reset_vs_recovery_fixture do
+    {foreign_request, foreign_registration} = account()
+    :ok = Identity.request_password_reset(foreign_request.email, "af", operation())
 
-      {request, registration, _recovery, recovery_bearer} = pending_recovery()
-      assert Identity.submit_recovery_proof(recovery_bearer, operation()) == {:ok, :accepted}
-      reset_bearer = password_reset_delivery(request, registration.account_id)
-      parent = self()
-      reference = make_ref()
-      scenario = Scenario.start()
+    foreign_proof =
+      Token
+      |> Ash.Query.filter(
+        account_id == ^foreign_registration.account_id and purpose == "password_reset"
+      )
+      |> Ash.read_one!(authorize?: false)
 
-      try do
-        {completion, completion_monitor} =
-          Scenario.spawn(scenario, :recovery_completion, fn ->
-            :ok = Sandbox.checkout(Repo, sandbox: false)
-            Process.put(RegistrationSeam, {:pause, parent, reference})
+    {request, registration, _recovery, recovery_bearer} =
+      pending_recovery(&RecoverySeam.isolated_fixture_request/2)
 
-            try do
-              result =
-                Identity.complete_recovery(
-                  recovery_bearer,
-                  "recovery credential wins",
-                  operation()
-                )
+    assert Identity.submit_recovery_proof(recovery_bearer, operation()) == {:ok, :accepted}
+    reset_bearer = password_reset_delivery(request, registration.account_id)
+    parent = self()
+    reference = make_ref()
+    scenario = Scenario.start()
 
-              send(parent, {reference, :completion_result, result})
-            after
-              Sandbox.checkin(Repo)
-            end
-          end)
+    try do
+      {completion, completion_monitor} =
+        Scenario.spawn(scenario, :recovery_completion, fn ->
+          :ok = Sandbox.checkout(Repo, sandbox: false)
+          Process.put(RegistrationSeam, {:pause, parent, reference})
 
-        completion_backend = await_checkpoint(reference)
+          try do
+            result =
+              Identity.complete_recovery(
+                recovery_bearer,
+                "recovery credential wins",
+                operation()
+              )
 
-        {_reset, reset_monitor} =
-          Scenario.spawn(scenario, :stale_password_reset, fn ->
-            :ok = Sandbox.checkout(Repo, sandbox: false)
+            send(parent, {reference, :completion_result, result})
+          after
+            Sandbox.checkin(Repo)
+          end
+        end)
 
-            try do
-              backend = P805.scalar("SELECT pg_backend_pid()")
-              send(parent, {reference, :reset_backend, backend})
+      completion_backend = await_checkpoint(reference)
 
-              result =
-                Identity.reset_password(reset_bearer, "stale reset credential", operation())
+      {_reset, reset_monitor} =
+        Scenario.spawn(scenario, :stale_password_reset, fn ->
+          :ok = Sandbox.checkout(Repo, sandbox: false)
 
-              send(parent, {reference, :reset_result, safe_reset(result)})
-            after
-              Sandbox.checkin(Repo)
-            end
-          end)
+          try do
+            backend = P805.scalar("SELECT pg_backend_pid()")
+            send(parent, {reference, :reset_backend, backend})
 
-        reset_backend = receive_backend(reference, :reset_backend)
-        assert_contention(reset_backend, completion_backend)
-        send(completion, {reference, :release})
-        assert await_result(reference, :completion_result) == {:ok, :completed}
-        assert await_result(reference, :reset_result) == :denied
-        await_normal(completion_monitor)
-        await_normal(reset_monitor)
-        assert account_version_by_email(request.email) == 2
-        assert Ash.get!(Token, foreign_proof.jti, authorize?: false) == foreign_proof
-      after
-        :ok = Scenario.stop(scenario)
-      end
-    end)
+            result =
+              Identity.reset_password(reset_bearer, "stale reset credential", operation())
+
+            send(parent, {reference, :reset_result, safe_reset(result)})
+          after
+            Sandbox.checkin(Repo)
+          end
+        end)
+
+      reset_backend = receive_backend(reference, :reset_backend)
+      assert_contention(reset_backend, completion_backend)
+      send(completion, {reference, :release})
+      assert await_result(reference, :completion_result) == {:ok, :completed}
+      assert await_result(reference, :reset_result) == :denied
+      await_normal(completion_monitor)
+      await_normal(reset_monitor)
+      assert account_version_by_email(request.email) == 2
+      assert Ash.get!(Token, foreign_proof.jti, authorize?: false) == foreign_proof
+    after
+      :ok = Scenario.stop(scenario)
+    end
   end
 
   def interrupted_acceptance do
@@ -988,10 +992,11 @@ defmodule NewYou.Proof.P815 do
     end)
   end
 
-  defp pending_recovery do
+  defp pending_recovery(request_fixture \\ &Identity.request_recovery(&1, "af", &2)) do
     {request, registration} = account()
-    :ok = Identity.request_recovery(request.email, "af", operation())
-    [recovery] = cases(registration.account_id)
+    request_id = operation()
+    :ok = request_fixture.(request.email, request_id)
+    [%RecoveryCase{operation_id: ^request_id} = recovery] = cases(registration.account_id)
     {:ok, bearer} = delivery(recovery, request.email)
     {request, registration, recovery, bearer}
   end
@@ -1019,12 +1024,12 @@ defmodule NewYou.Proof.P815 do
   end
 
   defp password_reset_delivery(request, account_id) do
-    :ok = Identity.request_password_reset(request.email, "af", operation())
+    request_id = operation()
+    :ok = Identity.request_password_reset(request.email, "af", request_id)
 
-    proof =
-      Token
-      |> Ash.Query.filter(account_id == ^account_id and purpose == "password_reset")
-      |> Ash.read_one!(authorize?: false)
+    missing_operation? = is_nil(password_reset_proof(account_id, Ecto.UUID.generate()))
+    assert missing_operation?
+    assert %Token{} = proof = password_reset_proof(account_id, request_id)
 
     {:ok, {:ok, bearer}} =
       Ash.transact([Account, Token], fn ->
@@ -1032,6 +1037,15 @@ defmodule NewYou.Proof.P815 do
       end)
 
     bearer
+  end
+
+  defp password_reset_proof(account_id, request_id) do
+    Token
+    |> Ash.Query.filter(
+      purpose == "password_reset" and reset_request_id == ^request_id and
+        account_id == ^account_id
+    )
+    |> Ash.read_one!(authorize?: false)
   end
 
   defp operation do
