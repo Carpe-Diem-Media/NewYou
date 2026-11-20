@@ -10,8 +10,8 @@
     "WELL-156"
   ],
   "implementation_revision": {
-    "git_sha": "63bce9387fa59497ded7799c93ab4ad99b9810a8",
-    "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions."
+    "git_sha": "26295fec18db5375d95fd3b3100e9b8cdd38bf9f",
+    "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -442,6 +442,15 @@
         "content",
         "communications",
         "executor"
+      ]
+    },
+    {
+      "summary": "On Support hold placement or verified recovery containment, the existing locked Account transaction terminalizes an active WELL-156 operation, revokes its proof and records one held Audit obligation. A revoked presenting Session still cannot apply or view the operation. The internal apply receipt remains idempotent.",
+      "source_ids": [
+        "security_hold_owner",
+        "recovery",
+        "lifecycle",
+        "audit"
       ]
     }
   ],
@@ -1345,7 +1354,8 @@
         "guarded apply, idempotent security consequences, restart/reconnect, stale target rejection and terminal states",
         "real PostgreSQL apply-versus-recovery competing transactions in both commit orderings",
         "real PostgreSQL Session logout-versus-apply lock contention in both transaction orderings",
-        "cancellation, supersession, target uniqueness race, same-Account competition, expiry, hold and risk review"
+        "cancellation, supersession, target uniqueness race, same-Account competition, expiry, hold and risk review",
+        "Real scoped Support hold revokes the bound Session and consumed proof, terminalizes the confirmed Phase-9 change and records one held Audit obligation. Repeated placement and application attempts leave the canonical email unchanged and create no old-address notice."
       ],
       "proves": "WELL-17 focused lifecycle and security regression behavior against the current PostgreSQL test database.",
       "limits": "Development/test behavior only; does not enable provider delivery or make production policy decisions.",
@@ -1353,7 +1363,8 @@
         "test",
         "restart_proof",
         "recovery",
-        "email_scenarios"
+        "email_scenarios",
+        "security_hold_owner"
       ]
     },
     {
@@ -1427,7 +1438,8 @@
       "cases": [
         "EN and AF authenticated entry, request retry, bad password, scanner-safe GET and HEAD, CSRF rejection, locale and context mismatch, confirmation replay, review, guarded apply, revocation and fresh sign-in.",
         "Stale cancellation ID and idempotent cancellation.",
-        "Chromium copy, labels, keyboard focus, 320 px reflow, 200 percent text resizing, reduced motion and stylesheets."
+        "Chromium copy, labels, keyboard focus, 320 px reflow, 200 percent text resizing, reduced motion and stylesheets.",
+        "Both Chromium locales exercise rejected-input focus and association, cancellation, expiry, replay unavailability, synthetic delay, distinct review and apply, fresh sign-in and denial after a real Support hold."
       ],
       "proves": "The bilingual web routes reach the Account owner through current Sessions and explicit POST confirmation and apply actions.",
       "limits": "The browser obtains held proof through a loopback fixture limited to a synthetic Account. This does not prove external delivery or real-participant use.",
@@ -1541,7 +1553,7 @@
       "id": "lifecycle",
       "path": "lib/new_you/identity/primary_email_change.ex",
       "symbol": "defmodule NewYou.Identity.PrimaryEmailChange",
-      "sha256": "31a79f936f2c26fb965da834c1aba2db450efe63facc8a1974d7feee4ae4bb4a"
+      "sha256": "b30c1105c92f5b3a7fabdc930f9579225e1ad1c71a00fc08f2bbf3deb385272a"
     },
     {
       "id": "token",
@@ -1553,7 +1565,7 @@
       "id": "recovery",
       "path": "lib/new_you/identity/recovery.ex",
       "symbol": "def finish(",
-      "sha256": "cc40a1be9383599904a5d3684cdc99f15c3d371a83c948787b6545f691f4d0e3"
+      "sha256": "d7b4cf5d03fed6b2da0a8c5324635b9db0cb91f005e28f0a02516a09b55b6aef"
     },
     {
       "id": "password_reset",
@@ -1595,7 +1607,7 @@
       "id": "html",
       "path": "lib/new_you_web/controllers/primary_email_change_html.ex",
       "symbol": "defmodule NewYouWeb.PrimaryEmailChangeHTML",
-      "sha256": "e09244fab0afac412fab46c2fe07b93a40364735f8796599df3c20ab6bde0d17"
+      "sha256": "e1daf9781c6c4cf0931d3b40493c3949864d62fd7cc1e6743826284149934740"
     },
     {
       "id": "route",
@@ -1637,7 +1649,7 @@
       "id": "test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "defmodule NewYou.Identity.PrimaryEmailChangeTest",
-      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
+      "sha256": "feb6d6bdab958b23d797c2e14b69e45e2a58a3e9c02afbc0874d55c0f97060eb"
     },
     {
       "id": "restart_proof",
@@ -1667,7 +1679,7 @@
       "id": "privacy_proof_test",
       "path": "test/new_you/identity/primary_email_change_test.exs",
       "symbol": "committed Privacy withdrawal wins before Identity's current mutation check",
-      "sha256": "58a07baf16ccc226a06a341cb37fc4b0260163ba7c53e9975d520d516de8bc86"
+      "sha256": "feb6d6bdab958b23d797c2e14b69e45e2a58a3e9c02afbc0874d55c0f97060eb"
     },
     {
       "id": "email_scenarios",
@@ -1709,7 +1721,7 @@
       "id": "phase9_controller",
       "path": "lib/new_you_web/controllers/ordinary_primary_email_change_controller.ex",
       "symbol": "defmodule NewYouWeb.OrdinaryPrimaryEmailChangeController",
-      "sha256": "1f19eb869ed46d58814df5a131ed0a89b689910642e07290132405485c2713b0"
+      "sha256": "86140a49902185b55da050933308e32a96f81dc68e97eabf0b4fe3778fead86c"
     },
     {
       "id": "phase9_web_route",
@@ -1745,13 +1757,13 @@
       "id": "phase9_browser",
       "path": "test/support/proof/well156_browser.ex",
       "symbol": "defmodule NewYou.Proof.Well156Browser",
-      "sha256": "229449754f9f8d317640e36e3a9a3c3b1e5c87156649fa69318c8b50c3f01782"
+      "sha256": "80f941fda58d286443578038a99b05f610da2bcaceed63df0cc52f97e35d217e"
     },
     {
       "id": "phase9_journey",
       "path": "lib/new_you_web/controllers/primary_email_change_html/journey.html.heex",
       "symbol": "primary-email-change-heading",
-      "sha256": "828d6abdf07a2902b718820d6244f4e3c45f024e22e656b219814ed5e456d9b1"
+      "sha256": "38d6d01ac041d43fba14d79405a089583ec3ff5575174fe9b0152bd6a491ec03"
     },
     {
       "id": "phase9_confirmation",
@@ -1763,7 +1775,13 @@
       "id": "phase9_browser_driver",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "ordinary_email_change",
-      "sha256": "f1276c89a0660cedafed955de8b922a517107c75f987087399d551dbde7e5fa3"
+      "sha256": "dbdabbeed34b07d95fbe5448592a1a74181061be44c25c4caedc4b9c4e820cf5"
+    },
+    {
+      "id": "security_hold_owner",
+      "path": "lib/new_you/identity/security_hold.ex",
+      "symbol": "PrimaryEmailChange.terminalize_for_security_hold",
+      "sha256": "0a50ef1dcfa4265dec758621d76a5c3998b652ea7eccc303f48cb418a2949b7d"
     }
   ]
 }
