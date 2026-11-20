@@ -15,6 +15,19 @@ Preserve local verification → optional OCR → required exact-head hosted CI �
 
 Do not automatically rerun already-valid focused proof or broad gates merely because another skill was loaded. Evidence reuse requires unchanged relevant source, exact inputs, environment, scope and comparison base, and must satisfy the authorised executor's validation. Iterative development tests and final committed-candidate proof are different obligations; the helper's required focused run is not automatically redundant. Do not add receipt caching, arbitrary evidence adoption or a second runner. Changed inputs invalidate affected proof; changed final heads require fresh exact-head CI and independent review. Preserve every applicable final gate.
 
+## Local command selection
+
+Follow [the canonical managed-slots guide](../../../docs/development/managed-local-slots.md).
+For opted-in worktrees, focused Mix tests and broad gates use
+`mise exec -- tools/newyou-local test -- mix <task>`. Inside an existing managed
+job, use `mise exec -- devcore-project run test -- mix <task>` so DevCore verifies
+and reuses its assigned environment. Non-opt-in worktrees keep the legacy command
+and shared TEST/PLT coordination. The examples below show that legacy syntax;
+the helper normalizes either supported focused syntax to the selected mode.
+Disabled admission or unverified managed context must stop without fallback.
+Installation of 1.2.1 is recorded; operational activation remains pending.
+The helper still owns focused proof and all applicable broad gates.
+
 ## Final candidate checks
 
 1. **Review the exact diff.** Run `git diff --stat origin/main...HEAD` and read the full diff. Confirm every changed path is in ticket scope.
@@ -49,7 +62,7 @@ python3 .agents/skills/code-change-verification/scripts/handoff.py preview --bud
 python3 .agents/skills/code-change-verification/scripts/handoff.py ocr
 ```
 
-The `local` command requires a repository test target through `python3 -m unittest tests.test_NAME` or `mise exec -- devcore-project run test -- mix test test/PATH_test.exs`. Focused Python commands allow explicit `tests.test_NAME` targets with optional `-v`/`--verbose` or `-q`/`--quiet`; discovery, filters and external targets are rejected. Focused Mix commands accept only existing files within this worktree's `test/` tree, with optional `:LINE` suffixes; external/symlink escapes and flags such as `--dry-run` are rejected. It rejects no-op/arbitrary commands and a zero-test report even when the process exits zero. `git diff --check` and `python3 -m tools.capability_knowledge` are supported supplemental checks and cannot replace focused tests. It runs argv without a shell and then `mise exec -- devcore-project run test -- mix check`. It adds `mise exec -- devcore-project run test -- mix check.deep` for application/dependency changes selected by the current router, or when `--deep` is supplied for other applicable scope. Apply `AGENTS.md` DevCore doctor/recovery first. Every local failure invalidates the old receipt. Diagnose it before retrying. Receipts/logs are private to this worktree's Git directory and must not be uploaded wholesale.
+The `local` command requires a repository test target through `python3 -m unittest tests.test_NAME` or `mise exec -- devcore-project run test -- mix test test/PATH_test.exs`. Focused Python commands allow explicit `tests.test_NAME` targets with optional `-v`/`--verbose` or `-q`/`--quiet`; discovery, filters and external targets are rejected. Focused Mix commands accept only existing files within this worktree's `test/` tree, with optional `:LINE` suffixes; external/symlink escapes and flags such as `--dry-run` are rejected. It rejects no-op/arbitrary commands and a zero-test report even when the process exits zero. `git diff --check` and `python3 -m tools.capability_knowledge` are supported supplemental checks and cannot replace focused tests. It runs argv without a shell, applies the command selection above, and then `mise exec -- devcore-project run test -- mix check`. It adds `mise exec -- devcore-project run test -- mix check.deep` for application/dependency changes selected by the current router, or when `--deep` is supplied for other applicable scope. Apply `AGENTS.md` DevCore doctor/recovery first. Every local failure invalidates the old receipt. Diagnose it before retrying. Receipts/logs are private to this worktree's Git directory and must not be uploaded wholesale.
 
 Inspect the zero-token preview first. OCR reviews the resolved merge-base and head, equivalent to `ocr review --from origin/main --to HEAD`, and uses `--provider chatgpt --model gpt-6-luna --effort low --concurrency 1 --max-tokens-budget 100000`. Low is one review round; model reasoning effort is separately preferred at medium. Configure `providers.chatgpt.extra_body` locally with `{"reasoning":{"effort":"medium"}}`, preserving existing provider fields. Never put credentials in Git, logs or CI. Do not use API-key fallback or another provider when the model is unavailable. Do not automatically retry or increase a budget. A deliberate paid retry requires `ocr --retry-reason TEXT` and documented cause; inspect every selection and exclusion before spending tokens. The budget is soft and in-flight requests can exceed it.
 

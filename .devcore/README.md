@@ -2,6 +2,14 @@
 
 NewYou uses existing shared DEV and TEST PostgreSQL allocations. Each checkout/worktree has its own Git-ignored `.env.dev.local` and `.env.test.local` files. A new worktree may lack those files without any database or credential fault. The T3 Code worktree bootstrap may render them before an agent starts; verify in the actual worktree regardless.
 
+WELL-147 stages an opt-in pool through `SLOT_POOL=.devcore/slots.json`.
+Use the [canonical operating guide](../docs/development/managed-local-slots.md)
+for admission, nested reuse, command selection and rollout prerequisites.
+DevCore 1.2.1 installation is recorded separately from operational activation,
+which remains pending. Preserve legacy shared TEST/PLT coordination for active
+agents and worktrees that have not opted in. Failed managed admission never
+permits shared TEST fallback.
+
 The canonical startup policy is in [AGENTS.md](../AGENTS.md). If doctor passes initially, proceed without render.
 
 From the current worktree root:

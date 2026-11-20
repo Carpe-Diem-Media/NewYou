@@ -539,8 +539,8 @@ defmodule NewYou.Proof.ResultTest do
     test_config = NewYou.LocalConfig.repo(:test)
 
     test_server = %{
-      database: "new_you_test",
-      username: "new_you_test",
+      database: test_config[:database],
+      username: test_config[:username],
       role_createdb?: false
     }
 

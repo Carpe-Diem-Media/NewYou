@@ -66,6 +66,9 @@ DOCUMENT_FILE_REFERENCE_PATTERN = re.compile(
     r"(?<![A-Za-z0-9_])((?:[A-Za-z0-9_.-]+/)+[A-Za-z0-9_.-]+\.(?:md|json))"
 )
 MARKDOWN_LINK_DESTINATION_PATTERN = re.compile(r"\]\(\s*<?([^\s)>]+)>?")
+EXTERNAL_DOCUMENT_URL_PATTERN = re.compile(
+    r"\bhttps?://[A-Za-z0-9][^\s`<>\[\]()\"']*", re.IGNORECASE
+)
 DOCUMENT_LOCATION_FIELDS = frozenset({"path", "archive_path", "repository_path", "target_path"})
 STATUS_VERSION_PATTERN = re.compile(
     r"^[-*]\s+\*\*Document status:\*\*.*?\bv(\d+\.\d+\.\d+)\b", re.MULTILINE
@@ -437,6 +440,10 @@ def _check_active_document_references(root: Path, report: dict[str, Any]) -> Non
                 references = _json_document_references(payload)
             else:
                 navigable_text = _without_fenced_code_blocks(text)
+                # Remove complete HTTP(S) tokens before either extraction pass:
+                # the file pattern also matches host/path suffixes inside URLs.
+                # Preserve Markdown delimiters and adjacent local references.
+                navigable_text = EXTERNAL_DOCUMENT_URL_PATTERN.sub("", navigable_text)
                 references = DOCUMENT_FILE_REFERENCE_PATTERN.findall(navigable_text)
                 references.extend(
                     destination

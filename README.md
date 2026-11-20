@@ -39,6 +39,12 @@ contract. TEST requires its own credentials, ignores DEV credentials and
 
 In the primary checkout:
 
+For opted-in managed worktrees, follow the single
+[managed-slots operating guide](docs/development/managed-local-slots.md) for
+startup and verification commands. Installation is recorded, but rollout remains
+pending activation and proof. The commands and manual port instructions below
+apply to legacy worktrees only. Preserve active legacy TEST/PLT coordination.
+
 ```sh
 mise exec -- devcore-project run dev -- mix setup
 mise exec -- devcore-project run dev -- mix phx.server

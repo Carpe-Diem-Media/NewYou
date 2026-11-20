@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "project": "new_you",
+  "slots": 20,
+  "http_base": 4220,
+  "test_host": "127.0.0.1",
+  "test_port": 55433,
+  "database_prefix": "dc_new_you_s",
+  "dev_database": "new_you_dev",
+  "legacy_test_database": "new_you_test",
+  "test_container": "dev-core-postgres-test-1",
+  "admin_role": "devcore_admin",
+  "database_owner": "devcore_admin"
+}

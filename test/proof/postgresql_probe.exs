@@ -1,3 +1,5 @@
+{:ok, _postgresql_version} = NewYou.Proof.Result.capture_postgresql()
+
 scenario = NewYou.Proof.Scenario.start()
 
 result =

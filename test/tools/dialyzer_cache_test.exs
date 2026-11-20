@@ -13,7 +13,7 @@ defmodule NewYou.DialyzerCacheTest do
     end)
   end
 
-  test "local core PLTs use Mix home while project PLTs stay local" do
+  test "local core PLTs use a private worktree path while project PLTs stay local" do
     for value <- [nil, "false"] do
       if value do
         System.put_env("GITHUB_ACTIONS", value)
@@ -22,9 +22,9 @@ defmodule NewYou.DialyzerCacheTest do
       end
 
       config = NewYou.MixProject.project()[:dialyzer]
-      assert config[:plt_core_path] == Mix.Utils.mix_home()
+      assert config[:plt_core_path] == "_build/plts/local-core"
       assert config[:plt_local_path] == "_build/plts"
-      assert config[:plt_add_apps] == [:mix, :ex_unit]
+      assert config[:plt_add_apps] == [:mix, :ex_unit, :dialyxir]
     end
   end
 
@@ -34,12 +34,160 @@ defmodule NewYou.DialyzerCacheTest do
 
     assert config[:plt_core_path] == "_build/plts"
     assert config[:plt_local_path] == "_build/plts"
-    assert config[:plt_add_apps] == [:mix, :ex_unit]
+    assert config[:plt_add_apps] == [:mix, :ex_unit, :dialyxir]
   end
 
   test "deep verification still performs Dialyzer analysis" do
-    assert NewYou.MixProject.project()[:aliases][:"check.deep"] == [
-             "dialyzer --format dialyxir"
+    aliases = NewYou.MixProject.project()[:aliases]
+
+    assert aliases[:dialyzer] == ["local_dialyzer"]
+
+    assert Keyword.fetch!(aliases, :"check.deep") == [
+             "local_dialyzer --format dialyxir"
            ]
+  end
+
+  test "local core PLT cache adapter preserves isolation and publication invariants" do
+    {output, status} =
+      System.cmd(
+        "python3",
+        ["-m", "unittest", "discover", "-s", "tests", "-p", "test_local_plt_cache.py"],
+        cd: File.cwd!(),
+        stderr_to_stdout: true
+      )
+
+    assert status == 0, output
+  end
+
+  test "cache key core plans are JSON encodable" do
+    plan = [{"dialyxir_erlang-27.2.plt", ["erts", "kernel"]}]
+
+    assert Jason.decode!(Jason.encode!(Mix.Tasks.LocalDialyzer.normalize_core_apps(plan))) == [
+             %{"basename" => "dialyxir_erlang-27.2.plt", "apps" => ["erts", "kernel"]}
+           ]
+  end
+
+  test "Dialyxir source hashes ignore worktree location" do
+    unique = System.unique_integer([:positive])
+
+    roots = [
+      Path.join(System.tmp_dir!(), "newyou-plt-source-a-#{unique}"),
+      Path.join(System.tmp_dir!(), "newyou-plt-source-b-#{unique}")
+    ]
+
+    try do
+      hashes =
+        Enum.map(roots, fn root ->
+          source = Path.join(root, "deps/dialyxir/lib/dialyxir/project.ex")
+          File.mkdir_p!(Path.dirname(source))
+          File.write!(source, "same pinned source")
+          Mix.Tasks.LocalDialyzer.source_hash([source], Path.join(root, "deps/dialyxir"))
+        end)
+
+      assert Enum.uniq(hashes) |> length() == 1
+    after
+      Enum.each(roots, &File.rm_rf!/1)
+    end
+  end
+
+  test "Dialyxir source inputs follow the selected dependency root" do
+    root =
+      Path.join(System.tmp_dir!(), "newyou-plt-alt-deps-#{System.unique_integer([:positive])}")
+
+    source = Path.join(root, "dialyxir/lib/dialyxir/project.ex")
+    File.mkdir_p!(Path.dirname(source))
+    File.write!(source, "selected dependency source")
+
+    try do
+      assert Mix.Tasks.LocalDialyzer.dialyxir_source_inputs(Path.join(root, "dialyxir")) ==
+               {Path.join(root, "dialyxir"), [source]}
+
+      assert_raise ArgumentError, fn ->
+        Mix.Tasks.LocalDialyzer.dialyxir_source_inputs(Path.join(root, "missing-deps/dialyxir"))
+      end
+    after
+      File.rm_rf!(root)
+    end
+  end
+
+  test "cache identity rejects missing Dialyxir source and core inputs" do
+    root =
+      Path.join(System.tmp_dir!(), "newyou-plt-identity-#{System.unique_integer([:positive])}")
+
+    source = Path.join(root, "dialyxir/lib/project.ex")
+    beam = Path.join(root, "kernel/kernel.beam")
+    app = Path.join(root, "kernel/kernel.app")
+
+    File.mkdir_p!(Path.dirname(source))
+    File.mkdir_p!(Path.dirname(beam))
+    File.write!(source, "source")
+    File.write!(beam, "beam")
+    File.write!(app, "app")
+
+    try do
+      plan = [{"erlang.plt", ["kernel"]}]
+      inputs = %{"kernel" => [beam, app]}
+
+      assert :ok =
+               Mix.Tasks.LocalDialyzer.validate_identity_inputs!(
+                 plan,
+                 [source],
+                 inputs,
+                 "1.4.8",
+                 "29.1.2"
+               )
+
+      assert_raise ArgumentError, ~r/source inputs/, fn ->
+        Mix.Tasks.LocalDialyzer.validate_identity_inputs!(plan, [], inputs, "1.4.8", "29.1.2")
+      end
+
+      for partial <- [[beam], [app], [beam, app <> ".missing"]] do
+        assert_raise ArgumentError, ~r/core applications/, fn ->
+          Mix.Tasks.LocalDialyzer.validate_identity_inputs!(
+            plan,
+            [source],
+            %{"kernel" => partial},
+            "1.4.8",
+            "29.1.2"
+          )
+        end
+      end
+
+      assert_raise ArgumentError, ~r/version is unavailable/, fn ->
+        Mix.Tasks.LocalDialyzer.validate_identity_inputs!(plan, [source], inputs, "1.4.8", "")
+      end
+
+      assert_raise ArgumentError, fn ->
+        Mix.Tasks.LocalDialyzer.validate_identity_inputs!(
+          [],
+          [],
+          %{"kernel" => [beam, app]},
+          "1.4.8",
+          "27.2.1"
+        )
+      end
+
+      assert_raise ArgumentError, fn ->
+        Mix.Tasks.LocalDialyzer.validate_identity_inputs!(
+          [{"erlang.plt", ["kernel"]}],
+          [source],
+          %{},
+          "1.4.8",
+          "27.2.1"
+        )
+      end
+
+      assert_raise ArgumentError, fn ->
+        Mix.Tasks.LocalDialyzer.validate_identity_inputs!(
+          [{"erlang.plt", ["kernel"]}],
+          [source],
+          %{"kernel" => [beam, app]},
+          "",
+          "27.2.1"
+        )
+      end
+    after
+      File.rm_rf!(root)
+    end
   end
 end

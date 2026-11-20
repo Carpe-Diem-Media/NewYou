@@ -14,7 +14,7 @@ defmodule NewYou.MixProject do
         end
       ],
       test_ignore_filters: [
-        ~r"^test/proof/(self_test|run|tb001_broken|tb001_inventory_broken|postgresql_probe|p8_09_restart|p8_09_magic_restart|p8_10_restart|p8_11_restart|p8_12_restart|p8_13_restart|p8_14_restart|p8_15_restart|p8_16_restart|p8_17_privacy_restart|fixtures/provider_fixtures)\.exs$"
+        ~r"^test/proof/(self_test|run|tb001_broken|tb001_inventory_broken|postgresql_probe|p8_09_restart|p8_09_magic_restart|p8_10_restart|p8_11_restart|p8_12_restart|p8_13_restart|p8_14_restart|p8_15_restart|p8_16_restart|p8_17_privacy_restart|managed_slot_probe|managed_slot_control|fixtures/provider_fixtures)\.exs$"
       ],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -76,19 +76,18 @@ defmodule NewYou.MixProject do
   end
 
   defp dialyzer do
-    # Share versioned core PLTs locally; preserve the GitHub Actions cache.
-    # Prepare a missing shared core cache sequentially across worktrees.
+    # Keep CI's hosted cache layout and give each local worktree private PLTs.
     core_plt_path =
       if System.get_env("GITHUB_ACTIONS") == "true" do
         "_build/plts"
       else
-        Mix.Utils.mix_home()
+        "_build/plts/local-core"
       end
 
     [
       plt_local_path: "_build/plts",
       plt_core_path: core_plt_path,
-      plt_add_apps: [:mix, :ex_unit]
+      plt_add_apps: [:mix, :ex_unit, :dialyxir]
     ]
   end
 
@@ -181,7 +180,8 @@ defmodule NewYou.MixProject do
         "test"
       ],
       # Slower engineering gate. Dialyzer owns its PLT build and caching.
-      "check.deep": ["dialyzer --format dialyxir"],
+      "check.deep": ["local_dialyzer --format dialyxir"],
+      dialyzer: ["local_dialyzer"],
       "check.architecture": ["run --no-start tools/architecture/check_ash_writes.exs"]
     ]
   end

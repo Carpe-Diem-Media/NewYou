@@ -79,3 +79,8 @@ Keep tests independent of a developer's already-built assets or local paths; ver
 - `tests.md`: NewYou-specific ExUnit examples, isolation and anti-patterns.
 - `mocking.md`: external-boundary doubles and safe fault injection.
 - Existing `.agents/skills/ash-framework/SKILL.md` and its `references/ash/testing.md` are the framework-focused reference; prefer installed/version-matched API evidence.
+
+Local command examples use legacy syntax. For opted-in worktrees, select the
+wrapper or verified nested reuse command from
+[the canonical operating guide](../../../docs/development/managed-local-slots.md).
+Final broad gates remain owned by code-change-verification. Activation is pending.

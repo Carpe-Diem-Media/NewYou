@@ -1589,8 +1589,9 @@ defmodule NewYou.Proof.SelfTest do
     timeout = System.find_executable("timeout")
     root = Path.expand("../..", __DIR__)
 
-    build_path =
-      Path.join(System.tmp_dir!(), "new-you-p8-04-prod-#{System.unique_integer([:positive])}")
+    # A VM-local integer can collide across simultaneous worktree probes.
+    generation = :crypto.strong_rand_bytes(16) |> Base.encode16(case: :lower)
+    build_path = Path.join([root, "_build", "proof-prod", generation])
 
     if is_binary(mix) and is_binary(elixir) and is_binary(timeout) do
       try do
@@ -1612,6 +1613,9 @@ defmodule NewYou.Proof.SelfTest do
         hook_absent? = production_owner_hook_absent?(build_path)
 
         expression = """
+        # This probe starts no Repo. Verify inherited TEST assignment while
+        # retaining production's separate runtime and module-exclusion checks.
+        NewYou.LocalConfig.repo(:test)
         Application.put_env(:new_you, :proof, %{enabled: true})
         for key <- [:fp001_development_entry, :verification_development_fixtures,
                     :p8_05_browser_development_fixtures, :p8_08_browser_development_fixtures,

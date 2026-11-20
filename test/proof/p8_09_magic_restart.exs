@@ -1,3 +1,5 @@
+{:ok, _postgresql_version} = NewYou.Proof.Result.capture_postgresql()
+
 input = IO.gets("") |> Jason.decode!()
 secret = Base.decode64!(input["signing_secret"])
 Application.put_env(:new_you, :identity_token_signing_secret, secret)

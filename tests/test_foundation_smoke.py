@@ -27,6 +27,32 @@ class FoundationSmokeTests(unittest.TestCase):
                     self.assertTrue(target.is_file(), source["path"])
                     self.assertEqual((ROOT / source["path"]).read_bytes(), target.read_bytes())
 
+    def test_fixture_preserves_complete_trees_and_individual_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._fixture(directory)
+            for relative in (
+                "docs/governance", "docs/delivery", "docs/history",
+                "docs/superpowers", "docs/development", "tools/hex_audit",
+                "priv/resource_snapshots", "priv/static/fonts", ".agents/skills",
+            ):
+                for source in (ROOT / relative).rglob("*"):
+                    target = root / source.relative_to(ROOT)
+                    with self.subTest(path=str(source.relative_to(ROOT))):
+                        if source.is_dir():
+                            self.assertTrue(target.is_dir())
+                        else:
+                            self.assertTrue(target.is_file())
+                            self.assertEqual(source.read_bytes(), target.read_bytes())
+            for relative in (
+                "AGENTS.md", "DESIGN.md", ".hallmark/log.json",
+                ".hallmark/preflight.json", ".devcore/README.md", "docs/README.md",
+                ".github/workflows/foundation-integrity.yml",
+                ".github/workflows/foundation-full.yml",
+                ".github/workflows/nightly-hardening.yml",
+            ):
+                with self.subTest(path=relative):
+                    self.assertEqual((ROOT / relative).read_bytes(), (root / relative).read_bytes())
+
     def _fixture(self, directory: str) -> Path:
         root = Path(directory)
         shutil.copy2(ROOT / "AGENTS.md", root / "AGENTS.md")
@@ -42,15 +68,6 @@ class FoundationSmokeTests(unittest.TestCase):
         (root / "docs").mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / "docs/README.md", root / "docs/README.md")
         shutil.copytree(ROOT / "docs/development", root / "docs/development")
-        # Capability JSON is active documentation with exact source references.
-        for path in (ROOT / "docs/development/knowledge").glob("*.json"):
-            knowledge = json.loads(path.read_text())
-            if "capability_id" not in knowledge:
-                continue
-            for source in knowledge["sources"]:
-                target = root / source["path"]
-                target.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(ROOT / source["path"], target)
         shutil.copytree(ROOT / "tools/hex_audit", root / "tools/hex_audit")
         shutil.copytree(ROOT / "priv/resource_snapshots", root / "priv/resource_snapshots")
         shutil.copytree(ROOT / "priv/static/fonts", root / "priv/static/fonts")
@@ -65,6 +82,16 @@ class FoundationSmokeTests(unittest.TestCase):
                 ROOT / ".github/workflows" / workflow,
                 root / ".github/workflows" / workflow,
             )
+        # Copy complete trees first: capability sources may be inside those trees.
+        # Then preserve every exact source reference, including files outside them.
+        for path in (ROOT / "docs/development/knowledge").glob("*.json"):
+            knowledge = json.loads(path.read_text())
+            if "capability_id" not in knowledge:
+                continue
+            for source in knowledge["sources"]:
+                target = root / source["path"]
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / source["path"], target)
         return root
 
     def _mutate_router(self, root: Path, relative: Path, mutate) -> None:

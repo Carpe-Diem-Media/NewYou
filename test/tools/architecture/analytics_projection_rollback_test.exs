@@ -9,18 +9,23 @@ defmodule NewYou.Architecture.AnalyticsProjectionRollbackTest do
 
   test "rolling back the test projection scope removes only valid test rows" do
     Code.require_file(@migration_path)
-    prefix = "projection_rollback_#{System.unique_integer([:positive])}"
 
-    Repo.query!(~s(CREATE SCHEMA "#{prefix}"))
+    assert %{rows: [[public_table_oid]]} =
+             Repo.query!("SELECT 'public.p817_privacy_projections'::regclass::oid::bigint")
 
     Repo.query!("""
-    CREATE TABLE "#{prefix}".p817_privacy_projections (
+    CREATE TEMPORARY TABLE p817_privacy_projections (
       projection_key text NOT NULL,
       current_allowed_count bigint NOT NULL,
       CONSTRAINT p817_privacy_projections_single_key
         CHECK (projection_key = 'p817_current_privacy_aggregate')
-    )
+    ) ON COMMIT DROP
     """)
+
+    assert %{rows: [[prefix]]} =
+             Repo.query!("SELECT nspname FROM pg_namespace WHERE oid = pg_my_temp_schema()")
+
+    assert String.starts_with?(prefix, "pg_temp_")
 
     migration_opts = [prefix: prefix, log: false]
 
@@ -68,6 +73,19 @@ defmodule NewYou.Architecture.AnalyticsProjectionRollbackTest do
              WHERE conrelid = '"#{prefix}".p817_privacy_projections'::regclass
                AND conname = 'p817_privacy_projections_single_key'
              """)
+
+    assert %{rows: [["t", temporary_table_oid]]} =
+             Repo.query!("""
+             SELECT relpersistence::text, oid::bigint
+             FROM pg_class
+             WHERE oid = '"#{prefix}".p817_privacy_projections'::regclass
+               AND relnamespace = pg_my_temp_schema()
+             """)
+
+    refute temporary_table_oid == public_table_oid
+
+    assert %{rows: [[^public_table_oid]]} =
+             Repo.query!("SELECT 'public.p817_privacy_projections'::regclass::oid::bigint")
 
     assert_raise Postgrex.Error, fn ->
       Repo.query!("""

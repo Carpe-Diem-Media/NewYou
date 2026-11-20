@@ -480,6 +480,21 @@ If ".devcore/project.conf" exists:
 
 If doctor passes initially, proceed without render. Rendering is allowed automatically only for the missing/stale local-file case above; a healthy worktree needs no recovery.
 
+Managed TEST adoption is staged under WELL-147. DevCore 1.2.1 installation is
+recorded separately from activation, which remains pending. The canonical
+operating procedure and command-selection rules are in the guide below. A worktree declaring
+"SLOT_POOL=.devcore/slots.json" must follow
+"docs/development/managed-local-slots.md" and, after the required activation
+authorizations and proof, enter normal local work through
+"mise exec -- tools/newyou-local dev|test -- <command>". This wrapper delegates
+credentials and automatic leases to DevCore and coordinates that worktree's
+mutable builds. Inside its managed job, the compatible DevCore run commands
+reuse the verified allocation. Do not set CI compatibility flags locally, remove
+the declaration, or reconnect to shared TEST to bypass failed acquisition.
+Unmigrated worktrees retain their existing shared TEST lock/booking procedure.
+This instruction does not authorize installation, cleanup activation, an ACL
+change, or switching an active job.
+
 "devcore-project activate" is a provisioning operation, not routine worktree setup or a generic doctor-failure repair. Use it only for separately authorised workstation provisioning, never as an automatic fallback in agent startup.
 
 Never request, print or commit password values or rendered secret-bearing files.

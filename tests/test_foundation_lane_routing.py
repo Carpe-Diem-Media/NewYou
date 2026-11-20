@@ -114,6 +114,120 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
                 self.assertFalse(classify_deep_application_changes([path]))
 
 
+class Well147RoutingRegressionTests(unittest.TestCase):
+    # Frozen PR 273 inventory, base fc8e12fb to source head 356b84ff.
+    # Keep this independent of the checkout so CI does not need historical refs.
+    CHANGE_INVENTORY = (
+        ".agents/skills/code-change-verification/SKILL.md",
+        ".agents/skills/code-change-verification/scripts/handoff.py",
+        ".agents/skills/tdd/SKILL.md",
+        ".agents/skills/tdd/tests.md",
+        ".devcore/README.md",
+        ".devcore/project.conf",
+        ".devcore/slots.json",
+        ".github/workflows/application-ci.yml",
+        ".github/workflows/nightly-hardening.yml",
+        ".github/workflows/phase8-proof.yml",
+        "AGENTS.md",
+        "README.md",
+        "config/config.exs",
+        "docs/development/design_system.md",
+        "docs/development/knowledge/engineering.managed_slots.json",
+        "docs/development/knowledge/identity.password_reset.json",
+        "docs/development/knowledge/identity.primary_email_change.json",
+        "docs/development/knowledge/identity.recovery.json",
+        "docs/development/knowledge/identity.sign_in.json",
+        "docs/development/knowledge/privacy.purpose_authority.json",
+        "docs/development/knowledge/proof.tb001.json",
+        "docs/development/managed-local-slots.md",
+        "docs/superpowers/plans/2026-11-17-well-147-managed-slots.md",
+        "lib/mix/tasks/local_dialyzer.ex",
+        "lib/new_you/local_config.ex",
+        "mix.exs",
+        "test/new_you/bootstrap_test.exs",
+        "test/new_you/local_config_test.exs",
+        "test/new_you/proof/browser_protocol_test.exs",
+        "test/new_you/proof/result_test.exs",
+        "test/proof/managed_slot_control.exs",
+        "test/proof/managed_slot_coordinator.py",
+        "test/proof/managed_slot_probe.exs",
+        "test/proof/p8_05_browser.mjs",
+        "test/proof/p8_09_magic_restart.exs",
+        "test/proof/p8_09_restart.exs",
+        "test/proof/p8_10_restart.exs",
+        "test/proof/p8_11_restart.exs",
+        "test/proof/p8_12_restart.exs",
+        "test/proof/p8_13_restart.exs",
+        "test/proof/p8_14_restart.exs",
+        "test/proof/p8_15_restart.exs",
+        "test/proof/p8_16_restart.exs",
+        "test/proof/p8_17_privacy_restart.exs",
+        "test/proof/postgresql_probe.exs",
+        "test/proof/reset_request_checkpoints_test.mjs",
+        "test/proof/self_test.exs",
+        "test/support/proof/p8_05_browser.ex",
+        "test/tools/architecture/analytics_projection_rollback_test.exs",
+        "test/tools/asset_cache_test.exs",
+        "test/tools/dialyzer_cache_test.exs",
+        "test/tools/local_session_test.exs",
+        "test/tools/managed_slot_probe_test.exs",
+        "tests/test_foundation_lane_routing.py",
+        "tests/test_local_plt_cache.py",
+        "tests/test_local_session.py",
+        "tests/test_managed_handoff_commands.py",
+        "tests/test_managed_slot_protocol.py",
+        "tests/test_well147_pilot.py",
+        "tests/test_well147_pilot_cli.py",
+        "tests/test_well147_pilot_identity.py",
+        "tests/test_well147_pilot_runtime.py",
+        "tools/local_plt_cache.py",
+        "tools/local_plt_core.exs",
+        "tools/local_session.py",
+        "tools/newyou-local",
+        "tools/well147_pilot.py",
+        "tools/well147_pilot_identity.py",
+        "tools/well147_pilot_runtime.py",
+    )
+    PREVIOUSLY_UNCLASSIFIED = (
+        ".github/workflows/phase8-proof.yml",
+        "tools/local_plt_cache.py",
+        "tools/local_plt_core.exs",
+        "tools/local_session.py",
+        "tools/newyou-local",
+        "tools/well147_pilot.py",
+        "tools/well147_pilot_identity.py",
+        "tools/well147_pilot_runtime.py",
+    )
+
+    def test_introduced_engineering_paths_select_application_and_hex_only(self):
+        for path in self.PREVIOUSLY_UNCLASSIFIED:
+            with self.subTest(path=path):
+                self.assertEqual("application", classify_path(path))
+                self.assertEqual({"application_changes": True}, _route([path]))
+                self.assertFalse(classify_deep_application_changes([path]))
+                self.assertTrue(classify_hex_audit_changes([path]))
+
+    def test_complete_change_inventory_selects_application_deep_and_hex(self):
+        self.assertEqual({"application_changes": True}, _route(list(self.CHANGE_INVENTORY)))
+        self.assertTrue(classify_deep_application_changes(list(self.CHANGE_INVENTORY)))
+        self.assertTrue(classify_hex_audit_changes(list(self.CHANGE_INVENTORY)))
+
+    def test_unknown_neighbors_still_fail_closed_in_mixed_inventory(self):
+        for path in (
+            ".github/workflows/phase8-proof-unknown.yml",
+            ".github/workflows/unclassified.yml",
+            "tools/local_plt_unknown.py",
+            "tools/local_session_unknown.py",
+            "tools/newyou-local-unknown",
+            "tools/well147_pilot_unknown.py",
+            "tools/unclassified.py",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual("unknown", classify_path(path))
+                with self.assertRaisesRegex(ValueError, "unclassified changed path"):
+                    _route([*self.CHANGE_INVENTORY, path])
+
+
 class GovernanceRoutingTests(unittest.TestCase):
     """Governance changes run Smoke without selecting Full on a PR."""
 
@@ -451,9 +565,20 @@ class TopologyTests(unittest.TestCase):
     def test_application_ci_uses_isolated_test_database_contract(self):
         workflow = (WORKFLOWS / "application-ci.yml").read_text(encoding="utf-8")
         self.assertIn('TEST_DATABASE_PORT: "55433"', workflow)
-        self.assertIn("TEST_DATABASE_USERNAME: new_you_test", workflow)
-        self.assertIn("CREATE ROLE new_you_test LOGIN NOSUPERUSER NOCREATEDB", workflow)
+        self.assertIn("TEST_DATABASE_USERNAME: new_you_ci_test", workflow)
+        self.assertIn("CREATE ROLE new_you_ci_test LOGIN NOSUPERUSER NOCREATEDB", workflow)
         self.assertNotIn("DEV_DATABASE", workflow)
+
+    def test_all_database_ci_lanes_use_distinct_ephemeral_identity(self):
+        for name in ("application-ci.yml", "nightly-hardening.yml", "phase8-proof.yml"):
+            workflow = (WORKFLOWS / name).read_text(encoding="utf-8")
+            with self.subTest(workflow=name):
+                self.assertIn("NEW_YOU_DATABASE_MODE: ci", workflow)
+                self.assertIn("CREATE DATABASE new_you_ci_test OWNER new_you_ci_test;", workflow)
+                self.assertIn("TEST_DATABASE_USERNAME: new_you_ci_test", workflow)
+                self.assertIn("TEST_DATABASE_NAME: new_you_ci_test", workflow)
+                self.assertNotIn("CREATE DATABASE new_you_test ", workflow)
+                self.assertNotIn("CREATE ROLE new_you_test ", workflow)
 
     def test_foundation_full_is_called_only_by_nightly_and_keeps_historical_checks(self):
         workflow = (WORKFLOWS / "foundation-full.yml").read_text(encoding="utf-8")

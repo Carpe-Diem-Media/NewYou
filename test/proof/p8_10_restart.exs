@@ -1,3 +1,5 @@
+{:ok, _postgresql_version} = NewYou.Proof.Result.capture_postgresql()
+
 # Synthetic proof configuration arrives over the anonymous pipe, never CLI args,
 # Oban args or persisted fixtures. No DevCore secret is read or copied here.
 input = IO.gets("") |> Jason.decode!()
