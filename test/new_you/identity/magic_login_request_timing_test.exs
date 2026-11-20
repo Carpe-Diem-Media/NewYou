@@ -4,9 +4,9 @@ defmodule NewYou.Identity.MagicLoginRequestTimingTest do
 
   alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.{Identity, Repo}
-  alias NewYou.Identity.{Account, Token}
   alias NewYou.Communications.MessageIntent
-  alias NewYou.Proof.{P805, RegistrationSeam}
+  alias NewYou.Identity.{Account, Token}
+  alias NewYou.Proof.{FixtureObservation, P805, RegistrationSeam}
 
   test "intent observations exclude another operation without changing its retained intent" do
     P805.with_fixture(fn ->
@@ -234,6 +234,56 @@ defmodule NewYou.Identity.MagicLoginRequestTimingTest do
     end)
   end
 
+  test "magic intent observations exclude an independent owner and retain additional own issuance" do
+    P805.with_fixture(fn ->
+      own = account(true)
+      :ok = Identity.request_magic_login(own.email, "af", operation())
+      assert magic_count(own.account_id) == 1
+      before = intent_count()
+      parent = self()
+      reference = make_ref()
+
+      foreign =
+        P805.independent_fixture_task(fn ->
+          other = account(true)
+          :ok = Identity.request_magic_login(other.email, "af", operation())
+          send(parent, {reference, magic_count(other.account_id) == 1})
+
+          receive do
+            {^reference, :release} -> :ok
+          after
+            5_000 -> raise "foreign magic fixture release deadline"
+          end
+        end)
+
+      try do
+        assert_receive {^reference, true}, 5_000
+        assert intent_count() == before
+        assert before == 1
+      after
+        send(foreign.pid, {reference, :release})
+        assert :ok = Task.await(foreign, 10_000)
+      end
+
+      additional_operation = operation()
+
+      {worker, monitor} =
+        database_worker(fn ->
+          :ok = Identity.request_magic_login(own.email, "af", additional_operation)
+          send(parent, {reference, :additional_issuance})
+        end)
+
+      assert_receive {^reference, :additional_issuance}, 2_000
+      finish_worker(worker, monitor)
+
+      assert P805.scalar("SELECT count(*) FROM message_intents WHERE source_operation_id = $1", [
+               Ecto.UUID.dump!(additional_operation)
+             ]) == 1
+
+      assert intent_count() == 2
+    end)
+  end
+
   defp account(verified?) do
     input = P805.request()
     {:ok, registration} = Identity.register(input)
@@ -264,28 +314,37 @@ defmodule NewYou.Identity.MagicLoginRequestTimingTest do
     |> Ash.count!(authorize?: false)
   end
 
-  defp intent_count(context \\ :fixture) do
-    intents =
-      case context do
-        :fixture -> P805.read(MessageIntent, NewYou.Communications)
-        context -> P805.read(MessageIntent, NewYou.Communications, context)
-      end
+  defp intent_count(context \\ :fixture)
 
-    Enum.count(intents, &(&1.role == :magic_login))
+  defp intent_count(:fixture) do
+    P805.scalar(
+      "SELECT count(*) FROM message_intents WHERE role = 'magic_login' AND id = ANY($1::uuid[])",
+      [FixtureObservation.ids(:intents)]
+    )
+  end
+
+  defp intent_count(context) do
+    MessageIntent
+    |> P805.read(NewYou.Communications, context)
+    |> Enum.count(&(&1.role == :magic_login))
   end
 
   defp fail(:exception), do: raise("magic request transaction failure")
   defp fail(:exit), do: exit(:magic_request_transaction_failure)
 
   defp database_worker(callback) do
-    spawn_monitor(fn ->
-      :ok = Sandbox.checkout(Repo, sandbox: false)
+    observation = FixtureObservation.context()
 
-      try do
-        callback.()
-      after
-        Sandbox.checkin(Repo)
-      end
+    spawn_monitor(fn ->
+      FixtureObservation.with_context(observation, fn ->
+        :ok = Sandbox.checkout(Repo, sandbox: false)
+
+        try do
+          callback.()
+        after
+          Sandbox.checkin(Repo)
+        end
+      end)
     end)
   end
 

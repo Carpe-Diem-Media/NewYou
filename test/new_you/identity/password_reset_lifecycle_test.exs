@@ -218,29 +218,60 @@ defmodule NewYou.Identity.PasswordResetLifecycleTest do
       initial = Ash.get!(Account, registration.account_id, authorize?: false)
 
       for table <- ["evidence_obligations", "oban_jobs"] do
-        Repo.query!(
-          "CREATE FUNCTION p812_fault() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'p812 synthetic failure' USING ERRCODE = '23514'; END; $$"
-        )
-
-        Repo.query!(
-          "CREATE TRIGGER p812_fault BEFORE INSERT ON #{table} FOR EACH ROW EXECUTE FUNCTION p812_fault()"
-        )
-
-        try do
-          # The public boundary cannot assert a committed outcome after a
-          # database exception. Durable rollback is independently checked below.
+        P805.with_rejected_insert(table, fn reached ->
           assert reset(bearer) == {:error, :reset_uncertain}
+          assert reached.()
           assert Ash.get!(Account, initial.id, authorize?: false) == initial
           assert Ash.get!(Token, proof.jti, authorize?: false).purpose == "password_reset"
           assert {:ok, _} = Identity.authorize_session(credentials)
-        after
-          Repo.query!("DROP TRIGGER p812_fault ON #{table}")
-          Repo.query!("DROP FUNCTION p812_fault()")
-        end
+        end)
       end
 
       assert {:ok, :reset} = reset(bearer)
     end)
+  end
+
+  for table <- ["evidence_obligations", "oban_jobs"] do
+    test "#{table} reset fault excludes an independent registration connection" do
+      P805.with_fixture(fn ->
+        {request, registration} = account()
+        {:ok, credentials} = Identity.authenticate_password(request.email, request.password)
+        {proof, bearer} = issue(request, registration)
+        initial = reset_security_snapshot(registration.account_id)
+        owner_backend = P805.scalar("SELECT pg_backend_pid()")
+        owner = self()
+        cleanup_reference = make_ref()
+
+        P805.with_rejected_insert(unquote(table), fn reached ->
+          # B's fault stays installed until A has committed and completed its
+          # own teardown on a separate connection.
+          foreign =
+            P805.independent_fixture_task(fn ->
+              Process.put({P805, :fixture_cleanup_hook}, fn ->
+                send(owner, {cleanup_reference, :foreign_cleanup})
+              end)
+
+              distinct_connection? = P805.scalar("SELECT pg_backend_pid()") != owner_backend
+              result = Identity.register(P805.request())
+              {distinct_connection?, match?({:ok, _}, result), P805.counts()}
+            end)
+
+          {distinct_connection?, committed?, consequences} = Task.await(foreign, 10_000)
+          assert distinct_connection?
+          assert committed?, "independent registration must commit"
+          assert consequences == [1, 1, 1, 0, 1, 1, 1, 1, 1, 1]
+          assert_receive {^cleanup_reference, :foreign_cleanup}
+          refute_receive {^cleanup_reference, :foreign_cleanup}
+          assert reset(bearer) == {:error, :reset_uncertain}
+          assert reached.()
+          assert reset_security_snapshot(registration.account_id) == initial
+          assert Ash.get!(Token, proof.jti, authorize?: false).purpose == "password_reset"
+          assert {:ok, _} = Identity.authorize_session(credentials)
+        end)
+
+        assert {:ok, :reset} = reset(bearer)
+      end)
+    end
   end
 
   test "minimized reset evidence materializes once and jobs retain identifiers only" do

@@ -112,6 +112,7 @@ defmodule NewYou.Communications.DispositionTest do
                platform_name, render_schema, render_digest
         FROM message_intents
         WHERE source_operation_id = $2
+        RETURNING id
         """,
         [duplicate_reference, Ecto.UUID.dump!(first_request.operation_id)]
       )

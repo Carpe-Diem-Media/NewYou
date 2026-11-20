@@ -586,7 +586,7 @@ defmodule NewYou.Identity.RegistrationOrchestrationTest do
     primary_key = Ecto.UUID.generate()
 
     Repo.query!(
-      "INSERT INTO oban_jobs (queue, worker, args) VALUES ('audit', 'NewYou.Audit.Workers.RegistrationEvidence', $1)",
+      "INSERT INTO oban_jobs (queue, worker, args) VALUES ('audit', 'NewYou.Audit.Workers.RegistrationEvidence', $1) RETURNING id",
       [%{"primary_key" => %{"id" => primary_key}}]
     )
 

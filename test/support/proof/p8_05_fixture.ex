@@ -28,6 +28,9 @@ defmodule NewYou.Proof.P805Fixture do
         cleanup_hook: cleanup_hook,
         operations: [],
         emails: [],
+        foreign_operations: [],
+        foreign_emails: [],
+        foreign_projections: [],
         workers: [],
         ports: %{},
         external_launch: nil
@@ -45,6 +48,19 @@ defmodule NewYou.Proof.P805Fixture do
 
   def track(reference, :email, email),
     do: update(reference, &%{&1 | emails: Enum.uniq([email | &1.emails])})
+
+  def track(reference, :foreign_operation, operation),
+    do:
+      update(
+        reference,
+        &%{&1 | foreign_operations: Enum.uniq([operation | &1.foreign_operations])}
+      )
+
+  def track(reference, :foreign_email, email),
+    do: update(reference, &%{&1 | foreign_emails: Enum.uniq([email | &1.foreign_emails])})
+
+  def track(reference, :foreign_projection, key),
+    do: update(reference, &%{&1 | foreign_projections: [key | &1.foreign_projections]})
 
   # Registered workers must launch externals through P805.open_restart_port/3.
   # A BEAM DOWN alone never settles a recorded external process group.

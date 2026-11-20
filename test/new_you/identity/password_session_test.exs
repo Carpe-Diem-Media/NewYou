@@ -2,7 +2,7 @@ defmodule NewYou.Identity.PasswordSessionTest do
   use ExUnit.Case, async: false
 
   alias NewYou.Identity
-  alias NewYou.Proof.P805
+  alias NewYou.Proof.{FixtureObservation, P805}
 
   test "proof runner reconstructs Session authority on a fresh connection" do
     assert Code.ensure_loaded?(NewYou.Proof.P809Catalog)
@@ -506,6 +506,156 @@ defmodule NewYou.Identity.PasswordSessionTest do
     end)
   end
 
+  for maintenance <- [:tokens, :sessions] do
+    test "#{maintenance} maintenance excludes foreign inserts and rolls back foreign effects" do
+      P805.with_fixture(fn ->
+        {_request, registration, credentials} = authenticated_fixture()
+        before = %{tokens: token_signature(), sessions: session_signature()}
+        parent = self()
+        reference = make_ref()
+
+        foreign =
+          P805.independent_fixture_task(fn -> foreign_maintenance_fixture(parent, reference) end)
+
+        try do
+          assert_receive {^reference, :ready, other}, 5_000
+          assert %{tokens: token_signature(), sessions: session_signature()} == before
+
+          with_rolled_back_maintenance(fn ->
+            case unquote(maintenance) do
+              :tokens ->
+                assert :ok =
+                         AshAuthentication.TokenResource.Actions.expunge_expired(Identity.Token)
+
+                removed? =
+                  is_nil(
+                    Ash.get!(Identity.Token, other.token_jti,
+                      authorize?: false,
+                      not_found_error?: false
+                    )
+                  )
+
+                assert removed?
+
+                assert Ash.get!(Identity.Session, other.session_id, authorize?: false).state ==
+                         :active
+
+              :sessions ->
+                due =
+                  P805.scalar(
+                    "SELECT count(*) FROM sessions WHERE state = 'active' AND (expires_at <= now() OR idle_expires_at <= now())"
+                  )
+
+                assert due >= 1
+
+                for batch <- 0..div(due - 1, 100) do
+                  expected = min(due - batch * 100, 100)
+                  assert {:ok, ^expected} = Identity.expire_due_sessions()
+                end
+
+                assert Ash.get!(Identity.Session, other.session_id, authorize?: false).state ==
+                         :expired
+            end
+          end)
+
+          assert %{tokens: token_signature(), sessions: session_signature()} == before
+
+          # This owned Session has neither the expected Account association nor
+          # a parent Token. Capture must observe its creation, not infer ownership
+          # from those links. The deliberate orphan exists only in this rollback.
+          assert {:error, :orphan_probe} =
+                   NewYou.Repo.transaction(fn ->
+                     own_session =
+                       Ash.get!(Identity.Session, credentials.session_id, authorize?: false)
+
+                     NewYou.Repo.query!("UPDATE tokens SET account_id = $1 WHERE jti = $2", [
+                       Ecto.UUID.dump!(other.account_id),
+                       own_session.token_jti
+                     ])
+
+                     refute token_signature() == before.tokens
+                     now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+                     Ash.create!(
+                       Identity.Session,
+                       %{
+                         account_id: other.account_id,
+                         token_jti: Ecto.UUID.generate(),
+                         expires_at: DateTime.add(now, 300),
+                         idle_expires_at: DateTime.add(now, 300),
+                         last_seen_at: now
+                       },
+                       action: :issue,
+                       authorize?: false
+                     )
+
+                     refute session_signature() == before.sessions
+                     NewYou.Repo.rollback(:orphan_probe)
+                   end)
+
+          assert session_signature() == before.sessions
+
+          assert Ash.get!(Identity.Account, registration.account_id, authorize?: false).account_status ==
+                   :open
+
+          send(foreign.pid, {reference, :verify})
+          assert_receive {^reference, :preserved, true}, 5_000
+        after
+          send(foreign.pid, {reference, :release})
+          assert :ok = Task.await(foreign, 10_000)
+        end
+      end)
+    end
+  end
+
+  defp authenticated_fixture do
+    request = P805.request()
+    {:ok, registration} = Identity.register(request)
+    {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+    {:ok, credentials} = Identity.authenticate_password(request.email, request.password)
+    {request, registration, credentials}
+  end
+
+  defp foreign_maintenance_fixture(parent, reference) do
+    {_request, registration, credentials} = authenticated_fixture()
+    assert {:ok, _} = Identity.authorize_session(credentials)
+    session = Ash.get!(Identity.Session, credentials.session_id, authorize?: false)
+
+    NewYou.Repo.query!(
+      "UPDATE tokens SET expires_at = now() - interval '1 hour' WHERE jti = $1",
+      [session.token_jti]
+    )
+
+    NewYou.Repo.query!(
+      "UPDATE sessions SET expires_at = now() - interval '1 hour' WHERE id = $1",
+      [Ecto.UUID.dump!(session.id)]
+    )
+
+    before = %{tokens: token_signature(), sessions: session_signature()}
+
+    send(
+      parent,
+      {reference, :ready,
+       %{
+         account_id: registration.account_id,
+         session_id: session.id,
+         token_jti: session.token_jti
+       }}
+    )
+
+    receive do
+      {^reference, :verify} ->
+        preserved? = %{tokens: token_signature(), sessions: session_signature()} == before
+        send(parent, {reference, :preserved, preserved?})
+        receive do: ({^reference, :release} -> :ok)
+
+      {^reference, :release} ->
+        :ok
+    after
+      10_000 -> raise "foreign maintenance fixture release deadline"
+    end
+  end
+
   # Use Ecto's sandbox transaction rather than nesting an outer Repo transaction.
   # Ash denials roll back their own savepoint without aborting the whole proof.
   defp with_rolled_back_maintenance(callback) do
@@ -521,15 +671,9 @@ defmodule NewYou.Identity.PasswordSessionTest do
     end
   end
 
-  defp token_signature do
-    %{rows: rows} = NewYou.Repo.query!("SELECT row_to_json(t)::text FROM tokens t ORDER BY jti")
-    :crypto.hash(:sha256, :erlang.term_to_binary(rows))
-  end
+  defp token_signature, do: FixtureObservation.fingerprint(:tokens)
 
-  defp session_signature do
-    %{rows: rows} = NewYou.Repo.query!("SELECT row_to_json(s)::text FROM sessions s ORDER BY id")
-    :crypto.hash(:sha256, :erlang.term_to_binary(rows))
-  end
+  defp session_signature, do: FixtureObservation.fingerprint(:sessions)
 
   defp await_account_lock(holder, login, deadline) do
     case NewYou.Repo.query!("SELECT $1 = ANY(pg_blocking_pids($2))", [holder, login]).rows do

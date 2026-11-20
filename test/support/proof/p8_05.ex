@@ -19,6 +19,10 @@ defmodule NewYou.Proof.P805 do
 
   @doc false
   def with_fixture(callback) when is_function(callback, 0) do
+    NewYou.Proof.FixtureObservation.with_scope(fn -> fixture(callback) end)
+  end
+
+  defp fixture(callback) do
     projection_key = "p817_test_" <> Ecto.UUID.generate()
     previous_projection_key = Process.get({NewYou.Analytics, :p817_test_projection_key}, :missing)
     cleanup_hook = Process.get({__MODULE__, :fixture_cleanup_hook})
@@ -30,6 +34,7 @@ defmodule NewYou.Proof.P805 do
         Process.put({NewYou.Analytics, :p817_test_projection_key}, projection_key)
         Process.put({__MODULE__, :operations}, [])
         Process.put({__MODULE__, :emails}, [])
+        Process.put({__MODULE__, :fault_names}, [])
         SelfTest.cleanup_manifest!(connections_released: false, locks_released: false)
         {guardian, guardian_monitor} = start_fixture_guardian(fixture)
         :ok = P805Fixture.attach(fixture, guardian)
@@ -137,8 +142,8 @@ defmodule NewYou.Proof.P805 do
     :ok = P805Fixture.settling(fixture)
     workers = await_registered_workers(guardian, guardian_monitor)
 
-    cleanup = fn _ ->
-      perform_fixture_cleanup(checked_out?, projection_key)
+    cleanup = fn target ->
+      perform_fixture_cleanup(checked_out?, projection_key, target)
       :ok
     end
 
@@ -168,17 +173,22 @@ defmodule NewYou.Proof.P805 do
   defp worker_cleanup_result(:confirmed), do: :confirmed
   defp worker_cleanup_result(_), do: :unconfirmed
 
-  defp perform_fixture_cleanup(true, projection_key) do
+  defp perform_fixture_cleanup(true, projection_key, fixture) do
     # Teardown needs its own live connection if a cancelled worker
     # disconnected the borrowed lease.
+    names = Process.get({__MODULE__, :fault_names}, [])
+
     Sandbox.unboxed_run(Repo, fn ->
-      cleanup(projection_key)
+      cleanup_fixture_rows(fixture, projection_key)
+
+      Process.delete({__MODULE__, :operations})
+      Process.delete({__MODULE__, :emails})
       false = Repo.in_transaction?()
-      0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'p805_fault_%'")
+      0 = scalar("SELECT count(*) FROM pg_trigger WHERE tgname = ANY($1::text[])", [names])
     end)
   end
 
-  defp perform_fixture_cleanup(false, _projection_key) do
+  defp perform_fixture_cleanup(false, _projection_key, _fixture) do
     Process.delete({__MODULE__, :operations})
     Process.delete({__MODULE__, :emails})
   end
@@ -203,6 +213,7 @@ defmodule NewYou.Proof.P805 do
     Process.delete({__MODULE__, :guardian})
     Process.delete({__MODULE__, :guardian_monitor})
     Process.delete({__MODULE__, :setup_checkpoint})
+    Process.delete({__MODULE__, :fault_names})
   end
 
   defp record_fixture_cleanup(_checked_out?, cleanup_result) do
@@ -256,6 +267,45 @@ defmodule NewYou.Proof.P805 do
     request
   end
 
+  # The worker uses the owner's environment lease but a distinct connection,
+  # observation scope and cleanup identities. Record its identities in the
+  # lease as a fallback if the worker terminates before its own teardown.
+  def independent_fixture_task(callback) when is_function(callback, 0) do
+    fixture = Process.get({__MODULE__, :fixture})
+    true = P805Fixture.owned?(fixture)
+    owner = self()
+    reference = make_ref()
+
+    task =
+      Task.async(fn ->
+        receive do
+          {^owner, ^reference} ->
+            run_independent_fixture(fixture, callback)
+        end
+      end)
+
+    :ok = register_cleanup_worker(task.pid)
+    send(task.pid, {owner, reference})
+    task
+  end
+
+  defp run_independent_fixture(fixture, callback) do
+    Process.put({__MODULE__, :cleanup_fallback}, fixture)
+    projection_key = "p817_test_" <> Ecto.UUID.generate()
+    :ok = P805Fixture.track(fixture, :foreign_projection, projection_key)
+    Process.put({NewYou.Analytics, :p817_test_projection_key}, projection_key)
+
+    NewYou.Proof.FixtureObservation.with_scope(fn ->
+      Sandbox.unboxed_run(Repo, fn ->
+        try do
+          callback.()
+        after
+          cleanup(projection_key)
+        end
+      end)
+    end)
+  end
+
   def track_operation(operation), do: track(%{operation_id: operation})
 
   defp track(request) do
@@ -263,6 +313,15 @@ defmodule NewYou.Proof.P805 do
 
     if is_pid(guardian) do
       register_fixture_value(guardian, :operation, request.operation_id)
+    end
+
+    if fallback = Process.get({__MODULE__, :cleanup_fallback}) do
+      :ok = P805Fixture.track(fallback, :foreign_operation, request.operation_id)
+
+      if request[:email] do
+        {:ok, email} = Identity.Email.canonicalize(request.email)
+        :ok = P805Fixture.track(fallback, :foreign_email, email)
+      end
     end
 
     Process.put({__MODULE__, :operations}, [
@@ -356,12 +415,24 @@ defmodule NewYou.Proof.P805 do
   end
 
   defp cleanup_retained_fixture(fixture) do
-    cleanup_orphaned_fixture(
-      fixture.operations,
-      fixture.emails,
-      fixture.projection_key,
+    Sandbox.unboxed_run(Repo, fn ->
+      cleanup_fixture_rows(fixture, fixture.projection_key)
+      :ok = SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
+    end)
+  end
+
+  defp cleanup_fixture_rows(fixture, projection_key) do
+    cleanup(
+      fixture.operations ++ fixture.foreign_operations,
+      fixture.emails ++ fixture.foreign_emails,
+      projection_key,
       fixture.cleanup_hook
     )
+
+    Enum.each(fixture.foreign_projections, fn key ->
+      :ok = cleanup_test_oban_queue(key)
+      :ok = cleanup_test_analytics_projection(key)
+    end)
   end
 
   defp await_registered_workers(guardian, monitor)
@@ -577,16 +648,12 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
-  defp cleanup_orphaned_fixture(operations, emails, projection_key, cleanup_hook) do
-    Sandbox.unboxed_run(Repo, fn ->
-      cleanup(operations, emails, projection_key, cleanup_hook)
-      :ok = SelfTest.cleanup_manifest!(connections_released: true, locks_released: true)
-    end)
-  end
-
   def check(case_id, assertion, observed, expected \\ true) do
+    # Record the fixed assertion label and match only, before expect! raises.
+    # Aggregate failures then retain the failing guard without raw values.
+    SelfTest.observe_manifest!(case_id <> "." <> assertion, observed === expected)
     SelfTest.expect_manifest!(case_id <> "." <> assertion, observed, expected)
-    SelfTest.observe_manifest!(case_id <> "." <> assertion, observed == expected)
+    :ok
   end
 
   defp execute("p805.accepted" = id) do
@@ -1167,34 +1234,14 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
-  # Identifier snapshots bound observations to writes after this synchronous
-  # fixture began. They never authorise cleanup. Unboxed proofs require
-  # exclusive TEST access; sandbox callers also retain their transaction isolation.
+  # Child identifiers come from fixture-owned writes, independently of parent
+  # associations. Captured IDs select observations and never authorize cleanup.
   @doc false
-  def capture_consequence_ids do
-    Map.new([:tokens, :nonces, :jobs], fn kind ->
-      {table, column, _type} = consequence_key(kind)
-      %{rows: rows} = Repo.query!("SELECT #{column} FROM #{table}")
-      {kind, Enum.map(rows, &hd/1)}
-    end)
-  end
+  def capture_consequence_ids, do: NewYou.Proof.FixtureObservation.snapshot()
 
   @doc false
-  def new_consequence_ids(baseline, kind) do
-    {table, column, type} = consequence_key(kind)
-
-    %{rows: rows} =
-      Repo.query!(
-        "SELECT #{column} FROM #{table} WHERE NOT (#{column} = ANY($1::#{type}[]))",
-        [Map.fetch!(baseline, kind)]
-      )
-
-    Enum.map(rows, &hd/1)
-  end
-
-  defp consequence_key(:tokens), do: {"tokens", "jti", "text"}
-  defp consequence_key(:nonces), do: {"communications_envelope_nonces", "nonce", "bytea"}
-  defp consequence_key(:jobs), do: {"oban_jobs", "id", "bigint"}
+  def new_consequence_ids(baseline, kind),
+    do: NewYou.Proof.FixtureObservation.new_ids(baseline, kind)
 
   defp scoped_counts(operations, emails) do
     operations = operations |> Enum.uniq() |> Enum.map(&Ecto.UUID.dump!/1)
@@ -1419,34 +1466,56 @@ defmodule NewYou.Proof.P805 do
     end
   end
 
-  defp with_rejected_insert(table, callback) do
-    suffix = System.unique_integer([:positive])
-    name = "p805_fault_#{suffix}"
+  @doc """
+  Reject inserts only on the caller's checked-out proof connection.
 
-    try do
-      Repo.query!("CREATE TEMP SEQUENCE #{name}")
+  The callback receives a rollback-resistant reached probe. Call outside a
+  transaction; the callback may start transactions. Temporary function/sequence
+  dependencies also remove the owned trigger if that connection terminates.
+  """
+  def with_rejected_insert(table, callback) when table in @tables do
+    if Repo.in_transaction?(), do: raise("proof insertion cut requires no enclosing transaction")
 
-      Repo.query!("""
-      CREATE FUNCTION pg_temp.#{name}() RETURNS trigger LANGUAGE plpgsql AS $$
-      BEGIN
-        PERFORM nextval('pg_temp.#{name}');
-        RAISE EXCEPTION 'bounded proof insertion cut' USING ERRCODE = '23514';
-      END; $$
-      """)
+    # Keep the SQL client checked out throughout the callback. DBConnection's
+    # ownership proxy disconnects an active client on abrupt owner death, so
+    # PostgreSQL removes its temporary objects and dependent trigger together.
+    Repo.checkout(fn ->
+      name = "p805_fault_" <> String.replace(Ecto.UUID.generate(), "-", "")
+      previous = scalar("SELECT current_setting('newyou.proof_cut', true)")
 
-      Repo.query!("SELECT set_config('newyou.proof_cut', $1, false)", [name])
+      if is_pid(Process.get({__MODULE__, :guardian})) do
+        Process.put({__MODULE__, :fault_names}, [
+          name | Process.get({__MODULE__, :fault_names}, [])
+        ])
+      end
 
-      Repo.query!(
-        "CREATE TRIGGER #{name} BEFORE INSERT ON #{table} FOR EACH ROW WHEN (current_setting('newyou.proof_cut', true) = '#{name}') EXECUTE FUNCTION pg_temp.#{name}()"
-      )
+      try do
+        Repo.query!("CREATE TEMP SEQUENCE #{name}")
 
-      callback.(fn -> scalar("SELECT is_called FROM pg_temp.#{name}") end)
-    after
-      Repo.query!("DROP TRIGGER IF EXISTS #{name} ON #{table}")
-      Repo.query!("DROP FUNCTION IF EXISTS pg_temp.#{name}()")
-      Repo.query!("DROP SEQUENCE IF EXISTS pg_temp.#{name}")
-      Repo.query!("RESET newyou.proof_cut")
-    end
+        Repo.query!("""
+        CREATE FUNCTION pg_temp.#{name}() RETURNS trigger LANGUAGE plpgsql AS $$
+        BEGIN
+          PERFORM nextval('pg_temp.#{name}');
+          RAISE EXCEPTION 'bounded proof insertion cut' USING ERRCODE = '23514';
+        END; $$
+        """)
+
+        Repo.query!("SELECT set_config('newyou.proof_cut', $1, false)", [name])
+
+        Repo.query!(
+          "CREATE TRIGGER #{name} BEFORE INSERT ON #{table} FOR EACH ROW WHEN (current_setting('newyou.proof_cut', true) = '#{name}') EXECUTE FUNCTION pg_temp.#{name}()"
+        )
+
+        callback.(fn -> scalar("SELECT is_called FROM pg_temp.#{name}") end)
+      after
+        Repo.query!("DROP TRIGGER IF EXISTS #{name} ON #{table}")
+        Repo.query!("DROP FUNCTION IF EXISTS pg_temp.#{name}()")
+        Repo.query!("DROP SEQUENCE IF EXISTS pg_temp.#{name}")
+        # PostgreSQL retains an empty custom-setting placeholder after RESET.
+        # Both missing and empty mean inactive; preserve any actual prior cut.
+        Repo.query!("SELECT set_config('newyou.proof_cut', $1, false)", [previous || ""])
+      end
+    end)
   end
 
   # Fixture teardown only, never an application mutation interface. PMR
