@@ -836,7 +836,9 @@ defmodule NewYou.Proof.P815 do
       )
       |> Ash.read_one!(authorize?: false)
 
-    {request, registration, _recovery, recovery_bearer} = pending_recovery()
+    {request, registration, _recovery, recovery_bearer} =
+      pending_recovery(&RecoverySeam.isolated_fixture_request/2)
+
     assert Identity.submit_recovery_proof(recovery_bearer, operation()) == {:ok, :accepted}
     reset_bearer = password_reset_delivery(request, registration.account_id)
     parent = self()
@@ -990,10 +992,11 @@ defmodule NewYou.Proof.P815 do
     end)
   end
 
-  defp pending_recovery do
+  defp pending_recovery(request_fixture \\ &Identity.request_recovery(&1, "af", &2)) do
     {request, registration} = account()
-    :ok = Identity.request_recovery(request.email, "af", operation())
-    [recovery] = cases(registration.account_id)
+    request_id = operation()
+    :ok = request_fixture.(request.email, request_id)
+    [%RecoveryCase{operation_id: ^request_id} = recovery] = cases(registration.account_id)
     {:ok, bearer} = delivery(recovery, request.email)
     {request, registration, recovery, bearer}
   end
