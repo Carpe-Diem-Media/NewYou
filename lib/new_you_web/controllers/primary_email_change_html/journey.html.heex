@@ -5,20 +5,17 @@
   heading_id="primary-email-change-heading"
 >
   <p
-    :if={@view != :signed_out && body(@view, @state)}
+    :if={body(@view, @state)}
     role="status"
     class="max-w-prose text-design-body-sm leading-design-body-sm"
   >
     {text(@copy, body(@view, @state))}
   </p>
-  <p :if={@view == :signed_out} role="status" class="max-w-prose text-design-body-sm">
-    {SignInCopy.text!("identity.session.reauthentication_required", @locale)}
-  </p>
   <a
     :if={@view in [:applied, :signed_out]}
     href={"/login?locale=#{@locale}"}
     class="min-h-11 w-fit content-center text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
-  >{SignInCopy.text!("identity.login.reauthenticate.action", @locale)}</a>
+  >{CopyRegistry.text!("shared.navigation.login", @locale)}</a>
   <p :if={@error?} role="alert" id="email-change-error" class="max-w-prose text-design-body-sm">
     {text(@copy, "uncertain.title")} {text(@copy, "uncertain.body")}
   </p>
@@ -64,7 +61,7 @@
     <input type="hidden" name="locale" value={@locale} />
     <input type="hidden" name="operation_id" value={@status.operation_id} />
     <label for="email-change-password" class="text-design-body-sm font-design-bold">
-      {SignInCopy.text!("identity.login.password.label", @locale)}
+      {if @locale == "af", do: "Huidige wagwoord", else: "Current password"}
     </label>
     <input
       class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"

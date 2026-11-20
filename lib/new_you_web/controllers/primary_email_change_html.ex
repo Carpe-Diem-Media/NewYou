@@ -1,14 +1,14 @@
 defmodule NewYouWeb.PrimaryEmailChangeHTML do
   use NewYouWeb, :html
   import NewYouWeb.SignInComponents
-  alias NewYouWeb.SignInCopy
+  alias NewYouWeb.CopyRegistry
   embed_templates "primary_email_change_html/*"
 
   def text(copy, key), do: Map.fetch!(copy, "identity.change_email." <> key)
 
   def heading(:unavailable, _state), do: "uncertain.title"
   def heading(:applied, _state), do: "applied.title"
-  def heading(:signed_out, _state), do: "start.title"
+  def heading(:signed_out, _state), do: "uncertain.title"
   def heading(:status, :new_address_pending), do: "pending.title"
   def heading(:status, :confirmed), do: "confirmed.title"
   def heading(:status, state) when state in [:delayed, :reviewed], do: "review.title"
@@ -21,6 +21,7 @@ defmodule NewYouWeb.PrimaryEmailChangeHTML do
   def heading(:status, _state), do: "start.title"
 
   def body(:unavailable, _state), do: "uncertain.body"
+  def body(:signed_out, _state), do: "uncertain.body"
   def body(:applied, _state), do: "applied.body"
   def body(:status, :requested), do: "request.neutral"
   def body(:status, :cancelled), do: nil
