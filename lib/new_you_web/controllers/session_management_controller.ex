@@ -47,6 +47,9 @@ defmodule NewYouWeb.SessionManagementController do
       {:ok, page} ->
         render_page(conn, page, message, status)
 
+      {:error, :authentication_unavailable} when message == "revoke.uncertain" ->
+        render_page(conn, nil, message, status)
+
       {:error, :authentication_unavailable} ->
         render_page(conn, nil, "active.unavailable", :unauthorized)
     end

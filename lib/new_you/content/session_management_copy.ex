@@ -23,18 +23,7 @@ defmodule NewYou.Content.SessionManagementCopy do
          {:ok, %{"copy_items" => items}} <- Jason.decode(bytes) do
       items
       |> Enum.filter(&individual_session_key?/1)
-      |> Enum.reduce_while({:ok, %{}}, fn item, {:ok, copy} ->
-        case item do
-          %{"key" => key, ^locale => %{"text" => text, "sha256" => expected}}
-          when is_binary(text) ->
-            if digest(text) == expected,
-              do: {:cont, {:ok, Map.put(copy, key, text)}},
-              else: {:halt, {:error, :content_ineligible}}
-
-          _ ->
-            {:halt, {:error, :content_ineligible}}
-        end
-      end)
+      |> Enum.reduce_while({:ok, %{}}, &collect_string(&1, &2, locale))
     else
       _ -> {:error, :content_ineligible}
     end
@@ -45,6 +34,18 @@ defmodule NewYou.Content.SessionManagementCopy do
   if Mix.env() == :test do
     @doc false
     def load_for_proof(locale, read), do: load(locale, read)
+  end
+
+  defp collect_string(%{"key" => key} = item, {:ok, copy}, locale) do
+    case item[locale] do
+      %{"text" => text, "sha256" => expected} when is_binary(text) ->
+        if digest(text) == expected,
+          do: {:cont, {:ok, Map.put(copy, key, text)}},
+          else: {:halt, {:error, :content_ineligible}}
+
+      _ ->
+        {:halt, {:error, :content_ineligible}}
+    end
   end
 
   defp individual_session_key?(%{"key" => "identity.sessions.all." <> _}), do: false

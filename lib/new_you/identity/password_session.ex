@@ -108,17 +108,26 @@ defmodule NewYou.Identity.PasswordSession do
   end
 
   def revoke_other(credentials, target_id) do
-    with {:ok, id} <- Ecto.UUID.cast(target_id) do
-      case with_current_session(credentials, &revoke_other_locked(&1, &2, &3, id)) do
-        {:ok, result} when result in [:revoked, :already_ended, :stale] -> {:ok, result}
-        {:error, :audit_rejected} -> {:error, :session_revocation_failed}
-        {:error, :transaction_unconfirmed} -> {:error, :session_result_uncertain}
-        _ -> {:error, :session_unavailable}
-      end
-    else
-      :error -> {:error, :session_unavailable}
+    case Ecto.UUID.cast(target_id) do
+      {:ok, id} ->
+        credentials
+        |> with_current_session(&revoke_other_locked(&1, &2, &3, id))
+        |> revocation_result()
+
+      :error ->
+        {:error, :session_unavailable}
     end
   end
+
+  defp revocation_result({:ok, result}) when result in [:revoked, :already_ended, :stale],
+    do: {:ok, result}
+
+  defp revocation_result({:error, :audit_rejected}), do: {:error, :session_revocation_failed}
+
+  defp revocation_result({:error, :transaction_unconfirmed}),
+    do: {:error, :session_result_uncertain}
+
+  defp revocation_result(_result), do: {:error, :session_unavailable}
 
   defp optional_cursor(nil), do: {:ok, nil}
   defp optional_cursor(cursor), do: Ecto.UUID.cast(cursor)
@@ -128,21 +137,10 @@ defmodule NewYou.Identity.PasswordSession do
     with {:ok, %{"sub" => subject, "jti" => jti, "purpose" => "user"}, Account} <-
            Jwt.verify(bearer, Account),
          {:ok, session} when not is_nil(session) <- Ash.get(Session, id, authorize?: false) do
-      case Ash.transact([Account, Token, Session], fn ->
-             authorize_locked(id, session.account_id, bearer, subject, jti, operation)
-           end) do
-        {:ok, {:ok, result}} ->
-          {:ok, result}
-
-        {:ok, result} ->
-          {:ok, result}
-
-        {:error, %Ash.Error.Unknown.UnknownError{error: @revocation_rollback}} ->
-          {:error, :audit_rejected}
-
-        {:error, _} ->
-          {:error, :transaction_unconfirmed}
-      end
+      Ash.transact([Account, Token, Session], fn ->
+        authorize_locked(id, session.account_id, bearer, subject, jti, operation)
+      end)
+      |> current_session_result()
     else
       _ -> {:error, :authentication_unavailable}
     end
@@ -151,6 +149,16 @@ defmodule NewYou.Identity.PasswordSession do
   end
 
   defp with_current_session(_, _), do: {:error, :authentication_unavailable}
+
+  defp current_session_result({:ok, {:ok, result}}), do: {:ok, result}
+  defp current_session_result({:ok, result}), do: {:ok, result}
+
+  defp current_session_result(
+         {:error, %Ash.Error.Unknown.UnknownError{error: @revocation_rollback}}
+       ),
+       do: {:error, :audit_rejected}
+
+  defp current_session_result({:error, _}), do: {:error, :transaction_unconfirmed}
 
   defp authorize_locked(id, account_id, bearer, subject, jti, operation) do
     with {:ok, [account]} <-
@@ -191,20 +199,9 @@ defmodule NewYou.Identity.PasswordSession do
   end
 
   defp read_active_page(current, account, cursor) do
-    account_id = account.id
-    subject = AshAuthentication.user_to_subject(account)
-
     query =
-      Session
-      |> Ash.Query.filter(
-        account_id == ^account_id and state == :active and expires_at > now() and
-          idle_expires_at > now() and
-          exists(
-            token,
-            account_id == ^account_id and subject == ^subject and purpose == "user" and
-              expires_at > now()
-          )
-      )
+      account
+      |> usable_sessions()
       |> Ash.Query.sort(id: :desc)
       |> Ash.Query.select([:id, :created_at, :last_seen_at])
       |> Ash.Query.limit(@session_page_size + 1)
@@ -224,6 +221,22 @@ defmodule NewYou.Identity.PasswordSession do
       {:listed,
        %{sessions: sessions, next_cursor: if(remaining == [], do: nil, else: List.last(page).id)}}
     end
+  end
+
+  defp usable_sessions(account) do
+    account_id = account.id
+    subject = AshAuthentication.user_to_subject(account)
+
+    Ash.Query.filter(
+      Session,
+      account_id == ^account_id and state == :active and expires_at > now() and
+        idle_expires_at > now() and
+        exists(
+          token,
+          account_id == ^account_id and subject == ^subject and purpose == "user" and
+            expires_at > now()
+        )
+    )
   end
 
   defp revoke_other_locked(%{id: id}, _account, _token, id), do: :denied

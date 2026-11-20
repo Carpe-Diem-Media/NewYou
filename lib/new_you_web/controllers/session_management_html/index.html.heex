@@ -89,6 +89,13 @@
   </section>
 
   <a
+    :if={!@page && @message == "revoke.uncertain"}
+    href={"/session/manage?locale=#{@locale}"}
+    class="min-h-11 w-fit content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+  >
+    {text(@copy, "active.refresh.action")}
+  </a>
+  <a
     :if={!@page}
     href={"/login?locale=#{@locale}"}
     class="min-h-11 w-fit content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
