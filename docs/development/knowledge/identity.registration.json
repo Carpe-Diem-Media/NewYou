@@ -11,11 +11,14 @@
     "WELL-96",
     "WELL-131",
     "WELL-112",
-    "WELL-114"
+    "WELL-114",
+    "WELL-141",
+    "WELL-142",
+    "WELL-143"
   ],
   "implementation_revision": {
-    "git_sha": "150a17f756ef93317efbbdde7fcca3ed6510b52a",
-    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 retains the registration and verification owner interfaces and exact semantic copy while using the shared native controls and approved font policy. The shared router/boundary also declares an isolated DEV-only design guide; no registration transaction, eligibility rule or Account lifecycle is changed. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract."
+    "git_sha": "b070971229029c12d86fb012bae9662858763ea3",
+    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 retains the registration and verification owner interfaces and exact semantic copy while using the shared native controls and approved font policy. The shared router/boundary also declares an isolated DEV-only design guide; no registration transaction, eligibility rule or Account lifecycle is changed. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -540,6 +543,49 @@
         "verification_controller",
         "verification_test"
       ]
+    },
+    {
+      "path": "test/new_you/proof/fixture_consequence_observation_test.exs",
+      "cases": [
+        "Independent fixture writes do not change the selected owner's observations.",
+        "Owned Tokens with wrong account association and parentless nonce/job writes remain observable.",
+        "Foreign retained rows survive successful and raised owner teardown.",
+        "Explicit fresh recovery ownership observes unlinked writes and excludes rolled-back rows.",
+        "An owned generated key that cannot be captured fails observation visibly.",
+        "Foreign retained rows survive abrupt owner cancellation and guardian teardown."
+      ],
+      "proves": "Bounded fixture attribution, foreign preservation and orphan sensitivity through real Ash/PostgreSQL writes and deterministic owner barriers.",
+      "limits": "Test source and focused evidence do not certify all proof callbacks, historical registration errors, canonical verification or merge readiness.",
+      "source_ids": [
+        "fixture_observation",
+        "fixture_consequence_observation_test"
+      ]
+    },
+    {
+      "path": "test/new_you/proof/fault_injection_test.exs",
+      "cases": [
+        "Prior cut setting and only owned DDL restored on return, raise, throw and exit.",
+        "Nested cuts preserve the outer reached probe.",
+        "Abrupt owner death disconnects the active SQL client and removes its temporary fault dependency."
+      ],
+      "proves": "Session-bound fault lifetime, rollback-resistant reached evidence and precise cleanup without a second runner.",
+      "limits": "Does not attribute the three historical registration failures or certify canonical gates.",
+      "source_ids": [
+        "fault_injection_test"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/password_reset_lifecycle_test.exs",
+      "cases": [
+        "Independent registration commits all expected consequences while each Audit/job reset fault stays installed.",
+        "Owned reset reaches the intended failure and preserves the full security and Audit snapshot.",
+        "Foreign fixture teardown does not invoke recovery for another owner's active trigger."
+      ],
+      "proves": "Separate backend registration isolation with valid fixture and signing-key lifetimes, without weakening existing reset rollback assertions.",
+      "limits": "Historical registration error provenance remains unknown; this is a deterministic fault-leak regression.",
+      "source_ids": [
+        "password_reset_lifecycle_test"
+      ]
     }
   ],
   "safe_extensions": [
@@ -685,7 +731,7 @@
       "id": "orchestration_test",
       "path": "test/new_you/identity/registration_orchestration_test.exs",
       "symbol": "defmodule",
-      "sha256": "6fe863fd7906b768268852f9488fd6bfb07829b49dd465d52a9764942470210c"
+      "sha256": "1fe2fce912f28dfd6c5799f8b12186fc044e17e26662503a5f4fce3886747d83"
     },
     {
       "id": "controller",
@@ -800,6 +846,30 @@
       "path": "lib/new_you_web/privacy_telemetry.ex",
       "symbol": "defmodule",
       "sha256": "d002278f8536002bfde7b08b3b88270a7180723110206854b432d2fce65b11b0"
+    },
+    {
+      "id": "fixture_observation",
+      "path": "test/support/proof/fixture_observation.ex",
+      "symbol": "defmodule NewYou.Proof.FixtureObservation",
+      "sha256": "4a6894b4d381db61022d3adf0787bfb6b71153e145502f4b04221c6d47986c49"
+    },
+    {
+      "id": "fixture_consequence_observation_test",
+      "path": "test/new_you/proof/fixture_consequence_observation_test.exs",
+      "symbol": "defmodule NewYou.Proof.FixtureConsequenceObservationTest",
+      "sha256": "78ff68a0c618bfac0c53f9d638880bc61413643744a53bfc0034bd0c8d9c833d"
+    },
+    {
+      "id": "fault_injection_test",
+      "path": "test/new_you/proof/fault_injection_test.exs",
+      "symbol": "defmodule NewYou.Proof.FaultInjectionTest",
+      "sha256": "0cec4822be8f48fe3659a009b2a20c8674a32658534d9a75940352e7c209f1ed"
+    },
+    {
+      "id": "password_reset_lifecycle_test",
+      "path": "test/new_you/identity/password_reset_lifecycle_test.exs",
+      "symbol": "defmodule NewYou.Identity.PasswordResetLifecycleTest",
+      "sha256": "eeb93078e230625441bd24035d6b6729d1dcb3e520b751953cac156dc1c905b3"
     }
   ]
 }
