@@ -1,9 +1,16 @@
 # Managed local TEST slots
 
-WELL-147 consumes DevCore's WELL-145 source capability. This implementation is
-pending successful live proof and integration. Existing active agents and legacy
-worktrees have not been migrated. Keep legacy TEST booking and its cooperating
-`/tmp/newyou-shared-test-plt.lock` protocol for those worktrees.
+WELL-147 consumes DevCore's WELL-145 source capability. A bounded real two-agent
+TEST lifecycle demonstrated independent Ash writes, isolation, automatic cleanup
+and fresh empty reacquisition, but the private pilot controller exited 1 while
+publishing its final report. Canonical exact-head local verification was stopped
+before execution by two private supervision-wrapper defects. **PR #273 is still
+blocked, not merge-certified and not routinely activated.** See the dated
+[WELL-147 pause and resume handoff](well-147-pause-and-resume.md) for exact evidence,
+open guards, and the safe resumption sequence; live status belongs in Plane.
+Existing active agents and legacy worktrees have not been migrated. Keep legacy
+TEST booking and its cooperating `/tmp/newyou-shared-test-plt.lock` protocol
+for those worktrees.
 
 ## Installation and activation checkpoint
 
@@ -332,9 +339,15 @@ no authentication. The local entry point rejects that mode; partial managed
 markers always reject even in CI mode. The hosted service provisions only its
 ephemeral CI identity. Workstation CI databases are not provisioned by this task.
 
-Pure LocalConfig, temporary-metadata cache and admission tests do not prove real
-NewYou database isolation. Before activation claims, WELL-147 still requires
-two independent worktrees with their own migrations and distinguishable committed
-synthetic fixtures, child/restart/browser paths, failure retention and clean
-reuse, measured heavy capacity,
-full repository gates, an optional OCR disposition, exact-head CI and independent review.
+Pure LocalConfig, temporary-metadata cache and admission tests alone do not
+prove real NewYou database isolation. The bounded 2026-11-20 two-agent pilot
+observed successful migrations, distinguishable Ash-backed fixtures, isolation,
+children and fresh empty cleanup in actual managed TEST databases. However, its
+private controller exited 1 before publishing `acceptance.json`; the independent
+17-check offline reconciliation is supplemental, not a successful original
+acceptance receipt. Outstanding requirements include final-head canonical local
+gates and independent review, adjudication of remaining child/browser/recovery
+and intentional failure-retention criteria, full-suite resource/capacity limits,
+exact-head hosted CI, and separately approved merge and activation. See the
+[dated resume handoff](well-147-pause-and-resume.md); do not infer readiness to
+merge or activate from the successful backend seed/empty lifecycle.
