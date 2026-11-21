@@ -6,12 +6,16 @@ defmodule NewYou.Proof.RecoveryLeaseTest do
     client = "#PID<0.100.0>"
 
     msg =
-      "client #{client} timed out because it queued and checked out the connection for longer than 250ms"
+      "client #{client} timed out because it queued and checked out the connection for longer than 350ms"
 
     reason = fn text -> {:shutdown, %DBConnection.ConnectionError{message: text}} end
     assert RecoveryLease.classify(reason.(msg <> "\nprivate stack"), client) == :checkout_deadline
     assert RecoveryLease.classify(reason.(msg), "#PID<0.101.0>") == :unknown
     assert RecoveryLease.classify(reason.(msg <> "0"), client) == :unknown
+
+    assert RecoveryLease.classify(reason.(String.replace(msg, "350ms", "250ms")), client) ==
+             :unknown
+
     assert RecoveryLease.classify(:noproc, client) == :unknown
   end
 

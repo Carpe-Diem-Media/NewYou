@@ -308,8 +308,9 @@ defmodule NewYou.Proof.P815 do
         :ok = Sandbox.checkout(Repo, sandbox: false)
 
         # Sample before the request can check out its transaction lease. This
-        # is a conservative bound on the earliest possible 250 ms expiry.
-        deadline = System.monotonic_time(:millisecond) + 250
+        # is a conservative bound on the earliest possible lease expiry.
+        deadline =
+          System.monotonic_time(:millisecond) + Identity.Recovery.request_transaction_timeout_ms()
 
         Process.put(
           RegistrationSeam,
@@ -474,7 +475,7 @@ defmodule NewYou.Proof.P815 do
   end
 
   defp await_timeout_release(parent, reference) do
-    # The existing 250ms request lease expires while this callback is paused.
+    # The request lease expires while this callback is paused.
     # The controller releases it only after PostgreSQL reports this XID aborted.
     receive do
       {^reference, :aborted_transaction_observed} ->

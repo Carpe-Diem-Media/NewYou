@@ -82,6 +82,10 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
+  @doc false
+  @spec request_transaction_timeout_ms() :: pos_integer()
+  def request_transaction_timeout_ms, do: 350
+
   if @enabled do
     @spec request(term(), term(), term()) :: :ok
     def request(email, locale, operation_id) do
@@ -101,7 +105,7 @@ defmodule NewYou.Identity.Recovery do
                 trace(:transaction_entered)
                 request_locked(email, locale, operation_id)
               end,
-              timeout: 250
+              timeout: request_transaction_timeout_ms()
             )
 
           lease_stage(:finished)
