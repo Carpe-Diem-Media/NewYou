@@ -86,3 +86,40 @@ After merge, verify resulting main SHA, ordered parents and tested tree before P
 CI generates informational mechanical PR snapshots without modifying the branch. Existing committed history remains searchable, but new records are not required. Verify semantic maps against the source and retain exact-head and current-base evidence.
 
 Before a routine PR update, follow the actual `JC-Agents` authentication and existing-author preflight in `AGENTS.md` and `ticket-implement`. A founder-authored PR is ineligible for the routine agent/founder approval route.
+
+## Elixir/Ash/OTP evidence lens — conditional review supplement
+
+Use this lens only for affected Elixir/Ash/Phoenix/ExUnit or PostgreSQL code.
+The existing final verification and independent Master Gate requirements above
+remain authoritative; **this section adds no separate review workflow,
+mandatory mutation-score threshold, full-suite rerun or CI gate**.
+
+- **Owner and framework contract:** Read the owning Ash Domain, Resource/action,
+  relevant code interface, policies, validations, AshStateMachine transitions,
+  authorization context, return/exception shapes, and pinned extension source.
+  Compare against current durable lifecycle authority; inspect actual callers.
+- **Lifecycle and persistence:** Review allowed states, transitions, guards,
+  version/identity constraints, side effects, terminal conditions, atomicity,
+  idempotency, retries and recovery. Check PostgreSQL constraints, migration
+  behavior, transaction boundaries and read-after-write assumptions. No second
+  Repo/raw-SQL/Ecto.Multi ordinary business-write path.
+- **Concurrency and OTP:** Establish transaction/lock ordering, participating
+  PIDs and BEAM nodes, supervision/monitor/exit behavior, cleanup, and real
+  connection/Sandbox ownership. A parent trace does not observe a separate
+  child VM. Distinguish ExUnit `async: false` from `--max-cases` capacity.
+- **Proof quality:** A negative test must fail at its *intended* guard, after
+  valid preconditions are established. Distinguish phase markers and
+  uncommitted writes from committed durable state; verify real process-loss
+  checkpoints and cleanup independently. Verify duplicate prevention and
+  same-operation retry effects. For high-consequence changes, assess focused
+  isolated sensitivity/mutation evidence under the existing TDD skill.
+- **Diagnosis before remedy:** Correlate an error, timeout or telemetry event
+  to the actual failing process/transaction; never assign root cause from
+  nearby unrelated logs or from a green rerun. Classify confirmed defects,
+  hypotheses, and observability limitations separately. Avoid logging SQL
+  parameters, participant identifiers, token contents or secret material.
+- **Scope and handoff:** If material runtime attribution is missing, load
+  `elixir-runtime-debugging` and identify the smallest distinguishing
+  experiment. Review the **complete exact base/head diff** and live Plane
+  acceptance criteria; check required exact-head CI. Do not demand unrelated
+  refactors or re-run valid broad gates merely to satisfy this supplement.
