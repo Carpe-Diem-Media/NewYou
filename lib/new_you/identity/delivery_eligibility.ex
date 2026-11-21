@@ -10,11 +10,12 @@ defmodule NewYou.Identity.DeliveryEligibility do
 
   @doc """
   Checks the exact recovery issuance under Account, case and Token locks without
-  serializing or consuming its proof. Requires an owning transaction. This is
-  source eligibility only; content and provider admission remain separate gates.
+  serializing or consuming its proof. Requires an owning transaction. An
+  unavailable signing key returns `{:error, :capability_unavailable}` once the
+  other source guards pass. Content and provider admission remain separate gates.
   """
   @spec recovery(String.t(), String.t(), String.t(), Ecto.UUID.t()) ::
-          :ok | {:error, :source_invalid}
+          :ok | {:error, :source_invalid | :capability_unavailable}
   def recovery(reference, destination, locale, operation_id),
     do: Recovery.delivery_eligibility(reference, destination, locale, operation_id)
 

@@ -24,25 +24,39 @@ defmodule NewYou.Proof.RecoveryScenarios do
       :ok = invoke(:request_recovery, [request.email, "af", operation()])
       {:ok, [recovery]} = cases(registered.account_id)
       {:ok, bearer} = delivery(recovery, request.email)
+      before = Ash.get!(Account, registered.account_id, authorize?: false)
+      completion = operation()
+      password = "new independent recovery credential"
+      pending_effects = assert_recovery_proof(recovery)
+
+      assert Identity.complete_recovery(bearer, password, completion) ==
+               {:error, :recovery_unavailable}
+
+      assert {:ok, [^recovery]} = cases(registered.account_id)
+      assert assert_recovery_proof(recovery) == pending_effects
+      assert P805.intents(completion) == []
+      assert Ash.get!(Account, registered.account_id, authorize?: false) == before
+
       confirmation = operation()
       assert invoke(:submit_recovery_proof, [bearer, confirmation]) == {:ok, :accepted}
       {:ok, [accepted]} = cases(registered.account_id)
       assert accepted.state == :additional_assurance
       assert accepted.satisfied_assurance == 1
-      before = Ash.get!(Account, registered.account_id, authorize?: false)
-      completion = operation()
+      assert accepted.proof_acceptance_id == confirmation
+      assert Identity.complete_recovery(bearer, password, completion) == {:ok, :completed}
 
-      assert invoke(:complete_recovery, [
-               bearer,
-               "new independent recovery credential",
-               completion
-             ]) == {:ok, :completed}
+      assert {:ok, [%{state: :completed, completion_id: ^completion} = completed]} =
+               cases(registered.account_id)
+
+      assert completed.completed_at
 
       assert invoke(:complete_recovery, [bearer, "ignored retry credential", completion]) ==
                {:ok, :already_completed}
 
       assert invoke(:complete_recovery, [bearer, "replay credential", operation()]) ==
                {:error, :recovery_unavailable}
+
+      assert {:ok, [^completed]} = cases(registered.account_id)
 
       after_account = Ash.get!(Account, registered.account_id, authorize?: false)
       assert after_account.credential_version == before.credential_version + 1
@@ -69,7 +83,7 @@ defmodule NewYou.Proof.RecoveryScenarios do
       assert {:ok, fresh_session} =
                Identity.authenticate_password(
                  request.email,
-                 "new independent recovery credential"
+                 password
                )
 
       assert fresh_session.session_id != session.session_id
@@ -367,6 +381,20 @@ defmodule NewYou.Proof.RecoveryScenarios do
         Scenario.stop(scenario)
       end
     end)
+  end
+
+  def assert_recovery_proof(recovery) do
+    assert [token] =
+             Token
+             |> Ash.Query.filter(recovery_case_id == ^recovery.id)
+             |> Ash.read!(authorize?: false)
+
+    assert token.account_id == recovery.account_id
+    assert token.jti == recovery.proof_jti
+    assert token.purpose == "recovery"
+    assert [%{role: :account_recovery} = intent] = P805.intents(recovery.operation_id)
+    assert intent.source_reference == token.jti
+    {token, intent}
   end
 
   def cases(id) do

@@ -33,17 +33,25 @@ defmodule NewYou.Identity.RecoveryTest do
     end)
   end
 
-  test "a verified-channel request creates durable case authority without consuming proof" do
+  test "a verified-channel request and its replay keep one linked unconsumed proof" do
     P805.with_fixture(fn ->
       {request, registered} = account()
-      assert invoke(:request_recovery, [request.email, "af", operation()]) == :ok
+      operation_id = operation()
+      account = P805.account!(registered.account_id)
+      assert account.email_verified?
+      assert :ok = Identity.request_recovery(request.email, "af", operation_id)
       assert {:ok, [recovery]} = cases(registered.account_id)
+      assert recovery.operation_id == operation_id
       assert recovery.state == :proof_pending
       assert recovery.required_assurance == 1
       assert recovery.satisfied_assurance == 0
       assert is_nil(recovery.completed_at)
-      assert Ash.get!(Account, registered.account_id, authorize?: false).email_verified?
-      assert Ash.get!(Token, recovery.proof_jti, authorize?: false).purpose == "recovery"
+      effects = assert_recovery_proof(recovery)
+
+      assert :ok = Identity.request_recovery(request.email, "af", operation_id)
+      assert {:ok, [^recovery]} = cases(registered.account_id)
+      assert assert_recovery_proof(recovery) == effects
+      assert P805.account!(account.id) == account
     end)
   end
 

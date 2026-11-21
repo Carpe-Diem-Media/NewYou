@@ -74,14 +74,28 @@ defmodule NewYou.Proof.P815PortTest do
         System.find_executable("sh"),
         [
           "-c",
-          "printf 'P815_STARTED\\nP815_OPERATION\\nP815_PHASE_TRANSACTION_ENTERED\\nP815_PHASE_ACCOUNT_LOCKED\\nP815_PHASE_TRANSACTION_ERROR\\nP815_PHASE_private-canary\\nP815_INTERRUPTION_NOT_PROVEN\\n'"
+          """
+          printf '%s\\n' P815_STARTED P815_OPERATION P815_PHASE_TRANSACTION_ENTERED \\
+            P815_PHASE_ACCOUNT_LOCKED P815_PHASE_AWAIT_PROOF P815_PHASE_AWAIT_PROOF_REJECTED \\
+            P815_PHASE_TRANSACTION_ERROR P815_PHASE_private-canary \\
+            P815_DB_LEASE_LOST P815_DB_private-canary P815_INTERRUPTION_NOT_PROVEN
+          """
         ],
         "",
         1_000
       )
 
     assert %{status: :ok, marker: :interruption_not_proven, checkpoint?: false} = result
-    assert result.phases == [:transaction_entered, :account_locked, :transaction_error]
+
+    assert result.phases == [
+             :transaction_entered,
+             :account_locked,
+             :await_proof,
+             :await_proof_rejected,
+             :transaction_error
+           ]
+
+    assert result.database_failures == [:lease_lost]
     refute inspect(result) =~ "private-canary"
   end
 

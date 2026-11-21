@@ -10,6 +10,7 @@ defmodule NewYou.Proof.RecoverySeam do
     :account_locked,
     :resume_verified_channel,
     :await_proof,
+    :await_proof_rejected,
     :checkpoint,
     :transaction_returned,
     :transaction_error,
@@ -20,6 +21,55 @@ defmodule NewYou.Proof.RecoverySeam do
 
   def observe(callback) when is_function(callback, 1),
     do: Process.put({__MODULE__, :observer}, callback)
+
+  @doc "Capture fixed database failure categories for queries issued by this process."
+  def capture_database_failures(callback) do
+    ref = make_ref()
+    event = Keyword.fetch!(Repo.config(), :telemetry_prefix) ++ [:query]
+    :ok = :telemetry.attach(ref, event, &__MODULE__.record_database_failure/4, {self(), ref})
+
+    try do
+      {callback.(), Enum.sort(Process.get(ref, MapSet.new()))}
+    after
+      :telemetry.detach(ref)
+      Process.delete(ref)
+    end
+  end
+
+  @doc false
+  def record_database_failure(_, _, %{result: {:error, error}}, {owner, ref})
+      when owner == self() do
+    case database_failure(error) do
+      nil -> :ok
+      category -> Process.put(ref, MapSet.put(Process.get(ref, MapSet.new()), category))
+    end
+  end
+
+  def record_database_failure(_, _, _, _), do: :ok
+
+  # DBConnection reports closed handles separately from queue failures. A closed
+  # handle proves loss of the lease but does not identify why it closed.
+  defp database_failure(%DBConnection.ConnectionError{
+         message: "connection is closed because of an error, disconnect or timeout"
+       }),
+       do: :lease_lost
+
+  defp database_failure(%DBConnection.ConnectionError{reason: :queue_timeout}),
+    do: :checkout_failed
+
+  defp database_failure(%DBConnection.OwnershipError{}), do: :checkout_failed
+  defp database_failure(%DBConnection.ConnectionError{}), do: :connection_error
+
+  defp database_failure(%Postgrex.Error{postgres: %{code: code}})
+       when code in [:lock_not_available, :deadlock_detected, :serialization_failure],
+       do: :database_conflict
+
+  defp database_failure(%Postgrex.Error{postgres: %{code: code}})
+       when code in [:unique_violation, :foreign_key_violation, :check_violation],
+       do: :constraint_error
+
+  defp database_failure(%Postgrex.Error{}), do: :database_error
+  defp database_failure(_), do: nil
 
   @doc "Run one recovery request on its own unboxed checkout and wait for worker cleanup."
   @spec isolated_fixture_request(binary(), Ecto.UUID.t()) :: :ok
