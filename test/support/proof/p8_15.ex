@@ -308,8 +308,9 @@ defmodule NewYou.Proof.P815 do
         :ok = Sandbox.checkout(Repo, sandbox: false)
 
         # Sample before the request can check out its transaction lease. This
-        # is a conservative bound on the earliest possible 250 ms expiry.
-        deadline = System.monotonic_time(:millisecond) + 250
+        # is a conservative bound on the earliest possible lease expiry.
+        deadline =
+          System.monotonic_time(:millisecond) + Identity.Recovery.request_transaction_timeout_ms()
 
         Process.put(
           RegistrationSeam,
@@ -474,7 +475,7 @@ defmodule NewYou.Proof.P815 do
   end
 
   defp await_timeout_release(parent, reference) do
-    # The existing 250ms request lease expires while this callback is paused.
+    # The request lease expires while this callback is paused.
     # The controller releases it only after PostgreSQL reports this XID aborted.
     receive do
       {^reference, :aborted_transaction_observed} ->
@@ -1246,6 +1247,99 @@ defmodule NewYou.Proof.P815 do
   defp safe_reset({:ok, :reset}), do: :reset
   defp safe_reset(_), do: :denied
   defp digest(value), do: :crypto.hash(:sha256, value) |> Base.encode16(case: :upper)
+
+  def characterize_budget(scenario, replicate) do
+    P805.with_fixture(fn ->
+      fixtures = for _ <- 1..2, do: resumable_fixture()
+
+      samples = Enum.map(fixtures, &budget_input(&1, scenario))
+
+      diagnostic =
+        run_restart(%{
+          mode: "sample_budget",
+          samples: samples,
+          signing_secret:
+            Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
+        })
+
+      assert diagnostic.status == :ok and diagnostic.cleanup == :confirmed
+      assert diagnostic.marker == :requested
+      assert length(diagnostic.budget_reports) == 2
+      assert length(diagnostic.lease_reports) == 2
+
+      Enum.zip([fixtures, diagnostic.budget_reports, diagnostic.lease_reports])
+      |> Enum.with_index(1)
+      |> Enum.each(fn {{fixture, timing, lease}, ordinal} ->
+        {transaction, timing} = Map.pop!(timing, :transaction)
+        {success_count, timing} = Map.pop!(timing, :account_success_count)
+        effect = budget_effect(fixture, scenario, transaction, lease)
+
+        IO.puts(
+          :stderr,
+          "P815_BUDGET_SAMPLE " <>
+            Jason.encode!(%{
+              scenario: scenario,
+              replicate: replicate,
+              ordinal: ordinal,
+              effect: effect,
+              transaction: transaction,
+              account_success_count: success_count,
+              timing_us: timing,
+              lease: lease
+            })
+        )
+
+        assert scenario != :replay or effect == :replayed
+        assert scenario != :contended or lease.closure == :checkout_deadline
+      end)
+    end)
+  end
+
+  defp budget_input(fixture, scenario) do
+    case_id = fixture.recovery.id
+    operation_id = fixture.recovery.operation_id
+    RecoveryLease.verify_fixture!(case_id, operation_id)
+
+    if scenario == :replay do
+      :ok = Identity.request_recovery(fixture.request.email, "af", operation_id)
+      assert_resumed_request(fixture)
+    end
+
+    email =
+      case scenario do
+        :unknown -> P805.request().email
+        :malformed -> "malformed"
+        _ -> fixture.request.email
+      end
+
+    %{
+      email: email,
+      case_id: case_id,
+      operation_id: operation_id,
+      locale: "af",
+      budget: true,
+      hold_lock: scenario == :contended,
+      lease_probe: "observe"
+    }
+  end
+
+  defp budget_effect(fixture, scenario, transaction, lease) do
+    state = Ash.get!(RecoveryCase, fixture.recovery.id, authorize?: false).state
+
+    case {scenario, state} do
+      {:replay, :proof_pending} ->
+        assert_resumed_request(fixture)
+        NewYou.Proof.RecoveryBudget.replay_effect(transaction, lease)
+
+      {:known, :proof_pending} ->
+        assert_resumed_request(fixture)
+        :issued
+
+      {_, :held_manual_review} ->
+        assert_resume_rolled_back(fixture)
+        :unchanged
+    end
+  end
 
   def calibrate_recovery_lease(mode) when mode in [:observe, :baseline, :expiry, :checkin] do
     P805.with_fixture(fn ->

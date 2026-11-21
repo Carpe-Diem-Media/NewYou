@@ -52,6 +52,14 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
+  defmacrop budget_stage(stage) do
+    if Mix.env() == :test do
+      quote do: NewYou.Proof.RecoveryBudget.stage(unquote(stage))
+    else
+      quote do: :ok
+    end
+  end
+
   defmacrop checkpoint do
     if Mix.env() == :test do
       quote do
@@ -74,6 +82,10 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
+  @doc false
+  @spec request_transaction_timeout_ms() :: pos_integer()
+  def request_transaction_timeout_ms, do: 350
+
   if @enabled do
     @spec request(term(), term(), term()) :: :ok
     def request(email, locale, operation_id) do
@@ -93,7 +105,7 @@ defmodule NewYou.Identity.Recovery do
                 trace(:transaction_entered)
                 request_locked(email, locale, operation_id)
               end,
-              timeout: 250
+              timeout: request_transaction_timeout_ms()
             )
 
           lease_stage(:finished)
@@ -106,6 +118,7 @@ defmodule NewYou.Identity.Recovery do
       rescue
         _ -> trace(:transaction_exception)
       after
+        budget_stage(:padding)
         Process.sleep(max(500 - (System.monotonic_time(:millisecond) - started), 0))
       end
 
@@ -123,6 +136,7 @@ defmodule NewYou.Identity.Recovery do
            |> Ash.Query.lock(:for_update)
            |> Ash.read_one(authorize?: false),
          :ok <- trace(:account_locked),
+         :ok <- budget_stage(:case_lookup),
          true <- account.account_status == :open and account.credential_status == :active,
          {:ok, prior} <-
            RecoveryCase
@@ -279,6 +293,7 @@ defmodule NewYou.Identity.Recovery do
              },
              Config.token_signer(Account)
            ),
+         :ok <- budget_stage(:token),
          {:ok, proof} <-
            Ash.create(
              Token,
@@ -287,6 +302,7 @@ defmodule NewYou.Identity.Recovery do
              authorize?: false,
              context: %{ash_authentication: %{user: account}}
            ),
+         :ok <- budget_stage(:communications),
          {:ok, _} <-
            Communications.establish_recovery(%{
              source_operation_id: recovery.operation_id,
@@ -303,6 +319,7 @@ defmodule NewYou.Identity.Recovery do
              proof_jti: proof.jti,
              account_binding: binding(account, recovery.required_assurance)
            }) do
+      budget_stage(:commit)
       checkpoint()
       {:ok, :pending}
     else

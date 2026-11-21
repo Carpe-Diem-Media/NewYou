@@ -190,7 +190,10 @@ defmodule NewYou.Identity.RecoveryTest do
           end)
 
         assert_receive {^reference, :checkpoint, backend, xid}
-        assert log =~ "checked out the connection for longer than 250ms"
+
+        assert log =~
+                 "checked out the connection for longer than #{NewYou.Identity.Recovery.request_transaction_timeout_ms()}ms"
+
         assert P805.scalar("SELECT pg_backend_pid()") == owner_backend
         refute backend == owner_backend
         assert P805.scalar("SELECT pg_xact_status($1::text::xid8)", [xid]) == "aborted"

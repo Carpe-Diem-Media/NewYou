@@ -1,6 +1,7 @@
 defmodule NewYou.Proof.RecoveryLease do
   @moduledoc false
   alias Ecto.Adapters.SQL.Sandbox
+  alias NewYou.Identity.Recovery
   alias NewYou.Repo
 
   @closures ~w(checkout_deadline owner_checkin none unknown unobserved)a
@@ -87,6 +88,8 @@ defmodule NewYou.Proof.RecoveryLease do
   end
 
   def stage(stage) do
+    NewYou.Proof.RecoveryBudget.stage(if stage == :request_locked, do: :account, else: stage)
+
     if state = Process.get(__MODULE__) do
       state =
         case stage do
@@ -114,7 +117,8 @@ defmodule NewYou.Proof.RecoveryLease do
   def calibrate_at_entry, do: inject(Process.get(__MODULE__))
 
   # Only the calibration child deliberately holds or checks in its own lease.
-  defp inject(%{mode: "expiry"}), do: Process.sleep(300)
+  defp inject(%{mode: "expiry"}),
+    do: Process.sleep(Recovery.request_transaction_timeout_ms() + 50)
 
   defp inject(%{mode: "checkin", probe: {pid, _, _}}) do
     ref = Process.monitor(pid)
@@ -172,12 +176,13 @@ defmodule NewYou.Proof.RecoveryLease do
   end
 
   def classify({:shutdown, %DBConnection.ConnectionError{message: msg}}, client) do
+    deadline = Recovery.request_transaction_timeout_ms()
+
+    timeout_line =
+      "client #{client} timed out because it queued and checked out the connection for longer than #{deadline}ms"
+
     case :binary.split(msg, "\n") |> hd() do
-      line
-      when line ==
-             "client " <>
-               client <>
-               " timed out because it queued and checked out the connection for longer than 250ms" ->
+      ^timeout_line ->
         :checkout_deadline
 
       line when line == client <> " checked in the connection owned by " <> client ->

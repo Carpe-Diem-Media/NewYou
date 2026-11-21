@@ -35,6 +35,13 @@ defmodule NewYou.Proof.P815RestartRequest do
     end)
   end
 
+  def sample([first, second]) do
+    Logger.configure(level: :emergency)
+    RecoverySeam.observe(&NewYou.Proof.RecoveryBudget.observe_outcome/1)
+    Enum.each([first, second], &request/1)
+    :requested
+  end
+
   defp requested_result(%{"rollback_request_once" => true}, attempt) when attempt > 1,
     do: :request_retried
 
@@ -52,14 +59,31 @@ defmodule NewYou.Proof.P815RestartRequest do
   end
 
   defp request_on_checkout(input) do
-    callback = fn ->
-      Identity.request_recovery(input["email"], input["locale"], input["operation_id"])
-    end
+    callback = fn -> measured_request(input) end
 
-    if Map.has_key?(input, "lease_probe") or RecoveryLease.hosted?() do
+    if input["budget"] == true or Map.has_key?(input, "lease_probe") or RecoveryLease.hosted?() do
       RecoveryLease.observe(input, callback)
     else
       callback.()
+    end
+  end
+
+  defp measured_request(input) do
+    call = fn ->
+      Identity.request_recovery(input["email"], input["locale"], input["operation_id"])
+    end
+
+    case input do
+      %{"budget" => true, "hold_lock" => true} ->
+        NewYou.Proof.RecoveryBudget.with_account_lock(input["case_id"], fn ->
+          NewYou.Proof.RecoveryBudget.measure(call)
+        end)
+
+      %{"budget" => true} ->
+        NewYou.Proof.RecoveryBudget.measure(call)
+
+      _ ->
+        call.()
     end
   end
 
@@ -120,6 +144,9 @@ Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
 
     result =
       case input["mode"] do
+        "sample_budget" ->
+          NewYou.Proof.P815RestartRequest.sample(input["samples"])
+
         "request" ->
           NewYou.Proof.P815RestartRequest.run(input)
 

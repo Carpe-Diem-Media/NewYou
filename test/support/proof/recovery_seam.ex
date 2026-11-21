@@ -48,6 +48,10 @@ defmodule NewYou.Proof.RecoverySeam do
     end
   end
 
+  def record_database_failure(_, measurements, %{result: {:ok, _}}, {owner, _})
+      when owner == self(),
+      do: NewYou.Proof.RecoveryBudget.successful_query(measurements)
+
   def record_database_failure(_, _, _, _), do: :ok
 
   # DBConnection reports closed handles separately from queue failures. A closed
