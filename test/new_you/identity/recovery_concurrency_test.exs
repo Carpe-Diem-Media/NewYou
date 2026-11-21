@@ -465,6 +465,18 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.interrupted_acceptance()
   end
 
+  test "pre-commit request termination rolls back before a new worker resumes the same case" do
+    assert P815.interrupted_request() == :ok
+  end
+
+  test "an already aborted request cannot prove rollback by terminating its worker" do
+    assert_raise ExUnit.AssertionError,
+                 ~r/exact transaction was no longer in progress at the cut/,
+                 fn ->
+                   P815.interrupted_request(expire_before_cut?: true)
+                 end
+  end
+
   test "recovery delivery and completion receipts survive fresh BEAM processes" do
     assert P815.restart_proof() == :ok
   end
