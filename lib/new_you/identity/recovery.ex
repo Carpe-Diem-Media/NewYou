@@ -44,6 +44,14 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
+  defmacrop lease_stage(stage) do
+    if Mix.env() == :test do
+      quote do: NewYou.Proof.RecoveryLease.stage(unquote(stage))
+    else
+      quote do: :ok
+    end
+  end
+
   defmacrop checkpoint do
     if Mix.env() == :test do
       quote do
@@ -75,14 +83,20 @@ defmodule NewYou.Identity.Recovery do
         with {:ok, email} <- NewYou.Identity.Email.canonicalize(email),
              true <- locale in ["en", "af"],
              {:ok, operation_id} <- Ecto.UUID.cast(operation_id) do
+          lease_stage(:before_transact)
+
           result =
             transaction(
               fn ->
+                lease_stage(:transaction_entered)
+                lease_stage(:request_locked)
                 trace(:transaction_entered)
                 request_locked(email, locale, operation_id)
               end,
               timeout: 250
             )
+
+          lease_stage(:finished)
 
           case result do
             {:ok, _} -> trace(:transaction_returned)
@@ -172,6 +186,8 @@ defmodule NewYou.Identity.Recovery do
          %{state: :held_manual_review, satisfied_assurance: 0, proof_jti: nil} = recovery,
          %{email_verified?: true} = account
        ) do
+    lease_stage(:resume_verified_channel)
+
     if recovery.account_binding ==
          binding(%{account | email_verified?: false}, recovery.required_assurance) and
          recovery.required_assurance >= required_assurance(account) do
@@ -251,6 +267,8 @@ defmodule NewYou.Identity.Recovery do
   end
 
   defp issue_proof(account, recovery) do
+    lease_stage(:issue_proof)
+
     with {:ok, bearer, claims} <-
            Joken.generate_and_sign(
              Config.default_claims(Account, token_lifetime: {15, :minutes}),
@@ -279,6 +297,7 @@ defmodule NewYou.Identity.Recovery do
              locale: recovery.locale
            }),
          :ok <- trace(:await_proof),
+         :ok <- lease_stage(:binding),
          {:ok, _} <-
            transition(recovery, :await_proof, %{
              proof_jti: proof.jti,
@@ -641,6 +660,7 @@ defmodule NewYou.Identity.Recovery do
 
   @doc false
   def transition(recovery, action, attrs) do
+    lease_stage(:transition)
     event = %{"action" => Atom.to_string(action), "version" => recovery.version + 1}
 
     result =

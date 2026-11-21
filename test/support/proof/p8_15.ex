@@ -9,6 +9,7 @@ defmodule NewYou.Proof.P815 do
   alias NewYou.Proof.{
     CutPoints,
     P805,
+    RecoveryLease,
     RecoveryScenarios,
     RecoverySeam,
     RegistrationSeam,
@@ -1246,11 +1247,81 @@ defmodule NewYou.Proof.P815 do
   defp safe_reset(_), do: :denied
   defp digest(value), do: :crypto.hash(:sha256, value) |> Base.encode16(case: :upper)
 
-  defp restart_call(fields) do
-    payload = Jason.encode!(fields)
-    executable = System.find_executable("mix")
+  def calibrate_recovery_lease(mode) when mode in [:observe, :baseline, :expiry, :checkin] do
+    P805.with_fixture(fn ->
+      fixture = resumable_fixture()
+      recovery = fixture.recovery
 
-    case NewYou.Proof.P815Port.run(executable, ["run", "test/proof/p8_15_restart.exs"], payload) do
+      fields = %{
+        mode: "request",
+        lease_probe: Atom.to_string(mode),
+        interrupt_request: true,
+        skip_interrupt: true,
+        expected_state: "proof_pending",
+        email: fixture.request.email,
+        case_id: recovery.id,
+        operation_id: recovery.operation_id,
+        locale: "af",
+        signing_secret:
+          Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
+      }
+
+      if mode == :baseline do
+        assert_raise RuntimeError, "Recovery disposable job database verification failed", fn ->
+          RecoveryLease.verify_fixture!(recovery.id, Ecto.UUID.generate())
+        end
+      end
+
+      diagnostic = run_restart(fields)
+      assert diagnostic.status == :ok and diagnostic.cleanup == :confirmed
+      assert diagnostic.marker == :interruption_not_proven
+      assert [report] = diagnostic.lease_reports
+      IO.puts(:stderr, "P815_CALIBRATION #{mode} #{inspect(report)}")
+      assert report.pre_callback_us >= 0 and report.callback_to_result_us >= 0
+
+      expected = %{
+        observe: :none,
+        baseline: :unobserved,
+        expiry: :checkout_deadline,
+        checkin: :owner_checkin
+      }
+
+      assert report.closure == Map.fetch!(expected, mode)
+      unchanged? = Ash.get!(Account, fixture.account.id, authorize?: false) == fixture.account
+      assert unchanged?, "calibration changed the verified account"
+
+      if mode in [:expiry, :checkin] do
+        assert report.error == :lease_lost
+        assert report.operation == :transition
+        assert :checkpoint not in diagnostic.phases
+        assert :transaction_error in diagnostic.phases
+        assert_resume_rolled_back(fixture)
+      else
+        assert report.error == :none
+        assert :transaction_returned in diagnostic.phases
+        assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).state == :proof_pending
+        assert timeout_effect_counts(recovery) == {1, 1}
+      end
+
+      report
+    end)
+  end
+
+  defp run_restart(fields) do
+    if fields.mode == "request" and
+         (RecoveryLease.hosted?() or Map.has_key?(fields, :lease_probe)) do
+      RecoveryLease.verify_fixture!(fields.case_id, fields.operation_id)
+    end
+
+    NewYou.Proof.P815Port.run(
+      System.find_executable("mix"),
+      ["run", "test/proof/p8_15_restart.exs"],
+      Jason.encode!(fields)
+    )
+  end
+
+  defp restart_call(fields) do
+    case run_restart(fields) do
       %{
         status: :interrupted,
         cleanup: :confirmed,
