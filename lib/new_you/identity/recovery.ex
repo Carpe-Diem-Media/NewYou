@@ -23,6 +23,7 @@ defmodule NewYou.Identity.Recovery do
 
   @enabled Mix.env() in [:dev, :test] and
              Application.compile_env(:new_you, :verification_development_fixtures, false)
+  @diagnostics? Mix.env() == :test
   @terminal [:completed, :failed, :expired, :cancelled]
   @resources [
     Account,
@@ -37,7 +38,7 @@ defmodule NewYou.Identity.Recovery do
   ]
 
   defmacrop trace(stage) do
-    if Mix.env() == :test do
+    if @diagnostics? do
       quote do: NewYou.Proof.RecoverySeam.trace(unquote(stage))
     else
       quote do: :ok
@@ -45,7 +46,7 @@ defmodule NewYou.Identity.Recovery do
   end
 
   defmacrop checkpoint do
-    if Mix.env() == :test do
+    if @diagnostics? do
       quote do
         NewYou.Proof.RecoverySeam.trace(:checkpoint)
         NewYou.Proof.RegistrationSeam.checkpoint()
@@ -619,10 +620,16 @@ defmodule NewYou.Identity.Recovery do
   def transition(recovery, action, attrs) do
     event = %{"action" => Atom.to_string(action), "version" => recovery.version + 1}
 
-    Ash.update(recovery, Map.put(attrs, :history, recovery.history ++ [event]),
-      action: action,
-      authorize?: false
-    )
+    result =
+      Ash.update(recovery, Map.put(attrs, :history, recovery.history ++ [event]),
+        action: action,
+        authorize?: false
+      )
+
+    if @diagnostics? and action == :await_proof and match?({:error, _}, result),
+      do: trace(:await_proof_rejected)
+
+    result
   end
 
   @doc false

@@ -281,7 +281,8 @@ defmodule NewYou.Proof.P815 do
         assert_timeout_rollback(fixture)
         send(worker, {reference, :aborted_transaction_observed})
         await_lease_expired(reference)
-        phases = await_timeout_result(reference)
+        {phases, database_failures} = await_timeout_result(reference)
+        assert :lease_lost in database_failures
         refute :checkpoint in phases
         assert stage in phases
         assert :transaction_exception in phases or :transaction_error in phases
@@ -326,11 +327,13 @@ defmodule NewYou.Proof.P815 do
     install_timeout_observer(parent, reference, fixture, stage, opts)
 
     try do
-      :ok =
-        Identity.request_recovery(fixture.request.email, "af", fixture.recovery.operation_id)
+      {:ok, database_failures} =
+        NewYou.Proof.RecoverySeam.capture_database_failures(fn ->
+          Identity.request_recovery(fixture.request.email, "af", fixture.recovery.operation_id)
+        end)
 
       phases = Process.get({__MODULE__, :timeout_phases}, []) |> Enum.reverse()
-      send(parent, {reference, :timeout_request_completed, phases})
+      send(parent, {reference, :timeout_request_completed, {phases, database_failures}})
     after
       Process.delete({NewYou.Proof.RecoverySeam, :observer})
       Process.delete({__MODULE__, :timeout_phases})
@@ -425,7 +428,7 @@ defmodule NewYou.Proof.P815 do
 
   defp await_timeout_result(reference) do
     receive do
-      {^reference, :timeout_request_completed, phases} -> phases
+      {^reference, :timeout_request_completed, result} -> result
     after
       5_000 -> flunk("neutral request outcome was not received after timeout")
     end
