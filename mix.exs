@@ -119,7 +119,7 @@ defmodule NewYou.MixProject do
       {:credo, "== 1.7.19", only: [:dev, :test], runtime: false},
       {:sobelow, "== 0.16.0", only: [:dev, :test], runtime: false},
       {:dialyxir, "== 1.4.8", only: [:dev, :test], runtime: false},
-      {:phoenix, "~> 1.8.16"},
+      {:phoenix, "~> 1.8.17"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.13"},
       {:postgrex, ">= 0.0.0"},
