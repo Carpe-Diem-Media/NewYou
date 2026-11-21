@@ -2,9 +2,10 @@ defmodule NewYou.Proof.P815RestartRequest do
   @moduledoc false
   alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.{Identity, Repo}
+  alias NewYou.Proof.RecoverySeam
 
   def run(input) do
-    NewYou.Proof.RecoverySeam.observe(fn stage ->
+    RecoverySeam.observe(fn stage ->
       IO.puts("P815_PHASE_" <> (stage |> Atom.to_string() |> String.upcase()))
     end)
 
@@ -35,8 +36,15 @@ defmodule NewYou.Proof.P815RestartRequest do
   defp requested_result(_input, _attempt), do: :requested
 
   defp request(input) do
-    Sandbox.unboxed_run(Repo, fn ->
-      :ok = Identity.request_recovery(input["email"], input["locale"], input["operation_id"])
+    {:ok, failures} =
+      RecoverySeam.capture_database_failures(fn ->
+        Sandbox.unboxed_run(Repo, fn ->
+          Identity.request_recovery(input["email"], input["locale"], input["operation_id"])
+        end)
+      end)
+
+    Enum.each(failures, fn category ->
+      IO.puts("P815_DB_" <> (category |> Atom.to_string() |> String.upcase()))
     end)
   end
 
