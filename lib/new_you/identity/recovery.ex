@@ -311,11 +311,12 @@ defmodule NewYou.Identity.Recovery do
   @spec delivery_eligibility(term(), term(), term(), term()) ::
           :ok | {:error, :source_invalid | :capability_unavailable}
   def delivery_eligibility(reference, destination, locale, operation_id) do
-    with {:ok, account, %{operation_id: ^operation_id} = recovery, _proof} <-
-           delivery_source(reference, destination, locale) do
-      verify_delivery_binding(account, recovery)
-    else
-      _ -> {:error, :source_invalid}
+    case delivery_source(reference, destination, locale) do
+      {:ok, account, %{operation_id: ^operation_id} = recovery, _proof} ->
+        verify_delivery_binding(account, recovery)
+
+      _ ->
+        {:error, :source_invalid}
     end
   end
 
