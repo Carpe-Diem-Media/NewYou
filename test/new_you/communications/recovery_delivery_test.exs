@@ -59,17 +59,25 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
     test "provider #{outcome} neither consumes proof nor establishes recovery success" do
       P805.with_fixture(fn ->
         {_request, recovery, intent} = pending("en")
-        Process.put(:p810_provider, fn _, _ -> unquote(outcome) end)
+        calls = count_provider(unquote(outcome))
         assert {:ok, :processed} = Communications.execute(intent.id)
         assert Ash.get!(RecoveryCase, recovery.id, authorize?: false) == recovery
         assert Ash.get!(Token, intent.source_reference, authorize?: false).purpose == "recovery"
         assert length(attempts(intent)) == 1
 
         if unquote(outcome) in [:accepted, :unknown] do
-          Process.put(:p810_provider, fn _, _ -> flunk("ambiguous submission must not repeat") end)
+          before = committed_delivery_state(intent)
+          assert before == {:reconciliation_required, nil, 1}
+          assert {:ok, :waiting} = Communications.execute(intent.id)
+
+          without_signing_key(fn ->
+            assert {:ok, :waiting} = Communications.execute(intent.id)
+            assert committed_delivery_state(intent) == before
+          end)
 
           assert {:ok, :waiting} = Communications.execute(intent.id)
-          assert length(attempts(intent)) == 1
+          assert committed_delivery_state(intent) == before
+          assert :atomics.get(calls, 1) == 1
         end
       end)
     after
@@ -148,6 +156,48 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
     Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
   end
 
+  test "a temporary signing-key outage holds the proof intent until the same key returns" do
+    P805.with_fixture(fn ->
+      {_request, recovery, intent} = pending("en")
+      assert intent.dispatch_disposition == :held
+      assert {:ok, _} = NewYou.Content.RecoveryMessage.eligible(intent)
+
+      assert :ok = source_eligibility(intent)
+
+      account = Ash.get!(Account, recovery.account_id, authorize?: false)
+      proof_query = Ash.Query.filter(Token, recovery_case_id == ^recovery.id)
+      assert [proof] = Ash.read!(proof_query, authorize?: false)
+      calls = count_provider(:delivered)
+
+      during_outage =
+        without_signing_key(fn ->
+          outcome = Communications.execute(intent.id)
+          {outcome, committed_delivery_state(intent), :atomics.get(calls, 1)}
+        end)
+
+      assert DateTime.compare(DateTime.utc_now(), proof.expires_at) == :lt
+      restored = Communications.execute(intent.id)
+      replay = Communications.execute(intent.id)
+
+      after_restoration =
+        {restored, replay, committed_delivery_state(intent), :atomics.get(calls, 1)}
+
+      # Collect both outcomes before asserting so RED shows the committed
+      # closure and the inability to deliver the same intent after restoration.
+      assert {during_outage, after_restoration} ==
+               {{{:ok, :held}, {:held, nil, 0}, 0},
+                {{:ok, :processed}, {:ok, :closed}, {:closed, "delivery_observed", 1}, 1}}
+
+      assert Ash.get!(Account, account.id, authorize?: false) == account
+      assert Ash.get!(RecoveryCase, recovery.id, authorize?: false) == recovery
+      assert Ash.read!(proof_query, authorize?: false) == [proof]
+      assert [%{id: intent_id}] = P805.intents(recovery.operation_id)
+      assert intent_id == intent.id
+    end)
+  after
+    Process.delete(:p810_provider)
+  end
+
   test "late content cannot revive revoked proof or bypass private binding policies" do
     P805.with_fixture(fn ->
       Process.put({NewYou.Content.RecoveryMessage, :evidence_root}, "/missing-recovery-content")
@@ -161,12 +211,17 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
       proof = Ash.get!(Token, recovery.proof_jti, authorize?: false)
       Ash.update!(proof, %{}, action: :revoke_recovery, authorize?: false)
       Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
-      Process.put(:p810_provider, fn _, _ -> flunk("revoked proof cannot send") end)
-      assert {:ok, :source_invalid} = Communications.execute(intent.id)
-      assert attempts(intent) == []
-      assert Ash.get!(MessageIntent, intent.id, authorize?: false).dispatch_disposition == :closed
+      assert {:error, :source_invalid} = source_eligibility(intent)
+      calls = count_provider(:delivered)
+
+      without_signing_key(fn ->
+        assert {:ok, :source_invalid} = Communications.execute(intent.id)
+        assert committed_delivery_state(intent) == {:closed, "source_invalid", 0}
+      end)
+
       assert Ash.get!(RecoveryCase, recovery.id, authorize?: false) == recovery
       assert {:ok, :closed} = Communications.execute(intent.id)
+      assert :atomics.get(calls, 1) == 0
     end)
   after
     Process.delete(:p810_provider)
@@ -382,6 +437,60 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
       DeliveryAttempt
       |> Ash.Query.filter(message_intent_id == ^intent.id)
       |> Ash.read!(authorize?: false)
+
+  defp count_provider(outcome) do
+    calls = :atomics.new(1, [])
+
+    Process.put(:p810_provider, fn _, _ ->
+      :atomics.add(calls, 1, 1)
+      outcome
+    end)
+
+    calls
+  end
+
+  defp source_eligibility(intent) do
+    {:ok, {:ok, result}} =
+      Ash.transact([Account, RecoveryCase, Token], fn ->
+        {:ok,
+         Identity.DeliveryEligibility.recovery(
+           intent.source_reference,
+           intent.destination,
+           intent.locale,
+           intent.source_operation_id
+         )}
+      end)
+
+    result
+  end
+
+  defp committed_delivery_state(intent) do
+    executor_backend = P805.scalar("SELECT pg_backend_pid()")
+
+    Task.async(fn ->
+      Ecto.Adapters.SQL.Sandbox.unboxed_run(Repo, fn ->
+        assert P805.scalar("SELECT pg_backend_pid()") != executor_backend
+        current = Ash.get!(MessageIntent, intent.id, authorize?: false)
+        {current.dispatch_disposition, current.terminal_reason, length(attempts(intent))}
+      end)
+    end)
+    |> Task.await()
+  end
+
+  defp without_signing_key(callback) do
+    key = :identity_token_signing_secret
+    previous = Application.fetch_env(:new_you, key)
+
+    try do
+      Application.delete_env(:new_you, key)
+      callback.()
+    after
+      case previous do
+        {:ok, value} -> Application.put_env(:new_you, key, value)
+        :error -> Application.delete_env(:new_you, key)
+      end
+    end
+  end
 
   defp operation do
     id = Ecto.UUID.generate()

@@ -75,6 +75,11 @@ defmodule NewYou.Communications.Executor do
       {:error, :source_invalid} ->
         close_source(intent)
 
+      {:error, :capability_unavailable}
+      when intent.role == :account_recovery and
+             intent.dispatch_disposition == :reconciliation_required ->
+        {:ok, :waiting}
+
       {:error, :capability_unavailable} ->
         with {:ok, _} <- disposition(intent, :held), do: {:ok, :held}
     end
