@@ -23,7 +23,6 @@ defmodule NewYou.Identity.Recovery do
 
   @enabled Mix.env() in [:dev, :test] and
              Application.compile_env(:new_you, :verification_development_fixtures, false)
-  @diagnostics? Mix.env() == :test
   @terminal [:completed, :failed, :expired, :cancelled]
   @resources [
     Account,
@@ -38,7 +37,7 @@ defmodule NewYou.Identity.Recovery do
   ]
 
   defmacrop trace(stage) do
-    if @diagnostics? do
+    if Mix.env() == :test do
       quote do: NewYou.Proof.RecoverySeam.trace(unquote(stage))
     else
       quote do: :ok
@@ -46,10 +45,21 @@ defmodule NewYou.Identity.Recovery do
   end
 
   defmacrop checkpoint do
-    if @diagnostics? do
+    if Mix.env() == :test do
       quote do
         NewYou.Proof.RecoverySeam.trace(:checkpoint)
         NewYou.Proof.RegistrationSeam.checkpoint()
+      end
+    else
+      quote do: :ok
+    end
+  end
+
+  defmacrop trace_transition_failure(action, result) do
+    if Mix.env() == :test do
+      quote do
+        if unquote(action) == :await_proof and match?({:error, _}, unquote(result)),
+          do: NewYou.Proof.RecoverySeam.trace(:await_proof_rejected)
       end
     else
       quote do: :ok
@@ -626,9 +636,7 @@ defmodule NewYou.Identity.Recovery do
         authorize?: false
       )
 
-    if @diagnostics? and action == :await_proof and match?({:error, _}, result),
-      do: trace(:await_proof_rejected)
-
+    trace_transition_failure(action, result)
     result
   end
 
