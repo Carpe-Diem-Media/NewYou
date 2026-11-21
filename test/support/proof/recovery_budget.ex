@@ -9,6 +9,7 @@ defmodule NewYou.Proof.RecoveryBudget do
 
   def measure(callback) do
     started = System.monotonic_time(:microsecond)
+    Process.put({__MODULE__, :account_queries}, {0, 0, 0})
     Process.put({__MODULE__, :outcome}, :unobserved)
     Process.put(__MODULE__, {:prepare, started, %{}})
 
@@ -18,10 +19,13 @@ defmodule NewYou.Proof.RecoveryBudget do
       {stage, time, durations} = Process.get(__MODULE__)
       durations = Map.put(durations, stage, stopped - time)
       values = [stopped - started | Enum.map(@stages, &Map.get(durations, &1, -1))]
+      {count, total, query} = Process.get({__MODULE__, :account_queries})
+      values = values ++ [count, total, query]
       outcome = Process.get({__MODULE__, :outcome})
       IO.puts("P815_BUDGET #{outcome} " <> Enum.map_join(values, " ", &min(&1, @limit)))
       result
     after
+      Process.delete({__MODULE__, :account_queries})
       Process.delete({__MODULE__, :outcome})
       Process.delete(__MODULE__)
     end
@@ -38,6 +42,28 @@ defmodule NewYou.Proof.RecoveryBudget do
   end
 
   def stage(_), do: :ok
+
+  # Ecto total_time includes available queue, query and decode times, excluding
+  # idle time. Missing measurements make the corresponding sum unknown.
+  def successful_query(measurements) do
+    if match?({:account, _, _}, Process.get(__MODULE__)) do
+      key = {__MODULE__, :account_queries}
+      {count, total, query} = Process.get(key)
+
+      Process.put(
+        key,
+        {min(count + 1, @limit), add_time(total, measurements[:total_time]),
+         add_time(query, measurements[:query_time])}
+      )
+    end
+
+    :ok
+  end
+
+  defp add_time(sum, native) when sum >= 0 and is_integer(native) and native >= 0,
+    do: min(sum + System.convert_time_unit(native, :native, :microsecond), @limit)
+
+  defp add_time(_, _), do: -1
 
   # Called inside the child after RecoveryLease verified the parent's committed
   # fixture and this disposable database. Hold one fixture row on another lease.
@@ -99,7 +125,9 @@ defmodule NewYou.Proof.RecoveryBudget do
   def parse("P815_BUDGET " <> payload) do
     [label | parts] = String.split(payload, " ")
     outcome = Enum.find(@outcomes, &(Atom.to_string(&1) == label))
-    fields = [:public | @stages]
+
+    fields =
+      [:public | @stages] ++ [:account_success_count, :account_adapter_total, :account_query]
 
     if outcome != nil and length(parts) == length(fields) and
          Enum.all?(parts, &Regex.match?(~r/\A(?:-1|[0-9]{1,7})\z/, &1)) do

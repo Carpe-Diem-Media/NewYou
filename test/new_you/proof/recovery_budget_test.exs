@@ -20,6 +20,40 @@ defmodule NewYou.Proof.RecoveryBudgetTest do
     assert Process.get(RecoveryBudget) == nil
   end
 
+  test "only successful query events from the owner inside the Account stage accumulate" do
+    measurements = %{
+      query_time: System.convert_time_unit(125, :microsecond, :native),
+      total_time: System.convert_time_unit(200, :microsecond, :native)
+    }
+
+    event = fn data, owner ->
+      NewYou.Proof.RecoverySeam.record_database_failure(
+        [],
+        data,
+        %{result: {:ok, :private}},
+        {owner, make_ref()}
+      )
+    end
+
+    line =
+      ExUnit.CaptureIO.capture_io(fn ->
+        RecoveryBudget.measure(fn ->
+          event.(measurements, self())
+          RecoveryBudget.stage(:account)
+          event.(measurements, :unrelated)
+          event.(measurements, self())
+          event.(Map.delete(measurements, :query_time), self())
+          RecoveryBudget.stage(:case_lookup)
+          event.(measurements, self())
+        end)
+      end)
+
+    assert [report] = RecoveryBudget.parse(String.trim(line))
+    assert report.account_success_count == 2
+    assert report.account_adapter_total == 400
+    assert report.account_query == -1
+  end
+
   test "two calls in one child retain their own terminal outcomes" do
     lines =
       ExUnit.CaptureIO.capture_io(fn ->

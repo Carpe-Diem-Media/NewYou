@@ -376,11 +376,16 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     end
   end
 
-  if System.get_env("P815_CHARACTERIZE_BUDGET") == "1" do
-    for scenario <- [:known, :unknown, :malformed, :replay, :contended], replicate <- 1..3 do
-      test "hosted budget #{scenario} pair #{replicate}" do
-        P815.characterize_budget(unquote(scenario), unquote(replicate))
-      end
+  budget_scenarios =
+    case System.get_env("P815_CHARACTERIZE_BUDGET") do
+      "1" -> [:known, :unknown, :malformed, :replay, :contended]
+      "account" -> [:known, :unknown]
+      _ -> []
+    end
+
+  for scenario <- budget_scenarios, replicate <- 1..3 do
+    test "hosted budget #{scenario} pair #{replicate}" do
+      P815.characterize_budget(unquote(scenario), unquote(replicate))
     end
   end
 

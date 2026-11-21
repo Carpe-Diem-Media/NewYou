@@ -1270,6 +1270,7 @@ defmodule NewYou.Proof.P815 do
       |> Enum.with_index(1)
       |> Enum.each(fn {{fixture, timing, lease}, ordinal} ->
         {transaction, timing} = Map.pop!(timing, :transaction)
+        {success_count, timing} = Map.pop!(timing, :account_success_count)
         effect = budget_effect(fixture, scenario, transaction, lease)
 
         IO.puts(
@@ -1281,6 +1282,7 @@ defmodule NewYou.Proof.P815 do
               ordinal: ordinal,
               effect: effect,
               transaction: transaction,
+              account_success_count: success_count,
               timing_us: timing,
               lease: lease
             })

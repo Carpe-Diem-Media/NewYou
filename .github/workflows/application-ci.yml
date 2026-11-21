@@ -90,6 +90,7 @@ jobs:
         run: mix assets.build
       - name: Run canonical fast gate
         env:
+          P815_CHARACTERIZE_BUDGET: ${{ github.head_ref == 'well/well-167-recovery-budget' && 'account' || '' }}
           DESIGN_SYSTEM_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           TEST_DATABASE_HOST: "127.0.0.1"
           TEST_DATABASE_PORT: "55433"
