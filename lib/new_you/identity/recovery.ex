@@ -291,32 +291,33 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
-  @spec delivery(term(), term(), term()) :: {:ok, binary()} | {:error, atom()}
+  @spec delivery(term(), term(), term()) ::
+          {:ok, binary()} | {:error, :source_invalid | :capability_unavailable}
   def delivery(reference, destination, locale) do
-    with {:ok, _recovery, proof} <- delivery_source(reference, destination, locale),
+    with {:ok, account, recovery, proof} <- delivery_source(reference, destination, locale),
+         :ok <- verify_delivery_binding(account, recovery),
          {:ok, bearer, claims} <-
            Joken.encode_and_sign(proof.recovery_claims, Config.token_signer(Account)),
          true <- claims == proof.recovery_claims,
          {:ok, ^claims, Account} <- Jwt.verify(bearer, Account) do
       {:ok, bearer}
     else
+      {:error, :capability_unavailable} = unavailable -> unavailable
       _ -> {:error, :source_invalid}
     end
-  rescue
-    _ -> {:error, :capability_unavailable}
   end
 
   @doc false
-  @spec delivery_eligibility(term(), term(), term(), term()) :: :ok | {:error, :source_invalid}
+  @spec delivery_eligibility(term(), term(), term(), term()) ::
+          :ok | {:error, :source_invalid | :capability_unavailable}
   def delivery_eligibility(reference, destination, locale, operation_id) do
-    with {:ok, recovery, _proof} <- delivery_source(reference, destination, locale),
-         true <- recovery.operation_id == operation_id do
-      :ok
-    else
-      _ -> {:error, :source_invalid}
+    case delivery_source(reference, destination, locale) do
+      {:ok, account, %{operation_id: ^operation_id} = recovery, _proof} ->
+        verify_delivery_binding(account, recovery)
+
+      _ ->
+        {:error, :source_invalid}
     end
-  rescue
-    _ -> {:error, :source_invalid}
   end
 
   @doc false
@@ -337,14 +338,26 @@ defmodule NewYou.Identity.Recovery do
 
   defp delivery_source(reference, destination, locale) do
     with {:ok, account, recovery, proof} <- lock_delivery_source(reference),
-         true <- current?(recovery, account) and recovery.state == :proof_pending,
+         true <- current_account?(recovery, account) and recovery.state == :proof_pending,
          true <- DateTime.compare(now(), recovery.expires_at) == :lt,
          true <- proof.purpose == "recovery" and DateTime.compare(now(), proof.expires_at) == :lt,
          true <- account.email_verified? and account.email == destination,
          true <- recovery.locale == locale do
-      {:ok, recovery, proof}
+      {:ok, account, recovery, proof}
     else
       _ -> {:error, :source_invalid}
+    end
+  end
+
+  defp verify_delivery_binding(account, recovery) do
+    case binding_secret() do
+      {:ok, secret} ->
+        if recovery.account_binding == binding(account, recovery.required_assurance, secret),
+          do: :ok,
+          else: {:error, :source_invalid}
+
+      :error ->
+        {:error, :capability_unavailable}
     end
   end
 
@@ -643,26 +656,36 @@ defmodule NewYou.Identity.Recovery do
   @doc false
   def current?(recovery, account),
     do:
+      current_account?(recovery, account) and
+        recovery.account_binding == binding(account, recovery.required_assurance)
+
+  defp current_account?(recovery, account),
+    do:
       recovery.account_id == account.id and account.account_status == :open and
         account.credential_status == :active and
-        recovery.account_binding == binding(account, recovery.required_assurance) and
         recovery.required_assurance >= required_assurance(account)
 
   @doc false
-  # The final digest member is case-owned required assurance. Its v1 encoding
-  # also preserves existing case bindings without retaining an Account-wide floor.
   def binding(account, required_assurance) do
+    {:ok, secret} = binding_secret()
+    binding(account, required_assurance, secret)
+  end
+
+  defp binding_secret do
     {:ok, {module, opts}} = AshAuthentication.Info.authentication_tokens_signing_secret(Account)
 
-    {:ok, secret} =
-      AshAuthentication.Secret.secret_for(
-        module,
-        [:authentication, :tokens, :signing_secret],
-        Account,
-        opts,
-        %{}
-      )
+    AshAuthentication.Secret.secret_for(
+      module,
+      [:authentication, :tokens, :signing_secret],
+      Account,
+      opts,
+      %{}
+    )
+  end
 
+  # The final digest member is case-owned required assurance. Its v1 encoding
+  # also preserves existing case bindings without retaining an Account-wide floor.
+  defp binding(account, required_assurance, secret) do
     :crypto.mac(
       :hmac,
       :sha256,
