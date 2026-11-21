@@ -55,6 +55,17 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
+  defmacrop trace_transition_failure(action, result) do
+    if Mix.env() == :test do
+      quote do
+        if unquote(action) == :await_proof and match?({:error, _}, unquote(result)),
+          do: NewYou.Proof.RecoverySeam.trace(:await_proof_rejected)
+      end
+    else
+      quote do: :ok
+    end
+  end
+
   if @enabled do
     @spec request(term(), term(), term()) :: :ok
     def request(email, locale, operation_id) do
@@ -619,10 +630,14 @@ defmodule NewYou.Identity.Recovery do
   def transition(recovery, action, attrs) do
     event = %{"action" => Atom.to_string(action), "version" => recovery.version + 1}
 
-    Ash.update(recovery, Map.put(attrs, :history, recovery.history ++ [event]),
-      action: action,
-      authorize?: false
-    )
+    result =
+      Ash.update(recovery, Map.put(attrs, :history, recovery.history ++ [event]),
+        action: action,
+        authorize?: false
+      )
+
+    trace_transition_failure(action, result)
+    result
   end
 
   @doc false

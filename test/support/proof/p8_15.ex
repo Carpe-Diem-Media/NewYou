@@ -273,18 +273,13 @@ defmodule NewYou.Proof.P815 do
     end)
   end
 
-  def interrupted_request do
+  def interrupted_request(opts \\ []) do
     P805.with_fixture(fn ->
       fixture = resumable_fixture()
       scenario = Scenario.start()
 
       try do
-        transaction = cut_request(scenario, fixture)
-        assert :ok = Scenario.request(scenario, {:await_owned_down, [transaction.worker], 5_000})
-
-        # The fixture owner can observe the outcome of the worker's exact XID.
-        assert transaction.backend != P805.scalar("SELECT pg_backend_pid()")
-        await_aborted_transaction(transaction.xid, System.monotonic_time(:millisecond) + 2_000)
+        cut_request(scenario, fixture, opts)
         assert_resume_rolled_back(fixture)
 
         assert :ok =
@@ -302,15 +297,18 @@ defmodule NewYou.Proof.P815 do
     end)
   end
 
-  defp cut_request(scenario, fixture) do
+  defp cut_request(scenario, fixture, opts) do
     parent = self()
     reference = make_ref()
     checkpoint = "transaction.before_commit"
-    :ok = CutPoints.arm(scenario, checkpoint, :resume_recovery, :terminate)
 
     {worker, monitor} =
       Scenario.spawn(scenario, :resume_recovery, fn ->
         :ok = Sandbox.checkout(Repo, sandbox: false)
+
+        # Sample before the request can check out its transaction lease. This
+        # is a conservative bound on the earliest possible 250 ms expiry.
+        deadline = System.monotonic_time(:millisecond) + 250
 
         Process.put(
           RegistrationSeam,
@@ -321,8 +319,13 @@ defmodule NewYou.Proof.P815 do
              %{rows: [[backend, xid]]} =
                Repo.query!("SELECT pg_backend_pid(), pg_current_xact_id()::text")
 
-             send(parent, {reference, :before_commit, self(), backend, xid})
-             CutPoints.hit(scenario, checkpoint, :resume_recovery)
+             send(parent, {reference, :before_commit, self(), backend, xid, deadline})
+
+             receive do
+               {^reference, :cut} -> CutPoints.hit(scenario, checkpoint, :resume_recovery)
+             after
+               2_000 -> flunk("Recovery controller did not authorize the pre-commit cut")
+             end
            end}
         )
 
@@ -334,10 +337,36 @@ defmodule NewYou.Proof.P815 do
       end)
 
     receive do
-      {^reference, :before_commit, ^worker, backend, xid} ->
+      {^reference, :before_commit, ^worker, backend, xid, deadline} ->
+        if Keyword.get(opts, :expire_before_cut?, false) do
+          await_aborted_transaction(xid, System.monotonic_time(:millisecond) + 2_000)
+        end
+
+        assert P805.scalar(
+                 """
+                 SELECT pg_backend_pid() <> $1
+                   AND pg_xact_status($2::text::xid8) = 'in progress'
+                   AND EXISTS (
+                     SELECT 1 FROM pg_locks
+                     WHERE pid = $1 AND locktype = 'transactionid'
+                       AND transactionid = $2::text::xid8::xid
+                       AND mode = 'ExclusiveLock' AND granted
+                   )
+                 """,
+                 [backend, xid]
+               ) == true,
+               "the exact transaction was no longer in progress at the cut"
+
+        assert :ok = CutPoints.arm(scenario, checkpoint, :resume_recovery, :terminate)
+        send(worker, {reference, :cut})
         assert_receive {:DOWN, ^monitor, :process, ^worker, :proof_terminated}, 2_000
+        await_aborted_transaction(xid, deadline)
+
+        assert System.monotonic_time(:millisecond) < deadline,
+               "the exact transaction was not observed aborted before possible lease expiry"
+
         assert :ok = CutPoints.verify_consumed(scenario)
-        %{worker: worker, backend: backend, xid: xid}
+        assert :ok = Scenario.request(scenario, {:await_owned_down, [worker], 5_000})
 
       {:DOWN, ^monitor, :process, ^worker, _reason} ->
         flunk("Recovery worker exited before acknowledging its pre-commit checkpoint")
@@ -363,7 +392,8 @@ defmodule NewYou.Proof.P815 do
         assert_resume_rolled_back(fixture)
         send(worker, {reference, :aborted_transaction_observed})
         await_lease_expired(reference)
-        phases = await_timeout_result(reference)
+        {phases, database_failures} = await_timeout_result(reference)
+        assert :lease_lost in database_failures
         refute :checkpoint in phases
         assert stage in phases
         assert :transaction_exception in phases or :transaction_error in phases
@@ -408,11 +438,13 @@ defmodule NewYou.Proof.P815 do
     install_timeout_observer(parent, reference, fixture, stage, opts)
 
     try do
-      :ok =
-        Identity.request_recovery(fixture.request.email, "af", fixture.recovery.operation_id)
+      {:ok, database_failures} =
+        NewYou.Proof.RecoverySeam.capture_database_failures(fn ->
+          Identity.request_recovery(fixture.request.email, "af", fixture.recovery.operation_id)
+        end)
 
       phases = Process.get({__MODULE__, :timeout_phases}, []) |> Enum.reverse()
-      send(parent, {reference, :timeout_request_completed, phases})
+      send(parent, {reference, :timeout_request_completed, {phases, database_failures}})
     after
       Process.delete({NewYou.Proof.RecoverySeam, :observer})
       Process.delete({__MODULE__, :timeout_phases})
@@ -480,7 +512,7 @@ defmodule NewYou.Proof.P815 do
 
       "in progress" ->
         assert System.monotonic_time(:millisecond) < deadline,
-               "pre-checkpoint lease expiry was not observed"
+               "the exact transaction was still in progress at the observation deadline"
 
         receive do
         after
@@ -507,7 +539,7 @@ defmodule NewYou.Proof.P815 do
 
   defp await_timeout_result(reference) do
     receive do
-      {^reference, :timeout_request_completed, phases} -> phases
+      {^reference, :timeout_request_completed, result} -> result
     after
       5_000 -> flunk("neutral request outcome was not received after timeout")
     end

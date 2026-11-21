@@ -464,6 +464,7 @@ defmodule NewYou.Proof.P815Port do
 
   defp result(status, output, started, cleanup, exit_status) do
     lines = :binary.split(output, "\n", [:global])
+    database_failures = database_failures(lines)
 
     %{
       status: status,
@@ -474,7 +475,8 @@ defmodule NewYou.Proof.P815Port do
       started?: "P815_STARTED" in lines,
       operation?: "P815_OPERATION" in lines,
       checkpoint?: "P815_CHECKPOINT" in lines,
-      connection_lost?: "P815_CONNECTION_LOST" in lines,
+      connection_lost?: :lease_lost in database_failures or "P815_CONNECTION_LOST" in lines,
+      database_failures: database_failures,
       rollback_checkpoint?: "P815_ROLLBACK_CHECKPOINT" in lines,
       failure_class: failure_class(lines),
       phases: phases(lines)
@@ -488,6 +490,7 @@ defmodule NewYou.Proof.P815Port do
       "P815_PHASE_ACCOUNT_LOCKED" => :account_locked,
       "P815_PHASE_RESUME_VERIFIED_CHANNEL" => :resume_verified_channel,
       "P815_PHASE_AWAIT_PROOF" => :await_proof,
+      "P815_PHASE_AWAIT_PROOF_REJECTED" => :await_proof_rejected,
       "P815_PHASE_CHECKPOINT" => :checkpoint,
       "P815_PHASE_TRANSACTION_RETURNED" => :transaction_returned,
       "P815_PHASE_TRANSACTION_ERROR" => :transaction_error,
@@ -500,6 +503,19 @@ defmodule NewYou.Proof.P815Port do
         :error -> []
       end
     end)
+  end
+
+  defp database_failures(lines) do
+    allowed = %{
+      "P815_DB_LEASE_LOST" => :lease_lost,
+      "P815_DB_CHECKOUT_FAILED" => :checkout_failed,
+      "P815_DB_CONNECTION_ERROR" => :connection_error,
+      "P815_DB_DATABASE_CONFLICT" => :database_conflict,
+      "P815_DB_CONSTRAINT_ERROR" => :constraint_error,
+      "P815_DB_DATABASE_ERROR" => :database_error
+    }
+
+    for line <- lines, {:ok, category} <- [Map.fetch(allowed, line)], uniq: true, do: category
   end
 
   defp failure_class(lines) do
