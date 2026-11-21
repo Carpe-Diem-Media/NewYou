@@ -12,8 +12,8 @@
     "WELL-143"
   ],
   "implementation_revision": {
-    "git_sha": "14f2a2d937612f07c0137de321176a04f28038d7",
-    "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure."
+    "git_sha": "21959d14f5a8e48560b292c2c62b3bd6ff5590c1",
+    "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-168 refreshes shared source references after a Recovery-only delivery fix."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1582,7 +1582,7 @@
       "id": "recovery",
       "path": "lib/new_you/identity/recovery.ex",
       "symbol": "def finish(",
-      "sha256": "ce6a594978a60cfb45f8b2057b0c1fbeba9f03786f300e6809ff4471d4799b00"
+      "sha256": "388acb08762ae6532e08d24138244b282134de9b696fdbb38d3aeddd7bee4fce"
     },
     {
       "id": "password_reset",
@@ -1606,7 +1606,7 @@
       "id": "executor",
       "path": "lib/new_you/communications/executor.ex",
       "symbol": "source_eligibility",
-      "sha256": "14d7b714ad7620df1edef309f7d616c5efb47f9987e36d1d0c43d2132c11619d"
+      "sha256": "81291c1785a0c2dc208466074dc2a0ba9a588e2523666a874c9eeb356c9669a1"
     },
     {
       "id": "content",
