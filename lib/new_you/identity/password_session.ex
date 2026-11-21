@@ -150,6 +150,18 @@ defmodule NewYou.Identity.PasswordSession do
 
   defp with_current_session(_, _), do: {:error, :authentication_unavailable}
 
+  if Mix.env() == :test do
+    # Ash has committed by this point. Exercise loss of its acknowledgement
+    # before the owning interface can confirm any outcome to the controller.
+    defp current_session_result({:ok, :revoked} = result) do
+      if Process.get({__MODULE__, :lose_revocation_acknowledgement}) do
+        raise "transaction acknowledgement lost in TEST"
+      end
+
+      result
+    end
+  end
+
   defp current_session_result({:ok, {:ok, result}}), do: {:ok, result}
   defp current_session_result({:ok, result}), do: {:ok, result}
 
