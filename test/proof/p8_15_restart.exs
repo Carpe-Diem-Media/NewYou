@@ -37,6 +37,7 @@ defmodule NewYou.Proof.P815RestartRequest do
 
   def sample([first, second]) do
     Logger.configure(level: :emergency)
+    RecoverySeam.observe(&NewYou.Proof.RecoveryBudget.observe_outcome/1)
     Enum.each([first, second], &request/1)
     :requested
   end

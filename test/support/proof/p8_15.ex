@@ -1269,7 +1269,8 @@ defmodule NewYou.Proof.P815 do
       Enum.zip([fixtures, diagnostic.budget_reports, diagnostic.lease_reports])
       |> Enum.with_index(1)
       |> Enum.each(fn {{fixture, timing, lease}, ordinal} ->
-        effect = budget_effect(fixture, scenario)
+        {transaction, timing} = Map.pop!(timing, :transaction)
+        effect = budget_effect(fixture, scenario, transaction, lease)
 
         IO.puts(
           :stderr,
@@ -1279,6 +1280,7 @@ defmodule NewYou.Proof.P815 do
               replicate: replicate,
               ordinal: ordinal,
               effect: effect,
+              transaction: transaction,
               timing_us: timing,
               lease: lease
             })
@@ -1318,13 +1320,13 @@ defmodule NewYou.Proof.P815 do
     }
   end
 
-  defp budget_effect(fixture, scenario) do
+  defp budget_effect(fixture, scenario, transaction, lease) do
     state = Ash.get!(RecoveryCase, fixture.recovery.id, authorize?: false).state
 
     case {scenario, state} do
       {:replay, :proof_pending} ->
         assert_resumed_request(fixture)
-        :replayed
+        NewYou.Proof.RecoveryBudget.replay_effect(transaction, lease)
 
       {:known, :proof_pending} ->
         assert_resumed_request(fixture)

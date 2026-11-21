@@ -20,6 +20,34 @@ defmodule NewYou.Proof.RecoveryBudgetTest do
     assert Process.get(RecoveryBudget) == nil
   end
 
+  test "two calls in one child retain their own terminal outcomes" do
+    lines =
+      ExUnit.CaptureIO.capture_io(fn ->
+        RecoveryBudget.measure(fn -> RecoveryBudget.observe_outcome(:transaction_returned) end)
+        RecoveryBudget.measure(fn -> RecoveryBudget.observe_outcome(:transaction_error) end)
+        RecoveryBudget.measure(fn -> :ok end)
+      end)
+
+    outcomes =
+      for line <- String.split(lines, "\n"),
+          report <- RecoveryBudget.parse(line),
+          do: report.transaction
+
+    assert outcomes == [:transaction_returned, :transaction_error, :unobserved]
+  end
+
+  test "previously issued durable effects only count as replay with a successful measured transaction" do
+    healthy = %{closure: :none, error: :none}
+    assert RecoveryBudget.replay_effect(:transaction_returned, healthy) == :replayed
+    assert RecoveryBudget.replay_effect(:transaction_error, healthy) == :failed_replay
+    assert RecoveryBudget.replay_effect(:unobserved, healthy) == :unconfirmed_replay
+
+    assert RecoveryBudget.replay_effect(:transaction_returned, %{
+             closure: :checkout_deadline,
+             error: :lease_lost
+           }) == :unconfirmed_replay
+  end
+
   test "exception clears the process-local measurement" do
     assert_raise RuntimeError, "fixture", fn ->
       RecoveryBudget.measure(fn -> raise "fixture" end)

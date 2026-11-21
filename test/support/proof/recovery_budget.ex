@@ -4,10 +4,12 @@ defmodule NewYou.Proof.RecoveryBudget do
   # Store elapsed time against the stage that just ended. An interrupted stage
   # includes error propagation until the next observed boundary.
   @stages ~w(prepare before_transact account case_lookup resume_verified_channel issue_proof token communications binding transition commit finished padding)a
+  @outcomes ~w(unobserved transaction_returned transaction_error transaction_exception)a
   @limit 9_999_999
 
   def measure(callback) do
     started = System.monotonic_time(:microsecond)
+    Process.put({__MODULE__, :outcome}, :unobserved)
     Process.put(__MODULE__, {:prepare, started, %{}})
 
     try do
@@ -16,9 +18,11 @@ defmodule NewYou.Proof.RecoveryBudget do
       {stage, time, durations} = Process.get(__MODULE__)
       durations = Map.put(durations, stage, stopped - time)
       values = [stopped - started | Enum.map(@stages, &Map.get(durations, &1, -1))]
-      IO.puts("P815_BUDGET " <> Enum.map_join(values, " ", &min(&1, @limit)))
+      outcome = Process.get({__MODULE__, :outcome})
+      IO.puts("P815_BUDGET #{outcome} " <> Enum.map_join(values, " ", &min(&1, @limit)))
       result
     after
+      Process.delete({__MODULE__, :outcome})
       Process.delete(__MODULE__)
     end
   end
@@ -78,13 +82,34 @@ defmodule NewYou.Proof.RecoveryBudget do
     end
   end
 
-  def parse("P815_BUDGET " <> values) do
-    fields = [:public | @stages]
-    parts = String.split(values, " ")
+  def observe_outcome(stage) when stage in @outcomes do
+    Process.put({__MODULE__, :outcome}, stage)
+    :ok
+  end
 
-    if length(parts) == length(fields) and
+  def observe_outcome(_), do: :ok
+
+  def replay_effect(:transaction_returned, %{closure: :none, error: :none}), do: :replayed
+
+  def replay_effect(stage, _) when stage in [:transaction_error, :transaction_exception],
+    do: :failed_replay
+
+  def replay_effect(_, _), do: :unconfirmed_replay
+
+  def parse("P815_BUDGET " <> payload) do
+    [label | parts] = String.split(payload, " ")
+    outcome = Enum.find(@outcomes, &(Atom.to_string(&1) == label))
+    fields = [:public | @stages]
+
+    if outcome != nil and length(parts) == length(fields) and
          Enum.all?(parts, &Regex.match?(~r/\A(?:-1|[0-9]{1,7})\z/, &1)) do
-      [Map.new(Enum.zip(fields, Enum.map(parts, &String.to_integer/1)))]
+      [
+        Map.put(
+          Map.new(Enum.zip(fields, Enum.map(parts, &String.to_integer/1))),
+          :transaction,
+          outcome
+        )
+      ]
     else
       []
     end
