@@ -376,6 +376,14 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     end
   end
 
+  if System.get_env("P815_CHARACTERIZE_BUDGET") == "1" do
+    for scenario <- [:known, :unknown, :malformed, :replay, :contended], replicate <- 1..3 do
+      test "hosted budget #{scenario} pair #{replicate}" do
+        P815.characterize_budget(unquote(scenario), unquote(replicate))
+      end
+    end
+  end
+
   # These additional fault controls require the per-job provisioner marker.
   # Existing interruption and skip-cut proofs run in every environment.
   if System.get_env("GITHUB_ACTIONS") == "true" do

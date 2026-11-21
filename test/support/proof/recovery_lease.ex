@@ -87,6 +87,8 @@ defmodule NewYou.Proof.RecoveryLease do
   end
 
   def stage(stage) do
+    NewYou.Proof.RecoveryBudget.stage(if stage == :request_locked, do: :account, else: stage)
+
     if state = Process.get(__MODULE__) do
       state =
         case stage do
