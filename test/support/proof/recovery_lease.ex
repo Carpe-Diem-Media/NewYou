@@ -5,7 +5,7 @@ defmodule NewYou.Proof.RecoveryLease do
 
   @closures ~w(checkout_deadline owner_checkin none unknown unobserved)a
   @operations ~w(none unknown request_locked resume_verified_channel issue_proof binding transition)a
-  @errors ~w(none unknown lease_lost checkout_failed connection_error database_conflict constraint_error database_error)a
+  @errors ~w(unobserved none unknown lease_lost checkout_failed connection_error database_conflict constraint_error database_error)a
   @maximum 9_999_999
 
   def hosted?, do: System.get_env("GITHUB_ACTIONS") == "true"
@@ -59,7 +59,7 @@ defmodule NewYou.Proof.RecoveryLease do
       result = callback.()
       state = Process.get(__MODULE__)
       closure = closure(state)
-      {operation, error, query_us} = state.first || {:none, :none, -1}
+      {operation, error, query_us} = first_failure(state)
       pre = duration(state, :before_transact, :transaction_entered)
       post = duration(state, :transaction_entered, :finished)
       IO.puts("P815_LEASE #{closure} #{operation} #{error} #{pre} #{post} #{query_us}")
@@ -101,11 +101,17 @@ defmodule NewYou.Proof.RecoveryLease do
         end
 
       Process.put(__MODULE__, state)
-      if stage == :await_proof, do: inject(state)
     end
 
     :ok
   end
+
+  defp first_failure(%{mode: "baseline"}), do: {:none, :unobserved, -1}
+  defp first_failure(state), do: state.first || {:none, :none, -1}
+
+  # Inject before the first Account query so a natural issuance timeout cannot
+  # preempt the intended non-timeout control.
+  def calibrate_at_entry, do: inject(Process.get(__MODULE__))
 
   # Only the calibration child deliberately holds or checks in its own lease.
   defp inject(%{mode: "expiry"}), do: Process.sleep(300)

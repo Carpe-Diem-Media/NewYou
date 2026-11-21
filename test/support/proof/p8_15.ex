@@ -1292,12 +1292,12 @@ defmodule NewYou.Proof.P815 do
 
       if mode in [:expiry, :checkin] do
         assert report.error == :lease_lost
-        assert report.operation == :transition
+        assert report.operation == :request_locked
         assert :checkpoint not in diagnostic.phases
         assert :transaction_error in diagnostic.phases
         assert_resume_rolled_back(fixture)
       else
-        assert report.error == :none
+        assert report.error == Map.fetch!(%{baseline: :unobserved, observe: :none}, mode)
         assert :transaction_returned in diagnostic.phases
         assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).state == :proof_pending
         assert timeout_effect_counts(recovery) == {1, 1}

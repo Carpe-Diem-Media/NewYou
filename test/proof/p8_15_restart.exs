@@ -10,7 +10,7 @@ defmodule NewYou.Proof.P815RestartRequest do
 
     RecoverySeam.observe(fn stage ->
       Process.put(:p815_phases, [stage | Process.get(:p815_phases, [])])
-      if stage == :await_proof, do: RecoveryLease.stage(stage)
+      if stage == :transaction_entered, do: RecoveryLease.calibrate_at_entry()
     end)
 
     interrupt_once(input)

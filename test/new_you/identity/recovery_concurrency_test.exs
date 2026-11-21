@@ -379,14 +379,19 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
   # These additional fault controls require the per-job provisioner marker.
   # Existing interruption and skip-cut proofs run in every environment.
   if System.get_env("GITHUB_ACTIONS") == "true" do
-    test "fresh child classifies its own checkout expiry and explicit check-in" do
-      baseline = P815.calibrate_recovery_lease(:baseline)
-      observed = P815.calibrate_recovery_lease(:observe)
+    test "fresh timing-only resume commits" do
+      P815.calibrate_recovery_lease(:baseline)
+    end
 
-      delta = observed.callback_to_result_us - baseline.callback_to_result_us
-      IO.puts(:stderr, "P815_OBSERVED_CALLBACK_DELTA_US #{delta}")
+    test "fresh monitored resume commits" do
+      P815.calibrate_recovery_lease(:observe)
+    end
 
+    test "fresh child attributes its deliberately expired client lease" do
       P815.calibrate_recovery_lease(:expiry)
+    end
+
+    test "fresh child distinguishes explicit check-in from deadline expiry" do
       P815.calibrate_recovery_lease(:checkin)
     end
   end
