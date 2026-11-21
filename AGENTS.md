@@ -491,3 +491,18 @@ The repository must not start, stop, recreate or delete shared DevCore services 
 Redis is not used by NewYou.
 
 Both PostgreSQL roles must remain "NOCREATEDB".
+
+## Elixir runtime debugging — conditional skill routing
+
+For unexplained, intermittent or recurring Elixir/OTP, Ash, Ecto/PostgreSQL,
+Phoenix or ExUnit runtime behavior, load
+`.agents/skills/elixir-runtime-debugging/SKILL.md` for focused investigation.
+Use IEx, DEV-only Tidewave, selective BEAM tracing, version-matched Ash
+introspection and database telemetry only when they can distinguish the
+leading explanations. A separate TEST BEAM needs its own observation scope.
+
+This skill is diagnostic technique only. It does not replace `ticket-implement`,
+`tdd`, `code-change-verification`, the current repository authority, live Plane
+readiness, exact-head CI or independent Master Gate. Never use shared TEST data
+for disruptive investigations, and never weaken assertions or timeouts to
+obtain a passing result.
