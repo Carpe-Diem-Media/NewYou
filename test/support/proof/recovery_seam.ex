@@ -37,9 +37,12 @@ defmodule NewYou.Proof.RecoverySeam do
   end
 
   @doc false
-  def record_database_failure(_, _, %{result: {:error, error}}, {owner, ref})
+  def record_database_failure(_, measurements, %{result: {:error, error}}, {owner, ref})
       when owner == self() do
-    case database_failure(error) do
+    category = database_failure(error)
+    NewYou.Proof.RecoveryLease.failure(category, measurements)
+
+    case category do
       nil -> :ok
       category -> Process.put(ref, MapSet.put(Process.get(ref, MapSet.new()), category))
     end
