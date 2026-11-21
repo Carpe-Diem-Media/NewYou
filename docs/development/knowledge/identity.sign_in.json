@@ -11,7 +11,7 @@
     "WELL-163"
   ],
   "implementation_revision": {
-    "git_sha": "7fdf2366e5981e43e290e25c4bb04a3908474673",
+    "git_sha": "83b895270ef41a337c2d18f418c4f6bf88638692",
     "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. WELL-163 adds a bounded EN/AF participant Session inventory and individual remote revocation with material Audit E2."
   },
   "authoritative_domain": "Identity",
@@ -883,6 +883,23 @@
       ]
     },
     {
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "cases": [
+        "fresh browser navigation reconciles a lost committed revocation in en",
+        "fresh browser navigation reconciles a lost committed revocation in af",
+        "shows approved rollback and uncertain outcomes without reporting success in en",
+        "shows approved rollback and uncertain outcomes without reporting success in af"
+      ],
+      "proves": "In both locales, Chromium drops the ordinary POST response after the real Identity revocation and selected Audit obligation commit. Fresh navigation removes the revoked Session without a success message. The target loses protected access while the initiating and unrelated same-Account Sessions retain it. The same CSRF-protected POST replay shows approved already-ended copy and preserves ended_at and one identical selected E2 obligation. The ordinary endpoint renders exact approved failure copy after a confirmed Audit rollback and exact approved uncertain copy when the TEST-only owner acknowledgement is lost after a real commit. Neither response reports success. A fresh read reconciles both outcomes with PostgreSQL.",
+      "limits": "Chromium uses response-stage DevTools interception to simulate a browser transport failure. The uncertain result test uses a process-local TEST cut after Ash commits and before Identity returns an outcome. It does not simulate a PostgreSQL network fault. Tests use synthetic local records. Earlier Hallmark and contrast evidence remains historical.",
+      "source_ids": [
+        "session_reconciliation_web_test",
+        "session_outcomes_web_test",
+        "session_inventory_driver",
+        "session_test_acknowledgement"
+      ]
+    },
+    {
       "path": "test/new_you/content/session_management_copy_test.exs",
       "cases": [
         "loads exact eligible Session keys in both locales and excludes global and trusted-device copy",
@@ -948,7 +965,7 @@
     "Hallmark existing-design extension check renders 20 EN/AF normal/error/pending/confirmation/protected/reauthentication/logout states. Generated unchanged app.css reports 96 static FAILs: gate 48 x89, 10a x4, 15 x2, 20 x1. No page-level FAIL is introduced; do not describe the whole inherited stylesheet as clean.",
     "Hallmark REFLEX 39b x8 is waived because DESIGN.md explicitly requires 58px input height. Generated dependency/token CSS REFLEX 7b x6, 22 x5, 24b x2 belongs to unchanged compatibility/design styles. F1 x5 preserves exact approved apostrophes, F23 x20 is non-public authentication metadata, and unchanged CSS warnings 10b x2/F7 x1 are recorded. Balanced heads removed both F26 stub warnings.",
     "Browser tests assert real Tab focus with visible outline, labels, styles loaded, reduced-motion state, responsive widths 320/375/768/1280/1920 and 200% text resize. Hallmark render contrast checks report no page-level contrast failure; source review preserves shared tokens. No redesign or theme run was invoked.",
-    "Current-session logout only. Remaining FP-001 Q.2 session controls, recovery/email-change/support/reconciliation product journeys, OQ-035 abuse thresholds, OQ-036 real channel/retry proof and participant content/legal eligibility remain release obligations. Existing owner capabilities do not grant participant UI or release access.",
+    "WELL-134 originally proved current-session logout. WELL-163 adds bounded EN/AF inventory of an Account's usable Sessions and revocation of one other Session through the existing development entry. Global sign-out, trusted-device controls, MFA enrollment and participant release remain outside this capability. The original WELL-134 dependencies and release gaps, including OQ-035, OQ-036 and participant content/legal eligibility, retain their historical scope.",
     "Permanent ordinary EN/AF browser proof doubles computed text sizes and numeric line heights at widths 320/375/768/1280/1920, checks horizontal document and text/control fit, then restores original inline styles. This runs on the login state; the earlier 20-state resize supplement remains separate evidence, not permanent all-state coverage.",
     "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations.",
     "WELL-114 source checkpoint 145c2be adds fixture-isolation regression coverage and assertion-preserving test corrections. See docs/superpowers/plans/2026-11-16-retained-fixture-observations.md for observed commands, test limits and current resource handling. Full applicable gates, OCR, exact-head CI and independent post-merge certification remain required. The original all-job privacy secret scan remains intentionally broad to detect incorrectly addressed leakage. The seven-file focused run passed 111/111, seed 985650. Canonical on clean 96a8455 passed 831/831, seed 813027, in 547.2 seconds under a command-scoped lock, after preserving and diagnosing a five-failure overlapping attempt and a same-seed 47/47 targeted pass. The focused plan records exact commands, fingerprints and limits. OCR, exact-final-head hosted CI and independent resulting-main certification remain separate requirements. Global maintenance tests use native Ecto sandbox checkout/checkin with signature restoration, rather than an outer Repo transaction that can be aborted by expected Ash denials.",
@@ -976,7 +993,7 @@
       "id": "password",
       "path": "lib/new_you/identity/password_session.ex",
       "symbol": "def authorize",
-      "sha256": "9c5489b1fa984c8968b92c36f69827c8a40a62f7fa90c9a39820732970b13e53"
+      "sha256": "538fcb22aafad64878b510f15528b95a33bd4c316c88547071793c0c9ed35b1b"
     },
     {
       "id": "magic",
@@ -1102,7 +1119,7 @@
       "id": "browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'signin'",
-      "sha256": "8f10a0f935945de65000e4b15d3372bc9261816fa054fb79b82e96576d7a7dd9"
+      "sha256": "564b51a45974649047c320b5de39c2bb638fe705ffc2ee484968c91cf2ab7f17"
     },
     {
       "id": "password_test",
@@ -1240,7 +1257,25 @@
       "id": "session_inventory_web_test",
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "symbol": "two independent Chromium Sessions",
-      "sha256": "163408a1049e1ceefe93a987a44c93d612d0b7ad529002a49365824aa22b44ab"
+      "sha256": "7f18813050133416ac1c8f8259a0afa9eca52bdd31eed1ab832ebbea5e7dcdc5"
+    },
+    {
+      "id": "session_reconciliation_web_test",
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "symbol": "fresh browser navigation reconciles a lost committed revocation",
+      "sha256": "7f18813050133416ac1c8f8259a0afa9eca52bdd31eed1ab832ebbea5e7dcdc5"
+    },
+    {
+      "id": "session_outcomes_web_test",
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "symbol": "shows approved rollback and uncertain outcomes without reporting success",
+      "sha256": "7f18813050133416ac1c8f8259a0afa9eca52bdd31eed1ab832ebbea5e7dcdc5"
+    },
+    {
+      "id": "session_test_acknowledgement",
+      "path": "lib/new_you/identity/password_session.ex",
+      "symbol": ":lose_revocation_acknowledgement",
+      "sha256": "538fcb22aafad64878b510f15528b95a33bd4c316c88547071793c0c9ed35b1b"
     },
     {
       "id": "session_inventory_copy_test",
@@ -1252,7 +1287,7 @@
       "id": "session_inventory_driver",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'session_management'",
-      "sha256": "8f10a0f935945de65000e4b15d3372bc9261816fa054fb79b82e96576d7a7dd9"
+      "sha256": "564b51a45974649047c320b5de39c2bb638fe705ffc2ee484968c91cf2ab7f17"
     },
     {
       "id": "session_inventory_index",
