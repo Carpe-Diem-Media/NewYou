@@ -465,6 +465,10 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.interrupted_acceptance()
   end
 
+  test "pre-commit request termination rolls back before a new worker resumes the same case" do
+    assert P815.interrupted_request() == :ok
+  end
+
   test "recovery delivery and completion receipts survive fresh BEAM processes" do
     assert P815.restart_proof() == :ok
   end
