@@ -140,8 +140,27 @@ defmodule NewYouWeb.PasswordSessionController do
       "content-security-policy",
       "default-src 'none';#{script_policy} style-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
     )
+    |> render_body(template, Map.put(assigns, :locale, locale))
+  end
+
+  defp render_body(conn, :protected, assigns) do
+    # Phoenix.Controller.render/3 retains its assigns on the connection that
+    # Bandit emits in request telemetry. Keep the PMR in the response body only.
+    html(
+      conn,
+      Phoenix.Template.render_to_iodata(
+        NewYouWeb.PasswordSessionHTML,
+        "protected",
+        "html",
+        assigns
+      )
+    )
+  end
+
+  defp render_body(conn, template, assigns) do
+    conn
     |> put_root_layout(false)
     |> put_view(html: NewYouWeb.PasswordSessionHTML)
-    |> render(template, Map.merge(%{locale: locale}, assigns))
+    |> render(template, assigns)
   end
 end

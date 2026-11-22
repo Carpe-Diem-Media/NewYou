@@ -125,7 +125,7 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
         {:ok, registration} = Identity.register(request)
         {:ok, :verified} = Identity.verify_email(registration.verification_proof)
         pmr = Ash.get!(Identity.Account, registration.account_id, authorize?: false).pmr
-        checks = NewYou.Proof.P805Browser.run_login(request, locale, pmr)
+        checks = browser_checks_without_pmr_telemetry(request, locale, pmr)
         assert checks["login_form"] == true
         assert checks["protected_access"] == true
         assert checks["reloaded_access"] == true
@@ -210,5 +210,32 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
 
       assert (login |> recycle() |> post("/session/logout")).status == 503
     end)
+  end
+
+  defp browser_checks_without_pmr_telemetry(request, locale, pmr) do
+    owner = self()
+    handler = {__MODULE__, make_ref()}
+
+    :ok =
+      :telemetry.attach(
+        handler,
+        [:bandit, :request, :stop],
+        fn _, _, metadata, _ ->
+          if metadata.conn.request_path == "/session/protected" and metadata.conn.status == 200 do
+            exposed? = :binary.match(:erlang.term_to_binary(metadata), pmr) != :nomatch
+            send(owner, {handler, exposed?})
+          end
+        end,
+        nil
+      )
+
+    try do
+      checks = NewYou.Proof.P805Browser.run_login(request, locale, pmr)
+      refute_received {^handler, true}
+      assert_received {^handler, false}
+      checks
+    after
+      :telemetry.detach(handler)
+    end
   end
 end
