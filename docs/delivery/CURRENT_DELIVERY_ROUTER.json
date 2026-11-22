@@ -348,6 +348,14 @@
       "sha256": "7d2e2db74229970748eb121459ca4b264bb8bb739f3de0adce2f3f0550b483ae",
       "contract_type": "content_evidence",
       "status": "BOUNDED_NONPRODUCTION_PHASE9; CONDITIONAL_ON_CURRENT_ELIGIBILITY"
+    },
+    {
+      "document_id": "FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_OWNER_APPROVED",
+      "canonical_filename": "FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_OWNER_APPROVED_v0.1.0.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_OWNER_APPROVED_v0.1.0.json",
+      "sha256": "84fbac70adec68617a0bc7366b71637c536f7a3fb800115ac1d1b284095eed3e",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_EXACT_EN_AF_WORDING_ONLY; REQUIRED_FP002_OFFER_COPY_REFERENCE; SPECIALIST_GATES_OPEN; NO_CLASS_A_DEVELOPMENT_OR_RELEASE_AUTHORITY"
     }
   ]
 }

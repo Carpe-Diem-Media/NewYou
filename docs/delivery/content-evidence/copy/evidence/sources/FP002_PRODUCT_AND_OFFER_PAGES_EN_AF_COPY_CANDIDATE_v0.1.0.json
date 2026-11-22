@@ -1,0 +1,1494 @@
+{
+  "packet_id": "FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_CANDIDATE",
+  "version": "0.1.0",
+  "status": "CANDIDATE_FOR_OWNER_REVIEW_ONLY; NO_CONTENT_APPROVAL; NO_PR; NO_IMPLEMENTATION; NO_PURCHASE_OR_RELEASE_PERMISSION",
+  "date_prepared": "2026-11-22",
+  "source_basis": {
+    "github_repository": "Carpe-Diem-Media/NewYou",
+    "inspected_main_sha": "e7fc58167223be433d9ccc9d61d3aaeb2090a10c",
+    "authority": [
+      "docs/governance/product/00_PLATFORM_v1.20.0.md §§21L.4–21L.6, 21L.15, 21R.1–21R.6, 21T.4",
+      "docs/governance/product/01_DECISIONS_v1.20.0.md DEC-282, DEC-284, DEC-299, DEC-300, DEC-303, DEC-308, DEC-313, DEC-314",
+      "docs/governance/roadmap/05_ROADMAP_v1.2.5.md FP-002",
+      "docs/delivery/content-evidence/copy/STYLE_GUIDE.md",
+      "docs/delivery/content-evidence/copy/GLOSSARY.md",
+      "NewYou-copy-and-approvals-2026-11-22.html §FP-002 Product and offer pages"
+    ],
+    "plane": [
+      "WELL-171: FP-002 planning only",
+      "WELL-22: FP-002 delivery gate not ready"
+    ],
+    "registry_sha": "7a25a11bedccead4bc59abbbf9da9d5b35ef3c28"
+  },
+  "scope": {
+    "included": [
+      "catalogue/offer overview",
+      "assessment offer",
+      "plan offer",
+      "assessment+plan bundle offer",
+      "price display/saving mechanics",
+      "product FAQ",
+      "pre-purchase eligibility guard wording"
+    ],
+    "excluded": [
+      "checkout/order-review contracts",
+      "payment initiation/return/pending/uncertain/retry",
+      "receipts and transaction history",
+      "refund/dispute workflow screens and notices",
+      "actual provider integration",
+      "legal documents, consent or early-performance instruction",
+      "health assessment, diet/meal/clinical guidance",
+      "SEO, content publication and release"
+    ],
+    "language_locales": [
+      "en",
+      "af"
+    ],
+    "copy_key_namespace": "commerce.product",
+    "not_approved_for_real_participants": true
+  },
+  "authoritative_price_facts_for_review_only": {
+    "currency": "ZAR",
+    "standalone_digital_assessment_list_rands": 249,
+    "standalone_personalised_plan_list_rands": 399,
+    "bundle_list_rands": 549,
+    "list_value_rands": 648,
+    "baseline_bundle_saving_rands": 99,
+    "display_rule": "Render current authoritative versioned price values, not literal amounts embedded in translation strings; preserve accepted order version/amounts.",
+    "bundle_component_split": "UNRESOLVED; versioned deterministic allocation selected and disclosed before sale; values must reconcile to accepted bundle amount."
+  },
+  "token_contract": {
+    "active_price": "Formatted currency amount from the authoritative current offer price version; bound to rendered SKU/offer context.",
+    "bundle_saving": "Formatted difference between validated applicable standalone list values and bundle price in the same comparable price set.",
+    "assessment_component_amount": "Currency amount from approved selected assessment allocation of accepted bundle order; must not be guessed.",
+    "plan_component_amount": "Currency amount from approved selected plan allocation of accepted bundle order; must not be guessed."
+  },
+  "reviews_required_before_exact_approval": [
+    "Accountable Product owner: scope and business/offer accuracy",
+    "Commerce and Entitlements: prices, versions, credit-purchase guards, plan held/refund/rights and component split",
+    "Safety and Eligibility: plan pathway, General Wellness and clinical-limit claims",
+    "Temperament/methodology and rights owner: branded model, report and existing-provenance claims",
+    "Content & Media / English reviewer / Afrikaans reviewer: exact language and semantic key review",
+    "Legal/Privacy: pre-sale disclosures, statutory refund and Terms/Privacy compatibility before release"
+  ],
+  "decisions_and_guards": [
+    {
+      "id": "FP002-COPY-G01",
+      "status": "OPEN_COMMERCE",
+      "question": "Choose and version the deterministic R549 bundle allocation (assessment component + plan component), and pre-sale disclosure. Do not assume R249 + R300 or another distribution."
+    },
+    {
+      "id": "FP002-COPY-G02",
+      "status": "OPEN_PAYSTACK_PROOF",
+      "question": "Confirm actual payment provider flows, uncertain attempts, safe retry and real access statuses before checkout/payment copy; excluded from this pack."
+    },
+    {
+      "id": "FP002-COPY-G03",
+      "status": "REVIEW_PRODUCT_COMMERCE",
+      "question": "Validate authoritative price-version display, promotions/discounts, exact current SKU and available offers."
+    },
+    {
+      "id": "FP002-COPY-G04",
+      "status": "REVIEW_IDENTITY_ENTITLEMENTS",
+      "question": "Guard unauthenticated surfaces and block second unused assessment credit/interval-stranding/bundle purchase; route to plan-only, not another assessment."
+    },
+    {
+      "id": "FP002-COPY-G05",
+      "status": "REVIEW_SAFETY_COMMERCE",
+      "question": "Confirm exact participant-facing pathway, held-right, General Wellness 14-day choice, final unfulfillable and refund disclosures with actual versioned offer."
+    },
+    {
+      "id": "FP002-COPY-G06",
+      "status": "REVIEW_TEMPERAMENT_IP",
+      "question": "Confirm authorised use of Four-Colour naming, licensed questions/methodology/report promises and book-derived paths before approval."
+    },
+    {
+      "id": "FP002-COPY-G07",
+      "status": "REVIEW_LEGAL_PRIVACY",
+      "question": "Review applicable statutory rights, early-performance choices, notice/acceptance, tax/invoice disclosures and supplier identity; omitted from this candidate."
+    },
+    {
+      "id": "FP002-COPY-G08",
+      "status": "NO_RELEASE",
+      "question": "FP-001 dependency, OQ-004 proof and applicable release gates remain open; these strings cannot activate checkout or sales."
+    }
+  ],
+  "reuse_existing_keys_unchanged": [
+    {
+      "key": "shared.navigation.products",
+      "purpose": "navigation; source candidate unless separately eligible evidence applies"
+    },
+    {
+      "key": "shared.action.back",
+      "purpose": "back navigation; use source semantics only where eligible"
+    },
+    {
+      "key": "shared.action.continue",
+      "purpose": "ordinary continuation; not purchase acceptance"
+    },
+    {
+      "key": "shared.action.contact_support",
+      "purpose": "conditional help channel; actual channel must exist"
+    },
+    {
+      "key": "shared.action.retry",
+      "purpose": "ordinary non-monetary retry only; never uncertain payment retry"
+    }
+  ],
+  "copy_items": [
+    {
+      "key": "commerce.product.catalogue.title",
+      "class": "B",
+      "group": "catalogue",
+      "meaning": "Heading for the three-item once-off catalogue",
+      "en": {
+        "text": "Choose where to begin",
+        "utf8_bytes": 21,
+        "sha256": "6ff47c3c6c3a292a98ef425a8381f12e1ff53559b698291aeac14e924650b709"
+      },
+      "af": {
+        "text": "Kies waar jy wil begin",
+        "utf8_bytes": 22,
+        "sha256": "9eedbd86bd61d072ba2bfa039c0da1aaf491c12e8bf612ee9b0c4bf4f23bba8a"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.catalogue.intro",
+      "class": "A",
+      "group": "catalogue",
+      "meaning": "Catalogue introduction",
+      "en": {
+        "text": "Explore our three once-off offers. What you can buy or use depends on your existing access and the requirements for each product.",
+        "utf8_bytes": 129,
+        "sha256": "f5b3ad2a741c0927398fb5d5ae40b5312ab057325687623240a9f7ed5e03cae0"
+      },
+      "af": {
+        "text": "Verken ons drie eenmalige aanbiedinge. Wat jy kan koop of gebruik, hang af van jou bestaande toegang en die vereistes vir elke produk.",
+        "utf8_bytes": 134,
+        "sha256": "51e764173007443343a1712c4eb268ef3f14f1c4fe8ecb9d1aea0c8fb6890a98"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.catalogue.audience",
+      "class": "A",
+      "group": "catalogue",
+      "meaning": "Shared launch audience statement, not a purchase eligibility decision",
+      "en": {
+        "text": "These South African launch offers are designed for adult women aged 18 or older.",
+        "utf8_bytes": 80,
+        "sha256": "38a1e512453abff2105896d86522b9e2a212ac9053c0983d6f016a3899c3f457"
+      },
+      "af": {
+        "text": "Hierdie aanbiedinge vir die Suid-Afrikaanse bekendstelling is ontwerp vir volwasse vroue van 18 jaar en ouer.",
+        "utf8_bytes": 109,
+        "sha256": "2a99a97de4e9cba6456b628b03f3904dc71a61bf88148d31c16c9ebec433025c"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.catalogue.price.label",
+      "class": "B",
+      "group": "catalogue",
+      "meaning": "Label for authoritative active SKU price",
+      "en": {
+        "text": "Price",
+        "utf8_bytes": 5,
+        "sha256": "93c91c851e7acc17d881c9b89ea954be1183070254014be03a93d169cf52dbbd"
+      },
+      "af": {
+        "text": "Prys",
+        "utf8_bytes": 4,
+        "sha256": "72cdb94a5ac763e8677afb2df8ec3ea799fce35834796982be543b46a6582ae7"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.catalogue.price.value",
+      "class": "A",
+      "group": "catalogue",
+      "meaning": "Display field for versioned, authoritative active price",
+      "en": {
+        "text": "{{active_price}}",
+        "utf8_bytes": 16,
+        "sha256": "11ce85c6237da128bde1a6c71e937a89361c5a97a7d2e71242b0e772952fe7d5"
+      },
+      "af": {
+        "text": "{{active_price}}",
+        "utf8_bytes": 16,
+        "sha256": "11ce85c6237da128bde1a6c71e937a89361c5a97a7d2e71242b0e772952fe7d5"
+      },
+      "tokens": [
+        "active_price"
+      ],
+      "render_guards": [
+        "Render value from the same accepted offer/price version; never hardcode R249/R399/R549 in UI text."
+      ]
+    },
+    {
+      "key": "commerce.product.catalogue.price.saving",
+      "class": "A",
+      "group": "catalogue",
+      "meaning": "Savings statement relative to active comparable list prices",
+      "en": {
+        "text": "Save {{bundle_saving}} compared with buying both products separately.",
+        "utf8_bytes": 69,
+        "sha256": "5c23162807be76557f37579bf1c8f87f19b863269279c1fece3fd40eaa0dec8f"
+      },
+      "af": {
+        "text": "Spaar {{bundle_saving}} teenoor die afsonderlike aankoop van albei produkte.",
+        "utf8_bytes": 76,
+        "sha256": "9fe026860a1a760851d98c0f36905dc1d3ef2dc53e8e122b5be98e60c463cdb4"
+      },
+      "tokens": [
+        "bundle_saving"
+      ],
+      "render_guards": [
+        "Show only when validated versioned list prices and accepted bundle price support this exact difference."
+      ]
+    },
+    {
+      "key": "commerce.product.catalogue.access.note",
+      "class": "A",
+      "group": "catalogue",
+      "meaning": "Distinguish purchase/payment from entitlement and fulfilment",
+      "en": {
+        "text": "A purchase does not itself mean your content is ready. Access is confirmed separately after payment verification and any required checks.",
+        "utf8_bytes": 137,
+        "sha256": "227eabfecd233f366f4a06ec0e46bbe0c7ab2240699532cdd555258874db9421"
+      },
+      "af": {
+        "text": "’n Aankoop beteken nie vanself dat jou inhoud gereed is nie. Toegang word afsonderlik bevestig nadat betaling geverifieer is en enige nodige kontroles afgehandel is.",
+        "utf8_bytes": 167,
+        "sha256": "784f68bc5053364128d8c1fb6afb6abccc7a41337b2bc020e07a9caeb438a567"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.catalogue.included.title",
+      "class": "B",
+      "group": "catalogue",
+      "meaning": "Reusable inclusion heading",
+      "en": {
+        "text": "What’s included",
+        "utf8_bytes": 17,
+        "sha256": "a441e0502556e206d117d44b4e8ca6bfb533cfe17a2f23706c5fbfd0da0dc525"
+      },
+      "af": {
+        "text": "Wat is ingesluit",
+        "utf8_bytes": 16,
+        "sha256": "dfc3b2c42f5e6f912b62a29d5261a371ae14263d44315a216f2d8068ad769e25"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.catalogue.not_available",
+      "class": "A",
+      "group": "catalogue",
+      "meaning": "Unavailable sale state",
+      "en": {
+        "text": "This offer is not available for purchase right now.",
+        "utf8_bytes": 51,
+        "sha256": "781d44900e549f34ddf31a4ae7a0023321a2515f084de1ea9bdf0464de317a56"
+      },
+      "af": {
+        "text": "Hierdie aanbod is tans nie beskikbaar om te koop nie.",
+        "utf8_bytes": 53,
+        "sha256": "6dd2667f8497e44a3528b6d89659ed0b29abe413fd05982a2ca538b631247b8a"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Use when release or purchase eligibility is not satisfied; never substitute an unauthorised payment link."
+      ]
+    },
+    {
+      "key": "commerce.product.catalogue.checking",
+      "class": "B",
+      "group": "catalogue",
+      "meaning": "Eligibility query in progress",
+      "en": {
+        "text": "Checking which offers are available to you…",
+        "utf8_bytes": 45,
+        "sha256": "8ac813555ca2e27950c46965b32f3c3099af8b03bb6ce5d6c1dfe4d4c6e534d9"
+      },
+      "af": {
+        "text": "Besig om na te gaan watter aanbiedinge vir jou beskikbaar is…",
+        "utf8_bytes": 63,
+        "sha256": "6dabf0e91ac82530e96982ed834cfea58805e8e5a986563851b1e6a40ef9e001"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Do not infer eligibility from a browser-only state."
+      ]
+    },
+    {
+      "key": "commerce.product.assessment.title",
+      "class": "B",
+      "group": "assessment",
+      "meaning": "SKU 1 official offer name",
+      "en": {
+        "text": "Digital Temperament Assessment",
+        "utf8_bytes": 30,
+        "sha256": "c992fa2e323e95cb76ae61b6527d91ef89472283c65d610f823d0bd6bf95f834"
+      },
+      "af": {
+        "text": "Digitale temperamentassessering",
+        "utf8_bytes": 31,
+        "sha256": "0fe13b3eb98c46fe94c9417b028e96903120c54ade76772dac323d53eb8e6ff8"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.tagline",
+      "class": "B",
+      "group": "assessment",
+      "meaning": "Assessment value framing",
+      "en": {
+        "text": "Understand your patterns, not just a label.",
+        "utf8_bytes": 43,
+        "sha256": "ee1294f2df554e90d32d075c396b0baceb62abf3af73604c4aac33b531a7fd18"
+      },
+      "af": {
+        "text": "Verstaan jou patrone, nie net ’n etiket nie.",
+        "utf8_bytes": 46,
+        "sha256": "c1a0be5f6565e7ec8de508ef3fd58371d1bebd7cf24100ee1ee0665132dc47cc"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.intro",
+      "class": "A",
+      "group": "assessment",
+      "meaning": "Assessment description; methodology rights still required",
+      "en": {
+        "text": "Explore your everyday patterns through a guided digital assessment based on the Four-Colour Temperament Model™. Your result is intended to support self-understanding and practical reflection.",
+        "utf8_bytes": 193,
+        "sha256": "a95cb1ed06fa45782e1f6e09263c73d0663f8b30aef43ad359e5e02061bc797a"
+      },
+      "af": {
+        "text": "Verken jou alledaagse patrone deur ’n begeleide digitale assessering wat op die Four-Colour Temperament Model™ gegrond is. Jou resultaat is bedoel om selfinsig en praktiese nadenke te ondersteun.",
+        "utf8_bytes": 199,
+        "sha256": "42fbaf5abcf3e631e295c4738618e6929b03ba4e971e40cd6c1e23215eebfa7f"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.included.attempt",
+      "class": "A",
+      "group": "assessment",
+      "meaning": "Component includes single governed attempt",
+      "en": {
+        "text": "One eligible digital assessment attempt.",
+        "utf8_bytes": 40,
+        "sha256": "322f751c5858bb73053696c075e2ba70b16558c3a33c8ae79040bd86f5160555"
+      },
+      "af": {
+        "text": "Een toegelate digitale assesseringspoging.",
+        "utf8_bytes": 42,
+        "sha256": "eab456910e883ec90bfdfc0c0a69327be0fc62384d8fe0c74a8da519f55590ff"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.included.report",
+      "class": "A",
+      "group": "assessment",
+      "meaning": "Report and guidance contingent on delivered complete result",
+      "en": {
+        "text": "Your governed assessment result, report and introductory guidance after successful delivery.",
+        "utf8_bytes": 92,
+        "sha256": "a9b4fe07fc49c1cdfb7e0c3522d41bf8abfe5778f4348fcc585dd5040457045c"
+      },
+      "af": {
+        "text": "Jou goedgekeurde assesseringsresultaat, verslag en inleidende leiding nadat dit suksesvol beskikbaar gestel is.",
+        "utf8_bytes": 111,
+        "sha256": "eabcc22674252d2dc699e8ca76aa61e6552a07fb8e2d1ee8faab845417f065be"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.included.history",
+      "class": "A",
+      "group": "assessment",
+      "meaning": "Report availability and governed deletion/access exceptions",
+      "en": {
+        "text": "Access to your delivered report and applicable correction history while your account relationship continues.",
+        "utf8_bytes": 108,
+        "sha256": "dcc846804acd72365d04142d8ff2702edc3d00b0747872ad3257395e7aa513c0"
+      },
+      "af": {
+        "text": "Toegang tot jou beskikbare verslag en toepaslike regstellingsgeskiedenis solank jou rekeningverhouding voortduur.",
+        "utf8_bytes": 113,
+        "sha256": "a67c79d24fcc2c14a8f0e915b34e8eddfa4dcdb289a700ffb7b814c219bc7529"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.conditions.title",
+      "class": "B",
+      "group": "assessment",
+      "meaning": "Purchase conditions heading",
+      "en": {
+        "text": "Before you buy",
+        "utf8_bytes": 14,
+        "sha256": "9bb1ed0a6b933db20cc1593f86ae2121a5dd5a8460a9eb1ee807768e29c2544b"
+      },
+      "af": {
+        "text": "Voordat jy koop",
+        "utf8_bytes": 15,
+        "sha256": "8d39c731341dc2bf2a41d3c240669e4a13b4cc13078dd6e77f3339e917f0b47c"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.conditions.body",
+      "class": "A",
+      "group": "assessment",
+      "meaning": "Unused credit and annual interval rules",
+      "en": {
+        "text": "An existing unused assessment credit or the assessment interval may prevent another purchase. We’ll check your eligibility before checkout.",
+        "utf8_bytes": 141,
+        "sha256": "9e9d883503d824670fbe34c19671dedbfb7975bb7a94257158bbaf5e980a75e9"
+      },
+      "af": {
+        "text": "’n Bestaande ongebruikte assesseringsreg of die tydsinterval tussen assesserings kan nog ’n aankoop verhinder. Ons gaan jou geskiktheid voor betaling na.",
+        "utf8_bytes": 157,
+        "sha256": "2b940891027ecb8fb247a4b290f4023abd114f418caabb6db3db1583e0ce0714"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Display no personalised status until the authenticated owning interface verifies eligibility."
+      ]
+    },
+    {
+      "key": "commerce.product.assessment.limits.body",
+      "class": "A",
+      "group": "assessment",
+      "meaning": "Temperament not clinical diagnostic truth",
+      "en": {
+        "text": "This is a tool for reflection about temperament and behaviour. It is not a medical or psychological diagnosis.",
+        "utf8_bytes": 110,
+        "sha256": "9559d1f6d87ae018a5263e6d44b05b309d023f25c7897e896354050a1ba9a5c9"
+      },
+      "af": {
+        "text": "Dit is ’n hulpmiddel om oor temperament en gedrag na te dink. Dit is nie ’n mediese of sielkundige diagnose nie.",
+        "utf8_bytes": 116,
+        "sha256": "70a6f12d3ab96b5cf077b6c9ad239fd086f1fef654365538bf68d2e7b6f8254c"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.faq.title",
+      "class": "B",
+      "group": "assessment",
+      "meaning": "Assessment FAQ heading",
+      "en": {
+        "text": "Questions about the assessment",
+        "utf8_bytes": 30,
+        "sha256": "e2fcc21eb9388810d0eb0ea13006b331536ddadbbd66500572076b4177d74405"
+      },
+      "af": {
+        "text": "Vrae oor die assessering",
+        "utf8_bytes": 24,
+        "sha256": "12f0a2cb4482f67f2fc22a73be7e009c953b55d5acae35d96952fce8163e6c41"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.faq.result.question",
+      "class": "B",
+      "group": "assessment",
+      "meaning": "Assessment result FAQ question",
+      "en": {
+        "text": "What do I receive after completing it?",
+        "utf8_bytes": 38,
+        "sha256": "55f22a9deab0477b3fd41ab5616cefad668b4b73ff7a2ac558a91aa1b821e502"
+      },
+      "af": {
+        "text": "Wat ontvang ek nadat ek dit voltooi het?",
+        "utf8_bytes": 40,
+        "sha256": "974c2271f1823680f57277feed54952a32f343a297a9e8cbbafdb898bc1de9a9"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.faq.result.answer",
+      "class": "A",
+      "group": "assessment",
+      "meaning": "FAQ answer contingent on complete delivery and method",
+      "en": {
+        "text": "After successful completion and delivery, you receive your digital assessment result, report and introductory guidance. The result reflects the approved methodology and can show more than one temperament pattern.",
+        "utf8_bytes": 212,
+        "sha256": "1bc2941a0c28691051c46d075635447338e450a0100a3af6f350fe02a6c9baff"
+      },
+      "af": {
+        "text": "Nadat jy die assessering suksesvol voltooi het en dit beskikbaar gestel is, ontvang jy jou digitale assesseringsresultaat, verslag en inleidende leiding. Die resultaat volg die goedgekeurde metode en kan meer as een temperamentpatroon aandui.",
+        "utf8_bytes": 242,
+        "sha256": "98ec63d0e0f24983b062599fc3f24747b6d0c0cb3fa7eac1da0164abc4ba44fd"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.faq.known.question",
+      "class": "B",
+      "group": "assessment",
+      "meaning": "Prior declarations FAQ question",
+      "en": {
+        "text": "What if I already know my temperament?",
+        "utf8_bytes": 38,
+        "sha256": "20039c627970544f82d501797db2e67aefc0954a31d858523f154d222a78d2af"
+      },
+      "af": {
+        "text": "Wat as ek reeds my temperament ken?",
+        "utf8_bytes": 35,
+        "sha256": "9b89fb854c2479ddf83cb731f55947c4a5700c6dd8496503b31317cd5d2bbc62"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.faq.known.answer",
+      "class": "A",
+      "group": "assessment",
+      "meaning": "Provenance difference",
+      "en": {
+        "text": "Self-reported or book-derived temperament information may support some permitted guidance, but it is not the same as a completed paid digital assessment or its report.",
+        "utf8_bytes": 167,
+        "sha256": "014215c9e08b6196318a6fd5b0658a14eabe9c7ff1f0feabcb80e54fef0a60dc"
+      },
+      "af": {
+        "text": "Temperamentinligting wat jy self aandui of uit die boek verkry het, kan sekere toegelate leiding ondersteun, maar dit is nie dieselfde as ’n voltooide betaalde digitale assessering of die verslag daarvan nie.",
+        "utf8_bytes": 210,
+        "sha256": "52153a3d319e9c7019c3d596a425e88171b011180f68135474e9d907d29a7036"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.faq.repeat.question",
+      "class": "B",
+      "group": "assessment",
+      "meaning": "Repeat purchase FAQ question",
+      "en": {
+        "text": "Can I buy another assessment straight away?",
+        "utf8_bytes": 43,
+        "sha256": "6c56bd42980137f13ad5daa43619d5c5dfee35a6cf6120b815bb8f95206e42fb"
+      },
+      "af": {
+        "text": "Kan ek dadelik nog ’n assessering koop?",
+        "utf8_bytes": 41,
+        "sha256": "9f7fc062711ebf79003d36fd0f0fb1813af85d04f0cddfec43b69a3876448c65"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.faq.repeat.answer",
+      "class": "A",
+      "group": "assessment",
+      "meaning": "Unused credit and interval restrictions",
+      "en": {
+        "text": "Not always. You cannot buy a second ordinary assessment while you have an unused paid assessment credit. The permitted interval between successfully delivered assessments also applies.",
+        "utf8_bytes": 184,
+        "sha256": "146360c422fe246c187a4a5f4f5c04efa2f2c6135632afc911539ca535a8e547"
+      },
+      "af": {
+        "text": "Nie altyd nie. Jy kan nie ’n tweede gewone assessering koop terwyl jy ’n ongebruikte betaalde assesseringsreg het nie. Die toegelate tydsinterval tussen suksesvol gelewerde assesserings geld ook.",
+        "utf8_bytes": 199,
+        "sha256": "5f7281ee5e4d6503f1fa24b53e0b3049499c7583ae8e46f5cb1653f18037497f"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.assessment.action.review",
+      "class": "B",
+      "group": "assessment",
+      "meaning": "Review-only CTA leading to governed checkout",
+      "en": {
+        "text": "Review assessment purchase",
+        "utf8_bytes": 26,
+        "sha256": "f0fe6b5c5b88bd4f07e5d447f62fe19a7bcc8cafd63d7afd1eff5df26c5117b4"
+      },
+      "af": {
+        "text": "Hersien assesseringsaankoop",
+        "utf8_bytes": 27,
+        "sha256": "3734cf1e2b8c6665cd159a11a9f3add73b1fb4661c65eeef214edf07c3d54042"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Show enabled only with a validated eligible purchase route and release permission."
+      ]
+    },
+    {
+      "key": "commerce.product.plan.title",
+      "class": "B",
+      "group": "plan",
+      "meaning": "SKU 2 official offer name",
+      "en": {
+        "text": "7-Day Personalised Plan",
+        "utf8_bytes": 23,
+        "sha256": "d2daff60d7c9a11e2ec4f8c205d8cb9f9ce624f87f6f8de6d47013887cf4cfaf"
+      },
+      "af": {
+        "text": "Persoonlike 7-dagplan",
+        "utf8_bytes": 21,
+        "sha256": "e87d80156af4bbf95801e7cb9af3f9fcb7290180b74e3ab1b37d8d513ff94925"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.tagline",
+      "class": "B",
+      "group": "plan",
+      "meaning": "Plan value framing",
+      "en": {
+        "text": "Practical guidance for the days ahead.",
+        "utf8_bytes": 38,
+        "sha256": "8b2f865ad6c9f2ec0e9cfdf5aacedb319e370205a3b232dd1ca73ed5bc9d7303"
+      },
+      "af": {
+        "text": "Praktiese leiding vir die dae wat voorlê.",
+        "utf8_bytes": 42,
+        "sha256": "0e4b0a7c86252ed343e7673879eeab772cc4b4f6385c88f7b3411e95500f2189"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.intro",
+      "class": "A",
+      "group": "plan",
+      "meaning": "Plan is contingent on Safety & Eligibility",
+      "en": {
+        "text": "A seven-day plan informed by your temperament context and the health and lifestyle information needed for safe personalisation. A personalised plan is provided only when the required eligibility checks allow it.",
+        "utf8_bytes": 211,
+        "sha256": "567927f06b6e82923823acbe3f92c4caa8e4e7b26091bb9b1af9e3615f1e0df8"
+      },
+      "af": {
+        "text": "’n Sewe-dagplan wat jou temperamentkonteks en die gesondheids- en leefstylinligting wat vir veilige verpersoonliking nodig is, in ag neem. ’n Persoonlike plan word slegs verskaf as die vereiste geskiktheidskontroles dit toelaat.",
+        "utf8_bytes": 232,
+        "sha256": "b547148625a73d947a63175a8af59f719f8a3e9aca6b191f9a51d95fd79b32ac"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.included.body",
+      "class": "A",
+      "group": "plan",
+      "meaning": "Included deliverable, not instant after payment",
+      "en": {
+        "text": "An approved seven-day plan with practical guidance for your eligible pathway, once it has been successfully delivered.",
+        "utf8_bytes": 118,
+        "sha256": "b02d689470ab631b30458b252e6ebf43beed44985f4a830ed9fdc3718afddcae"
+      },
+      "af": {
+        "text": "’n Goedgekeurde sewe-dagplan met praktiese leiding vir die pad waarvoor jy geskik is, nadat dit suksesvol beskikbaar gestel is.",
+        "utf8_bytes": 129,
+        "sha256": "cfc496a9e002e203a0cff33634b8abedfab87fcfc61f10ad025721c2af8486e6"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.conditions.title",
+      "class": "B",
+      "group": "plan",
+      "meaning": "Eligibility prerequisite heading",
+      "en": {
+        "text": "What’s needed first",
+        "utf8_bytes": 21,
+        "sha256": "d47e4db92954cb68a57266da547ecbb8b5e5cf7bc178b36d2696e7159d4e32ea"
+      },
+      "af": {
+        "text": "Wat eers nodig is",
+        "utf8_bytes": 17,
+        "sha256": "37d8d3114a36b7c605a7fd2b5b605d398fbd93784b0ffd5cf1a68ae6bc48d489"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.conditions.body",
+      "class": "A",
+      "group": "plan",
+      "meaning": "Minimum prerequisites",
+      "en": {
+        "text": "We need sufficient temperament information, the required health and safety information, and an eligibility outcome that permits a personalised plan.",
+        "utf8_bytes": 148,
+        "sha256": "25e03ac0cb4660157c9d8cc29a8a39741e3e7cba71026647c6e2539966d98c80"
+      },
+      "af": {
+        "text": "Ons het voldoende temperamentinligting, die vereiste gesondheids- en veiligheidsinligting en ’n geskiktheidsuitkoms wat ’n persoonlike plan toelaat, nodig.",
+        "utf8_bytes": 159,
+        "sha256": "af6c27ad4ed8f640c76a19280d671fa93069606d058d878830550bc0982fe913"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.hold.body",
+      "class": "A",
+      "group": "plan",
+      "meaning": "Held-unconsumed state",
+      "en": {
+        "text": "If information is missing or professional review is required, your purchased plan right stays on hold and is not used up while the outcome is unresolved.",
+        "utf8_bytes": 153,
+        "sha256": "dfe1cebfb4080fbdac971a98bfafa0d3483723cf816679a8be97211fc8df3876"
+      },
+      "af": {
+        "text": "As inligting ontbreek of professionele hersiening nodig is, bly jou gekoopte planreg voorbehou en word dit nie opgebruik terwyl die uitkoms nog nie vasstaan nie.",
+        "utf8_bytes": 161,
+        "sha256": "b71314e0cb63dccc494544443cc7cea0ea8133fd63655fa21767155d5f4e4c87"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.limits.body",
+      "class": "A",
+      "group": "plan",
+      "meaning": "Safety and no outcome guarantee",
+      "en": {
+        "text": "A personalised plan is not guaranteed by payment alone. It does not replace individual medical, psychological or dietetic care, and it cannot promise a particular weight or health result.",
+        "utf8_bytes": 187,
+        "sha256": "45de50981365dcb1169698cfcd62c5b1af6fd0e62d150b87ca98839ef21754e4"
+      },
+      "af": {
+        "text": "Betaling alleen waarborg nie ’n persoonlike plan nie. Dit vervang nie individuele mediese, sielkundige of dieetkundige sorg nie en kan nie ’n bepaalde gewigs- of gesondheidsresultaat waarborg nie.",
+        "utf8_bytes": 200,
+        "sha256": "2254da6adb59a540fbf1d611183f2045ec2bcc04542b34d67b89adf7f03dd726"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.faq.title",
+      "class": "B",
+      "group": "plan",
+      "meaning": "Plan FAQ heading",
+      "en": {
+        "text": "Questions about the plan",
+        "utf8_bytes": 24,
+        "sha256": "1bfb8f823d00d89276db916d534797f66a8a826258115dfe012462c8547f3e30"
+      },
+      "af": {
+        "text": "Vrae oor die plan",
+        "utf8_bytes": 17,
+        "sha256": "e5899461bc18a44cabf69c432d56bf48c5ec91ded8e0ab99cbd590903ee6b537"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.faq.delivery.question",
+      "class": "B",
+      "group": "plan",
+      "meaning": "Timing FAQ question",
+      "en": {
+        "text": "Will I get my plan as soon as I pay?",
+        "utf8_bytes": 36,
+        "sha256": "aa42f5eb287825587af7d246b42a989644c375b4ff6019d6c271edac90da5f42"
+      },
+      "af": {
+        "text": "Kry ek my plan sodra ek betaal?",
+        "utf8_bytes": 31,
+        "sha256": "5c30c44ea5f914b8d6865a194b7e34ead031769aefee1ef1f5812f15dfb3841a"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.faq.delivery.answer",
+      "class": "A",
+      "group": "plan",
+      "meaning": "No immediate access claim",
+      "en": {
+        "text": "Not automatically. Payment must first be verified, and a personalised plan can be delivered only after the required information and safety checks are satisfied.",
+        "utf8_bytes": 160,
+        "sha256": "eec9fa83d3452f2d0ca23dccd142bf2b72277bb81f36081a0b5b5dc851ea9c1f"
+      },
+      "af": {
+        "text": "Nie outomaties nie. Betaling moet eers geverifieer word, en ’n persoonlike plan kan eers beskikbaar gestel word nadat die vereiste inligting en veiligheidskontroles afgehandel is.",
+        "utf8_bytes": 181,
+        "sha256": "4611a0b41403d1fd396b48b04571c992221b0d46d3664713964faa3a987a3c51"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.faq.not_eligible.question",
+      "class": "B",
+      "group": "plan",
+      "meaning": "General Wellness and final outcome FAQ question",
+      "en": {
+        "text": "What if a personalised plan is not appropriate for me?",
+        "utf8_bytes": 54,
+        "sha256": "dd006dd894400e29b9aef66df1a84dccd5bc60091040b61fea31eeee2406bf7e"
+      },
+      "af": {
+        "text": "Wat as ’n persoonlike plan nie vir my geskik is nie?",
+        "utf8_bytes": 54,
+        "sha256": "fa9bad3ff797ef54fd854224de6b0c7f4beea2c2a98bad650b40eb6b61b0e6c5"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.faq.not_eligible.answer",
+      "class": "A",
+      "group": "plan",
+      "meaning": "Distinct general_wellness_only and terminal-unfulfillable outcomes",
+      "en": {
+        "text": "If only General Wellness guidance is appropriate, you may use an approved General Wellness pathway without using up the purchased personalised-plan right. You can choose to keep that right or request a refund for its recorded purchase allocation. A final outcome that cannot provide the plan leads to the applicable plan-component refund.",
+        "utf8_bytes": 338,
+        "sha256": "7102ebf1d3619a93e7e6ebb316c9ba97e7629517f85602072c62b682c0db8b12"
+      },
+      "af": {
+        "text": "As slegs algemene welstandsleiding geskik is, kan jy ’n goedgekeurde algemene welstandspad volg sonder om jou gekoopte reg op ’n persoonlike plan op te gebruik. Jy kan kies om daardie reg te behou of ’n terugbetaling van die vasgelegde aankooptoedeling vir die plan aan te vra. ’n Finale uitkoms waar die plan nie voorsien kan word nie, lei tot die toepaslike terugbetaling vir die plandeel.",
+        "utf8_bytes": 399,
+        "sha256": "3e04a07c33c4a5fa4996e73ab2c87abe865ef78a3454d5bc4b15cb5d21da16f4"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Render only with the approved eligibility outcome and Commerce policy; do not imply support can grant eligibility."
+      ]
+    },
+    {
+      "key": "commerce.product.plan.faq.choice.question",
+      "class": "B",
+      "group": "plan",
+      "meaning": "General Wellness choice-window FAQ question",
+      "en": {
+        "text": "How long do I have to choose between keeping my plan right and a refund?",
+        "utf8_bytes": 72,
+        "sha256": "f19db5ecdf1812679c42a213726c676b3afd5e4bb1997b329ca5b94140ab8856"
+      },
+      "af": {
+        "text": "Hoe lank het ek om te kies tussen die behoud van my planreg en ’n terugbetaling?",
+        "utf8_bytes": 82,
+        "sha256": "a81fd5e543a7a2e586b2460eeb44c8fc04b2392e30746d5f9f406f1599c06406"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.faq.choice.answer",
+      "class": "A",
+      "group": "plan",
+      "meaning": "Exactly one 14-day period; no later eligibility promise",
+      "en": {
+        "text": "If your outcome is General Wellness only, you have one 14-day choice period from the notice explaining your options. If you do not choose in that period, the recorded plan-component amount is refunded and that plan right closes. Keeping it does not guarantee that you will qualify for a personalised plan later.",
+        "utf8_bytes": 311,
+        "sha256": "73a7de046220e7885c7d843dd6a7a585ae60f479f1438d4f2dbb0f547d866f71"
+      },
+      "af": {
+        "text": "As jou uitkoms slegs algemene welstand toelaat, het jy een keusetydperk van 14 dae vanaf die kennisgewing wat jou opsies verduidelik. As jy nie binne dié tydperk kies nie, word die vasgelegde bedrag vir die plandeel terugbetaal en word daardie planreg beëindig. As jy dit behou, waarborg dit nie dat jy later vir ’n persoonlike plan sal kwalifiseer nie.",
+        "utf8_bytes": 357,
+        "sha256": "ce40f2c89789b2373fcdb80b570f5d14f48f018675dfed4771b0ab52dcc7cef2"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Show only for general_wellness_only; ensure SKU/component amount from accepted order."
+      ]
+    },
+    {
+      "key": "commerce.product.plan.faq.existing_assessment.question",
+      "class": "B",
+      "group": "plan",
+      "meaning": "Plan-only permitted independently of assessment credit",
+      "en": {
+        "text": "Can I buy a plan if I already have an unused assessment credit?",
+        "utf8_bytes": 63,
+        "sha256": "dd9a628b9691ee766be4f064f26a51662fbdab22e1018d9bd2b1b37e511840bd"
+      },
+      "af": {
+        "text": "Kan ek ’n plan koop as ek reeds ’n ongebruikte assesseringsreg het?",
+        "utf8_bytes": 71,
+        "sha256": "c176c69ae30e11995571394375a8b491808e52e1b9f011a303ab1e49f503e924"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.faq.existing_assessment.answer",
+      "class": "A",
+      "group": "plan",
+      "meaning": "Independent purchase but not eligibility guarantee",
+      "en": {
+        "text": "Yes, a plan-only purchase is independent of an unused assessment credit. Delivery still depends on the required temperament, health and safety checks.",
+        "utf8_bytes": 150,
+        "sha256": "eb4775566cb99bac734a2c8984bc564c3bf991b20b274c59e2c5f08f1189f477"
+      },
+      "af": {
+        "text": "Ja, jy kan die plan alleen koop al het jy ’n ongebruikte assesseringsreg. Of die plan beskikbaar gestel kan word, hang steeds van die vereiste temperament-, gesondheids- en veiligheidskontroles af.",
+        "utf8_bytes": 199,
+        "sha256": "01eac75d95127c26632cfb708a8ec0953204c223361443c08b55b1eac921d13f"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.plan.action.review",
+      "class": "B",
+      "group": "plan",
+      "meaning": "Review-only CTA leading to governed checkout",
+      "en": {
+        "text": "Review plan purchase",
+        "utf8_bytes": 20,
+        "sha256": "eaf74b7b6d9a1365ef1f3a306addbad38996aafd1611877ac94f12caa68f6393"
+      },
+      "af": {
+        "text": "Hersien planaankoop",
+        "utf8_bytes": 19,
+        "sha256": "ba4f1d32de6bc36def9664de8fd0265c2877f361affecf02327e8b318313140d"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Show enabled only with a validated eligible purchase route and release permission."
+      ]
+    },
+    {
+      "key": "commerce.product.bundle.title",
+      "class": "B",
+      "group": "bundle",
+      "meaning": "SKU 3 offer name",
+      "en": {
+        "text": "Assessment + Plan Bundle",
+        "utf8_bytes": 24,
+        "sha256": "8dbb13f561999d5b896e703ac86bc449fda89e60b6a4fe2b4d9e7a98011f3f25"
+      },
+      "af": {
+        "text": "Bundel: assessering en 7-dagplan",
+        "utf8_bytes": 32,
+        "sha256": "633fee5b4ca07396b447a149501a66cccc2734b63ab863a97e16600488db02c5"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.tagline",
+      "class": "B",
+      "group": "bundle",
+      "meaning": "Bundle framing",
+      "en": {
+        "text": "Two parts, one once-off offer.",
+        "utf8_bytes": 30,
+        "sha256": "c4b6ad1d4a2e70e466976f372cd2b05d73610730ed9f06f7ee1d9038aba9463e"
+      },
+      "af": {
+        "text": "Twee dele, een eenmalige aanbod.",
+        "utf8_bytes": 32,
+        "sha256": "e8fbb0a8c0ec587e08bde8435fdff305fbe21429e9b71e8502e25a3e628743e9"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.intro",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Bundle contains two separate entitlements",
+      "en": {
+        "text": "Combine the digital temperament assessment and the seven-day personalised plan in one purchase. The assessment and plan remain separate parts, each with its own use and eligibility rules.",
+        "utf8_bytes": 187,
+        "sha256": "c64ed36a7f3d92fcd1369f0e2a3adefe4ea09f00b1d321804105844b43062e5a"
+      },
+      "af": {
+        "text": "Kry die digitale temperamentassessering en die persoonlike sewe-dagplan met een aankoop. Die assessering en plan bly afsonderlike dele, elk met sy eie gebruiks- en geskiktheidsreëls.",
+        "utf8_bytes": 183,
+        "sha256": "19808e7b3247918918c61491a11ad2e26f5de468069267c33e501c40efbee7dc"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.included.assessment",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Included assessment component",
+      "en": {
+        "text": "One digital assessment right, with its result and report after successful completion and delivery.",
+        "utf8_bytes": 98,
+        "sha256": "dd2cf534736828847e5702cb2c48fe79f54f8332f7ab49d23063323cb02972f4"
+      },
+      "af": {
+        "text": "Een reg op ’n digitale assessering, met die resultaat en verslag nadat dit suksesvol voltooi en beskikbaar gestel is.",
+        "utf8_bytes": 119,
+        "sha256": "4fa405950e1d77e524c44de1c66f4feb6fa9dd6d7f10232c0fa25cfc831605d1"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.included.plan",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Included plan component conditional on eligibility",
+      "en": {
+        "text": "One separate right to a personalised seven-day plan when the required information and safety checks permit delivery.",
+        "utf8_bytes": 116,
+        "sha256": "d77d08a76ed92162a3fda785d88f44ea293903d3719ea1d62d47772969fcb3d2"
+      },
+      "af": {
+        "text": "Een afsonderlike reg op ’n persoonlike sewe-dagplan wanneer die vereiste inligting en veiligheidskontroles dit moontlik maak.",
+        "utf8_bytes": 127,
+        "sha256": "ef8a2b6e8b3d07cd5e2be2254038cbd70b8264d381be928991d74e029934762b"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.allocation.title",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Component allocation section heading",
+      "en": {
+        "text": "How the bundle price is divided",
+        "utf8_bytes": 31,
+        "sha256": "0264dac3fc64c1ad918c14008b48750bee62eb933fd40759e73d52a5e4502c48"
+      },
+      "af": {
+        "text": "Hoe die bundelprys verdeel word",
+        "utf8_bytes": 31,
+        "sha256": "2857836b47ff4b23fbbc2a0c1e0938c2cedd1666776f6e25ad2d37bce61a56b7"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.allocation.intro",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Versioned pre-sale allocation and immutable order snapshot",
+      "en": {
+        "text": "Before you pay, we will show the amount assigned to the assessment and the amount assigned to the plan. These amounts will be recorded with your accepted order.",
+        "utf8_bytes": 160,
+        "sha256": "41b74625392b76f20b055e320c712f29e50d43fb082f2578d45cdb6113364d71"
+      },
+      "af": {
+        "text": "Voordat jy betaal, sal ons wys watter bedrag aan die assessering en watter bedrag aan die plan toegewys word. Hierdie bedrae sal saam met jou aanvaarde bestelling vasgelê word.",
+        "utf8_bytes": 177,
+        "sha256": "60ab41451f6d497f073ee5da0b4673844d5feada09ab3eb4716961d41351a769"
+      },
+      "tokens": [],
+      "render_guards": [
+        "BLOCK RELEASE: show only when both actual allocation amounts and version are approved, shown before payment, and sum to accepted bundle total."
+      ]
+    },
+    {
+      "key": "commerce.product.bundle.allocation.assessment",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Authoritative disclosed allocation for assessment component",
+      "en": {
+        "text": "Assessment part: {{assessment_component_amount}}",
+        "utf8_bytes": 48,
+        "sha256": "cb7fe414381de67f9875a9d2f5c1ba57f9bfc9948a0c96f02808b441a82a80ed"
+      },
+      "af": {
+        "text": "Assesseringsdeel: {{assessment_component_amount}}",
+        "utf8_bytes": 49,
+        "sha256": "fd0413c9cd6f7dc9cdcfe7926d94e8c6e2e52362e12ea237ab90114d3a507b6f"
+      },
+      "tokens": [
+        "assessment_component_amount"
+      ],
+      "render_guards": [
+        "No sample numbers; only approved snapshotted versioned allocation."
+      ]
+    },
+    {
+      "key": "commerce.product.bundle.allocation.plan",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Authoritative disclosed allocation for plan component",
+      "en": {
+        "text": "Plan part: {{plan_component_amount}}",
+        "utf8_bytes": 36,
+        "sha256": "e8cb0435426c2d58c1816621348d448c93a3abe8c79e72e0cb6ab8d4d3306cf2"
+      },
+      "af": {
+        "text": "Plandeel: {{plan_component_amount}}",
+        "utf8_bytes": 35,
+        "sha256": "398215c5ac5a6b58f3a869bc7f6c2c14d5f178b3c52f2e3d6d871d5ec54c8988"
+      },
+      "tokens": [
+        "plan_component_amount"
+      ],
+      "render_guards": [
+        "No sample numbers; only approved snapshotted versioned allocation."
+      ]
+    },
+    {
+      "key": "commerce.product.bundle.conditions.title",
+      "class": "B",
+      "group": "bundle",
+      "meaning": "Bundle prerequisites heading",
+      "en": {
+        "text": "Before you choose the bundle",
+        "utf8_bytes": 28,
+        "sha256": "7c1afe5a7412f2f982587ec00dfb89682a9dff8ce45d22f01b0c0fc2088b1ad0"
+      },
+      "af": {
+        "text": "Voordat jy die bundel kies",
+        "utf8_bytes": 26,
+        "sha256": "2b18c2a9b2827d2b306cacb4a4658efe9ca1322a33ce6bebc199de478d44a584"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.conditions.body",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Assessment credit block and plan-only route",
+      "en": {
+        "text": "You cannot buy this bundle while you already hold an unused ordinary paid assessment credit. Choose the plan-only offer instead if you need a plan. Personalised-plan delivery remains subject to the required eligibility and safety checks.",
+        "utf8_bytes": 237,
+        "sha256": "e7023887ecb196f8d950bddebca769fea4e1513cb4274313d3b72995a4db1544"
+      },
+      "af": {
+        "text": "Jy kan nie hierdie bundel koop terwyl jy reeds ’n ongebruikte gewone betaalde assesseringsreg het nie. Kies eerder die aanbod vir slegs die plan as jy ’n plan nodig het. Die verskaffing van ’n persoonlike plan bly onderhewig aan die vereiste geskiktheids- en veiligheidskontroles.",
+        "utf8_bytes": 286,
+        "sha256": "5efc57ce0bccf09bab38ff760359281c0900abaeb8d4168f741b23992ef11e12"
+      },
+      "tokens": [],
+      "render_guards": [
+        "No private account facts in public marketing; only personalized denial when authenticated and eligible facts read."
+      ]
+    },
+    {
+      "key": "commerce.product.bundle.limits.body",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Bundle limitations and safety disclaimer",
+      "en": {
+        "text": "Paying for the bundle does not guarantee that a personalised plan can be delivered. Safety and eligibility checks still apply, and the digital assessment is not a medical or psychological diagnosis.",
+        "utf8_bytes": 198,
+        "sha256": "336a9459ad970d43173ff427ae04b902b99d5ed5a717c1230d369776af5d8ed2"
+      },
+      "af": {
+        "text": "Om vir die bundel te betaal, waarborg nie dat ’n persoonlike plan gelewer kan word nie. Veiligheids- en geskiktheidskontroles geld steeds, en die digitale assessering is nie ’n mediese of sielkundige diagnose nie.",
+        "utf8_bytes": 217,
+        "sha256": "4722b4ba145ae068be7e6113cddc073133296414bc4f255b03d7a5a67e58c7ed"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.faq.title",
+      "class": "B",
+      "group": "bundle",
+      "meaning": "Bundle FAQ heading",
+      "en": {
+        "text": "Questions about the bundle",
+        "utf8_bytes": 26,
+        "sha256": "ca9734f203c7c6a41804ea7c59dd63d9112dddb357cd7270bfc4cc2835fc6d58"
+      },
+      "af": {
+        "text": "Vrae oor die bundel",
+        "utf8_bytes": 19,
+        "sha256": "12ad2de0c0918eea4f7b7ddb906666f7597f79ffd12612c958fa3b32c3cd428d"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.faq.assessment_later.question",
+      "class": "B",
+      "group": "bundle",
+      "meaning": "Known temperament/assessment credit FAQ question",
+      "en": {
+        "text": "Can I complete the included assessment later?",
+        "utf8_bytes": 45,
+        "sha256": "d0b92d2291dad3932081ac6035409680e8545cfc8d72de7d5663ab7822cfd6f7"
+      },
+      "af": {
+        "text": "Kan ek die ingeslote assessering later voltooi?",
+        "utf8_bytes": 47,
+        "sha256": "16309068999dcb21b905b0107bd6049229991ce1f73a4984a3d07ff5f39c40e4"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.faq.assessment_later.answer",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Conditional fast-onboarding without consuming paid digital assessment",
+      "en": {
+        "text": "Where an approved temperament entry path allows it, you may begin with existing temperament information and complete the included digital assessment later. Earlier self-reported or book-derived information is not a paid digital assessment result.",
+        "utf8_bytes": 246,
+        "sha256": "5188966fb143ac90f6e036a1c2184b07ae9aa22b76db9e5c21fcf311a6abf3ec"
+      },
+      "af": {
+        "text": "Waar ’n goedgekeurde manier om temperamentinligting te verskaf dit toelaat, kan jy met bestaande temperamentinligting begin en die ingeslote digitale assessering later voltooi. Inligting wat jy self aandui of uit die boek verkry het, is nie ’n betaalde digitale assesseringsresultaat nie.",
+        "utf8_bytes": 292,
+        "sha256": "29bedb06acd3dbef9c23abfd3c093eaf6c0fc1f9054fefdf36df21bffaba258e"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.faq.plan_refund.question",
+      "class": "B",
+      "group": "bundle",
+      "meaning": "Bundle partial-plan refund FAQ question",
+      "en": {
+        "text": "What happens if I cannot receive a personalised plan?",
+        "utf8_bytes": 53,
+        "sha256": "6e070c14077401d7728dfdd9a4d8bd6747932400c2fadfaa30b45f3acb18ce43"
+      },
+      "af": {
+        "text": "Wat gebeur as ek nie ’n persoonlike plan kan ontvang nie?",
+        "utf8_bytes": 59,
+        "sha256": "2782bc5b5626d4c468b0ba75175a22567e7498337492600c0e454c23d36c4b9d"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.faq.plan_refund.answer",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Component refund from immutable snapshot",
+      "en": {
+        "text": "The outcome determines whether your plan right stays on hold, you can choose to keep it or request a refund, or the plan part must be refunded. Any refund of that part uses the amount recorded for the plan in your accepted bundle order, not the current standalone plan price. A valid, separately delivered assessment is not automatically cancelled.",
+        "utf8_bytes": 348,
+        "sha256": "0312345e4dd990116446dcacdc89a8651253f09df21873156f80990effa89325"
+      },
+      "af": {
+        "text": "Die uitkoms bepaal of jou planreg voorbehou bly, of jy kan kies om dit te behou of ’n terugbetaling aan te vra, of of die plandeel terugbetaal moet word. ’n Terugbetaling vir dié deel gebruik die bedrag wat vir die plan in jou aanvaarde bundelbestelling vasgelê is, nie die huidige prys van ’n afsonderlike plan nie. ’n Geldige assessering wat afsonderlik beskikbaar gestel is, word nie outomaties gekanselleer nie.",
+        "utf8_bytes": 425,
+        "sha256": "0a5ff0362abd1b7bb8de25e5df277561d60a7e63434dc00975db976af61b0508"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.faq.savings.question",
+      "class": "B",
+      "group": "bundle",
+      "meaning": "Savings logic FAQ question",
+      "en": {
+        "text": "How is the saving worked out?",
+        "utf8_bytes": 29,
+        "sha256": "93c3768fd4daa2226b12622acff26c07eb8758f0bd637941e5ff005be3331ed7"
+      },
+      "af": {
+        "text": "Hoe word die besparing bereken?",
+        "utf8_bytes": 31,
+        "sha256": "18ec2c2e46fac7689ce19f6e6c271ae48b35f6c05539c37d6e7f005f0d6490b5"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.faq.savings.answer",
+      "class": "A",
+      "group": "bundle",
+      "meaning": "Price version and promotion separation",
+      "en": {
+        "text": "The saving is the difference between the applicable separate list prices and the bundle price. Promotions and the accepted order amounts are shown separately before payment.",
+        "utf8_bytes": 173,
+        "sha256": "3688d9d1781df2f2e76aed671b4c1bccca0d5abf32171e9bdf52be047ff93b9f"
+      },
+      "af": {
+        "text": "Die besparing is die verskil tussen die toepaslike afsonderlike lyspryse en die bundelprys. Promosies en die bedrae van die aanvaarde bestelling word afsonderlik voor betaling gewys.",
+        "utf8_bytes": 182,
+        "sha256": "9e2aab0b85929ffba583795a1bf1b04da8d6fc384ad87eb6e949ad6accf34fb2"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.bundle.action.review",
+      "class": "B",
+      "group": "bundle",
+      "meaning": "Review-only CTA leading to governed checkout",
+      "en": {
+        "text": "Review bundle purchase",
+        "utf8_bytes": 22,
+        "sha256": "f40ca4cdfc2821e4d1191447b72c4a0e8f4dc77d13b509245e00759a0b7a1f17"
+      },
+      "af": {
+        "text": "Hersien bundelaankoop",
+        "utf8_bytes": 21,
+        "sha256": "d07e9a2ae1c7b5bdb54588d3618716c6a525bbfa8bac6ac9a480224fd04aa1da"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Show enabled only with valid allocation, eligibility, accepted active price and release permission."
+      ]
+    },
+    {
+      "key": "commerce.product.eligibility.already_have_credit.title",
+      "class": "A",
+      "group": "eligibility",
+      "meaning": "Only after authenticated eligibility read",
+      "en": {
+        "text": "You already have an unused assessment credit",
+        "utf8_bytes": 44,
+        "sha256": "df06849321e57f49d373d541977bf858829a7ddfba9690842165ec6d3c3a8a24"
+      },
+      "af": {
+        "text": "Jy het reeds ’n ongebruikte assesseringsreg",
+        "utf8_bytes": 45,
+        "sha256": "06e0e964ab0d8087b0d900c84a1491130fb03d68533748bbb5d3cedcb62c6009"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Never reveal purchase/credit state on public or unauthenticated surfaces."
+      ]
+    },
+    {
+      "key": "commerce.product.eligibility.already_have_credit.body",
+      "class": "A",
+      "group": "eligibility",
+      "meaning": "Blocked repeat purchase and safe plan-only path",
+      "en": {
+        "text": "You cannot buy another standalone assessment or assessment bundle while that credit remains unused. You may still choose the plan-only offer if it suits your needs.",
+        "utf8_bytes": 164,
+        "sha256": "025a02f04b6bd511a54d1848bcdda5839894106604cbaabc130aeec51474096e"
+      },
+      "af": {
+        "text": "Jy kan nie nog ’n afsonderlike assessering of assesseringsbundel koop terwyl daardie reg ongebruik bly nie. Jy kan steeds die aanbod vir slegs die plan kies as dit by jou behoeftes pas.",
+        "utf8_bytes": 187,
+        "sha256": "ea1051a5f1577be525bbcd571319d6fcc4e7d0e19e85d5e54348f5c39c3921c5"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Use only for the actual unused ordinary paid credit case."
+      ]
+    },
+    {
+      "key": "commerce.product.eligibility.assessment_interval.title",
+      "class": "A",
+      "group": "eligibility",
+      "meaning": "Only after authenticated annual interval decision",
+      "en": {
+        "text": "Another assessment is not available yet",
+        "utf8_bytes": 39,
+        "sha256": "ac661584b1ce3880f6baac41945d6f2f082a64610f615c337a828a64a19ef526"
+      },
+      "af": {
+        "text": "Nog ’n assessering is nie tans beskikbaar nie",
+        "utf8_bytes": 47,
+        "sha256": "a98876c9c04416e0e373fd87bbcd3143687d2319951efc536be773bb3a18f657"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Use only when current governed assessment interval blocks another attempt/sale."
+      ]
+    },
+    {
+      "key": "commerce.product.eligibility.assessment_interval.body",
+      "class": "A",
+      "group": "eligibility",
+      "meaning": "Avoid stranded credit due to annual interval",
+      "en": {
+        "text": "The permitted interval since your last successfully delivered digital assessment has not passed. You cannot purchase an assessment that you would not yet be allowed to use.",
+        "utf8_bytes": 172,
+        "sha256": "2bfc3d972740782c426255c5bed95691928e3c701d91bbb517ecd95f86bbc3dc"
+      },
+      "af": {
+        "text": "Die toegelate tydperk sedert jou laaste suksesvol gelewerde digitale assessering het nog nie verstryk nie. Jy kan nie ’n assessering koop wat jy nog nie mag gebruik nie.",
+        "utf8_bytes": 171,
+        "sha256": "edf5425dde7151a7edadb5b12e639efc5a2be48f5efb914de457083c0d8e1ef4"
+      },
+      "tokens": [],
+      "render_guards": []
+    },
+    {
+      "key": "commerce.product.eligibility.status_unavailable",
+      "class": "A",
+      "group": "eligibility",
+      "meaning": "Unknown eligibility does not imply purchase started",
+      "en": {
+        "text": "We cannot confirm your purchase eligibility right now. No purchase has been started. Please try again later.",
+        "utf8_bytes": 108,
+        "sha256": "6e18145dd7470bbfc159b4e6b1c13b51b89df7cf66be439de32161084f499748"
+      },
+      "af": {
+        "text": "Ons kan nie nou bevestig of jy mag koop nie. Geen aankoop is begin nie. Probeer later weer.",
+        "utf8_bytes": 91,
+        "sha256": "cf1ff3883e9bdedd304af6733c2e86301e8853efd8007825307ad1f10795fe91"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Use only if no purchase was started; never use after uncertain payment."
+      ]
+    },
+    {
+      "key": "commerce.product.eligibility.plan_on_hold",
+      "class": "A",
+      "group": "eligibility",
+      "meaning": "Hold distinct from consumption, approval and refund",
+      "en": {
+        "text": "Your purchased plan right is on hold while the required information or professional review is outstanding. It has not been used to deliver a plan.",
+        "utf8_bytes": 146,
+        "sha256": "9489369fc594ae278a9554df25e28373ba6be2de5e63b862baecd163c26690ef"
+      },
+      "af": {
+        "text": "Jou gekoopte planreg bly voorbehou terwyl die vereiste inligting of professionele hersiening nog uitstaande is. Dit is nie gebruik om ’n plan te verskaf nie.",
+        "utf8_bytes": 159,
+        "sha256": "1d45c07d1c0f484fd168d98264ad0adf179875b74f06b32a60a677d05e446290"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Render only from owned entitlement and eligibility truth."
+      ]
+    },
+    {
+      "key": "commerce.product.eligibility.no_checkout",
+      "class": "A",
+      "group": "eligibility",
+      "meaning": "Fail closed before checkout",
+      "en": {
+        "text": "This purchase cannot continue until the required offer and eligibility information is available.",
+        "utf8_bytes": 96,
+        "sha256": "be154cb08bd6e2d5b3972fb78607103638de2f5593434fd25493664757074f7d"
+      },
+      "af": {
+        "text": "Hierdie aankoop kan nie voortgaan voordat die vereiste aanbod- en geskiktheidsinligting beskikbaar is nie.",
+        "utf8_bytes": 106,
+        "sha256": "fc2614d78e3da41fe4ccef7b187277895707d485b1c448a63c62bca4d8c60f6d"
+      },
+      "tokens": [],
+      "render_guards": [
+        "Do not enable a payment attempt on incomplete offer or unknown eligibility."
+      ]
+    }
+  ],
+  "approval": {
+    "owner_approved": false,
+    "en_language_reviewed": false,
+    "af_language_reviewed": false,
+    "commerce_approved": false,
+    "legal_privacy_release_approved": false,
+    "safety_approved": false,
+    "approved_sha256": null,
+    "production_eligible": false
+  }
+}

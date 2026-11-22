@@ -1,0 +1,585 @@
+{
+  "schema_version": 1,
+  "packet_id": "FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_OWNER_APPROVED",
+  "version": "0.1.0",
+  "status": "OWNER_APPROVED_EXACT_WORDING_ONLY; FUTURE_FP002_OFFER_COPY_SOURCE_LOCKED; REQUIRED_SPECIALIST_REVIEWS_OPEN; NO_DEVELOPMENT_PRODUCTION_OR_SALE_ELIGIBILITY",
+  "approved_on": "2026-11-22",
+  "source": {
+    "repository_path": "docs/delivery/content-evidence/copy/evidence/sources/FP002_PRODUCT_AND_OFFER_PAGES_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+    "sha256": "a4bdbe28b47f2356dad26598c1dbc70b619409dd9365b245af4a872bbc58c325",
+    "utf8_bytes": 62292,
+    "original_packet_id": "FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_CANDIDATE",
+    "source_was_candidate_at_preparation": true,
+    "approved_complete_version": "0.1.0",
+    "main_at_source_preparation": "e7fc58167223be433d9ccc9d61d3aaeb2090a10c",
+    "source_copy_registry_blob": "7a25a11bedccead4bc59abbbf9da9d5b35ef3c28"
+  },
+  "owner_decision": {
+    "verbatim": "Approved. This needs to be captured and locked down and MUST be used by future agents when developing the platform",
+    "observed_in_project_conversation_on": "2026-11-22",
+    "scope": "Complete exact version 0.1.0 candidate, all 72 keys and all 144 EN/AF strings.",
+    "owner_approved_exact_wording": true,
+    "other_capacity_approvals_not_inferred": true,
+    "english_language_reviewer_separate_decision_recorded": false,
+    "afrikaans_language_reviewer_separate_decision_recorded": false,
+    "commerce_entitlements_review_recorded": false,
+    "safety_clinical_review_recorded": false,
+    "temperament_methodology_rights_review_recorded": false,
+    "legal_privacy_release_review_recorded": false,
+    "class_a_development_approved": false,
+    "sale_pilot_or_production_authorised": false,
+    "merge_authorised": false
+  },
+  "content": {
+    "semantic_key_count": 72,
+    "locale_string_count": 144,
+    "class_a": 43,
+    "class_b": 29,
+    "locales": [
+      "en",
+      "af"
+    ],
+    "key_namespace": "commerce.product"
+  },
+  "source_scope": {
+    "included": [
+      "catalogue/offer overview",
+      "assessment offer",
+      "plan offer",
+      "assessment+plan bundle offer",
+      "price display/saving mechanics",
+      "product FAQ",
+      "pre-purchase eligibility guard wording"
+    ],
+    "excluded": [
+      "checkout/order-review contracts",
+      "payment initiation/return/pending/uncertain/retry",
+      "receipts and transaction history",
+      "refund/dispute workflow screens and notices",
+      "actual provider integration",
+      "legal documents, consent or early-performance instruction",
+      "health assessment, diet/meal/clinical guidance",
+      "SEO, content publication and release"
+    ],
+    "language_locales": [
+      "en",
+      "af"
+    ],
+    "copy_key_namespace": "commerce.product",
+    "not_approved_for_real_participants": true
+  },
+  "price_token_contract": {
+    "active_price": "Formatted currency amount from the authoritative current offer price version; bound to rendered SKU/offer context.",
+    "bundle_saving": "Formatted difference between validated applicable standalone list values and bundle price in the same comparable price set.",
+    "assessment_component_amount": "Currency amount from approved selected assessment allocation of accepted bundle order; must not be guessed.",
+    "plan_component_amount": "Currency amount from approved selected plan allocation of accepted bundle order; must not be guessed."
+  },
+  "existing_shared_keys_to_reuse_not_reapprove": [
+    {
+      "key": "shared.navigation.products",
+      "purpose": "navigation; source candidate unless separately eligible evidence applies"
+    },
+    {
+      "key": "shared.action.back",
+      "purpose": "back navigation; use source semantics only where eligible"
+    },
+    {
+      "key": "shared.action.continue",
+      "purpose": "ordinary continuation; not purchase acceptance"
+    },
+    {
+      "key": "shared.action.contact_support",
+      "purpose": "conditional help channel; actual channel must exist"
+    },
+    {
+      "key": "shared.action.retry",
+      "purpose": "ordinary non-monetary retry only; never uncertain payment retry"
+    }
+  ],
+  "unresolved_decisions_and_guards": [
+    {
+      "id": "FP002-COPY-G01",
+      "status": "OPEN_COMMERCE",
+      "question": "Choose and version the deterministic R549 bundle allocation (assessment component + plan component), and pre-sale disclosure. Do not assume R249 + R300 or another distribution."
+    },
+    {
+      "id": "FP002-COPY-G02",
+      "status": "OPEN_PAYSTACK_PROOF",
+      "question": "Confirm actual payment provider flows, uncertain attempts, safe retry and real access statuses before checkout/payment copy; excluded from this pack."
+    },
+    {
+      "id": "FP002-COPY-G03",
+      "status": "REVIEW_PRODUCT_COMMERCE",
+      "question": "Validate authoritative price-version display, promotions/discounts, exact current SKU and available offers."
+    },
+    {
+      "id": "FP002-COPY-G04",
+      "status": "REVIEW_IDENTITY_ENTITLEMENTS",
+      "question": "Guard unauthenticated surfaces and block second unused assessment credit/interval-stranding/bundle purchase; route to plan-only, not another assessment."
+    },
+    {
+      "id": "FP002-COPY-G05",
+      "status": "REVIEW_SAFETY_COMMERCE",
+      "question": "Confirm exact participant-facing pathway, held-right, General Wellness 14-day choice, final unfulfillable and refund disclosures with actual versioned offer."
+    },
+    {
+      "id": "FP002-COPY-G06",
+      "status": "REVIEW_TEMPERAMENT_IP",
+      "question": "Confirm authorised use of Four-Colour naming, licensed questions/methodology/report promises and book-derived paths before approval."
+    },
+    {
+      "id": "FP002-COPY-G07",
+      "status": "REVIEW_LEGAL_PRIVACY",
+      "question": "Review applicable statutory rights, early-performance choices, notice/acceptance, tax/invoice disclosures and supplier identity; omitted from this candidate."
+    },
+    {
+      "id": "FP002-COPY-G08",
+      "status": "NO_RELEASE",
+      "question": "FP-001 dependency, OQ-004 proof and applicable release gates remain open; these strings cannot activate checkout or sales."
+    }
+  ],
+  "key_locale_sha256_index": [
+    {
+      "key": "commerce.product.catalogue.title",
+      "en_sha256": "6ff47c3c6c3a292a98ef425a8381f12e1ff53559b698291aeac14e924650b709",
+      "af_sha256": "9eedbd86bd61d072ba2bfa039c0da1aaf491c12e8bf612ee9b0c4bf4f23bba8a",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.catalogue.intro",
+      "en_sha256": "f5b3ad2a741c0927398fb5d5ae40b5312ab057325687623240a9f7ed5e03cae0",
+      "af_sha256": "51e764173007443343a1712c4eb268ef3f14f1c4fe8ecb9d1aea0c8fb6890a98",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.catalogue.audience",
+      "en_sha256": "38a1e512453abff2105896d86522b9e2a212ac9053c0983d6f016a3899c3f457",
+      "af_sha256": "2a99a97de4e9cba6456b628b03f3904dc71a61bf88148d31c16c9ebec433025c",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.catalogue.price.label",
+      "en_sha256": "93c91c851e7acc17d881c9b89ea954be1183070254014be03a93d169cf52dbbd",
+      "af_sha256": "72cdb94a5ac763e8677afb2df8ec3ea799fce35834796982be543b46a6582ae7",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.catalogue.price.value",
+      "en_sha256": "11ce85c6237da128bde1a6c71e937a89361c5a97a7d2e71242b0e772952fe7d5",
+      "af_sha256": "11ce85c6237da128bde1a6c71e937a89361c5a97a7d2e71242b0e772952fe7d5",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.catalogue.price.saving",
+      "en_sha256": "5c23162807be76557f37579bf1c8f87f19b863269279c1fece3fd40eaa0dec8f",
+      "af_sha256": "9fe026860a1a760851d98c0f36905dc1d3ef2dc53e8e122b5be98e60c463cdb4",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.catalogue.access.note",
+      "en_sha256": "227eabfecd233f366f4a06ec0e46bbe0c7ab2240699532cdd555258874db9421",
+      "af_sha256": "784f68bc5053364128d8c1fb6afb6abccc7a41337b2bc020e07a9caeb438a567",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.catalogue.included.title",
+      "en_sha256": "a441e0502556e206d117d44b4e8ca6bfb533cfe17a2f23706c5fbfd0da0dc525",
+      "af_sha256": "dfc3b2c42f5e6f912b62a29d5261a371ae14263d44315a216f2d8068ad769e25",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.catalogue.not_available",
+      "en_sha256": "781d44900e549f34ddf31a4ae7a0023321a2515f084de1ea9bdf0464de317a56",
+      "af_sha256": "6dd2667f8497e44a3528b6d89659ed0b29abe413fd05982a2ca538b631247b8a",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.catalogue.checking",
+      "en_sha256": "8ac813555ca2e27950c46965b32f3c3099af8b03bb6ce5d6c1dfe4d4c6e534d9",
+      "af_sha256": "6dabf0e91ac82530e96982ed834cfea58805e8e5a986563851b1e6a40ef9e001",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.assessment.title",
+      "en_sha256": "c992fa2e323e95cb76ae61b6527d91ef89472283c65d610f823d0bd6bf95f834",
+      "af_sha256": "0fe13b3eb98c46fe94c9417b028e96903120c54ade76772dac323d53eb8e6ff8",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.assessment.tagline",
+      "en_sha256": "ee1294f2df554e90d32d075c396b0baceb62abf3af73604c4aac33b531a7fd18",
+      "af_sha256": "c1a0be5f6565e7ec8de508ef3fd58371d1bebd7cf24100ee1ee0665132dc47cc",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.assessment.intro",
+      "en_sha256": "a95cb1ed06fa45782e1f6e09263c73d0663f8b30aef43ad359e5e02061bc797a",
+      "af_sha256": "42fbaf5abcf3e631e295c4738618e6929b03ba4e971e40cd6c1e23215eebfa7f",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.assessment.included.attempt",
+      "en_sha256": "322f751c5858bb73053696c075e2ba70b16558c3a33c8ae79040bd86f5160555",
+      "af_sha256": "eab456910e883ec90bfdfc0c0a69327be0fc62384d8fe0c74a8da519f55590ff",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.assessment.included.report",
+      "en_sha256": "a9b4fe07fc49c1cdfb7e0c3522d41bf8abfe5778f4348fcc585dd5040457045c",
+      "af_sha256": "eabcc22674252d2dc699e8ca76aa61e6552a07fb8e2d1ee8faab845417f065be",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.assessment.included.history",
+      "en_sha256": "dcc846804acd72365d04142d8ff2702edc3d00b0747872ad3257395e7aa513c0",
+      "af_sha256": "a67c79d24fcc2c14a8f0e915b34e8eddfa4dcdb289a700ffb7b814c219bc7529",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.assessment.conditions.title",
+      "en_sha256": "9bb1ed0a6b933db20cc1593f86ae2121a5dd5a8460a9eb1ee807768e29c2544b",
+      "af_sha256": "8d39c731341dc2bf2a41d3c240669e4a13b4cc13078dd6e77f3339e917f0b47c",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.assessment.conditions.body",
+      "en_sha256": "9e9d883503d824670fbe34c19671dedbfb7975bb7a94257158bbaf5e980a75e9",
+      "af_sha256": "2b940891027ecb8fb247a4b290f4023abd114f418caabb6db3db1583e0ce0714",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.assessment.limits.body",
+      "en_sha256": "9559d1f6d87ae018a5263e6d44b05b309d023f25c7897e896354050a1ba9a5c9",
+      "af_sha256": "70a6f12d3ab96b5cf077b6c9ad239fd086f1fef654365538bf68d2e7b6f8254c",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.assessment.faq.title",
+      "en_sha256": "e2fcc21eb9388810d0eb0ea13006b331536ddadbbd66500572076b4177d74405",
+      "af_sha256": "12f0a2cb4482f67f2fc22a73be7e009c953b55d5acae35d96952fce8163e6c41",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.assessment.faq.result.question",
+      "en_sha256": "55f22a9deab0477b3fd41ab5616cefad668b4b73ff7a2ac558a91aa1b821e502",
+      "af_sha256": "974c2271f1823680f57277feed54952a32f343a297a9e8cbbafdb898bc1de9a9",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.assessment.faq.result.answer",
+      "en_sha256": "1bc2941a0c28691051c46d075635447338e450a0100a3af6f350fe02a6c9baff",
+      "af_sha256": "98ec63d0e0f24983b062599fc3f24747b6d0c0cb3fa7eac1da0164abc4ba44fd",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.assessment.faq.known.question",
+      "en_sha256": "20039c627970544f82d501797db2e67aefc0954a31d858523f154d222a78d2af",
+      "af_sha256": "9b89fb854c2479ddf83cb731f55947c4a5700c6dd8496503b31317cd5d2bbc62",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.assessment.faq.known.answer",
+      "en_sha256": "014215c9e08b6196318a6fd5b0658a14eabe9c7ff1f0feabcb80e54fef0a60dc",
+      "af_sha256": "52153a3d319e9c7019c3d596a425e88171b011180f68135474e9d907d29a7036",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.assessment.faq.repeat.question",
+      "en_sha256": "6c56bd42980137f13ad5daa43619d5c5dfee35a6cf6120b815bb8f95206e42fb",
+      "af_sha256": "9f7fc062711ebf79003d36fd0f0fb1813af85d04f0cddfec43b69a3876448c65",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.assessment.faq.repeat.answer",
+      "en_sha256": "146360c422fe246c187a4a5f4f5c04efa2f2c6135632afc911539ca535a8e547",
+      "af_sha256": "5f7281ee5e4d6503f1fa24b53e0b3049499c7583ae8e46f5cb1653f18037497f",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.assessment.action.review",
+      "en_sha256": "f0fe6b5c5b88bd4f07e5d447f62fe19a7bcc8cafd63d7afd1eff5df26c5117b4",
+      "af_sha256": "3734cf1e2b8c6665cd159a11a9f3add73b1fb4661c65eeef214edf07c3d54042",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.plan.title",
+      "en_sha256": "d2daff60d7c9a11e2ec4f8c205d8cb9f9ce624f87f6f8de6d47013887cf4cfaf",
+      "af_sha256": "e87d80156af4bbf95801e7cb9af3f9fcb7290180b74e3ab1b37d8d513ff94925",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.plan.tagline",
+      "en_sha256": "8b2f865ad6c9f2ec0e9cfdf5aacedb319e370205a3b232dd1ca73ed5bc9d7303",
+      "af_sha256": "0e4b0a7c86252ed343e7673879eeab772cc4b4f6385c88f7b3411e95500f2189",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.plan.intro",
+      "en_sha256": "567927f06b6e82923823acbe3f92c4caa8e4e7b26091bb9b1af9e3615f1e0df8",
+      "af_sha256": "b547148625a73d947a63175a8af59f719f8a3e9aca6b191f9a51d95fd79b32ac",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.plan.included.body",
+      "en_sha256": "b02d689470ab631b30458b252e6ebf43beed44985f4a830ed9fdc3718afddcae",
+      "af_sha256": "cfc496a9e002e203a0cff33634b8abedfab87fcfc61f10ad025721c2af8486e6",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.plan.conditions.title",
+      "en_sha256": "d47e4db92954cb68a57266da547ecbb8b5e5cf7bc178b36d2696e7159d4e32ea",
+      "af_sha256": "37d8d3114a36b7c605a7fd2b5b605d398fbd93784b0ffd5cf1a68ae6bc48d489",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.plan.conditions.body",
+      "en_sha256": "25e03ac0cb4660157c9d8cc29a8a39741e3e7cba71026647c6e2539966d98c80",
+      "af_sha256": "af6c27ad4ed8f640c76a19280d671fa93069606d058d878830550bc0982fe913",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.plan.hold.body",
+      "en_sha256": "dfe1cebfb4080fbdac971a98bfafa0d3483723cf816679a8be97211fc8df3876",
+      "af_sha256": "b71314e0cb63dccc494544443cc7cea0ea8133fd63655fa21767155d5f4e4c87",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.plan.limits.body",
+      "en_sha256": "45de50981365dcb1169698cfcd62c5b1af6fd0e62d150b87ca98839ef21754e4",
+      "af_sha256": "2254da6adb59a540fbf1d611183f2045ec2bcc04542b34d67b89adf7f03dd726",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.plan.faq.title",
+      "en_sha256": "1bfb8f823d00d89276db916d534797f66a8a826258115dfe012462c8547f3e30",
+      "af_sha256": "e5899461bc18a44cabf69c432d56bf48c5ec91ded8e0ab99cbd590903ee6b537",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.plan.faq.delivery.question",
+      "en_sha256": "aa42f5eb287825587af7d246b42a989644c375b4ff6019d6c271edac90da5f42",
+      "af_sha256": "5c30c44ea5f914b8d6865a194b7e34ead031769aefee1ef1f5812f15dfb3841a",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.plan.faq.delivery.answer",
+      "en_sha256": "eec9fa83d3452f2d0ca23dccd142bf2b72277bb81f36081a0b5b5dc851ea9c1f",
+      "af_sha256": "4611a0b41403d1fd396b48b04571c992221b0d46d3664713964faa3a987a3c51",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.plan.faq.not_eligible.question",
+      "en_sha256": "dd006dd894400e29b9aef66df1a84dccd5bc60091040b61fea31eeee2406bf7e",
+      "af_sha256": "fa9bad3ff797ef54fd854224de6b0c7f4beea2c2a98bad650b40eb6b61b0e6c5",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.plan.faq.not_eligible.answer",
+      "en_sha256": "7102ebf1d3619a93e7e6ebb316c9ba97e7629517f85602072c62b682c0db8b12",
+      "af_sha256": "3e04a07c33c4a5fa4996e73ab2c87abe865ef78a3454d5bc4b15cb5d21da16f4",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.plan.faq.choice.question",
+      "en_sha256": "f19db5ecdf1812679c42a213726c676b3afd5e4bb1997b329ca5b94140ab8856",
+      "af_sha256": "a81fd5e543a7a2e586b2460eeb44c8fc04b2392e30746d5f9f406f1599c06406",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.plan.faq.choice.answer",
+      "en_sha256": "73a7de046220e7885c7d843dd6a7a585ae60f479f1438d4f2dbb0f547d866f71",
+      "af_sha256": "ce40f2c89789b2373fcdb80b570f5d14f48f018675dfed4771b0ab52dcc7cef2",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.plan.faq.existing_assessment.question",
+      "en_sha256": "dd9a628b9691ee766be4f064f26a51662fbdab22e1018d9bd2b1b37e511840bd",
+      "af_sha256": "c176c69ae30e11995571394375a8b491808e52e1b9f011a303ab1e49f503e924",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.plan.faq.existing_assessment.answer",
+      "en_sha256": "eb4775566cb99bac734a2c8984bc564c3bf991b20b274c59e2c5f08f1189f477",
+      "af_sha256": "01eac75d95127c26632cfb708a8ec0953204c223361443c08b55b1eac921d13f",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.plan.action.review",
+      "en_sha256": "eaf74b7b6d9a1365ef1f3a306addbad38996aafd1611877ac94f12caa68f6393",
+      "af_sha256": "ba4f1d32de6bc36def9664de8fd0265c2877f361affecf02327e8b318313140d",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.bundle.title",
+      "en_sha256": "8dbb13f561999d5b896e703ac86bc449fda89e60b6a4fe2b4d9e7a98011f3f25",
+      "af_sha256": "633fee5b4ca07396b447a149501a66cccc2734b63ab863a97e16600488db02c5",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.bundle.tagline",
+      "en_sha256": "c4b6ad1d4a2e70e466976f372cd2b05d73610730ed9f06f7ee1d9038aba9463e",
+      "af_sha256": "e8fbb0a8c0ec587e08bde8435fdff305fbe21429e9b71e8502e25a3e628743e9",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.bundle.intro",
+      "en_sha256": "c64ed36a7f3d92fcd1369f0e2a3adefe4ea09f00b1d321804105844b43062e5a",
+      "af_sha256": "19808e7b3247918918c61491a11ad2e26f5de468069267c33e501c40efbee7dc",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.included.assessment",
+      "en_sha256": "dd2cf534736828847e5702cb2c48fe79f54f8332f7ab49d23063323cb02972f4",
+      "af_sha256": "4fa405950e1d77e524c44de1c66f4feb6fa9dd6d7f10232c0fa25cfc831605d1",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.included.plan",
+      "en_sha256": "d77d08a76ed92162a3fda785d88f44ea293903d3719ea1d62d47772969fcb3d2",
+      "af_sha256": "ef8a2b6e8b3d07cd5e2be2254038cbd70b8264d381be928991d74e029934762b",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.allocation.title",
+      "en_sha256": "0264dac3fc64c1ad918c14008b48750bee62eb933fd40759e73d52a5e4502c48",
+      "af_sha256": "2857836b47ff4b23fbbc2a0c1e0938c2cedd1666776f6e25ad2d37bce61a56b7",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.allocation.intro",
+      "en_sha256": "41b74625392b76f20b055e320c712f29e50d43fb082f2578d45cdb6113364d71",
+      "af_sha256": "60ab41451f6d497f073ee5da0b4673844d5feada09ab3eb4716961d41351a769",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.allocation.assessment",
+      "en_sha256": "cb7fe414381de67f9875a9d2f5c1ba57f9bfc9948a0c96f02808b441a82a80ed",
+      "af_sha256": "fd0413c9cd6f7dc9cdcfe7926d94e8c6e2e52362e12ea237ab90114d3a507b6f",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.allocation.plan",
+      "en_sha256": "e8cb0435426c2d58c1816621348d448c93a3abe8c79e72e0cb6ab8d4d3306cf2",
+      "af_sha256": "398215c5ac5a6b58f3a869bc7f6c2c14d5f178b3c52f2e3d6d871d5ec54c8988",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.conditions.title",
+      "en_sha256": "7c1afe5a7412f2f982587ec00dfb89682a9dff8ce45d22f01b0c0fc2088b1ad0",
+      "af_sha256": "2b18c2a9b2827d2b306cacb4a4658efe9ca1322a33ce6bebc199de478d44a584",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.bundle.conditions.body",
+      "en_sha256": "e7023887ecb196f8d950bddebca769fea4e1513cb4274313d3b72995a4db1544",
+      "af_sha256": "5efc57ce0bccf09bab38ff760359281c0900abaeb8d4168f741b23992ef11e12",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.limits.body",
+      "en_sha256": "336a9459ad970d43173ff427ae04b902b99d5ed5a717c1230d369776af5d8ed2",
+      "af_sha256": "4722b4ba145ae068be7e6113cddc073133296414bc4f255b03d7a5a67e58c7ed",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.faq.title",
+      "en_sha256": "ca9734f203c7c6a41804ea7c59dd63d9112dddb357cd7270bfc4cc2835fc6d58",
+      "af_sha256": "12ad2de0c0918eea4f7b7ddb906666f7597f79ffd12612c958fa3b32c3cd428d",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.bundle.faq.assessment_later.question",
+      "en_sha256": "d0b92d2291dad3932081ac6035409680e8545cfc8d72de7d5663ab7822cfd6f7",
+      "af_sha256": "16309068999dcb21b905b0107bd6049229991ce1f73a4984a3d07ff5f39c40e4",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.bundle.faq.assessment_later.answer",
+      "en_sha256": "5188966fb143ac90f6e036a1c2184b07ae9aa22b76db9e5c21fcf311a6abf3ec",
+      "af_sha256": "29bedb06acd3dbef9c23abfd3c093eaf6c0fc1f9054fefdf36df21bffaba258e",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.faq.plan_refund.question",
+      "en_sha256": "6e070c14077401d7728dfdd9a4d8bd6747932400c2fadfaa30b45f3acb18ce43",
+      "af_sha256": "2782bc5b5626d4c468b0ba75175a22567e7498337492600c0e454c23d36c4b9d",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.bundle.faq.plan_refund.answer",
+      "en_sha256": "0312345e4dd990116446dcacdc89a8651253f09df21873156f80990effa89325",
+      "af_sha256": "0a5ff0362abd1b7bb8de25e5df277561d60a7e63434dc00975db976af61b0508",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.faq.savings.question",
+      "en_sha256": "93c3768fd4daa2226b12622acff26c07eb8758f0bd637941e5ff005be3331ed7",
+      "af_sha256": "18ec2c2e46fac7689ce19f6e6c271ae48b35f6c05539c37d6e7f005f0d6490b5",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.bundle.faq.savings.answer",
+      "en_sha256": "3688d9d1781df2f2e76aed671b4c1bccca0d5abf32171e9bdf52be047ff93b9f",
+      "af_sha256": "9e2aab0b85929ffba583795a1bf1b04da8d6fc384ad87eb6e949ad6accf34fb2",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.bundle.action.review",
+      "en_sha256": "f40ca4cdfc2821e4d1191447b72c4a0e8f4dc77d13b509245e00759a0b7a1f17",
+      "af_sha256": "d07e9a2ae1c7b5bdb54588d3618716c6a525bbfa8bac6ac9a480224fd04aa1da",
+      "class": "B"
+    },
+    {
+      "key": "commerce.product.eligibility.already_have_credit.title",
+      "en_sha256": "df06849321e57f49d373d541977bf858829a7ddfba9690842165ec6d3c3a8a24",
+      "af_sha256": "06e0e964ab0d8087b0d900c84a1491130fb03d68533748bbb5d3cedcb62c6009",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.eligibility.already_have_credit.body",
+      "en_sha256": "025a02f04b6bd511a54d1848bcdda5839894106604cbaabc130aeec51474096e",
+      "af_sha256": "ea1051a5f1577be525bbcd571319d6fcc4e7d0e19e85d5e54348f5c39c3921c5",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.eligibility.assessment_interval.title",
+      "en_sha256": "ac661584b1ce3880f6baac41945d6f2f082a64610f615c337a828a64a19ef526",
+      "af_sha256": "a98876c9c04416e0e373fd87bbcd3143687d2319951efc536be773bb3a18f657",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.eligibility.assessment_interval.body",
+      "en_sha256": "2bfc3d972740782c426255c5bed95691928e3c701d91bbb517ecd95f86bbc3dc",
+      "af_sha256": "edf5425dde7151a7edadb5b12e639efc5a2be48f5efb914de457083c0d8e1ef4",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.eligibility.status_unavailable",
+      "en_sha256": "6e18145dd7470bbfc159b4e6b1c13b51b89df7cf66be439de32161084f499748",
+      "af_sha256": "cf1ff3883e9bdedd304af6733c2e86301e8853efd8007825307ad1f10795fe91",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.eligibility.plan_on_hold",
+      "en_sha256": "9489369fc594ae278a9554df25e28373ba6be2de5e63b862baecd163c26690ef",
+      "af_sha256": "1d45c07d1c0f484fd168d98264ad0adf179875b74f06b32a60a677d05e446290",
+      "class": "A"
+    },
+    {
+      "key": "commerce.product.eligibility.no_checkout",
+      "en_sha256": "be154cb08bd6e2d5b3972fb78607103638de2f5593434fd25493664757074f7d",
+      "af_sha256": "fc2614d78e3da41fe4ccef7b187277895707d485b1c448a63c62bca4d8c60f6d",
+      "class": "A"
+    }
+  ],
+  "mandatory_agent_consumption": {
+    "where_to_find": "Start with AGENTS.md, docs/README.md, current governance/delivery routers, this routed packet and the SHA-256-pinned source. Also consult the separate lock at docs/delivery/content-evidence/copy/evidence/FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_LOCK_v0.1.0.md.",
+    "must_reuse": "For future FP-002 offer/catalogue/product selection/related FAQs and pre-purchase eligibility copy, adopt the approved 72 semantic keys and exact paired EN/AF strings as the owner-approved wording baseline, not new generated paraphrases. Specialist/feature eligibility gates still apply before Class A use.",
+    "must_not_assume": "Approval of wording is not Commerce, Safety, Temperament/IP, language specialist, Legal/Privacy, payment, Entitlements, Paystack proof, development-eligibility, sale or production approval.",
+    "must_bind": "Active prices and savings come from current versioned Commerce offer data; bundle component amounts require accepted and disclosed versioned allocation. Do not hardcode prices into strings or invent component splits.",
+    "must_fail_closed": "On source hash mismatch, missing required locale, unresolved allowed tokens, unsuitable feature context or missing specialist authorisation, do not render the consequential message or activate a transaction.",
+    "must_version": "For corrected English, Afrikaans, keys, commercial meaning, offer applicability or new claims, create successor immutable version with approvals and do not overwrite this owner-approved source.",
+    "preserve_domain_ownership": "Commerce owns payment truth, Entitlements owns access, Safety owns eligibility, Temperament methodology remains rights-governed; UI and provider callbacks create no rights.",
+    "superseded_or_withdrawn": "Terminal for new consumption; preserve historical approved evidence."
+  }
+}
