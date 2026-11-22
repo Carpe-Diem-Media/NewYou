@@ -9,6 +9,25 @@
   <p class="max-w-prose text-design-body-sm leading-design-body-sm">
     {Copy.text!("identity.session.protected.body", @locale)}
   </p>
+  <% reference_copy = member_reference_copy(@locale) %>
+  <script defer src={~p"/assets/js/member_reference.js"}>
+  </script>
+  <div class="grid min-w-0 gap-design-base justify-items-start">
+    <dl class="min-w-0 max-w-full text-design-body-sm leading-design-body-sm">
+      <dt id="member-reference-label" class="font-design-bold">{reference_copy.label}</dt>
+      <dd id="member-reference-value" class="break-all">{@pmr}</dd>
+    </dl>
+    <.secondary_button
+      id="copy-member-reference"
+      type="button"
+      hidden
+      data-copied={reference_copy.copied}
+      data-unavailable={reference_copy.unavailable}
+    >
+      {reference_copy.action}
+    </.secondary_button>
+    <p id="member-reference-copy-status" role="status" class="text-design-body-sm"></p>
+  </div>
   <a
     :if={@email_change_copy}
     href={"/primary-email-change?locale=#{@locale}"}

@@ -49,9 +49,10 @@ defmodule NewYouWeb.PasswordSessionController do
   def protected(conn, params) do
     case locale(conn, params) do
       locale when locale in ["en", "af"] ->
-        case Identity.authorize_session(credentials(conn)) do
-          {:ok, _} ->
+        case Identity.self_member_reference(credentials(conn)) do
+          {:ok, pmr} ->
             render_page(conn, :protected, locale, %{
+              pmr: pmr,
               email_change_copy: email_change_copy(locale),
               session_management_title: session_management_title(locale)
             })
@@ -130,12 +131,14 @@ defmodule NewYouWeb.PasswordSessionController do
     do: render_page(conn, :login, locale, %{error_key: error_key})
 
   defp render_page(conn, template, locale, assigns) do
+    script_policy = if template == :protected, do: " script-src 'self';", else: ""
+
     conn
     |> put_resp_header("cache-control", "no-store")
     |> put_resp_header("referrer-policy", "no-referrer")
     |> put_resp_header(
       "content-security-policy",
-      "default-src 'none'; style-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+      "default-src 'none';#{script_policy} style-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
     )
     |> put_root_layout(false)
     |> put_view(html: NewYouWeb.PasswordSessionHTML)
