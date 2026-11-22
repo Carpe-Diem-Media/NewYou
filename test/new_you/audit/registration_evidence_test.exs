@@ -362,15 +362,32 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
              NewYou.Audit.get_evidence_obligation!(obligation.id, authorize?: false)
   end
 
-  test "the durable scheduler recreates missing execution from open obligations" do
+  test "the durable scheduler recreates one job for the owned open obligation alongside another" do
     request = valid_request()
     assert {:ok, _} = NewYou.Identity.register(request)
-    [obligation] = audit_records("EvidenceObligation")
+    assert [%{id: owned_id, state: :open}] = audit_records("EvidenceObligation")
 
-    Repo.query!(
-      "DELETE FROM oban_jobs WHERE queue = 'audit' AND args->'primary_key'->>'id' = $1",
-      [obligation.id]
-    )
+    # Give the real scheduler a second eligible obligation outside the tracked registration.
+    assert {:ok, %{id: other_id, state: :open}} =
+             NewYou.Audit.establish_registration_obligation(
+               %{
+                 source_operation_id: Ecto.UUID.generate(),
+                 source_occurred_at: DateTime.utc_now()
+               },
+               authorize?: false
+             )
+
+    assert [%{id: ^owned_id}] = audit_records("EvidenceObligation")
+
+    for obligation_id <- [owned_id, other_id] do
+      assert %{num_rows: 1} =
+               Repo.query!(
+                 "DELETE FROM oban_jobs WHERE queue = 'audit' AND args->'primary_key'->>'id' = $1",
+                 [obligation_id]
+               )
+
+      assert audit_job_count(obligation_id) == 0
+    end
 
     trigger = AshOban.Info.oban_trigger(NewYou.Audit.EvidenceObligation, :registration_evidence)
 
@@ -383,8 +400,8 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     assert {"* * * * *", trigger.scheduler, []} in configured[:cron][:crontab]
     assert is_atom(trigger.scheduler) and not is_nil(trigger.scheduler)
     assert :ok = trigger.scheduler.perform(%Oban.Job{args: %{}})
-    assert [%{args: %{"primary_key" => %{"id" => id}}}] = scheduled_audit_jobs()
-    assert id == obligation.id
+    assert audit_job_count(owned_id) == 1
+    assert audit_job_count(other_id) == 1
   end
 
   test "PostgreSQL refuses fulfilled obligations without evidence" do
@@ -787,6 +804,16 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
 
       Enum.map(rows, fn [queue, args] -> %{queue: queue, args: args} end)
     end
+  end
+
+  defp audit_job_count(obligation_id) do
+    %{rows: [[count]]} =
+      Repo.query!(
+        "SELECT count(*) FROM public.oban_jobs WHERE queue = 'audit' AND args->'primary_key'->>'id' = $1",
+        [obligation_id]
+      )
+
+    count
   end
 
   defp identity_truth(account_id) do

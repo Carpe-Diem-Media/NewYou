@@ -47,7 +47,9 @@ Ash Signals were considered for cross-Domain reactions. They are not selected be
 
 ## Executable proof and limits
 
-[Registration evidence tests](../../test/new_you/audit/registration_evidence_test.exs) exercise atomic source acceptance and initial schedule, replay, recovery with an existing record, scheduler configuration/discovery, database uniqueness/FK/lifecycle/immutability, corrupt terminal fail-closed behavior and rejected selectors/excess payload. [E2RecoveryTest](../../test/new_you/audit/e2_recovery_test.exs) executes four [P811 catalogue cases](../../test/support/proof/p8_11_catalog.ex) through the established P8-04 runner:
+[Registration evidence tests](../../test/new_you/audit/registration_evidence_test.exs) exercise atomic source acceptance and initial schedule, replay, recovery with an existing record, scheduler configuration/discovery, database uniqueness/FK/lifecycle/immutability, corrupt terminal fail-closed behavior and rejected selectors/excess payload. The WELL-182 scheduler test removes the initial jobs for two synthetic open obligations in the rollback sandbox. It invokes the configured scheduler and counts recreated jobs by obligation key, one per fixture. The separate rollback tests preserve the WELL-114 isolation contract by detecting unexpected newly created jobs, including jobs without a surviving obligation.
+
+[E2RecoveryTest](../../test/new_you/audit/e2_recovery_test.exs) executes four [P811 catalogue cases](../../test/support/proof/p8_11_catalog.ex) through the established P8-04 runner:
 
 - `p811.interrupted_materialisation` terminates the executor at `evidence.after_materialize_before_commit` after record insertion and before fulfilment. It proves actual transaction rollback, an open obligation, a fresh-connection retry and unchanged source truth.
 - `p811.existing_assertion` proves the supported committed-record recovery input, repeated terminal replay, truthful source/materialisation/fulfilment times and the minimum envelope.
