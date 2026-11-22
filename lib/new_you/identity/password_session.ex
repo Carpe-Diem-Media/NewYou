@@ -3,9 +3,21 @@ defmodule NewYou.Identity.PasswordSession do
   require Ash.Query
 
   alias AshAuthentication.{Argon2Provider, Jwt}
-  alias NewYou.Identity.{Account, Email, Session, Token}
+
+  alias NewYou.Identity.{
+    Account,
+    Email,
+    IdentityGrant,
+    PrivilegedAccess,
+    Session,
+    SessionRevocation,
+    Token
+  }
+
   @session_page_size 20
   @revocation_rollback "Audit rejected Session revocation evidence"
+  @global_rollback "Global Session revocation rolled back before commit"
+  @global_proof_expired "Global Session revocation proof expired before use"
   @idle_seconds 30 * 60
 
   def authenticate(email, password) when is_binary(password) and byte_size(password) <= 1024 do
@@ -89,7 +101,7 @@ defmodule NewYou.Identity.PasswordSession do
   end
 
   def authorize(credentials) do
-    case with_current_session(credentials, fn session, account, _token ->
+    case with_current_session(credentials, fn session, account, _token, _linked ->
            validate_and_touch(session, account)
          end) do
       {:ok, %Account{id: id}} -> {:ok, %{account_id: id}}
@@ -100,7 +112,9 @@ defmodule NewYou.Identity.PasswordSession do
   def list_active(credentials, cursor) do
     with {:ok, cursor} <- optional_cursor(cursor),
          {:ok, {:listed, page}} <-
-           with_current_session(credentials, &active_page(&1, &2, &3, cursor)) do
+           with_current_session(credentials, fn session, account, token, _linked ->
+             active_page(session, account, token, cursor)
+           end) do
       {:ok, page}
     else
       _ -> {:error, :authentication_unavailable}
@@ -111,7 +125,9 @@ defmodule NewYou.Identity.PasswordSession do
     case Ecto.UUID.cast(target_id) do
       {:ok, id} ->
         credentials
-        |> with_current_session(&revoke_other_locked(&1, &2, &3, id))
+        |> with_current_session(fn session, account, token, _linked ->
+          revoke_other_locked(session, account, token, id)
+        end)
         |> revocation_result()
 
       :error ->
@@ -119,10 +135,87 @@ defmodule NewYou.Identity.PasswordSession do
     end
   end
 
+  def global_revocation_form(credentials) do
+    case with_current_session(credentials, &global_form_locked/4) do
+      {:ok, {:form, form}} -> {:ok, form}
+      _ -> {:error, :session_unavailable}
+    end
+  end
+
+  defp global_form_locked(session, account, _token, _linked) do
+    with true <- usable_deadlines?(session),
+         {:ok, mfa_required?} <- ordinary_revocation_factor(account) do
+      {:form, %{session_id: session.id, mfa_required?: mfa_required?}}
+    else
+      _ -> :denied
+    end
+  end
+
+  def revoke_all(credentials, password, code) do
+    credentials
+    |> with_current_session(&revoke_all_locked(&1, &2, &3, &4, password, code), :all)
+    |> revocation_result()
+  end
+
+  defp revoke_all_locked(session, account, token, linked, password, code) do
+    with true <- usable_deadlines?(session),
+         {:ok, _mfa_required?} <- ordinary_revocation_factor(account),
+         :ok <- PrivilegedAccess.step_up_for_revocation(account, session, password, code) do
+      finish_global_revocation(session, account, token, linked)
+    else
+      {:denied, _reason} -> :denied
+      false -> :denied
+      {:error, :ineligible} -> :denied
+      {:error, _} -> {:error, @global_rollback}
+    end
+  rescue
+    _ -> {:error, @global_rollback}
+  end
+
+  defp ordinary_revocation_factor(account) do
+    with true <- account.mfa_enrollment_state in [:disabled, :active],
+         {:ok, false} <-
+           IdentityGrant
+           |> Ash.Query.filter(
+             subject_account_id == ^account.id and state == :active and expires_at > now()
+           )
+           |> Ash.exists(authorize?: false) do
+      {:ok, account.mfa_enrollment_state == :active}
+    else
+      false -> {:error, :ineligible}
+      {:ok, true} -> {:error, :ineligible}
+      {:error, _} = error -> error
+    end
+  end
+
+  defp finish_global_revocation(session, account, token, linked) do
+    with {:ok, %Session{} = verified} <- Ash.get(Session, session.id, authorize?: false),
+         true <- usable_deadlines?(verified) and future?(token.expires_at),
+         true <- PrivilegedAccess.current_revocation_step_up?(verified, account),
+         :ok <- SessionRevocation.revoke_sessions(account.id, linked),
+         :ok <- SessionRevocation.revoke_devices(account.id),
+         {:ok, _} <-
+           NewYou.Audit.establish_identity_security_obligation(%{
+             source_operation_id: session.id,
+             source_occurred_at: DateTime.utc_now(),
+             evidence_type: :identity_session_revoked,
+             actor_id: account.id,
+             target_id: account.id,
+             outcome: :succeeded
+           }) do
+      checkpoint()
+      :revoked
+    else
+      false -> {:error, @global_proof_expired}
+      {:error, _} -> {:error, @global_rollback}
+    end
+  end
+
   defp revocation_result({:ok, result}) when result in [:revoked, :already_ended, :stale],
     do: {:ok, result}
 
-  defp revocation_result({:error, :audit_rejected}), do: {:error, :session_revocation_failed}
+  defp revocation_result({:error, reason}) when reason in [:audit_rejected, :global_rollback],
+    do: {:error, :session_revocation_failed}
 
   defp revocation_result({:error, :transaction_unconfirmed}),
     do: {:error, :session_result_uncertain}
@@ -132,13 +225,15 @@ defmodule NewYou.Identity.PasswordSession do
   defp optional_cursor(nil), do: {:ok, nil}
   defp optional_cursor(cursor), do: Ecto.UUID.cast(cursor)
 
-  defp with_current_session(%{session_id: id, token: bearer}, operation)
+  defp with_current_session(credentials, operation, scope \\ :presenting)
+
+  defp with_current_session(%{session_id: id, token: bearer}, operation, scope)
        when is_binary(id) and is_binary(bearer) do
     with {:ok, %{"sub" => subject, "jti" => jti, "purpose" => "user"}, Account} <-
            Jwt.verify(bearer, Account),
          {:ok, session} when not is_nil(session) <- Ash.get(Session, id, authorize?: false) do
       Ash.transact([Account, Token, Session], fn ->
-        authorize_locked(id, session.account_id, bearer, subject, jti, operation)
+        authorize_locked(id, session.account_id, bearer, subject, jti, operation, scope)
       end)
       |> current_session_result()
     else
@@ -148,7 +243,7 @@ defmodule NewYou.Identity.PasswordSession do
     _ -> {:error, :transaction_unconfirmed}
   end
 
-  defp with_current_session(_, _), do: {:error, :authentication_unavailable}
+  defp with_current_session(_, _, _), do: {:error, :authentication_unavailable}
 
   if Mix.env() == :test do
     # Ash has committed by this point. Exercise loss of its acknowledgement
@@ -170,9 +265,17 @@ defmodule NewYou.Identity.PasswordSession do
        ),
        do: {:error, :audit_rejected}
 
+  defp current_session_result({:error, %Ash.Error.Unknown.UnknownError{error: @global_rollback}}),
+    do: {:error, :global_rollback}
+
+  defp current_session_result(
+         {:error, %Ash.Error.Unknown.UnknownError{error: @global_proof_expired}}
+       ),
+       do: {:error, :session_unavailable}
+
   defp current_session_result({:error, _}), do: {:error, :transaction_unconfirmed}
 
-  defp authorize_locked(id, account_id, bearer, subject, jti, operation) do
+  defp authorize_locked(id, account_id, bearer, subject, jti, operation, scope) do
     with {:ok, [account]} <-
            Account
            |> Ash.Query.filter(id == ^account_id)
@@ -180,7 +283,7 @@ defmodule NewYou.Identity.PasswordSession do
            |> Ash.read(authorize?: false),
          true <- eligible?(account),
          ^subject <- AshAuthentication.user_to_subject(account),
-         {:ok, token} when not is_nil(token) <- locked_user_token(jti, account_id, subject),
+         {:ok, token, linked} <- lock_authority_tokens(scope, jti, account_id, subject),
          {:ok, [session]} <-
            Session
            |> Ash.Query.filter(id == ^id and account_id == ^account_id and token_jti == ^jti)
@@ -189,8 +292,24 @@ defmodule NewYou.Identity.PasswordSession do
          {:ok, %{"sub" => ^subject, "jti" => ^jti}, Account} <- Jwt.verify(bearer, Account),
          true <- session.state == :active,
          true <- future?(token.expires_at) do
-      operation.(session, account, token)
+      operation.(session, account, token, linked)
     else
+      _ -> :denied
+    end
+  end
+
+  defp lock_authority_tokens(:all, jti, account_id, subject) do
+    linked = SessionRevocation.lock_linked_tokens(account_id)
+
+    case Map.get(linked, jti) do
+      %Token{subject: ^subject} = token -> {:ok, token, linked}
+      _ -> :denied
+    end
+  end
+
+  defp lock_authority_tokens(:presenting, jti, account_id, subject) do
+    case locked_user_token(jti, account_id, subject) do
+      {:ok, %Token{} = token} -> {:ok, token, nil}
       _ -> :denied
     end
   end

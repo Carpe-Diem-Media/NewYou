@@ -226,7 +226,65 @@ try {
       const packet = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json', 'utf8'));
       const copy = key => JSON.stringify(packet.copy_items.find(item => item.key === 'identity.sessions.' + key)[input.locale].text);
       const unrelated = input.unrelated_session;
-      if (unrelated) {
+      if (input.global_revocation) {
+        const all = 'a[href^="/session/manage/all?"]';
+        const confirmation = '#revoke-all-sessions';
+        const protectedStatus = status => `fetch('/session/protected', {cache: 'no-store'}).then(response => response.status === ${status})`;
+        await navigation(() => evaluate(`document.querySelector('${all}').click()`));
+        checks.confirmation = await evaluate(`document.documentElement.lang === '${input.locale}' && document.querySelector('h1')?.textContent.trim() === ${copy('all.confirm.title')}`);
+
+        await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+        checks.reduced_motion = await evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0`);
+        checks.responsive = true;
+        for (const width of [320, 768, 1280]) {
+          await cdp('Emulation.setDeviceMetricsOverride', {width, height: 900, deviceScaleFactor: 1, mobile: width < 768});
+          checks.responsive &&= await evaluate(`document.documentElement.scrollWidth <= innerWidth && document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
+        }
+
+        for (let tab = 0; tab < 7 && !(await evaluate(`document.activeElement.matches('#sign-out-password')`)); tab++) {
+          await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+          await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+        }
+        checks.focus = await evaluate(`document.activeElement.matches('#sign-out-password:focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+        await navigation(() => evaluate(`document.querySelector('${confirmation} a').click()`));
+        checks.cancel = await evaluate(`location.pathname === '/session/manage' && !!document.querySelector('${all}')`) &&
+          await evaluate(protectedStatus(200), otherSession);
+        await navigation(() => evaluate(`document.querySelector('${all}').click()`));
+        await evaluate(`document.querySelector('#sign-out-password').value = ${JSON.stringify(input.password)}`);
+
+        const submit = () => navigation(() => evaluate(`document.querySelector('${confirmation}').requestSubmit()`));
+        if (input.lose_response) {
+          const eventKey = `${sessionId}:Fetch.requestPaused`;
+          await cdp('Fetch.enable', {patterns: [{urlPattern: `${base}/session/manage/all`, requestStage: 'Response'}]});
+          let timer;
+          try {
+            const lost = new Promise((resolve, reject) => {
+              timer = setTimeout(() => reject(new Error('browser.protocol_timeout')), 20000);
+              events.set(eventKey, {resolve, timer});
+            }).then(async ({requestId, request, responseStatusCode}) => {
+              if (request.method !== 'POST' || responseStatusCode !== 200) throw new Error('browser.protocol');
+              await cdp('Fetch.failRequest', {requestId, errorReason: 'ConnectionClosed'});
+            });
+            await Promise.all([lost, submit()]);
+          } finally {
+            clearTimeout(timer);
+            events.delete(eventKey);
+            await cdp('Fetch.disable');
+          }
+          checks.response_lost = await evaluate(`location.protocol === 'chrome-error:' && !document.querySelector('[role="status"]')`);
+          await navigation(() => cdp('Page.navigate', {url: `${base}/login?locale=${input.locale}`}));
+        } else {
+          await submit();
+          checks.completed = await evaluate(`document.querySelector('[role="status"]')?.textContent.trim() === ${copy('all.completed')}`);
+        }
+
+        checks.target_denied = await evaluate(protectedStatus(401), otherSession);
+        await navigation(() => cdp('Page.navigate', {url: `${base}/session/protected?locale=${input.locale}`}));
+        checks.initiator_denied = await evaluate(`!!document.querySelector('#password-login') && !document.querySelector('#session-logout')`);
+        await signIn(sessionId);
+        await navigation(() => evaluate(`document.querySelector('${link}').click()`));
+        checks.reconciled = await evaluate(`document.querySelectorAll('li').length === 1 && document.documentElement.lang === '${input.locale}'`);
+      } else if (unrelated) {
         const form = `form[data-session-revoke-form]:not(:has(input[name="target"][value="${unrelated}"]))`;
         const fields = await evaluate(`[...new FormData(document.querySelector(${JSON.stringify(form)}))]`);
         const targetId = fields.find(([name]) => name === 'target')[1];

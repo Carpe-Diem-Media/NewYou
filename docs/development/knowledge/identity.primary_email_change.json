@@ -12,7 +12,7 @@
     "WELL-143"
   ],
   "implementation_revision": {
-    "git_sha": "2049e9f28713dc2fa5ba6ba4e104a609c3e590e9",
+    "git_sha": "874a190965592574111a05e774af9535c8f0342b",
     "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-168 refreshes shared source references after a Recovery-only delivery fix."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1558,7 +1558,7 @@
       "id": "identity_api",
       "path": "lib/new_you/identity.ex",
       "symbol": "def request_primary_email_change",
-      "sha256": "b5e9fd52bda3524e844f76a18d452dd55a7d496bbe4c9bb85f94f4ff05e5b379"
+      "sha256": "e072a4c4fb586b3c93beb9f5543896801b0ddd2b7f96ac07cb006528ccf98bef"
     },
     {
       "id": "account",
@@ -1586,9 +1586,9 @@
     },
     {
       "id": "password_reset",
-      "path": "lib/new_you/identity/password_reset.ex",
-      "symbol": "defp revoke_sessions",
-      "sha256": "f5f2e615c9ef51de0eba319c9bf38d713d2cd318c76d1445f4fb80216be342ed"
+      "path": "lib/new_you/identity/session_revocation.ex",
+      "symbol": "def revoke_sessions(id)",
+      "sha256": "6cfdc40095d684fc832ef58d604781a255cc75350067cf8af7ca85aabbd13580"
     },
     {
       "id": "communications",
@@ -1612,7 +1612,7 @@
       "id": "content",
       "path": "lib/new_you/content/primary_email_change_message.ex",
       "symbol": "defmodule NewYou.Content.PrimaryEmailChangeMessage",
-      "sha256": "41b7d792ffd9b68150a3714c594548c095bfd2a91c90e1207b3c02473c4e4039"
+      "sha256": "3589aa038f6f6345f39db5f4fa1c18e6210cb0404b4cf9458ce7519d0bf4ed6d"
     },
     {
       "id": "controller",
@@ -1714,7 +1714,7 @@
       "id": "applicability_validator",
       "path": "tools/check_well157_email_applicability.py",
       "symbol": "validate_packet",
-      "sha256": "871b1af17acb746750a84e45d9bbe5ec34bbadf8749db28d160871d690b878c5"
+      "sha256": "ffa04a17638f876cf01fe40c5124630e24b8a66638571fce8f26c426e045bf08"
     },
     {
       "id": "applicability_test",
@@ -1726,7 +1726,7 @@
       "id": "magic_approval_checker",
       "path": "tools/check_magic_login_evidence.py",
       "symbol": "def validate_development",
-      "sha256": "13339b0fb8248d28d85126840cc1fcad32587b0308c9adf078d7a675cf1c98aa"
+      "sha256": "f46f25ae05d1652aabbe239486bff24ae8f29c3ab59edfe94ed50c47440adce4"
     },
     {
       "id": "magic_approval_test",
@@ -1744,7 +1744,7 @@
       "id": "phase9_web_route",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "/primary-email-change/confirmation",
-      "sha256": "0cefb2894f1745067e70d44dec30ceee5f43fc3c16e511970286be34520933c9"
+      "sha256": "08f3b17fe1f24a1c66dd2a99a3c90fb67a4325848b6bb3948ffff3a3ee973226"
     },
     {
       "id": "phase9_copy",
@@ -1768,7 +1768,7 @@
       "id": "phase9_content_test",
       "path": "test/new_you/content/primary_email_change_message_test.exs",
       "symbol": "defmodule NewYou.Content.PrimaryEmailChangeMessageTest",
-      "sha256": "17ade818ba5f28744302bc9d6d969cd098a1e6c43401c0767121b66ae0ecd318"
+      "sha256": "b2c23779a44a7523228fd0e05188ea73e10e91c709ea130ca1d28c0a5ec66338"
     },
     {
       "id": "phase9_browser",
@@ -1792,7 +1792,7 @@
       "id": "phase9_browser_driver",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "ordinary_email_change",
-      "sha256": "564b51a45974649047c320b5de39c2bb638fe705ffc2ee484968c91cf2ab7f17"
+      "sha256": "4378a3962799047212e7f4583d59031346f9803f50b9beeb99ae39ffe034ac46"
     },
     {
       "id": "security_hold_owner",

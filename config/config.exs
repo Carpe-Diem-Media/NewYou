@@ -84,7 +84,7 @@ config :new_you, NewYou.Repo, log: false
 
 # Capability input remains transient even if a future caller enables Phoenix
 # parameter logging. Sensitive browser paths also suppress full-conn telemetry.
-config :phoenix, :filter_parameters, ["password", "proof", "token", "confirm", "secret"]
+config :phoenix, :filter_parameters, ["password", "proof", "token", "confirm", "secret", "otp"]
 
 # Configure the endpoint
 config :new_you, NewYouWeb.Endpoint,

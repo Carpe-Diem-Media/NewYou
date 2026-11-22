@@ -1,5 +1,5 @@
 defmodule NewYou.Content.SessionManagementCopy do
-  @moduledoc "Loads the exact routed WELL-163 development copy for individual Session management."
+  @moduledoc "Loads the exact routed development copy for Session management."
 
   @enabled Mix.env() in [:dev, :test]
   @root Path.expand("../../..", __DIR__)
@@ -8,7 +8,7 @@ defmodule NewYou.Content.SessionManagementCopy do
   @digest "db49143d725bc09a16ca31490e438370377393632ebba5850ded318e67a381ef"
   @status "OWNER_APPROVED_BOUNDED_NONPRODUCTION_BROWSER_COPY; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
 
-  @doc "Returns only the eligible individual-session strings for the requested locale."
+  @doc "Returns the eligible Session management strings for the requested locale."
   @spec load(String.t()) :: {:ok, %{String.t() => String.t()}} | {:error, :content_ineligible}
   def load(locale), do: load(locale, &read/1)
 
@@ -22,7 +22,7 @@ defmodule NewYou.Content.SessionManagementCopy do
          true <- digest(bytes) == @digest,
          {:ok, %{"copy_items" => items}} <- Jason.decode(bytes) do
       items
-      |> Enum.filter(&individual_session_key?/1)
+      |> Enum.filter(&session_key?/1)
       |> Enum.reduce_while({:ok, %{}}, &collect_string(&1, &2, locale))
     else
       _ -> {:error, :content_ineligible}
@@ -48,9 +48,8 @@ defmodule NewYou.Content.SessionManagementCopy do
     end
   end
 
-  defp individual_session_key?(%{"key" => "identity.sessions.all." <> _}), do: false
-  defp individual_session_key?(%{"key" => "identity.sessions." <> _}), do: true
-  defp individual_session_key?(_item), do: false
+  defp session_key?(%{"key" => "identity.sessions." <> _}), do: true
+  defp session_key?(_item), do: false
 
   defp digest(bytes), do: Base.encode16(:crypto.hash(:sha256, bytes), case: :lower)
 
