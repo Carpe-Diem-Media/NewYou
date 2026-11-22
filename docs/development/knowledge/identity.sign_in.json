@@ -11,7 +11,7 @@
     "WELL-163"
   ],
   "implementation_revision": {
-    "git_sha": "83b895270ef41a337c2d18f418c4f6bf88638692",
+    "git_sha": "a7395400ecb59f50b51a69bab3220f011c412a9c",
     "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. WELL-163 adds a bounded EN/AF participant Session inventory and individual remote revocation with material Audit E2."
   },
   "authoritative_domain": "Identity",
@@ -959,6 +959,7 @@
     }
   ],
   "proof_limitations": [
+    "WELL-132 exercises the real Identity enrollment and confirmation calls on either side of a controlled 30-second TOTP boundary. The test selects distinct adjacent codes, checks that stale rejection leaves the factor pending with no accepted period or confirmation obligation, then confirms with the current code. The Audit rollback test submits the same valid code at the same instant with and without the injected failure. The original failing runs did not capture the generation and validation instants.",
     "The linked existing migrations establish Account foreign key, unique Session/Token and magic-provenance constraints. The retention migration removes the Token foreign key so cleanup preserves Session history. Existing rollback/reconciliation guards still apply.",
     "Author proof and this map never substitute for exact-head independent Master Gate, hosted CI or resulting-main reconciliation. WELL-21 remains open.",
     "C-01 source table is archived exactly; the original canonical JSON serialization is unavailable. Derived table strings have individual byte/digest bindings, a separate artifact hash and the unchanged original canonical digest. This does not claim a fabricated reproduction of unavailable source serialization.",
@@ -1155,7 +1156,7 @@
       "id": "privilege_test",
       "path": "test/new_you/identity/privileged_access_test.exs",
       "symbol": "scoped grant consumption",
-      "sha256": "4679fbdc79f7ea35aefcd5ee4b3f1f0fc6f9b18617d0a2171cc7ac778d8adfb7"
+      "sha256": "16a9af3df23309c317c9070bbd7af1915c7fd1693902c88812afccb4def76f77"
     },
     {
       "id": "proof_authority",

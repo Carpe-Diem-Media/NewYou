@@ -34,15 +34,45 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
 
       assert is_binary(secret)
 
+      # Select a boundary where the generated secret has distinct adjacent codes.
+      timestamp =
+        Stream.iterate(1_800_000_000, &(&1 + 30))
+        |> Enum.find(fn boundary ->
+          NimbleTOTP.verification_code(secret, time: boundary - 1) !=
+            NimbleTOTP.verification_code(secret, time: boundary)
+        end)
+
+      stale_code = NimbleTOTP.verification_code(secret, time: timestamp - 1)
+      assert NimbleTOTP.valid?(secret, stale_code, time: timestamp - 1)
+      refute NimbleTOTP.valid?(secret, stale_code, time: timestamp)
+
+      stale_result =
+        with_totp_timestamp(timestamp, fn ->
+          Identity.confirm_privileged_mfa(credentials, request.password, stale_code)
+        end)
+
+      pending = P805.account!(registration.account_id)
+      assert pending.mfa_enrollment_state == :pending
+      assert pending.mfa_last_accepted_period == nil
+      assert pending.mfa_confirmed_at == nil
+      assert pending.mfa_failed_attempts == 1
+      assert mfa_confirmation_obligations(registration.account_id) == 0
+
+      assert stale_result == {:error, :privileged_access_unavailable}
+
+      code = NimbleTOTP.verification_code(secret, time: timestamp)
+      assert NimbleTOTP.valid?(secret, code, time: timestamp)
+
       assert {:ok, :ok} =
-               Identity.confirm_privileged_mfa(
-                 credentials,
-                 request.password,
-                 NimbleTOTP.verification_code(secret)
-               )
+               with_totp_timestamp(timestamp, fn ->
+                 Identity.confirm_privileged_mfa(credentials, request.password, code)
+               end)
 
       account = P805.account!(registration.account_id)
       assert account.mfa_enrollment_state == :active
+      assert account.mfa_last_accepted_period == div(timestamp, 30)
+      assert account.mfa_failed_attempts == 0
+      assert mfa_confirmation_obligations(registration.account_id) == 1
       refute is_binary(account.totp_secret)
 
       assert %{rows: [[ciphertext]]} =
@@ -93,21 +123,29 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
       {:ok, credentials} = Identity.authenticate_password(request.email, request.password)
       {:ok, %{secret: secret}} = Identity.enroll_privileged_mfa(credentials, request.password)
 
+      timestamp = 1_800_000_000
+      code = NimbleTOTP.verification_code(secret, time: timestamp)
+      assert NimbleTOTP.valid?(secret, code, time: timestamp)
+
+      confirm = fn ->
+        with_totp_timestamp(timestamp, fn ->
+          Identity.confirm_privileged_mfa(credentials, request.password, code)
+        end)
+      end
+
       install_mfa_audit_failure()
 
       try do
-        assert {:error, :privileged_access_unavailable} =
-                 Identity.confirm_privileged_mfa(
-                   credentials,
-                   request.password,
-                   NimbleTOTP.verification_code(secret)
-                 )
+        assert {:error, :privileged_access_unavailable} = confirm.()
       after
         remove_mfa_audit_failure()
       end
 
       account = P805.account!(registration.account_id)
       assert account.mfa_enrollment_state == :pending
+      assert account.mfa_last_accepted_period == nil
+      assert account.mfa_confirmed_at == nil
+      assert account.mfa_failed_attempts == 0
 
       assert %{rows: [[ciphertext]]} =
                NewYou.Repo.query!(
@@ -117,11 +155,12 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
 
       assert is_binary(ciphertext)
 
-      assert %{rows: [[0]]} =
-               NewYou.Repo.query!(
-                 "SELECT count(*) FROM evidence_obligations WHERE evidence_type = 'identity_mfa_confirmed' AND target_id = $1",
-                 [Ecto.UUID.dump!(registration.account_id)]
-               )
+      assert mfa_confirmation_obligations(registration.account_id) == 0
+
+      # Removing the Audit trigger is the only change to the confirmation.
+      assert {:ok, :ok} = confirm.()
+      assert P805.account!(registration.account_id).mfa_enrollment_state == :active
+      assert mfa_confirmation_obligations(registration.account_id) == 1
     end)
   end
 
@@ -422,6 +461,16 @@ defmodule NewYou.Identity.PrivilegedAccessTest do
       action: :provision,
       authorize?: false
     )
+  end
+
+  defp mfa_confirmation_obligations(account_id) do
+    %{rows: [[count]]} =
+      NewYou.Repo.query!(
+        "SELECT count(*) FROM evidence_obligations WHERE evidence_type = 'identity_mfa_confirmed' AND target_id = $1",
+        [Ecto.UUID.dump!(account_id)]
+      )
+
+    count
   end
 
   defp install_mfa_audit_failure do
