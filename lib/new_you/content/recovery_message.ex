@@ -1,6 +1,6 @@
 defmodule NewYou.Content.RecoveryMessage do
   @moduledoc """
-  Exact WELL-110 recovery content for bounded development proof.
+  Exact EN/AF Recovery content for historical P8-15 and bounded WELL-183 use.
 
   Every binding and queued use rechecks the pinned approval packet, paired locale
   bytes and current Product/Decision routes. This grants content eligibility only.
@@ -12,6 +12,10 @@ defmodule NewYou.Content.RecoveryMessage do
   @directory "docs/delivery/content-evidence/content_media/recovery_messages"
   @packet "#{@directory}/RECOVERY_MESSAGE_DEVELOPMENT_EVIDENCE_PACKET_v0.2.0.json"
   @packet_sha "83a44a10763181f46bbab2d6de99cf67854a18623a174746095628ae55bbeea7"
+  @phase9_document "WELL175_RECOVERY_PHASE9_APPLICABILITY_EVIDENCE"
+  @phase9_filename "WELL175_PHASE9_APPLICABILITY_EVIDENCE_v0.1.0.json"
+  @phase9_packet "#{@directory}/#{@phase9_filename}"
+  @phase9_sha "7d2e2db74229970748eb121459ca4b264bb8bb739f3de0adce2f3f0550b483ae"
   @root Path.expand("../../..", __DIR__)
   @roles [:account_recovery, :recovery_security_notice]
   @v1_17_authority %{
@@ -47,10 +51,14 @@ defmodule NewYou.Content.RecoveryMessage do
        "1a5d6d7c2bb0ca2a595dd28e2e371340298aa0b62ff613939c5de141831eb7f8"}
   }
 
+  @type context :: :p8_15 | :well183
+
   @doc "Resolve one exact role and locale, without fallback or latest-version lookup."
-  @spec binding(atom(), term()) :: {:ok, map()} | {:error, :content_ineligible}
-  def binding(role, locale) when role in @roles and locale in ["en", "af"] do
-    with {:ok, packet, versions} <- evidence(),
+  @spec binding(atom(), term(), context()) :: {:ok, map()} | {:error, :content_ineligible}
+  def binding(role, locale, context \\ :p8_15)
+
+  def binding(role, locale, context) when role in @roles and locale in ["en", "af"] do
+    with {:ok, packet, versions} <- evidence(context),
          {:ok, message} <- message(packet, role),
          {:ok, {version, _bytes}} <- Map.fetch(versions, {role, locale}) do
       {:ok, fields(message, version)}
@@ -61,12 +69,14 @@ defmodule NewYou.Content.RecoveryMessage do
     _ -> ineligible()
   end
 
-  def binding(_, _), do: ineligible()
+  def binding(_, _, _), do: ineligible()
 
   @doc "Revalidate the entire current approval and return only the exact bound bytes."
-  @spec eligible(map()) :: {:ok, binary()} | {:error, :content_ineligible}
-  def eligible(binding) when is_map(binding) do
-    with {:ok, packet, versions} <- evidence(),
+  @spec eligible(map(), context()) :: {:ok, binary()} | {:error, :content_ineligible}
+  def eligible(binding, context \\ :p8_15)
+
+  def eligible(binding, context) when is_map(binding) do
+    with {:ok, packet, versions} <- evidence(context),
          {:ok, message} <- message(packet, Map.get(binding, :role)),
          {:ok, {version, bytes}} <-
            Map.fetch(versions, {Map.get(binding, :role), Map.get(binding, :locale)}),
@@ -80,12 +90,12 @@ defmodule NewYou.Content.RecoveryMessage do
     _ -> ineligible()
   end
 
-  def eligible(_), do: ineligible()
+  def eligible(_, _), do: ineligible()
 
   @doc "Return the approved non-secret development value, without claiming operability."
-  @spec support_contact() :: {:ok, String.t()} | {:error, :content_ineligible}
-  def support_contact do
-    with {:ok, packet, _} <- evidence(), do: {:ok, packet["support_contact"]["value"]}
+  @spec support_contact(context()) :: {:ok, String.t()} | {:error, :content_ineligible}
+  def support_contact(context \\ :p8_15) do
+    with {:ok, packet, _} <- evidence(context), do: {:ok, packet["support_contact"]["value"]}
   end
 
   defp fields(message, version) do
@@ -107,7 +117,7 @@ defmodule NewYou.Content.RecoveryMessage do
 
   defp message(_, _), do: ineligible()
 
-  defp evidence do
+  defp evidence(context) do
     with true <- @enabled,
          root when is_binary(root) <- evidence_root(),
          {:ok, bytes} <- read_file(root, @packet),
@@ -115,6 +125,7 @@ defmodule NewYou.Content.RecoveryMessage do
          {:ok, packet} <- Jason.decode(bytes),
          {:ok, delivery} <- read_json(root, "docs/delivery/CURRENT_DELIVERY_ROUTER.json"),
          true <- routed_packet?(delivery),
+         true <- context_eligible?(context, root, delivery),
          {:ok, governance} <- read_json(root, "docs/governance/CURRENT_GOVERNANCE_ROUTER.json"),
          {:ok, historical} <-
            NewYou.Content.ProductAuthority.historical_bindings(governance, &read_file(root, &1)),
@@ -144,6 +155,36 @@ defmodule NewYou.Content.RecoveryMessage do
       }
     ]
   end
+
+  defp context_eligible?(:p8_15, _root, _delivery), do: true
+
+  defp context_eligible?(:well183, root, delivery) do
+    route = %{
+      "document_id" => @phase9_document,
+      "canonical_filename" => @phase9_filename,
+      "repository_path" => @phase9_packet,
+      "sha256" => @phase9_sha,
+      "contract_type" => "content_evidence",
+      "status" => "BOUNDED_NONPRODUCTION_PHASE9; CONDITIONAL_ON_CURRENT_ELIGIBILITY"
+    }
+
+    # The separately pinned envelope binds the Product decision, all four
+    # Content applicability decisions and the unchanged historical versions.
+    with [^route] <-
+           Enum.filter(delivery["delivery_contracts"], &(&1["document_id"] == @phase9_document)),
+         {:ok, bytes} <- read_file(root, @phase9_packet),
+         true <- digest(bytes) == @phase9_sha,
+         {:ok, %{"approved_subjects" => subjects}} <- Jason.decode(bytes) do
+      Enum.all?(["proposal", "exact_bindings"], fn name ->
+        %{"path" => path, "sha256" => sha} = Map.fetch!(subjects, name)
+        file_matches?(root, path, sha)
+      end)
+    else
+      _ -> false
+    end
+  end
+
+  defp context_eligible?(_, _, _), do: false
 
   defp current_authority?(root, historical) do
     Enum.all?(@authority, fn {id, {path, sha}} ->

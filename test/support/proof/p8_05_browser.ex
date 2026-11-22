@@ -24,6 +24,7 @@ defmodule NewYou.Proof.P805Browser do
     reset.confirm_submit reset.session_revocation reset.replay_submit
     reset.retry_navigation reset.old_login reset.fresh_login reset.new_request
     reset.expired_link reset.withdrawal
+    recovery.request recovery.delivery recovery.confirm recovery.confirm_denied recovery.credential_missing recovery.complete recovery.replay recovery.sign_in
   )
 
   def run_login(request, locale) do

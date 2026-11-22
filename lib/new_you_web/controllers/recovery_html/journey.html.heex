@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="referrer" content="no-referrer" />
-    <title>{NewYouWeb.RecoveryCopy.text!("#{@stage}.title", @locale)}</title>
+    <title>{text(@copy, "identity.recovery.#{@stage}.title", @locale)}</title>
     <link rel="stylesheet" href={~p"/assets/css/app.css"} />
   </head>
   <body>
@@ -20,10 +20,10 @@
           id="recovery-heading"
           class="max-w-3xl text-balance font-design-bold text-design-display-sm leading-design-display-sm tracking-design-display-sm design-tablet:text-design-display-md design-tablet:leading-design-display-md design-tablet:tracking-design-display-md"
         >
-          {NewYouWeb.RecoveryCopy.text!("#{@stage}.title", @locale)}
+          {text(@copy, "identity.recovery.#{@stage}.title", @locale)}
         </h1>
         <p role="status" class="max-w-prose text-design-body-sm leading-design-body-sm">
-          {NewYouWeb.RecoveryCopy.text!("#{@stage}.body", @locale)}
+          {text(@copy, "identity.recovery.#{@stage}.body", @locale)}
         </p>
         <.form
           :if={@stage in [:request, :confirmation, :credential]}
@@ -47,7 +47,7 @@
             class="text-design-body-sm font-design-bold text-design-ink"
             for="email"
           >
-            {NewYouWeb.CopyRegistry.text!("identity.registration.email.label", @locale)}
+            {text(@copy, "identity.registration.email.label", @locale)}
           </label>
           <input
             :if={@stage == :request}
@@ -63,7 +63,7 @@
             class="text-design-body-sm font-design-bold text-design-ink"
             for="password"
           >
-            {NewYouWeb.CopyRegistry.text!("identity.registration.password.label", @locale)}
+            {text(@copy, "identity.registration.password.label", @locale)}
           </label>
           <input
             :if={@stage == :credential}
@@ -75,8 +75,9 @@
             autocomplete="new-password"
             maxlength="1024"
           />
-          <.primary_button type="submit">{NewYouWeb.RecoveryCopy.text!(
-            "#{@stage}.action",
+          <.primary_button type="submit">{text(
+            @copy,
+            "identity.recovery.#{@stage}.action",
             @locale
           )}</.primary_button>
         </.form>
@@ -85,14 +86,14 @@
           href={"/recovery?locale=" <> @locale}
           class="text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
         >
-          {NewYouWeb.RecoveryCopy.text!("request.action", @locale)}
+          {text(@copy, "identity.recovery.request.action", @locale)}
         </a>
         <a
           :if={@stage == :completed}
           href={"/login?locale=" <> @locale}
           class="text-design-body-sm underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
         >
-          {NewYouWeb.CopyRegistry.text!("shared.navigation.login", @locale)}
+          {text(@copy, "shared.navigation.login", @locale)}
         </a>
       </section>
     </main>

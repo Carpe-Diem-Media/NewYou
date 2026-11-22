@@ -85,41 +85,53 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
     end
   end
 
-  test "content withdrawal between admission and invocation prevents submission" do
-    P805.with_fixture(fn ->
-      {_request, _recovery, intent} = pending("en")
-      root = Path.join(System.tmp_dir!(), "queued-recovery-#{Ecto.UUID.generate()}")
-      File.mkdir_p!(root)
-      File.cp_r!(Path.expand("../../../docs", __DIR__), Path.join(root, "docs"))
-      Process.put({NewYou.Content.RecoveryMessage, :evidence_root}, root)
-      Process.put(:p810_provider, fn _, _ -> flunk("withdrawn content cannot reach provider") end)
+  for {context, packet} <- [
+        p8_15: "RECOVERY_MESSAGE_DEVELOPMENT_EVIDENCE_PACKET_v0.2.0.json",
+        well183: "WELL175_PHASE9_APPLICABILITY_EVIDENCE_v0.1.0.json"
+      ] do
+    @context context
+    @packet packet
+    test "#{context} content withdrawal between admission and invocation prevents submission" do
+      P805.with_fixture(fn ->
+        if @context == :well183, do: Application.put_env(:new_you, :fp001_development_entry, true)
+        {_request, recovery, intent} = pending("en", @context)
+        assert recovery.entry_context == @context
+        root = Path.join(System.tmp_dir!(), "queued-recovery-#{Ecto.UUID.generate()}")
+        File.mkdir_p!(root)
+        File.cp_r!(Path.expand("../../../docs", __DIR__), Path.join(root, "docs"))
+        Process.put({NewYou.Content.RecoveryMessage, :evidence_root}, root)
 
-      Process.put(DeliverySeam, fn
-        :after_admission ->
-          File.rm!(
-            Path.join(
-              root,
-              "docs/delivery/content-evidence/content_media/recovery_messages/RECOVERY_MESSAGE_DEVELOPMENT_EVIDENCE_PACKET_v0.2.0.json"
+        Process.put(:p810_provider, fn _, _ ->
+          flunk("withdrawn content cannot reach provider")
+        end)
+
+        Process.put(DeliverySeam, fn
+          :after_admission ->
+            File.rm!(
+              Path.join(
+                root,
+                "docs/delivery/content-evidence/content_media/recovery_messages/#{@packet}"
+              )
             )
-          )
 
-        _ ->
-          :ok
+          _ ->
+            :ok
+        end)
+
+        try do
+          assert {:ok, :held} = Communications.execute(intent.id)
+          assert [attempt] = attempts(intent)
+          assert attempt.admission == :closed_before_invocation
+          assert attempt.invocation_started_at == nil
+        after
+          File.rm_rf!(root)
+        end
       end)
-
-      try do
-        assert {:ok, :held} = Communications.execute(intent.id)
-        assert [attempt] = attempts(intent)
-        assert attempt.admission == :closed_before_invocation
-        assert attempt.invocation_started_at == nil
-      after
-        File.rm_rf!(root)
-      end
-    end)
-  after
-    Process.delete(:p810_provider)
-    Process.delete(DeliverySeam)
-    Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
+    after
+      Process.delete(:p810_provider)
+      Process.delete(DeliverySeam)
+      Process.delete({NewYou.Content.RecoveryMessage, :evidence_root})
+    end
   end
 
   test "restored content binds a held proof once without changing Identity authority" do
@@ -379,12 +391,12 @@ defmodule NewYou.Communications.RecoveryDeliveryTest do
     Process.delete(:p810_provider)
   end
 
-  defp pending(locale) do
+  defp pending(locale, context \\ :p8_15) do
     request = P805.request(%{preferred_language: String.to_existing_atom(locale)})
     {:ok, registration} = Identity.register(request)
     {:ok, :verified} = Identity.verify_email(registration.verification_proof)
     operation = operation()
-    :ok = Identity.request_recovery(request.email, locale, operation)
+    :ok = Identity.request_recovery(request.email, locale, operation, context)
     intent = intent(operation, :account_recovery)
 
     recovery =

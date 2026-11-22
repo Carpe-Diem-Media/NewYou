@@ -514,6 +514,10 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.restart_proof() == :ok
   end
 
+  test "ordinary Phase-9 proof and completion survive separate BEAM processes" do
+    assert P815.restart_proof(:well183) == :ok
+  end
+
   defp await_initial_lease_loss(parent, reference, deadline) do
     assert System.monotonic_time(:millisecond) < deadline
 

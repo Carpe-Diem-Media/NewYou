@@ -1061,9 +1061,13 @@ defmodule NewYou.Proof.P815 do
     end)
   end
 
-  def restart_proof do
+  def restart_proof(context \\ :p8_15) do
     P805.with_fixture(fn ->
-      {request, registration, recovery, bearer} = pending_recovery()
+      if context == :well183, do: Application.put_env(:new_you, :fp001_development_entry, true)
+
+      {request, registration, recovery, bearer} =
+        pending_recovery(&Identity.request_recovery(&1, "af", &2, context))
+
       operation_id = operation()
       password = "recovery survives a fresh BEAM"
       secret = Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
@@ -1074,14 +1078,16 @@ defmodule NewYou.Proof.P815 do
                destination: request.email,
                locale: "af",
                expected_digest: digest(bearer),
-               signing_secret: secret
+               signing_secret: secret,
+               context: context
              }) == :delivery_matches
 
       assert restart_call(%{
                mode: "submit",
                proof: bearer,
                operation_id: operation(),
-               signing_secret: secret
+               signing_secret: secret,
+               context: context
              }) == :accepted
 
       assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).state == :additional_assurance
@@ -1091,15 +1097,17 @@ defmodule NewYou.Proof.P815 do
                proof: bearer,
                password: password,
                operation_id: operation_id,
-               signing_secret: secret
+               signing_secret: secret,
+               context: context
              }) == :completed
 
       assert restart_call(%{
                mode: "replay",
                proof: bearer,
-               password: "ignored",
+               password: if(context == :well183, do: password, else: "ignored"),
                operation_id: operation_id,
-               signing_secret: secret
+               signing_secret: secret,
+               context: context
              }) == :already_completed
 
       assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).state == :completed

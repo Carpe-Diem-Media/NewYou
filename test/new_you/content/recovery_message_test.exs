@@ -51,6 +51,30 @@ defmodule NewYou.Content.RecoveryMessageTest do
     assert {:ok, "jc@carpediem.co.za"} = RecoveryMessage.support_contact()
   end
 
+  test "Phase 9 requires its own exact approval at binding and queued use", %{root: root} do
+    for role <- [:account_recovery, :recovery_security_notice], locale <- ["en", "af"] do
+      assert {:ok, historical} = RecoveryMessage.binding(role, locale)
+      assert {:ok, ^historical} = RecoveryMessage.binding(role, locale, :well183)
+      queued = Map.put(historical, :role, role)
+
+      assert {:ok, bytes} = RecoveryMessage.eligible(queued, :well183)
+      assert {:ok, ^bytes} = RecoveryMessage.eligible(queued)
+    end
+
+    assert {:ok, binding} = RecoveryMessage.binding(:account_recovery, "en", :well183)
+    queued = Map.put(binding, :role, :account_recovery)
+
+    path = Path.join(root, "#{@directory}/WELL175_PHASE9_APPLICABILITY_EVIDENCE_v0.1.0.json")
+    approval = path |> File.read!() |> Jason.decode!()
+    File.write!(path, Jason.encode!(put_in(approval["lifecycle"]["state"], "withdrawn")))
+
+    assert {:error, :content_ineligible} =
+             RecoveryMessage.binding(:account_recovery, "en", :well183)
+
+    assert {:error, :content_ineligible} = RecoveryMessage.eligible(queued, :well183)
+    assert {:ok, _} = RecoveryMessage.eligible(queued)
+  end
+
   test "unknown locales, roles and altered exact bindings fail without fallback" do
     for locale <- ["af-ZA", "en-GB", "zu", nil],
         do:
