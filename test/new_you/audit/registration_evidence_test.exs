@@ -69,12 +69,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     [job] = scheduled_audit_jobs()
     assert job.queue == "audit"
 
-    assert job.args == %{
-             "primary_key" => %{"id" => obligation.id},
-             "metadata" => %{},
-             "action_arguments" => %{},
-             "tenant" => nil
-           }
+    assert job.args == registration_evidence_job_args(obligation.id)
   end
 
   test "the Identity owner action repeats registration admission and derives its binding" do
@@ -386,7 +381,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
                  [obligation_id]
                )
 
-      assert audit_job_count(obligation_id) == 0
+      assert audit_jobs_for_obligation(obligation_id) == []
     end
 
     trigger = AshOban.Info.oban_trigger(NewYou.Audit.EvidenceObligation, :registration_evidence)
@@ -400,8 +395,13 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     assert {"* * * * *", trigger.scheduler, []} in configured[:cron][:crontab]
     assert is_atom(trigger.scheduler) and not is_nil(trigger.scheduler)
     assert :ok = trigger.scheduler.perform(%Oban.Job{args: %{}})
-    assert audit_job_count(owned_id) == 1
-    assert audit_job_count(other_id) == 1
+
+    worker = Oban.Worker.to_string(trigger.worker)
+
+    for obligation_id <- [owned_id, other_id] do
+      args = registration_evidence_job_args(obligation_id)
+      assert [[^worker, "available", ^args]] = audit_jobs_for_obligation(obligation_id)
+    end
   end
 
   test "PostgreSQL refuses fulfilled obligations without evidence" do
@@ -806,14 +806,23 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     end
   end
 
-  defp audit_job_count(obligation_id) do
-    %{rows: [[count]]} =
+  defp audit_jobs_for_obligation(obligation_id) do
+    %{rows: rows} =
       Repo.query!(
-        "SELECT count(*) FROM public.oban_jobs WHERE queue = 'audit' AND args->'primary_key'->>'id' = $1",
+        "SELECT worker, state, args FROM public.oban_jobs WHERE queue = 'audit' AND args->'primary_key'->>'id' = $1",
         [obligation_id]
       )
 
-    count
+    rows
+  end
+
+  defp registration_evidence_job_args(obligation_id) do
+    %{
+      "primary_key" => %{"id" => obligation_id},
+      "metadata" => %{},
+      "action_arguments" => %{},
+      "tenant" => nil
+    }
   end
 
   defp identity_truth(account_id) do
