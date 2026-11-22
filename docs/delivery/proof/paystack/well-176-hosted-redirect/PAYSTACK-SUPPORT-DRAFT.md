@@ -1,0 +1,10 @@
+# Paystack support inquiry, draft only
+
+We are designing card-only ZAR checkout recovery in Paystack TEST mode using Hosted Redirect. Our server creates one transaction and stores its unique reference and returned checkout capability before returning the redirect. If the response to the customer is lost, we want to reopen the original transaction safely without creating a second payable attempt.
+
+1. Can the exact original `authorization_url` be reopened in a new browser after the first customer-facing redirect was lost? Please confirm its binding to the original transaction, any conditions or lifetime limits and whether simultaneous tabs or sequential reopened sessions can initiate multiple collections against the same transaction.
+2. Is there a documented pre-payment response, supported read, or other observation that binds the specific fresh hosted session opened at that URL to the same exact transaction ID returned by server-side Verify? Please identify the exact evidence and the expected hosted browser origins, methods and routes or versioned resource data through checkout load. We want an isolated TEST check with one navigation and zero payment submissions.
+3. If Paystack accepted Initialize but the response never reached our server, can any supported read or idempotent operation using the original reference retrieve or refresh the original capability without creating another payable transaction? Please identify the operation and guarantees regarding old capabilities, reference uniqueness and in-flight payments.
+4. For card-only Hosted Redirect, what exact provider evidence proves both that an old capability can no longer initiate payment and that any in-flight authorization cannot result in later collection? How should a merchant distinguish session expiry from abandoned, failed, unavailable or pending evidence? Can a payment settle after the session timeout if authorization started earlier?
+
+Written answers or links to the supported contract would let us define a bounded TEST experiment. This inquiry contains no real credentials, identifiers or checkout capabilities.

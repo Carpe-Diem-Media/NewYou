@@ -1,0 +1,27 @@
+test_browser_return_and_duplicate_webhook_are_triggers_only (test_hosted.HostedTest.test_browser_return_and_duplicate_webhook_are_triggers_only) ... ok
+test_concurrent_start_emits_one_initialize (test_hosted.HostedTest.test_concurrent_start_emits_one_initialize) ... ok
+test_expired_or_abandoned_attempt_does_not_admit_replacement (test_hosted.HostedTest.test_expired_or_abandoned_attempt_does_not_admit_replacement) ... ok
+test_initial_redirect_is_exact_and_noncacheable (test_hosted.HostedTest.test_initial_redirect_is_exact_and_noncacheable) ... ok
+test_lost_participant_reply_restart_and_resume_reuse_retained_url (test_hosted.HostedTest.test_lost_participant_reply_restart_and_resume_reuse_retained_url) ... ok
+test_lost_upstream_reply_preserves_reference_and_can_reconcile_late_success (test_hosted.HostedTest.test_lost_upstream_reply_preserves_reference_and_can_reconcile_late_success) ... ok
+test_mismatched_receipt_is_quarantined (test_hosted.HostedTest.test_mismatched_receipt_is_quarantined) ... ok
+test_only_payer_can_admit_or_reopen (test_hosted.HostedTest.test_only_payer_can_admit_or_reopen) ... ok
+test_persisted_poll_recovers_without_webhook_or_callback (test_hosted.HostedTest.test_persisted_poll_recovers_without_webhook_or_callback) ... ok
+test_untrusted_destination_spellings_are_rejected (test_hosted.HostedTest.test_untrusted_destination_spellings_are_rejected) ... ok
+test_bounded_retries_reach_one_operator_case_and_durable_backstop (test_commerce.CommerceTests.test_bounded_retries_reach_one_operator_case_and_durable_backstop) ... ok
+test_concurrent_reservations_allow_one_mutation_dispatch (test_commerce.CommerceTests.test_concurrent_reservations_allow_one_mutation_dispatch) ... ok
+test_durable_receipt_survives_participant_loss_and_restart (test_commerce.CommerceTests.test_durable_receipt_survives_participant_loss_and_restart) ... ok
+test_entitlement_delivery_retry_is_idempotent_after_ack_loss (test_commerce.CommerceTests.test_entitlement_delivery_retry_is_idempotent_after_ack_loss) ... ok
+test_lost_provider_reply_keeps_original_reference_and_fence (test_commerce.CommerceTests.test_lost_provider_reply_keeps_original_reference_and_fence) ... ok
+test_positive_terminal_observations_do_not_release_the_payment_fence (test_commerce.CommerceTests.test_positive_terminal_observations_do_not_release_the_payment_fence) ... ok
+test_receipt_cannot_replace_original_identity_or_rebind_a_capability (test_commerce.CommerceTests.test_receipt_cannot_replace_original_identity_or_rebind_a_capability) ... ok
+test_reconciliation_binds_only_authorized_reference_price_and_integration (test_commerce.CommerceTests.test_reconciliation_binds_only_authorized_reference_price_and_integration) ... ok
+test_reversal_before_entitlement_preserves_evidence_and_fails_closed (test_commerce.CommerceTests.test_reversal_before_entitlement_preserves_evidence_and_fails_closed) ... ok
+test_matching_url_and_verify_records_without_session_witness_stay_inconclusive (test_evidence_gate.EvidenceGateTest.test_matching_url_and_verify_records_without_session_witness_stay_inconclusive) ... ok
+test_stale_or_fabricated_witness_or_budget_breach_stops (test_evidence_gate.EvidenceGateTest.test_stale_or_fabricated_witness_or_budget_breach_stops) ... ok
+test_synthetic_session_witness_and_lossless_verify_match (test_evidence_gate.EvidenceGateTest.test_synthetic_session_witness_and_lossless_verify_match) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 0.281s
+
+OK
