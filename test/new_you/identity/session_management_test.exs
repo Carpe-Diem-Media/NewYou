@@ -9,7 +9,15 @@ defmodule NewYou.Identity.SessionManagementTest do
   alias NewYou.Identity.{Account, DeviceAssurance, PasswordSession, Session, Token}
   alias NewYou.Repo
   alias Ecto.Adapters.SQL.Sandbox
-  alias NewYou.Proof.{P805, P809, PrivilegedAccessSeam, RecoveryScenarios, RegistrationSeam}
+
+  alias NewYou.Proof.{
+    P805,
+    P809,
+    P813HoldFixture,
+    PrivilegedAccessSeam,
+    RecoveryScenarios,
+    RegistrationSeam
+  }
 
   test "global revocation requires fresh proof and a replay cannot affect a fresh Session" do
     P805.with_fixture(fn ->
@@ -90,7 +98,28 @@ defmodule NewYou.Identity.SessionManagementTest do
                  Identity.revoke_all_sessions(initiator, request.password, confirmation)
 
         assert session(target).state == :active
-        fresh_timestamp = timestamp + 30
+        other_purpose_timestamp = timestamp + 30
+        Process.put(PrivilegedAccessSeam, other_purpose_timestamp)
+        other_code = NimbleTOTP.verification_code(secret, time: other_purpose_timestamp)
+
+        assert {:ok, :ok} =
+                 Identity.step_up_privileged(
+                   initiator,
+                   request.password,
+                   other_code,
+                   :lookup_identity
+                 )
+
+        assert session(initiator).step_up_purpose == :lookup_identity
+
+        for rejected_code <- [nil, other_code] do
+          assert {:error, :session_unavailable} =
+                   Identity.revoke_all_sessions(initiator, request.password, rejected_code)
+        end
+
+        assert session(initiator).step_up_purpose == :lookup_identity
+        assert session(target).state == :active
+        fresh_timestamp = timestamp + 60
         Process.put(PrivilegedAccessSeam, fresh_timestamp)
         code = NimbleTOTP.verification_code(secret, time: fresh_timestamp)
         assert {:ok, :revoked} = Identity.revoke_all_sessions(initiator, request.password, code)
@@ -106,36 +135,85 @@ defmodule NewYou.Identity.SessionManagementTest do
     end
   end
 
-  test "global Audit rejection rolls back Sessions, tokens, assurance and devices" do
-    P805.with_fixture(fn ->
-      request = verified_account()
-      initiator = sign_in(request)
-      target = sign_in(request)
-      account_id = session(initiator).account_id
-      device = RecoveryScenarios.trusted_device(account_id)
+  test "an active Support grant denies global revocation even with fresh factor proof" do
+    P813HoldFixture.with_fixture(fn %{target: target, approver: approver} ->
+      member = P813HoldFixture.factor_member()
 
-      assert {:ok, _} =
-               Ash.transact(Account, fn ->
-                 Audit.establish_identity_security_obligation(%{
-                   source_operation_id: initiator.session_id,
-                   source_occurred_at: ~U[2025-01-01 00:00:00Z],
-                   evidence_type: :identity_session_revoked,
-                   actor_id: account_id,
-                   target_id: account_id,
-                   outcome: :failed
-                 })
-               end)
+      assert {:ok, %{mfa_required?: true}} =
+               Identity.global_session_revocation_form(member.credentials)
 
-      assert {:error, :session_revocation_failed} =
-               Identity.revoke_all_sessions(initiator, request.password, nil)
+      grant = P813HoldFixture.grant(member, target, approver, :security_hold_restriction)
+      assert grant.state == :active
 
-      for credentials <- [initiator, target] do
-        assert %{state: :active, step_up_purpose: nil, token_jti: jti} = session(credentials)
-        assert Ash.get!(Token, jti, authorize?: false).purpose == "user"
-        assert {:ok, _} = Identity.authorize_session(credentials)
+      timestamp = 1_800_000_000
+      Process.put(PrivilegedAccessSeam, timestamp)
+
+      try do
+        code = NimbleTOTP.verification_code(member.secret, time: timestamp)
+
+        assert {:error, :session_unavailable} =
+                 Identity.revoke_all_sessions(member.credentials, member.password, code)
+
+        assert P805.account!(member.id).mfa_last_accepted_period == nil
+        assert_live_authentication(member.credentials)
+        assert_no_revocation_evidence(member.credentials.session_id)
+      after
+        Process.delete(PrivilegedAccessSeam)
       end
+    end)
+  end
 
-      assert Ash.get!(DeviceAssurance, device, authorize?: false).state == :trusted
+  test "global Audit rejection rolls back MFA, Sessions, tokens, assurance and device trust" do
+    P813HoldFixture.with_fixture(fn _ ->
+      member = P813HoldFixture.factor_member()
+      credentials = member.credentials
+      device = RecoveryScenarios.trusted_device(member.id)
+
+      # A second Session shares the Account without receiving elevated assurance.
+      account = P805.account!(member.id)
+      target = sign_in(%{email: account.email, password: member.password})
+
+      previous_timestamp = 1_800_000_000
+      Process.put(PrivilegedAccessSeam, previous_timestamp)
+
+      try do
+        assert {:ok, :ok} = P813HoldFixture.step_up(member, :lookup_identity)
+        assert P805.account!(member.id).mfa_last_accepted_period == div(previous_timestamp, 30)
+        original = session(credentials)
+        assert original.step_up_purpose == :lookup_identity
+
+        timestamp = previous_timestamp + 30
+        Process.put(PrivilegedAccessSeam, timestamp)
+        code = NimbleTOTP.verification_code(member.secret, time: timestamp)
+
+        P805.with_rejected_insert("evidence_obligations", fn reached ->
+          # A database exception reports uncertainty. The fresh reads below
+          # establish rollback independently before retrying the same code.
+          assert {:error, :session_result_uncertain} =
+                   Identity.revoke_all_sessions(credentials, member.password, code)
+
+          assert reached.()
+        end)
+
+        assert P805.account!(member.id).mfa_last_accepted_period == div(previous_timestamp, 30)
+        assert session(credentials) == original
+        assert_live_authentication(credentials)
+        assert_live_authentication(target)
+        assert Ash.get!(DeviceAssurance, device, authorize?: false).state == :trusted
+        assert_no_revocation_evidence(credentials.session_id)
+
+        assert {:ok, :revoked} = Identity.revoke_all_sessions(credentials, member.password, code)
+        assert P805.account!(member.id).mfa_last_accepted_period == div(timestamp, 30)
+
+        for revoked <- [credentials, target] do
+          assert %{state: :revoked, step_up_purpose: nil, token_jti: jti} = session(revoked)
+          assert Ash.get!(Token, jti, authorize?: false).purpose == "revocation"
+        end
+
+        assert Ash.get!(DeviceAssurance, device, authorize?: false).state == :revoked
+      after
+        Process.delete(PrivilegedAccessSeam)
+      end
     end)
   end
 
@@ -307,6 +385,7 @@ defmodule NewYou.Identity.SessionManagementTest do
       initiator = sign_in(request)
       stale_session = sign_in(request)
       stale_token = sign_in(request)
+      foreign = verified_account() |> sign_in()
       usable = sign_in(request)
 
       Repo.query!(
@@ -325,6 +404,20 @@ defmodule NewYou.Identity.SessionManagementTest do
       assert Enum.sort(Enum.map(sessions, & &1.id)) ==
                Enum.sort([initiator.session_id, usable.session_id])
 
+      assert {:ok, _} = Identity.global_session_revocation_form(initiator)
+      same_account_mismatch = %{initiator | token: usable.token}
+      foreign_mismatch = %{initiator | token: foreign.token}
+
+      for rejected <- [stale_session, stale_token, same_account_mismatch, foreign_mismatch] do
+        assert {:error, :session_unavailable} =
+                 Identity.revoke_all_sessions(rejected, request.password, nil)
+
+        assert_no_revocation_evidence(rejected.session_id)
+        assert_live_authentication(usable)
+      end
+
+      assert_live_authentication(foreign)
+
       for stale <- [stale_session, stale_token] do
         assert {:ok, :stale} = Identity.revoke_other_session(initiator, stale.session_id)
         assert %{state: :active, ended_at: nil} = session(stale)
@@ -336,6 +429,12 @@ defmodule NewYou.Identity.SessionManagementTest do
       ])
 
       assert {:error, :authentication_unavailable} = Identity.list_active_sessions(initiator)
+
+      assert {:error, :session_unavailable} =
+               Identity.revoke_all_sessions(initiator, request.password, nil)
+
+      assert_no_revocation_evidence(initiator.session_id)
+      assert %{state: :active, ended_at: nil} = session(initiator)
 
       assert {:error, :session_unavailable} =
                Identity.revoke_other_session(initiator, usable.session_id)
@@ -414,6 +513,21 @@ defmodule NewYou.Identity.SessionManagementTest do
       assert :denied = P809.restart_process(target)
       assert :allowed = P809.restart_process(initiator)
     end)
+  end
+
+  defp assert_live_authentication(credentials) do
+    assert %{state: :active, ended_at: nil, token_jti: jti} = session(credentials)
+    assert Ash.get!(Token, jti, authorize?: false).purpose == "user"
+    assert {:ok, _} = Identity.authorize_session(credentials)
+  end
+
+  defp assert_no_revocation_evidence(session_id) do
+    assert {:ok, false} =
+             EvidenceObligation
+             |> Ash.Query.filter(
+               evidence_type == :identity_session_revoked and source_operation_id == ^session_id
+             )
+             |> Ash.exists(authorize?: false)
   end
 
   defp verified_account do
