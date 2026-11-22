@@ -1,0 +1,63 @@
+<.auth_shell
+  title={text(@copy, "all.confirm.title")}
+  locale={@locale}
+  locale_path="/session/manage/all"
+>
+  <script defer src={~p"/assets/js/password_reset.js"}>
+  </script>
+  <p class="max-w-prose text-design-body-sm leading-design-body-sm">
+    {text(@copy, "all.confirm.body")}
+  </p>
+  <.form
+    for={%{}}
+    id="revoke-all-sessions"
+    action="/session/manage/all"
+    method="post"
+    class="grid w-full max-w-prose gap-design-base"
+    data-session-revoke-form
+    data-processing={text(@copy, "all.processing")}
+  >
+    <input type="hidden" name="locale" value={@locale} />
+    <input type="hidden" name="presenting" value={@form.session_id} />
+    <label class="text-design-body-sm font-design-bold" for="sign-out-password">
+      {NewYouWeb.SignInCopy.text!("identity.login.password.label", @locale)}
+    </label>
+    <input
+      class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      id="sign-out-password"
+      name="password"
+      type="password"
+      required
+      maxlength="1024"
+      autocomplete="current-password"
+    />
+    <label
+      :if={@form.mfa_required?}
+      class="text-design-body-sm font-design-bold"
+      for="sign-out-otp"
+    >
+      {if @locale == "af", do: "Verifikasiekode", else: "Verification code"}
+    </label>
+    <input
+      :if={@form.mfa_required?}
+      class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      id="sign-out-otp"
+      name="otp"
+      type="text"
+      required
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      maxlength="6"
+      pattern="[0-9]{6}"
+    />
+    <div class="flex flex-wrap items-center gap-design-base">
+      <.primary_button type="submit" adaptive>{text(@copy, "all.action")}</.primary_button>
+      <a
+        href={"/session/manage?locale=#{@locale}"}
+        class="min-h-11 content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      >
+        {if @locale == "af", do: "Kanselleer", else: "Cancel"}
+      </a>
+    </div>
+  </.form>
+</.auth_shell>

@@ -8,9 +8,116 @@ defmodule NewYouWeb.SessionManagementControllerTest do
 
   alias NewYou.{Audit, Identity}
   alias NewYou.Identity.{Account, PasswordSession, Session}
-  alias NewYou.Proof.{P805, P805Browser, SignInJourney}
+  alias NewYou.Proof.{P805, P805Browser, PrivilegedAccessSeam, SignInJourney}
 
   @endpoint NewYouWeb.Endpoint
+
+  test "global confirmation is read-only and requires a bound CSRF-protected POST in EN and AF" do
+    P805.with_fixture(fn ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
+      input = P805.request()
+      assert {:ok, registration} = Identity.register(input)
+      assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+
+      for locale <- ["en", "af"] do
+        origin = login(input, locale)
+        target = login(input, locale)
+        origin_id = get_session(origin, :identity_session_id)
+        path = "/session/manage/all"
+        assert head(recycle(origin), path).status == 200
+        page = get(recycle(origin), path)
+        body = html_response(page, 200)
+        assert body =~ ~s(lang="#{locale}")
+        assert body =~ "current-password"
+        assert get(recycle(target), "/session/protected").status == 200
+
+        params = %{"locale" => locale, "password" => input.password, "presenting" => origin_id}
+        assert post(with_csrf(page), path, params).status == 403
+        assert get(recycle(target), "/session/protected").status == 200
+
+        [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, body)
+        result = post(with_csrf(page), path, Map.put(params, "_csrf_token", csrf))
+        assert_status_copy(result, 200, locale, "all.completed")
+        assert get_resp_header(result, "cache-control") == ["no-store"]
+        assert get(recycle(result), "/session/protected?locale=#{locale}").status == 401
+        assert get(recycle(target), "/session/protected").status == 401
+
+        fresh = login(input, locale)
+        fresh_form = get(recycle(fresh), path)
+
+        [_, fresh_csrf] =
+          Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, html_response(fresh_form, 200))
+
+        stale = post(with_csrf(fresh_form), path, Map.put(params, "_csrf_token", fresh_csrf))
+        assert_status_copy(stale, 403, locale, "all.failed")
+        assert get(recycle(fresh), "/session/protected").status == 200
+      end
+    end)
+  end
+
+  test "the browser confirmation requires the real enrolled factor" do
+    previous = Application.fetch_env(:new_you, :identity_mfa_keyring)
+
+    Application.put_env(:new_you, :identity_mfa_keyring, %{
+      active_version: "test-v1",
+      keys: %{"test-v1" => :crypto.strong_rand_bytes(32)}
+    })
+
+    try do
+      P805.with_fixture(fn ->
+        input = verified_input()
+        origin = login(input, "af")
+        target = login(input, "af")
+
+        credentials = %{
+          session_id: get_session(origin, :identity_session_id),
+          token: get_session(origin, :identity_token)
+        }
+
+        timestamp = 1_800_000_000
+        Process.put(PrivilegedAccessSeam, timestamp)
+
+        assert {:ok, %{secret: secret}} =
+                 Identity.enroll_privileged_mfa(credentials, input.password)
+
+        confirmation = NimbleTOTP.verification_code(secret, time: timestamp)
+
+        assert {:ok, :ok} =
+                 Identity.confirm_privileged_mfa(credentials, input.password, confirmation)
+
+        path = "/session/manage/all"
+        page = get(recycle(origin), path)
+        body = html_response(page, 200)
+        assert body =~ ~s(autocomplete="one-time-code")
+        [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, body)
+
+        params = %{
+          "locale" => "af",
+          "password" => input.password,
+          "presenting" => credentials.session_id,
+          "_csrf_token" => csrf
+        }
+
+        rejected = post(with_csrf(page), path, Map.put(params, "otp", confirmation))
+        assert_status_copy(rejected, 403, "af", "all.failed")
+        assert get(recycle(target), "/session/protected").status == 200
+
+        next_timestamp = timestamp + 30
+        Process.put(PrivilegedAccessSeam, next_timestamp)
+        code = NimbleTOTP.verification_code(secret, time: next_timestamp)
+        result = post(with_csrf(page), path, Map.put(params, "otp", code))
+        assert_status_copy(result, 200, "af", "all.completed")
+        assert get(recycle(target), "/session/protected").status == 401
+      end)
+    after
+      Process.delete(PrivilegedAccessSeam)
+
+      case previous do
+        {:ok, value} -> Application.put_env(:new_you, :identity_mfa_keyring, value)
+        :error -> Application.delete_env(:new_you, :identity_mfa_keyring)
+      end
+    end
+  end
 
   test "both locales link to a current Session list and require explicit CSRF-protected revocation" do
     P805.with_fixture(fn ->
@@ -53,6 +160,39 @@ defmodule NewYouWeb.SessionManagementControllerTest do
         assert get(recycle(origin), "/session/protected").status == 200
         assert post(with_csrf(origin), "/session/logout", %{"locale" => locale}).status == 403
       end
+    end)
+  end
+
+  for locale <- ["en", "af"] do
+    @locale locale
+    @tag timeout: 120_000
+    test "Chromium signs out every Session and reconciles with a new sign-in in #{@locale}" do
+      P805.with_fixture(fn ->
+        input = verified_input()
+
+        result =
+          run_browser(input, @locale, SignInJourney.Endpoint, %{global_revocation: true})
+
+        assert_browser_checks(
+          result,
+          ~w(confirmation cancel focus responsive reduced_motion completed initiator_denied target_denied reconciled)
+        )
+      end)
+    end
+  end
+
+  @tag timeout: 120_000
+  test "Chromium reconciles an interrupted global sign-out response by signing in again" do
+    P805.with_fixture(fn ->
+      input = verified_input()
+
+      result =
+        run_browser(input, "af", SignInJourney.Endpoint, %{
+          global_revocation: true,
+          lose_response: true
+        })
+
+      assert_browser_checks(result, ~w(response_lost initiator_denied target_denied reconciled))
     end)
   end
 

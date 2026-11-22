@@ -174,7 +174,8 @@ defmodule NewYou.Identity.Session do
                     :change_primary_email,
                     :approve_manual_recovery,
                     :complete_manual_recovery,
-                    :lookup_identity
+                    :lookup_identity,
+                    :revoke_all_sessions
                   ]
 
       public? false

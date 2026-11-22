@@ -238,6 +238,29 @@ defmodule NewYou.Identity.PrivilegedAccess do
     end
   end
 
+  # Called only by the Account-locked participant revocation transaction.
+  # Kept separate from @purposes so it cannot admit privileged Grant use.
+  def step_up_for_revocation(account, session, password, code) do
+    case account.mfa_enrollment_state do
+      :active ->
+        if valid_code_shape?(code) do
+          step_up_locked(account, session, password, code, :revoke_all_sessions)
+        else
+          {:denied, :invalid_code}
+        end
+
+      :disabled ->
+        with :ok <- not_locked?(account),
+             :ok <- reauthenticate_or_record_failure(account, password),
+             {:ok, _session} <- set_step_up(session, account, :revoke_all_sessions) do
+          :ok
+        end
+    end
+  end
+
+  def current_revocation_step_up?(session, account),
+    do: current_step_up?(session, account, :revoke_all_sessions)
+
   defp step_up_locked(account, session, password, code, purpose) do
     with :ok <- not_locked?(account),
          :ok <- reauthenticate_or_record_failure(account, password),
@@ -248,8 +271,6 @@ defmodule NewYou.Identity.PrivilegedAccess do
          true <-
            is_nil(current.mfa_last_accepted_period) or period > current.mfa_last_accepted_period,
          true <- valid_totp?(current.totp_secret, code, period) do
-      now = now_usec()
-
       with {:ok, _updated} <-
              update_account(current, %{
                mfa_last_accepted_period: period,
@@ -257,18 +278,7 @@ defmodule NewYou.Identity.PrivilegedAccess do
                mfa_locked_until: nil
              }),
            {:ok, _session} <-
-             Ash.update(
-               session,
-               %{
-                 step_up_purpose: purpose,
-                 step_up_at: now,
-                 step_up_expires_at: DateTime.add(now, @step_up_seconds, :second),
-                 step_up_mfa_version: current.mfa_version,
-                 step_up_security_version: current.security_version
-               },
-               action: :set_step_up,
-               authorize?: false
-             ) do
+             set_step_up(session, current, purpose) do
         :ok
       else
         _ -> {:error, :unavailable}
@@ -286,6 +296,23 @@ defmodule NewYou.Identity.PrivilegedAccess do
       _ ->
         {:error, :unavailable}
     end
+  end
+
+  defp set_step_up(session, account, purpose) do
+    now = now_usec()
+
+    Ash.update(
+      session,
+      %{
+        step_up_purpose: purpose,
+        step_up_at: now,
+        step_up_expires_at: DateTime.add(now, @step_up_seconds, :second),
+        step_up_mfa_version: account.mfa_version,
+        step_up_security_version: account.security_version
+      },
+      action: :set_step_up,
+      authorize?: false
+    )
   end
 
   defp reauthenticate(account, password)
@@ -473,7 +500,10 @@ defmodule NewYou.Identity.PrivilegedAccess do
       DateTime.compare(now, grant.expires_at) == :lt
   end
 
-  defp valid_step_up?(session, account, purpose) do
+  defp valid_step_up?(session, account, purpose),
+    do: account.mfa_enrollment_state == :active and current_step_up?(session, account, purpose)
+
+  defp current_step_up?(session, account, purpose) do
     now = now_usec()
 
     session.step_up_purpose == purpose and not is_nil(session.step_up_at) and
@@ -481,8 +511,7 @@ defmodule NewYou.Identity.PrivilegedAccess do
       DateTime.compare(now, session.step_up_at) != :lt and
       DateTime.compare(now, session.step_up_expires_at) == :lt and
       session.step_up_mfa_version == account.mfa_version and
-      session.step_up_security_version == account.security_version and
-      account.mfa_enrollment_state == :active
+      session.step_up_security_version == account.security_version
   end
 
   defp load_account(id, fields) do

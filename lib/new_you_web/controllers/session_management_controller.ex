@@ -32,6 +32,49 @@ defmodule NewYouWeb.SessionManagementController do
 
   def revoke(conn, _params), do: render_list(conn, nil, "revoke.failed", :forbidden)
 
+  @doc false
+  def confirm_all(conn, _params) do
+    case Identity.global_session_revocation_form(credentials(conn)) do
+      {:ok, form} ->
+        conn
+        |> prepare_page(:ok)
+        |> render(:confirm_all, form: form)
+
+      {:error, :session_unavailable} ->
+        render_page(conn, nil, "active.unavailable", :unauthorized)
+    end
+  end
+
+  @doc false
+  def revoke_all(conn, %{"presenting" => presenting, "password" => password} = params)
+      when is_binary(presenting) and is_binary(password) do
+    credentials = credentials(conn)
+
+    if credentials.session_id == presenting do
+      conn |> global_result(Identity.revoke_all_sessions(credentials, password, params["otp"]))
+    else
+      render_page(conn, nil, "all.failed", :forbidden)
+    end
+  end
+
+  def revoke_all(conn, _params), do: render_page(conn, nil, "all.failed", :forbidden)
+
+  defp global_result(conn, {:ok, :revoked}) do
+    conn
+    |> clear_session()
+    |> configure_session(drop: true)
+    |> render_page(nil, "all.completed", :ok)
+  end
+
+  defp global_result(conn, {:error, :session_result_uncertain}),
+    do: render_page(conn, nil, "all.uncertain", :service_unavailable)
+
+  defp global_result(conn, {:error, :session_revocation_failed}),
+    do: render_page(conn, nil, "all.failed", :service_unavailable)
+
+  defp global_result(conn, {:error, :session_unavailable}),
+    do: render_page(conn, nil, "all.failed", :forbidden)
+
   # The number is presentation only; Identity alone bounds and scopes the cursor.
   defp page_number(value) when is_binary(value) and byte_size(value) <= 9 do
     case Integer.parse(value) do
@@ -57,6 +100,12 @@ defmodule NewYouWeb.SessionManagementController do
 
   defp render_page(conn, page, message, status) do
     conn
+    |> prepare_page(status)
+    |> render(:index, page: page, message: message, page_number: conn.assigns[:page_number] || 1)
+  end
+
+  defp prepare_page(conn, status) do
+    conn
     |> put_status(status)
     |> put_resp_header("cache-control", "no-store")
     |> put_resp_header("referrer-policy", "no-referrer")
@@ -66,7 +115,6 @@ defmodule NewYouWeb.SessionManagementController do
     )
     |> put_root_layout(false)
     |> put_view(html: SessionManagementHTML)
-    |> render(:index, page: page, message: message, page_number: conn.assigns[:page_number] || 1)
   end
 
   defp require_eligible_copy(conn, _) do
