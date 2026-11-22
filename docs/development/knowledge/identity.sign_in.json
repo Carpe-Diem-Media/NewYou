@@ -12,8 +12,8 @@
     "WELL-170"
   ],
   "implementation_revision": {
-    "git_sha": "874a190965592574111a05e774af9535c8f0342b",
-    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. WELL-163 adds a bounded EN/AF participant Session inventory and individual remote revocation with material Audit E2. WELL-170 serializes global termination with issuance under the Account lock, reuses reset's linked-token and device invalidation actions, and establishes Audit E2 within the same transaction."
+    "git_sha": "87b317362551a7ab713626ac8651c0382281746b",
+    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. WELL-163 adds a bounded EN/AF participant Session inventory and individual remote revocation with material Audit E2. WELL-170 serializes global termination with issuance under the Account lock, reuses reset's linked-token and device invalidation actions, and establishes Audit E2 within the same transaction. The PR #292 review follow-up extends the proof without changing the application transaction or policy."
   },
   "authoritative_domain": "Identity",
   "collaborating_domains": [
@@ -871,7 +871,7 @@
       ]
     },
     {
-      "summary": "Audit rejection returns confirmed rollback. Lost commit acknowledgement produces an uncertain result, and a browser-level cut produces no completion claim. Fresh sign-in and the durable inventory reconcile. A fresh BEAM rejects the revoked authority.",
+      "summary": "A conflicting Audit obligation returns confirmed rollback. A database exception can report uncertainty even when durable reads establish rollback. The injected Audit insert fault preserves the prior MFA period and assurance, and the same current code succeeds after fault removal. Lost acknowledgement after commit yields the EN/AF uncertain response and durable revoked authority. A browser-level cut yields no completion claim. Fresh authentication and inventory reconcile the result.",
       "source_ids": [
         "identity",
         "password",
@@ -882,7 +882,9 @@
         "boundary",
         "session_inventory_packet",
         "global_revocation_restart",
-        "global_revocation_response_loss"
+        "global_revocation_response_loss",
+        "global_mfa_rollback",
+        "global_endpoint_outcomes"
       ]
     }
   ],
@@ -1078,16 +1080,21 @@
       "cases": [
         "global revocation requires fresh proof and a replay cannot affect a fresh Session",
         "an enrolled factor requires a fresh current code and preserves strict replay protection",
-        "global Audit rejection rolls back Sessions, tokens, assurance and devices",
+        "an active Support grant denies global revocation even with fresh factor proof",
+        "active rows with an expired deadline or revoked token neither appear nor accept revocation",
+        "global Audit rejection rolls back MFA, Sessions, tokens, assurance and device trust",
         "an unacknowledged global commit survives restart and a stale retry cannot end fresh authority",
         "independent PostgreSQL connections order password issuance around global revocation"
       ],
-      "proves": "Own password and magic Session/token termination, unrelated proof and foreign preservation, device termination, real current TOTP, Audit rollback, restart, stale replay and both password issuance orders.",
+      "proves": "Own password and magic Session/token termination, unrelated proof and foreign preservation, device termination, real current TOTP, Audit rollback, restart, stale replay and both password issuance orders. Valid active Support-grant denial, held and expired Session rejection, revoked and mismatched bearer denial, and non-transferable cross-purpose assurance. A reached Audit insert fault restores the prior TOTP period, exact Session assurance, linked authority and device trust. The same code succeeds after the fault is removed.",
       "limits": "The blocking race exercises password issuance. Magic consumption uses the same Account-first serialization and its issued authority is exercised in global revocation.",
       "source_ids": [
         "global_revocation_owner",
         "global_revocation_race",
-        "global_revocation_restart"
+        "global_revocation_restart",
+        "global_grant_denial",
+        "global_authority_denial",
+        "global_mfa_rollback"
       ]
     },
     {
@@ -1096,14 +1103,16 @@
         "global confirmation is read-only and requires a bound CSRF-protected POST in EN and AF",
         "the browser confirmation requires the real enrolled factor",
         "Chromium signs out every Session and reconciles with a new sign-in",
-        "Chromium reconciles an interrupted global sign-out response by signing in again"
+        "Chromium reconciles an interrupted global sign-out response by signing in again",
+        "global POST distinguishes rollback from an unconfirmed commit"
       ],
-      "proves": "Endpoint CSRF, stale form binding and real enrolled TOTP, plus Chromium confirmation, cancellation, focus, responsive and reduced-motion checks, independent session denial and response-loss reconciliation.",
+      "proves": "Endpoint CSRF, stale form binding and real enrolled TOTP, plus Chromium confirmation, cancellation, focus, responsive and reduced-motion checks, independent session denial and response-loss reconciliation. Both locales distinguish a confirmed Audit conflict rollback from a committed operation whose acknowledgement was lost. Each response checks exact copy, absence of success, persisted tokens and Sessions, and Audit evidence.",
       "limits": "Real Chromium uses password-only synthetic Accounts. The active factor path is exercised at the Phoenix endpoint with deterministic TEST timestamps.",
       "source_ids": [
         "global_revocation_browser",
         "global_revocation_response_loss",
-        "confirmation_all_template"
+        "confirmation_all_template",
+        "global_endpoint_outcomes"
       ]
     }
   ],
@@ -1446,25 +1455,25 @@
       "id": "session_inventory_test",
       "path": "test/new_you/identity/session_management_test.exs",
       "symbol": "defmodule NewYou.Identity.SessionManagementTest",
-      "sha256": "4480b942d18b05e544de4d0c393063a8b9e35e3990618a1f78634f5f04519da6"
+      "sha256": "b894e6a08854555dc9a430f4e68275f56b6a3c1ac8a3f54ec90533419e4acfc6"
     },
     {
       "id": "session_inventory_web_test",
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "symbol": "two independent Chromium Sessions",
-      "sha256": "cbaeac74228f9c7917fba83eccd4d9860ca898aa95008f9b349411a420622232"
+      "sha256": "a1723f5e05b0569387dc7e78f0bfc6d68c4de66e7da88e4d5f31ad27001fbaa1"
     },
     {
       "id": "session_reconciliation_web_test",
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "symbol": "fresh browser navigation reconciles a lost committed revocation",
-      "sha256": "cbaeac74228f9c7917fba83eccd4d9860ca898aa95008f9b349411a420622232"
+      "sha256": "a1723f5e05b0569387dc7e78f0bfc6d68c4de66e7da88e4d5f31ad27001fbaa1"
     },
     {
       "id": "session_outcomes_web_test",
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "symbol": "shows approved rollback and uncertain outcomes without reporting success",
-      "sha256": "cbaeac74228f9c7917fba83eccd4d9860ca898aa95008f9b349411a420622232"
+      "sha256": "a1723f5e05b0569387dc7e78f0bfc6d68c4de66e7da88e4d5f31ad27001fbaa1"
     },
     {
       "id": "session_test_acknowledgement",
@@ -1536,31 +1545,55 @@
       "id": "global_revocation_owner",
       "path": "test/new_you/identity/session_management_test.exs",
       "symbol": "global revocation requires fresh proof",
-      "sha256": "4480b942d18b05e544de4d0c393063a8b9e35e3990618a1f78634f5f04519da6"
+      "sha256": "b894e6a08854555dc9a430f4e68275f56b6a3c1ac8a3f54ec90533419e4acfc6"
     },
     {
       "id": "global_revocation_race",
       "path": "test/new_you/identity/session_management_test.exs",
       "symbol": "independent PostgreSQL connections order password issuance",
-      "sha256": "4480b942d18b05e544de4d0c393063a8b9e35e3990618a1f78634f5f04519da6"
+      "sha256": "b894e6a08854555dc9a430f4e68275f56b6a3c1ac8a3f54ec90533419e4acfc6"
     },
     {
       "id": "global_revocation_restart",
       "path": "test/new_you/identity/session_management_test.exs",
       "symbol": "an unacknowledged global commit survives restart",
-      "sha256": "4480b942d18b05e544de4d0c393063a8b9e35e3990618a1f78634f5f04519da6"
+      "sha256": "b894e6a08854555dc9a430f4e68275f56b6a3c1ac8a3f54ec90533419e4acfc6"
     },
     {
       "id": "global_revocation_browser",
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "symbol": "global confirmation is read-only",
-      "sha256": "cbaeac74228f9c7917fba83eccd4d9860ca898aa95008f9b349411a420622232"
+      "sha256": "a1723f5e05b0569387dc7e78f0bfc6d68c4de66e7da88e4d5f31ad27001fbaa1"
     },
     {
       "id": "global_revocation_response_loss",
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "symbol": "Chromium reconciles an interrupted global sign-out response",
-      "sha256": "cbaeac74228f9c7917fba83eccd4d9860ca898aa95008f9b349411a420622232"
+      "sha256": "a1723f5e05b0569387dc7e78f0bfc6d68c4de66e7da88e4d5f31ad27001fbaa1"
+    },
+    {
+      "id": "global_grant_denial",
+      "path": "test/new_you/identity/session_management_test.exs",
+      "symbol": "an active Support grant denies global revocation even with fresh factor proof",
+      "sha256": "b894e6a08854555dc9a430f4e68275f56b6a3c1ac8a3f54ec90533419e4acfc6"
+    },
+    {
+      "id": "global_authority_denial",
+      "path": "test/new_you/identity/session_management_test.exs",
+      "symbol": "active rows with an expired deadline or revoked token neither appear nor accept revocation",
+      "sha256": "b894e6a08854555dc9a430f4e68275f56b6a3c1ac8a3f54ec90533419e4acfc6"
+    },
+    {
+      "id": "global_mfa_rollback",
+      "path": "test/new_you/identity/session_management_test.exs",
+      "symbol": "global Audit rejection rolls back MFA, Sessions, tokens, assurance and device trust",
+      "sha256": "b894e6a08854555dc9a430f4e68275f56b6a3c1ac8a3f54ec90533419e4acfc6"
+    },
+    {
+      "id": "global_endpoint_outcomes",
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "symbol": "global POST distinguishes rollback from an unconfirmed commit",
+      "sha256": "a1723f5e05b0569387dc7e78f0bfc6d68c4de66e7da88e4d5f31ad27001fbaa1"
     }
   ]
 }
