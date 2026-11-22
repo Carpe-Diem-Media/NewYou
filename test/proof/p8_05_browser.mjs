@@ -107,6 +107,54 @@ try {
     await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
     checks.protected_access = await evaluate(`location.pathname === '/session/protected'`);
     checks.reloaded_access = await evaluate(`fetch('/session/protected').then(r => r.status === 200)`);
+    if (input.pmr) {
+      const pmr = JSON.stringify(input.pmr);
+      const label = input.locale === 'en' ? 'Platform Member Reference' : 'Platformlidverwysing';
+      const otherLocale = input.locale === 'en' ? 'af' : 'en';
+      const otherLabel = otherLocale === 'en' ? 'Platform Member Reference' : 'Platformlidverwysing';
+      const copy = input.locale === 'en' ? 'Copy reference' : 'Kopieer verwysing';
+      const copied = input.locale === 'en' ? 'Reference copied.' : 'Verwysing gekopieer.';
+      await cdp('Emulation.setDeviceMetricsOverride', {width: 320, height: 900, deviceScaleFactor: 1, mobile: true});
+      await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+      checks.member_reference = await evaluate(`document.querySelector('#member-reference-value')?.textContent === ${pmr}
+        && document.querySelector('#member-reference-label')?.textContent === ${JSON.stringify(label)}
+        && !location.href.includes(${pmr}) && document.documentElement.scrollWidth <= innerWidth
+        && document.getAnimations().length === 0`);
+      await call('Browser.grantPermissions', {
+        origin: base, browserContextId: context.browserContextId,
+        permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite']
+      });
+      for (let tab = 0; tab < 7 && !(await evaluate(`document.activeElement.id === 'copy-member-reference'`)); tab++) {
+        await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+        await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+      }
+      checks.member_reference_keyboard = await evaluate(`document.activeElement.id === 'copy-member-reference'
+        && document.activeElement.matches(':focus-visible')
+        && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2
+        && document.activeElement.textContent.trim() === ${JSON.stringify(copy)}`);
+      await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: ' ', code: 'Space', windowsVirtualKeyCode: 32, text: ' '});
+      await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: ' ', code: 'Space', windowsVirtualKeyCode: 32});
+      checks.member_reference_announced = await evaluate(`(async () => {
+        const status = document.querySelector('#member-reference-copy-status[role="status"]');
+        for (let frame = 0; status && !status.textContent.trim() && frame < 60; frame++) {
+          await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+        return status?.textContent === ${JSON.stringify(copied)};
+      })()`);
+      checks.member_reference_copied = await evaluate(`navigator.clipboard.readText().then(text => text === ${pmr}, () => false)`);
+      await navigation(() => evaluate(`document.querySelector('a[lang="${otherLocale}"]').click()`));
+      checks.member_reference_locale_switch = await evaluate(`document.documentElement.lang === ${JSON.stringify(otherLocale)}
+        && document.querySelector('#member-reference-label')?.textContent === ${JSON.stringify(otherLabel)}
+        && document.querySelector('#member-reference-value')?.textContent === ${pmr}`);
+      await navigation(() => evaluate(`document.querySelector('#session-logout').requestSubmit()`));
+      checks.member_reference_reconnect_denied = await evaluate(`fetch('/session/protected', {cache: 'no-store'})
+        .then(async response => response.status === 401 && !(await response.text()).includes(${pmr}))`);
+      await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
+      await evaluate(`document.querySelector('[name="email"]').value=${JSON.stringify(input.email)};
+        document.querySelector('[name="password"]').value=${JSON.stringify(input.password)};`);
+      await navigation(() => evaluate(`document.querySelector('form[action="/login"]').requestSubmit()`));
+      checks.member_reference_reauthenticated = await evaluate(`document.querySelector('#member-reference-value')?.textContent === ${pmr}`);
+    }
   } else if (input.mode === 'stale_session') {
     await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
     checks.login_form = await evaluate(`!!document.querySelector('form[action="/login"] [name="_csrf_token"]')`);

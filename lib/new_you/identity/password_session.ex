@@ -8,6 +8,7 @@ defmodule NewYou.Identity.PasswordSession do
     Account,
     Email,
     IdentityGrant,
+    PMR,
     PrivilegedAccess,
     Session,
     SessionRevocation,
@@ -106,6 +107,23 @@ defmodule NewYou.Identity.PasswordSession do
          end) do
       {:ok, %Account{id: id}} -> {:ok, %{account_id: id}}
       _ -> {:error, :authentication_unavailable}
+    end
+  end
+
+  def self_member_reference(credentials) do
+    case with_current_session(credentials, &member_reference_locked/4) do
+      {:ok, {:member_reference, pmr}} -> {:ok, pmr}
+      _ -> {:error, :authentication_unavailable}
+    end
+  end
+
+  defp member_reference_locked(session, account, _token, _linked) do
+    with %Account{canonical_account_id: nil, pmr_status: :active, pmr: pmr} <- account,
+         true <- PMR.valid?(pmr),
+         {:ok, %Account{}} <- validate_and_touch(session, account) do
+      {:member_reference, pmr}
+    else
+      _ -> :denied
     end
   end
 

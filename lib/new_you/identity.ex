@@ -246,6 +246,17 @@ defmodule NewYou.Identity do
           {:ok, %{account_id: String.t()}} | {:error, :authentication_unavailable}
   def authorize_session(credentials), do: NewYou.Identity.PasswordSession.authorize(credentials)
 
+  @doc """
+  Return the presenting Session holder's current canonical Platform Member Reference.
+  The Session ID and bearer must resolve to the same active verified Account. This
+  reuses the normal Session activity refresh and returns one generic error on
+  denial. It never allocates a reference or follows a retired Account to its survivor.
+  """
+  @spec self_member_reference(%{session_id: String.t() | nil, token: String.t() | nil}) ::
+          {:ok, String.t()} | {:error, :authentication_unavailable}
+  def self_member_reference(credentials),
+    do: NewYou.Identity.PasswordSession.self_member_reference(credentials)
+
   @typedoc "A bounded participant-facing projection of a currently usable Session."
   @type active_session :: %{
           id: Ecto.UUID.t(),
