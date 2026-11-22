@@ -11,6 +11,22 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     assert P815.duplicate_request_race(false)
   end
 
+  test "competing Phase-9 requests commit one active case and proof obligation" do
+    assert :ok = P815.phase9_entry_race(:well183, :well183)
+  end
+
+  test "a historical contender cannot rebind or consume the winning Phase-9 case" do
+    assert :ok = P815.phase9_entry_race(:well183, :p8_15)
+  end
+
+  test "a Phase-9 contender cannot rebind or consume the winning historical case" do
+    assert :ok = P815.phase9_entry_race(:p8_15, :well183)
+  end
+
+  test "conflicting Phase-9 retries cannot resume outside the original locale and context" do
+    assert :ok = P815.phase9_conflicting_retries()
+  end
+
   test "parallel proof acceptance imposes one justified hold and one E2 consequence" do
     assert P815.assurance_race()
   end
@@ -512,6 +528,10 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
 
   test "recovery delivery and completion receipts survive fresh BEAM processes" do
     assert P815.restart_proof() == :ok
+  end
+
+  test "ordinary Phase-9 proof and completion survive separate BEAM processes" do
+    assert P815.restart_proof(:well183) == :ok
   end
 
   defp await_initial_lease_loss(parent, reference, deadline) do

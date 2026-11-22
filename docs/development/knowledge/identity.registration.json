@@ -17,7 +17,7 @@
     "WELL-143"
   ],
   "implementation_revision": {
-    "git_sha": "874a190965592574111a05e774af9535c8f0342b",
+    "git_sha": "6b726143c9d9d835829898831b6b96a2ce70da52",
     "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 retains the registration and verification owner interfaces and exact semantic copy while using the shared native controls and approved font policy. The shared router/boundary also declares an isolated DEV-only design guide; no registration transaction, eligibility rule or Account lifecycle is changed. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -671,7 +671,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def register(request)",
-      "sha256": "e072a4c4fb586b3c93beb9f5543896801b0ddd2b7f96ac07cb006528ccf98bef"
+      "sha256": "1b506684f4a56af038d8a16375019db8f1bb25584d31c02fb05e71a50137c786"
     },
     {
       "id": "accept",
@@ -695,7 +695,7 @@
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def establish_verification",
-      "sha256": "111fc6033c0a2b3b9f29cc3c7a8582b7c49dc8e8756ca9b8ee9a086dc8a7e504"
+      "sha256": "408e0c815a74e98317ab4d5e22b499a32369a83f3e42162d087bbad25e8b2baa"
     },
     {
       "id": "audit",

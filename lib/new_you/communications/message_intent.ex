@@ -30,7 +30,7 @@ defmodule NewYou.Communications.MessageIntent do
 
       check_constraint :source_purpose, "message_intents_role_purpose_schema",
         check:
-          "(role = 'account_verification' AND source_purpose = 'email_verification' AND render_schema = 'verification-v1') OR (role = 'magic_login' AND source_purpose = 'magic_login' AND render_schema = 'magic-login-v1') OR (role = 'password_reset' AND source_purpose = 'password_reset' AND render_schema IN ('password-reset-v1', 'password-reset-well136-v1')) OR (role = 'account_recovery' AND source_purpose = 'recovery' AND render_schema = 'recovery-v1') OR (role = 'recovery_security_notice' AND source_purpose = 'recovery_completed' AND render_schema = 'recovery-notice-v1') OR (role = 'email_change_confirmation' AND source_purpose = 'email_change_confirmation' AND render_schema = 'email-change-confirmation-v1') OR (role = 'email_change_old_address_notice' AND source_purpose = 'email_change_old_address_notice' AND render_schema = 'email-change-old-address-notice-v1')",
+          "(role = 'account_verification' AND source_purpose = 'email_verification' AND render_schema = 'verification-v1') OR (role = 'magic_login' AND source_purpose = 'magic_login' AND render_schema = 'magic-login-v1') OR (role = 'password_reset' AND source_purpose = 'password_reset' AND render_schema IN ('password-reset-v1', 'password-reset-well136-v1')) OR (role = 'account_recovery' AND source_purpose = 'recovery' AND render_schema IN ('recovery-v1', 'recovery-well183-v1')) OR (role = 'recovery_security_notice' AND source_purpose = 'recovery_completed' AND render_schema IN ('recovery-notice-v1', 'recovery-notice-well183-v1')) OR (role = 'email_change_confirmation' AND source_purpose = 'email_change_confirmation' AND render_schema = 'email-change-confirmation-v1') OR (role = 'email_change_old_address_notice' AND source_purpose = 'email_change_old_address_notice' AND render_schema = 'email-change-old-address-notice-v1')",
         message: "does not match the message role"
 
       check_constraint :source_reference, "message_intents_source_reference",
@@ -210,12 +210,12 @@ defmodule NewYou.Communications.MessageIntent do
         :platform_name,
         :support_contact,
         :render_digest,
+        :render_schema,
         :terminal_reason
       ]
 
       change set_attribute(:role, :account_recovery)
       change set_attribute(:source_purpose, "recovery")
-      change set_attribute(:render_schema, "recovery-v1")
       change set_attribute(:dispatch_disposition, :held)
     end
 
@@ -236,12 +236,12 @@ defmodule NewYou.Communications.MessageIntent do
         :platform_name,
         :support_contact,
         :render_digest,
+        :render_schema,
         :terminal_reason
       ]
 
       change set_attribute(:role, :recovery_security_notice)
       change set_attribute(:source_purpose, "recovery_completed")
-      change set_attribute(:render_schema, "recovery-notice-v1")
       change set_attribute(:dispatch_disposition, :held)
     end
 

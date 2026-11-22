@@ -138,6 +138,14 @@ input = IO.gets("") |> Jason.decode!()
 secret = Base.decode64!(input["signing_secret"])
 Application.put_env(:new_you, :identity_token_signing_secret, secret)
 
+context =
+  if input["context"] == "well183" do
+    Application.put_env(:new_you, :fp001_development_entry, true)
+    :well183
+  else
+    :p8_15
+  end
+
 Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
   try do
     IO.puts("P815_OPERATION")
@@ -167,7 +175,12 @@ Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
           end
 
         "submit" ->
-          case NewYou.Identity.submit_recovery_proof(input["proof"], input["operation_id"]) do
+          case NewYou.Identity.submit_recovery_proof(
+                 input["proof"],
+                 input["operation_id"],
+                 "af",
+                 context
+               ) do
             {:ok, :accepted} -> :accepted
             _ -> :submission_denied
           end
@@ -176,7 +189,9 @@ Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
           case NewYou.Identity.complete_recovery(
                  input["proof"],
                  input["password"],
-                 input["operation_id"]
+                 input["operation_id"],
+                 "af",
+                 context
                ) do
             {:ok, :completed} -> :completed
             _ -> :completion_denied
@@ -186,7 +201,9 @@ Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
           case NewYou.Identity.complete_recovery(
                  input["proof"],
                  input["password"],
-                 input["operation_id"]
+                 input["operation_id"],
+                 "af",
+                 context
                ) do
             {:ok, :already_completed} -> :already_completed
             _ -> :replay_denied

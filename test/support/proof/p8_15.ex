@@ -30,63 +30,209 @@ defmodule NewYou.Proof.P815 do
         end
 
       before_account = Ash.get!(Account, registration.account_id, authorize?: false)
-      parent = self()
-      reference = make_ref()
-      first_operation = operation()
-      second_operation = operation()
-      scenario = Scenario.start()
+      first = operation()
+      second = operation()
 
-      try do
-        {first, first_monitor} =
-          Scenario.spawn(scenario, :first_request, fn ->
-            :ok = Sandbox.checkout(Repo, sandbox: false)
-            Process.put(RegistrationSeam, {:pause, parent, reference})
+      race_recovery_requests(
+        fn -> Identity.request_recovery(request.email, "af", first) end,
+        fn -> Identity.request_recovery(request.email, "af", second) end
+      )
 
-            try do
-              result = Identity.request_recovery(request.email, "af", first_operation)
-              send(parent, {reference, :first_result, result})
-            after
-              Sandbox.checkin(Repo)
-            end
-          end)
+      assert [recovery] = cases(registration.account_id)
+      assert Ash.get!(Account, registration.account_id, authorize?: false) == before_account
 
-        first_backend = await_checkpoint(reference)
-
-        {_second, second_monitor} =
-          Scenario.spawn(scenario, :second_request, fn ->
-            :ok = Sandbox.checkout(Repo, sandbox: false)
-
-            try do
-              backend = P805.scalar("SELECT pg_backend_pid()")
-              send(parent, {reference, :second_backend, backend})
-              result = Identity.request_recovery(request.email, "af", second_operation)
-              send(parent, {reference, :second_result, result})
-            after
-              Sandbox.checkin(Repo)
-            end
-          end)
-
-        second_backend = receive_backend(reference, :second_backend)
-        assert_contention(second_backend, first_backend)
-        send(first, {reference, :release})
-        assert await_result(reference, :first_result) == :ok
-        assert await_result(reference, :second_result) == :ok
-        await_normal(first_monitor)
-        await_normal(second_monitor)
-        assert length(cases(registration.account_id)) == 1
-        assert Ash.get!(Account, registration.account_id, authorize?: false) == before_account
-
-        unless verified? do
-          [recovery] = cases(registration.account_id)
-          assert recovery.satisfied_assurance == 0
-          assert recovery.state == :held_manual_review
-        end
-
-        :ok
-      after
-        :ok = Scenario.stop(scenario)
+      unless verified? do
+        assert recovery.satisfied_assurance == 0
+        assert recovery.state == :held_manual_review
       end
+
+      :ok
     end)
+  end
+
+  def phase9_entry_race(first_context, second_context) do
+    P805.with_fixture(fn ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
+      Application.put_env(:new_you, :p8_15_browser_development_fixtures, false)
+      {request, registration} = account()
+      account_id = registration.account_id
+      assert {:ok, session} = Identity.authenticate_password(request.email, request.password)
+      before_account = Ash.get!(Account, account_id, authorize?: false)
+      first = operation()
+      second = operation()
+
+      race_recovery_requests(
+        fn -> Identity.request_recovery(request.email, "af", first, first_context) end,
+        fn -> Identity.request_recovery(request.email, "af", second, second_context) end
+      )
+
+      assert [%{operation_id: ^first, entry_context: ^first_context, locale: "af"} = recovery] =
+               cases(account_id)
+
+      assert recovery.state == :proof_pending
+      assert recovery.satisfied_assurance == 0
+      assert {token, intent} = RecoveryScenarios.assert_recovery_proof(recovery)
+      assert intent.locale == "af"
+      assert NewYou.Communications.recovery_context(intent) == first_context
+      assert P805.intents(second) == []
+
+      assert :ok = Identity.request_recovery(request.email, "af", first, second_context)
+      assert :ok = Identity.request_recovery(request.email, "af", first, first_context)
+      assert [^recovery] = cases(account_id)
+      assert {^token, ^intent} = RecoveryScenarios.assert_recovery_proof(recovery)
+
+      {:ok, bearer} = delivery(recovery, request.email)
+      acceptance = operation()
+      other_context = if first_context == :well183, do: :p8_15, else: :well183
+
+      assert {:error, :recovery_unavailable} =
+               Identity.submit_recovery_proof(bearer, acceptance, "af", other_context)
+
+      if first_context == :well183 do
+        assert {:error, :recovery_unavailable} =
+                 Identity.submit_recovery_proof(bearer, acceptance, "en", :well183)
+      end
+
+      assert [^recovery] = cases(account_id)
+      assert {^token, ^intent} = RecoveryScenarios.assert_recovery_proof(recovery)
+
+      assert {:ok, :accepted} =
+               Identity.submit_recovery_proof(bearer, acceptance, "af", first_context)
+
+      assert [
+               %{id: id, state: :additional_assurance, proof_acceptance_id: ^acceptance} =
+                 accepted
+             ] =
+               cases(account_id)
+
+      assert id == recovery.id
+      assert accepted.entry_context == first_context
+      assert accepted.locale == "af"
+      assert accepted.satisfied_assurance == 1
+      assert accepted.version == recovery.version + 1
+
+      assert {:ok, :accepted} =
+               Identity.submit_recovery_proof(bearer, acceptance, "af", first_context)
+
+      assert {:error, :recovery_unavailable} =
+               Identity.submit_recovery_proof(bearer, acceptance, "af", other_context)
+
+      assert [^accepted] = cases(account_id)
+      assert {:ok, _} = Identity.authorize_session(session)
+      assert Ash.get!(Account, account_id, authorize?: false) == before_account
+      assert Ash.get!(Token, token.jti, authorize?: false).purpose == "recovery_consumed"
+      assert P805.intents(first) == [intent]
+      assert P805.intents(acceptance) == []
+      refute RecoveryScenarios.hold_obligation(first)
+      refute RecoveryScenarios.hold_obligation(second)
+      :ok
+    end)
+  end
+
+  def phase9_conflicting_retries do
+    P805.with_fixture(fn ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
+      request = P805.request()
+      {:ok, registration} = Identity.register(request)
+      account_id = registration.account_id
+      original = operation()
+      other = operation()
+      :ok = Identity.request_recovery(request.email, "af", original, :well183)
+      assert [%{state: :held_manual_review, proof_jti: nil} = waiting] = cases(account_id)
+      assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+      account = Ash.get!(Account, account_id, authorize?: false)
+
+      # The channel is now genuinely verified. An otherwise valid retry can
+      # resume the case, so unchanged state discriminates the context/locale guard.
+      for {operation, locale, context} <- [
+            {original, "en", :well183},
+            {other, "en", :well183},
+            {original, "af", :p8_15},
+            {other, "af", :p8_15}
+          ] do
+        assert :ok = Identity.request_recovery(request.email, locale, operation, context)
+        assert [^waiting] = cases(account_id)
+        assert P805.intents(operation) == []
+      end
+
+      race_recovery_requests(
+        fn -> Identity.request_recovery(request.email, "af", original, :well183) end,
+        fn -> Identity.request_recovery(request.email, "en", other, :well183) end
+      )
+
+      assert [%{state: :proof_pending, entry_context: :well183, locale: "af"} = resumed] =
+               cases(account_id)
+
+      assert resumed.id == waiting.id
+      assert resumed.operation_id == original
+      assert resumed.version == waiting.version + 1
+      assert resumed.satisfied_assurance == 0
+
+      assert {_token, %{render_schema: "recovery-well183-v1"}} =
+               RecoveryScenarios.assert_recovery_proof(resumed)
+
+      assert P805.intents(other) == []
+      assert Ash.get!(Account, account_id, authorize?: false) == account
+      refute RecoveryScenarios.hold_obligation(original)
+      refute RecoveryScenarios.hold_obligation(other)
+      :ok
+    end)
+  end
+
+  defp race_recovery_requests(first_request, second_request) do
+    parent = self()
+    reference = make_ref()
+    scenario = Scenario.start()
+
+    try do
+      {second, second_monitor} =
+        Scenario.spawn(scenario, :second_request, fn ->
+          :ok = Sandbox.checkout(Repo, sandbox: false)
+
+          try do
+            backend = P805.scalar("SELECT pg_backend_pid()")
+            send(parent, {reference, :second_backend, backend})
+
+            receive do
+              {^reference, :begin} ->
+                RecoverySeam.observe(fn
+                  :transaction_returned -> send(parent, {reference, :second_committed})
+                  _ -> :ok
+                end)
+
+                send(parent, {reference, :second_result, second_request.()})
+            end
+          after
+            Sandbox.checkin(Repo)
+          end
+        end)
+
+      second_backend = receive_backend(reference, :second_backend)
+
+      {first, first_monitor} =
+        Scenario.spawn(scenario, :first_request, fn ->
+          :ok = Sandbox.checkout(Repo, sandbox: false)
+          Process.put(RegistrationSeam, {:pause, parent, reference})
+
+          try do
+            send(parent, {reference, :first_result, first_request.()})
+          after
+            Sandbox.checkin(Repo)
+          end
+        end)
+
+      first_backend = await_checkpoint(reference)
+      send(second, {reference, :begin})
+      assert_contention(second_backend, first_backend)
+      send(first, {reference, :release})
+      assert await_result(reference, :first_result) == :ok
+      assert await_result(reference, :second_result) == :ok
+      assert_received {^reference, :second_committed}
+      await_normal(first_monitor)
+      await_normal(second_monitor)
+    after
+      :ok = Scenario.stop(scenario)
+    end
   end
 
   def assurance_race do
@@ -1061,9 +1207,13 @@ defmodule NewYou.Proof.P815 do
     end)
   end
 
-  def restart_proof do
+  def restart_proof(context \\ :p8_15) do
     P805.with_fixture(fn ->
-      {request, registration, recovery, bearer} = pending_recovery()
+      if context == :well183, do: Application.put_env(:new_you, :fp001_development_entry, true)
+
+      {request, registration, recovery, bearer} =
+        pending_recovery(&Identity.request_recovery(&1, "af", &2, context))
+
       operation_id = operation()
       password = "recovery survives a fresh BEAM"
       secret = Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
@@ -1074,14 +1224,16 @@ defmodule NewYou.Proof.P815 do
                destination: request.email,
                locale: "af",
                expected_digest: digest(bearer),
-               signing_secret: secret
+               signing_secret: secret,
+               context: context
              }) == :delivery_matches
 
       assert restart_call(%{
                mode: "submit",
                proof: bearer,
                operation_id: operation(),
-               signing_secret: secret
+               signing_secret: secret,
+               context: context
              }) == :accepted
 
       assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).state == :additional_assurance
@@ -1091,15 +1243,17 @@ defmodule NewYou.Proof.P815 do
                proof: bearer,
                password: password,
                operation_id: operation_id,
-               signing_secret: secret
+               signing_secret: secret,
+               context: context
              }) == :completed
 
       assert restart_call(%{
                mode: "replay",
                proof: bearer,
-               password: "ignored",
+               password: if(context == :well183, do: password, else: "ignored"),
                operation_id: operation_id,
-               signing_secret: secret
+               signing_secret: secret,
+               context: context
              }) == :already_completed
 
       assert Ash.get!(RecoveryCase, recovery.id, authorize?: false).state == :completed

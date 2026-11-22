@@ -503,6 +503,87 @@ try {
     await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
     await signIn(input.target);
     checks.held_login = await evaluate(`location.pathname === '/login' && !!document.querySelector('#password-login')`);
+  } else if (input.mode === 'ordinary_recovery') {
+    const approved = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json', 'utf8'));
+    const text = key => JSON.stringify(approved.candidate.copy_items.find(item => item.key === key).locales[input.locale].text);
+    const stage = name => evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && document.querySelector('h1')?.textContent.trim() === ${text(`identity.recovery.${name}.title`)} && document.querySelector('[role="status"]')?.textContent.trim() === ${text(`identity.recovery.${name}.body`)}`);
+    const navigate = url => navigation(() => cdp('Page.navigate', {url}));
+    const submit = selector => navigation(() => evaluate(`document.querySelector(${JSON.stringify(selector)}).requestSubmit()`));
+    const fill = (selector, value) => evaluate(`document.querySelector(${JSON.stringify(selector)}).value = ${JSON.stringify(value)}`);
+    const operation = async () => {
+      const id = await evaluate(`document.querySelector('[name="operation_id"]').value`);
+      operations.push(id);
+      return id;
+    };
+    const requestUrl = `${base}/recovery?locale=${input.locale}`;
+
+    checkpoint = 'recovery.request';
+    await navigate(requestUrl);
+    checks.request_copy = await stage('request');
+    checks.usable_form = await evaluate(`!!document.querySelector('#recovery-form[method="post"] [name="_csrf_token"]') && document.querySelector('label[for="email"]')?.textContent.trim() === ${text('identity.registration.email.label')} && document.querySelector('#email')?.autocomplete === 'email' && document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
+    await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    checks.keyboard_focus = await evaluate(`document.activeElement.matches('#email:focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+    checks.responsive = true;
+    for (const width of [320, 768, 1280]) {
+      await cdp('Emulation.setDeviceMetricsOverride', {width, height: 900, deviceScaleFactor: 1, mobile: width < 768});
+      checks.responsive &&= await evaluate(`document.documentElement.scrollWidth <= innerWidth && document.querySelector('#email').getBoundingClientRect().right <= innerWidth`);
+    }
+    await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+    checks.reduced_motion = await evaluate(`matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0`);
+
+    await operation();
+    await fill('#email', `unknown-${randomUUID()}@example.test`);
+    await submit('#recovery-form');
+    const unknown = await stage('requested');
+    await navigate(requestUrl);
+    const requestId = await operation();
+    await fill('#email', input.email);
+    await submit('#recovery-form');
+    checks.neutral_request = unknown && await stage('requested');
+
+    checkpoint = 'recovery.delivery';
+    const {proof} = await fetch(`${base}/__well183/delivery?operation=${requestId}`).then(response => response.json());
+    checks.real_delivery = typeof proof === 'string';
+    const confirmationUrl = `${base}/recovery/confirm?${new URLSearchParams({locale:input.locale, proof})}`;
+
+    checkpoint = 'recovery.confirm';
+    const head = await fetch(confirmationUrl, {method: 'HEAD'});
+    const prefetch = await fetch(confirmationUrl, {headers: {purpose: 'prefetch'}});
+    await navigate(confirmationUrl);
+    checks.confirmation_copy = await stage('confirmation') && await evaluate(`!document.querySelector('#password')`);
+    await operation();
+    await submit('#recovery-form');
+    checks.credential_copy = await stage('credential') && await evaluate(`document.querySelector('label[for="password"]')?.textContent.trim() === ${text('identity.registration.password.label')} && document.querySelector('#password')?.autocomplete === 'new-password'`);
+    checks.passive_safe = head.status === 200 && prefetch.status === 200 && checks.credential_copy;
+
+    if (!checks.credential_copy) {
+      checkpoint = await stage('unavailable') ? 'recovery.confirm_denied' : 'recovery.credential_missing';
+      throw new Error('browser.evaluation');
+    }
+    checkpoint = 'recovery.complete';
+    await operation();
+    await fill('#password', input.replacement);
+    await submit('#recovery-form');
+    checks.completed_copy = await stage('completed') && await evaluate(`!document.querySelector('[name="proof"]')`);
+    await navigate(`${base}/session/protected?locale=${input.locale}`);
+    checks.no_automatic_login = await evaluate(`!!document.querySelector('#password-login #password') && !!document.querySelector('#sign-in-error')`);
+
+    checkpoint = 'recovery.replay';
+    await navigate(confirmationUrl);
+    await submit('#recovery-form');
+    checks.replay_denied = await stage('unavailable') && await evaluate(`!document.querySelector('#password')`);
+
+    checkpoint = 'recovery.sign_in';
+    await navigate(loginUrl.toString());
+    await fill('#email', input.email);
+    await fill('#password', input.password);
+    await submit('#password-login');
+    checks.old_password_denied = await evaluate(`!!document.querySelector('#sign-in-error')`);
+    await fill('#email', input.email);
+    await fill('#password', input.replacement);
+    await submit('#password-login');
+    checks.fresh_sign_in = await evaluate(`location.pathname === '/session/protected' && fetch('/session/protected').then(r => r.status === 200)`);
   } else if (input.mode === 'ordinary_reset') {
     const approved = JSON.parse(readFileSync('docs/development/fixtures/well136-c02-v0.1.json', 'utf8'));
     const text = key => approved.entries[key][input.locale].text;
