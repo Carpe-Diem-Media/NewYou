@@ -29,6 +29,8 @@ defmodule NewYou.Content.PrimaryEmailChangeMessageTest do
     for path <- [
           "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
           "docs/governance/CURRENT_GOVERNANCE_ROUTER.json",
+          "docs/governance/product/00_PLATFORM_v1.20.0.md",
+          "docs/governance/product/01_DECISIONS_v1.20.0.md",
           "docs/governance/product/00_PLATFORM_v1.19.0.md",
           "docs/governance/product/01_DECISIONS_v1.19.0.md"
         ] do
@@ -42,6 +44,18 @@ defmodule NewYou.Content.PrimaryEmailChangeMessageTest do
     File.cp_r!(approved, destination)
     Process.put({PrimaryEmailChangeMessage, :evidence_root}, root)
     packet = Path.join(destination, "WELL157_PHASE9_APPLICABILITY_EVIDENCE_v0.1.0.json")
+
+    assert {:ok, _} =
+             PrimaryEmailChangeMessage.binding(:email_change_confirmation, "af", :well156)
+
+    law = Path.join(root, "docs/governance/product/00_PLATFORM_v1.20.0.md")
+    bytes = File.read!(law)
+    File.write!(law, bytes <> "\n")
+
+    assert {:error, :content_ineligible} =
+             PrimaryEmailChangeMessage.binding(:email_change_confirmation, "af", :well156)
+
+    File.write!(law, bytes)
 
     assert {:ok, _} =
              PrimaryEmailChangeMessage.binding(:email_change_confirmation, "af", :well156)

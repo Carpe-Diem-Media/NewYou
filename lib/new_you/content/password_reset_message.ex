@@ -413,6 +413,8 @@ defmodule NewYou.Content.PasswordResetMessage do
 
     defp product_authority_current?(root, packet) do
       with {:ok, router} <- read_json(root, @governance_router_path),
+           {:ok, historical} <-
+             NewYou.Content.ProductAuthority.historical_bindings(router, &read_file(root, &1)),
            authority when is_list(authority) <- packet["promoted_authority"],
            true <- length(authority) == length(@product_authority),
            true <-
@@ -420,7 +422,7 @@ defmodule NewYou.Content.PasswordResetMessage do
              |> Enum.all?(fn {actual, expected} ->
                authority_binding_matches?(actual, expected) and
                  authority_files_match?(root, expected) and
-                 routed_authority?(root, router, expected)
+                 approved_authority?(root, historical, expected)
              end) do
         true
       else
@@ -459,12 +461,12 @@ defmodule NewYou.Content.PasswordResetMessage do
       )
     end
 
-    defp routed_authority?(root, router, authority) do
+    defp approved_authority?(root, historical, authority) do
       {path, sha} = Map.fetch!(@current_authority, authority["document_id"])
 
       entries =
         Enum.filter(
-          router["governing_documents"],
+          historical,
           &(&1["document_id"] == authority["document_id"])
         )
 
@@ -567,6 +569,8 @@ defmodule NewYou.Content.PasswordResetMessage do
                 "docs/governance/product/01_DECISIONS_v1.17.0.md",
                 "docs/governance/product/00_PLATFORM_v1.18.0.md",
                 "docs/governance/product/01_DECISIONS_v1.18.0.md",
+                "docs/governance/product/00_PLATFORM_v1.20.0.md",
+                "docs/governance/product/01_DECISIONS_v1.20.0.md",
                 "docs/governance/product/00_PLATFORM_v1.19.0.md",
                 "docs/governance/product/01_DECISIONS_v1.19.0.md"
               ] do

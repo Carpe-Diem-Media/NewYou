@@ -68,8 +68,9 @@ defmodule NewYou.Content.PrimaryEmailChangeMessage do
            Jason.decode(bytes),
          true <- Enum.member?(messages, message),
          {:ok, governance} <- read(@governance_router),
-         {:ok, %{"governing_documents" => current}} <- Jason.decode(governance) do
-      Enum.all?(authority, &current_authority?(&1, current))
+         {:ok, router} <- Jason.decode(governance),
+         {:ok, historical} <- NewYou.Content.ProductAuthority.historical_bindings(router, &read/1) do
+      Enum.all?(authority, &approved_authority?(&1, historical))
     else
       _ -> false
     end
@@ -77,8 +78,8 @@ defmodule NewYou.Content.PrimaryEmailChangeMessage do
 
   defp applicable?(_, _, _), do: false
 
-  defp current_authority?(%{"document_id" => id, "path" => path, "sha256" => sha}, current) do
-    match?([%{"repository_path" => ^path, "sha256" => ^sha}], entries(current, id)) and
+  defp approved_authority?(%{"document_id" => id, "path" => path, "sha256" => sha}, historical) do
+    match?([%{"repository_path" => ^path, "sha256" => ^sha}], entries(historical, id)) and
       match?({:ok, _}, checked_read(path, sha))
   end
 

@@ -377,9 +377,11 @@ defmodule NewYou.Content.MagicLoginMessage do
 
     defp promoted_authority_current?(root, packet) do
       with {:ok, router} <- read_json(root, @governance_router_path),
+           {:ok, historical} <-
+             NewYou.Content.ProductAuthority.historical_bindings(router, &read_file(root, &1)),
            true <- packet["promoted_authority"] == @historical_promoted_authority,
            true <- historical_promoted_authority_matches?(root),
-           true <- current_successor_authority_matches?(root, router) do
+           true <- approved_successor_authority_matches?(root, historical) do
         true
       else
         _ -> false
@@ -395,18 +397,20 @@ defmodule NewYou.Content.MagicLoginMessage do
       end)
     end
 
-    defp current_successor_authority_matches?(root, router) do
+    defp approved_successor_authority_matches?(root, historical) do
       Enum.all?(
         @prior_successor_authority ++ @v1_17_successor_authority ++ @v1_18_successor_authority,
         &successor_lineage_matches?(root, &1)
       ) and
-        Enum.all?(@current_successor_authority, &promoted_authority_matches?(root, router, &1))
+        Enum.all?(
+          @current_successor_authority,
+          &promoted_authority_matches?(root, historical, &1)
+        )
     end
 
-    defp promoted_authority_matches?(root, router, authority) do
+    defp promoted_authority_matches?(root, historical, authority) do
       entries =
-        router
-        |> Map.get("governing_documents", [])
+        historical
         |> Enum.filter(&(&1["document_id"] == authority["document_id"]))
 
       case entries do
@@ -515,6 +519,8 @@ defmodule NewYou.Content.MagicLoginMessage do
                 "docs/governance/product/01_DECISIONS_v1.17.0.md",
                 "docs/governance/product/00_PLATFORM_v1.18.0.md",
                 "docs/governance/product/01_DECISIONS_v1.18.0.md",
+                "docs/governance/product/00_PLATFORM_v1.20.0.md",
+                "docs/governance/product/01_DECISIONS_v1.20.0.md",
                 "docs/governance/product/00_PLATFORM_v1.19.0.md",
                 "docs/governance/product/01_DECISIONS_v1.19.0.md",
                 "docs/governance/product/proposals/well-157/PHASE9_EMAIL_APPLICABILITY_v0.1.0_PROPOSED.md",
