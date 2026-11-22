@@ -120,6 +120,48 @@ state. Do not add a second Sass or JavaScript calculation authority.
 These are independent NewYou recipes. Nothing further must be extracted from
 ACSS before this foundation can be finished and adopted.
 
+## Section layouts
+
+The development guide's [section examples](../../lib/new_you_web/live/design_system_sections.ex)
+show three [Phoenix functions](../../lib/new_you_web/components/design/section.ex)
+for composing an introduction, a feature list and a call to action. Import
+`NewYouWeb.Components.Design.Section` where needed. Give each instance a unique
+`id` and set `heading_level` to fit the caller's page outline. The section
+derives its heading ID from that ID. The caller supplies localized copy, media
+alternatives and the native controls used in the action slots.
+
+```heex
+<.split_hero id="introduction" title={@title} heading_level={1}>
+  <:body><p>{@description}</p></:body>
+  <:media><img src={@image_url} alt={@image_alt} /></:media>
+</.split_hero>
+
+<.feature_grid id="features" title={@features_title}>
+  <:item :for={feature <- @features}>
+    <.design_card title={feature.title}><p>{feature.summary}</p></.design_card>
+  </:item>
+</.feature_grid>
+
+<.action_section id="next-step" title={@next_title}>
+  <:actions><.text_link href={@next_path}>{@next_label}</.text_link></:actions>
+</.action_section>
+```
+
+Contain the section in the page's existing gutter. Noninteractive hero media
+can sit to the left of the copy on a wide layout and follows the copy when
+stacked. Feature grids with no items and action sections with no actions are
+omitted. The guide is the current consumer. Participant adoption requires a
+named consumer and the applicable copy review.
+
+The [render tests](../../test/new_you_web/design_section_test.exs) cover the
+slot contract and section semantics. The [browser check](../../test/assets/design_sections_browser.mjs)
+uses the [existing guide tooling](design_system.md#repeatable-verification)
+to check reflow, contrast and keyboard behavior:
+
+```sh
+BROWSER_TOOLS_ROOT=/path/to/browser-tools node test/assets/design_sections_browser.mjs
+```
+
 ## Content, surfaces and controls
 
 - **Contextual spacing and prose, application consumer:** registration uses
