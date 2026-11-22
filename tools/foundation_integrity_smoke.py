@@ -14,6 +14,12 @@ from typing import Any
 
 DEFAULT_GOVERNANCE_ROUTER = Path("docs/governance/CURRENT_GOVERNANCE_ROUTER.json")
 DEFAULT_DELIVERY_ROUTER = Path("docs/delivery/CURRENT_DELIVERY_ROUTER.json")
+RECOVERY_COPY_ID = "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED"
+RECOVERY_COPY_FILE = Path(
+    f"docs/delivery/content-evidence/copy/evidence/{RECOVERY_COPY_ID}_v0.2.0.json"
+)
+RECOVERY_COPY_CANDIDATE_SHA256 = "6cc5d6d02d51298f1e405d3250385eab7a6bb74d1bfa9a09d6f90bff42e778d3"
+RECOVERY_COPY_RECEIPTS_SHA256 = "3fc81643daca1ac85980d70efb2652e80439098b0333a5aa4de259273f5cf588"
 EXPECTED_GOVERNING_IDS = frozenset(
     {
         "NORTH_STAR_AND_MVP",
@@ -459,6 +465,74 @@ def _check_active_document_references(root: Path, report: dict[str, Any]) -> Non
     )
 
 
+def validate_recovery_browser_copy(
+    root: Path, governance: dict[str, Any], delivery: dict[str, Any]
+) -> str | None:
+    """Check bounded approval evidence on disk. Live receipts and integration are separate gates."""
+    try:
+        path = root / RECOVERY_COPY_FILE
+        data = path.read_bytes()
+        routes = [row for row in delivery["delivery_contracts"] if row["document_id"] == RECOVERY_COPY_ID]
+        if routes != [{
+            "document_id": RECOVERY_COPY_ID,
+            "canonical_filename": path.name,
+            "repository_path": RECOVERY_COPY_FILE.as_posix(),
+            "sha256": hashlib.sha256(data).hexdigest(),
+            "contract_type": "content_evidence",
+            "status": "OWNER_APPROVED_BOUNDED_NONPRODUCTION_BROWSER_COPY; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY",
+        }]:
+            return "Recovery browser copy route must bind the one current approval file and digest"
+
+        evidence = json.loads(data)
+        if evidence["development_approval"] != {
+            "previous_state": "candidate",
+            "state": "development_approved",
+            "context": "fp001_phase9_synthetic_verified_factor_recovery_dev_test",
+            "requires_canonical_integration": True,
+            "requires_current_eligibility_and_independent_ready_check": True,
+            "terminal_for_new_use": ["superseded", "withdrawn"],
+            "runtime_authority": False,
+        }:
+            return "Recovery browser copy context or lifecycle denies new use"
+
+        candidate = evidence["candidate"]
+        items = candidate["copy_items"]
+        if len(items) != 18 or len({item["key"] for item in items}) != 18:
+            return "Recovery browser copy requires 18 distinct semantic keys"
+        for item in items:
+            if set(item["locales"]) != {"en", "af"}:
+                return f"Recovery browser copy locale pair is incomplete for {item['key']}"
+            for value in item["locales"].values():
+                text = value["text"].encode("utf-8")
+                if (len(text), hashlib.sha256(text).hexdigest()) != (value["utf8_bytes"], value["sha256"]):
+                    return f"Recovery browser copy locale bytes do not match the digest for {item['key']}"
+
+        # The reviewed file used precisely this serialization. Its independent
+        # pin also detects a changed value with a recomputed locale hash.
+        raw_candidate = (json.dumps(candidate, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        if evidence["source_candidate"]["sha256"] != RECOVERY_COPY_CANDIDATE_SHA256 or (
+            hashlib.sha256(raw_candidate).hexdigest() != RECOVERY_COPY_CANDIDATE_SHA256
+        ):
+            return "Recovery browser copy candidate digest differs from the exact approved bytes"
+
+        # These five snapshots bind one self-attestation and four distinct
+        # decisions. Replacing or adding receipts requires independent review.
+        receipts = json.dumps(evidence["approval_receipts"], sort_keys=True, separators=(",", ":"))
+        if hashlib.sha256(receipts.encode("utf-8")).hexdigest() != RECOVERY_COPY_RECEIPTS_SHA256:
+            return "Recovery browser copy approval provenance differs from the verified receipts"
+
+        for document_id in ("PLATFORM_PRODUCT_LAW", "PRODUCT_DECISIONS"):
+            rows = [row for row in governance["governing_documents"] if row["document_id"] == document_id]
+            if len(rows) != 1 or (
+                candidate["authority_sha256"].get(rows[0]["repository_path"]) != rows[0]["sha256"]
+            ):
+                return "Recovery browser copy requires revalidation under current Product authority"
+    except (AttributeError, KeyError, OSError, TypeError, UnicodeError, ValueError):
+        return "Recovery browser copy route or approval evidence is missing or malformed"
+
+    return None
+
+
 def run_smoke_audit(
     root: Path,
     governance_router_path: Path = DEFAULT_GOVERNANCE_ROUTER,
@@ -553,6 +627,15 @@ def run_smoke_audit(
 
     _check_active_document_references(root, report)
     _check_current_routing_guidance(root, report, governance, delivery)
+
+    if governance is not None and delivery is not None:
+        failure = validate_recovery_browser_copy(root, governance, delivery)
+        _record(
+            report,
+            "smoke_recovery_browser_copy_evidence",
+            failure is None,
+            failure or "Recovery browser copy binds the exact bounded bilingual approval",
+        )
 
     required_paths = (
         "AGENTS.md",

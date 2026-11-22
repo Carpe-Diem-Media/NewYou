@@ -1,0 +1,646 @@
+{
+  "packet_id": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED",
+  "version": "0.2.0",
+  "source_candidate": {
+    "filename": "WELL183_RECOVERY_PHASE9_BROWSER_COPY_CANDIDATE_v0.2.0.json",
+    "sha256": "6cc5d6d02d51298f1e405d3250385eab7a6bb74d1bfa9a09d6f90bff42e778d3",
+    "encoding": "UTF-8 JSON, two-space indentation, literal Unicode, original key order, one final LF"
+  },
+  "development_approval": {
+    "previous_state": "candidate",
+    "state": "development_approved",
+    "context": "fp001_phase9_synthetic_verified_factor_recovery_dev_test",
+    "requires_canonical_integration": true,
+    "requires_current_eligibility_and_independent_ready_check": true,
+    "terminal_for_new_use": [
+      "superseded",
+      "withdrawn"
+    ],
+    "runtime_authority": false
+  },
+  "approval_source": {
+    "work_item": "WELL-183",
+    "work_item_id": "a0c70e55-3712-4ebe-b836-777114263cbf",
+    "attribution": "One self-attested accountable owner acting in four distinct capacities.",
+    "comment_digest_format": "SHA-256 of UTF-8 Plane comment_stripped bytes, without an added newline."
+  },
+  "approval_receipts": [
+    {
+      "comment_id": "ad8d7507-b06b-4571-8af1-e3ffedd8ebd3",
+      "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_at": "2026-11-22T12:59:43.417024Z",
+      "updated_at": "2026-11-22T12:59:43.417034Z",
+      "edited_at": null,
+      "capacity": "owner_capacity_attestation",
+      "decision": "attested",
+      "comment_sha256": "34ec67c7ed403d1bc821fe6fa5515c1771822ecf2b5a87d5d1efebd798f0d773",
+      "candidate_sha256": "6cc5d6d02d51298f1e405d3250385eab7a6bb74d1bfa9a09d6f90bff42e778d3"
+    },
+    {
+      "comment_id": "7424ecb9-8fcc-46fa-9599-a27ed7221c23",
+      "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_at": "2026-11-22T13:00:14.383507Z",
+      "updated_at": "2026-11-22T13:00:14.383517Z",
+      "edited_at": null,
+      "capacity": "content_media",
+      "decision": "approved",
+      "comment_sha256": "4f96370b63798278c968670f2870d3e27a1a729271407476f8b9a56239a6f7ef",
+      "candidate_sha256": "6cc5d6d02d51298f1e405d3250385eab7a6bb74d1bfa9a09d6f90bff42e778d3"
+    },
+    {
+      "comment_id": "9d6e446b-769b-4281-b7dc-af56a5ef2efb",
+      "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_at": "2026-11-22T13:00:21.190616Z",
+      "updated_at": "2026-11-22T13:00:21.190624Z",
+      "edited_at": null,
+      "capacity": "english_language",
+      "decision": "approved",
+      "comment_sha256": "bbaee4ec2a2981aa2eac9b609335c2901592baa060afade725cdd36f0c49a87e",
+      "candidate_sha256": "6cc5d6d02d51298f1e405d3250385eab7a6bb74d1bfa9a09d6f90bff42e778d3"
+    },
+    {
+      "comment_id": "f48fa17f-da14-4c63-bc9b-4436fa353441",
+      "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_at": "2026-11-22T13:00:29.939782Z",
+      "updated_at": "2026-11-22T13:00:29.939793Z",
+      "edited_at": null,
+      "capacity": "afrikaans_language",
+      "decision": "approved",
+      "comment_sha256": "3e65757231c3c65e2d3f51bbd6d13667f599996958df31391c3738d88e1a51bc",
+      "candidate_sha256": "6cc5d6d02d51298f1e405d3250385eab7a6bb74d1bfa9a09d6f90bff42e778d3"
+    },
+    {
+      "comment_id": "5780e080-cc07-472a-9e8e-3d82b51a0b31",
+      "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_at": "2026-11-22T13:00:55.363060Z",
+      "updated_at": "2026-11-22T13:00:55.363067Z",
+      "edited_at": null,
+      "capacity": "identity_security",
+      "decision": "approved",
+      "comment_sha256": "0cbffab074a99bcbbd2bc7783425b38584ab479ed868f50a5f330a948be2dfff",
+      "candidate_sha256": "6cc5d6d02d51298f1e405d3250385eab7a6bb74d1bfa9a09d6f90bff42e778d3"
+    }
+  ],
+  "candidate": {
+    "packet_id": "WELL183_RECOVERY_PHASE9_BROWSER_COPY_CANDIDATE_v0.2.0",
+    "version": "0.2.0",
+    "status": "candidate",
+    "development_eligible": false,
+    "production_eligible": false,
+    "baseline_github_main": "e7fc58167223be433d9ccc9d61d3aaeb2090a10c",
+    "plane_preparation_scope": "f3a6edac-ea9e-499a-aa51-13525224cd0a",
+    "plane_exact_inventory": "b58172c2-d7e3-4b2a-91c8-60e10a7e159b",
+    "scope": {
+      "context": "FP-001 Phase 9 ordinary verified-factor Recovery in bounded non-production DEV/TEST for synthetic accounts only",
+      "required_locales": [
+        "en",
+        "af"
+      ],
+      "silent_locale_fallback": false,
+      "external_delivery": false,
+      "public_release": false,
+      "paid_pilot": false,
+      "production_build": false,
+      "real_participants": false,
+      "lost_all_factor_completion": false,
+      "privileged_recovery_expansion": false
+    },
+    "serialization": "Per-locale SHA-256 and byte count cover the exact UTF-8 text value without an added newline or normalization. File digests cover raw bytes.",
+    "source_sha256": {
+      "lib/new_you_web/recovery_copy.ex": "2c72568dbe7dbc36e2e26683d79595a26994a5b0891a488b68ebc6cd8e9a2cca",
+      "lib/new_you_web/password_reset_copy.ex": "8b39f3b2130644bf49a2b696bd540a9da3eb156778f6e847ea221d9a42002159",
+      "docs/delivery/content-evidence/copy/COPY_REGISTRY.json": "744f1a34ad80c0158c86395f3f66227622714969526f5e9d69ee62314fd48635",
+      "lib/new_you_web/controllers/recovery_html/journey.html.heex": "131b3844c5f202d1093117e981fb73256137137e9242ecf46b6de0515e1873ee",
+      "lib/new_you/content/entry_copy.ex": "6f1dff0e9fe5b12da259e90a037983cb0389706a962ecc2e854448eb28324536",
+      "docs/delivery/content-evidence/copy/pages/public/registration.yaml": "09ea540487523e9ac236fef4c706378540ea4b07fef7ca5a5b745624d41a8dd8",
+      "docs/development/fixtures/well136-c02-v0.1.json": "2d1c6eda21bedde4e5c4be93e9a5f79a6b34a968025c533a584262e1932554d0",
+      "docs/development/fixtures/well136-c02-owner-approval.json": "2fe86a5655aa2795150bacea67cc2830a8df2aafc23c415c924237a375fcb3cd",
+      "lib/new_you_web/router.ex": "a08e890d4f49151edcd36ed69fd884ce07cf3f06b89b15438d164ecc95697485"
+    },
+    "authority_sha256": {
+      "docs/governance/CURRENT_GOVERNANCE_ROUTER.json": "6c503310eabad48f7cece668c23b27c18b6dacfcd3733a6bc09fe34f31810b07",
+      "docs/delivery/CURRENT_DELIVERY_ROUTER.json": "a8a699e2ebeaa3472a719e6f329fdbe505731a604b11501d723634e73e54aa75",
+      "docs/governance/product/00_PLATFORM_v1.20.0.md": "5308e09f668b4a9762f98fb0bcbddf2f84595703b69c6ed511e8f511c3da36b1",
+      "docs/governance/product/01_DECISIONS_v1.20.0.md": "7282344c42e850a2683e15dcce21b46bb3ecca28d9fac22b91b01ec7e8f32b16",
+      "docs/delivery/content-evidence/copy/GOVERNANCE.md": "e3f5a89c23329269a2714fcbce50772641b72b8575d308df41a2e3179815688e",
+      "docs/delivery/jit/identity/FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.3.0.md": "400bea9d56ed0e8cc07a9ae3a774978f876b961fcf3d90af549d9478b16d3ea5",
+      "docs/delivery/feature-contracts/fp-001/FP-001_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md": "5f9b1d28ed1e72c7ce4cfae5444d1bfa69b58331cc7afaffead060c827f6ef81"
+    },
+    "authority_sections": [
+      "Product §§21E.31 and 21J.7",
+      "DEC-250 and DEC-327",
+      "Identity JIT F.6 and J.1a",
+      "FP-001 Final Contract Q.3 and AC-08",
+      "Copy governance §§2 and 6–10"
+    ],
+    "reuse_boundary": {
+      "historical_password_reset": "Four Recovery keys resolve through PasswordResetCopy.text!/2. Historical P8-12 source text is proposed for Recovery-specific reuse.",
+      "well136": "PasswordResetCopy.text!/3 with :well136 delegates to Content.PasswordResetBrowserCopy and separate approved artifacts. Their Password Reset approval confers no Recovery eligibility even where strings coincide.",
+      "shared_labels": "The three registry entries are candidates. EntryCopy uses their exact bytes for the approved registration composition. Explicit approval is pending for these exact uses in Recovery."
+    },
+    "copy_items": [
+      {
+        "key": "identity.recovery.request.title",
+        "proposed_class": "B",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "request.title",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.request.title:en:well183:0.1.0",
+            "text": "Recover your account",
+            "utf8_bytes": 20,
+            "sha256": "51ac0753998edc67b14ab8264e931beba952e8108c4ce5ffa60030e466aaead2"
+          },
+          "af": {
+            "version_id": "identity.recovery.request.title:af:well183:0.1.0",
+            "text": "Herstel jou rekening",
+            "utf8_bytes": 20,
+            "sha256": "6e38e24bc0c823b52a5b9676f010d975f4e6baecae81315005a43e6ef969333f"
+          }
+        }
+      },
+      {
+        "key": "identity.recovery.request.body",
+        "proposed_class": "B",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "request.body",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.request.body:en:well183:0.1.0",
+            "text": "Enter your email address to request recovery.",
+            "utf8_bytes": 45,
+            "sha256": "a09639aada04ca25af57c6601b68ec4daa445b520ccb369e7b25d647948bded7"
+          },
+          "af": {
+            "version_id": "identity.recovery.request.body:af:well183:0.1.0",
+            "text": "Voer jou e-posadres in om herstel aan te vra.",
+            "utf8_bytes": 45,
+            "sha256": "deebbce5c46719d17ff6e92c87781e0950d23b69f55bc783a90e3fbee1918964"
+          }
+        }
+      },
+      {
+        "key": "identity.recovery.request.action",
+        "proposed_class": "B",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "request.action",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.request.action:en:well183:0.1.0",
+            "text": "Request recovery link",
+            "utf8_bytes": 21,
+            "sha256": "ecee57a1aea3fd1c70104a12a5c341f41fbb42029de7cdfb38a8a66549c861c7"
+          },
+          "af": {
+            "version_id": "identity.recovery.request.action:af:well183:0.1.0",
+            "text": "Vra herstelskakel aan",
+            "utf8_bytes": 21,
+            "sha256": "833112b26b5a24d85189ff789307e4c87faa3e8889963c72ca9c441409a476c0"
+          }
+        }
+      },
+      {
+        "key": "identity.recovery.requested.title",
+        "proposed_class": "A",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "requested.title",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.requested.title:en:well183:0.2.0",
+            "text": "Recovery request",
+            "utf8_bytes": 16,
+            "sha256": "9cf6942b3663862bfc13eacbba61973d9456ca5af7beff7ac8a6361dbca68a91"
+          },
+          "af": {
+            "version_id": "identity.recovery.requested.title:af:well183:0.2.0",
+            "text": "Herstelaanvraag",
+            "utf8_bytes": 15,
+            "sha256": "52110ba21567b9ac994898e5e17069febe25d062cbb307107f429b1d50c9536a"
+          }
+        },
+        "predecessor_locale_versions": {
+          "en": "identity.recovery.requested.title:en:well183:0.1.0",
+          "af": "identity.recovery.requested.title:af:well183:0.1.0"
+        }
+      },
+      {
+        "key": "identity.recovery.requested.body",
+        "proposed_class": "A",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "requested.body",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.requested.body:en:well183:0.2.0",
+            "text": "If we can send a recovery link to this address, check your email for the next step.",
+            "utf8_bytes": 83,
+            "sha256": "0db8c3b73c2531809c034b855e77f1c8062ed4ab9eeeb1db3d22b814d0c78ed7"
+          },
+          "af": {
+            "version_id": "identity.recovery.requested.body:af:well183:0.2.0",
+            "text": "As ons ’n herstelskakel na hierdie adres kan stuur, kyk in jou e-pos vir die volgende stap.",
+            "utf8_bytes": 93,
+            "sha256": "8fd1e080c36709984b590c1cf3d43d8e31b10b6ace1c6e65cc6242c71af5ca3f"
+          }
+        },
+        "predecessor_locale_versions": {
+          "en": "identity.recovery.requested.body:en:well183:0.1.0",
+          "af": "identity.recovery.requested.body:af:well183:0.1.0"
+        }
+      },
+      {
+        "key": "identity.recovery.confirmation.title",
+        "proposed_class": "B",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "confirmation.title",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.confirmation.title:en:well183:0.1.0",
+            "text": "Confirm account recovery",
+            "utf8_bytes": 24,
+            "sha256": "80af965016a8d049bfa37fa15bba923d4c84f3c535575e50cf76b1225f9c0351"
+          },
+          "af": {
+            "version_id": "identity.recovery.confirmation.title:af:well183:0.1.0",
+            "text": "Bevestig rekeningherstel",
+            "utf8_bytes": 24,
+            "sha256": "85363ea6eace018cc74f97eda2f4c6c998443525005d8402a37de8a86cc4402e"
+          }
+        }
+      },
+      {
+        "key": "identity.recovery.confirmation.body",
+        "proposed_class": "A",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "confirmation.body",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.confirmation.body:en:well183:0.2.0",
+            "text": "Continue only if you requested recovery. Opening this page does not confirm recovery or change your password.",
+            "utf8_bytes": 109,
+            "sha256": "a4261ca5b1790f868993d4858ebe0e4f554b3cbba0fc828a8a2c5811e93ab7a7"
+          },
+          "af": {
+            "version_id": "identity.recovery.confirmation.body:af:well183:0.2.0",
+            "text": "Gaan slegs voort as jy herstel aangevra het. As jy hierdie bladsy net oopmaak, word jou herstel nie bevestig of jou wagwoord verander nie.",
+            "utf8_bytes": 138,
+            "sha256": "1176a6232a4ed078294c7e620d84bd5afb84f651d322ce7125dcdc60561455fc"
+          }
+        },
+        "predecessor_locale_versions": {
+          "en": "identity.recovery.confirmation.body:en:well183:0.1.0",
+          "af": "identity.recovery.confirmation.body:af:well183:0.1.0"
+        }
+      },
+      {
+        "key": "identity.recovery.confirmation.action",
+        "proposed_class": "B",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "confirmation.action",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.confirmation.action:en:well183:0.1.0",
+            "text": "Continue recovery",
+            "utf8_bytes": 17,
+            "sha256": "662faf15ad981ace151a3351c87713786a05de64e6ded7b932ac5876e3b42e33"
+          },
+          "af": {
+            "version_id": "identity.recovery.confirmation.action:af:well183:0.1.0",
+            "text": "Gaan voort met herstel",
+            "utf8_bytes": 22,
+            "sha256": "05e67c2eda9838e227f3d9b5f87245babc828dba1b6f3ad5754f806dcde4b74e"
+          }
+        }
+      },
+      {
+        "key": "identity.recovery.credential.title",
+        "proposed_class": "B",
+        "source": {
+          "path": "lib/new_you_web/password_reset_copy.ex",
+          "key": "confirm.title",
+          "reader": "PasswordResetCopy.text!/2",
+          "scope": "historical P8-12 embedded text"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.credential.title:en:well183:0.1.0",
+            "text": "Choose a new password",
+            "utf8_bytes": 21,
+            "sha256": "833b8512168fcc8844457a5355c6db45c59f0f18850b1be02e636f22be9ff429"
+          },
+          "af": {
+            "version_id": "identity.recovery.credential.title:af:well183:0.1.0",
+            "text": "Kies ’n nuwe wagwoord",
+            "utf8_bytes": 23,
+            "sha256": "c27cb16de4a22e5e311ed33abbc78a6a1e7eb6a5d11f09438b0bc4f4f20425cc"
+          }
+        }
+      },
+      {
+        "key": "identity.recovery.credential.body",
+        "proposed_class": "A",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "credential.body",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.credential.body:en:well183:0.2.0",
+            "text": "If recovery succeeds, your password will change, existing sessions will end, and trusted devices will lose their trusted status. We may need to verify your identity further before recovery can finish.",
+            "utf8_bytes": 200,
+            "sha256": "8cd496752d245f2b449ba1727c74357d40999bff4ad6d1e8548741ad43c53052"
+          },
+          "af": {
+            "version_id": "identity.recovery.credential.body:af:well183:0.2.0",
+            "text": "As herstel slaag, word jou wagwoord gewysig, bestaande sessies beëindig en die vertroude status van jou toestelle herroep. Ons sal dalk jou identiteit verder moet verifieer voordat herstel voltooi kan word.",
+            "utf8_bytes": 207,
+            "sha256": "f82506caec5909407a83c0106f6120b780c6bbc3d518f8e5c7fc079d3628228d"
+          }
+        },
+        "predecessor_locale_versions": {
+          "en": "identity.recovery.credential.body:en:well183:0.1.0",
+          "af": "identity.recovery.credential.body:af:well183:0.1.0"
+        }
+      },
+      {
+        "key": "identity.recovery.credential.action",
+        "proposed_class": "B",
+        "source": {
+          "path": "lib/new_you_web/password_reset_copy.ex",
+          "key": "confirm.action",
+          "reader": "PasswordResetCopy.text!/2",
+          "scope": "historical P8-12 embedded text"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.credential.action:en:well183:0.1.0",
+            "text": "Confirm new password",
+            "utf8_bytes": 20,
+            "sha256": "bf000421aeb39493cf8044ec73846d7da8ca97b7166208c0d1172a17ba23a388"
+          },
+          "af": {
+            "version_id": "identity.recovery.credential.action:af:well183:0.1.0",
+            "text": "Bevestig nuwe wagwoord",
+            "utf8_bytes": 22,
+            "sha256": "e25d680dff23b27d8844e092601cfe4693d9ecfd61b6baaa14e5e82e124d527b"
+          }
+        }
+      },
+      {
+        "key": "identity.recovery.completed.title",
+        "proposed_class": "A",
+        "source": {
+          "path": "lib/new_you_web/password_reset_copy.ex",
+          "key": "confirm.complete.title",
+          "reader": "PasswordResetCopy.text!/2",
+          "scope": "historical P8-12 embedded text"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.completed.title:en:well183:0.1.0",
+            "text": "Your password has changed",
+            "utf8_bytes": 25,
+            "sha256": "b3cf4236ea8c6fb9fa4aaf858986dbe45d84e1c865d5f3d7ccc807aeda94a046"
+          },
+          "af": {
+            "version_id": "identity.recovery.completed.title:af:well183:0.1.0",
+            "text": "Jou wagwoord is gewysig",
+            "utf8_bytes": 23,
+            "sha256": "e16df79d9a59e600761ef1b73ab9d5f95e5360130d23ec6ab47dd9becb95d92f"
+          }
+        }
+      },
+      {
+        "key": "identity.recovery.completed.body",
+        "proposed_class": "A",
+        "source": {
+          "path": "lib/new_you_web/password_reset_copy.ex",
+          "key": "confirm.complete.body",
+          "reader": "PasswordResetCopy.text!/2",
+          "scope": "historical P8-12 embedded text"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.completed.body:en:well183:0.1.0",
+            "text": "Sign in again with your new password.",
+            "utf8_bytes": 37,
+            "sha256": "b2163c3e254ff63690be9f0ee868b7400c827bcc6cf343290ece655c3ee2fdc1"
+          },
+          "af": {
+            "version_id": "identity.recovery.completed.body:af:well183:0.1.0",
+            "text": "Meld weer met jou nuwe wagwoord aan.",
+            "utf8_bytes": 36,
+            "sha256": "245c086dd7308d3235c412d6031e5160a9f288f74d6d2f416e631a0f6f99274c"
+          }
+        }
+      },
+      {
+        "key": "identity.recovery.unavailable.title",
+        "proposed_class": "A",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "unavailable.title",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.unavailable.title:en:well183:0.1.0",
+            "text": "Recovery could not continue",
+            "utf8_bytes": 27,
+            "sha256": "6023f20da1a3e69121b7982711ffcd2f610863f15eba7ba9235e5a0efe5c580a"
+          },
+          "af": {
+            "version_id": "identity.recovery.unavailable.title:af:well183:0.1.0",
+            "text": "Herstel kon nie voortgaan nie",
+            "utf8_bytes": 29,
+            "sha256": "be598bedd1f31201bf143b9e8e8309fc6e446efd5c44e2e85621a7e756ea42c9"
+          }
+        }
+      },
+      {
+        "key": "identity.recovery.unavailable.body",
+        "proposed_class": "A",
+        "source": {
+          "path": "lib/new_you_web/recovery_copy.ex",
+          "key": "unavailable.body",
+          "reader": "RecoveryCopy.text!/2"
+        },
+        "locales": {
+          "en": {
+            "version_id": "identity.recovery.unavailable.body:en:well183:0.2.0",
+            "text": "This step could not be completed. You can return to the recovery request page. If a support channel is available, ask about other recovery options.",
+            "utf8_bytes": 147,
+            "sha256": "ef7308d775d70c7af2c0a776fbc740b7c4281de35f4436e9b18d0c6404e14fff"
+          },
+          "af": {
+            "version_id": "identity.recovery.unavailable.body:af:well183:0.2.0",
+            "text": "Hierdie stap kon nie voltooi word nie. Jy kan na die rekeningherstelbladsy terugkeer. As ’n ondersteuningskanaal beskikbaar is, kan jy navraag doen oor ander herstelopsies.",
+            "utf8_bytes": 174,
+            "sha256": "61cdbfb071f045511d35dd0f1c35ff51f45825d2ac023bc6186b17ed5040ec81"
+          }
+        },
+        "predecessor_locale_versions": {
+          "en": "identity.recovery.unavailable.body:en:well183:0.1.0",
+          "af": "identity.recovery.unavailable.body:af:well183:0.1.0"
+        }
+      },
+      {
+        "key": "identity.registration.email.label",
+        "proposed_class": "B",
+        "source": {
+          "path": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+          "key": "identity.registration.email.label",
+          "version": "1",
+          "status": "candidate",
+          "development_eligible": false,
+          "current_scoped_composition": "docs/delivery/content-evidence/copy/pages/public/registration.yaml"
+        },
+        "proposed_recovery_reuse": "Recovery request email label",
+        "locales": {
+          "en": {
+            "version_id": "identity.registration.email.label:en:well183:0.1.0",
+            "text": "Email address",
+            "utf8_bytes": 13,
+            "sha256": "f2488fd4ef4adbc6ac61300083f2c33980e48bb4bbf3c540ad760d61fc36f420"
+          },
+          "af": {
+            "version_id": "identity.registration.email.label:af:well183:0.1.0",
+            "text": "E-posadres",
+            "utf8_bytes": 10,
+            "sha256": "34870301420d88ae63ced4c24bee08ed1d682682c6086ed333ed04b81940c8d0"
+          }
+        }
+      },
+      {
+        "key": "identity.registration.password.label",
+        "proposed_class": "B",
+        "source": {
+          "path": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+          "key": "identity.registration.password.label",
+          "version": "1",
+          "status": "candidate",
+          "development_eligible": false,
+          "current_scoped_composition": "docs/delivery/content-evidence/copy/pages/public/registration.yaml"
+        },
+        "proposed_recovery_reuse": "Recovery replacement password label",
+        "locales": {
+          "en": {
+            "version_id": "identity.registration.password.label:en:well183:0.1.0",
+            "text": "Password",
+            "utf8_bytes": 8,
+            "sha256": "e7cf3ef4f17c3999a94f2c6f612e8a888e5b1026878e4e19398b23bd38ec221a"
+          },
+          "af": {
+            "version_id": "identity.registration.password.label:af:well183:0.1.0",
+            "text": "Wagwoord",
+            "utf8_bytes": 8,
+            "sha256": "40f7daf845876c9b76ba09f2b0f26244c55294875a08661699a7b2e1537bcc3d"
+          }
+        }
+      },
+      {
+        "key": "shared.navigation.login",
+        "proposed_class": "B",
+        "source": {
+          "path": "docs/delivery/content-evidence/copy/COPY_REGISTRY.json",
+          "key": "shared.navigation.login",
+          "version": "1",
+          "status": "candidate",
+          "development_eligible": false,
+          "current_scoped_composition": "docs/delivery/content-evidence/copy/pages/public/registration.yaml"
+        },
+        "proposed_recovery_reuse": "Recovery completion link to fresh sign-in",
+        "locales": {
+          "en": {
+            "version_id": "shared.navigation.login:en:well183:0.1.0",
+            "text": "Log in",
+            "utf8_bytes": 6,
+            "sha256": "c189840cf7e2d6f6fdeefde1ac59dfdf50bb75642eb569b4e38a5614d6f12ac2"
+          },
+          "af": {
+            "version_id": "shared.navigation.login:af:well183:0.1.0",
+            "text": "Meld aan",
+            "utf8_bytes": 8,
+            "sha256": "69a8b09db2f59e0bd846273e36db485337fad31cb1ca7169388cd4515727753f"
+          }
+        }
+      }
+    ],
+    "review_findings": [
+      "Use the same public acknowledgement for eligible, unknown and held requests in each supported locale. The conditional message makes no claim of email delivery.",
+      "Opening the confirmation page does not confirm Recovery or change credentials. GET does not consume proof. Explicit Continue can consume proof and can place a governed hold when stronger assurance is required.",
+      "The credential form may appear after proof acceptance even for a held case. The wording ties credential replacement and revocation of active sessions and trusted-device assurance to successful completion. Further assurance can prevent completion.",
+      "The unavailable state covers multiple outcomes. The existing request route offers a way back. The wording makes support conditional because the current router provides no Help or Contact Support route.",
+      "The completion text directs a fresh sign-in after committed completion or the same committed operation receipt. The controller clears the browser session. The current template targets /login, and the router has no GET /login. WELL-183 AC4 must exercise the allowed destination and successful sign-in through the actual browser journey."
+    ],
+    "required_reviews": [
+      {
+        "capacity": "Content & Media",
+        "status": "pending",
+        "decision_receipt": null
+      },
+      {
+        "capacity": "English language",
+        "status": "pending",
+        "decision_receipt": null
+      },
+      {
+        "capacity": "Afrikaans language",
+        "status": "pending",
+        "decision_receipt": null
+      },
+      {
+        "capacity": "Identity & Access security",
+        "status": "pending",
+        "decision_receipt": null
+      }
+    ],
+    "approval_boundary": "Each decision must identify the reviewer and capacity, exact v0.2.0 packet SHA-256, applicable locale wording, bounded use, and scoped shared or legacy reuse. Any requested wording change requires a successor and applicable review on its exact digest. Future use requires current evidence for both locales and denial on missing, conflicting, stale, superseded or withdrawn evidence. Approved evidence must be integrated and independently checked on current main before Ready.",
+    "predecessor": {
+      "packet_id": "WELL183_RECOVERY_PHASE9_BROWSER_COPY_CANDIDATE_v0.1.0",
+      "sha256": "96af241d3f93f108458e21a303e2db2bfb4fb24c089b403335f96dd482289ad9"
+    },
+    "independent_review_receipt": "58a9c0fd-9233-4818-82fe-3a500f9db125",
+    "selection": {
+      "retained_proposed_changes": [
+        "identity.recovery.requested.title",
+        "identity.recovery.requested.body",
+        "identity.recovery.credential.body"
+      ],
+      "refined_changes": [
+        "identity.recovery.confirmation.body",
+        "identity.recovery.unavailable.body"
+      ],
+      "version_policy": "Changed locale values use v0.2.0 IDs. The other locale values keep their exact v0.1.0 IDs."
+    }
+  }
+}
