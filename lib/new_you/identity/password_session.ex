@@ -4,6 +4,8 @@ defmodule NewYou.Identity.PasswordSession do
 
   alias AshAuthentication.{Argon2Provider, Jwt}
   alias NewYou.Identity.{Account, Email, Session, Token}
+  @session_page_size 20
+  @revocation_rollback "Audit rejected Session revocation evidence"
   @idle_seconds 30 * 60
 
   def authenticate(email, password) when is_binary(password) and byte_size(password) <= 1024 do
@@ -86,28 +88,91 @@ defmodule NewYou.Identity.PasswordSession do
     end
   end
 
-  def authorize(%{session_id: id, token: bearer}) when is_binary(id) and is_binary(bearer) do
-    with {:ok, %{"sub" => subject, "jti" => jti}, Account} <- Jwt.verify(bearer, Account),
-         {:ok, session} when not is_nil(session) <- Ash.get(Session, id, authorize?: false),
-         {:ok, result} <-
-           Ash.transact([Account, Token, Session], fn ->
-             authorize_locked(id, session.account_id, bearer, subject, jti)
-           end) do
-      case result do
-        {:ok, %Account{id: id}} -> {:ok, %{account_id: id}}
-        %Account{id: id} -> {:ok, %{account_id: id}}
-        _ -> {:error, :authentication_unavailable}
-      end
+  def authorize(credentials) do
+    case with_current_session(credentials, fn session, account, _token ->
+           validate_and_touch(session, account)
+         end) do
+      {:ok, %Account{id: id}} -> {:ok, %{account_id: id}}
+      _ -> {:error, :authentication_unavailable}
+    end
+  end
+
+  def list_active(credentials, cursor) do
+    with {:ok, cursor} <- optional_cursor(cursor),
+         {:ok, {:listed, page}} <-
+           with_current_session(credentials, &active_page(&1, &2, &3, cursor)) do
+      {:ok, page}
+    else
+      _ -> {:error, :authentication_unavailable}
+    end
+  end
+
+  def revoke_other(credentials, target_id) do
+    case Ecto.UUID.cast(target_id) do
+      {:ok, id} ->
+        credentials
+        |> with_current_session(&revoke_other_locked(&1, &2, &3, id))
+        |> revocation_result()
+
+      :error ->
+        {:error, :session_unavailable}
+    end
+  end
+
+  defp revocation_result({:ok, result}) when result in [:revoked, :already_ended, :stale],
+    do: {:ok, result}
+
+  defp revocation_result({:error, :audit_rejected}), do: {:error, :session_revocation_failed}
+
+  defp revocation_result({:error, :transaction_unconfirmed}),
+    do: {:error, :session_result_uncertain}
+
+  defp revocation_result(_result), do: {:error, :session_unavailable}
+
+  defp optional_cursor(nil), do: {:ok, nil}
+  defp optional_cursor(cursor), do: Ecto.UUID.cast(cursor)
+
+  defp with_current_session(%{session_id: id, token: bearer}, operation)
+       when is_binary(id) and is_binary(bearer) do
+    with {:ok, %{"sub" => subject, "jti" => jti, "purpose" => "user"}, Account} <-
+           Jwt.verify(bearer, Account),
+         {:ok, session} when not is_nil(session) <- Ash.get(Session, id, authorize?: false) do
+      Ash.transact([Account, Token, Session], fn ->
+        authorize_locked(id, session.account_id, bearer, subject, jti, operation)
+      end)
+      |> current_session_result()
     else
       _ -> {:error, :authentication_unavailable}
     end
   rescue
-    _ -> {:error, :authentication_unavailable}
+    _ -> {:error, :transaction_unconfirmed}
   end
 
-  def authorize(_), do: {:error, :authentication_unavailable}
+  defp with_current_session(_, _), do: {:error, :authentication_unavailable}
 
-  defp authorize_locked(id, account_id, bearer, subject, jti) do
+  if Mix.env() == :test do
+    # Ash has committed by this point. Exercise loss of its acknowledgement
+    # before the owning interface can confirm any outcome to the controller.
+    defp current_session_result({:ok, :revoked} = result) do
+      if Process.get({__MODULE__, :lose_revocation_acknowledgement}) do
+        raise "transaction acknowledgement lost in TEST"
+      end
+
+      result
+    end
+  end
+
+  defp current_session_result({:ok, {:ok, result}}), do: {:ok, result}
+  defp current_session_result({:ok, result}), do: {:ok, result}
+
+  defp current_session_result(
+         {:error, %Ash.Error.Unknown.UnknownError{error: @revocation_rollback}}
+       ),
+       do: {:error, :audit_rejected}
+
+  defp current_session_result({:error, _}), do: {:error, :transaction_unconfirmed}
+
+  defp authorize_locked(id, account_id, bearer, subject, jti, operation) do
     with {:ok, [account]} <-
            Account
            |> Ash.Query.filter(id == ^account_id)
@@ -115,11 +180,7 @@ defmodule NewYou.Identity.PasswordSession do
            |> Ash.read(authorize?: false),
          true <- eligible?(account),
          ^subject <- AshAuthentication.user_to_subject(account),
-         {:ok, [token]} <-
-           Token
-           |> Ash.Query.filter(jti == ^jti and account_id == ^account_id and purpose == "user")
-           |> Ash.Query.lock(:for_update)
-           |> Ash.read(authorize?: false),
+         {:ok, token} when not is_nil(token) <- locked_user_token(jti, account_id, subject),
          {:ok, [session]} <-
            Session
            |> Ash.Query.filter(id == ^id and account_id == ^account_id and token_jti == ^jti)
@@ -127,12 +188,127 @@ defmodule NewYou.Identity.PasswordSession do
            |> Ash.read(authorize?: false),
          {:ok, %{"sub" => ^subject, "jti" => ^jti}, Account} <- Jwt.verify(bearer, Account),
          true <- session.state == :active,
-         :lt <- DateTime.compare(DateTime.utc_now(), token.expires_at) do
-      validate_and_touch(session, account)
+         true <- future?(token.expires_at) do
+      operation.(session, account, token)
     else
-      _ -> {:error, :authentication_unavailable}
+      _ -> :denied
     end
   end
+
+  defp locked_user_token(jti, account_id, subject) do
+    Token
+    |> Ash.Query.filter(
+      jti == ^jti and account_id == ^account_id and subject == ^subject and purpose == "user"
+    )
+    |> Ash.Query.lock(:for_update)
+    |> Ash.read_one(authorize?: false)
+  end
+
+  defp active_page(current, account, token, cursor) do
+    if usable_deadlines?(current) and future?(token.expires_at),
+      do: read_active_page(current, account, cursor),
+      else: :denied
+  end
+
+  defp read_active_page(current, account, cursor) do
+    query =
+      account
+      |> usable_sessions()
+      |> Ash.Query.sort(id: :desc)
+      |> Ash.Query.select([:id, :created_at, :last_seen_at])
+      |> Ash.Query.limit(@session_page_size + 1)
+
+    query = if cursor, do: Ash.Query.filter(query, id < ^cursor), else: query
+
+    with {:ok, rows} <- Ash.read(query, authorize?: false) do
+      {page, remaining} = Enum.split(rows, @session_page_size)
+
+      sessions =
+        Enum.map(page, fn session ->
+          session
+          |> Map.take([:id, :created_at, :last_seen_at])
+          |> Map.put(:current?, session.id == current.id)
+        end)
+
+      {:listed,
+       %{sessions: sessions, next_cursor: if(remaining == [], do: nil, else: List.last(page).id)}}
+    end
+  end
+
+  defp usable_sessions(account) do
+    account_id = account.id
+    subject = AshAuthentication.user_to_subject(account)
+
+    Ash.Query.filter(
+      Session,
+      account_id == ^account_id and state == :active and expires_at > now() and
+        idle_expires_at > now() and
+        exists(
+          token,
+          account_id == ^account_id and subject == ^subject and purpose == "user" and
+            expires_at > now()
+        )
+    )
+  end
+
+  defp revoke_other_locked(%{id: id}, _account, _token, id), do: :denied
+
+  defp revoke_other_locked(current, account, actor_token, id) do
+    with true <- usable_deadlines?(current),
+         {:ok, target} when not is_nil(target) <-
+           Session
+           |> Ash.Query.filter(id == ^id and account_id == ^account.id)
+           |> Ash.Query.lock(:for_update)
+           |> Ash.read_one(authorize?: false) do
+      cond do
+        not (usable_deadlines?(current) and future?(actor_token.expires_at)) -> :denied
+        target.state == :active -> revoke_usable(current, account, actor_token, target)
+        true -> :already_ended
+      end
+    else
+      false -> :denied
+      {:ok, nil} -> :denied
+      {:error, _} = error -> error
+    end
+  end
+
+  # Remote termination of a currently usable session is the material security
+  # transition. Replays and stale targets stop before establishing E2.
+  defp revoke_usable(current, account, actor_token, target) do
+    subject = AshAuthentication.user_to_subject(account)
+
+    with {:ok, token} when not is_nil(token) <-
+           locked_user_token(target.token_jti, account.id, subject),
+         true <-
+           future?(token.expires_at) and usable_deadlines?(target) and
+             future?(actor_token.expires_at) and usable_deadlines?(current),
+         {:ok, ended} <- Ash.update(target, %{}, action: :revoke, authorize?: false),
+         {:ok, _} <-
+           NewYou.Audit.establish_identity_security_obligation(%{
+             source_operation_id: ended.id,
+             source_occurred_at: ended.ended_at,
+             evidence_type: :identity_session_revoked,
+             actor_id: account.id,
+             target_id: account.id,
+             outcome: :succeeded
+           }) do
+      :revoked
+    else
+      {:error, :evidence_outcome_unavailable} -> {:error, @revocation_rollback}
+      {:ok, nil} -> stale_or_denied(current, actor_token)
+      false -> stale_or_denied(current, actor_token)
+      {:error, _} = error -> error
+    end
+  end
+
+  defp stale_or_denied(current, token) do
+    if usable_deadlines?(current) and future?(token.expires_at), do: :stale, else: :denied
+  end
+
+  defp usable_deadlines?(session),
+    do: future?(session.expires_at) and future?(session.idle_expires_at)
+
+  defp future?(deadline), do: DateTime.compare(deadline, DateTime.utc_now()) == :gt
 
   defp validate_and_touch(session, account) do
     now = DateTime.utc_now() |> DateTime.truncate(:second)

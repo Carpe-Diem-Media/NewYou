@@ -197,6 +197,41 @@ defmodule NewYou.Identity do
           {:ok, %{account_id: String.t()}} | {:error, :authentication_unavailable}
   def authorize_session(credentials), do: NewYou.Identity.PasswordSession.authorize(credentials)
 
+  @typedoc "A bounded participant-facing projection of a currently usable Session."
+  @type active_session :: %{
+          id: Ecto.UUID.t(),
+          current?: boolean(),
+          created_at: DateTime.t(),
+          last_seen_at: DateTime.t()
+        }
+
+  @doc """
+  List a page of the presenting Account's currently usable Sessions.
+
+  Revalidates the Account, Session and bearer on every page. An optional cursor
+  continues the same Account-scoped query. Listing does not extend any Session.
+  """
+  @spec list_active_sessions(map(), Ecto.UUID.t() | nil) ::
+          {:ok, %{sessions: [active_session()], next_cursor: Ecto.UUID.t() | nil}}
+          | {:error, :authentication_unavailable}
+  def list_active_sessions(credentials, cursor \\ nil),
+    do: NewYou.Identity.PasswordSession.list_active(credentials, cursor)
+
+  @doc """
+  Terminate one other currently usable Session owned by the presenting Account.
+
+  Foreign, missing and self targets share a denial. A bound terminal target is
+  safe to retry. Success includes the durable Audit obligation. A confirmed
+  Audit rejection rolls back the transition. An unconfirmed result must be
+  reconciled by rereading the Account's current Sessions.
+  """
+  @spec revoke_other_session(map(), Ecto.UUID.t()) ::
+          {:ok, :revoked | :already_ended | :stale}
+          | {:error,
+             :session_unavailable | :session_revocation_failed | :session_result_uncertain}
+  def revoke_other_session(credentials, session_id),
+    do: NewYou.Identity.PasswordSession.revoke_other(credentials, session_id)
+
   @doc "Begin or resume pending Support MFA setup after current Session/password reauthentication. Active factors never return setup material."
   @spec enroll_privileged_mfa(term(), term()) ::
           {:ok, %{secret: binary()}} | {:error, :privileged_access_unavailable}
