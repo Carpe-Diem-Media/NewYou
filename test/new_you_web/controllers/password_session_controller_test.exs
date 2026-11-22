@@ -60,12 +60,17 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
 
       protected = login |> recycle() |> get("/session/protected")
       assert protected.status == 200
+      pmr = Ash.get!(Identity.Account, registration.account_id, authorize?: false).pmr
+      assert protected.resp_body =~ pmr
+      assert get_resp_header(protected, "cache-control") == ["no-store"]
 
       NewYou.Repo.query!("UPDATE accounts SET security_posture = 'held' WHERE id = $1", [
         Ecto.UUID.dump!(registration.account_id)
       ])
 
-      assert (protected |> recycle() |> get("/session/protected")).status == 401
+      denied = protected |> recycle() |> get("/session/protected")
+      assert denied.status == 401
+      refute denied.resp_body =~ pmr
     end)
   end
 
@@ -119,10 +124,18 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
         request = P805.request()
         {:ok, registration} = Identity.register(request)
         {:ok, :verified} = Identity.verify_email(registration.verification_proof)
-        checks = NewYou.Proof.P805Browser.run_login(request, locale)
+        pmr = Ash.get!(Identity.Account, registration.account_id, authorize?: false).pmr
+        checks = browser_checks_without_pmr_telemetry(request, locale, pmr)
         assert checks["login_form"] == true
         assert checks["protected_access"] == true
         assert checks["reloaded_access"] == true
+        assert checks["member_reference"]
+        assert checks["member_reference_keyboard"]
+        assert checks["member_reference_announced"]
+        assert checks["member_reference_copied"]
+        assert checks["member_reference_locale_switch"]
+        assert checks["member_reference_reconnect_denied"]
+        assert checks["member_reference_reauthenticated"]
       end)
     end
   end
@@ -132,6 +145,7 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
       request = P805.request()
       {:ok, registration} = Identity.register(request)
       {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+      pmr = Ash.get!(Identity.Account, registration.account_id, authorize?: false).pmr
       parent = self()
       handler = "p809-#{System.unique_integer([:positive])}"
 
@@ -161,11 +175,13 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
         assert_receive {:p809_bearer, token}
         refute logs =~ request.password
         refute logs =~ token
+        refute logs =~ pmr
 
         for _ <- 1..4 do
           assert_receive {:p809_telemetry, metadata}
           refute inspect(metadata) =~ request.password
           refute inspect(metadata) =~ token
+          refute inspect(metadata) =~ pmr
         end
       after
         :telemetry.detach(handler)
@@ -194,5 +210,32 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
 
       assert (login |> recycle() |> post("/session/logout")).status == 503
     end)
+  end
+
+  defp browser_checks_without_pmr_telemetry(request, locale, pmr) do
+    owner = self()
+    handler = {__MODULE__, make_ref()}
+
+    :ok =
+      :telemetry.attach(
+        handler,
+        [:bandit, :request, :stop],
+        fn _, _, metadata, _ ->
+          if metadata.conn.request_path == "/session/protected" and metadata.conn.status == 200 do
+            exposed? = :binary.match(:erlang.term_to_binary(metadata), pmr) != :nomatch
+            send(owner, {handler, exposed?})
+          end
+        end,
+        nil
+      )
+
+    try do
+      checks = NewYou.Proof.P805Browser.run_login(request, locale, pmr)
+      refute_received {^handler, true}
+      assert_received {^handler, false}
+      checks
+    after
+      :telemetry.detach(handler)
+    end
   end
 end

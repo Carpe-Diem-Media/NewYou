@@ -27,7 +27,7 @@ defmodule NewYou.Proof.P805Browser do
     recovery.request recovery.delivery recovery.confirm recovery.confirm_denied recovery.credential_missing recovery.complete recovery.replay recovery.sign_in
   )
 
-  def run_login(request, locale) do
+  def run_login(request, locale, pmr \\ nil) do
     reference = make_ref()
 
     {:ok, server} =
@@ -43,6 +43,7 @@ defmodule NewYou.Proof.P805Browser do
       payload =
         Jason.encode!(%{
           mode: "login",
+          pmr: pmr,
           port: port,
           locale: locale,
           email: request.email,
