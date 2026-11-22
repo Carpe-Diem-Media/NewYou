@@ -1,0 +1,15 @@
+test_initial_redirect_is_exact_and_noncacheable (test_hosted.HostedTest.test_initial_redirect_is_exact_and_noncacheable) ... FAIL
+
+======================================================================
+FAIL: test_initial_redirect_is_exact_and_noncacheable (test_hosted.HostedTest.test_initial_redirect_is_exact_and_noncacheable)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "test_hosted.py", line 126, in test_initial_redirect_is_exact_and_noncacheable
+    self.assertEqual(status, 303)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+AssertionError: 202 != 303
+
+----------------------------------------------------------------------
+Ran 1 test in 0.023s
+
+FAILED (failures=1)
