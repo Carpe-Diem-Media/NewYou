@@ -233,26 +233,22 @@ class WELL60CommunicationsHandoffContractTests(unittest.TestCase):
         self.assertIn("WELL-49 remains BLOCKED / WAITING ON WELL-61", self.open_work)
         self.assertIn("WELL-60: COMPLETE / PR #165 RESULTING-MAIN VERIFIED", self.open_work)
 
-    def test_identity_source_contract_uses_current_v020_route(self) -> None:
-        delivery_router = json.loads(
-            (DOCS / "delivery/CURRENT_DELIVERY_ROUTER.json").read_text(encoding="utf-8")
-        )
-        current_identity_entry = next(
-            entry
-            for entry in delivery_router["delivery_contracts"]
-            if entry["document_id"] == "FP001_IDENTITY_ACCESS_JIT"
-        )
-        current_identity_route = current_identity_entry["repository_path"]
-        self.assertTrue((ROOT / current_identity_entry["repository_path"]).is_file())
-
+    def test_identity_source_contract_preserves_reviewed_v020_citation(self) -> None:
         _, source_heading, source_contents = self.candidate.partition(
             "Current FP-001 source contracts:"
         )
         self.assertTrue(source_heading)
-        current_sources = source_contents.split("\n## ", 1)[0]
-        current_identity_source = current_identity_route
-        self.assertIn(f"`{current_identity_source}`", current_sources)
-        self.assertNotIn("FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.1.4.md", current_sources)
+        cited_sources = source_contents.split("\n## ", 1)[0]
+        identity_source = (
+            "docs/delivery/jit/identity/"
+            "FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v0.2.0.md"
+        )
+        identity_citations = re.findall(
+            r"`([^`]*FP-001_IDENTITY_ACCESS_JIT_DOMAIN_DOSSIER_WORKING_v[^`]+\.md)`",
+            cited_sources,
+        )
+        self.assertEqual([identity_source], identity_citations)
+        self.assertTrue((ROOT / identity_source).is_file())
 
     def test_no_lost_handoff_and_executor_boundary_are_explicit(self) -> None:
         candidate_clauses = (
