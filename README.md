@@ -13,16 +13,19 @@ Install the workstation `devcore-project` CLI from the approved DevCore bootstra
 kit. The workstation owns the shared services; this repository never starts,
 stops, recreates, or deletes them.
 
-Read `.devcore/project.conf` and `.devcore/render-map.tsv`, then run:
+Read `.devcore/project.conf` and `.devcore/render-map.tsv`. From the current
+worktree root, run `devcore-project doctor`. If it passes, continue setup.
 
-```sh
-devcore-project doctor
-# If local state is missing or stale:
-devcore-project activate
-```
+If the only problem is a missing or stale Git-ignored worktree-local environment file
+(`.env.dev.local` or `.env.test.local`), run `devcore-project render`, then rerun
+`devcore-project doctor`. Continue setup only when doctor passes.
 
-Activation provisions only NewYou's roles/databases and renders ignored
-`.env.dev.local` and `.env.test.local` files. Never print or commit credentials.
+For authentication, database connectivity, role or ownership, central credential,
+or shared-service failures, stop setup and report the non-secret error. Use
+`devcore-project activate` only for separately authorised workstation provisioning.
+See [the DevCore worktree guide](.devcore/README.md) for the full procedure.
+
+Never print or commit credentials.
 Redis is disabled. Both roles have `NOCREATEDB`.
 
 | Profile | Host | Port | Role | Database |

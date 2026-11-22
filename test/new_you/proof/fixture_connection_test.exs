@@ -49,41 +49,55 @@ defmodule NewYou.Proof.FixtureConnectionTest do
   end
 
   test "a timed out bounded worker does not disconnect the fixture owner" do
-    capture_log(fn ->
-      P805.with_fixture(fn ->
-        parent = self()
-        reference = make_ref()
-        {:ok, registration} = Identity.register(P805.request())
-        Process.put(:isolated_worker_account, registration.account_id)
-        assert %{rows: [[owner_backend]]} = Repo.query!("SELECT pg_backend_pid()")
+    {{worker_pid, error}, log} =
+      with_log(fn ->
+        P805.with_fixture(fn ->
+          parent = self()
+          reference = make_ref()
+          {:ok, registration} = Identity.register(P805.request())
+          Process.put(:isolated_worker_account, registration.account_id)
+          assert %{rows: [[owner_backend]]} = Repo.query!("SELECT pg_backend_pid()")
 
-        callback =
-          NewYou.Proof.RegistrationSeam.inherit(fn ->
-            assert %{rows: [[worker_backend]]} = Repo.query!("SELECT pg_backend_pid()")
-            send(parent, {reference, :worker_ready, worker_backend})
-            Repo.query!("SELECT pg_sleep(1)", [], timeout: 25)
-          end)
+          callback =
+            NewYou.Proof.RegistrationSeam.inherit(fn ->
+              assert %{rows: [[worker_backend]]} = Repo.query!("SELECT pg_backend_pid()")
+              send(parent, {reference, :worker_ready, worker_backend})
+              Repo.query!("SELECT pg_sleep(1)", [], timeout: 25)
+            end)
 
-        task =
-          Task.Supervisor.async_nolink(NewYou.Identity.MagicLogin.RequestSupervisor, callback)
+          task =
+            Task.Supervisor.async_nolink(NewYou.Identity.MagicLogin.RequestSupervisor, callback)
 
-        assert_receive {^reference, :worker_ready, worker_backend}, 2_000
-        refute worker_backend == owner_backend
-        assert {:exit, {error, _stacktrace}} = Task.yield(task, 2_000)
+          assert_receive {^reference, :worker_ready, worker_backend}, 2_000
+          refute worker_backend == owner_backend
+          assert {:exit, {error, _stacktrace}} = Task.yield(task, 2_000)
 
-        assert match?(
-                 %DBConnection.ConnectionError{message: message} when is_binary(message),
-                 error
-               ) or
-                 match?(%Postgrex.Error{postgres: %{code: :query_canceled}}, error)
-
-        if match?(%DBConnection.ConnectionError{}, error),
-          do: assert(error.message =~ "timed out")
-
-        assert %{rows: [[1]]} = Repo.query!("SELECT 1")
-        refute Repo.in_transaction?()
+          assert %{rows: [[^owner_backend]]} = Repo.query!("SELECT pg_backend_pid()")
+          refute Repo.in_transaction?()
+          {task.pid, error}
+        end)
       end)
-    end)
+
+    # DBConnection logs the worker deadline before Postgrex cancels the query
+    # and closes the socket. The worker can receive either consequence.
+    worker = Regex.escape(inspect(worker_pid))
+
+    deadline =
+      ~r/client #{worker}(?: \([^\n]*\))? timed out because it queued and checked out the connection for longer than 25ms/
+
+    assert Regex.match?(deadline, log), "DBConnection did not report the bounded worker deadline"
+
+    case error do
+      %DBConnection.ConnectionError{message: message} ->
+        assert message =~ deadline or
+                 String.starts_with?(
+                   message,
+                   "tcp recv: closed (the connection was closed by the pool,"
+                 )
+
+      %Postgrex.Error{postgres: %{code: :query_canceled}} ->
+        :ok
+    end
 
     account_id = Process.delete(:isolated_worker_account)
 
