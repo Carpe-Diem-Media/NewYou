@@ -69,12 +69,7 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     [job] = scheduled_audit_jobs()
     assert job.queue == "audit"
 
-    assert job.args == %{
-             "primary_key" => %{"id" => obligation.id},
-             "metadata" => %{},
-             "action_arguments" => %{},
-             "tenant" => nil
-           }
+    assert job.args == registration_evidence_job_args(obligation.id)
   end
 
   test "the Identity owner action repeats registration admission and derives its binding" do
@@ -362,15 +357,32 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
              NewYou.Audit.get_evidence_obligation!(obligation.id, authorize?: false)
   end
 
-  test "the durable scheduler recreates missing execution from open obligations" do
+  test "the durable scheduler recreates one job for the owned open obligation alongside another" do
     request = valid_request()
     assert {:ok, _} = NewYou.Identity.register(request)
-    [obligation] = audit_records("EvidenceObligation")
+    assert [%{id: owned_id, state: :open}] = audit_records("EvidenceObligation")
 
-    Repo.query!(
-      "DELETE FROM oban_jobs WHERE queue = 'audit' AND args->'primary_key'->>'id' = $1",
-      [obligation.id]
-    )
+    # Give the real scheduler a second eligible obligation outside the tracked registration.
+    assert {:ok, %{id: other_id, state: :open}} =
+             NewYou.Audit.establish_registration_obligation(
+               %{
+                 source_operation_id: Ecto.UUID.generate(),
+                 source_occurred_at: DateTime.utc_now()
+               },
+               authorize?: false
+             )
+
+    assert [%{id: ^owned_id}] = audit_records("EvidenceObligation")
+
+    for obligation_id <- [owned_id, other_id] do
+      assert %{num_rows: 1} =
+               Repo.query!(
+                 "DELETE FROM oban_jobs WHERE queue = 'audit' AND args->'primary_key'->>'id' = $1",
+                 [obligation_id]
+               )
+
+      assert audit_jobs_for_obligation(obligation_id) == []
+    end
 
     trigger = AshOban.Info.oban_trigger(NewYou.Audit.EvidenceObligation, :registration_evidence)
 
@@ -383,8 +395,13 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
     assert {"* * * * *", trigger.scheduler, []} in configured[:cron][:crontab]
     assert is_atom(trigger.scheduler) and not is_nil(trigger.scheduler)
     assert :ok = trigger.scheduler.perform(%Oban.Job{args: %{}})
-    assert [%{args: %{"primary_key" => %{"id" => id}}}] = scheduled_audit_jobs()
-    assert id == obligation.id
+
+    worker = Oban.Worker.to_string(trigger.worker)
+
+    for obligation_id <- [owned_id, other_id] do
+      args = registration_evidence_job_args(obligation_id)
+      assert [[^worker, "available", ^args]] = audit_jobs_for_obligation(obligation_id)
+    end
   end
 
   test "PostgreSQL refuses fulfilled obligations without evidence" do
@@ -787,6 +804,25 @@ defmodule NewYou.Audit.RegistrationEvidenceTest do
 
       Enum.map(rows, fn [queue, args] -> %{queue: queue, args: args} end)
     end
+  end
+
+  defp audit_jobs_for_obligation(obligation_id) do
+    %{rows: rows} =
+      Repo.query!(
+        "SELECT worker, state, args FROM public.oban_jobs WHERE queue = 'audit' AND args->'primary_key'->>'id' = $1",
+        [obligation_id]
+      )
+
+    rows
+  end
+
+  defp registration_evidence_job_args(obligation_id) do
+    %{
+      "primary_key" => %{"id" => obligation_id},
+      "metadata" => %{},
+      "action_arguments" => %{},
+      "tenant" => nil
+    }
   end
 
   defp identity_truth(account_id) do
