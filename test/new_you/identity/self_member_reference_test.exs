@@ -61,6 +61,18 @@ defmodule NewYou.Identity.SelfMemberReferenceTest do
         [session_id]
       )
 
+      deny_during(
+        credentials,
+        "UPDATE sessions SET expires_at = now() - interval '1 second' WHERE id = $1",
+        [session_id]
+      )
+
+      invalid_pmr =
+        String.slice(pmr, 0, 20) <> if(String.ends_with?(pmr, "0"), do: "1", else: "0")
+
+      refute Identity.PMR.valid?(invalid_pmr)
+      deny_during(credentials, "UPDATE accounts SET pmr = $2 WHERE id = $1", [id, invalid_pmr])
+
       deny_during(credentials, "UPDATE sessions SET state = 'revoked' WHERE id = $1", [session_id])
 
       deny_during(
