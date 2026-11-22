@@ -50,17 +50,26 @@ class VerificationMessageAuthorityTests(unittest.TestCase):
 
     def test_current_authority_successors_and_decisions_are_routed(self) -> None:
         routes = {row["document_id"]: row for row in ROUTER["governing_documents"] + ROUTER["supporting_documents"]}
-        for document_id, stem in (("PLATFORM_PRODUCT_LAW", "00_PLATFORM"), ("PRODUCT_DECISIONS", "01_DECISIONS")):
+        for document_id, stem, minimum_version in (
+            ("PLATFORM_PRODUCT_LAW", "00_PLATFORM", (1, 13, 0)),
+            ("PRODUCT_DECISIONS", "01_DECISIONS", (1, 13, 0)),
+            ("PLATFORM_OPERATING_MODEL", "PLATFORM_OPERATING_MODEL", (1, 3, 0)),
+        ):
             route = routes[document_id]
-            self.assertGreaterEqual(tuple(map(int, route["semver"].split("."))), (1, 13, 0))
+            self.assertGreaterEqual(tuple(map(int, route["semver"].split("."))), minimum_version)
             self.assertEqual(f"{stem}_v{route['semver']}.md", route["canonical_filename"])
-        self.assertEqual("PLATFORM_OPERATING_MODEL_v1.3.0.md", routes["PLATFORM_OPERATING_MODEL"]["canonical_filename"])
         self.assertIn("DEC-320", self.decisions)
         self.assertIn("DEC-319", self.decisions)
         self.assertIn("**Status:** LOCKED", self.decisions.split("## DEC-319 —", 1)[1].split("\n## ", 1)[0])
 
-    def test_superseded_routed_predecessors_are_archived_not_left_in_current_locations(self) -> None:
+    def test_archived_predecessors_are_unrouted_and_retained_copy_matches_archive(self) -> None:
         routed = ROUTER["governing_documents"] + ROUTER["architecture_references"] + ROUTER["supporting_documents"]
+        routed_paths = {ROOT / route["repository_path"] for route in routed}
+        # The frozen audit still reads this preserved compatibility copy.
+        retained_copy = DOCS / "governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.2.0.md"
+        self.assertNotIn(retained_copy, routed_paths)
+        retained_archive = DOCS / "history/platform/archive" / retained_copy.name
+        self.assertEqual(retained_archive.read_bytes(), retained_copy.read_bytes())
         for route in routed:
             current_path = ROOT / route["repository_path"]
             name = current_path.name
@@ -79,11 +88,13 @@ class VerificationMessageAuthorityTests(unittest.TestCase):
                 archived_tuple = tuple(int(part) for part in archived_version.split("."))
                 if archived_tuple < current_tuple:
                     former_current_path = current_path.parent / archived.name
+                    self.assertTrue(archived.is_file(), f"archived predecessor is missing: {archived}")
+                    if former_current_path == retained_copy:
+                        continue
                     self.assertFalse(
                         former_current_path.exists(),
                         f"superseded authority predecessor remains in a current location: {former_current_path}",
                     )
-                    self.assertTrue(archived.is_file(), f"archived predecessor is missing: {archived}")
 
     def test_active_p805_contract_is_current_and_separates_development_from_release(self) -> None:
         section = self.spec.split("## WELL-63 bounded verification-message content eligibility", 1)[1].split("## Registration and retry contract", 1)[0]
@@ -95,15 +106,18 @@ class VerificationMessageAuthorityTests(unittest.TestCase):
         self.assertIn("development_approved", section)
         self.assertIn("runtime_release_eligibility", section)
 
-    def test_live_p805_product_references_match_current_governance_routes(self) -> None:
+    def test_p805_uses_live_router_and_preserves_versioned_product_citations(self) -> None:
         expected = {
-            row["repository_path"] for row in ROUTER["governing_documents"]
-            if row["document_id"] in {"PLATFORM_PRODUCT_LAW", "PRODUCT_DECISIONS"}
+            "docs/governance/product/00_PLATFORM_v1.15.0.md",
+            "docs/governance/product/01_DECISIONS_v1.15.0.md",
         }
+        for path in expected:
+            self.assertTrue((ROOT / path).is_file(), path)
         for heading in ("## Purpose and current boundary", "## Source references"):
             with self.subTest(section=heading):
                 section = self.spec.split(heading, 1)[1].split("\n## ", 1)[0]
                 references = set(re.findall(r"docs/governance/product/(?:00_PLATFORM|01_DECISIONS)_v\d+\.\d+\.\d+\.md", section))
+                self.assertIn("`docs/governance/CURRENT_GOVERNANCE_ROUTER.json`", section)
                 self.assertEqual(expected, references)
 
     def test_locale_version_is_delivery_authority_not_mutable_authoring_template(self) -> None:

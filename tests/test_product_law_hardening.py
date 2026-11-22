@@ -14,6 +14,12 @@ DOCS = ROOT / "docs" / "00_platform"
 MANIFEST = DOCS / "CURRENT_AUTHORITY_MANIFEST_v1.0.0.json"
 ROUTER = DOCS / "CURRENT_AUTHORITY_ROUTER_v1.0.0.json"
 
+# The Atlas header routes live authority. Its source table retains these citations.
+ATLAS_PRODUCT_SOURCES = (
+    "docs/governance/product/00_PLATFORM_v1.15.0.md",
+    "docs/governance/product/01_DECISIONS_v1.15.0.md",
+)
+
 
 def frozen_manifest_document(document_id: str) -> str:
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
@@ -494,8 +500,7 @@ class ProductLawHardeningTests(unittest.TestCase):
         current_source_table = self.atlas.split("## 1.1 Authority hierarchy", 1)[1].split("## 1.2 Purpose", 1)[0]
         for current_name in (
             "PROJECT_NORTH_STAR_AND_MVP_v1.3.0.md",
-            current_document_path(ROOT, "PLATFORM_BASELINE").name,
-            current_document_path(ROOT, "DECISION_REGISTER").name,
+            *ATLAS_PRODUCT_SOURCES,
             current_document_path(ROOT, "OPEN_WORK").name,
             "04_DOMAIN_MAP_v1.2.0.md",
             current_document_path(ROOT, "ROADMAP").name,
@@ -828,11 +833,14 @@ class ProductLawHardeningTests(unittest.TestCase):
         self.assertNotIn("after the governed decision and reminder period", temperament)
 
 
-    def test_atlas_routes_to_current_authorities_and_does_not_block_on_resolved_oq034(self):
-        current_sources = (
+    def test_atlas_routes_authority_through_routers_and_keeps_oq034_resolved(self):
+        header = self.atlas.split("## ", 1)[0]
+        for router in ("governance", "delivery"):
+            self.assertIn(f"`docs/{router}/CURRENT_{router.upper()}_ROUTER.json`", header)
+
+        source_references = (
             "PROJECT_NORTH_STAR_AND_MVP_v1.3.0.md",
-            current_document_path(ROOT, "PLATFORM_BASELINE").name,
-            current_document_path(ROOT, "DECISION_REGISTER").name,
+            *ATLAS_PRODUCT_SOURCES,
             "03_ARCHITECTURE_v1.1.1.md",
             "04_DOMAIN_MAP_v1.2.0.md",
             current_document_path(ROOT, "ROADMAP").name,
@@ -840,9 +848,11 @@ class ProductLawHardeningTests(unittest.TestCase):
             "FRONTEND_EXPERIENCE_SYSTEM_v1.0.1.md",
         )
         source_table = self.atlas.split("## 1.2 Purpose", 1)[0]
-        for filename in current_sources:
+        for filename in source_references:
             with self.subTest(filename=filename):
-                self.assertTrue(filename in source_table, f"Atlas current-source table is missing {filename}")
+                self.assertTrue(filename in source_table, f"Atlas source table is missing {filename}")
+        for reference in ATLAS_PRODUCT_SOURCES:
+            self.assertTrue((ROOT / reference).is_file(), reference)
         fp001_section = self.atlas.split("## FP-001", 1)[1].split("## FP-002", 1)[0]
         self.assertNotRegex(fp001_section, r"OQ-034[^\n]*BLOCKS_THIS_FP")
         self.assertIn("OQ-034", fp001_section)
