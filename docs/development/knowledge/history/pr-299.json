@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "pr": 299,
+  "pr_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/299",
+  "base_sha": "e7fc58167223be433d9ccc9d61d3aaeb2090a10c",
+  "range_base_sha": "e7fc58167223be433d9ccc9d61d3aaeb2090a10c",
+  "checks_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/299/checks",
+  "commits_url": "https://github.com/Carpe-Diem-Media/NewYou/pull/299/commits",
+  "files": [
+    {
+      "path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "old_path": "docs/delivery/CURRENT_DELIVERY_ROUTER.json",
+      "status": "modified",
+      "mode": "100644",
+      "old_mode": "100644",
+      "blob": "8b01dcbf47f7253318bd0fcb7c944269c58086a1",
+      "old_blob": "16a7615bbd3cd7e6532eb6acd2a88689c0378390",
+      "sha256": "3017d7ce47f5153e8425f4bec8f7222b367c1c27717133598dc5ce93d2623978",
+      "old_sha256": "a8a699e2ebeaa3472a719e6f329fdbe505731a604b11501d723634e73e54aa75"
+    },
+    {
+      "path": "docs/delivery/content-evidence/copy/evidence/sources/FP002_PRODUCT_AND_OFFER_PAGES_EN_AF_COPY_CANDIDATE_v0.1.0.json",
+      "old_path": null,
+      "status": "added",
+      "mode": "100644",
+      "old_mode": null,
+      "blob": "724d8620cb4dfd43bf087d2083d2c82000848aea",
+      "old_blob": null,
+      "sha256": "a4bdbe28b47f2356dad26598c1dbc70b619409dd9365b245af4a872bbc58c325",
+      "old_sha256": null
+    },
+    {
+      "path": "docs/delivery/content-evidence/copy/evidence/FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_OWNER_APPROVED_v0.1.0.json",
+      "old_path": null,
+      "status": "added",
+      "mode": "100644",
+      "old_mode": null,
+      "blob": "f6be8a4a94b0fe722cd663b045bc742e3050da9b",
+      "old_blob": null,
+      "sha256": "84fbac70adec68617a0bc7366b71637c536f7a3fb800115ac1d1b284095eed3e",
+      "old_sha256": null
+    },
+    {
+      "path": "docs/delivery/content-evidence/copy/evidence/FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_LOCK_v0.1.0.md",
+      "old_path": null,
+      "status": "added",
+      "mode": "100644",
+      "old_mode": null,
+      "blob": "887cf2e1cd136f0ad21e8af8b3b46e6018ffb5b7",
+      "old_blob": null,
+      "sha256": "1af957c33f7354d6915aed03e0ddab397793b1bca985e796857f0db1a757f778",
+      "old_sha256": null
+    }
+  ],
+  "migrations": [],
+  "symbols": [],
+  "tests": [],
+  "tickets": [
+    "WELL-185"
+  ]
+}
