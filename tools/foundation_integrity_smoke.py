@@ -18,6 +18,7 @@ RECOVERY_COPY_ID = "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED"
 RECOVERY_COPY_FILE = Path(
     f"docs/delivery/content-evidence/copy/evidence/{RECOVERY_COPY_ID}_v0.2.0.json"
 )
+RECOVERY_COPY_ARTIFACT_SHA256 = "8a9466ce2b91e6311154bea13d085959d550f77ba63b6f9b4585ad3d3a67c5da"
 RECOVERY_COPY_CANDIDATE_SHA256 = "6cc5d6d02d51298f1e405d3250385eab7a6bb74d1bfa9a09d6f90bff42e778d3"
 RECOVERY_COPY_RECEIPTS_SHA256 = "3fc81643daca1ac85980d70efb2652e80439098b0333a5aa4de259273f5cf588"
 EXPECTED_GOVERNING_IDS = frozenset(
@@ -472,12 +473,13 @@ def validate_recovery_browser_copy(
     try:
         path = root / RECOVERY_COPY_FILE
         data = path.read_bytes()
+        artifact_sha256 = hashlib.sha256(data).hexdigest()
         routes = [row for row in delivery["delivery_contracts"] if row["document_id"] == RECOVERY_COPY_ID]
         if routes != [{
             "document_id": RECOVERY_COPY_ID,
             "canonical_filename": path.name,
             "repository_path": RECOVERY_COPY_FILE.as_posix(),
-            "sha256": hashlib.sha256(data).hexdigest(),
+            "sha256": artifact_sha256,
             "contract_type": "content_evidence",
             "status": "OWNER_APPROVED_BOUNDED_NONPRODUCTION_BROWSER_COPY; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY",
         }]:
@@ -527,6 +529,10 @@ def validate_recovery_browser_copy(
                 candidate["authority_sha256"].get(rows[0]["repository_path"]) != rows[0]["sha256"]
             ):
                 return "Recovery browser copy requires revalidation under current Product authority"
+
+        # A recomputed router hash cannot authorize changed approval metadata.
+        if artifact_sha256 != RECOVERY_COPY_ARTIFACT_SHA256:
+            return "Recovery browser copy approval envelope differs from the verified artifact"
     except (AttributeError, KeyError, OSError, TypeError, UnicodeError, ValueError):
         return "Recovery browser copy route or approval evidence is missing or malformed"
 

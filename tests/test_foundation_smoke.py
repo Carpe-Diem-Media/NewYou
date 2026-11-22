@@ -82,13 +82,36 @@ class RecoveryBrowserCopyEvidenceTests(unittest.TestCase):
         self.route["sha256"] = "0" * 64
         self.assertIn("route", validate_recovery_browser_copy(ROOT, self.governance, self.delivery))
 
+    def test_rejects_changed_approval_envelope_even_with_matching_route_digest(self):
+        self.assertIsNone(self.validate_change(lambda packet: None))
+        mutations = [
+            (None, "packet_id", "UNRELATED_COPY_APPROVAL"),
+            (None, "version", "0.2.1"),
+            ("source_candidate", "filename", "unrelated.json"),
+            ("source_candidate", "encoding", "ASCII"),
+            ("approval_source", "work_item", "WELL-999"),
+            ("approval_source", "work_item_id", "unrelated"),
+            ("approval_source", "attribution", "Four independent reviewers."),
+            ("approval_source", "comment_digest_format", "Unverified comment digest."),
+        ]
+        for section, key, value in mutations:
+            with self.subTest(section=section, key=key):
+                self.assertEqual(
+                    "Recovery browser copy approval envelope differs from the verified artifact",
+                    self.validate_change(
+                        lambda packet: (packet if section is None else packet[section]).update(
+                            {key: value}
+                        )
+                    ),
+                )
+
     def validate_change(self, mutate):
         mutate(self.packet)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             evidence = root / self.relative
             evidence.parent.mkdir(parents=True)
-            data = json.dumps(self.packet).encode("utf-8")
+            data = (json.dumps(self.packet, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
             evidence.write_bytes(data)
             # Keep route integrity valid so each assertion reaches the affected guard.
             route_digest = self.route["sha256"]
