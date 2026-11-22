@@ -191,6 +191,28 @@ defmodule NewYouWeb.RegistrationBoundary do
     do: dispatch_browser_request(conn, :privacy)
 
   if Mix.env() in [:dev, :test] do
+    defp dispatch(
+           %Plug.Conn{method: method, request_path: "/dev/support/account-access"} = conn,
+           _opts
+         )
+         when method in ["GET", "POST"] do
+      conn =
+        conn
+        |> Plug.Conn.put_resp_header("cache-control", "no-store")
+        |> Plug.Conn.put_resp_header("referrer-policy", "no-referrer")
+
+      if conn.query_string == "" do
+        action = if method == "POST", do: :lookup, else: :show
+
+        NewYou.Repo.without_query_telemetry(fn ->
+          dispatch_browser_request(conn, action, NewYouWeb.SupportLookupController)
+        end)
+      else
+        fail_closed_response(conn, 404)
+      end
+      |> scrub_support_response()
+    end
+
     defp dispatch(%Plug.Conn{method: "GET", request_path: path} = conn, _opts)
          when path in ["/dev/design-system", "/dev/design-system/preview"] do
       NewYouWeb.DesignSystemBoundary.render(conn)
@@ -200,6 +222,26 @@ defmodule NewYouWeb.RegistrationBoundary do
   # Every current browser route is dispatched above. A Router fallback would
   # expose session-bearing connections through dispatch or error telemetry.
   defp dispatch(%Plug.Conn{} = conn, _opts), do: fail_closed_response(conn, 404)
+
+  if Mix.env() in [:dev, :test] do
+    # Bandit publishes the returned, already-sent connection in request-stop
+    # metadata. The session and CSRF callbacks have run before we clear it.
+    defp scrub_support_response(conn) do
+      %{
+        conn
+        | assigns: %{},
+          body_params: %{},
+          params: %{},
+          private: %{},
+          cookies: %{},
+          query_params: %{},
+          query_string: "",
+          req_cookies: %{},
+          req_headers: [],
+          secret_key_base: nil
+      }
+    end
+  end
 
   defp dispatch_browser_request(conn, action, controller \\ RegistrationController) do
     conn

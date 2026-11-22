@@ -1,0 +1,58 @@
+<.auth_shell title="Account access lookup" locale="en" heading_id="support-lookup-heading">
+  <p class="max-w-prose">Security review of a synthetic Account covered by a Support grant.</p>
+
+  <p :if={@unavailable?} role="alert" class="text-design-body-sm font-design-bold">
+    Lookup unavailable.
+  </p>
+
+  <section :if={@diagnostics} id="support-diagnostics" aria-labelledby="diagnostics-heading">
+    <h2 id="diagnostics-heading" class="font-design-bold">Access diagnostics</h2>
+    <dl class="grid gap-design-sm">
+      <dt>Account status</dt>
+      <dd>{@diagnostics.account_status |> Atom.to_string() |> String.replace("_", " ")}</dd>
+      <dt>Email verified</dt>
+      <dd>{if @diagnostics.email_verified?, do: "Yes", else: "No"}</dd>
+      <dt>Security posture</dt>
+      <dd>{@diagnostics.security_posture |> Atom.to_string() |> String.replace("_", " ")}</dd>
+    </dl>
+  </section>
+
+  <.form
+    for={%{}}
+    id="support-lookup"
+    action="/dev/support/account-access"
+    method="post"
+    autocomplete="off"
+    class="grid w-full max-w-prose gap-design-base"
+  >
+    <div
+      :for={
+        {name, label, type, maximum, autocomplete} <- [
+          {"grant_id", "Support grant ID", "text", 36, "off"},
+          {"target_account_id", "Target Account ID", "text", 36, "off"},
+          {"email", "Target email", "email", 254, "off"},
+          {"password", "Your password", "password", 1024, "current-password"},
+          {"code", "Your authenticator code", "text", 6, "one-time-code"}
+        ]
+      }
+      class="grid min-w-0 gap-design-xs"
+    >
+      <label for={name} class="text-design-body-sm font-design-bold">{label}</label>
+      <input
+        id={name}
+        name={name}
+        type={type}
+        maxlength={maximum}
+        autocomplete={autocomplete}
+        inputmode={if name == "code", do: "numeric"}
+        pattern={if name == "code", do: "[0-9]{6}"}
+        spellcheck="false"
+        required
+        class="h-design-input-height w-full min-w-0 rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+      />
+    </div>
+    <div>
+      <.primary_button type="submit" adaptive>Inspect account access</.primary_button>
+    </div>
+  </.form>
+</.auth_shell>

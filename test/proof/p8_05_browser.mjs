@@ -424,6 +424,45 @@ try {
     } finally {
       await call('Target.disposeBrowserContext', {browserContextId: second.browserContextId});
     }
+  } else if (input.mode === 'support_lookup') {
+    const path = '/dev/support/account-access';
+    const openLookup = () => navigation(() => cdp('Page.navigate', {url: base + path}));
+    await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
+    await evaluate(`document.querySelector('#email').value=${JSON.stringify(input.email)}; document.querySelector('#password').value=${JSON.stringify(input.password)};`);
+    await navigation(() => evaluate(`document.querySelector('#password-login').requestSubmit()`));
+    checks.signed_in = await evaluate(`location.pathname === '/session/protected'`);
+    await openLookup();
+
+    await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    checks.keyboard = await evaluate(`document.activeElement.id === 'grant_id' &&
+      document.activeElement.matches(':focus-visible') &&
+      document.activeElement.labels.length === 1 &&
+      getComputedStyle(document.activeElement).outlineStyle !== 'none'`);
+
+    await cdp('Emulation.setDeviceMetricsOverride', {width: 320, height: 900, deviceScaleFactor: 1, mobile: true});
+    checks.reflow = await evaluate(`document.documentElement.scrollWidth <= innerWidth`);
+    await cdp('Emulation.clearDeviceMetricsOverride');
+
+    const submitLookup = async code => {
+      const values = {grant_id: input.grant_id, target_account_id: input.target_account_id,
+        email: input.target_email, password: input.password, code};
+      await evaluate(`Object.entries(${JSON.stringify(values)}).forEach(([id, value]) => {
+        document.getElementById(id).value = value;
+      });`);
+      await navigation(() => evaluate(`document.querySelector('#support-lookup').requestSubmit()`));
+    };
+
+    await submitLookup(input.codes[0]);
+    checks.diagnostics = await evaluate(`document.querySelector('#support-diagnostics')?.textContent.includes('Email verified')`);
+    const sensitive = [input.grant_id, input.target_account_id, input.target_email, input.password, ...input.codes];
+    checks.private_response = await evaluate(`location.pathname === ${JSON.stringify(path)} && !location.search &&
+      ${JSON.stringify(sensitive)}.every(value => !document.body.innerHTML.includes(value))`);
+
+    await openLookup();
+    await submitLookup(input.codes[1]);
+    checks.revoked = await evaluate(`document.querySelector('[role="alert"]')?.textContent.includes('Lookup unavailable') &&
+      !document.querySelector('#support-diagnostics')`);
   } else if (input.mode === 'ordinary_email_change') {
     const packet = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED_v0.1.1.json', 'utf8'));
     const copy = key => JSON.stringify(packet.copy_items.find(item => item.semantic_key === `identity.change_email.${key}`)[input.locale]);
