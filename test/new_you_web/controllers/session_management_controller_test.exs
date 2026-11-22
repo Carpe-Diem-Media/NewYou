@@ -8,7 +8,7 @@ defmodule NewYouWeb.SessionManagementControllerTest do
 
   alias NewYou.{Audit, Identity}
   alias NewYou.Identity.{Account, PasswordSession, Session, Token}
-  alias NewYou.Proof.{P805, P805Browser, PrivilegedAccessSeam, SignInJourney}
+  alias NewYou.Proof.{P805, P805Browser, P813HoldFixture, PrivilegedAccessSeam, SignInJourney}
 
   @endpoint NewYouWeb.Endpoint
 
@@ -98,13 +98,19 @@ defmodule NewYouWeb.SessionManagementControllerTest do
           "_csrf_token" => csrf
         }
 
-        rejected = post(with_csrf(page), path, Map.put(params, "otp", confirmation))
-        assert_status_copy(rejected, 403, "af", "all.failed")
-        assert get(recycle(target), "/session/protected").status == 200
+        for rejected_params <- [params, Map.put(params, "otp", confirmation)] do
+          rejected = post(with_csrf(page), path, rejected_params)
+          assert_status_copy(rejected, 403, "af", "all.failed")
+        end
 
         next_timestamp = timestamp + 30
         Process.put(PrivilegedAccessSeam, next_timestamp)
         code = NimbleTOTP.verification_code(secret, time: next_timestamp)
+        wrong_code = if code == "000000", do: "000001", else: "000000"
+        wrong = post(with_csrf(page), path, Map.put(params, "otp", wrong_code))
+        assert_status_copy(wrong, 403, "af", "all.failed")
+        assert get(recycle(target), "/session/protected").status == 200
+
         result = post(with_csrf(page), path, Map.put(params, "otp", code))
         assert_status_copy(result, 200, "af", "all.completed")
         assert get(recycle(target), "/session/protected").status == 401
@@ -117,6 +123,45 @@ defmodule NewYouWeb.SessionManagementControllerTest do
         :error -> Application.delete_env(:new_you, :identity_mfa_keyring)
       end
     end
+  end
+
+  test "global POST rejects a newly granted Support account despite an existing form" do
+    P813HoldFixture.with_fixture(fn %{target: target, approver: approver} ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
+      member = P813HoldFixture.factor_member()
+      input = %{email: P805.account!(member.id).email, password: member.password}
+      origin = login(input, "en")
+      origin_id = get_session(origin, :identity_session_id)
+      path = "/session/manage/all"
+      page = get(recycle(origin), path)
+      body = html_response(page, 200)
+      assert body =~ ~s(autocomplete="one-time-code")
+      [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, body)
+
+      grant = P813HoldFixture.grant(member, target, approver, :security_hold_restriction)
+      assert grant.state == :active
+
+      timestamp = 1_800_000_000
+      Process.put(PrivilegedAccessSeam, timestamp)
+
+      try do
+        result =
+          post(with_csrf(page), path, %{
+            "locale" => "en",
+            "presenting" => origin_id,
+            "password" => input.password,
+            "otp" => NimbleTOTP.verification_code(member.secret, time: timestamp),
+            "_csrf_token" => csrf
+          })
+
+        assert_status_copy(result, 403, "en", "all.failed")
+        assert_global_session_state([origin_id, member.credentials.session_id], :active, "user")
+        assert P805.account!(member.id).mfa_last_accepted_period == nil
+        assert selected_evidence(origin_id) == []
+      after
+        Process.delete(PrivilegedAccessSeam)
+      end
+    end)
   end
 
   test "both locales link to a current Session list and require explicit CSRF-protected revocation" do
