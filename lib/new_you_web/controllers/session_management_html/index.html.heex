@@ -12,6 +12,12 @@
     <h2 id="active-sessions" class="font-design-bold text-design-heading-sm">
       {text(@copy, "active.title")}
     </h2>
+    <a
+      href={"/session/manage/all?locale=#{@locale}"}
+      class="min-h-11 w-fit content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+    >
+      {text(@copy, "all.action")}
+    </a>
     <p :if={@page.sessions == []}>{text(@copy, "active.empty")}</p>
     <ul :if={@page.sessions != []} class="grid gap-design-base">
       <li
@@ -100,6 +106,6 @@
     href={"/login?locale=#{@locale}"}
     class="min-h-11 w-fit content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
   >
-    {NewYouWeb.SignInCopy.text!("shared.navigation.login", @locale)}
+    {NewYouWeb.SignInCopy.text!("identity.login.reauthenticate.action", @locale)}
   </a>
 </.auth_shell>

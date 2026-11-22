@@ -6,18 +6,18 @@ defmodule NewYou.Content.SessionManagementCopyTest do
   @router "docs/delivery/CURRENT_DELIVERY_ROUTER.json"
   @id "FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED"
 
-  test "loads exact eligible Session keys in both locales and excludes global and trusted-device copy" do
+  test "loads exact eligible Session keys in both locales including all seven global keys" do
     entries = router()["delivery_contracts"]
     entry = Enum.find(entries, &(&1["document_id"] == @id))
     items = File.read!(entry["repository_path"]) |> Jason.decode!() |> Map.fetch!("copy_items")
 
     for locale <- ~w(en af) do
       assert {:ok, text} = SessionManagementCopy.load(locale)
-      assert map_size(text) == 22
+      assert map_size(text) == 29
+      assert Enum.count(Map.keys(text), &String.starts_with?(&1, "identity.sessions.all.")) == 7
 
       for {key, value} <- text do
         assert String.starts_with?(key, "identity.sessions.")
-        refute String.starts_with?(key, "identity.sessions.all.")
         item = Enum.find(items, &(&1["key"] == key))
         assert value == item[locale]["text"]
       end

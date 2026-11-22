@@ -11,7 +11,17 @@ defmodule NewYou.Identity.PasswordReset do
   if @enabled do
     require Ash.Query
     alias AshAuthentication.{Jwt, Jwt.Config}
-    alias NewYou.Identity.{Account, Email, Session, Token, DeviceAssurance, RegistrationOperation}
+
+    alias NewYou.Identity.{
+      Account,
+      Email,
+      Session,
+      Token,
+      DeviceAssurance,
+      RegistrationOperation,
+      SessionRevocation
+    }
+
     alias NewYou.Audit.EvidenceObligation
     alias NewYou.Communications.{MessageIntent, DeliveryAttempt}
 
@@ -297,8 +307,8 @@ defmodule NewYou.Identity.PasswordReset do
                action: :replace_password,
                authorize?: false
              ),
-           :ok <- revoke_sessions(account.id),
-           :ok <- revoke_devices(account.id),
+           :ok <- SessionRevocation.revoke_sessions(account.id),
+           :ok <- SessionRevocation.revoke_devices(account.id),
            :ok <- NewYou.Identity.invalidate_registration_operations(account.id),
            {:ok, _} <-
              NewYou.Audit.establish_identity_security_obligation(%{
@@ -314,65 +324,6 @@ defmodule NewYou.Identity.PasswordReset do
       else
         _ -> {:error, :reset_unavailable}
       end
-    end
-
-    defp revoke_sessions(id) do
-      active_session_jtis =
-        Session
-        |> Ash.Query.filter(account_id == ^id and state == :active)
-        |> Ash.Query.sort(:id)
-        |> Ash.read!(authorize?: false)
-        |> Enum.map(& &1.token_jti)
-        |> Enum.uniq()
-
-      linked_tokens =
-        case active_session_jtis do
-          [] ->
-            %{}
-
-          jtis ->
-            Token
-            |> Ash.Query.filter(account_id == ^id and jti in ^jtis)
-            |> Ash.Query.sort(:jti)
-            |> Ash.Query.lock(:for_update)
-            |> Ash.read!(authorize?: false)
-            |> Map.new(&{&1.jti, &1})
-        end
-
-      # Account-level security writes lock related Token rows before Sessions.
-      # Keep password reset aligned with primary-email apply and recovery.
-      sessions =
-        Session
-        |> Ash.Query.filter(account_id == ^id and state == :active)
-        |> Ash.Query.sort(:id)
-        |> Ash.Query.lock(:for_update)
-        |> Ash.read!(authorize?: false)
-
-      Enum.each(sessions, fn session ->
-        # Invalidate only linked authentication authority, never other purposes.
-        case Map.get(linked_tokens, session.token_jti) do
-          %Token{purpose: "user"} = linked ->
-            Ash.update!(linked, %{}, action: :revoke_authentication, authorize?: false)
-
-          _ ->
-            :ok
-        end
-
-        Ash.update!(session, %{}, action: :revoke, authorize?: false)
-      end)
-
-      :ok
-    end
-
-    defp revoke_devices(id) do
-      DeviceAssurance
-      |> Ash.Query.filter(account_id == ^id and state == :trusted)
-      |> Ash.Query.sort(:id)
-      |> Ash.Query.lock(:for_update)
-      |> Ash.read!(authorize?: false)
-      |> Enum.each(&Ash.update!(&1, %{}, action: :revoke, authorize?: false))
-
-      :ok
     end
 
     defp valid_current?(%Token{} = proof, %Account{} = account) do

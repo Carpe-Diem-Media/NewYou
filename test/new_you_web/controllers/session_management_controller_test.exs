@@ -7,10 +7,162 @@ defmodule NewYouWeb.SessionManagementControllerTest do
   require Ash.Query
 
   alias NewYou.{Audit, Identity}
-  alias NewYou.Identity.{Account, PasswordSession, Session}
-  alias NewYou.Proof.{P805, P805Browser, SignInJourney}
+  alias NewYou.Identity.{Account, PasswordSession, Session, Token}
+  alias NewYou.Proof.{P805, P805Browser, P813HoldFixture, PrivilegedAccessSeam, SignInJourney}
 
   @endpoint NewYouWeb.Endpoint
+
+  test "global confirmation is read-only and requires a bound CSRF-protected POST in EN and AF" do
+    P805.with_fixture(fn ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
+      input = P805.request()
+      assert {:ok, registration} = Identity.register(input)
+      assert {:ok, :verified} = Identity.verify_email(registration.verification_proof)
+
+      for locale <- ["en", "af"] do
+        origin = login(input, locale)
+        target = login(input, locale)
+        origin_id = get_session(origin, :identity_session_id)
+        path = "/session/manage/all"
+        assert head(recycle(origin), path).status == 200
+        page = get(recycle(origin), path)
+        body = html_response(page, 200)
+        assert body =~ ~s(lang="#{locale}")
+        assert body =~ "current-password"
+        assert get(recycle(target), "/session/protected").status == 200
+
+        params = %{"locale" => locale, "password" => input.password, "presenting" => origin_id}
+        assert post(with_csrf(page), path, params).status == 403
+        assert get(recycle(target), "/session/protected").status == 200
+
+        [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, body)
+        result = post(with_csrf(page), path, Map.put(params, "_csrf_token", csrf))
+        assert_status_copy(result, 200, locale, "all.completed")
+        assert get_resp_header(result, "cache-control") == ["no-store"]
+        assert get(recycle(result), "/session/protected?locale=#{locale}").status == 401
+        assert get(recycle(target), "/session/protected").status == 401
+
+        fresh = login(input, locale)
+        fresh_form = get(recycle(fresh), path)
+
+        [_, fresh_csrf] =
+          Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, html_response(fresh_form, 200))
+
+        stale = post(with_csrf(fresh_form), path, Map.put(params, "_csrf_token", fresh_csrf))
+        assert_status_copy(stale, 403, locale, "all.failed")
+        assert get(recycle(fresh), "/session/protected").status == 200
+      end
+    end)
+  end
+
+  test "the browser confirmation requires the real enrolled factor" do
+    previous = Application.fetch_env(:new_you, :identity_mfa_keyring)
+
+    Application.put_env(:new_you, :identity_mfa_keyring, %{
+      active_version: "test-v1",
+      keys: %{"test-v1" => :crypto.strong_rand_bytes(32)}
+    })
+
+    try do
+      P805.with_fixture(fn ->
+        input = verified_input()
+        origin = login(input, "af")
+        target = login(input, "af")
+
+        credentials = %{
+          session_id: get_session(origin, :identity_session_id),
+          token: get_session(origin, :identity_token)
+        }
+
+        timestamp = 1_800_000_000
+        Process.put(PrivilegedAccessSeam, timestamp)
+
+        assert {:ok, %{secret: secret}} =
+                 Identity.enroll_privileged_mfa(credentials, input.password)
+
+        confirmation = NimbleTOTP.verification_code(secret, time: timestamp)
+
+        assert {:ok, :ok} =
+                 Identity.confirm_privileged_mfa(credentials, input.password, confirmation)
+
+        path = "/session/manage/all"
+        page = get(recycle(origin), path)
+        body = html_response(page, 200)
+        assert body =~ ~s(autocomplete="one-time-code")
+        [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, body)
+
+        params = %{
+          "locale" => "af",
+          "password" => input.password,
+          "presenting" => credentials.session_id,
+          "_csrf_token" => csrf
+        }
+
+        for rejected_params <- [params, Map.put(params, "otp", confirmation)] do
+          rejected = post(with_csrf(page), path, rejected_params)
+          assert_status_copy(rejected, 403, "af", "all.failed")
+        end
+
+        next_timestamp = timestamp + 30
+        Process.put(PrivilegedAccessSeam, next_timestamp)
+        code = NimbleTOTP.verification_code(secret, time: next_timestamp)
+        wrong_code = if code == "000000", do: "000001", else: "000000"
+        wrong = post(with_csrf(page), path, Map.put(params, "otp", wrong_code))
+        assert_status_copy(wrong, 403, "af", "all.failed")
+        assert get(recycle(target), "/session/protected").status == 200
+
+        result = post(with_csrf(page), path, Map.put(params, "otp", code))
+        assert_status_copy(result, 200, "af", "all.completed")
+        assert get(recycle(target), "/session/protected").status == 401
+      end)
+    after
+      Process.delete(PrivilegedAccessSeam)
+
+      case previous do
+        {:ok, value} -> Application.put_env(:new_you, :identity_mfa_keyring, value)
+        :error -> Application.delete_env(:new_you, :identity_mfa_keyring)
+      end
+    end
+  end
+
+  test "global POST rejects a newly granted Support account despite an existing form" do
+    P813HoldFixture.with_fixture(fn %{target: target, approver: approver} ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
+      member = P813HoldFixture.factor_member()
+      input = %{email: P805.account!(member.id).email, password: member.password}
+      origin = login(input, "en")
+      origin_id = get_session(origin, :identity_session_id)
+      path = "/session/manage/all"
+      page = get(recycle(origin), path)
+      body = html_response(page, 200)
+      assert body =~ ~s(autocomplete="one-time-code")
+      [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, body)
+
+      grant = P813HoldFixture.grant(member, target, approver, :security_hold_restriction)
+      assert grant.state == :active
+
+      timestamp = 1_800_000_000
+      Process.put(PrivilegedAccessSeam, timestamp)
+
+      try do
+        result =
+          post(with_csrf(page), path, %{
+            "locale" => "en",
+            "presenting" => origin_id,
+            "password" => input.password,
+            "otp" => NimbleTOTP.verification_code(member.secret, time: timestamp),
+            "_csrf_token" => csrf
+          })
+
+        assert_status_copy(result, 403, "en", "all.failed")
+        assert_global_session_state([origin_id, member.credentials.session_id], :active, "user")
+        assert P805.account!(member.id).mfa_last_accepted_period == nil
+        assert selected_evidence(origin_id) == []
+      after
+        Process.delete(PrivilegedAccessSeam)
+      end
+    end)
+  end
 
   test "both locales link to a current Session list and require explicit CSRF-protected revocation" do
     P805.with_fixture(fn ->
@@ -56,6 +208,39 @@ defmodule NewYouWeb.SessionManagementControllerTest do
     end)
   end
 
+  for locale <- ["en", "af"] do
+    @locale locale
+    @tag timeout: 120_000
+    test "Chromium signs out every Session and reconciles with a new sign-in in #{@locale}" do
+      P805.with_fixture(fn ->
+        input = verified_input()
+
+        result =
+          run_browser(input, @locale, SignInJourney.Endpoint, %{global_revocation: true})
+
+        assert_browser_checks(
+          result,
+          ~w(confirmation cancel focus responsive reduced_motion completed initiator_denied target_denied reconciled)
+        )
+      end)
+    end
+  end
+
+  @tag timeout: 120_000
+  test "Chromium reconciles an interrupted global sign-out response by signing in again" do
+    P805.with_fixture(fn ->
+      input = verified_input()
+
+      result =
+        run_browser(input, "af", SignInJourney.Endpoint, %{
+          global_revocation: true,
+          lose_response: true
+        })
+
+      assert_browser_checks(result, ~w(response_lost initiator_denied target_denied reconciled))
+    end)
+  end
+
   test "foreign and missing targets receive indistinguishable denial with a valid CSRF token" do
     P805.with_fixture(fn ->
       Application.put_env(:new_you, :fp001_development_entry, true)
@@ -97,6 +282,72 @@ defmodule NewYouWeb.SessionManagementControllerTest do
 
   for locale <- ["en", "af"] do
     @locale locale
+    test "global POST distinguishes rollback from an unconfirmed commit in #{@locale}" do
+      P805.with_fixture(fn ->
+        input = verified_input()
+        origin = login(input, @locale)
+        target = login(input, @locale)
+        origin_id = get_session(origin, :identity_session_id)
+        target_id = get_session(target, :identity_session_id)
+        path = "/session/manage/all"
+        form = get(recycle(origin), path)
+
+        [_, csrf] =
+          Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, html_response(form, 200))
+
+        params = %{
+          "locale" => @locale,
+          "password" => input.password,
+          "presenting" => origin_id,
+          "_csrf_token" => csrf
+        }
+
+        account_id = session(origin_id).account_id
+        reject_revocation(origin_id, account_id)
+        prior_evidence = selected_evidence(origin_id)
+        assert [%{outcome: :failed}] = prior_evidence
+
+        failed = post(with_csrf(form), path, params)
+        assert_status_copy(failed, 503, @locale, "all.failed")
+        assert get_resp_header(failed, "cache-control") == ["no-store"]
+        assert_global_session_state([origin_id, target_id], :active, "user")
+        assert selected_evidence(origin_id) == prior_evidence
+        assert get(recycle(origin), "/session/protected").status == 200
+        assert get(recycle(target), "/session/protected").status == 200
+
+        # Use a fresh presenting Session so the earlier immutable Audit
+        # conflict remains in place while this operation can commit.
+        fresh = login(input, @locale)
+        fresh_id = get_session(fresh, :identity_session_id)
+        fresh_form = get(recycle(fresh), path)
+
+        [_, fresh_csrf] =
+          Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, html_response(fresh_form, 200))
+
+        fresh_params = %{params | "presenting" => fresh_id, "_csrf_token" => fresh_csrf}
+        assert selected_evidence(fresh_id) == []
+
+        acknowledgement = {PasswordSession, :lose_revocation_acknowledgement}
+        Process.put(acknowledgement, true)
+
+        uncertain =
+          try do
+            post(with_csrf(fresh_form), path, fresh_params)
+          after
+            Process.delete(acknowledgement)
+          end
+
+        assert_status_copy(uncertain, 503, @locale, "all.uncertain")
+        assert get_resp_header(uncertain, "cache-control") == ["no-store"]
+        assert_global_session_state([origin_id, target_id, fresh_id], :revoked, "revocation")
+        assert [%{outcome: :succeeded}] = selected_evidence(fresh_id)
+        assert selected_evidence(origin_id) == prior_evidence
+        assert get(recycle(fresh), "/session/protected").status == 401
+        assert get(recycle(origin), "/session/protected").status == 401
+        assert get(recycle(target), "/session/protected").status == 401
+      end)
+    end
+
     test "shows approved rollback and uncertain outcomes without reporting success in #{@locale}" do
       P805.with_fixture(fn ->
         input = verified_input()
@@ -108,17 +359,7 @@ defmodule NewYouWeb.SessionManagementControllerTest do
         unconfirmed_id = get_session(unconfirmed, :identity_session_id)
         account_id = session(rollback_id).account_id
 
-        assert {:ok, _} =
-                 Ash.transact(Account, fn ->
-                   Audit.establish_identity_security_obligation(%{
-                     source_operation_id: rollback_id,
-                     source_occurred_at: ~U[2025-01-01 00:00:00Z],
-                     evidence_type: :identity_session_revoked,
-                     actor_id: account_id,
-                     target_id: account_id,
-                     outcome: :failed
-                   })
-                 end)
+        reject_revocation(rollback_id, account_id)
 
         path = "/session/manage?locale=#{@locale}"
         page = get(recycle(actor), path)
@@ -279,6 +520,27 @@ defmodule NewYouWeb.SessionManagementControllerTest do
     end
   end
 
+  defp reject_revocation(session_id, account_id) do
+    assert {:ok, _} =
+             Ash.transact(Account, fn ->
+               Audit.establish_identity_security_obligation(%{
+                 source_operation_id: session_id,
+                 source_occurred_at: ~U[2025-01-01 00:00:00Z],
+                 evidence_type: :identity_session_revoked,
+                 actor_id: account_id,
+                 target_id: account_id,
+                 outcome: :failed
+               })
+             end)
+  end
+
+  defp assert_global_session_state(ids, state, purpose) do
+    for id <- ids do
+      assert %{state: ^state, token_jti: jti} = session(id)
+      assert Ash.get!(Token, jti, authorize?: false).purpose == purpose
+    end
+  end
+
   defp session(id), do: Ash.get!(Session, id, authorize?: false)
 
   defp selected_evidence(id) do
@@ -320,7 +582,18 @@ defmodule NewYouWeb.SessionManagementControllerTest do
       |> Phoenix.HTML.safe_to_string()
 
     assert rendered == expected
-    refute rendered == copy["identity.sessions.revoke.completed"]
+
+    if String.ends_with?(key, [".failed", ".uncertain"]) do
+      refute body =~
+               Phoenix.HTML.safe_to_string(
+                 Phoenix.HTML.html_escape(copy["identity.sessions.all.completed"])
+               )
+
+      refute body =~
+               Phoenix.HTML.safe_to_string(
+                 Phoenix.HTML.html_escape(copy["identity.sessions.revoke.completed"])
+               )
+    end
   end
 
   defp with_csrf(conn), do: conn |> recycle() |> put_private(:plug_skip_csrf_protection, false)

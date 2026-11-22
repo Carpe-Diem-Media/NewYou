@@ -232,6 +232,29 @@ defmodule NewYou.Identity do
   def revoke_other_session(credentials, session_id),
     do: NewYou.Identity.PasswordSession.revoke_other(credentials, session_id)
 
+  @doc """
+  Validate the current ordinary Session and project its global sign-out form requirements.
+  This read does not extend the Session or establish assurance.
+  """
+  @spec global_session_revocation_form(map()) ::
+          {:ok, %{session_id: Ecto.UUID.t(), mfa_required?: boolean()}}
+          | {:error, :session_unavailable}
+  def global_session_revocation_form(credentials),
+    do: NewYou.Identity.PasswordSession.global_revocation_form(credentials)
+
+  @doc """
+  Reauthenticate an ordinary Account holder and atomically end all their current
+  Sessions, linked authentication tokens and trusted devices with Audit evidence.
+  The presenting Session is consumed. If the result is uncertain, sign in again
+  and inspect current Sessions. A stale Session cannot repeat the operation.
+  """
+  @spec revoke_all_sessions(map(), String.t(), String.t() | nil) ::
+          {:ok, :revoked}
+          | {:error,
+             :session_unavailable | :session_revocation_failed | :session_result_uncertain}
+  def revoke_all_sessions(credentials, password, code),
+    do: NewYou.Identity.PasswordSession.revoke_all(credentials, password, code)
+
   @doc "Begin or resume pending Support MFA setup after current Session/password reauthentication. Active factors never return setup material."
   @spec enroll_privileged_mfa(term(), term()) ::
           {:ok, %{secret: binary()}} | {:error, :privileged_access_unavailable}

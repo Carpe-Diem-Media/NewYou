@@ -172,6 +172,12 @@ defmodule NewYouWeb.RegistrationBoundary do
   defp dispatch(%Plug.Conn{method: "GET", request_path: "/session/manage"} = conn, _opts),
     do: dispatch_browser_request(conn, :show, NewYouWeb.SessionManagementController)
 
+  defp dispatch(%Plug.Conn{method: "GET", request_path: "/session/manage/all"} = conn, _opts),
+    do: dispatch_browser_request(conn, :confirm_all, NewYouWeb.SessionManagementController)
+
+  defp dispatch(%Plug.Conn{method: "POST", request_path: "/session/manage/all"} = conn, _opts),
+    do: dispatch_browser_request(conn, :revoke_all, NewYouWeb.SessionManagementController)
+
   defp dispatch(%Plug.Conn{method: "POST", request_path: "/session/manage/revoke"} = conn, _opts),
     do: dispatch_browser_request(conn, :revoke, NewYouWeb.SessionManagementController)
 
