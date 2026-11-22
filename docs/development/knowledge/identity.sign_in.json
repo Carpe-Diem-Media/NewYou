@@ -1321,7 +1321,7 @@
       "id": "boundary",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "defp dispatch_browser_request",
-      "sha256": "08f3b17fe1f24a1c66dd2a99a3c90fb67a4325848b6bb3948ffff3a3ee973226"
+      "sha256": "3da225c8dd247100776d8770bb404cb04e3ec9d26c2a06026f0e33d85de75ea8"
     },
     {
       "id": "endpoint",
@@ -1405,7 +1405,7 @@
       "id": "browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'signin'",
-      "sha256": "fe5ba0d4aa88cc5c05f10ffc8c5b6deb7942a0105df44d8a78eae81357a41455"
+      "sha256": "a5076c5c387de6cc037de03050adf03c723a32566e0649c27f6409ad73347412"
     },
     {
       "id": "password_test",
@@ -1573,7 +1573,7 @@
       "id": "session_inventory_driver",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'session_management'",
-      "sha256": "fe5ba0d4aa88cc5c05f10ffc8c5b6deb7942a0105df44d8a78eae81357a41455"
+      "sha256": "a5076c5c387de6cc037de03050adf03c723a32566e0649c27f6409ad73347412"
     },
     {
       "id": "session_inventory_index",

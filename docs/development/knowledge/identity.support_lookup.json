@@ -3,11 +3,12 @@
   "capability_id": "identity.support_lookup",
   "purpose": "Perform one read-only, grant-bound Identity lookup for an authorized Support operator and return the minimum approved Account context.",
   "implementing_tickets": [
-    "WELL-18"
+    "WELL-18",
+    "WELL-173"
   ],
   "implementation_revision": {
-    "git_sha": "0406f410d5063972a9b0086d62989ea04dc9ddf5",
-    "semantics": "WELL-18 adds an Identity-owned lookup scope and a read-only current-authority path. The map is refreshed against the committed source checkpoint; it is descriptive, not authorization or merge evidence. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract."
+    "git_sha": "b1f671cee5c2f4a5276508edef87b543ca2a3406",
+    "semantics": "WELL-173 adds the private DEV/TEST operator browser workflow around the existing Identity lookup. The owning interface, grant lifecycle and standard Audit selection are preserved."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -137,6 +138,15 @@
         "lookup",
         "lookup_test"
       ]
+    },
+    {
+      "summary": "Sign in through the existing password Session journey, then open /dev/support/account-access in an enabled DEV/TEST build. Submit the known synthetic Support grant, Account ID and email with the operator password and a current authenticator code. The browser passes only this POST intent and current cookie credentials to Identity. A successful lookup presents Account status, email verification and security posture. A fresh GET has no previous result.",
+      "source_ids": [
+        "browser_dispatch",
+        "browser_controller",
+        "browser_form",
+        "identity_api"
+      ]
     }
   ],
   "lifecycle": {
@@ -193,6 +203,16 @@
         "grant",
         "lookup_test"
       ]
+    },
+    {
+      "summary": "The browser route rejects query strings and requires CSRF for explicit POST. The controller revalidates the current cookie Session and establishes lookup_identity assurance before Identity locks and checks the named current grant. Browser denial collapses no match and rejected authority to one response after authentication. All lookup responses are no-store. The dispatcher clears parsed values and diagnostics before Bandit request-stop telemetry and suppresses SQL payload events for matching synchronous Repo operations.",
+      "source_ids": [
+        "browser_dispatch",
+        "browser_controller",
+        "query_privacy",
+        "privilege",
+        "browser_test"
+      ]
     }
   ],
   "concurrency": [
@@ -211,6 +231,15 @@
       "source_ids": [
         "lookup",
         "lookup_test"
+      ]
+    },
+    {
+      "summary": "The browser stores no lookup result. A new submission needs a fresh valid authenticator period and repeats the owner checks. Existing durable Account locking and TOTP replay prevention govern competing step-up requests.",
+      "source_ids": [
+        "browser_controller",
+        "privilege",
+        "privilege_test",
+        "browser_test"
       ]
     }
   ],
@@ -241,15 +270,32 @@
         "Missing, wrong-scope, wrong-actor, expired and revoked grant denials.",
         "Non-security-review grant reason and malformed grant, target and email inputs deny generically.",
         "Invalid and revoked Session, wrong-purpose step-up and stale MFA-version assurance denials.",
-        "Unrelated target denial and no Super Admin capability bypass."
+        "Unrelated target denial and no Super Admin capability bypass.",
+        "A permitted control with the same credentials and grant, followed by wrong-target denial and rejection of a separately scoped self grant."
       ],
       "proves": "The real Identity interface returns a narrow result only under current named Support authority and otherwise hides account classification behind one generic error.",
-      "limits": "The caller is an internal authorized Identity consumer; there is no public Support lookup route or participant-facing Support UI in this capability.",
+      "limits": "These tests call the Identity interface directly. The browser integration is exercised separately.",
       "source_ids": [
         "lookup_test",
         "lookup",
         "privilege",
         "web_scenarios"
+      ]
+    },
+    {
+      "path": "test/new_you_web/controllers/support_lookup_controller_test.exs",
+      "cases": [
+        "CSRF rejection, current Session, disabled and anonymous entry, query rejection and TOTP replay.",
+        "Real Chromium sign-in, keyboard focus, narrow reflow, fresh MFA, minimum projection, fresh request after grant revocation and payload-free request-stop and SQL telemetry."
+      ],
+      "proves": "The private synthetic browser workflow reuses the owning Identity checks and does not persist the lookup result.",
+      "limits": "Chromium uses a loopback TEST endpoint and a deterministic TOTP clock. The fixture revokes the grant separately through its real Ash action. It does not model production staff provisioning or external monitoring.",
+      "source_ids": [
+        "browser_dispatch",
+        "browser_controller",
+        "browser_form",
+        "browser_test",
+        "chromium"
       ]
     }
   ],
@@ -296,9 +342,10 @@
     }
   ],
   "proof_limitations": [
-    "This proof exercises Identity's owner interface with synthetic development/test Support grants; production grant issuance and an operator UI are outside WELL-18.",
+    "Proof uses synthetic development/test Accounts and grants. Production grant issuance and operator route activation remain outside the ticket.",
     "Authorized matching and non-matching results differ by design; the denial boundary remains generic and the function is not exposed publicly.",
-    "The lookup is read-only and does not create an Audit event; selected Audit authority classifies ordinary low-risk lookup as E3 normally."
+    "The lookup is read-only and does not create an Audit event; selected Audit authority classifies ordinary low-risk lookup as E3 normally.",
+    "The HTTP adapter starts request telemetry before application dispatch and can observe the existing encrypted cookie transport. The browser does not send lookup data in the URL or expose decoded cookie values to request-stop telemetry."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -348,7 +395,7 @@
       "id": "lookup_test",
       "path": "test/new_you/identity/support_lookup_test.exs",
       "symbol": "defmodule NewYou.Identity.SupportLookupTest",
-      "sha256": "982b20af255707f2deac356b53d88de61c918a2355dea3d4b9f78561ca604888"
+      "sha256": "156ec60b99d7bcf1c4f024a3a025a5740b8feb3f81723063af2b96b99653cc9d"
     },
     {
       "id": "audit_contract",
@@ -361,6 +408,48 @@
       "path": "test/support/proof/web_scenarios.ex",
       "symbol": "defmodule NewYou.Proof.WebScenarios",
       "sha256": "d33e18605b1495218a788d5e000c47977f410811a2af11cc2c480d9387df7a58"
+    },
+    {
+      "id": "browser_dispatch",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "symbol": "/dev/support/account-access",
+      "sha256": "3da225c8dd247100776d8770bb404cb04e3ec9d26c2a06026f0e33d85de75ea8"
+    },
+    {
+      "id": "browser_controller",
+      "path": "lib/new_you_web/controllers/support_lookup_controller.ex",
+      "symbol": "defmodule NewYouWeb.SupportLookupController",
+      "sha256": "2bc7ba9ac601389747064aaa3cd4e59074c74526e19a66e1e9d88d8ccd92c1d4"
+    },
+    {
+      "id": "browser_form",
+      "path": "lib/new_you_web/controllers/support_lookup_html/index.html.heex",
+      "symbol": "id=\"support-lookup\"",
+      "sha256": "9658210b0eab306a095737b14487818e3a95036f8aa6ccf02e8c1ae65ffabba5"
+    },
+    {
+      "id": "query_privacy",
+      "path": "lib/new_you/repo.ex",
+      "symbol": "def without_query_telemetry",
+      "sha256": "01f0c24631ab149711f6b88f1b2cc5ff19d0b6121079c2222fa3ff3b6703b28e"
+    },
+    {
+      "id": "browser_test",
+      "path": "test/new_you_web/controllers/support_lookup_controller_test.exs",
+      "symbol": "defmodule NewYouWeb.SupportLookupControllerTest",
+      "sha256": "441b7eb3e6ad0a416d0cce2e074cd31ac809e5b1c1a95c3a2c49b4edd938934e"
+    },
+    {
+      "id": "chromium",
+      "path": "test/proof/p8_05_browser.mjs",
+      "symbol": "input.mode === 'support_lookup'",
+      "sha256": "a5076c5c387de6cc037de03050adf03c723a32566e0649c27f6409ad73347412"
+    },
+    {
+      "id": "privilege_test",
+      "path": "test/new_you/identity/privileged_access_test.exs",
+      "symbol": "two independent Sessions transactions cannot consume one TOTP period twice",
+      "sha256": "16a9af3df23309c317c9070bbd7af1915c7fd1693902c88812afccb4def76f77"
     }
   ]
 }

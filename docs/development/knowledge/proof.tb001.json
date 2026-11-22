@@ -571,7 +571,7 @@
       "id": "browser_script",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'spine'",
-      "sha256": "fe5ba0d4aa88cc5c05f10ffc8c5b6deb7942a0105df44d8a78eae81357a41455"
+      "sha256": "a5076c5c387de6cc037de03050adf03c723a32566e0649c27f6409ad73347412"
     },
     {
       "id": "fixture",
