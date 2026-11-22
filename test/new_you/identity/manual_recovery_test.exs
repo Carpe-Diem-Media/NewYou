@@ -279,6 +279,109 @@ defmodule NewYou.Identity.ManualRecoveryTest do
     end)
   end
 
+  test "current historical operators cannot approve or complete a held Phase-9 case" do
+    P813HoldFixture.with_fixture(fn fixture ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
+      P813HoldFixture.reviewed_hold(fixture)
+      target = Ash.get!(Account, fixture.target.id, authorize?: false)
+
+      historical = held_recovery(target, :p8_15, :accepted)
+      review = operator_request(fixture, :reviewer, :approve_manual_recovery, historical)
+
+      assert {:ok, %{status: :approved, version: reviewed_version}} =
+               Identity.approve_manual_recovery(review)
+
+      historical = recovery_case(target.id)
+      assert historical.version == reviewed_version
+
+      completion =
+        fixture
+        |> operator_request(:actor, :complete_manual_recovery, historical)
+        |> Map.put(:password, "historical operator replacement credential")
+
+      assert {:ok, :completed} = Identity.complete_manual_recovery(completion)
+
+      ordinary = held_recovery(target, :well183, :held)
+      account = Ash.get!(Account, target.id, authorize?: false)
+      assert account.credential_version == target.credential_version + 1
+      assert account.hold_version == historical.review["hold_version"]
+      assert ordinary.required_assurance == 2
+      assert Identity.Recovery.current?(ordinary, account)
+
+      approval = %{
+        review
+        | case_id: ordinary.id,
+          expected_version: ordinary.version,
+          operation_id: operation()
+      }
+
+      assert {:error, :recovery_unavailable} = Identity.approve_manual_recovery(approval)
+      refute admission(approval.operation_id)
+      refute outcome(approval.operation_id)
+      assert Ash.get!(RecoveryCase, ordinary.id, authorize?: false) == ordinary
+
+      # Give completion a current review from the same reviewer and target.
+      # The private fixture write bypasses approval only to reach the separate
+      # completion guard with valid historical authority and accepted proof.
+      review_record = Map.put(historical.review, "case_version", ordinary.version + 1)
+
+      assert {:ok, seeded} =
+               Identity.Recovery.transition(ordinary, :record_review, %{review: review_record})
+
+      seeded = Ash.get!(RecoveryCase, seeded.id, authorize?: false)
+      assert seeded.review == review_record
+
+      denied = %{
+        completion
+        | case_id: seeded.id,
+          expected_version: seeded.version,
+          operation_id: operation(),
+          password: "forbidden Phase-9 operator replacement"
+      }
+
+      token = Ash.get!(Token, seeded.proof_jti, authorize?: false)
+      assert token.purpose == "recovery_consumed"
+      assert {:error, :recovery_unavailable} = Identity.complete_manual_recovery(denied)
+      refute admission(denied.operation_id)
+      refute outcome(denied.operation_id)
+      assert NewYou.Proof.P805.intents(denied.operation_id) == []
+      assert Ash.get!(RecoveryCase, seeded.id, authorize?: false) == seeded
+      assert Ash.get!(Token, seeded.proof_jti, authorize?: false) == token
+      assert Ash.get!(Account, target.id, authorize?: false) == account
+    end)
+  end
+
+  defp held_recovery(target, context, proof_outcome) do
+    id = operation()
+    assert :ok = Identity.request_recovery(target.email, "en", id, context)
+
+    recovery =
+      Ash.read_one!(Ash.Query.filter(RecoveryCase, operation_id == ^id), authorize?: false)
+
+    assert {:ok, bearer} = recovery_delivery(recovery, target.email)
+
+    assert {:ok, ^proof_outcome} =
+             Identity.submit_recovery_proof(bearer, operation(), "en", context)
+
+    assert %{state: :held_manual_review, entry_context: ^context, satisfied_assurance: 1} =
+             Ash.get!(RecoveryCase, recovery.id, authorize?: false)
+  end
+
+  defp operator_request(fixture, role, purpose, recovery) do
+    operator = Map.fetch!(fixture, role)
+    grant = P813HoldFixture.grant(operator, fixture.target, fixture.approver, :identity_recovery)
+    assert {:ok, :ok} = P813HoldFixture.step_up(operator, purpose)
+
+    %{
+      credentials: operator.credentials,
+      grant_id: grant.id,
+      case_id: recovery.id,
+      expected_version: recovery.version,
+      operation_id: operation(),
+      reason_code: :verified_recovery
+    }
+  end
+
   defp after_process_loss(request, action) do
     alias NewYou.Proof.{Scenario, CutPoints, RegistrationSeam}
     alias Ecto.Adapters.SQL.Sandbox

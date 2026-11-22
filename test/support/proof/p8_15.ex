@@ -114,6 +114,9 @@ defmodule NewYou.Proof.P815 do
       assert {:ok, :accepted} =
                Identity.submit_recovery_proof(bearer, acceptance, "af", first_context)
 
+      assert {:error, :recovery_unavailable} =
+               Identity.submit_recovery_proof(bearer, acceptance, "af", other_context)
+
       assert [^accepted] = cases(account_id)
       assert {:ok, _} = Identity.authorize_session(session)
       assert Ash.get!(Account, account_id, authorize?: false) == before_account
