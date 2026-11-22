@@ -1,18 +1,19 @@
 {
   "schema_version": 1,
   "capability_id": "identity.sign_in",
-  "purpose": "WELL-134 bounded FP-001 EN/AF development sign-in and current-session protected access. This source map grants no release or review approval. WELL-163 adds a current-use Session inventory and revocation of one other Session on the same Account.",
+  "purpose": "WELL-134 bounded FP-001 EN/AF development sign-in and current-session protected access. This source map grants no release or review approval. WELL-163 adds a current-use Session inventory and revocation of one other Session on the same Account. WELL-170 adds development-only global sign-out with fresh purpose-bound password and applicable TOTP proof.",
   "implementing_tickets": [
     "WELL-134",
     "WELL-112",
     "WELL-114",
     "WELL-143",
     "WELL-86",
-    "WELL-163"
+    "WELL-163",
+    "WELL-170"
   ],
   "implementation_revision": {
-    "git_sha": "a7395400ecb59f50b51a69bab3220f011c412a9c",
-    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. WELL-163 adds a bounded EN/AF participant Session inventory and individual remote revocation with material Audit E2."
+    "git_sha": "874a190965592574111a05e774af9535c8f0342b",
+    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. WELL-163 adds a bounded EN/AF participant Session inventory and individual remote revocation with material Audit E2. WELL-170 serializes global termination with issuance under the Account lock, reuses reset's linked-token and device invalidation actions, and establishes Audit E2 within the same transaction."
   },
   "authoritative_domain": "Identity",
   "collaborating_domains": [
@@ -38,7 +39,7 @@
     {
       "domain": "Content",
       "interface": "NewYou.Content.SessionManagementCopy.load/1",
-      "ownership": "Exact integrated and routed WELL-163 individual-session wording, limited to the selected development locale.",
+      "ownership": "Exact routed individual and global Session wording in the selected development locale.",
       "source_ids": [
         "session_inventory_copy",
         "session_inventory_packet"
@@ -94,7 +95,8 @@
         "touch",
         "logout",
         "revoke",
-        "expire"
+        "expire",
+        "set_step_up"
       ],
       "caller_boundary": "Private actions with public denial policy. Existing Identity interface coordinates current Account, Token and Session state.",
       "source_ids": [
@@ -109,10 +111,22 @@
         "establish_identity_security",
         "materialize_registration_evidence"
       ],
-      "caller_boundary": "Identity supplies a minimized Account-bound envelope keyed by the terminal target Session ID. AshOban executes and recovers the Audit-owned obligation.",
+      "caller_boundary": "Identity supplies a minimized Account-bound envelope keyed by the ended target Session for individual revocation or the consumed presenting Session for global revocation. AshOban executes and recovers the Audit-owned obligation.",
       "source_ids": [
         "password",
         "session_revocation_audit"
+      ]
+    },
+    {
+      "domain": "Identity",
+      "resource": "NewYou.Identity.DeviceAssurance",
+      "actions": [
+        "revoke"
+      ],
+      "caller_boundary": "Account-locked security transactions terminate own trusted rows. No enrollment action is introduced.",
+      "source_ids": [
+        "session_scope_revocation",
+        "global_device_assurance"
       ]
     }
   ],
@@ -313,6 +327,70 @@
         "session_inventory_controller",
         "session_revocation_audit"
       ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "global_session_revocation_form",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Current presenting Session credentials"
+      ],
+      "returns": [
+        "{:ok, %{session_id: UUID, mfa_required?: boolean}}",
+        "{:error, :session_unavailable}"
+      ],
+      "side_effects": [
+        "Read only. Neither extends the current Session nor establishes assurance."
+      ],
+      "caller_constraints": [
+        "Bounded browser dispatch checks current copy, presenting form binding and CSRF before POST. A lost response requires fresh authentication and inventory reconciliation."
+      ],
+      "source_ids": [
+        "identity",
+        "password",
+        "session_scope_revocation",
+        "step_up_for_global_revocation",
+        "session_inventory_controller",
+        "confirmation_all_template",
+        "boundary",
+        "session_inventory_packet",
+        "session_revocation_audit_interface",
+        "session_revocation_audit"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "revoke_all_sessions",
+      "arity": 3,
+      "visibility": "supported",
+      "arguments": [
+        "Current presenting Session credentials",
+        "Current password",
+        "Current TOTP code when enrolled"
+      ],
+      "returns": [
+        "{:ok, :revoked}",
+        "{:error, :session_unavailable | :session_revocation_failed | :session_result_uncertain}"
+      ],
+      "side_effects": [
+        "Revokes all pre-boundary active Sessions and linked user tokens, clears elevation, ends trusted device assurance and creates one selected Audit E2. A failed proof can update existing cooldown counters."
+      ],
+      "caller_constraints": [
+        "Bounded browser dispatch checks current copy, presenting form binding and CSRF before POST. A lost response requires fresh authentication and inventory reconciliation."
+      ],
+      "source_ids": [
+        "identity",
+        "password",
+        "session_scope_revocation",
+        "step_up_for_global_revocation",
+        "session_inventory_controller",
+        "confirmation_all_template",
+        "boundary",
+        "session_inventory_packet",
+        "session_revocation_audit_interface",
+        "session_revocation_audit"
+      ]
     }
   ],
   "persistence": [
@@ -467,6 +545,19 @@
         "password",
         "session_inventory_copy"
       ]
+    },
+    {
+      "summary": "WELL-170 cold start: from /session/manage follow /session/manage/all. RegistrationBoundary dispatches passive GET/HEAD and CSRF-protected POST to SessionManagementController. The form binds to the presenting Session and projects the factor requirement. Identity proves the current password and active-factor TOTP when applicable, saves and consumes purpose-bound assurance in a single transaction, then reports confirmed success, confirmed failure or uncertainty. Success drops the browser session and renders exact localized copy with reauthentication.",
+      "source_ids": [
+        "session_inventory_controller",
+        "confirmation_all_template",
+        "boundary",
+        "session_inventory_packet",
+        "identity",
+        "password",
+        "session_scope_revocation",
+        "step_up_for_global_revocation"
+      ]
     }
   ],
   "lifecycle": {
@@ -555,6 +646,25 @@
           "password",
           "session_revocation_audit"
         ]
+      },
+      {
+        "from_state": "active",
+        "to_state": "revoked",
+        "guards": [
+          "Current eligible ordinary Account and matching active Token/Session with both deadlines. Fresh password and current TOTP for active MFA, then unexpired Session assurance bound to the global purpose and Account security/MFA versions. Pending MFA or active Support grant blocks the participant path."
+        ],
+        "side_effects": [
+          "Terminate all own pre-boundary active Sessions, clear assurance, revoke only linked user tokens and terminate own trusted DeviceAssurance. Commit one E2 obligation in the source transaction."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "identity",
+          "password",
+          "session_scope_revocation",
+          "step_up_for_global_revocation",
+          "session_revocation_audit_interface",
+          "session_revocation_audit"
+        ]
       }
     ]
   },
@@ -633,6 +743,17 @@
         "session_inventory_controller",
         "session_inventory_copy"
       ]
+    },
+    {
+      "summary": "The global purpose cannot admit a privileged grant and trusted-device state cannot satisfy step-up. No password, OTP, bearer or device fingerprint enters Audit or a result body.",
+      "source_ids": [
+        "identity",
+        "password",
+        "session_scope_revocation",
+        "step_up_for_global_revocation",
+        "session_revocation_audit_interface",
+        "session_revocation_audit"
+      ]
     }
   ],
   "concurrency": [
@@ -661,6 +782,16 @@
         "session_revocation_audit",
         "session_inventory_test"
       ]
+    },
+    {
+      "summary": "Global revocation locks the Account, then linked user Tokens in JTI order before locking the presenting Session. It revokes current Sessions and trusted devices inside the same transaction. Issuance committed ahead of the Account lock is revoked, and issuance behind the boundary rechecks eligibility and survives.",
+      "source_ids": [
+        "identity",
+        "password",
+        "session_scope_revocation",
+        "step_up_for_global_revocation",
+        "global_revocation_race"
+      ]
     }
   ],
   "idempotency_retry": [
@@ -686,6 +817,20 @@
       "source_ids": [
         "password",
         "session_inventory_test"
+      ]
+    },
+    {
+      "summary": "A revoked presenting Session cannot produce another result or revoke fresh Sessions. The browser rejects a stale confirmation bound to another Session even with fresh browser CSRF. The single Audit operation is keyed by the consumed presenting Session.",
+      "source_ids": [
+        "identity",
+        "password",
+        "session_scope_revocation",
+        "step_up_for_global_revocation",
+        "session_inventory_controller",
+        "confirmation_all_template",
+        "boundary",
+        "session_inventory_packet",
+        "global_revocation_owner"
       ]
     }
   ],
@@ -723,6 +868,21 @@
         "session_revocation_audit",
         "session_inventory_controller",
         "session_inventory_test"
+      ]
+    },
+    {
+      "summary": "Audit rejection returns confirmed rollback. Lost commit acknowledgement produces an uncertain result, and a browser-level cut produces no completion claim. Fresh sign-in and the durable inventory reconcile. A fresh BEAM rejects the revoked authority.",
+      "source_ids": [
+        "identity",
+        "password",
+        "session_scope_revocation",
+        "step_up_for_global_revocation",
+        "session_inventory_controller",
+        "confirmation_all_template",
+        "boundary",
+        "session_inventory_packet",
+        "global_revocation_restart",
+        "global_revocation_response_loss"
       ]
     }
   ],
@@ -902,7 +1062,7 @@
     {
       "path": "test/new_you/content/session_management_copy_test.exs",
       "cases": [
-        "loads exact eligible Session keys in both locales and excludes global and trusted-device copy",
+        "loads exact eligible Session keys in both locales including all seven global keys",
         "fails closed for withdrawn, superseded or conflicting routing and tampered packet bytes"
       ],
       "proves": "Exact supported locale selection and fail-closed routing and bytes.",
@@ -911,6 +1071,39 @@
         "session_inventory_copy_test",
         "session_inventory_copy",
         "session_inventory_packet"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/session_management_test.exs",
+      "cases": [
+        "global revocation requires fresh proof and a replay cannot affect a fresh Session",
+        "an enrolled factor requires a fresh current code and preserves strict replay protection",
+        "global Audit rejection rolls back Sessions, tokens, assurance and devices",
+        "an unacknowledged global commit survives restart and a stale retry cannot end fresh authority",
+        "independent PostgreSQL connections order password issuance around global revocation"
+      ],
+      "proves": "Own password and magic Session/token termination, unrelated proof and foreign preservation, device termination, real current TOTP, Audit rollback, restart, stale replay and both password issuance orders.",
+      "limits": "The blocking race exercises password issuance. Magic consumption uses the same Account-first serialization and its issued authority is exercised in global revocation.",
+      "source_ids": [
+        "global_revocation_owner",
+        "global_revocation_race",
+        "global_revocation_restart"
+      ]
+    },
+    {
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "cases": [
+        "global confirmation is read-only and requires a bound CSRF-protected POST in EN and AF",
+        "the browser confirmation requires the real enrolled factor",
+        "Chromium signs out every Session and reconciles with a new sign-in",
+        "Chromium reconciles an interrupted global sign-out response by signing in again"
+      ],
+      "proves": "Endpoint CSRF, stale form binding and real enrolled TOTP, plus Chromium confirmation, cancellation, focus, responsive and reduced-motion checks, independent session denial and response-loss reconciliation.",
+      "limits": "Real Chromium uses password-only synthetic Accounts. The active factor path is exercised at the Phoenix endpoint with deterministic TEST timestamps.",
+      "source_ids": [
+        "global_revocation_browser",
+        "global_revocation_response_loss",
+        "confirmation_all_template"
       ]
     }
   ],
@@ -966,14 +1159,15 @@
     "Hallmark existing-design extension check renders 20 EN/AF normal/error/pending/confirmation/protected/reauthentication/logout states. Generated unchanged app.css reports 96 static FAILs: gate 48 x89, 10a x4, 15 x2, 20 x1. No page-level FAIL is introduced; do not describe the whole inherited stylesheet as clean.",
     "Hallmark REFLEX 39b x8 is waived because DESIGN.md explicitly requires 58px input height. Generated dependency/token CSS REFLEX 7b x6, 22 x5, 24b x2 belongs to unchanged compatibility/design styles. F1 x5 preserves exact approved apostrophes, F23 x20 is non-public authentication metadata, and unchanged CSS warnings 10b x2/F7 x1 are recorded. Balanced heads removed both F26 stub warnings.",
     "Browser tests assert real Tab focus with visible outline, labels, styles loaded, reduced-motion state, responsive widths 320/375/768/1280/1920 and 200% text resize. Hallmark render contrast checks report no page-level contrast failure; source review preserves shared tokens. No redesign or theme run was invoked.",
-    "WELL-134 originally proved current-session logout. WELL-163 adds bounded EN/AF inventory of an Account's usable Sessions and revocation of one other Session through the existing development entry. Global sign-out, trusted-device controls, MFA enrollment and participant release remain outside this capability. The original WELL-134 dependencies and release gaps, including OQ-035, OQ-036 and participant content/legal eligibility, retain their historical scope.",
+    "WELL-134 originally proved current-session logout. WELL-163 adds bounded EN/AF inventory of an Account's usable Sessions and revocation of one other Session through the existing development entry. WELL-170 adds global sign-out and revocation of trusted status. Device management, MFA enrollment UI and participant release remain outside its scope. The original WELL-134 dependencies and release gaps, including OQ-035, OQ-036 and participant content/legal eligibility, retain their historical scope.",
     "Permanent ordinary EN/AF browser proof doubles computed text sizes and numeric line heights at widths 320/375/768/1280/1920, checks horizontal document and text/control fit, then restores original inline styles. This runs on the login state; the earlier 20-state resize supplement remains separate evidence, not permanent all-state coverage.",
     "WELL-112 source-reference refresh records the reconciled implementation, not a full-suite or integration pass. Current-base Content eligibility failures remain recorded under WELL-138 and WELL-136; canonical/deep, OCR, exact-head CI and independent certification remain separate obligations.",
     "WELL-114 source checkpoint 145c2be adds fixture-isolation regression coverage and assertion-preserving test corrections. See docs/superpowers/plans/2026-11-16-retained-fixture-observations.md for observed commands, test limits and current resource handling. Full applicable gates, OCR, exact-head CI and independent post-merge certification remain required. The original all-job privacy secret scan remains intentionally broad to detect incorrectly addressed leakage. The seven-file focused run passed 111/111, seed 985650. Canonical on clean 96a8455 passed 831/831, seed 813027, in 547.2 seconds under a command-scoped lock, after preserving and diagnosing a five-failure overlapping attempt and a same-seed 47/47 targeted pass. The focused plan records exact commands, fingerprints and limits. OCR, exact-final-head hosted CI and independent resulting-main certification remain separate requirements. Global maintenance tests use native Ecto sandbox checkout/checkin with signature restoration, rather than an outer Repo transaction that can be aborted by expected Ash denials.",
     "Current-base WELL-114 proof: clean 9f4b8fd1975e0b1f67b12463e01156529ce7d57b incorporates main 2736a9c6925c8c126cbba007f404b2e38ec2080d with identical executable correction. Canonical passed 831/831, seed 813027, in 508.2 seconds; content compatibility passed 34/34 and routing/knowledge/smoke checks passed 71/71. Private per-row digest multisets preserve all preexisting rows across 15 tables, including membership in growing nonce and PMR sets, with no unexpected additions. DeliveryAttempt baseline was empty; permanent synthetic own/foreign coverage is separate. The focused plan records exact commands, hashes, observed counts, review limits and lost historical raw logs. Fresh OCR, final-head CI and independent integration/resulting-main certification remain separate requirements.",
     "WELL-112 incorporates independently integrated WELL-114 from main f72cf637453408896a5037dcb2f8d37f0d29e3af. Earlier proof notes describe their historical checkpoints; new complete branch gates, OCR and independent review remain required. The floating-label variant is opt-in and does not migrate registration or change owner lifecycles.",
     "WELL-136 verification found a global MessageIntent counter in the timing fixture. Its deterministic retained-foreign-intent regression failed before correction; the corrected fixture delegates to the existing P805 finite observation reader. Timing and shared observation tests passed 9 with seed 441709 and four schedulers. No retained shared records were deleted and no business API or response-window assertion changed.",
-    "The WELL-163 partial index and evidence-type widening retain existing rows. After revocation evidence exists, the prior Audit constraint blocks downgrade to protect append-only evidence. Global logout, device trust, MFA enrollment, support and participant release are outside WELL-163."
+    "The WELL-163 partial index and evidence-type widening retain existing rows. After revocation evidence exists, the prior Audit constraint blocks downgrade to protect append-only evidence. Global logout, device trust, MFA enrollment, support and participant release are outside WELL-163.",
+    "WELL-170 introduces no migration or additional evidence type. Existing Audit uniqueness and Session terminal actions govern the new operation. The Hallmark render of four sanitized endpoint pages showed no page FAIL. Static checks reported 90 inherited findings in the unchanged generated CSS and 10 inherited CSS REFLEX findings. The existing 58px design-system input height explains the two new gate 39b REFLEX findings. The exact approved Afrikaans label can wrap on narrow screens. No release proof is claimed."
   ],
   "follow_up_tickets": [
     "WELL-21",
@@ -988,13 +1182,13 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def authenticate_password",
-      "sha256": "b5e9fd52bda3524e844f76a18d452dd55a7d496bbe4c9bb85f94f4ff05e5b379"
+      "sha256": "e072a4c4fb586b3c93beb9f5543896801b0ddd2b7f96ac07cb006528ccf98bef"
     },
     {
       "id": "password",
       "path": "lib/new_you/identity/password_session.ex",
       "symbol": "def authorize",
-      "sha256": "538fcb22aafad64878b510f15528b95a33bd4c316c88547071793c0c9ed35b1b"
+      "sha256": "55b65e5cdcf948b59602a90e9635aedb6e42af64499c6849d9d2db9768258d45"
     },
     {
       "id": "magic",
@@ -1006,7 +1200,7 @@
       "id": "session",
       "path": "lib/new_you/identity/session.ex",
       "symbol": "update :logout",
-      "sha256": "0d83117c41e4e60dd3eecd64cb716ef22618add644b18b6206aab1a20d435264"
+      "sha256": "779565c4e389b1ea3c3ba13c01f5227c52b3b12e67de8c6383f8c259491925f4"
     },
     {
       "id": "token",
@@ -1036,7 +1230,7 @@
       "id": "boundary",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "defp dispatch_browser_request",
-      "sha256": "0cefb2894f1745067e70d44dec30ceee5f43fc3c16e511970286be34520933c9"
+      "sha256": "08f3b17fe1f24a1c66dd2a99a3c90fb67a4325848b6bb3948ffff3a3ee973226"
     },
     {
       "id": "endpoint",
@@ -1120,7 +1314,7 @@
       "id": "browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'signin'",
-      "sha256": "564b51a45974649047c320b5de39c2bb638fe705ffc2ee484968c91cf2ab7f17"
+      "sha256": "4378a3962799047212e7f4583d59031346f9803f50b9beeb99ae39ffe034ac46"
     },
     {
       "id": "password_test",
@@ -1228,7 +1422,7 @@
       "id": "session_inventory_copy",
       "path": "lib/new_you/content/session_management_copy.ex",
       "symbol": "def load(locale)",
-      "sha256": "a39d26b58d8c90b7a13b7e60fedd931098263b5d3ad8e4a8688838855dbbd972"
+      "sha256": "5aab636ee3558929b627c069f7362eac7f3bce6fff06e3fd171eb2ed6c25bfd8"
     },
     {
       "id": "session_inventory_packet",
@@ -1240,55 +1434,55 @@
       "id": "session_inventory_controller",
       "path": "lib/new_you_web/controllers/session_management_controller.ex",
       "symbol": "def revoke",
-      "sha256": "af85ade12a9c39f20d7e3d3ab13d1250d3b43ac9ef55e4e470c74277da2d7237"
+      "sha256": "40afd234487c02532e56521670e47fc0727af8bb7e8fc8b3d60c4007932f33ed"
     },
     {
       "id": "session_inventory_template",
       "path": "lib/new_you_web/controllers/session_management_html/index.html.heex",
       "symbol": "data-session-revoke-form",
-      "sha256": "fc8578d0146528212ffa9e8cab2a99f1fa5ab392ff8e6485e2767df9647b851e"
+      "sha256": "cdab159134bd8c6cfacdc4c00feac59bd6ae2f13724970d2e8959025c0d07e51"
     },
     {
       "id": "session_inventory_test",
       "path": "test/new_you/identity/session_management_test.exs",
       "symbol": "defmodule NewYou.Identity.SessionManagementTest",
-      "sha256": "b19dbd4859e9c419b1d29247bfa4cd6c2239795d9b598bf6b5a323892eeee9dc"
+      "sha256": "4480b942d18b05e544de4d0c393063a8b9e35e3990618a1f78634f5f04519da6"
     },
     {
       "id": "session_inventory_web_test",
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "symbol": "two independent Chromium Sessions",
-      "sha256": "7f18813050133416ac1c8f8259a0afa9eca52bdd31eed1ab832ebbea5e7dcdc5"
+      "sha256": "cbaeac74228f9c7917fba83eccd4d9860ca898aa95008f9b349411a420622232"
     },
     {
       "id": "session_reconciliation_web_test",
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "symbol": "fresh browser navigation reconciles a lost committed revocation",
-      "sha256": "7f18813050133416ac1c8f8259a0afa9eca52bdd31eed1ab832ebbea5e7dcdc5"
+      "sha256": "cbaeac74228f9c7917fba83eccd4d9860ca898aa95008f9b349411a420622232"
     },
     {
       "id": "session_outcomes_web_test",
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "symbol": "shows approved rollback and uncertain outcomes without reporting success",
-      "sha256": "7f18813050133416ac1c8f8259a0afa9eca52bdd31eed1ab832ebbea5e7dcdc5"
+      "sha256": "cbaeac74228f9c7917fba83eccd4d9860ca898aa95008f9b349411a420622232"
     },
     {
       "id": "session_test_acknowledgement",
       "path": "lib/new_you/identity/password_session.ex",
       "symbol": ":lose_revocation_acknowledgement",
-      "sha256": "538fcb22aafad64878b510f15528b95a33bd4c316c88547071793c0c9ed35b1b"
+      "sha256": "55b65e5cdcf948b59602a90e9635aedb6e42af64499c6849d9d2db9768258d45"
     },
     {
       "id": "session_inventory_copy_test",
       "path": "test/new_you/content/session_management_copy_test.exs",
       "symbol": "defmodule NewYou.Content.SessionManagementCopyTest",
-      "sha256": "7ab48dd6ac743a270871f76d182768dbdf691477a86737815ee5d68a76d0e08c"
+      "sha256": "8ed813645a30e4a53414cc95f0db60fa236717382bd372a8ffb9be80c292eee1"
     },
     {
       "id": "session_inventory_driver",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'session_management'",
-      "sha256": "564b51a45974649047c320b5de39c2bb638fe705ffc2ee484968c91cf2ab7f17"
+      "sha256": "4378a3962799047212e7f4583d59031346f9803f50b9beeb99ae39ffe034ac46"
     },
     {
       "id": "session_inventory_index",
@@ -1313,6 +1507,60 @@
       "path": "lib/new_you/audit.ex",
       "symbol": "defdelegate establish_identity_security_obligation",
       "sha256": "4c526021acbd6c1eddbe723815c2a35a7a6f0beec6ca06c2892f829386d2f0e7"
+    },
+    {
+      "id": "session_scope_revocation",
+      "path": "lib/new_you/identity/session_revocation.ex",
+      "symbol": "def revoke_sessions",
+      "sha256": "6cfdc40095d684fc832ef58d604781a255cc75350067cf8af7ca85aabbd13580"
+    },
+    {
+      "id": "step_up_for_global_revocation",
+      "path": "lib/new_you/identity/privileged_access.ex",
+      "symbol": "def step_up_for_revocation",
+      "sha256": "f24d938f0a69254bb19d0a2a940b3ae71ecec846516707299a6fae2010d5cdfb"
+    },
+    {
+      "id": "global_device_assurance",
+      "path": "lib/new_you/identity/device_assurance.ex",
+      "symbol": "update :revoke",
+      "sha256": "8512dbc9ccc63383a798c67192d83ea6fdc71cc27b7ebb3ebec2334b5374e476"
+    },
+    {
+      "id": "confirmation_all_template",
+      "path": "lib/new_you_web/controllers/session_management_html/confirm_all.html.heex",
+      "symbol": "revoke-all-sessions",
+      "sha256": "92f9566285c67ff3f2acce7158cf2da5afb02fed5181f88cad3ca9f1b8d0d5c4"
+    },
+    {
+      "id": "global_revocation_owner",
+      "path": "test/new_you/identity/session_management_test.exs",
+      "symbol": "global revocation requires fresh proof",
+      "sha256": "4480b942d18b05e544de4d0c393063a8b9e35e3990618a1f78634f5f04519da6"
+    },
+    {
+      "id": "global_revocation_race",
+      "path": "test/new_you/identity/session_management_test.exs",
+      "symbol": "independent PostgreSQL connections order password issuance",
+      "sha256": "4480b942d18b05e544de4d0c393063a8b9e35e3990618a1f78634f5f04519da6"
+    },
+    {
+      "id": "global_revocation_restart",
+      "path": "test/new_you/identity/session_management_test.exs",
+      "symbol": "an unacknowledged global commit survives restart",
+      "sha256": "4480b942d18b05e544de4d0c393063a8b9e35e3990618a1f78634f5f04519da6"
+    },
+    {
+      "id": "global_revocation_browser",
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "symbol": "global confirmation is read-only",
+      "sha256": "cbaeac74228f9c7917fba83eccd4d9860ca898aa95008f9b349411a420622232"
+    },
+    {
+      "id": "global_revocation_response_loss",
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "symbol": "Chromium reconciles an interrupted global sign-out response",
+      "sha256": "cbaeac74228f9c7917fba83eccd4d9860ca898aa95008f9b349411a420622232"
     }
   ]
 }

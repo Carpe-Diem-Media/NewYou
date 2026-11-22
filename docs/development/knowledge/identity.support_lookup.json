@@ -6,7 +6,7 @@
     "WELL-18"
   ],
   "implementation_revision": {
-    "git_sha": "7fdf2366e5981e43e290e25c4bb04a3908474673",
+    "git_sha": "874a190965592574111a05e774af9535c8f0342b",
     "semantics": "WELL-18 adds an Identity-owned lookup scope and a read-only current-authority path. The map is refreshed against the committed source checkpoint; it is descriptive, not authorization or merge evidence. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -306,7 +306,7 @@
       "id": "identity_api",
       "path": "lib/new_you/identity.ex",
       "symbol": "lookup_support_identity",
-      "sha256": "b5e9fd52bda3524e844f76a18d452dd55a7d496bbe4c9bb85f94f4ff05e5b379"
+      "sha256": "e072a4c4fb586b3c93beb9f5543896801b0ddd2b7f96ac07cb006528ccf98bef"
     },
     {
       "id": "lookup",
@@ -324,13 +324,13 @@
       "id": "privilege",
       "path": "lib/new_you/identity/privileged_access.ex",
       "symbol": ":lookup_identity",
-      "sha256": "c3cabe7fd241751a268b030242cbd21adf3e7df81f286aa492f6c14e864eacad"
+      "sha256": "f24d938f0a69254bb19d0a2a940b3ae71ecec846516707299a6fae2010d5cdfb"
     },
     {
       "id": "session",
       "path": "lib/new_you/identity/session.ex",
       "symbol": ":lookup_identity",
-      "sha256": "0d83117c41e4e60dd3eecd64cb716ef22618add644b18b6206aab1a20d435264"
+      "sha256": "779565c4e389b1ea3c3ba13c01f5227c52b3b12e67de8c6383f8c259491925f4"
     },
     {
       "id": "account",
