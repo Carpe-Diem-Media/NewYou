@@ -12,7 +12,7 @@
     "WELL-143"
   ],
   "implementation_revision": {
-    "git_sha": "874a190965592574111a05e774af9535c8f0342b",
+    "git_sha": "cd7489608cba1d4ce32e6402f84ff5fb906eb712",
     "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-168 refreshes shared source references after a Recovery-only delivery fix."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1612,7 +1612,7 @@
       "id": "content",
       "path": "lib/new_you/content/primary_email_change_message.ex",
       "symbol": "defmodule NewYou.Content.PrimaryEmailChangeMessage",
-      "sha256": "3589aa038f6f6345f39db5f4fa1c18e6210cb0404b4cf9458ce7519d0bf4ed6d"
+      "sha256": "41b7d792ffd9b68150a3714c594548c095bfd2a91c90e1207b3c02473c4e4039"
     },
     {
       "id": "controller",
@@ -1714,7 +1714,7 @@
       "id": "applicability_validator",
       "path": "tools/check_well157_email_applicability.py",
       "symbol": "validate_packet",
-      "sha256": "ffa04a17638f876cf01fe40c5124630e24b8a66638571fce8f26c426e045bf08"
+      "sha256": "871b1af17acb746750a84e45d9bbe5ec34bbadf8749db28d160871d690b878c5"
     },
     {
       "id": "applicability_test",
@@ -1726,7 +1726,7 @@
       "id": "magic_approval_checker",
       "path": "tools/check_magic_login_evidence.py",
       "symbol": "def validate_development",
-      "sha256": "f46f25ae05d1652aabbe239486bff24ae8f29c3ab59edfe94ed50c47440adce4"
+      "sha256": "13339b0fb8248d28d85126840cc1fcad32587b0308c9adf078d7a675cf1c98aa"
     },
     {
       "id": "magic_approval_test",
@@ -1768,7 +1768,7 @@
       "id": "phase9_content_test",
       "path": "test/new_you/content/primary_email_change_message_test.exs",
       "symbol": "defmodule NewYou.Content.PrimaryEmailChangeMessageTest",
-      "sha256": "b2c23779a44a7523228fd0e05188ea73e10e91c709ea130ca1d28c0a5ec66338"
+      "sha256": "17ade818ba5f28744302bc9d6d969cd098a1e6c43401c0767121b66ae0ecd318"
     },
     {
       "id": "phase9_browser",
