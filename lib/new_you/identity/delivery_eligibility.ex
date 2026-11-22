@@ -14,10 +14,16 @@ defmodule NewYou.Identity.DeliveryEligibility do
   unavailable signing key returns `{:error, :capability_unavailable}` once the
   other source guards pass. Content and provider admission remain separate gates.
   """
-  @spec recovery(String.t(), String.t(), String.t(), Ecto.UUID.t()) ::
+  @spec recovery(
+          String.t(),
+          String.t(),
+          String.t(),
+          Ecto.UUID.t(),
+          NewYou.Identity.recovery_context()
+        ) ::
           :ok | {:error, :source_invalid | :capability_unavailable}
-  def recovery(reference, destination, locale, operation_id),
-    do: Recovery.delivery_eligibility(reference, destination, locale, operation_id)
+  def recovery(reference, destination, locale, operation_id, context \\ :p8_15),
+    do: Recovery.delivery_eligibility(reference, destination, locale, operation_id, context)
 
   @doc """
   Checks the exact durable completion receipt under Account, case and Token locks.
@@ -26,10 +32,10 @@ defmodule NewYou.Identity.DeliveryEligibility do
   authorised in the atomic completion handoff; this check never retargets it.
   It grants no content eligibility, provider permission, Session or hold release.
   """
-  @spec recovery_notice(String.t(), String.t(), Ecto.UUID.t()) ::
+  @spec recovery_notice(String.t(), String.t(), Ecto.UUID.t(), NewYou.Identity.recovery_context()) ::
           :ok | {:error, :source_invalid}
-  def recovery_notice(reference, locale, completion_id),
-    do: Recovery.notice_eligibility(reference, locale, completion_id)
+  def recovery_notice(reference, locale, completion_id, context \\ :p8_15),
+    do: Recovery.notice_eligibility(reference, locale, completion_id, context)
 
   @spec verification(String.t(), String.t()) :: :ok | {:error, :source_invalid}
   def verification(reference, destination) do

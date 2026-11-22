@@ -311,7 +311,7 @@ defmodule NewYou.Identity.ManualRecovery do
   end
 
   defp valid_case(recovery, account, expected_version) do
-    with true <- recovery.account_id == account.id,
+    with true <- recovery.entry_context == :p8_15 and recovery.account_id == account.id,
          true <- recovery.version == expected_version,
          true <- DateTime.compare(DateTime.utc_now(), recovery.expires_at) == :lt,
          true <- recovery.state == :held_manual_review,
@@ -323,8 +323,9 @@ defmodule NewYou.Identity.ManualRecovery do
   end
 
   defp valid_case_or_receipt(recovery, account, input) do
-    if recovery.state == :completed and recovery.completion_id == input.operation_id and
-         recovery.account_id == account.id and recovery.version == input.expected_version + 1 and
+    if recovery.entry_context == :p8_15 and recovery.state == :completed and
+         recovery.completion_id == input.operation_id and recovery.account_id == account.id and
+         recovery.version == input.expected_version + 1 and
          account.account_status == :open and account.credential_status == :active do
       :ok
     else

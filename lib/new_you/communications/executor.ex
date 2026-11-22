@@ -128,7 +128,8 @@ defmodule NewYou.Communications.Executor do
         intent.source_reference,
         intent.destination,
         intent.locale,
-        intent.source_operation_id
+        intent.source_operation_id,
+        Communications.recovery_context(intent)
       )
 
   defp source_eligibility(
@@ -138,7 +139,8 @@ defmodule NewYou.Communications.Executor do
          NewYou.Identity.DeliveryEligibility.recovery_notice(
            intent.source_reference,
            intent.locale,
-           intent.source_operation_id
+           intent.source_operation_id,
+           Communications.recovery_context(intent)
          )
 
   defp source_eligibility(%{role: role})
@@ -200,7 +202,11 @@ defmodule NewYou.Communications.Executor do
 
   defp recovery_payload(intent) do
     with :ok <- source_eligibility(intent),
-         {:ok, bytes} <- NewYou.Content.RecoveryMessage.eligible(intent),
+         {:ok, bytes} <-
+           NewYou.Content.RecoveryMessage.eligible(
+             intent,
+             Communications.recovery_context(intent)
+           ),
          true <- valid_recovery_render?(intent),
          {:ok, replacement} <- recovery_replacement(intent),
          true <- DeliveryProvider.available?() do
@@ -235,7 +241,8 @@ defmodule NewYou.Communications.Executor do
   end
 
   defp recovery_replacement(%{role: :recovery_security_notice} = intent) do
-    with {:ok, contact} <- NewYou.Content.RecoveryMessage.support_contact(),
+    with {:ok, contact} <-
+           NewYou.Content.RecoveryMessage.support_contact(Communications.recovery_context(intent)),
          true <- contact == intent.support_contact do
       {:ok, contact}
     else

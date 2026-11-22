@@ -86,14 +86,16 @@ defmodule NewYou.Identity.Recovery do
   @spec request_transaction_timeout_ms() :: pos_integer()
   def request_transaction_timeout_ms, do: 350
 
+  @spec request(term(), term(), term(), Identity.recovery_context()) :: :ok
+  def request(email, locale, operation_id, context \\ :p8_15)
+
   if @enabled do
-    @spec request(term(), term(), term()) :: :ok
-    def request(email, locale, operation_id) do
+    def request(email, locale, operation_id, context) do
       started = System.monotonic_time(:millisecond)
 
       try do
         with {:ok, email} <- NewYou.Identity.Email.canonicalize(email),
-             true <- locale in ["en", "af"],
+             true <- locale in ["en", "af"] and allowed_entry?(email, context),
              {:ok, operation_id} <- Ecto.UUID.cast(operation_id) do
           lease_stage(:before_transact)
 
@@ -103,7 +105,7 @@ defmodule NewYou.Identity.Recovery do
                 lease_stage(:transaction_entered)
                 lease_stage(:request_locked)
                 trace(:transaction_entered)
-                request_locked(email, locale, operation_id)
+                request_locked(email, locale, operation_id, context)
               end,
               timeout: request_transaction_timeout_ms()
             )
@@ -125,11 +127,19 @@ defmodule NewYou.Identity.Recovery do
       :ok
     end
   else
-    @spec request(term(), term(), term()) :: :ok
-    def request(_email, _locale, _operation_id), do: :ok
+    def request(_email, _locale, _operation_id, _context), do: :ok
   end
 
-  defp request_locked(email, locale, operation_id) do
+  defp allowed_entry?(_email, :p8_15), do: true
+
+  defp allowed_entry?(email, :well183),
+    do:
+      Application.get_env(:new_you, :fp001_development_entry) == true and
+        String.ends_with?(email, "@example.test")
+
+  defp allowed_entry?(_email, _context), do: false
+
+  defp request_locked(email, locale, operation_id, context) do
     with {:ok, %Account{} = account} <-
            Account
            |> Ash.Query.filter(email == ^email)
@@ -142,18 +152,20 @@ defmodule NewYou.Identity.Recovery do
            RecoveryCase
            |> Ash.Query.filter(operation_id == ^operation_id)
            |> Ash.read_one(authorize?: false) do
-      reuse_or_start(prior, account, locale, operation_id)
+      reuse_or_start(prior, account, locale, operation_id, context)
     else
       _ -> unavailable()
     end
   end
 
   defp reuse_or_start(
-         %RecoveryCase{account_id: id} = recovery,
+         %RecoveryCase{account_id: id, entry_context: context, locale: original_locale} = recovery,
          %{id: id} = account,
-         _locale,
-         _operation_id
-       ) do
+         locale,
+         _operation_id,
+         context
+       )
+       when context == :p8_15 or locale == original_locale do
     cond do
       recovery.state in @terminal ->
         {:ok, :pending}
@@ -168,27 +180,30 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
-  defp reuse_or_start(%RecoveryCase{}, _account, _locale, _operation_id), do: unavailable()
+  defp reuse_or_start(%RecoveryCase{}, _account, _locale, _operation_id, _context),
+    do: unavailable()
 
-  defp reuse_or_start(nil, account, locale, operation_id) do
+  defp reuse_or_start(nil, account, locale, operation_id, context) do
     current =
       RecoveryCase
       |> Ash.Query.filter(account_id == ^account.id and state not in ^@terminal)
       |> Ash.read_one!(authorize?: false)
 
-    start_or_resume(current, account, locale, operation_id)
+    start_or_resume(current, account, locale, operation_id, context)
   end
 
-  defp start_or_resume(nil, account, locale, operation_id),
-    do: start_case(account, locale, operation_id)
+  defp start_or_resume(nil, account, locale, operation_id, context),
+    do: start_case(account, locale, operation_id, context)
 
-  defp start_or_resume(current, account, locale, operation_id) do
+  defp start_or_resume(current, account, locale, operation_id, context) do
     if DateTime.compare(now(), current.expires_at) == :lt do
-      resume_verified_channel(current, account)
+      if current.entry_context == context and (context == :p8_15 or current.locale == locale),
+        do: resume_verified_channel(current, account),
+        else: {:ok, :pending}
     else
       with {:ok, _} <- transition(current, :expire, %{terminated_at: now()}),
            :ok <- revoke_case_proof(current) do
-        start_case(account, locale, operation_id)
+        start_case(account, locale, operation_id, context)
       end
     end
   end
@@ -232,7 +247,7 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
-  defp start_case(account, locale, operation_id) do
+  defp start_case(account, locale, operation_id, context) do
     required = required_assurance(account)
 
     with {:ok, recovery} <-
@@ -244,6 +259,7 @@ defmodule NewYou.Identity.Recovery do
                required_assurance: required,
                account_binding: binding(account, required),
                locale: locale,
+               entry_context: context,
                expires_at: DateTime.add(now(), 3600, :second),
                history: [%{"state" => "requested", "version" => 0}]
              },
@@ -304,14 +320,17 @@ defmodule NewYou.Identity.Recovery do
            ),
          :ok <- budget_stage(:communications),
          {:ok, _} <-
-           Communications.establish_recovery(%{
-             source_operation_id: recovery.operation_id,
-             source_reference: proof.jti,
-             destination: account.email,
-             destination_provenance: "identity_recovery_issuance",
-             destination_authorized_at: proof.created_at,
-             locale: recovery.locale
-           }),
+           Communications.establish_recovery(
+             %{
+               source_operation_id: recovery.operation_id,
+               source_reference: proof.jti,
+               destination: account.email,
+               destination_provenance: "identity_recovery_issuance",
+               destination_authorized_at: proof.created_at,
+               locale: recovery.locale
+             },
+             recovery.entry_context
+           ),
          :ok <- trace(:await_proof),
          :ok <- lease_stage(:binding),
          {:ok, _} <-
@@ -344,11 +363,11 @@ defmodule NewYou.Identity.Recovery do
   end
 
   @doc false
-  @spec delivery_eligibility(term(), term(), term(), term()) ::
+  @spec delivery_eligibility(term(), term(), term(), term(), Identity.recovery_context()) ::
           :ok | {:error, :source_invalid | :capability_unavailable}
-  def delivery_eligibility(reference, destination, locale, operation_id) do
+  def delivery_eligibility(reference, destination, locale, operation_id, context) do
     case delivery_source(reference, destination, locale) do
-      {:ok, account, %{operation_id: ^operation_id} = recovery, _proof} ->
+      {:ok, account, %{operation_id: ^operation_id, entry_context: ^context} = recovery, _proof} ->
         verify_delivery_binding(account, recovery)
 
       _ ->
@@ -357,13 +376,14 @@ defmodule NewYou.Identity.Recovery do
   end
 
   @doc false
-  @spec notice_eligibility(term(), term(), term()) :: :ok | {:error, :source_invalid}
-  def notice_eligibility(reference, locale, completion_id) do
+  @spec notice_eligibility(term(), term(), term(), Identity.recovery_context()) ::
+          :ok | {:error, :source_invalid}
+  def notice_eligibility(reference, locale, completion_id, context) do
     with {:ok, _account, recovery, _proof} <- lock_delivery_source(reference),
          true <- recovery.state == :completed and recovery.completion_id == completion_id,
          true <- not is_nil(recovery.completed_at) and not is_nil(recovery.terminated_at),
          true <- recovery.satisfied_assurance >= recovery.required_assurance,
-         true <- recovery.locale == locale do
+         true <- recovery.locale == locale and recovery.entry_context == context do
       :ok
     else
       _ -> {:error, :source_invalid}
@@ -445,32 +465,49 @@ defmodule NewYou.Identity.Recovery do
     with {:ok, account} <- lock_account(locator.account_id),
          {:ok, recovery} <- lock_case(locator.recovery_case_id),
          {:ok, proof} <- token(locator.jti, true),
-         true <- proof.recovery_claims == claims and recovery.proof_jti == proof.jti do
+         true <- proof.recovery_claims == claims and recovery.proof_jti == proof.jti,
+         true <- matches_entry?(recovery, account, request) do
       claimant_locked(operation, request, operation_id, recovery, account, proof)
     else
       _ -> unavailable()
     end
   end
 
+  defp matches_entry?(%{entry_context: :p8_15}, _account, request),
+    do: Map.get(request, :entry_context, :p8_15) == :p8_15
+
+  defp matches_entry?(%{entry_context: :well183, locale: locale}, account, request),
+    do:
+      request[:entry_context] == :well183 and request[:locale] == locale and
+        allowed_entry?(account.email, :well183)
+
   defp claimant_locked(
          :complete_recovery,
-         _request,
+         request,
          id,
-         %{state: :completed, completion_id: id},
-         _account,
+         %{state: :completed, completion_id: id} = recovery,
+         account,
          _proof
-       ),
-       do: {:ok, :already_completed}
+       ) do
+    if recovery.entry_context == :p8_15 or
+         (current?(recovery, account) and current_replacement?(request[:password], account)),
+       do: {:ok, :already_completed},
+       else: unavailable()
+  end
 
   defp claimant_locked(
          :submit_recovery_proof,
          _request,
          id,
-         %{proof_acceptance_id: id, state: state},
-         _account,
-         %{purpose: "recovery_consumed"}
+         %{proof_acceptance_id: id, state: state} = recovery,
+         account,
+         %{purpose: "recovery_consumed"} = proof
        )
-       when state not in @terminal, do: {:ok, :accepted}
+       when state not in @terminal do
+    if recovery.entry_context == :p8_15 or current_proof?(recovery, account, proof),
+      do: proof_outcome(recovery),
+      else: unavailable()
+  end
 
   defp claimant_locked(:cancel_recovery, _request, _id, %{state: :cancelled}, _account, _proof),
     do: {:ok, :cancelled}
@@ -480,7 +517,8 @@ defmodule NewYou.Identity.Recovery do
       recovery.state in @terminal ->
         unavailable()
 
-      DateTime.compare(now(), recovery.expires_at) != :lt ->
+      DateTime.compare(now(), recovery.expires_at) != :lt or
+          (recovery.entry_context == :well183 and DateTime.compare(now(), proof.expires_at) != :lt) ->
         terminate(recovery, proof, :expire, :expired)
 
       not current?(recovery, account) ->
@@ -488,6 +526,15 @@ defmodule NewYou.Identity.Recovery do
 
       true ->
         fresh_claimant_action(operation, request, id, recovery, account, proof)
+    end
+  end
+
+  defp current_replacement?(password, account) do
+    with true <- is_binary(password) and byte_size(password) in 1..1024,
+         {:ok, strategy} <- AshAuthentication.Info.strategy(Account, :password) do
+      strategy.hash_provider.valid?(password, account.hashed_password)
+    else
+      _ -> false
     end
   end
 
@@ -520,11 +567,19 @@ defmodule NewYou.Identity.Recovery do
     do: terminate(recovery, proof, :cancel, :cancelled)
 
   defp accept_assurance(account, recovery) do
-    with {:ok, _} <- graduate_assurance(account, recovery) do
+    with {:ok, advanced} <- graduate_assurance(account, recovery) do
       checkpoint()
-      {:ok, :accepted}
+      proof_outcome(advanced)
     end
   end
+
+  defp current_proof?(recovery, account, proof),
+    do:
+      DateTime.compare(now(), recovery.expires_at) == :lt and
+        DateTime.compare(now(), proof.expires_at) == :lt and current?(recovery, account)
+
+  defp proof_outcome(%{entry_context: :well183, state: :held_manual_review}), do: {:ok, :held}
+  defp proof_outcome(_recovery), do: {:ok, :accepted}
 
   defp graduate_assurance(account, %{required_assurance: 2} = recovery),
     do: hold_case(account, recovery)
@@ -566,10 +621,11 @@ defmodule NewYou.Identity.Recovery do
 
   @doc false
   def finish(recovery, account, proof, password, operation_id, authority) do
-    with true <- is_binary(password) and byte_size(password) in 1..1024,
+    with true <- recovery.entry_context == :p8_15 or is_nil(authority),
+         true <- is_binary(password) and byte_size(password) in 1..1024,
          {:ok, strategy} <- AshAuthentication.Info.strategy(Account, :password),
          false <- strategy.hash_provider.valid?(password, account.hashed_password),
-         {:ok, _} <-
+         {:ok, updated_account} <-
            Ash.update(account, %{password: password},
              action: :replace_password,
              authorize?: false
@@ -577,14 +633,17 @@ defmodule NewYou.Identity.Recovery do
          :ok <- invalidate_sessions_and_devices(account.id),
          :ok <- Identity.invalidate_registration_operations(account.id),
          {:ok, _} <-
-           Communications.establish_recovery_notice(%{
-             source_operation_id: operation_id,
-             source_reference: proof.jti,
-             destination: account.email,
-             destination_provenance: "identity_recovery_completion",
-             destination_authorized_at: now(),
-             locale: recovery.locale
-           }),
+           Communications.establish_recovery_notice(
+             %{
+               source_operation_id: operation_id,
+               source_reference: proof.jti,
+               destination: account.email,
+               destination_provenance: "identity_recovery_completion",
+               destination_authorized_at: now(),
+               locale: recovery.locale
+             },
+             recovery.entry_context
+           ),
          {:ok, _} <-
            Audit.establish_identity_security_obligation(%{
              source_operation_id: operation_id,
@@ -602,6 +661,7 @@ defmodule NewYou.Identity.Recovery do
          {:ok, _} <-
            transition(recovery, :finish, %{
              completion_id: operation_id,
+             account_binding: completion_binding(recovery, updated_account),
              completed_at: now(),
              terminated_at: now(),
              satisfied_assurance: recovery.required_assurance
@@ -612,6 +672,11 @@ defmodule NewYou.Identity.Recovery do
       _ -> unavailable()
     end
   end
+
+  defp completion_binding(%{entry_context: :well183} = recovery, updated_account),
+    do: binding(updated_account, recovery.required_assurance)
+
+  defp completion_binding(recovery, _updated_account), do: recovery.account_binding
 
   @doc false
   def invalidate_sessions_and_devices(id) do

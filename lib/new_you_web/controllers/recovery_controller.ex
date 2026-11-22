@@ -6,11 +6,13 @@ defmodule NewYouWeb.RecoveryController do
   an external sender or production routes.
   """
   use NewYouWeb, :controller
+  alias NewYou.Content.RecoveryBrowserCopy
   alias NewYou.Identity
 
   @enabled Mix.env() in [:dev, :test] and
              Application.compile_env(:new_you, :verification_development_fixtures, false)
   plug :require_proof_environment
+  plug :require_current_copy
 
   def new(conn, %{"locale" => locale}) when locale in ["en", "af"],
     do: page(conn, :request, locale)
@@ -29,19 +31,36 @@ defmodule NewYouWeb.RecoveryController do
   def show(conn, _params), do: neutral(conn)
 
   def request(conn, params) do
-    Identity.request_recovery(params["email"], params["locale"], params["operation_id"])
+    Identity.request_recovery(
+      params["email"],
+      params["locale"],
+      params["operation_id"],
+      conn.assigns.recovery_context
+    )
+
     result(conn, params, :requested)
   end
 
   def confirm(conn, params) do
-    case Identity.submit_recovery_proof(params["proof"], params["operation_id"]) do
+    case Identity.submit_recovery_proof(
+           params["proof"],
+           params["operation_id"],
+           params["locale"],
+           conn.assigns.recovery_context
+         ) do
       {:ok, :accepted} -> result(conn, params, :credential, proof: safe_proof(params["proof"]))
       _ -> result(conn, params, :unavailable)
     end
   end
 
   def complete(conn, params) do
-    case Identity.complete_recovery(params["proof"], params["password"], params["operation_id"]) do
+    case Identity.complete_recovery(
+           params["proof"],
+           params["password"],
+           params["operation_id"],
+           params["locale"],
+           conn.assigns.recovery_context
+         ) do
       {:ok, outcome} when outcome in [:completed, :already_completed] ->
         conn |> configure_session(renew: true) |> clear_session() |> result(params, :completed)
 
@@ -51,18 +70,54 @@ defmodule NewYouWeb.RecoveryController do
   end
 
   def cancel(conn, params) do
-    Identity.cancel_recovery(params["proof"], params["operation_id"])
+    Identity.cancel_recovery(
+      params["proof"],
+      params["operation_id"],
+      params["locale"],
+      conn.assigns.recovery_context
+    )
+
     neutral(conn)
   end
 
   defp require_proof_environment(conn, _opts) do
-    if :erlang.andalso(
-         @enabled,
-         Application.get_env(:new_you, :p8_15_browser_development_fixtures) == true
-       ),
-       do: conn,
-       else: conn |> headers() |> send_resp(404, "") |> halt()
+    case entry_context() do
+      nil -> conn |> headers() |> send_resp(404, "") |> halt()
+      context -> assign(conn, :recovery_context, context)
+    end
   end
+
+  if @enabled do
+    defp entry_context do
+      cond do
+        Application.get_env(:new_you, :fp001_development_entry) == true ->
+          if NewYouWeb.DevelopmentEntry.enabled?(), do: :well183
+
+        Application.get_env(:new_you, :p8_15_browser_development_fixtures) == true ->
+          :p8_15
+
+        true ->
+          nil
+      end
+    end
+  else
+    defp entry_context, do: nil
+  end
+
+  defp require_current_copy(%{assigns: %{recovery_context: :well183}} = conn, _opts) do
+    case conn.params["locale"] do
+      locale when locale in ["en", "af"] ->
+        case RecoveryBrowserCopy.load(locale) do
+          {:ok, copy} -> assign(conn, :recovery_copy, copy)
+          _ -> conn |> headers() |> send_resp(503, "") |> halt()
+        end
+
+      _ ->
+        conn |> neutral() |> halt()
+    end
+  end
+
+  defp require_current_copy(conn, _opts), do: conn
 
   defp neutral(conn), do: conn |> headers() |> send_resp(204, "")
 
@@ -81,7 +136,13 @@ defmodule NewYouWeb.RecoveryController do
     |> render(
       :journey,
       Map.merge(
-        %{stage: stage, locale: locale, proof: "", operation_id: Ecto.UUID.generate()},
+        %{
+          stage: stage,
+          locale: locale,
+          copy: conn.assigns[:recovery_copy],
+          proof: "",
+          operation_id: Ecto.UUID.generate()
+        },
         Map.new(assigns)
       )
     )
@@ -108,7 +169,7 @@ defmodule NewYouWeb.RecoveryController do
     |> put_resp_header("referrer-policy", "no-referrer")
     |> put_resp_header(
       "content-security-policy",
-      "default-src 'none'; style-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+      "default-src 'none'; style-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
     )
   end
 end

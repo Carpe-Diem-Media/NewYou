@@ -32,6 +32,10 @@ defmodule NewYou.Identity.RecoveryCase do
           "(state NOT IN ('proof_pending','additional_assurance','completed') OR proof_jti IS NOT NULL) AND (satisfied_assurance = 0 OR proof_acceptance_id IS NOT NULL) AND (required_assurance <> 2 OR state <> 'completed' OR review IS NOT NULL)"
 
       check_constraint :locale, "recovery_cases_locale", check: "locale IN ('en','af')"
+
+      check_constraint :entry_context, "recovery_cases_entry_context",
+        check: "entry_context IN ('p8_15','well183')"
+
       check_constraint :version, "recovery_cases_version", check: "version >= 0"
 
       check_constraint :state, "recovery_cases_state",
@@ -96,6 +100,7 @@ defmodule NewYou.Identity.RecoveryCase do
         :account_binding,
         :expires_at,
         :locale,
+        :entry_context,
         :history
       ]
     end
@@ -212,6 +217,12 @@ defmodule NewYou.Identity.RecoveryCase do
       allow_nil?: false,
       default: [],
       sensitive?: true,
+      public?: false
+
+    attribute :entry_context, :atom,
+      allow_nil?: false,
+      default: :p8_15,
+      constraints: [one_of: [:p8_15, :well183]],
       public?: false
 
     attribute :locale, :string,

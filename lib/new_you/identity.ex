@@ -47,10 +47,21 @@ defmodule NewYou.Identity do
     resource NewYou.Identity.RecoveryCase
   end
 
+  @type recovery_context :: :p8_15 | :well183
+
   @doc "Start or reuse a recovery case with a neutral result. Requests alone do not change Account security or access. A missing channel remains unproven until the existing Identity verification boundary establishes it."
   @spec request_recovery(term(), term(), term()) :: :ok
   def request_recovery(email, locale, operation_id),
     do: NewYou.Identity.Recovery.request(email, locale, operation_id)
+
+  @doc """
+  Request bounded Recovery in a trusted server-selected context. The ordinary
+  context limits issuance to synthetic accounts and uses its own Content
+  applicability. Every outcome is neutral and retry preserves the original case.
+  """
+  @spec request_recovery(term(), term(), term(), recovery_context()) :: :ok
+  def request_recovery(email, locale, operation_id, context),
+    do: NewYou.Identity.Recovery.request(email, locale, operation_id, context)
 
   @doc "Accept current proof explicitly. Proof consumption and case assurance commit together."
   @spec submit_recovery_proof(term(), term()) ::
@@ -70,6 +81,32 @@ defmodule NewYou.Identity do
         operation_id: operation_id
       })
 
+  @doc "Consume current proof in its exact server-selected browser context. A hold returns without admitting password completion."
+  @spec submit_recovery_proof(term(), term(), String.t(), recovery_context()) ::
+          {:ok, :accepted | :held | :failed | :expired} | {:error, :recovery_unavailable}
+  def submit_recovery_proof(proof, operation_id, locale, context),
+    do:
+      recovery_action(:submit_recovery_proof, %{
+        proof: proof,
+        operation_id: operation_id,
+        locale: locale,
+        entry_context: context
+      })
+
+  @doc "Complete Recovery within its original context. The same committed operation returns its receipt without applying a second credential or creating a Session."
+  @spec complete_recovery(term(), term(), term(), String.t(), recovery_context()) ::
+          {:ok, :completed | :already_completed | :failed | :expired}
+          | {:error, :recovery_unavailable}
+  def complete_recovery(proof, password, operation_id, locale, context),
+    do:
+      recovery_action(:complete_recovery, %{
+        proof: proof,
+        password: password,
+        operation_id: operation_id,
+        locale: locale,
+        entry_context: context
+      })
+
   @doc "Record case-bound current scoped manual review. This does not complete recovery or release a security hold."
   @spec approve_manual_recovery(term()) ::
           {:ok, %{status: :approved, version: non_neg_integer()}}
@@ -86,6 +123,18 @@ defmodule NewYou.Identity do
           {:ok, :cancelled | :failed | :expired} | {:error, :recovery_unavailable}
   def cancel_recovery(proof, operation_id),
     do: recovery_action(:cancel_recovery, %{proof: proof, operation_id: operation_id})
+
+  @doc "Cancel a current claimant case in its original server-selected context."
+  @spec cancel_recovery(term(), term(), String.t(), recovery_context()) ::
+          {:ok, :cancelled | :failed | :expired} | {:error, :recovery_unavailable}
+  def cancel_recovery(proof, operation_id, locale, context),
+    do:
+      recovery_action(:cancel_recovery, %{
+        proof: proof,
+        operation_id: operation_id,
+        locale: locale,
+        entry_context: context
+      })
 
   @doc "Trusted transient proof serialization inside a delivery transaction. Content eligibility remains independently required before sending."
   @spec recovery_delivery(term(), term(), term()) ::

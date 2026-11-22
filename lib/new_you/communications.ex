@@ -350,18 +350,20 @@ defmodule NewYou.Communications do
     :render_digest
   ]
 
-  @doc "Establish a durable recovery obligation, binding exact development content when eligible."
-  @spec establish_recovery(map()) ::
+  @doc "Establish the durable proof obligation in the Identity-supplied context. Ineligible Content leaves the obligation held."
+  @spec establish_recovery(map(), NewYou.Identity.recovery_context()) ::
           {:ok, MessageIntent.t()} | {:error, :recovery_obligation_unavailable}
-  def establish_recovery(attrs), do: establish_recovery_intent(attrs, :establish_recovery)
+  def establish_recovery(attrs, context \\ :p8_15),
+    do: establish_recovery_intent(attrs, :establish_recovery, context)
 
-  @doc "Establish the distinct durable notice after recovery; missing content preserves a held obligation."
-  @spec establish_recovery_notice(map()) ::
+  @doc "Establish the durable completion notice for the Identity case's context. Missing eligibility preserves a held obligation."
+  @spec establish_recovery_notice(map(), NewYou.Identity.recovery_context()) ::
           {:ok, MessageIntent.t()} | {:error, :recovery_obligation_unavailable}
-  def establish_recovery_notice(attrs),
-    do: establish_recovery_intent(attrs, :establish_recovery_notice)
+  def establish_recovery_notice(attrs, context \\ :p8_15),
+    do: establish_recovery_intent(attrs, :establish_recovery_notice, context)
 
-  defp establish_recovery_intent(attrs, action) when is_map(attrs) do
+  defp establish_recovery_intent(attrs, action, context)
+       when is_map(attrs) and context in [:p8_15, :well183] do
     role_binding =
       case action do
         :establish_recovery ->
@@ -374,6 +376,8 @@ defmodule NewYou.Communications do
             render_schema: "recovery-notice-v1"
           }
       end
+
+    role_binding = Map.update!(role_binding, :render_schema, &recovery_schema(&1, context))
 
     source_params =
       attrs
@@ -396,7 +400,21 @@ defmodule NewYou.Communications do
     _ -> {:error, :recovery_obligation_unavailable}
   end
 
-  defp establish_recovery_intent(_, _), do: {:error, :recovery_obligation_unavailable}
+  defp establish_recovery_intent(_, _, _), do: {:error, :recovery_obligation_unavailable}
+
+  defp recovery_schema(schema, :p8_15), do: schema
+  defp recovery_schema("recovery-v1", :well183), do: "recovery-well183-v1"
+  defp recovery_schema("recovery-notice-v1", :well183), do: "recovery-notice-well183-v1"
+
+  @doc false
+  @spec recovery_context(map()) :: NewYou.Identity.recovery_context() | nil
+  def recovery_context(%{render_schema: schema}) do
+    case schema do
+      schema when schema in ["recovery-v1", "recovery-notice-v1"] -> :p8_15
+      schema when schema in ["recovery-well183-v1", "recovery-notice-well183-v1"] -> :well183
+      _ -> nil
+    end
+  end
 
   defp create_recovery_intent(source_params, role_binding, action) do
     expected =
@@ -404,7 +422,7 @@ defmodule NewYou.Communications do
       |> Map.merge(recovery_content(role_binding, source_params.locale))
 
     with {:ok, intent} <-
-           Ash.create(MessageIntent, Map.drop(expected, [:role, :source_purpose, :render_schema]),
+           Ash.create(MessageIntent, Map.drop(expected, [:role, :source_purpose]),
              action: action,
              domain: __MODULE__,
              authorize?: false,
@@ -459,8 +477,11 @@ defmodule NewYou.Communications do
   def bind_recovery_content(%MessageIntent{} = intent), do: {:ok, intent}
 
   defp recovery_content(role_binding, locale) do
-    with {:ok, content} <- NewYou.Content.RecoveryMessage.binding(role_binding.role, locale),
-         {:ok, support} <- recovery_support_contact(role_binding.role) do
+    context = recovery_context(role_binding)
+
+    with {:ok, content} <-
+           NewYou.Content.RecoveryMessage.binding(role_binding.role, locale, context),
+         {:ok, support} <- recovery_support_contact(role_binding.role, context) do
       platform = NewYou.platform_name()
 
       Map.merge(content, %{
@@ -484,10 +505,10 @@ defmodule NewYou.Communications do
     end
   end
 
-  defp recovery_support_contact(:recovery_security_notice),
-    do: NewYou.Content.RecoveryMessage.support_contact()
+  defp recovery_support_contact(:recovery_security_notice, context),
+    do: NewYou.Content.RecoveryMessage.support_contact(context)
 
-  defp recovery_support_contact(:account_recovery), do: {:ok, nil}
+  defp recovery_support_contact(:account_recovery, _context), do: {:ok, nil}
 
   @doc false
   @spec recovery_render_digest(String.t(), String.t(), String.t() | nil) :: String.t()
