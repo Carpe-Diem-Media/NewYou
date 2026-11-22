@@ -140,27 +140,19 @@ defmodule NewYouWeb.PasswordSessionController do
       "content-security-policy",
       "default-src 'none';#{script_policy} style-src 'self'; font-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
     )
-    |> render_body(template, Map.put(assigns, :locale, locale))
-  end
-
-  defp render_body(conn, :protected, assigns) do
-    # Phoenix.Controller.render/3 retains its assigns on the connection that
-    # Bandit emits in request telemetry. Keep the PMR in the response body only.
-    html(
-      conn,
-      Phoenix.Template.render_to_iodata(
-        NewYouWeb.PasswordSessionHTML,
-        "protected",
-        "html",
-        assigns
-      )
-    )
-  end
-
-  defp render_body(conn, template, assigns) do
-    conn
     |> put_root_layout(false)
     |> put_view(html: NewYouWeb.PasswordSessionHTML)
-    |> render(template, assigns)
+    |> redact_reference_before_send(template)
+    |> render(template, Map.put(assigns, :locale, locale))
   end
+
+  defp redact_reference_before_send(conn, :protected) do
+    # The template has rendered by this point. Bandit emits the returned
+    # connection in request telemetry, so remove the private render assign.
+    register_before_send(conn, fn response ->
+      %{response | assigns: Map.delete(response.assigns, :pmr)}
+    end)
+  end
+
+  defp redact_reference_before_send(conn, _template), do: conn
 end
