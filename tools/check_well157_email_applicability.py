@@ -246,24 +246,19 @@ def validate_packet(root: Path, packet: dict[str, Any]) -> list[str]:
 
     try:
         router = read_json(root, GOVERNANCE_ROUTER)
+        legacy.check_product_lineage(root, router, errors)
         platform, decisions = [], []
         for doc_id, expected in CURRENT_AUTHORITY.items():
-            routes = [x for x in router.get("governing_documents", []) if x.get("document_id") == doc_id]
             path = expected["path"]
             data = (root / path).read_bytes()
             prior = (root / expected["predecessor"]).read_bytes()
-            route = routes[0] if len(routes) == 1 else {}
             if (
-                route.get("repository_path") != path
-                or route.get("canonical_filename") != Path(path).name
-                or route.get("sha256") != expected["sha256"]
-                or route.get("semver") != "1.19.0"
-                or sha256(data) != expected["sha256"]
+                sha256(data) != expected["sha256"]
                 or sha256(prior) != expected["predecessor_sha256"]
                 or f"**Predecessor:** `{expected['predecessor']}`".encode() not in data
                 or "**SemVer transition:** `v1.18.0 → v1.19.0`".encode() not in data
             ):
-                errors.append(f"current Product authority route or lineage mismatch: {doc_id}")
+                errors.append(f"historical WELL-157 Product authority lineage mismatch: {doc_id}")
             if doc_id == "PLATFORM_PRODUCT_LAW":
                 platform = data.decode("utf-8")
             else:

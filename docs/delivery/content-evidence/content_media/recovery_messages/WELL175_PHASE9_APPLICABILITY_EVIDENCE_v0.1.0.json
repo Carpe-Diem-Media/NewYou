@@ -1,0 +1,339 @@
+{
+  "packet_id": "WELL175_RECOVERY_PHASE9_APPLICABILITY_v0.1.0",
+  "status": "BOUNDED_NONPRODUCTION_PHASE9; CONDITIONAL_ON_CURRENT_ELIGIBILITY",
+  "context": "FP-001 Phase 9 verified-factor ordinary Recovery for synthetic accounts only in local development, automated tests, development environments and bounded non-production verification",
+  "scope_receipt": {
+    "work_item_id": "c075b8c2-880c-4b95-90ad-a85a915fb5cc",
+    "comment_id": "fea6120c-e8ff-4476-b5a8-a018441cb021",
+    "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+    "created_at": "2026-11-22T06:47:26.332405Z",
+    "scope": "Authorize preparation of the bounded applicability candidate"
+  },
+  "historical_packet": {
+    "path": "docs/delivery/content-evidence/content_media/recovery_messages/RECOVERY_MESSAGE_DEVELOPMENT_EVIDENCE_PACKET_v0.2.0.json",
+    "sha256": "83a44a10763181f46bbab2d6de99cf67854a18623a174746095628ae55bbeea7"
+  },
+  "historical_approval_source": {
+    "path": "docs/delivery/content-evidence/content_media/recovery_messages/OWNER_APPROVALS_v1.json",
+    "sha256": "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225b3c",
+    "index_comment_id": "b2f7477e-d0db-4f46-bfe0-35bf75ba3656"
+  },
+  "predecessor_authority": [
+    {
+      "path": "docs/governance/product/00_PLATFORM_v1.19.0.md",
+      "sha256": "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9"
+    },
+    {
+      "path": "docs/governance/product/01_DECISIONS_v1.19.0.md",
+      "sha256": "ed90a1ec6adb201de094f130fc091c10bca6145e142a6e225fc840794553f4c2"
+    }
+  ],
+  "proposed_successor_version": "1.20.0",
+  "serialization": {
+    "format_id": "recovery-message-subject-body-text-v1",
+    "encoding": "UTF-8",
+    "line_endings": "LF",
+    "bom": false,
+    "terminal_lf_count": 1,
+    "subject_prefix": "subject: ",
+    "subject_body_boundary": "one blank line",
+    "digest_input": "exact file bytes",
+    "subject_digest_input": "subject value only, excluding prefix and LF",
+    "body_digest_input": "all bytes after first blank line, including terminal LF",
+    "token_contract_digest_input": "UTF-8 JSON with sort_keys=True, separators=(comma,colon), ensure_ascii=False",
+    "normalization": "none"
+  },
+  "messages": [
+    {
+      "purpose": "proof",
+      "product_type": "account_recovery_proof_message",
+      "communications_role": "account_recovery",
+      "content_item_id": "NEWYOU-CONTENTITEM-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL",
+      "content_version_id": "NEWYOU-CONTENTVERSION-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-V1",
+      "token_allowlist": [
+        {
+          "literal": "{{platform_name}}",
+          "type": "platform_display_name",
+          "allowed_fields": [
+            "subject",
+            "body"
+          ],
+          "source": "Approved non-secret platform configuration; single-line plain text."
+        },
+        {
+          "literal": "{{account_recovery_link}}",
+          "type": "identity_account_recovery_confirmation_url",
+          "allowed_fields": [
+            "body"
+          ],
+          "source": "Current Identity-issued purpose-bound recovery proof, serialized only through approved protected delivery; literal only in candidate evidence."
+        }
+      ],
+      "token_contract_sha256": "19862cc352eb8248f4511d9c84c7d4fad650a68a1885a7766b53ddf66cb80f6a",
+      "product_approval_event_id": "e0df49d1-f343-4576-aabc-3a62bfb2aeaf",
+      "locale_versions": [
+        {
+          "locale": "en",
+          "content_translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-EN-V1",
+          "artifact": {
+            "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-EN-V1.txt",
+            "bytes": 693,
+            "sha256": "c1d761d829e7eb3e400b94d6c2be734ac33a0087a742c2b77818ff06a21d3cb7"
+          },
+          "subject": {
+            "offset": 9,
+            "bytes": 48,
+            "sha256": "73043422f763167e8714fb79a38c9ed79f993429eeed14314b3b52a04b4fed15"
+          },
+          "body": {
+            "offset": 59,
+            "bytes": 634,
+            "sha256": "8dfd3a54d865885b1cfb8eeddfe7d55bdaeee4d7dbd2d13e35cf3c5c83996148"
+          },
+          "content_approval_event_id": "2b1f47a1-bfd5-4748-8aaa-e4e56e828bcd",
+          "language_approval_event_id": "54c57464-48c9-4c62-8eb3-8354f0bfd54b",
+          "phase_9_content_applicability_decision": "90b4fa76-b68c-424f-94bd-35d03b727d95"
+        },
+        {
+          "locale": "af",
+          "content_translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-AF-V1",
+          "artifact": {
+            "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-AF-V1.txt",
+            "bytes": 826,
+            "sha256": "ae9b51d967c2be015b8f948bb05360027647767c1189e3df284afbb296295d90"
+          },
+          "subject": {
+            "offset": 9,
+            "bytes": 52,
+            "sha256": "b924fddd552a404a47b0bec2c5ef2426a01f25fa3a277bf257db5baaf0973cf3"
+          },
+          "body": {
+            "offset": 63,
+            "bytes": 763,
+            "sha256": "bba7d534bd3e35224bd80ee484fc57909ade179ffa268765e33c67a67063e6f9"
+          },
+          "content_approval_event_id": "07f86c5a-2021-410b-86ee-0153728e7d12",
+          "language_approval_event_id": "a3e9f721-0018-4b05-bafd-b9afc9c50708",
+          "phase_9_content_applicability_decision": "c550b9aa-a681-4cff-9e07-7937ee0560a2"
+        }
+      ]
+    },
+    {
+      "purpose": "completion_notice",
+      "product_type": "account_recovery_completion_notice",
+      "communications_role": "recovery_security_notice",
+      "content_item_id": "NEWYOU-CONTENTITEM-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL",
+      "content_version_id": "NEWYOU-CONTENTVERSION-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-V1",
+      "token_allowlist": [
+        {
+          "literal": "{{platform_name}}",
+          "type": "platform_display_name",
+          "allowed_fields": [
+            "subject",
+            "body"
+          ],
+          "source": "Approved non-secret platform configuration; single-line plain text."
+        },
+        {
+          "literal": "{{support_contact}}",
+          "type": "approved_non_secret_support_contact",
+          "allowed_fields": [
+            "body"
+          ],
+          "source": "Exact accountable-owner-approved support contact; binding not yet provided or approved. No participant data or authentication material."
+        }
+      ],
+      "token_contract_sha256": "172b65484ad8fd50e7626b5e8a00784309e5a0c9486a096647d7f30ad1457c7a",
+      "product_approval_event_id": "e0df49d1-f343-4576-aabc-3a62bfb2aeaf",
+      "locale_versions": [
+        {
+          "locale": "en",
+          "content_translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-EN-V1",
+          "artifact": {
+            "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-EN-V1.txt",
+            "bytes": 443,
+            "sha256": "7f57114273ec162a9a4dad9a5c260985ba9148f98d58917ac5e7fa95d95a2042"
+          },
+          "subject": {
+            "offset": 9,
+            "bytes": 51,
+            "sha256": "7aeacca511a6754c23ca2832e9a0866ad329d5921966769793defbc5f0e06ef5"
+          },
+          "body": {
+            "offset": 62,
+            "bytes": 381,
+            "sha256": "11f463bdcfd89efb9531a2ae217b52ea5e0d009905bcc4a7f2f3a6f70799bce2"
+          },
+          "content_approval_event_id": "24c5d6e8-faa2-4cee-b35b-0ebfb7571d56",
+          "language_approval_event_id": "b1d4489f-40f7-4ff6-90bd-5d87801ea411",
+          "phase_9_content_applicability_decision": "4d89259b-8d70-4e40-a959-8551a4da321e"
+        },
+        {
+          "locale": "af",
+          "content_translation_version_id": "NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-AF-V1",
+          "artifact": {
+            "path": "docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-AF-V1.txt",
+            "bytes": 469,
+            "sha256": "2d55e469b1717a28af4b4ee3467fba2ecc5eca1df9083b23f233de60c158a337"
+          },
+          "subject": {
+            "offset": 9,
+            "bytes": 48,
+            "sha256": "eff70ec2b89aeeefbdd20ca96d0ab97f8040fbf5e5cd35c15025dff36f29e4e9"
+          },
+          "body": {
+            "offset": 59,
+            "bytes": 410,
+            "sha256": "15fe6d59eba72c7789f43cad06df720fa5b6cbb0cf48413051be6c739ce9fd90"
+          },
+          "content_approval_event_id": "7e2ef52f-910a-446b-8fae-58ed19126533",
+          "language_approval_event_id": "bfeb063b-f27e-4b5a-981d-a1fa04cec941",
+          "phase_9_content_applicability_decision": "2731c139-27e1-48d6-82b6-09165cbf6a5c"
+        }
+      ]
+    }
+  ],
+  "exact_product_applicability_decision": "84b93616-76d0-4103-bb14-dbf117c024a9",
+  "support_contact": {
+    "token": "{{support_contact}}",
+    "value": "jc@carpediem.co.za",
+    "scope": "temporary development configuration only",
+    "owner_comment_id": "b36e72fe-acbe-4925-8486-b2de93bde03f",
+    "operational_mailbox_verified": false,
+    "provider_admission_enabled": false,
+    "send_requires_verified_contact_and_current_provider_authority": true
+  },
+  "browser_content_eligibility": "Separate reconciliation required before normal-entry implementation. Existing account-access Help copy approves navigation and guidance only.",
+  "approval_receipts": [
+    {
+      "id": "84b93616-76d0-4103-bb14-dbf117c024a9",
+      "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_at": "2026-11-22T06:57:57.186351Z",
+      "updated_at": "2026-11-22T06:57:57.186360Z",
+      "edited_at": null,
+      "project": "846031af-971b-4f08-92c3-7f008522a5ac",
+      "issue": "c075b8c2-880c-4b95-90ad-a85a915fb5cc",
+      "comment_stripped": "WELL-175-PRODUCT-PHASE9-APPLICABILITY — APPROVE EXACT PROPOSAL — ACCOUNTABLE PRODUCT OWNER\nAttribution: transcribed on the requesting owner's behalf in response to their 2026-11-22 exact approval-record request, in continuation of explicit owner decision to extend existing exact EN/AF versions to bounded Phase 9 (WELL-175 receipt fea6120c-e8ff-4476-b5a8-a018441cb021). Owner-attested development capacities verified from live WELL-110 role attestation 677c7f35-cd92-4723-afcf-ee71ffb7e446, same accountable person and Plane actor 2d75ac08-a11c-4fe1-9545-c1d885f83955; separate role decision, not separate independent person, runtime grant, language review or Master Gate merge approval.\nReviewed draft PR #293 head 2a94f0c9d1f58a3f4a1fe24d1e2e0d4f8a509b52; exact proposal SHA-256 49e4bbf9135139eaef6eda35ac7bd14a8b42df4251677b7257e955c8321e6fce; exact bindings docs/governance/product/proposals/well-175/EXACT_BINDINGS_v0.1.0.json SHA-256 a0884abdc4532472717bf4827252fa94d254303d0dc705aa973be412b86b2fa0. Independently recomputed both file digests, predecessor Product/Decision digests, historical packet and approval-source digests, and all four artifact digests and byte counts; matched historic bindings and unchanged language evidence. Scope: FP-001 Phase 9 verified-factor ordinary Recovery for synthetic accounts only in local development, automated tests, development environments and bounded non-production verification. No live or external delivery, production/production-build, publication, public release, paid pilot, real participants, lost-all-factor or privileged recovery expansion. Existing support-contact binding for controlled non-production completion notice rendering only; mailbox verification and provider admission remain false. Not current applicability until integrated routed authority and all required genuine evidence pass current eligibility checks; no automatic normal-entry dispatch or FP-001 closure.\nApprove proposed Product §21E.31 / DEC-327 as the narrow v1.20.0 successor exception to §21E.26 / DEC-323 solely for the exact existing EN V1 and AF V1 proof and completion-notice versions in the specified context. Preserve all historical approvals and Phase-8 scope, current §21J.7 / DEC-250 Recovery policy, ownership, immutable version identities, exact digests/typed tokens, paired locales, withdrawal/supersession and fail-closed rechecks. No other change approved. This is exact proposal approval, not enacted Product Law; complete independent review and governed integration after WELL-170 resulting-main reconciliation or explicit sequencing decision.",
+      "role": "Product owner"
+    },
+    {
+      "id": "90b4fa76-b68c-424f-94bd-35d03b727d95",
+      "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_at": "2026-11-22T06:58:10.841604Z",
+      "updated_at": "2026-11-22T06:58:10.841614Z",
+      "edited_at": null,
+      "project": "846031af-971b-4f08-92c3-7f008522a5ac",
+      "issue": "c075b8c2-880c-4b95-90ad-a85a915fb5cc",
+      "comment_stripped": "WELL-175-CONTENT-PROOF-EN-V1-PHASE9 — APPROVE EXACT APPLICABILITY — CONTENT & MEDIA OWNER\nAttribution: transcribed on the requesting owner's behalf in response to their 2026-11-22 exact approval-record request, in continuation of explicit owner decision to extend existing exact EN/AF versions to bounded Phase 9 (WELL-175 receipt fea6120c-e8ff-4476-b5a8-a018441cb021). Owner-attested development capacities verified from live WELL-110 role attestation 677c7f35-cd92-4723-afcf-ee71ffb7e446, same accountable person and Plane actor 2d75ac08-a11c-4fe1-9545-c1d885f83955; separate role decision, not separate independent person, runtime grant, language review or Master Gate merge approval.\nReviewed draft PR #293 head 2a94f0c9d1f58a3f4a1fe24d1e2e0d4f8a509b52; exact proposal SHA-256 49e4bbf9135139eaef6eda35ac7bd14a8b42df4251677b7257e955c8321e6fce; exact bindings docs/governance/product/proposals/well-175/EXACT_BINDINGS_v0.1.0.json SHA-256 a0884abdc4532472717bf4827252fa94d254303d0dc705aa973be412b86b2fa0. Independently recomputed both file digests, predecessor Product/Decision digests, historical packet and approval-source digests, and all four artifact digests and byte counts; matched historic bindings and unchanged language evidence. Scope: FP-001 Phase 9 verified-factor ordinary Recovery for synthetic accounts only in local development, automated tests, development environments and bounded non-production verification. No live or external delivery, production/production-build, publication, public release, paid pilot, real participants, lost-all-factor or privileged recovery expansion. Existing support-contact binding for controlled non-production completion notice rendering only; mailbox verification and provider admission remain false. Not current applicability until integrated routed authority and all required genuine evidence pass current eligibility checks; no automatic normal-entry dispatch or FP-001 closure.\nSeparate exact Content applicability approval, conditional on integrated Product §21E.31 / DEC-327 and required paired eligibility, Product decision receipt 84b93616-76d0-4103-bb14-dbf117c024a9. Purpose proof; locale en; Product type account_recovery_proof_message; Communications role account_recovery; ContentItem NEWYOU-CONTENTITEM-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL; ContentVersion NEWYOU-CONTENTVERSION-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-V1; ContentTranslationVersion NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-EN-V1. Artifact docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-EN-V1.txt; 693 UTF-8 bytes; SHA-256 c1d761d829e7eb3e400b94d6c2be734ac33a0087a742c2b77818ff06a21d3cb7; subject SHA-256 73043422f763167e8714fb79a38c9ed79f993429eeed14314b3b52a04b4fed15; body SHA-256 8dfd3a54d865885b1cfb8eeddfe7d55bdaeee4d7dbd2d13e35cf3c5c83996148; serialization recovery-message-subject-body-text-v1; LF, no BOM, single terminal LF; typed-token contract SHA-256 19862cc352eb8248f4511d9c84c7d4fad650a68a1885a7766b53ddf66cb80f6a. Prior Content approval 2b1f47a1-bfd5-4748-8aaa-e4e56e828bcd; existing unchanged language-quality review 54c57464-48c9-4c62-8eb3-8354f0bfd54b. Approve only this exact locale binding for the additional non-production context, not a replacement or revised version. Preserve earlier historical scope. No latest, no locale fallback, no changed bytes/tokens, no new consumption or queued use if stale, withdrawn, superseded, contradictory or mismatched. No fabrication of language approval events or operational mailbox verification.",
+      "role": "Content & Media owner"
+    },
+    {
+      "id": "c550b9aa-a681-4cff-9e07-7937ee0560a2",
+      "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_at": "2026-11-22T06:58:23.109883Z",
+      "updated_at": "2026-11-22T06:58:23.109892Z",
+      "edited_at": null,
+      "project": "846031af-971b-4f08-92c3-7f008522a5ac",
+      "issue": "c075b8c2-880c-4b95-90ad-a85a915fb5cc",
+      "comment_stripped": "WELL-175-CONTENT-PROOF-AF-V1-PHASE9 — APPROVE EXACT APPLICABILITY — CONTENT & MEDIA OWNER\nAttribution: transcribed on the requesting owner's behalf in response to their 2026-11-22 exact approval-record request, in continuation of explicit owner decision to extend existing exact EN/AF versions to bounded Phase 9 (WELL-175 receipt fea6120c-e8ff-4476-b5a8-a018441cb021). Owner-attested development capacities verified from live WELL-110 role attestation 677c7f35-cd92-4723-afcf-ee71ffb7e446, same accountable person and Plane actor 2d75ac08-a11c-4fe1-9545-c1d885f83955; separate role decision, not separate independent person, runtime grant, language review or Master Gate merge approval.\nReviewed draft PR #293 head 2a94f0c9d1f58a3f4a1fe24d1e2e0d4f8a509b52; exact proposal SHA-256 49e4bbf9135139eaef6eda35ac7bd14a8b42df4251677b7257e955c8321e6fce; exact bindings docs/governance/product/proposals/well-175/EXACT_BINDINGS_v0.1.0.json SHA-256 a0884abdc4532472717bf4827252fa94d254303d0dc705aa973be412b86b2fa0. Independently recomputed both file digests, predecessor Product/Decision digests, historical packet and approval-source digests, and all four artifact digests and byte counts; matched historic bindings and unchanged language evidence. Scope: FP-001 Phase 9 verified-factor ordinary Recovery for synthetic accounts only in local development, automated tests, development environments and bounded non-production verification. No live or external delivery, production/production-build, publication, public release, paid pilot, real participants, lost-all-factor or privileged recovery expansion. Existing support-contact binding for controlled non-production completion notice rendering only; mailbox verification and provider admission remain false. Not current applicability until integrated routed authority and all required genuine evidence pass current eligibility checks; no automatic normal-entry dispatch or FP-001 closure.\nSeparate exact Content applicability approval, conditional on integrated Product §21E.31 / DEC-327 and required paired eligibility, Product decision receipt 84b93616-76d0-4103-bb14-dbf117c024a9. Purpose proof; locale af; Product type account_recovery_proof_message; Communications role account_recovery; ContentItem NEWYOU-CONTENTITEM-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL; ContentVersion NEWYOU-CONTENTVERSION-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-V1; ContentTranslationVersion NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-AF-V1. Artifact docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-PROOF-MESSAGE-EMAIL-AF-V1.txt; 826 UTF-8 bytes; SHA-256 ae9b51d967c2be015b8f948bb05360027647767c1189e3df284afbb296295d90; subject SHA-256 b924fddd552a404a47b0bec2c5ef2426a01f25fa3a277bf257db5baaf0973cf3; body SHA-256 bba7d534bd3e35224bd80ee484fc57909ade179ffa268765e33c67a67063e6f9; serialization recovery-message-subject-body-text-v1; LF, no BOM, single terminal LF; typed-token contract SHA-256 19862cc352eb8248f4511d9c84c7d4fad650a68a1885a7766b53ddf66cb80f6a. Prior Content approval 07f86c5a-2021-410b-86ee-0153728e7d12; existing unchanged language-quality review a3e9f721-0018-4b05-bafd-b9afc9c50708. Approve only this exact locale binding for the additional non-production context, not a replacement or revised version. Preserve earlier historical scope. No latest, no locale fallback, no changed bytes/tokens, no new consumption or queued use if stale, withdrawn, superseded, contradictory or mismatched. No fabrication of language approval events or operational mailbox verification.",
+      "role": "Content & Media owner"
+    },
+    {
+      "id": "4d89259b-8d70-4e40-a959-8551a4da321e",
+      "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_at": "2026-11-22T06:58:41.746461Z",
+      "updated_at": "2026-11-22T06:58:41.746469Z",
+      "edited_at": null,
+      "project": "846031af-971b-4f08-92c3-7f008522a5ac",
+      "issue": "c075b8c2-880c-4b95-90ad-a85a915fb5cc",
+      "comment_stripped": "WELL-175-CONTENT-COMPLETION_NOTICE-EN-V1-PHASE9 — APPROVE EXACT APPLICABILITY — CONTENT & MEDIA OWNER\nAttribution: transcribed on the requesting owner's behalf in response to their 2026-11-22 exact approval-record request, in continuation of explicit owner decision to extend existing exact EN/AF versions to bounded Phase 9 (WELL-175 receipt fea6120c-e8ff-4476-b5a8-a018441cb021). Owner-attested development capacities verified from live WELL-110 role attestation 677c7f35-cd92-4723-afcf-ee71ffb7e446, same accountable person and Plane actor 2d75ac08-a11c-4fe1-9545-c1d885f83955; separate role decision, not separate independent person, runtime grant, language review or Master Gate merge approval.\nReviewed draft PR #293 head 2a94f0c9d1f58a3f4a1fe24d1e2e0d4f8a509b52; exact proposal SHA-256 49e4bbf9135139eaef6eda35ac7bd14a8b42df4251677b7257e955c8321e6fce; exact bindings docs/governance/product/proposals/well-175/EXACT_BINDINGS_v0.1.0.json SHA-256 a0884abdc4532472717bf4827252fa94d254303d0dc705aa973be412b86b2fa0. Independently recomputed both file digests, predecessor Product/Decision digests, historical packet and approval-source digests, and all four artifact digests and byte counts; matched historic bindings and unchanged language evidence. Scope: FP-001 Phase 9 verified-factor ordinary Recovery for synthetic accounts only in local development, automated tests, development environments and bounded non-production verification. No live or external delivery, production/production-build, publication, public release, paid pilot, real participants, lost-all-factor or privileged recovery expansion. Existing support-contact binding for controlled non-production completion notice rendering only; mailbox verification and provider admission remain false. Not current applicability until integrated routed authority and all required genuine evidence pass current eligibility checks; no automatic normal-entry dispatch or FP-001 closure.\nSeparate exact Content applicability approval, conditional on integrated Product §21E.31 / DEC-327 and required paired eligibility, Product decision receipt 84b93616-76d0-4103-bb14-dbf117c024a9. Purpose completion_notice; locale en; Product type account_recovery_completion_notice; Communications role recovery_security_notice; ContentItem NEWYOU-CONTENTITEM-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL; ContentVersion NEWYOU-CONTENTVERSION-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-V1; ContentTranslationVersion NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-EN-V1. Artifact docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-EN-V1.txt; 443 UTF-8 bytes; SHA-256 7f57114273ec162a9a4dad9a5c260985ba9148f98d58917ac5e7fa95d95a2042; subject SHA-256 7aeacca511a6754c23ca2832e9a0866ad329d5921966769793defbc5f0e06ef5; body SHA-256 11f463bdcfd89efb9531a2ae217b52ea5e0d009905bcc4a7f2f3a6f70799bce2; serialization recovery-message-subject-body-text-v1; LF, no BOM, single terminal LF; typed-token contract SHA-256 172b65484ad8fd50e7626b5e8a00784309e5a0c9486a096647d7f30ad1457c7a. Prior Content approval 24c5d6e8-faa2-4cee-b35b-0ebfb7571d56; existing unchanged language-quality review b1d4489f-40f7-4ff6-90bd-5d87801ea411. Approve only this exact locale binding for the additional non-production context, not a replacement or revised version. Preserve earlier historical scope. No latest, no locale fallback, no changed bytes/tokens, no new consumption or queued use if stale, withdrawn, superseded, contradictory or mismatched. No fabrication of language approval events or operational mailbox verification.",
+      "role": "Content & Media owner"
+    },
+    {
+      "id": "2731c139-27e1-48d6-82b6-09165cbf6a5c",
+      "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+      "created_at": "2026-11-22T06:58:56.053651Z",
+      "updated_at": "2026-11-22T06:58:56.053660Z",
+      "edited_at": null,
+      "project": "846031af-971b-4f08-92c3-7f008522a5ac",
+      "issue": "c075b8c2-880c-4b95-90ad-a85a915fb5cc",
+      "comment_stripped": "WELL-175-CONTENT-COMPLETION_NOTICE-AF-V1-PHASE9 — APPROVE EXACT APPLICABILITY — CONTENT & MEDIA OWNER\nAttribution: transcribed on the requesting owner's behalf in response to their 2026-11-22 exact approval-record request, in continuation of explicit owner decision to extend existing exact EN/AF versions to bounded Phase 9 (WELL-175 receipt fea6120c-e8ff-4476-b5a8-a018441cb021). Owner-attested development capacities verified from live WELL-110 role attestation 677c7f35-cd92-4723-afcf-ee71ffb7e446, same accountable person and Plane actor 2d75ac08-a11c-4fe1-9545-c1d885f83955; separate role decision, not separate independent person, runtime grant, language review or Master Gate merge approval.\nReviewed draft PR #293 head 2a94f0c9d1f58a3f4a1fe24d1e2e0d4f8a509b52; exact proposal SHA-256 49e4bbf9135139eaef6eda35ac7bd14a8b42df4251677b7257e955c8321e6fce; exact bindings docs/governance/product/proposals/well-175/EXACT_BINDINGS_v0.1.0.json SHA-256 a0884abdc4532472717bf4827252fa94d254303d0dc705aa973be412b86b2fa0. Independently recomputed both file digests, predecessor Product/Decision digests, historical packet and approval-source digests, and all four artifact digests and byte counts; matched historic bindings and unchanged language evidence. Scope: FP-001 Phase 9 verified-factor ordinary Recovery for synthetic accounts only in local development, automated tests, development environments and bounded non-production verification. No live or external delivery, production/production-build, publication, public release, paid pilot, real participants, lost-all-factor or privileged recovery expansion. Existing support-contact binding for controlled non-production completion notice rendering only; mailbox verification and provider admission remain false. Not current applicability until integrated routed authority and all required genuine evidence pass current eligibility checks; no automatic normal-entry dispatch or FP-001 closure.\nSeparate exact Content applicability approval, conditional on integrated Product §21E.31 / DEC-327 and required paired eligibility, Product decision receipt 84b93616-76d0-4103-bb14-dbf117c024a9. Purpose completion_notice; locale af; Product type account_recovery_completion_notice; Communications role recovery_security_notice; ContentItem NEWYOU-CONTENTITEM-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL; ContentVersion NEWYOU-CONTENTVERSION-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-V1; ContentTranslationVersion NEWYOU-CONTENTTRANSLATIONVERSION-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-AF-V1. Artifact docs/delivery/content-evidence/content_media/recovery_messages/NEWYOU-ACCOUNT-RECOVERY-COMPLETION-NOTICE-EMAIL-AF-V1.txt; 469 UTF-8 bytes; SHA-256 2d55e469b1717a28af4b4ee3467fba2ecc5eca1df9083b23f233de60c158a337; subject SHA-256 eff70ec2b89aeeefbdd20ca96d0ab97f8040fbf5e5cd35c15025dff36f29e4e9; body SHA-256 15fe6d59eba72c7789f43cad06df720fa5b6cbb0cf48413051be6c739ce9fd90; serialization recovery-message-subject-body-text-v1; LF, no BOM, single terminal LF; typed-token contract SHA-256 172b65484ad8fd50e7626b5e8a00784309e5a0c9486a096647d7f30ad1457c7a. Prior Content approval 7e2ef52f-910a-446b-8fae-58ed19126533; existing unchanged language-quality review bfeb063b-f27e-4b5a-981d-a1fa04cec941. Approve only this exact locale binding for the additional non-production context, not a replacement or revised version. Preserve earlier historical scope. No latest, no locale fallback, no changed bytes/tokens, no new consumption or queued use if stale, withdrawn, superseded, contradictory or mismatched. No fabrication of language approval events or operational mailbox verification.",
+      "role": "Content & Media owner"
+    }
+  ],
+  "approved_subjects": {
+    "draft_head": "2a94f0c9d1f58a3f4a1fe24d1e2e0d4f8a509b52",
+    "proposal": {
+      "path": "docs/governance/product/proposals/well-175/PHASE9_RECOVERY_APPLICABILITY_v0.1.0_PROPOSED.md",
+      "sha256": "49e4bbf9135139eaef6eda35ac7bd14a8b42df4251677b7257e955c8321e6fce"
+    },
+    "exact_bindings": {
+      "path": "docs/governance/product/proposals/well-175/EXACT_BINDINGS_v0.1.0.json",
+      "sha256": "a0884abdc4532472717bf4827252fa94d254303d0dc705aa973be412b86b2fa0"
+    }
+  },
+  "eligibility": {
+    "production": false,
+    "production_build": false,
+    "publication": false,
+    "public_release": false,
+    "paid_pilot": false,
+    "real_participants": false,
+    "live_delivery": false,
+    "external_provider": false,
+    "locale_fallback": false,
+    "latest_alias": false
+  },
+  "lifecycle": {
+    "state": "development_approved",
+    "terminal_for_new_use": [
+      "superseded",
+      "withdrawn"
+    ],
+    "paired_locales": [
+      "en",
+      "af"
+    ],
+    "recheck_before_new_and_queued_use": true,
+    "conflict": "deny_pending_explicit_owner_reconciliation"
+  },
+  "current_governing_authority": [
+    {
+      "path": "docs/governance/product/00_PLATFORM_v1.20.0.md",
+      "sha256": "5308e09f668b4a9762f98fb0bcbddf2f84595703b69c6ed511e8f511c3da36b1",
+      "document_id": "PLATFORM_PRODUCT_LAW",
+      "section": "§21E.31",
+      "predecessor": {
+        "path": "docs/governance/product/00_PLATFORM_v1.19.0.md",
+        "sha256": "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9"
+      }
+    },
+    {
+      "path": "docs/governance/product/01_DECISIONS_v1.20.0.md",
+      "sha256": "7282344c42e850a2683e15dcce21b46bb3ecca28d9fac22b91b01ec7e8f32b16",
+      "document_id": "PRODUCT_DECISIONS",
+      "section": "DEC-327",
+      "predecessor": {
+        "path": "docs/governance/product/01_DECISIONS_v1.19.0.md",
+        "sha256": "ed90a1ec6adb201de094f130fc091c10bca6145e142a6e225fc840794553f4c2"
+      }
+    }
+  ],
+  "development_owner_capacity_attestation": {
+    "id": "677c7f35-cd92-4723-afcf-ee71ffb7e446",
+    "actor": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+    "created_by": "2d75ac08-a11c-4fe1-9545-c1d885f83955",
+    "created_at": "2026-11-11T04:44:19.913826Z",
+    "updated_at": "2026-11-11T04:44:19.913833Z",
+    "edited_at": null,
+    "project": "846031af-971b-4f08-92c3-7f008522a5ac",
+    "issue": "9b4f49af-dba4-46f8-aa8e-6ea74c4d05cd",
+    "comment_stripped": "OWNER ROLE ATTESTATION / DEVELOPMENT ONLY — 2026-11-11\nIn this conversation the requesting project owner explicitly confirmed: “Yes I will. We locked down that during development I will be the sole person that approves everything and after MVP etc. we will refine with my team.” This confirms that during current development the same person acts as accountable Product owner, Content & Media owner, English Language Reviewer and Afrikaans Language Reviewer for the four recovery messages. Plane actor for this record: 2d75ac08-a11c-4fe1-9545-c1d885f83955. This is owner-attested governance capacity, NOT a verified runtime IdentityGrant, an independent external reviewer, or production/release permission.\nEach Product, Content exact-locale and language-quality decision must have a separate attributable event despite the same actor. Developer convenience cannot bypass explicit second-person privileged recovery, sensitive independent professional/clinical/safety/legal approval where otherwise required, or future production gates. After MVP, accountable ownership and approval roles will be reviewed with the team through a deliberate successor decision; no automatic transfer or changed authority is implied now."
+  },
+  "support_contact_use": "Completion notice body only, controlled non-production rendering after applicable approval. Existing P8-15 configuration is evidence of the bound value. No mailbox or send verification."
+}

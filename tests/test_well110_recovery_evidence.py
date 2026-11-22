@@ -86,6 +86,80 @@ class RecoveryEvidenceTest(unittest.TestCase):
                         self.assertIn('body', rule['allowed_fields'])
                 self.assertNotIn(packet['support_contact']['value'].encode(), data)
 
+    def test_phase9_packet_preserves_exact_approved_subjects_and_receipts(self):
+        new_path = DIR / 'WELL175_PHASE9_APPLICABILITY_EVIDENCE_v0.1.0.json'
+        new_bytes = new_path.read_bytes()
+        packet = json.loads(new_bytes)
+        delivery = json.loads((ROOT / 'docs/delivery/CURRENT_DELIVERY_ROUTER.json').read_bytes())
+        routes = [row for row in delivery['delivery_contracts']
+                  if row['document_id'] == 'WELL175_RECOVERY_PHASE9_APPLICABILITY_EVIDENCE']
+        self.assertEqual([(new_path.relative_to(ROOT).as_posix(), sha(new_bytes))],
+                         [(row['repository_path'], row['sha256']) for row in routes])
+
+        sources = {**packet['approved_subjects']}
+        sources.pop('draft_head')
+        for reference in [*sources.values(), packet['historical_packet'], *packet['predecessor_authority']]:
+            self.assertEqual(reference['sha256'], sha((ROOT / reference['path']).read_bytes()))
+
+        original = json.loads((ROOT / sources['exact_bindings']['path']).read_bytes())
+        self.assertEqual(original['support_contact'], packet['support_contact'])
+        self.assertIs(packet['support_contact']['operational_mailbox_verified'], False)
+        self.assertIs(packet['support_contact']['provider_admission_enabled'], False)
+        self.assertTrue(all(value is False for value in packet['eligibility'].values()))
+        self.assertEqual(['superseded', 'withdrawn'], packet['lifecycle']['terminal_for_new_use'])
+        self.assertTrue(packet['lifecycle']['recheck_before_new_and_queued_use'])
+
+        receipts = packet['approval_receipts']
+        self.assertEqual([
+            '84b93616-76d0-4103-bb14-dbf117c024a9',
+            '90b4fa76-b68c-424f-94bd-35d03b727d95',
+            'c550b9aa-a681-4cff-9e07-7937ee0560a2',
+            '4d89259b-8d70-4e40-a959-8551a4da321e',
+            '2731c139-27e1-48d6-82b6-09165cbf6a5c',
+        ], [receipt['id'] for receipt in receipts])
+        self.assertEqual(receipts[0]['id'], packet['exact_product_applicability_decision'])
+        self.assertEqual(['Product owner'] + ['Content & Media owner'] * 4,
+                         [receipt['role'] for receipt in receipts])
+        for receipt in receipts:
+            self.assertEqual(packet['scope_receipt']['actor'], receipt['actor'])
+            self.assertIsNone(receipt['edited_at'])
+            for value in [packet['context'], packet['approved_subjects']['draft_head'],
+                          sources['proposal']['sha256'], sources['exact_bindings']['sha256']]:
+                self.assertIn(value, receipt['comment_stripped'])
+
+        content_receipts = iter(receipts[1:])
+        for message, original_message in zip(packet['messages'], original['messages'], strict=True):
+            for actual, expected in zip(message['locale_versions'], original_message['locale_versions'], strict=True):
+                receipt = next(content_receipts)
+                self.assertEqual(receipt['id'], actual['phase_9_content_applicability_decision'])
+                expected['phase_9_content_applicability_decision'] = receipt['id']
+                for required in [actual['content_translation_version_id'], actual['artifact']['sha256'],
+                                 message['token_contract_sha256'], actual['language_approval_event_id']]:
+                    self.assertIn(required, receipt['comment_stripped'])
+            self.assertEqual(original_message, message)
+
+    def test_phase9_authority_appends_only_exact_approved_clauses(self):
+        governance = json.loads((ROOT / 'docs/governance/CURRENT_GOVERNANCE_ROUTER.json').read_bytes())
+        packet = json.loads((DIR / 'WELL175_PHASE9_APPLICABILITY_EVIDENCE_v0.1.0.json').read_bytes())
+        proposal = (ROOT / packet['approved_subjects']['proposal']['path']).read_text()
+        product, decisions = proposal.split('## Proposed Product successor clause\n\n')[1].split(
+            '\n## Proposed Decision successor clause\n\n'
+        )
+        product = product.replace('(EXACT_BINDINGS_v0.1.0.json)',
+                                  '(proposals/well-175/EXACT_BINDINGS_v0.1.0.json)')
+        for record, clause in zip(packet['current_governing_authority'], (product, decisions), strict=True):
+            old = (ROOT / record['predecessor']['path']).read_text()
+            new = (ROOT / record['path']).read_text()
+            old_body = old.split('\n\n', 2)[2]
+            new_body = new.split('\n\n', 2)[2]
+            self.assertEqual(old_body.rstrip() + '\n\n' + clause.strip().replace('### ', '## ', 1) + '\n',
+                             new_body)
+            self.assertEqual(record['sha256'], sha(new.encode()))
+            routes = [row for row in governance['governing_documents']
+                      if row['document_id'] == record['document_id']]
+            self.assertEqual([(record['path'], record['sha256'], '1.20.0')],
+                             [(row['repository_path'], row['sha256'], row['semver']) for row in routes])
+
 
 if __name__ == '__main__':
     unittest.main()

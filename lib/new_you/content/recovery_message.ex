@@ -116,7 +116,9 @@ defmodule NewYou.Content.RecoveryMessage do
          {:ok, delivery} <- read_json(root, "docs/delivery/CURRENT_DELIVERY_ROUTER.json"),
          true <- routed_packet?(delivery),
          {:ok, governance} <- read_json(root, "docs/governance/CURRENT_GOVERNANCE_ROUTER.json"),
-         true <- current_authority?(root, governance),
+         {:ok, historical} <-
+           NewYou.Content.ProductAuthority.historical_bindings(governance, &read_file(root, &1)),
+         true <- current_authority?(root, historical),
          true <- dependencies_match?(root, packet),
          {:ok, versions} <- versions(root, packet) do
       {:ok, packet, versions}
@@ -143,9 +145,9 @@ defmodule NewYou.Content.RecoveryMessage do
     ]
   end
 
-  defp current_authority?(root, router) do
+  defp current_authority?(root, historical) do
     Enum.all?(@authority, fn {id, {path, sha}} ->
-      case Enum.filter(router["governing_documents"], &(&1["document_id"] == id)) do
+      case Enum.filter(historical, &(&1["document_id"] == id)) do
         [entry] ->
           entry["repository_path"] == path and entry["canonical_filename"] == Path.basename(path) and
             entry["semver"] == "1.19.0" and entry["sha256"] == sha and
