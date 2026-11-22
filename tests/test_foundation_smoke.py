@@ -1,17 +1,126 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import tempfile
 import unittest
 from pathlib import Path
 
-from tools.foundation_integrity_smoke import run_smoke_audit
+from tools.foundation_integrity_smoke import run_smoke_audit, validate_recovery_browser_copy
 
 
 ROOT = Path(__file__).resolve().parents[1]
 GOVERNANCE_ROUTER = Path("docs/governance/CURRENT_GOVERNANCE_ROUTER.json")
 DELIVERY_ROUTER = Path("docs/delivery/CURRENT_DELIVERY_ROUTER.json")
+RECOVERY_COPY_ID = "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED"
+
+
+class RecoveryBrowserCopyEvidenceTests(unittest.TestCase):
+    def setUp(self):
+        self.governance = json.loads((ROOT / GOVERNANCE_ROUTER).read_bytes())
+        self.delivery = json.loads((ROOT / DELIVERY_ROUTER).read_bytes())
+        self.route = next(
+            row for row in self.delivery["delivery_contracts"]
+            if row["document_id"] == RECOVERY_COPY_ID
+        )
+        self.relative = Path(self.route["repository_path"])
+        self.packet = json.loads((ROOT / self.relative).read_bytes())
+
+    def test_accepts_exact_active_packet(self):
+        self.assertIsNone(validate_recovery_browser_copy(ROOT, self.governance, self.delivery))
+
+    def test_rejects_wrong_context_and_terminal_or_inactive_lifecycle(self):
+        for field, value in [
+            ("context", "production"),
+            ("state", "candidate"),
+            ("state", "withdrawn"),
+            ("state", "superseded"),
+        ]:
+            with self.subTest(field=field, value=value):
+                self.assertIn("lifecycle", self.validate_change(
+                    lambda packet: packet["development_approval"].update({field: value})
+                ))
+
+    def test_rejects_missing_locale_and_rehashed_different_copy(self):
+        def replace_text(packet):
+            value = packet["candidate"]["copy_items"][0]["locales"]["en"]
+            value.update(text="Changed", utf8_bytes=7, sha256=hashlib.sha256(b"Changed").hexdigest())
+
+        self.assertIn("locale", self.validate_change(
+            lambda packet: packet["candidate"]["copy_items"][0]["locales"].pop("af")
+        ))
+        self.assertIn("locale", self.validate_change(
+            lambda packet: packet["candidate"]["copy_items"][0]["locales"]["en"].update(sha256="0" * 64)
+        ))
+        self.assertIn("candidate digest", self.validate_change(replace_text))
+
+    def test_rejects_missing_stale_conflicting_and_replaced_approval_evidence(self):
+        mutations = [
+            lambda receipts: receipts.pop(),
+            lambda receipts: receipts[0].update(candidate_sha256="0" * 64),
+            lambda receipts: receipts.append(receipts[0]),
+            lambda receipts: receipts[0].update(comment_id=receipts[1]["comment_id"]),
+            lambda receipts: receipts[0].update(comment_sha256="0" * 64),
+        ]
+        for index, mutate in enumerate(mutations):
+            with self.subTest(mutation=index):
+                self.assertIn("approval provenance", self.validate_change(
+                    lambda packet: mutate(packet["approval_receipts"])
+                ))
+
+    def test_rejects_unrouted_evidence_and_stale_product_authority(self):
+        self.delivery["delivery_contracts"].remove(self.route)
+        self.assertIn("route", validate_recovery_browser_copy(ROOT, self.governance, self.delivery))
+        self.delivery["delivery_contracts"].append(self.route)
+        product = next(row for row in self.governance["governing_documents"]
+                       if row["document_id"] == "PLATFORM_PRODUCT_LAW")
+        product["sha256"] = "0" * 64
+        self.assertIn("Product authority", validate_recovery_browser_copy(ROOT, self.governance, self.delivery))
+
+    def test_rejects_mismatched_route_digest(self):
+        self.route["sha256"] = "0" * 64
+        self.assertIn("route", validate_recovery_browser_copy(ROOT, self.governance, self.delivery))
+
+    def test_rejects_changed_approval_envelope_even_with_matching_route_digest(self):
+        self.assertIsNone(self.validate_change(lambda packet: None))
+        mutations = [
+            (None, "packet_id", "UNRELATED_COPY_APPROVAL"),
+            (None, "version", "0.2.1"),
+            ("source_candidate", "filename", "unrelated.json"),
+            ("source_candidate", "encoding", "ASCII"),
+            ("approval_source", "work_item", "WELL-999"),
+            ("approval_source", "work_item_id", "unrelated"),
+            ("approval_source", "attribution", "Four independent reviewers."),
+            ("approval_source", "comment_digest_format", "Unverified comment digest."),
+        ]
+        for section, key, value in mutations:
+            with self.subTest(section=section, key=key):
+                self.assertEqual(
+                    "Recovery browser copy approval envelope differs from the verified artifact",
+                    self.validate_change(
+                        lambda packet: (packet if section is None else packet[section]).update(
+                            {key: value}
+                        )
+                    ),
+                )
+
+    def validate_change(self, mutate):
+        mutate(self.packet)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            evidence = root / self.relative
+            evidence.parent.mkdir(parents=True)
+            data = (json.dumps(self.packet, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+            evidence.write_bytes(data)
+            # Keep route integrity valid so each assertion reaches the affected guard.
+            route_digest = self.route["sha256"]
+            self.route["sha256"] = hashlib.sha256(data).hexdigest()
+            try:
+                return validate_recovery_browser_copy(root, self.governance, self.delivery)
+            finally:
+                self.route["sha256"] = route_digest
+                self.packet = json.loads((ROOT / self.relative).read_bytes())
 
 
 class FoundationSmokeTests(unittest.TestCase):

@@ -230,6 +230,14 @@
       "status": "DEVELOPMENT_ONLY_APPROVED; DELIVERY_DISABLED"
     },
     {
+      "document_id": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED",
+      "canonical_filename": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json",
+      "sha256": "8a9466ce2b91e6311154bea13d085959d550f77ba63b6f9b4585ad3d3a67c5da",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_BOUNDED_NONPRODUCTION_BROWSER_COPY; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
+    },
+    {
       "document_id": "FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED",
       "canonical_filename": "FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED_v0.1.1.json",
       "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED_v0.1.1.json",
@@ -340,6 +348,14 @@
       "sha256": "7d2e2db74229970748eb121459ca4b264bb8bb739f3de0adce2f3f0550b483ae",
       "contract_type": "content_evidence",
       "status": "BOUNDED_NONPRODUCTION_PHASE9; CONDITIONAL_ON_CURRENT_ELIGIBILITY"
+    },
+    {
+      "document_id": "FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_OWNER_APPROVED",
+      "canonical_filename": "FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_OWNER_APPROVED_v0.1.0.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP002_PRODUCT_AND_OFFER_PAGES_BROWSER_COPY_OWNER_APPROVED_v0.1.0.json",
+      "sha256": "84fbac70adec68617a0bc7366b71637c536f7a3fb800115ac1d1b284095eed3e",
+      "contract_type": "content_evidence",
+      "status": "OWNER_APPROVED_EXACT_EN_AF_WORDING_ONLY; REQUIRED_FP002_OFFER_COPY_REFERENCE; SPECIALIST_GATES_OPEN; NO_CLASS_A_DEVELOPMENT_OR_RELEASE_AUTHORITY"
     }
   ]
 }
