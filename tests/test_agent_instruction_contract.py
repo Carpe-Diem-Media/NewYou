@@ -35,6 +35,15 @@ class AgentInstructionContractTests(unittest.TestCase):
             self.assertNotRegex(skill, r'(?m)^\s*(?:\d+\. |[-*] )?(?:Run |run )?`?devcore-project (?:activate|render)')
             self.assertIn('AGENTS.md', skill)
 
+    def test_root_readme_limits_devcore_recovery_to_local_env_files(self):
+        readme = (ROOT / 'README.md').read_text()
+        prerequisites = readme.split('## Local prerequisites\n', 1)[1].split('\n## ', 1)[0]
+        self.assertNotRegex(prerequisites, r'(?m)^\s*devcore-project activate\b')
+        self.assertRegex(prerequisites, r'(?s)devcore-project doctor.*only.*missing or stale'
+                                        r'.*worktree-local environment file.*devcore-project render'
+                                        r'.*devcore-project doctor')
+        self.assertIn('separately authorised workstation provisioning', prerequisites)
+
     def test_pinned_dev_test_commands_and_no_unwrapped_local_mix_examples(self):
         for document in (self.agents, self.ticket, self.verify, self.devcore):
             for line in document.splitlines():
