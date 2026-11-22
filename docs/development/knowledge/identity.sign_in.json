@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "capability_id": "identity.sign_in",
-  "purpose": "WELL-134 bounded FP-001 EN/AF development sign-in and current-session protected access. This source map grants no release or review approval. WELL-163 adds a current-use Session inventory and revocation of one other Session on the same Account. WELL-170 adds development-only global sign-out with fresh purpose-bound password and applicable TOTP proof. WELL-177 adds a bounded self-display of the presenting Session holder\u2019s current Platform Member Reference in English and Afrikaans.",
+  "purpose": "WELL-134 bounded FP-001 EN/AF development sign-in and current-session protected access. This source map grants no release or review approval. WELL-163 adds a current-use Session inventory and revocation of one other Session on the same Account. WELL-170 adds development-only global sign-out with fresh purpose-bound password and applicable TOTP proof. WELL-177 adds a bounded self-display of the presenting Session holder's current Platform Member Reference in English and Afrikaans.",
   "implementing_tickets": [
     "WELL-134",
     "WELL-112",
