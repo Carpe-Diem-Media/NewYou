@@ -27,6 +27,13 @@ defmodule NewYou.Privacy do
   @doc false
   def proof_purpose, do: @proof_purpose
 
+  @spec grant_p817_proof_purpose(binary(), binary()) ::
+          {:ok, :allowed | :already_allowed}
+          | {:error, :withdrawn | :privacy_authority_unavailable}
+
+  @spec withdraw_p817_proof_purpose(binary(), binary()) ::
+          {:ok, :withdrawn | :already_withdrawn} | {:error, term()}
+
   if Mix.env() in [:dev, :test] do
     @doc "Create one operation-bound P8-17 proof purpose. This is not production consent."
     def grant_p817_proof_purpose(subject_id, operation_id) do
@@ -51,7 +58,11 @@ defmodule NewYou.Privacy do
       _, _ -> resolve_grant_failure(subject_id, operation_id)
     end
 
-    @doc "Withdraw one operation-bound P8-17 proof purpose. Withdrawal is terminal for this operation."
+    @doc """
+    Withdraw a P8-17 proof purpose and record its event in the same transaction.
+    A repeat returns `:already_withdrawn`. An absent purpose returns
+    `{:error, :missing}`. A failed write can return its Ash error.
+    """
     def withdraw_p817_proof_purpose(subject_id, operation_id) do
       with {:ok, subject_id} <- Ecto.UUID.cast(subject_id),
            {:ok, operation_id} <- Ecto.UUID.cast(operation_id),

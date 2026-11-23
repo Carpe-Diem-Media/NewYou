@@ -21,11 +21,11 @@ class AgentInstructionContractTests(unittest.TestCase):
         policy = self.agents.split('Local DevCore credentials', 1)[1]
         self.assertLess(policy.index('devcore-project doctor'), policy.index('devcore-project render'))
         self.assertRegex(policy, r'only reported problem.*missing or stale.*rendered environment file')
-        self.assertIn('rerun "devcore-project doctor"', policy)
+        self.assertRegex(policy, r'rerun ([`\"])devcore-project doctor\1')
         self.assertIn('If doctor passes initially, proceed without render', policy)
         for failure in ('authentication', 'role/ownership', 'central credentials', 'PostgreSQL services'):
             self.assertIn(failure, policy)
-        self.assertIn('Do not automatically invoke "devcore-project activate"', policy)
+        self.assertRegex(policy, r'Do not automatically invoke ([`\"])devcore-project activate\1')
         self.assertIn('separately authorised', policy)
         self.assertIn('Redis is not used', policy)
         self.assertIn('NOCREATEDB', policy)

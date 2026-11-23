@@ -63,6 +63,8 @@ defmodule NewYou.Identity.Reconciliation do
 
   def open(_), do: unavailable()
 
+  @spec status(map()) ::
+          {:ok, Identity.reconciliation_status()} | {:error, :reconciliation_unavailable}
   def status(request) do
     with {:ok, initial} <- find_case(request),
          false <- Ash.DataLayer.in_transaction?(Account) do
@@ -203,6 +205,11 @@ defmodule NewYou.Identity.Reconciliation do
 
   defp review_outcome(_current, _request, _authority, _operation_id), do: :ok
 
+  # Preflight, Audit admission and the source apply are separate transactions.
+  # Audit admission survives source failure. Apply rechecks the case and grant
+  # bindings under lock before committing or returning the bound prior result.
+  @spec apply_decision(map()) ::
+          {:ok, ReconciliationCase.t()} | {:error, :reconciliation_unavailable}
   def apply_decision(request) when is_map(request) do
     with true <-
            keys?(

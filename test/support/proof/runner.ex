@@ -45,6 +45,12 @@ defmodule NewYou.Proof.Runner do
 
   def parse_args(_args), do: {:error, :invalid_arguments}
 
+  @doc """
+  Run the selected proof mode and return its result envelope. Use `:tb001` with
+  no overrides to run the compiled catalog. Targeted cases and fault fixtures
+  belong to diagnostic runs. Read the envelope verdict and exit code to
+  distinguish failed proof from a successful run.
+  """
   @spec run(Result.mode(), keyword()) :: map()
   def run(mode, opts \\ [])
 

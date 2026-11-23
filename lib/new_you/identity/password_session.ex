@@ -21,6 +21,10 @@ defmodule NewYou.Identity.PasswordSession do
   @global_proof_expired "Global Session revocation proof expired before use"
   @idle_seconds 30 * 60
 
+  # Password verification happens before the transaction. Issuance rechecks the
+  # verified credential and Account eligibility under the lock before writing.
+  @spec authenticate(term(), term()) ::
+          {:ok, NewYou.Identity.session_credentials()} | {:error, :authentication_unavailable}
   def authenticate(email, password) when is_binary(password) and byte_size(password) <= 1024 do
     with {:ok, email} <- Email.canonicalize(email),
          {:ok, account} <- find_account(email),
@@ -74,6 +78,8 @@ defmodule NewYou.Identity.PasswordSession do
   @doc false
   # Internal Identity seam. Caller holds the current eligible Account lock in the
   # same Token/Session transaction. Shared issuance preserves password semantics.
+  @spec issue_current(Account.t(), map()) ::
+          {:ok, NewYou.Identity.session_credentials()} | {:error, :authentication_unavailable}
   def issue_current(current, provenance \\ %{}) do
     with {:ok, bearer, claims} <-
            Jwt.token_for_user(current, %{}, purpose: :user, authorize?: false),

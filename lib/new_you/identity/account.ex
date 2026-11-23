@@ -1,4 +1,14 @@
 defmodule NewYou.Identity.Account do
+  @moduledoc """
+  Identity's authoritative Ash resource for Account eligibility, credentials,
+  security posture and Platform Member Reference. It also stores the current
+  primary-email-change operation and its security binding.
+
+  Application callers use `NewYou.Identity` for account use cases. The private
+  actions here implement parts of those use cases, including writes that rely on
+  owner-managed locks, proof checks and transaction boundaries.
+  """
+
   use Ash.Resource,
     otp_app: :new_you,
     domain: NewYou.Identity,

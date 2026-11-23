@@ -7,8 +7,12 @@ defmodule NewYou.Identity.SessionRevocation do
 
   # The caller holds the Account lock and owns the surrounding transaction.
   # Account-locked issuance cannot add Sessions while this set is being ended.
+  # The bang Ash calls raise on failure, leaving rollback to the caller.
+  @spec revoke_sessions(Ecto.UUID.t()) :: :ok
   def revoke_sessions(id), do: revoke_sessions(id, lock_linked_tokens(id))
 
+  # The token set is valid only while the caller keeps the Account locked.
+  @spec lock_linked_tokens(Ecto.UUID.t()) :: %{optional(String.t()) => Token.t()}
   def lock_linked_tokens(id) do
     jtis =
       Session
@@ -26,6 +30,7 @@ defmodule NewYou.Identity.SessionRevocation do
     |> Map.new(&{&1.jti, &1})
   end
 
+  @spec revoke_sessions(Ecto.UUID.t(), %{optional(String.t()) => Token.t()}) :: :ok
   def revoke_sessions(id, linked_tokens) do
     # Account-level security writes lock related Token rows before Sessions.
     # Keep password reset aligned with primary-email apply and recovery.
@@ -52,6 +57,8 @@ defmodule NewYou.Identity.SessionRevocation do
     :ok
   end
 
+  # Also requires the caller's Account lock and transaction.
+  @spec revoke_devices(Ecto.UUID.t()) :: :ok
   def revoke_devices(id) do
     DeviceAssurance
     |> Ash.Query.filter(account_id == ^id and state == :trusted)

@@ -17,6 +17,10 @@ defmodule NewYou.Identity.ManualRecovery do
     end
   end
 
+  # Approval binds the reviewer to a case version. It records evidence without
+  # replacing credentials or releasing the Account hold.
+  @spec approve(map()) ::
+          {:ok, %{status: :approved, version: pos_integer()}} | {:error, :recovery_unavailable}
   def approve(request) when is_map(request) do
     with true <- @enabled,
          {:ok, input} <- parse(request),
@@ -54,6 +58,8 @@ defmodule NewYou.Identity.ManualRecovery do
     _ -> unavailable()
   end
 
+  @spec complete(map()) ::
+          {:ok, :completed | :already_completed} | {:error, :recovery_unavailable}
   def complete(request) when is_map(request) do
     with true <- @enabled,
          {:ok, input} <- parse(request),

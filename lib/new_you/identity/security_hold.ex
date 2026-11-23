@@ -27,6 +27,11 @@ defmodule NewYou.Identity.SecurityHold do
     end
   end
 
+  # Call outside the Account transaction. Release must commit E1 before the
+  # source write. A successful replay still requires current scoped authority
+  # and a matching operation binding.
+  @spec run(:place_security_hold | :review_security_hold | :release_security_hold, map()) ::
+          {:ok, NewYou.Identity.security_hold_receipt()} | {:error, :security_hold_unavailable}
   def run(kind, request) do
     with {:ok, request} <- validate_request(request),
          false <- Ash.DataLayer.in_transaction?(Account) do

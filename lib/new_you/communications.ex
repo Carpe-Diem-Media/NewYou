@@ -30,12 +30,25 @@ defmodule NewYou.Communications do
     resource NewYou.Communications.DeliveryAttempt
   end
 
+  @typedoc "Executor disposition after processing an intent. It does not certify delivery."
+  @type execution_result :: :closed | :waiting | :held | :source_invalid | :processed
+
+  @typedoc "Observations admissible through authenticated provider reconciliation."
+  @type evidence_outcome ::
+          :accepted
+          | :delivered
+          | :rejected_before_submission
+          | :bounced_or_failed
+          | :unknown
+          | :confirmed_no_operation
+
   @doc "Execute a trusted id-only delivery job. Public HTTP callers must not expose this internal boundary."
-  @spec execute(String.t()) :: {:ok, atom()} | {:error, atom()}
+  @spec execute(binary()) :: {:ok, execution_result()} | {:error, term()}
   def execute(id), do: NewYou.Communications.Executor.execute(id)
 
   @doc "Accept only authenticated bounded provider evidence for an existing attempt. No operator bypass is provided."
-  @spec reconcile(String.t(), atom(), String.t(), binary()) :: {:ok, :recorded} | {:error, atom()}
+  @spec reconcile(binary(), evidence_outcome(), String.t(), binary()) ::
+          {:ok, :recorded} | {:error, term()}
   def reconcile(id, outcome, reference, signature),
     do: NewYou.Communications.Executor.reconcile(id, outcome, reference, signature)
 
