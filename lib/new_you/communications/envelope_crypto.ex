@@ -3,6 +3,7 @@ defmodule NewYou.Communications.EnvelopeCrypto do
 
   @typep binding :: {binary(), binary(), binary()}
   @typep envelope :: %{nonce: binary(), ciphertext: binary(), tag: binary()}
+  @typep decrypt_envelope :: envelope() | NewYou.Communications.ProtectedEnvelope.t()
   @typep invalid_envelope :: {:error, :invalid_envelope}
 
   # Communications reserves the nonce for this key version before encrypting.
@@ -28,7 +29,7 @@ defmodule NewYou.Communications.EnvelopeCrypto do
   def encrypt(_, _, _, _), do: {:error, :invalid_envelope}
 
   # A malformed envelope, wrong binding or failed authentication all fail closed.
-  @spec decrypt(binary(), binding(), envelope()) :: {:ok, binary()} | invalid_envelope()
+  @spec decrypt(binary(), binding(), decrypt_envelope()) :: {:ok, binary()} | invalid_envelope()
   def decrypt(
         key,
         {intent, source, purpose} = binding,
@@ -71,7 +72,7 @@ defmodule NewYou.Communications.EnvelopeCrypto do
           %{optional(String.t()) => binary()},
           String.t(),
           binding(),
-          envelope()
+          decrypt_envelope()
         ) :: {:ok, binary()} | invalid_envelope()
   def decrypt_versioned(keys, version, binding, envelope)
       when is_map(keys) and is_binary(version) do
