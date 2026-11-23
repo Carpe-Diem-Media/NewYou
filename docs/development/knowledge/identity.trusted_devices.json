@@ -6,7 +6,7 @@
     "WELL-178"
   ],
   "implementation_revision": {
-    "git_sha": "371553d77a25c1b11e3d3cad937ef413522685b5",
+    "git_sha": "b8f2b8753e53ce275f7f37fe272138b740f7c366",
     "semantics": "WELL-178 extends the existing private DeviceAssurance Resource and Session management page with participant-owned device trust."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -352,7 +352,7 @@
       "id": "devices",
       "path": "lib/new_you/identity/trusted_devices.ex",
       "symbol": "expire_due",
-      "sha256": "4449cc5eeaecf179f3fe3ce285a7d8839f1acefc1f0112ac463a2902a3556699"
+      "sha256": "5f5f6c1da3abeb78b52efabaf0c1d8f45b6bf9fd72e4a85ad652e39ea88fda8d"
     },
     {
       "id": "resource",
