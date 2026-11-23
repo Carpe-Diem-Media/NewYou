@@ -1,95 +1,92 @@
-NewYou Engineering Contract
+# NewYou Engineering Contract
 
 This file is manually owned by NewYou. Generated framework documentation never replaces it.
 
-Development workflow
+## Authority and execution sources
+
+GitHub is canonical for durable governance and implementation evidence.
+Plane project "WELL" is canonical for live execution state beneath that law: work-item state, priority, blockers, dependencies, sequencing, acceptance criteria, discovered work and review/merge readiness.
+
+For current durable routing start with:
+1. `docs/README.md`
+2. `docs/governance/CURRENT_GOVERNANCE_ROUTER.json`
+
+Use the governance router's `architecture_references` only when exact source, identifier-level reasoning or deep Architecture tracing is required.
+`docs/history/CURRENT_AUTHORITY_MANIFEST_v1.0.0.json` is frozen historical/provenance input for Foundation Full, not a current router.
+`docs/history/02_OPEN_WORK_v1.2.90.md` is frozen legacy evidence, not live execution authority.
+
+Durable authority order is:
+> Product Law → Architecture Law → Domain Law → governing Roadmap → applicable supporting authority → semantic Feature/JIT/proof contracts where required → implementation.
+
+Plane never overrides durable GitHub law. If Plane and durable authority conflict, STOP only the affected work, record the evidence in Plane and reconcile the smallest correct upstream authority.
+Working or derived artifacts such as Delivery Atlas, Skeleton, HARDEN, JIT dossiers and proof contracts change only when their semantic contract changes. Status-only changes belong in Plane.
+Durable governance is read-only during ordinary implementation. Amend it only for a deliberate durable semantic change or a proven upstream governance contradiction.
+
+## Development workflow
 
 - Make all changes on a git branch.
 - Use an isolated worktree where appropriate.
 - Create a PR for implementation or repository changes so they can be reviewed.
-- Do not merge unless explicitly authorised.
+- Do not merge unless explicitly authorised under the applicable governing merge procedure. For eligible founder-development PRs, the authenticated exact-head `APPROVED` review described under **Founder-development merge** constitutes standing merge authorisation.
 - After merge and local sync, leave the repository clean and ready for the next agent.
 
-Authority and execution sources
+## Codebase and Modules
 
-GitHub is canonical for durable governance and implementation evidence.
+Prefer deep, cohesive modules with small, stable public interfaces. Keep related behaviour together, hide implementation complexity, and split code only when there is a meaningful responsibility or technical boundary. Prove correctness through risk-appropriate automated tests.
 
-Plane project "WELL" is canonical for live execution state beneath that law: work-item state, priority, blockers, dependencies, sequencing, acceptance criteria, discovered work and review/merge readiness.
-
-For current durable routing start with:
-
-1. "docs/README.md"
-2. "docs/governance/CURRENT_GOVERNANCE_ROUTER.json"
-
-Use the governance router's `architecture_references` only when exact source, identifier-level reasoning or deep Architecture tracing is required.
-
-"docs/history/CURRENT_AUTHORITY_MANIFEST_v1.0.0.json" is frozen historical/provenance input for Foundation Full, not a current router.
-
-"docs/history/02_OPEN_WORK_v1.2.90.md" is frozen legacy evidence, not live execution authority.
-
-Durable authority order is:
-
-Product Law → Architecture Law → Domain Law → governing Roadmap → applicable supporting authority → semantic Feature/JIT/proof contracts where required → implementation.
-
-Plane never overrides durable GitHub law. If Plane and durable authority conflict, STOP only the affected work, record the evidence in Plane and reconcile the smallest correct upstream authority.
-
-Working or derived artifacts such as Delivery Atlas, Skeleton, HARDEN, JIT dossiers and proof contracts change only when their semantic contract changes. Status-only changes belong in Plane.
-
-Durable governance is read-only during ordinary implementation. Amend it only for a deliberate durable semantic change or a proven upstream governance contradiction.
-
-Delivery modes
+## Delivery modes
 
 NewYou has two distinct delivery modes.
 
-New vertical slice or substantial feature
+### New vertical slice or substantial feature
 
 Use proportional planning:
 
-"reconnaissance → /grilling when materially needed → to-spec only when durable semantics are missing → to-tickets when decomposition helps → Plane"
+`reconnaissance → /grilling when materially needed → to-spec only when durable semantics are missing → to-tickets when decomposition helps → Plane`
 
 Do not force every slice through every ceremony.
 
 A "/grilling" may conclude that current authority is sufficient and the remaining decisions are JIT implementation choices.
 
-Ready implementation ticket
+### Ready implementation ticket
 
-Fresh implementation starts only from a dependency-cleared Plane ticket in "Ready".
+Fresh implementation starts only from a dependency-cleared Plane ticket in `Ready`.
 
-"Ready" means there is sufficient durable direction and executable acceptance criteria to implement, while leaving normal engineering design to JIT development.
+`Ready` means there is sufficient durable direction and executable acceptance criteria to implement, while leaving normal engineering design to JIT development.
 
 It does not mean every Resource, table, field, action, constraint, transaction mechanism or internal representation has already been designed.
 
-Before implementing a Ready ticket use:
-
-".agents/skills/ticket-implement/SKILL.md"
+Before implementing a Ready ticket, follow **Required skills** below.
 
 Do not routinely invoke "/grilling", "to-spec" or "to-tickets" again inside a Ready ticket.
 
 A Ready ticket can still uncover genuinely new information. Discovery alone does not make the ticket blocked.
 
-Plane execution boundary
+### Plane execution boundary
 
-Only "Ready" authorises a fresh implementation agent to begin a ticket.
+Only `Ready` authorises a fresh implementation agent to begin a ticket.
 
-- "Backlog", "Planning" and "Blocked" are not executable.
-- "In Progress", "In Review", "Changes Requested", "Ready to Merge" and "Merging" describe work already in progress.
-- "Done" is terminal only after required post-merge/resulting-main reconciliation.
+- `Backlog`, `Planning` and `Blocked` are not executable.
+- `In Progress`, `In Review`, `Changes Requested`, `Ready to Merge` and `Merging` describe work already in progress.
+- `Done` is terminal only after required post-merge/resulting-main reconciliation.
+
+These are **Plane ticket states**. `IMPLEMENTING`, `TARGETED_FAILURE`, `CANDIDATE_STABLE`, `LOCAL_VERIFIED`, `APPROVED` and `INTEGRATED` below are **engineering verification stages**, not additional Plane states. Neither set replaces the other.
 
 Before dispatch or implementation, reverify:
 
-- the ticket is still "Ready";
+- the ticket is still `Ready`;
 - blockers and dependencies are resolved;
 - acceptance criteria remain coherent and executable;
-- current "main" has not invalidated the ticket;
+- current `main` has not invalidated the ticket;
 - no already-known upstream contradiction exists.
 
 After the readiness gate passes and immediately before implementation begins, move the ticket:
 
-"Ready → In Progress"
+`Ready → In Progress`
 
 When the implementation PR is opened and ready for independent review, move it:
 
-"In Progress → In Review"
+`In Progress → In Review`
 
 Search Plane before creating work. Do not create duplicates.
 
@@ -99,17 +96,17 @@ Do not leave delivery-affecting work only in chat, PR comments, TODOs, handoff n
 
 Keep Plane focused on active delivery and near-term executable work. Do not pre-create speculative future tasks.
 
-Reconnaissance
+## Reconnaissance
 
-Before "/grilling", "to-spec", "to-tickets" or material implementation, inspect the relevant live state:
+Before "/grilling", "to-spec", "to-tickets" or material implementation, inspect the relevant live state (Invoke /repository-reconnaissance skill):
 
-1. "docs/README.md", "docs/governance/CURRENT_GOVERNANCE_ROUTER.json" and, where relevant, "docs/delivery/CURRENT_DELIVERY_ROUTER.json";
+1. `docs/README.md`, `docs/governance/CURRENT_GOVERNANCE_ROUTER.json` and, where relevant, `docs/delivery/CURRENT_DELIVERY_ROUTER.json`;
 2. applicable durable Product/Decision, Architecture, Domain, Roadmap and supporting authority;
 3. relevant semantic Feature/JIT/proof contracts;
 4. live Plane work, blockers, dependencies and acceptance criteria;
 5. actual code, tests, migrations and dependency versions.
 
-Participant-facing copy and localisation
+### Participant-facing copy and localisation
 
 When a task creates, changes or renders participant-visible copy, inspect `docs/delivery/content-evidence/copy/` during reconnaissance, including `COPY_REGISTRY.json` and the relevant journey/page/glossary/style files.
 
@@ -124,7 +121,7 @@ Follow evidence only as far as the task requires. Do not load the entire histori
 
 Do not re-grill, re-spec or re-ticket settled decisions without new evidence, changed scope or a proven contradiction.
 
-JIT implementation decision model
+## JIT implementation decision model
 
 NewYou deliberately uses just-in-time implementation design.
 
@@ -134,13 +131,13 @@ It is not expected to pre-specify every internal engineering mechanism.
 
 Classify material questions as follows.
 
-"LOCKED"
+### LOCKED
 
 Current durable authority answers the material business or architectural question.
 
 Follow it.
 
-"JIT IMPLEMENTATION CHOICE"
+### JIT IMPLEMENTATION CHOICE
 
 This is the default classification for implementation detail not fixed by durable authority.
 
@@ -169,7 +166,7 @@ Material JIT choices become durable through code, migrations and constraints whe
 
 Do not amend Product, Architecture, Domain, Roadmap or semantic contracts merely to record an implementation choice.
 
-"UPSTREAM GOVERNANCE CONTRADICTION"
+### UPSTREAM GOVERNANCE CONTRADICTION
 
 This classification is exceptional.
 
@@ -191,13 +188,13 @@ Before blocking for governance, demonstrate all three:
 2. why no reasonable compliant JIT implementation can satisfy them;
 3. the material durable semantic that would otherwise have to be invented or changed.
 
-If all three cannot be demonstrated, continue as a "JIT IMPLEMENTATION CHOICE".
+If all three cannot be demonstrated, continue as a `JIT IMPLEMENTATION CHOICE`.
 
 When a genuine contradiction exists, STOP only the affected work, record exact evidence in Plane and escalate the smallest correct upstream authority.
 
-Implementation presumption
+## Implementation presumption
 
-For a dependency-cleared "Ready" ticket:
+For a dependency-cleared `Ready` ticket:
 
 Prefer implementation over governance amendment.
 
@@ -207,75 +204,7 @@ Do not ask the human to choose between ordinary compliant implementation alterna
 
 Ask or escalate only when the unresolved choice would materially change a durable or expensive-to-reverse semantic.
 
-Implementation discipline
-
-For a Ready ticket:
-
-1. reverify Plane state and dependencies;
-2. inspect relevant authority and actual code/tests/migrations/dependencies;
-3. identify the existing implementation seam;
-4. classify unresolved questions as "LOCKED", "JIT IMPLEMENTATION CHOICE" or "UPSTREAM GOVERNANCE CONTRADICTION";
-5. make the necessary JIT engineering decisions;
-6. create a focused implementation plan against actual code;
-7. implement ticket scope using test-first development;
-8. run applicable repository verification;
-9. update Plane and open a PR with exact evidence.
-
-Stay inside ticket scope. Do not opportunistically implement adjacent features or Domains.
-
-Use Igniter first for supported structural or package changes. Hand-edit where Igniter does not safely support the change.
-
-Use Tidewave/runtime evidence where it answers development questions better than static reading. Tidewave is diagnostic tooling, never business authority.
-
-Implementation handoffs
-
-For substantial capabilities and material Domain/interface/lifecycle/schema changes, maintain one canonical source-linked capability JSON map in the same implementation PR using "docs/development/implementation-handoff-standard.md". Record a brief documentation-impact determination in every implementation PR. Provide a concise technical PR description. CI generates informational mechanical snapshots without branch mutation; existing historical records remain available and new history records are not mandatory. Do not duplicate the canonical JSON in a Markdown handoff. Later material changes maintain the existing handoff; proof-only work updates its proof section or a focused addendum. Trivial helpers, cosmetic and editorial changes may be exempt with rationale.
-
-Independent Master Gate verifies required handoff accuracy against the exact reviewed head. Missing or materially inaccurate required documentation means "CHANGES REQUIRED" for that PR. No routine after-merge documentation ticket or unrelated blocker is required. Apply prospectively after WELL-96 integration, without retroactively blocking completed work or already-active WELL-7.
-
-Handoffs describe implementation at a recorded Git SHA. Future agents must verify current source before relying on them. They are not Product, Architecture, Domain or execution authority. Plane remains the live execution ledger; existing exact-head and resulting-main verification still apply.
-
-Required skills
-
-Before implementing a Ready ticket use:
-
-".agents/skills/ticket-implement/SKILL.md"
-
-Before implementation involving Ash-backed behaviour or durable state, load the relevant Ash skill/reference.
-
-Before handoff or merge recommendation use:
-
-".agents/skills/code-change-verification/SKILL.md"
-
-Load other generated framework skills only when relevant.
-
-The legacy ".agents/skills/project-implementation/SKILL.md" may remain only as a compatibility shim for existing references. It must delegate to "ticket-implement", not define a competing workflow.
-
-Ash-first mechanism selection
-
-Ash is the default application framework.
-
-For implementation involving business behaviour, durable state, authorization, authentication, lifecycle, history, async work, audit/evidence, cross-Domain coordination or Ash-backed web flows:
-
-1. load ".agents/skills/ash-framework/SKILL.md" and relevant generated references;
-2. evaluate the Ash capabilities that materially match the requirement;
-3. verify current APIs and compatibility against official primary sources;
-4. prefer a fitting Ash mechanism over bespoke Elixir/Ecto/OTP plumbing when it satisfies the requirement without violating authority;
-5. record material selections where useful as "USE", "NOT APPLICABLE", "DEFER" or "BLOCKED / NEEDS AUTHORITY".
-
-Evaluate relevant core Resources/actions/interfaces, policies, identities/constraints and applicable extensions such as AshPostgres, AshAuthentication, AshPhoenix, AshOban, AshStateMachine, Signals, Temporal Resources, Cloak or history/archive tooling only when their capability materially matches the ticket.
-
-For cross-Domain reactions or event-like coordination, explicitly consider Ash Signals.
-
-For historical/as-of/effective-period requirements, explicitly consider Temporal Resources.
-
-Neither Signals nor Temporal Resources becomes business authority merely because it is technically useful.
-
-Evaluation is not installation authority. A new dependency requires a concrete need, compatibility with the current stack, current stable-version/API verification and any required Architecture/Security/Domain approval.
-
-Re-evaluate material framework choices at implementation time when versions, capabilities, scope or authority have changed since planning.
-
-Domain and persistence invariants
+## Domain and persistence invariants
 
 Every durable business truth has exactly one authoritative Domain owner.
 
@@ -285,11 +214,11 @@ Derived state, caches, Analytics, search indexes, provider state, PubSub and UI 
 
 Business writes use owning Ash interfaces. Controllers, LiveViews and workers call the owning Domain/application interface.
 
-Do not introduce parallel ordinary "NewYou.Repo", raw SQL or "Ecto.Multi" business-write APIs. `mise exec -- devcore-project run test -- mix check.architecture` enforces these boundaries.
+Do not introduce parallel ordinary `NewYou.Repo`, raw SQL or `Ecto.Multi` business-write APIs. `mise exec -- devcore-project run test -- mix check.architecture` enforces these boundaries.
 
 Do not introduce Redis, extra services, extra Repos, ETS/process authority, replicas, Rust/Rustler, microservices or speculative infrastructure without demonstrated need and authority.
 
-Authorization and capability authority
+## Authorization and capability authority
 
 Resolve authorization through governed roles, scopes and applicable relationships.
 
@@ -307,7 +236,7 @@ Super Admin is break-glass, not a universal bypass.
 
 An unresolved required approver authority is a STOP condition.
 
-Lifecycle requirements
+## Lifecycle requirements
 
 Every meaningful lifecycle must explicitly cover, as applicable:
 
@@ -325,22 +254,23 @@ Every meaningful lifecycle must explicitly cover, as applicable:
 
 Lifecycle correctness must be enforced by the owning durable authority, not process-local state.
 
-Defects and regression proof
+## Required skills
 
-Every material bug, security issue or behavioural regression must leave permanent regression coverage.
+Before implementing a Ready ticket use:
 
-Where technically possible:
+`.agents/skills/ticket-implement/SKILL.md`
 
-1. reproduce it with a focused failing automated test;
-2. implement the fix;
-3. prove the regression test passes;
-4. run applicable wider verification.
+Before implementation involving Ash-backed behaviour or durable state, load the relevant Ash skill/reference.
 
-If deterministic automation is genuinely impossible, record the reason and strongest repeatable alternative proof in Plane.
+Before handoff or merge recommendation use:
 
-A material defect fix without adequate regression proof is not complete.
+`.agents/skills/code-change-verification/SKILL.md`
 
-Evidence
+Load other generated framework skills only when relevant.
+
+The legacy `.agents/skills/project-implementation/SKILL.md` may remain only as a compatibility shim for existing references. It must delegate to "ticket-implement", not define a competing workflow.
+
+## Evidence
 
 Do not guess material framework or package APIs.
 
@@ -352,9 +282,38 @@ Prefer evidence in this order:
 4. version-matched official HexDocs/source;
 5. model memory last.
 
+Use generated skills for discovery, not as authority over current APIs. If they conflict with version-matched official HexDocs/source, check the actual dependency version and follow official primary evidence.
+
 Verify current stable package/API facts and distinguish stable releases from prerelease or main-branch documentation.
 
-Local Elixir toolchain execution
+## Local DevCore credentials
+
+DO NOT ASK THE USER FOR LOCAL DB PASSWORDS OR DEVCORE-MANAGED DB VARIABLES.
+
+NewYou uses existing shared DEV and TEST PostgreSQL allocations. Every linked worktree has separate Git-ignored `.env.dev.local` and `.env.test.local` files. A new worktree can lack these files even when both databases and their centrally managed credentials are healthy. T3 Code may render them in its worktree setup action; agents must still verify readiness in their actual working directory.
+
+If `.devcore/project.conf` exists:
+
+1. From the current repository/worktree root, run `devcore-project doctor`.
+2. If the only reported problem is a missing or stale worktree-local rendered environment file, run `devcore-project render`, then rerun `devcore-project doctor`. Rendering uses existing central credentials; it does not provision databases or change role passwords.
+3. If authentication, role/ownership invariants, central credentials, PostgreSQL services, or other infrastructure checks fail, stop environment preparation and report the exact non-secret error. Do not automatically invoke `devcore-project activate` or change shared state.
+4. Run local Elixir/Mix commands requiring a project environment with:
+   - `mise exec -- devcore-project run dev -- <command>`
+   - `mise exec -- devcore-project run test -- <command>`
+
+If doctor passes initially, proceed without render. Rendering is allowed automatically only for the missing/stale local-file case above; a healthy worktree needs no recovery.
+
+`devcore-project activate` is a provisioning operation, not routine worktree setup or a generic doctor-failure repair. Use it only for separately authorised workstation provisioning, never as an automatic fallback in agent startup.
+
+Never request, print or commit password values or rendered secret-bearing files.
+
+The repository must not start, stop, recreate or delete shared DevCore services or volumes.
+
+Redis is not used by NewYou.
+
+Both PostgreSQL roles must remain `NOCREATEDB`.
+
+## Local Elixir toolchain execution
 
 NewYou pins Elixir and Erlang/OTP in `.tool-versions`.
 
@@ -369,7 +328,89 @@ Do not run local Mix commands through an unwrapped `devcore-project run ...` com
 
 Before reporting local verification success, record the exact command, the resolved Elixir and Erlang/OTP versions from `mise current`, and the observed outcome. Confirm the active Elixir runtime with `mise exec -- elixir --version`.
 
-Verification, review and merge
+## Ash-first mechanism selection
+
+Ash is the default application framework.
+
+For implementation involving business behaviour, durable state, authorization, authentication, lifecycle, history, async work, audit/evidence, cross-Domain coordination or Ash-backed web flows:
+
+1. load `.agents/skills/ash-framework/SKILL.md` and relevant generated references;
+2. evaluate the Ash capabilities that materially match the requirement;
+3. verify current APIs and compatibility against official primary sources;
+4. prefer a fitting Ash mechanism over bespoke Elixir/Ecto/OTP plumbing when it satisfies the requirement without violating authority;
+5. record material selections where useful as `USE`, `NOT APPLICABLE`, `DEFER` or `BLOCKED / NEEDS AUTHORITY`.
+
+Evaluate relevant core Resources/actions/interfaces, policies, identities/constraints and applicable extensions such as AshPostgres, AshAuthentication, AshPhoenix, AshOban, AshStateMachine, Signals, Temporal Resources, Cloak or history/archive tooling only when their capability materially matches the ticket.
+
+For cross-Domain reactions or event-like coordination, explicitly consider Ash Signals.
+
+For historical/as-of/effective-period requirements, explicitly consider Temporal Resources.
+
+Neither Signals nor Temporal Resources becomes business authority merely because it is technically useful.
+
+Evaluation is not installation authority. A new dependency requires a concrete need, compatibility with the current stack, current stable-version/API verification and any required Architecture/Security/Domain approval.
+
+Re-evaluate material framework choices at implementation time when versions, capabilities, scope or authority have changed since planning.
+
+## Implementation discipline
+
+For a Ready ticket:
+
+1. reverify Plane state and dependencies;
+2. inspect relevant authority and actual code/tests/migrations/dependencies;
+3. identify the existing implementation seam;
+4. classify unresolved questions as `LOCKED`, `JIT IMPLEMENTATION CHOICE` or `UPSTREAM GOVERNANCE CONTRADICTION`;
+5. make the necessary JIT engineering decisions;
+6. create a focused implementation plan against actual code;
+7. implement ticket scope using test-first development;
+8. run applicable repository verification;
+9. update Plane and open a PR with exact evidence.
+
+Stay inside ticket scope. Do not opportunistically implement adjacent features or Domains.
+
+Use Igniter first for supported structural or package changes. Hand-edit where Igniter does not safely support the change.
+
+Use Tidewave/runtime evidence where it answers development questions better than static reading. Tidewave is diagnostic tooling, never business authority.
+
+## Defects and regression proof
+
+Every material bug, security issue or behavioural regression must leave permanent regression coverage.
+
+Where technically possible:
+
+1. reproduce it with a focused failing automated test;
+2. implement the fix;
+3. prove the regression test passes;
+4. run applicable wider verification.
+
+If deterministic automation is genuinely impossible, record the reason and strongest repeatable alternative proof in Plane.
+
+A material defect fix without adequate regression proof is not complete.
+
+## Elixir runtime debugging — conditional skill routing
+
+For unexplained, intermittent or recurring Elixir/OTP, Ash, Ecto/PostgreSQL,
+Phoenix or ExUnit runtime behavior, load
+`.agents/skills/elixir-runtime-debugging/SKILL.md` for focused investigation.
+Use IEx, DEV-only Tidewave, selective BEAM tracing, version-matched Ash
+introspection and database telemetry only when they can distinguish the
+leading explanations. A separate TEST BEAM needs its own observation scope.
+
+This skill is diagnostic technique only. It does not replace `ticket-implement`,
+`tdd`, `code-change-verification`, the current repository authority, live Plane
+readiness, exact-head CI or independent Master Gate. Never use shared TEST data
+for disruptive investigations, and never weaken assertions or timeouts to
+obtain a passing result.
+
+## Implementation handoffs
+
+For substantial capabilities and material Domain/interface/lifecycle/schema changes, maintain one canonical source-linked capability JSON map under `docs/development/knowledge/` in the same implementation PR using `docs/development/implementation-handoff-standard.md`. Record a brief documentation-impact determination in every implementation PR. Provide a concise technical PR description. CI generates informational mechanical snapshots without branch mutation; existing historical records remain available and new history records are not mandatory. Do not duplicate the canonical JSON in a Markdown handoff. Later material changes maintain the existing handoff; proof-only work updates its proof section or a focused addendum. Trivial helpers, cosmetic and editorial changes may be exempt with rationale.
+
+Independent Master Gate verifies required handoff accuracy against the exact reviewed head. Missing or materially inaccurate required documentation means "CHANGES REQUIRED" for that PR. No routine after-merge documentation ticket or unrelated blocker is required. Apply prospectively after WELL-96 integration, without retroactively blocking completed work or already-active WELL-7.
+
+Handoffs describe implementation at a recorded Git SHA. Future agents must verify current source and live Plane state separately before relying on them. They are not Product, Architecture, Domain or execution authority. Plane remains the live execution ledger; existing exact-head and resulting-main verification still apply. Shape/reference validation does not replace semantic review.
+
+## Verification, review and merge
 
 `mise exec -- devcore-project run test -- mix check` is the canonical fast engineering gate.
 
@@ -383,7 +424,7 @@ Foundation Full is historical/provenance certification in the nightly hardening 
 
 The operational CI topology is documented in:
 
-"docs/development/foundation-integrity-merge-gate.md"
+`docs/development/foundation-integrity-merge-gate.md`
 
 Do not wait for the nightly Foundation Full during routine implementation. The required PR gates are Foundation Smoke and routed Application CI/Hex security audit when applicable.
 
@@ -416,8 +457,6 @@ After LOCAL_VERIFIED, follow local verification → optional OCR → required ex
 
 APPROVED requires authenticated independent Master Gate approval for the exact final head. Before authorised integration run the read-only native candidate check. INTEGRATED requires the read-only native result check and resulting-main reconciliation. Only that proof permits Plane Done and dependent work. Merge alone never completes delivery.
 
-For the separate historical WELL-125 / PR #244 closeout only, follow section 10.1 of the current routed Delivery Governance Standard and its cross-reference in `docs/development/foundation-integrity-merge-gate.md`. The amendment itself follows the ordinary integration procedure.
-
 ### Routine PR identity preflight
 
 Before creating or updating a routine PR, run `gh api user --jq .login` and `python3 -m tools.newyou_attest pr-preflight`, adding `--pr NUMBER` for an existing PR. Require actual authenticated `JC-Agents` identity and an agent-authored existing PR. Git commit name/email is insufficient. Wrong, missing or unverifiable authentication stops PR creation/update. Never request founder credentials. `JCSchoeman96` remains the independent code-owner reviewer; do not self-approve, relax protection or merge without independent authority.
@@ -432,6 +471,8 @@ For a claimed complete OCR result, parse JSON and require `ocr.run-manifest/v1`,
 
 Any source-changing correction invalidates affected local and hosted CI proof and independent approval. Existing OCR evidence must be accurately identified as stale when its inputs change. Require current-base candidate proof and resulting-main verification under the merge gate.
 
+### Independent review and handoff
+
 Before handoff:
 
 - verify the complete diff;
@@ -445,64 +486,28 @@ The implementing agent does not self-certify merge authority and does not silent
 
 Master Gate independently verifies the exact PR head, complete diff, durable authority, live Plane acceptance contract, scope, ownership, lifecycle, persistence, concurrency/idempotency, retries/failure/recovery, security/privacy/safety, dependency/API correctness, tests and exact-head CI.
 
-### Founder-development merge
-
-Follow `docs/development/foundation-integrity-merge-gate.md`. For eligible development work, ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the exact final head. That review is both technical approval and standing merge authorization. Do not add a second founder comment or a base-SHA line to the review. The implementing agent must not use founder credentials.
-
-Before merge, verify the current required CI and live branch protection, then run the read-only native candidate check from trusted integrated `main`. Merge with the normal GitHub merge command bound to the reviewed head. Run the read-only native result check afterward. A merge response with an uncertain outcome requires reading the PR and `main` before taking any further action. Do not blindly retry. Mark Plane Done only after resulting-main proof succeeds.
-
-Apply stronger approval only when a governing or external obligation requires it. Assess risk from the actual change; file paths or changes to CI, agent instructions, or governance do not by themselves require a stricter route. PR #224 remains under current-main requirements. Its current exact-head transition needs explicit owner authorization after fresh complete review and CI. Collection-only comment 6821263762 is not authorization. Do not self-approve or self-merge it. `.github/CODEOWNERS` read from the base cannot enforce review on PR #224.
-
-After authorized integration of PR #224, a one-time GitHub settings change may be made only under separate authorization. Preserve ruleset 24191860's Foundation Integrity requirement, PR-only integration, no bypass, force-push and deletion protections, and regular merge-only behavior. Require one approval, code-owner approval using `.github/CODEOWNERS` with `* @JCSchoeman96`, stale-review dismissal, latest-push approval and resolved review threads. The founder has approved retaining JC-Agents' All-repository Admin, CI/CD Admin and Security manager roles. Native verification accepts only the authenticated JC-Agents account with effective repository Admin or Write and active organization Member access. Do not attempt further permission changes. Admin access grants no merge bypass or founder-review authority. Preserve JCSchoeman96's existing owner/admin access. Independently inspect and verify the live rules and access before describing enforcement as active.
-
-Maintain one source-linked JSON capability map under `docs/development/knowledge/` for meaningful capabilities and material interface/lifecycle/schema changes, following the implementation-handoff standard. Verify actual source and live Plane before reuse. CI generates informational mechanical snapshots without branch mutation. Existing history remains available; new committed history records are not mandatory. Verify live Plane state separately. Shape/reference validation does not replace semantic review. Trivial internal/cosmetic changes may record an exemption.
-
 Master Gate reviews JIT implementation choices for correctness and compliance. It must not reject a compliant internal engineering choice merely because governance did not pre-specify it.
 
 A reviewer claiming an upstream governance contradiction must satisfy the same three-part contradiction test before blocking integration.
 
 Any reviewed-head change invalidates prior certification.
 
-Merge alone does not complete delivery. Independently verify resulting-main SHA/tree, candidate integration/no drift and required resulting-main CI/proof before moving Plane to "Done" or opening dependent work. The PR-tested merge tree may supply that proof only when the pre-merge run, reviewed head, base, candidate, required checks and resulting merge commit are independently bound as described in "docs/development/foundation-integrity-merge-gate.md". Any missing or mismatched evidence requires explicit fresh exact-SHA verification; never describe reused PR evidence as a main-SHA check run.
+### Founder-development merge
 
-Local DevCore credentials
+Follow `docs/development/foundation-integrity-merge-gate.md`. For eligible development work, ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the exact final head. That review is both technical approval and standing merge authorization. Do not add a second founder comment or a base-SHA line to the review. The implementing agent must not use founder credentials.
 
-DO NOT ASK THE USER FOR LOCAL DB PASSWORDS OR DEVCORE-MANAGED DB VARIABLES.
+Before merge, verify the current required CI and live branch protection, then run the read-only native candidate check from trusted integrated `main`. Merge with the normal GitHub merge command bound to the reviewed head. Run the read-only native result check afterward. A merge response with an uncertain outcome requires reading the PR and `main` before taking any further action. Do not blindly retry. Mark Plane Done only after resulting-main proof succeeds.
 
-NewYou uses existing shared DEV and TEST PostgreSQL allocations. Every linked worktree has separate Git-ignored ".env.dev.local" and ".env.test.local" files. A new worktree can lack these files even when both databases and their centrally managed credentials are healthy. T3 Code may render them in its worktree setup action; agents must still verify readiness in their actual working directory.
+Apply stronger approval only when a governing or external obligation requires it. Assess risk from the actual change; file paths or changes to CI, agent instructions, or governance do not by themselves require a stricter route.
 
-If ".devcore/project.conf" exists:
+### Case-specific transitions (not routine merge policy)
 
-1. From the current repository/worktree root, run "devcore-project doctor".
-2. If the only reported problem is a missing or stale worktree-local rendered environment file, run "devcore-project render", then rerun "devcore-project doctor". Rendering uses existing central credentials; it does not provision databases or change role passwords.
-3. If authentication, role/ownership invariants, central credentials, PostgreSQL services, or other infrastructure checks fail, stop environment preparation and report the exact non-secret error. Do not automatically invoke "devcore-project activate" or change shared state.
-4. Run local Elixir/Mix commands requiring a project environment with:
-   - "mise exec -- devcore-project run dev -- <command>"
-   - "mise exec -- devcore-project run test -- <command>"
+PR #224 remains under current-main requirements. Its current exact-head transition needs explicit owner authorization after fresh complete review and CI. Collection-only comment 6821263762 is not authorization. Do not self-approve or self-merge it. `.github/CODEOWNERS` read from the base cannot enforce review on PR #224.
 
-If doctor passes initially, proceed without render. Rendering is allowed automatically only for the missing/stale local-file case above; a healthy worktree needs no recovery.
+After authorized integration of PR #224, a one-time GitHub settings change may be made only under separate authorization. Preserve ruleset 24191860's Foundation Integrity requirement, PR-only integration, no bypass, force-push and deletion protections, and regular merge-only behavior. Require one approval, code-owner approval using `.github/CODEOWNERS` with `* @JCSchoeman96`, stale-review dismissal, latest-push approval and resolved review threads. The founder has approved retaining JC-Agents' All-repository Admin, CI/CD Admin and Security manager roles. Native verification accepts only the authenticated JC-Agents account with effective repository Admin or Write and active organization Member access. Do not attempt further permission changes. Admin access grants no merge bypass or founder-review authority. Preserve JCSchoeman96's existing owner/admin access. Independently inspect and verify the live rules and access before describing enforcement as active.
 
-"devcore-project activate" is a provisioning operation, not routine worktree setup or a generic doctor-failure repair. Use it only for separately authorised workstation provisioning, never as an automatic fallback in agent startup.
+For the separate historical WELL-125 / PR #244 closeout only, follow section 10.1 of the current routed Delivery Governance Standard and its cross-reference in `docs/development/foundation-integrity-merge-gate.md`. The amendment itself follows the ordinary integration procedure.
 
-Never request, print or commit password values or rendered secret-bearing files.
+### Post-merge reconciliation
 
-The repository must not start, stop, recreate or delete shared DevCore services or volumes.
-
-Redis is not used by NewYou.
-
-Both PostgreSQL roles must remain "NOCREATEDB".
-
-## Elixir runtime debugging — conditional skill routing
-
-For unexplained, intermittent or recurring Elixir/OTP, Ash, Ecto/PostgreSQL,
-Phoenix or ExUnit runtime behavior, load
-`.agents/skills/elixir-runtime-debugging/SKILL.md` for focused investigation.
-Use IEx, DEV-only Tidewave, selective BEAM tracing, version-matched Ash
-introspection and database telemetry only when they can distinguish the
-leading explanations. A separate TEST BEAM needs its own observation scope.
-
-This skill is diagnostic technique only. It does not replace `ticket-implement`,
-`tdd`, `code-change-verification`, the current repository authority, live Plane
-readiness, exact-head CI or independent Master Gate. Never use shared TEST data
-for disruptive investigations, and never weaken assertions or timeouts to
-obtain a passing result.
+Merge alone does not complete delivery. Independently verify resulting-main SHA/tree, candidate integration/no drift and required resulting-main CI/proof before moving Plane to `Done` or opening dependent work. The PR-tested merge tree may supply that proof only when the pre-merge run, reviewed head, base, candidate, required checks and resulting merge commit are independently bound as described in `docs/development/foundation-integrity-merge-gate.md`. Any missing or mismatched evidence requires explicit fresh exact-SHA verification; never describe reused PR evidence as a main-SHA check run.
