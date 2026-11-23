@@ -42,19 +42,19 @@
     },
     {
       "document_id": "FP002_PHASE_7B_RECONCILIATION",
-      "canonical_filename": "FP-002_PHASE_7B_RECONCILIATION_WORKING_v0.1.0.md",
-      "repository_path": "docs/delivery/proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_WORKING_v0.1.0.md",
-      "sha256": "45fd54e905d85b95f1b0bf482c1759c6a3ce368db98ab8666de7aa0e641babe3",
+      "canonical_filename": "FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+      "repository_path": "docs/delivery/proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+      "sha256": "429659470e446c4172e6bee57d1ccf6dcd34467fbc86dfb539c44364e994f822",
       "contract_type": "proof",
-      "status": "CANDIDATE_FOR_EXACT_SOURCE_REVIEW; NO_DEVELOPMENT_OR_RELEASE_AUTHORITY"
+      "status": "COMPLETE; CERTIFIED; CURRENT; NO_DEVELOPMENT_OR_RELEASE_AUTHORITY"
     },
     {
       "document_id": "FP002_FINAL_FEATURE_PACK",
-      "canonical_filename": "FP-002_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md",
-      "repository_path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_WORKING_v0.1.0.md",
-      "sha256": "e8089bf64d91d6c367fd6fb92f9292855580bdd9b979059f9ab2ec41b78959c5",
+      "canonical_filename": "FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md",
+      "repository_path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md",
+      "sha256": "b0bbb66c81f60db68d2d9fcd15e688e3358c02bc0c371612880a4224f3e9cf43",
       "contract_type": "feature_contract",
-      "status": "CANDIDATE_FOR_EXACT_SOURCE_REVIEW; NO_DEVELOPMENT_OR_RELEASE_AUTHORITY"
+      "status": "COMPLETE; CERTIFIED; CURRENT; NO_DEVELOPMENT_OR_RELEASE_AUTHORITY"
     },
     {
       "document_id": "DELIVERY_ATLAS",
