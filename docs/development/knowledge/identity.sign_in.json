@@ -1405,7 +1405,7 @@
       "id": "browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'signin'",
-      "sha256": "a5076c5c387de6cc037de03050adf03c723a32566e0649c27f6409ad73347412"
+      "sha256": "daf05e7eb4e1baed9b69f821d3c21f93bbebc8bc050a9bb3f26520e927c3b390"
     },
     {
       "id": "password_test",
@@ -1573,7 +1573,7 @@
       "id": "session_inventory_driver",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'session_management'",
-      "sha256": "a5076c5c387de6cc037de03050adf03c723a32566e0649c27f6409ad73347412"
+      "sha256": "daf05e7eb4e1baed9b69f821d3c21f93bbebc8bc050a9bb3f26520e927c3b390"
     },
     {
       "id": "session_inventory_index",

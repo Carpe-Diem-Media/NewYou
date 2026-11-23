@@ -7,8 +7,8 @@
     "WELL-173"
   ],
   "implementation_revision": {
-    "git_sha": "b1f671cee5c2f4a5276508edef87b543ca2a3406",
-    "semantics": "WELL-173 adds the private DEV/TEST operator browser workflow around the existing Identity lookup. The owning interface, grant lifecycle and standard Audit selection are preserved."
+    "git_sha": "4f30a7279af9caf280e8dcc9fbcd37efa77946ea",
+    "semantics": "WELL-173 adds the private DEV/TEST operator browser workflow around the existing Identity lookup. The owning interface, grant lifecycle and standard Audit selection are preserved. The review correction clears form values and diagnostics on pagehide and navigate-replaces persisted restorations with an authorized GET."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -213,6 +213,15 @@
         "privilege",
         "browser_test"
       ]
+    },
+    {
+      "summary": "The same-origin lookup script resets operator inputs and destroys diagnostics on pagehide. On persisted pageshow it clears again and calls location.replace with the fixed form URL. A fresh GET rechecks the current Session without resubmitting lookup intent. A subsequent explicit POST still needs fresh MFA and a current named grant.",
+      "source_ids": [
+        "browser_history",
+        "browser_form",
+        "browser_controller",
+        "browser_dispatch"
+      ]
     }
   ],
   "concurrency": [
@@ -286,16 +295,18 @@
       "path": "test/new_you_web/controllers/support_lookup_controller_test.exs",
       "cases": [
         "CSRF rejection, current Session, disabled and anonymous entry, query rejection and TOTP replay.",
-        "Real Chromium sign-in, keyboard focus, narrow reflow, fresh MFA, minimum projection, fresh request after grant revocation and payload-free request-stop and SQL telemetry."
+        "Real Chromium sign-in, keyboard focus, narrow reflow, fresh MFA, minimum projection, fresh request after grant revocation and payload-free request-stop and SQL telemetry.",
+        "Native Chromium Back/Forward after sensitive entry, grant revocation and logout. Check real pagehide clearing, persisted-event handling on an actual POST document, authorized blank GET replacement, no additional POST and fresh 404 GETs after logout."
       ],
       "proves": "The private synthetic browser workflow reuses the owning Identity checks and does not persist the lookup result.",
-      "limits": "Chromium uses a loopback TEST endpoint and a deterministic TOTP clock. The fixture revokes the grant separately through its real Ash action. It does not model production staff provisioning or external monitoring.",
+      "limits": "Chromium uses a loopback TEST endpoint and a deterministic TOTP clock. The fixture revokes the grant separately through its real Ash action. It does not model production staff provisioning or external monitoring. The POST restoration test dispatches persisted events on the actual Chromium document because native admission to the back-forward cache varies by browser. The separate history navigation tests traverse real entries.",
       "source_ids": [
         "browser_dispatch",
         "browser_controller",
         "browser_form",
         "browser_test",
-        "chromium"
+        "chromium",
+        "browser_history"
       ]
     }
   ],
@@ -345,7 +356,8 @@
     "Proof uses synthetic development/test Accounts and grants. Production grant issuance and operator route activation remain outside the ticket.",
     "Authorized matching and non-matching results differ by design; the denial boundary remains generic and the function is not exposed publicly.",
     "The lookup is read-only and does not create an Audit event; selected Audit authority classifies ordinary low-risk lookup as E3 normally.",
-    "The HTTP adapter starts request telemetry before application dispatch and can observe the existing encrypted cookie transport. The browser does not send lookup data in the URL or expose decoded cookie values to request-stop telemetry."
+    "The HTTP adapter starts request telemetry before application dispatch and can observe the existing encrypted cookie transport. The browser does not send lookup data in the URL or expose decoded cookie values to request-stop telemetry.",
+    "The browser-history mitigation requires the scoped script to run. The server continues to require current authority on every network request."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -419,13 +431,13 @@
       "id": "browser_controller",
       "path": "lib/new_you_web/controllers/support_lookup_controller.ex",
       "symbol": "defmodule NewYouWeb.SupportLookupController",
-      "sha256": "2bc7ba9ac601389747064aaa3cd4e59074c74526e19a66e1e9d88d8ccd92c1d4"
+      "sha256": "24beeb4e1f3e5d194a4413fc7b3dd726d6df4e2ffe67c4580e52c47944531be0"
     },
     {
       "id": "browser_form",
       "path": "lib/new_you_web/controllers/support_lookup_html/index.html.heex",
       "symbol": "id=\"support-lookup\"",
-      "sha256": "9658210b0eab306a095737b14487818e3a95036f8aa6ccf02e8c1ae65ffabba5"
+      "sha256": "7cbf27d79f0f788093774709c3b3a1a7b72ff8d8c8d094241092bb31b9225bb9"
     },
     {
       "id": "query_privacy",
@@ -437,19 +449,25 @@
       "id": "browser_test",
       "path": "test/new_you_web/controllers/support_lookup_controller_test.exs",
       "symbol": "defmodule NewYouWeb.SupportLookupControllerTest",
-      "sha256": "441b7eb3e6ad0a416d0cce2e074cd31ac809e5b1c1a95c3a2c49b4edd938934e"
+      "sha256": "52665c8578539b81dfd5370629dcfa0496668bfa63ed9c053f2556256515552d"
     },
     {
       "id": "chromium",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'support_lookup'",
-      "sha256": "a5076c5c387de6cc037de03050adf03c723a32566e0649c27f6409ad73347412"
+      "sha256": "daf05e7eb4e1baed9b69f821d3c21f93bbebc8bc050a9bb3f26520e927c3b390"
     },
     {
       "id": "privilege_test",
       "path": "test/new_you/identity/privileged_access_test.exs",
       "symbol": "two independent Sessions transactions cannot consume one TOTP period twice",
       "sha256": "16a9af3df23309c317c9070bbd7af1915c7fd1693902c88812afccb4def76f77"
+    },
+    {
+      "id": "browser_history",
+      "path": "assets/js/support_lookup.js",
+      "symbol": "function clearLookup()",
+      "sha256": "36d6e66d79e91aa15f2280c8fc89d47b4ef84cfd5b41fd771627da6ede8497e1"
     }
   ]
 }
