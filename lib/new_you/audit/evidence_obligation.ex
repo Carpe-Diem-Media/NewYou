@@ -1,8 +1,9 @@
 defmodule NewYou.Audit.EvidenceObligation do
   @moduledoc """
-  Durable selected Audit E2 work, independent of executor jobs. PostgreSQL preserves the
-  source provenance and terminal fulfilment. The AshOban scheduler rediscovers
-  open obligations every minute, including those with missing or exhausted jobs.
+  Audit owns this durable E2 obligation independently of executor jobs. The
+  source transaction establishes the obligation. Audit materializes evidence
+  from the stored provenance and marks the obligation fulfilled. The AshOban
+  scheduler rediscovers open rows, including those with missing or exhausted jobs.
   """
   use Ash.Resource,
     otp_app: :new_you,

@@ -1,4 +1,14 @@
 defmodule NewYou.Identity.RegistrationOperation do
+  @moduledoc """
+  Identity's private Ash resource for registration idempotency. A live binding
+  records the accepted request fingerprint, password verifier and neutral receipt.
+  It can refer to a newly created Account. A tombstone reserves the operation ID
+  after clearing the request binding, so expiry or invalidation cannot make that
+  ID available for a fresh registration.
+
+  `NewYou.Identity.register/1` owns the application contract.
+  """
+
   use Ash.Resource, otp_app: :new_you, domain: NewYou.Identity, data_layer: AshPostgres.DataLayer
 
   postgres do

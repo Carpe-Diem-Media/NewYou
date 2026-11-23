@@ -18,6 +18,10 @@ defmodule NewYou.Audit.PrivilegedEvidence do
     end
   end
 
+  # E1 admission must commit outside the source transaction. Reuse an attempt
+  # only when the full admitted binding matches, including after an insert race.
+  @spec admit(map(), :security_hold_release | :identity_reconciliation | :identity_recovery) ::
+          {:ok, EvidenceRecord.t()} | {:error, :evidence_admission_unavailable}
   def admit(envelope, action_class \\ :security_hold_release)
 
   def admit(envelope, action_class)
@@ -106,6 +110,10 @@ defmodule NewYou.Audit.PrivilegedEvidence do
       is_integer(envelope.grant_version) and envelope.grant_version > 0 and
         is_integer(envelope.expected_version) and envelope.expected_version >= 0
 
+  # E2 requires the surrounding source transaction. Replay compares the
+  # supplied fields of the existing operation/type binding. Ash errors from
+  # the create action are returned to the caller so it can roll back.
+  @spec establish_outcome(map()) :: {:ok, EvidenceObligation.t()} | {:error, term()}
   def establish_outcome(envelope) when is_map(envelope) do
     with true <- Ash.DataLayer.in_transaction?(EvidenceObligation),
          true <- Enum.all?(Map.keys(envelope), &(&1 in @outcome_fields)),

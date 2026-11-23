@@ -1,6 +1,13 @@
 defmodule NewYou.Communications.EnvelopeCrypto do
   @moduledoc false
 
+  @typep binding :: {binary(), binary(), binary()}
+  @typep envelope :: %{nonce: binary(), ciphertext: binary(), tag: binary()}
+  @typep invalid_envelope :: {:error, :invalid_envelope}
+
+  # Communications reserves the nonce for this key version before encrypting.
+  # Intent, source and purpose are authenticated with the ciphertext.
+  @spec encrypt(binary(), binding(), binary(), binary()) :: {:ok, envelope()} | invalid_envelope()
   def encrypt(key, {intent, source, purpose}, bearer, nonce)
       when is_binary(key) and byte_size(key) == 32 and is_binary(intent) and
              is_binary(source) and is_binary(purpose) and is_binary(bearer) and
@@ -20,6 +27,8 @@ defmodule NewYou.Communications.EnvelopeCrypto do
 
   def encrypt(_, _, _, _), do: {:error, :invalid_envelope}
 
+  # A malformed envelope, wrong binding or failed authentication all fail closed.
+  @spec decrypt(binary(), binding(), envelope()) :: {:ok, binary()} | invalid_envelope()
   def decrypt(
         key,
         {intent, source, purpose} = binding,
@@ -57,6 +66,13 @@ defmodule NewYou.Communications.EnvelopeCrypto do
       is_binary(nonce) and byte_size(nonce) == 12 and is_binary(tag) and byte_size(tag) == 16 and
         is_binary(ciphertext) and byte_size(ciphertext) > 0
 
+  # Read with the recorded version only, including during key rotation.
+  @spec decrypt_versioned(
+          %{optional(String.t()) => binary()},
+          String.t(),
+          binding(),
+          envelope()
+        ) :: {:ok, binary()} | invalid_envelope()
   def decrypt_versioned(keys, version, binding, envelope)
       when is_map(keys) and is_binary(version) do
     case Map.fetch(keys, version) do
