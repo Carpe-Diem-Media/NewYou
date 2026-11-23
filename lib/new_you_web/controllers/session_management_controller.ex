@@ -6,6 +6,11 @@ defmodule NewYouWeb.SessionManagementController do
   alias NewYou.Identity
   alias NewYouWeb.{DevelopmentEntry, SessionManagementHTML}
 
+  @device_cookie "new_you_device"
+  @device_path "/session/manage"
+  @consent_salt "trusted-device-consent"
+  @consent_seconds 600
+
   plug :require_eligible_copy
 
   @doc false
@@ -31,6 +36,110 @@ defmodule NewYouWeb.SessionManagementController do
   end
 
   def revoke(conn, _params), do: render_list(conn, nil, "revoke.failed", :forbidden)
+
+  @doc false
+  def manage_device(conn, %{"operation" => "consent", "device_proof" => proof})
+      when is_binary(proof) and byte_size(proof) <= 1024 do
+    credentials = credentials(conn)
+    presenting = credentials.session_id
+
+    with {:ok, {^presenting, artifact}} <-
+           Phoenix.Token.decrypt(conn, @consent_salt, proof, max_age: @consent_seconds),
+         {:ok, device} <- Identity.manage_trusted_devices(credentials, {:grant, artifact}) do
+      encoded = Base.url_encode64(artifact, padding: false)
+      max_age = max(0, DateTime.diff(device.expires_at, DateTime.utc_now()))
+
+      conn
+      |> put_resp_cookie(@device_cookie, encoded,
+        secure: true,
+        http_only: true,
+        same_site: "Lax",
+        path: @device_path,
+        max_age: max_age
+      )
+      |> assign(:consented_artifact, artifact)
+      |> render_list(nil, nil, :ok)
+    else
+      {:error, :device_result_uncertain} ->
+        device_result(conn, "consent.uncertain", :service_unavailable)
+
+      _ ->
+        device_result(conn, "consent.failed", :forbidden)
+    end
+  end
+
+  def manage_device(conn, %{"operation" => "rename", "device_id" => id, "device_name" => name}) do
+    case Identity.manage_trusted_devices(credentials(conn), {:rename, id, name}) do
+      {:ok, :renamed} ->
+        render_list(conn, nil, nil, :ok)
+
+      {:error, :device_result_uncertain} ->
+        device_result(conn, "item.name.uncertain", :service_unavailable)
+
+      _ ->
+        device_result(conn, "item.name.failed", :unprocessable_entity)
+    end
+  end
+
+  def manage_device(conn, %{"operation" => "revoke", "device_id" => id}) do
+    case Identity.manage_trusted_devices(credentials(conn), {:revoke, id}) do
+      {:ok, :revoked} ->
+        device_result(conn, "revoke.completed", :ok)
+
+      {:ok, :already_ended} ->
+        device_result(conn, "revoke.already_ended", :ok)
+
+      {:error, :device_result_uncertain} ->
+        device_result(conn, "revoke.uncertain", :service_unavailable)
+
+      _ ->
+        device_result(conn, "revoke.failed", :forbidden)
+    end
+  end
+
+  def manage_device(conn, _params), do: device_result(conn, "consent.failed", :forbidden)
+
+  defp device_result(conn, message, status) do
+    conn
+    |> assign(:device_message, message)
+    |> render_list(nil, nil, status)
+  end
+
+  defp inventory(conn, nil), do: {conn, nil}
+
+  defp inventory(conn, _page) do
+    conn = fetch_cookies(conn)
+    credentials = credentials(conn)
+    artifact = conn.assigns[:consented_artifact] || device_artifact(conn)
+
+    case Identity.manage_trusted_devices(credentials, {:list, artifact}) do
+      {:ok, devices} ->
+        if Enum.any?(devices, & &1.current?) do
+          {conn, %{devices: devices, consent: nil}}
+        else
+          consent =
+            Phoenix.Token.encrypt(
+              conn,
+              @consent_salt,
+              {credentials.session_id, :crypto.strong_rand_bytes(32)}
+            )
+
+          {conn, %{devices: devices, consent: consent}}
+        end
+
+      _ ->
+        {conn, nil}
+    end
+  end
+
+  defp device_artifact(conn) do
+    with <<encoded::binary-size(43)>> <- conn.req_cookies[@device_cookie],
+         {:ok, <<artifact::binary-size(32)>>} <- Base.url_decode64(encoded, padding: false) do
+      artifact
+    else
+      _ -> nil
+    end
+  end
 
   @doc false
   def confirm_all(conn, _params) do
@@ -63,6 +172,7 @@ defmodule NewYouWeb.SessionManagementController do
     conn
     |> clear_session()
     |> configure_session(drop: true)
+    |> delete_resp_cookie(@device_cookie, path: @device_path, secure: true)
     |> render_page(nil, "all.completed", :ok)
   end
 
@@ -99,9 +209,17 @@ defmodule NewYouWeb.SessionManagementController do
   end
 
   defp render_page(conn, page, message, status) do
+    {conn, inventory} = inventory(conn, page)
+
     conn
     |> prepare_page(status)
-    |> render(:index, page: page, message: message, page_number: conn.assigns[:page_number] || 1)
+    |> render(:index,
+      page: page,
+      message: message,
+      page_number: conn.assigns[:page_number] || 1,
+      inventory: inventory,
+      device_message: conn.assigns[:device_message]
+    )
   end
 
   defp prepare_page(conn, status) do
@@ -121,8 +239,9 @@ defmodule NewYouWeb.SessionManagementController do
     locale = Map.get(conn.params, "locale", get_session(conn, :identity_locale))
 
     with true <- DevelopmentEntry.enabled?() and NewYouWeb.SignInCopy.available?(),
-         {:ok, copy} <- SessionManagementCopy.load(locale) do
-      conn |> assign(:locale, locale) |> assign(:copy, copy)
+         {:ok, copy} <- SessionManagementCopy.load(locale),
+         {:ok, device_copy} <- SessionManagementCopy.load_devices(locale) do
+      conn |> assign(:locale, locale) |> assign(:copy, copy) |> assign(:device_copy, device_copy)
     else
       _ -> conn |> put_resp_header("cache-control", "no-store") |> send_resp(404, "") |> halt()
     end

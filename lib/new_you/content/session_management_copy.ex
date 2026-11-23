@@ -10,9 +10,14 @@ defmodule NewYou.Content.SessionManagementCopy do
 
   @doc "Returns the eligible Session management strings for the requested locale."
   @spec load(String.t()) :: {:ok, %{String.t() => String.t()}} | {:error, :content_ineligible}
-  def load(locale), do: load(locale, &read/1)
+  def load(locale), do: load(locale, &read/1, "identity.sessions.")
 
-  defp load(locale, read) when locale in ["en", "af"] do
+  @doc "Returns the eligible trusted-device strings for the requested locale."
+  @spec load_devices(String.t()) ::
+          {:ok, %{String.t() => String.t()}} | {:error, :content_ineligible}
+  def load_devices(locale), do: load(locale, &read/1, "identity.trusted_devices.")
+
+  defp load(locale, read, prefix) when locale in ["en", "af"] do
     with true <- @enabled,
          {:ok, router} <- read.("docs/delivery/CURRENT_DELIVERY_ROUTER.json"),
          {:ok, %{"delivery_contracts" => entries}} <- Jason.decode(router),
@@ -22,18 +27,18 @@ defmodule NewYou.Content.SessionManagementCopy do
          true <- digest(bytes) == @digest,
          {:ok, %{"copy_items" => items}} <- Jason.decode(bytes) do
       items
-      |> Enum.filter(&session_key?/1)
+      |> Enum.filter(fn %{"key" => key} -> String.starts_with?(key, prefix) end)
       |> Enum.reduce_while({:ok, %{}}, &collect_string(&1, &2, locale))
     else
       _ -> {:error, :content_ineligible}
     end
   end
 
-  defp load(_locale, _read), do: {:error, :content_ineligible}
+  defp load(_locale, _read, _prefix), do: {:error, :content_ineligible}
 
   if Mix.env() == :test do
     @doc false
-    def load_for_proof(locale, read), do: load(locale, read)
+    def load_for_proof(locale, read), do: load(locale, read, "identity.sessions.")
   end
 
   defp collect_string(%{"key" => key} = item, {:ok, copy}, locale) do
@@ -47,9 +52,6 @@ defmodule NewYou.Content.SessionManagementCopy do
         {:halt, {:error, :content_ineligible}}
     end
   end
-
-  defp session_key?(%{"key" => "identity.sessions." <> _}), do: true
-  defp session_key?(_item), do: false
 
   defp digest(bytes), do: Base.encode16(:crypto.hash(:sha256, bytes), case: :lower)
 

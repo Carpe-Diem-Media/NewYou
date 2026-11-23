@@ -19,6 +19,112 @@ defmodule NewYou.Identity.SessionManagementTest do
     RegistrationSeam
   }
 
+  test "device consent converges on retry and a revoked artifact cannot enroll again" do
+    P805.with_fixture(fn ->
+      request = verified_account()
+      credentials = sign_in(request)
+      foreign = verified_account() |> sign_in()
+      artifact = :crypto.strong_rand_bytes(32)
+
+      assert {:ok, %{id: id, expires_at: expiry}} =
+               Identity.manage_trusted_devices(credentials, {:grant, artifact})
+
+      assert DateTime.diff(expiry, DateTime.utc_now(), :day) in 29..30
+
+      assert {:ok, %{id: ^id, expires_at: ^expiry}} =
+               Identity.manage_trusted_devices(credentials, {:grant, artifact})
+
+      assert {:ok, []} = Identity.manage_trusted_devices(foreign, :list)
+
+      assert {:error, :device_unavailable} =
+               Identity.manage_trusted_devices(foreign, {:revoke, id})
+
+      assert {:ok, :renamed} =
+               Identity.manage_trusted_devices(credentials, {:rename, id, "My laptop"})
+
+      assert {:ok, [%{id: ^id, name: "My laptop", current?: true}]} =
+               Identity.manage_trusted_devices(credentials, {:list, artifact})
+
+      assert {:ok, :revoked} = Identity.manage_trusted_devices(credentials, {:revoke, id})
+      assert {:ok, :already_ended} = Identity.manage_trusted_devices(credentials, {:revoke, id})
+
+      assert {:error, :device_unavailable} =
+               Identity.manage_trusted_devices(credentials, {:grant, artifact})
+
+      assert {:ok, %{id: fresh}} =
+               Identity.manage_trusted_devices(
+                 credentials,
+                 {:grant, :crypto.strong_rand_bytes(32)}
+               )
+
+      refute fresh == id
+      assert {:ok, _} = Identity.authorize_session(credentials)
+
+      assert %{state: :revoked, revoked_at: %DateTime{}} =
+               Ash.get!(DeviceAssurance, id, authorize?: false)
+
+      evidence =
+        EvidenceObligation
+        |> Ash.Query.filter(source_operation_id == ^id)
+        |> Ash.read!(authorize?: false)
+
+      assert Enum.sort(Enum.map(evidence, & &1.evidence_type)) ==
+               [:identity_device_trust_granted, :identity_device_trust_revoked]
+    end)
+  end
+
+  test "selected Audit rejection rolls back manual trust removal" do
+    P805.with_fixture(fn ->
+      credentials = verified_account() |> sign_in()
+      account_id = session(credentials).account_id
+      artifact = :crypto.strong_rand_bytes(32)
+      assert {:ok, %{id: id}} = Identity.manage_trusted_devices(credentials, {:grant, artifact})
+
+      assert {:ok, _} =
+               Ash.transact(Account, fn ->
+                 Audit.establish_identity_security_obligation(%{
+                   source_operation_id: id,
+                   source_occurred_at: ~U[2025-01-01 00:00:00Z],
+                   evidence_type: :identity_device_trust_revoked,
+                   actor_id: account_id,
+                   target_id: account_id,
+                   session_id: credentials.session_id,
+                   outcome: :failed
+                 })
+               end)
+
+      assert {:error, :device_result_uncertain} =
+               Identity.manage_trusted_devices(credentials, {:revoke, id})
+
+      assert %{state: :trusted, revoked_at: nil} =
+               Ash.get!(DeviceAssurance, id, authorize?: false)
+
+      assert {:ok, [%{id: ^id, current?: true}]} =
+               Identity.manage_trusted_devices(credentials, {:list, artifact})
+    end)
+  end
+
+  test "expired device artifacts are terminal and concurrent consent shares one record" do
+    P805.with_fixture(fn ->
+      credentials = verified_account() |> sign_in()
+      artifact = :crypto.strong_rand_bytes(32)
+      grant = fn -> Identity.manage_trusted_devices(credentials, {:grant, artifact}) end
+      first = separate_connection(grant)
+      second = separate_connection(grant)
+      assert [{:ok, %{id: id} = device}, {:ok, retry}] = Task.await_many([first, second])
+      assert retry == device
+
+      Repo.query!("UPDATE device_assurances SET expires_at = now() WHERE id = $1", [
+        Ecto.UUID.dump!(id)
+      ])
+
+      assert {:ok, []} = Identity.manage_trusted_devices(credentials, {:list, artifact})
+      assert %{state: :expired} = Ash.get!(DeviceAssurance, id, authorize?: false)
+      assert {:error, :device_unavailable} = grant.()
+      assert {:ok, :already_ended} = Identity.manage_trusted_devices(credentials, {:revoke, id})
+    end)
+  end
+
   test "global revocation requires fresh proof and a replay cannot affect a fresh Session" do
     P805.with_fixture(fn ->
       request = verified_account()
@@ -26,10 +132,10 @@ defmodule NewYou.Identity.SessionManagementTest do
       target = sign_in(request)
       foreign = verified_account() |> sign_in()
       terminal = sign_in(request)
-      account_id = session(initiator).account_id
-      device = RecoveryScenarios.trusted_device(account_id)
+      artifact = :crypto.strong_rand_bytes(32)
+      assert {:ok, %{id: device}} = Identity.manage_trusted_devices(initiator, {:grant, artifact})
       foreign_device = RecoveryScenarios.trusted_device(session(foreign).account_id)
-      {magic, independent_proof} = sign_in_magic(request, account_id)
+      {magic, independent_proof} = sign_in_magic(request, session(initiator).account_id)
       assert :ok = Identity.logout(terminal)
 
       assert {:error, :session_unavailable} =
@@ -52,6 +158,10 @@ defmodule NewYou.Identity.SessionManagementTest do
       assert session(terminal).state == :logged_out
       assert {:ok, _} = Identity.authorize_session(foreign)
       fresh = sign_in(request)
+      assert {:ok, []} = Identity.manage_trusted_devices(fresh, :list)
+
+      assert {:error, :device_unavailable} =
+               Identity.manage_trusted_devices(fresh, {:grant, artifact})
 
       assert {:error, :session_unavailable} =
                Identity.revoke_all_sessions(initiator, request.password, nil)

@@ -274,7 +274,39 @@ try {
       const packet = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json', 'utf8'));
       const copy = key => JSON.stringify(packet.copy_items.find(item => item.key === 'identity.sessions.' + key)[input.locale].text);
       const unrelated = input.unrelated_session;
-      if (input.global_revocation) {
+      if (input.trusted_devices) {
+        const deviceText = key => JSON.stringify(packet.copy_items.find(item => item.key === 'identity.trusted_devices.' + key)[input.locale].text);
+        const form = operation => `document.querySelector('#trusted-devices').closest('section').querySelector('input[name="operation"][value="${operation}"]').form`;
+        checkpoint = 'trusted_devices.consent';
+        await cdp('Emulation.setDeviceMetricsOverride', {width: 375, height: 740, deviceScaleFactor: 1, mobile: true});
+        checks.empty = await evaluate(`document.querySelector('#trusted-devices').closest('section').textContent.includes(${deviceText('active.empty')})`);
+        checks.responsive = await evaluate('document.documentElement.scrollWidth <= innerWidth');
+        await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+        checks.reduced_motion = await evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0");
+        await navigation(() => evaluate(`${form('consent')}.requestSubmit()`));
+        checkpoint = 'trusted_devices.granted';
+        checks.cookie_private = await evaluate('!document.cookie.includes("new_you_device")');
+        checks.current = await evaluate(`!!${form('rename')} && !document.querySelector('input[name="device_proof"]')`);
+
+        checkpoint = 'trusted_devices.rename';
+        await evaluate(`${form('rename')}.elements.device_name.value = 'Synthetic laptop'`);
+        await navigation(() => evaluate(`${form('rename')}.requestSubmit()`));
+        checks.name_saved = await evaluate(`${form('rename')}.elements.device_name.value === 'Synthetic laptop'`);
+
+        checkpoint = 'trusted_devices.remove';
+        const detail = "document.querySelector('#trusted-devices').closest('section').querySelector('details')";
+        await evaluate(`${detail}.querySelector('summary').focus()`);
+        await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Enter', code: 'Enter', text: '\r', windowsVirtualKeyCode: 13});
+        await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13});
+        checks.explicit_confirm = await evaluate(`${detail}.open && ${detail}.textContent.includes(${deviceText('revoke.confirm.body')})`);
+        await navigation(() => evaluate(`${form('revoke')}.requestSubmit()`));
+        checkpoint = 'trusted_devices.removed';
+        checks.removed = await evaluate(`document.querySelector('#trusted-devices')?.closest('section').querySelector('[role="status"]')?.textContent.trim() === ${deviceText('revoke.completed')}`);
+        await navigation(() => cdp('Page.navigate', {url: `${base}/session/manage?locale=${input.locale}`}));
+        checks.refreshed = await evaluate(`!document.querySelector('input[name="device_id"]') && !!document.querySelector('input[name="device_proof"]')`);
+        await navigation(() => cdp('Page.navigate', {url: `${base}/session/protected`}));
+        checks.session_survives = await evaluate(`!!document.querySelector('#session-logout')`);
+      } else if (input.global_revocation) {
         const all = 'a[href^="/session/manage/all?"]';
         const confirmation = '#revoke-all-sessions';
         const protectedStatus = status => `fetch('/session/protected', {cache: 'no-store'}).then(response => response.status === ${status})`;

@@ -5,6 +5,23 @@ defmodule NewYou.Identity.SecurityHoldTest do
   alias NewYou.Proof.{P805, P813HoldFixture}
   require Ash.Query
 
+  test "suspected compromise terminates participant device trust before a hold can be released" do
+    P813HoldFixture.with_fixture(fn f ->
+      artifact = :crypto.strong_rand_bytes(32)
+      credentials = f.target.credentials
+      assert {:ok, %{id: id}} = Identity.manage_trusted_devices(credentials, {:grant, artifact})
+      assert {:ok, :ok} = P813HoldFixture.step_up(f.actor, :place_security_hold)
+
+      hold = P813HoldFixture.request(f, :place, 0)
+
+      assert {:ok, %{status: :held}} =
+               Identity.place_security_hold(%{hold | reason_code: :suspected_compromise})
+
+      assert %{state: :revoked} = Ash.get!(NewYou.Identity.DeviceAssurance, id, authorize?: false)
+      assert {:error, :device_unavailable} = Identity.manage_trusted_devices(credentials, :list)
+    end)
+  end
+
   test "release without an independent review cannot establish E1 admission" do
     P813HoldFixture.with_fixture(fn f ->
       {:ok, :ok} = P813HoldFixture.step_up(f.actor, :place_security_hold)

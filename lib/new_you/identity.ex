@@ -277,6 +277,33 @@ defmodule NewYou.Identity do
   def list_active_sessions(credentials, cursor \\ nil),
     do: NewYou.Identity.PasswordSession.list_active(credentials, cursor)
 
+  @type trusted_device :: %{
+          id: Ecto.UUID.t(),
+          name: String.t() | nil,
+          expires_at: DateTime.t(),
+          current?: boolean()
+        }
+
+  @type trusted_device_operation ::
+          :list
+          | {:list, binary() | nil}
+          | {:grant, binary()}
+          | {:rename, Ecto.UUID.t(), String.t()}
+          | {:revoke, Ecto.UUID.t()}
+
+  @doc """
+  Manage device trust for the presenting ordinary Account. The caller must submit
+  a fresh random 32-byte artifact only after explicit consent. A successful
+  replay of that artifact keeps the original expiry. Terminal artifacts cannot
+  grant again. The optional listing artifact identifies the current device.
+  Revoke ends trust only. An uncertain write requires a fresh inventory read.
+  """
+  @spec manage_trusted_devices(map(), trusted_device_operation()) ::
+          {:ok, [trusted_device()] | trusted_device() | :renamed | :revoked | :already_ended}
+          | {:error, :device_unavailable | :device_result_uncertain}
+  def manage_trusted_devices(credentials, operation),
+    do: NewYou.Identity.PasswordSession.manage_trusted_devices(credentials, operation)
+
   @doc """
   Terminate one other currently usable Session owned by the presenting Account.
 
