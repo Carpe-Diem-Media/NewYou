@@ -178,19 +178,29 @@ defmodule NewYouWeb.SupportLookupControllerTest do
       do: send(test_pid, :lookup_query_telemetry)
   end
 
-  def observe_transport([:bandit, :request, :stop], _measurements, %{conn: conn}, test_pid) do
-    if conn.request_path == @path and conn.method == "GET" do
-      send(test_pid, {:lookup_get, conn.status})
-    end
-
-    if conn.request_path == @path and conn.method == "POST" do
-      safe =
-        conn.params == %{} and conn.body_params == %{} and conn.assigns == %{} and
-          conn.private == %{} and conn.req_headers == [] and is_nil(conn.resp_body)
-
-      send(test_pid, {:lookup_transport, conn.status, safe})
-    end
+  def observe_transport(
+        [:bandit, :request, :stop],
+        _measurements,
+        %{conn: %{request_path: @path, method: "GET", status: status}},
+        test_pid
+      ) do
+    send(test_pid, {:lookup_get, status})
   end
+
+  def observe_transport(
+        [:bandit, :request, :stop],
+        _measurements,
+        %{conn: %{request_path: @path, method: "POST"} = conn},
+        test_pid
+      ) do
+    safe =
+      conn.params == %{} and conn.body_params == %{} and conn.assigns == %{} and
+        conn.private == %{} and conn.req_headers == [] and is_nil(conn.resp_body)
+
+    send(test_pid, {:lookup_transport, conn.status, safe})
+  end
+
+  def observe_transport([:bandit, :request, :stop], _measurements, _metadata, _test_pid), do: :ok
 
   defmodule BrowserEndpoint do
     @moduledoc false
