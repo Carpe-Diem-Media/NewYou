@@ -188,6 +188,22 @@ The following describes required observable states and transitions without pre-s
 
 **Concurrency and failure proof:** P1-02 uses **two independent PostgreSQL transactions**, not an in-memory serialization or sequential helper. Unique and source-binding DB constraints complement Ash policy checks. P1-03 rollback before Commerce commit leaves zero payment/consequence/right; P1-04 crash after Commerce commit before grant leaves discoverable consequence and one eventual held right; P1-05 crash after grant commit before ack reconciles without duplication. Proof must cross a genuinely fresh process/restart and include relevant SQL row identities/effect counts; a job may be missing/exhausted and discovery must still work.
 
+### P1-01 through P1-07 approved proof traceability
+
+The [accountable-human-approved proof design](../../proof/fp-002/FP-002_TRACER_BULLET_DESIGN_CANDIDATE_v0.1.0.md) controls exact semantics. This matrix is a **planning trace**, not a replacement or enlargement of its acceptance authority.
+
+| Exact P1 case | Engineering check | Negative and durable result to demonstrate |
+| --- | --- | --- |
+| **P1-01** — Acceptance and qualified evidence | Canonical verified payer=recipient; fixed standalone Plan version, 39,900 ZAR minor units; one accepted purchase/known attempt | Same input idempotently replays; changed actor/recipient/version/amount/currency/integration/environment, pending or unqualified source produces no verified payment/right |
+| **P1-02** — Independent concurrency and access | Two independently committed/contending PostgreSQL transactions apply equivalent qualified evidence through genuine Commerce/Entitlements Ash actions | Exactly **one verified payment, one durable consequence, one held source-specific right**; deny direct unauthorized grant, foreign read and any Plan content/delivery/consumption |
+| **P1-03** — Pre-Commerce-commit failure | Abort Commerce authoritative payment/consequence transaction before commit | Zero verified payment/consequence/right, even if an earlier accepted pending attempt survives |
+| **P1-04** — Post-Commerce commit/pre-grant crash | Fresh process reloads original committed consequence and asks Entitlements through owner interface | Access unavailable before grant commit; one held right after recovery, no lost consequence |
+| **P1-05** — Post-grant commit/pre-ack crash | Fresh retry reconciles the original consequence against original source-specific held right | No duplicate right/payment, no delivered content/consumption or second source |
+| **P1-06** — Production synthetic exclusion | Compile/test production profile to establish TEST producer absent; attempt ordinary forged input | No production browser, header, provider/callback or runtime switch can make synthetic evidence qualify |
+| **P1-07** — Identity owner registration regression | Registered Commerce and Entitlements owner reviews integrated with Identity positive/negative/unknown/conflicting/stale and restart checks | Existing `UnreviewedProofDomain` fail-close retained; no Identity direct write to Commerce payment or Entitlements rights |
+
+Required evidence: named focused test cases, source IDs/row counts at each crash cut, independent transaction overlap proof, real process restart, compile isolation, actor denials, migration/constraint safety, HIGH proof-menu applicability and exact-head CI. No synthetic case promotes Paystack or later FP-002 stage certification.
+
 ### Ten-unit staged roadmap with entry, evidence and exclusions
 
 | Proposed unit | Direct blockers | Executable outcome and proof boundary |
