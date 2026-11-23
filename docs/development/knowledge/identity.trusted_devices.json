@@ -6,8 +6,8 @@
     "WELL-178"
   ],
   "implementation_revision": {
-    "git_sha": "b8f2b8753e53ce275f7f37fe272138b740f7c366",
-    "semantics": "WELL-178 extends the existing private DeviceAssurance Resource and Session management page with participant-owned device trust."
+    "git_sha": "7842f30beb92aeb8c533819c2080efe25bef87f7",
+    "semantics": "WELL-178 extends the existing private DeviceAssurance Resource and Session management page with participant-owned device trust. Master Gate corrections bound the trusted set and use eligible copy. A scoped Audit insert fault proves grant rollback and cookie suppression."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -97,6 +97,19 @@
         "resource",
         "audit"
       ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261123085658_well178_bound_trusted_collection.exs",
+      "tables": [
+        "device_assurances"
+      ],
+      "constraints": [
+        "device_assurances_trusted_account_page"
+      ],
+      "source_ids": [
+        "bound_index",
+        "resource"
+      ]
     }
   ],
   "request_flow": [
@@ -123,6 +136,14 @@
         "browser",
         "devices",
         "template"
+      ]
+    },
+    {
+      "summary": "A name save with an uncertain result redirects to an authoritative GET of the localized inventory. The refreshed form presents the name Identity currently reads.",
+      "source_ids": [
+        "browser",
+        "template",
+        "devices"
       ]
     }
   ],
@@ -221,6 +242,15 @@
         "revocation",
         "recovery"
       ]
+    },
+    {
+      "summary": "The Account lock serializes the ten-record capacity check with new grants. Each trusted-record read is limited to ten and uses the Account-scoped partial index, which excludes terminal history. The reconciliation pass retires only that bounded set. Expired and stale-version rows become terminal and free capacity. Terminal history remains available for fingerprint replay denial.",
+      "source_ids": [
+        "session",
+        "devices",
+        "resource",
+        "bound_index"
+      ]
     }
   ],
   "idempotency_retry": [
@@ -237,6 +267,13 @@
       "source_ids": [
         "devices",
         "audit"
+      ]
+    },
+    {
+      "summary": "Replaying an existing current artifact at capacity returns the original row and expiry. One new artifact can claim the last slot, and expiry permits a later fresh grant.",
+      "source_ids": [
+        "devices",
+        "owner_proof"
       ]
     }
   ],
@@ -266,7 +303,8 @@
       "path": "test/new_you/identity/session_management_test.exs",
       "cases": [
         "Consent, duplicate replay, cross-Account denial, rename, removal, fresh consent, expiry, concurrent consent and Audit rejection.",
-        "Global sign-out invalidates a device issued through the owner interface."
+        "Global sign-out invalidates a device issued through the owner interface.",
+        "Separate database connections compete for the last of ten slots, an existing artifact still replays, and expiry frees capacity without deleting or reviving the expired record."
       ],
       "proves": "Durable Account scoping, terminal states, convergence, rollback and selected E2.",
       "limits": "Elapsed time is represented by a synthetic persisted deadline fixture.",
@@ -278,7 +316,8 @@
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "cases": [
         "EN/AF CSRF and cookie flags.",
-        "Chromium consent, rename, keyboard confirmation, fresh inventory and surviving Session."
+        "Chromium consent, rename, keyboard confirmation, fresh inventory and surviving Session.",
+        "A connection-scoped Audit insertion rejection reaches the real source write, leaves zero DeviceAssurance rows and sends no cookie. The same consent succeeds once the fault is removed."
       ],
       "proves": "The real development endpoint renders eligible localized copy and carries the opaque artifact in a private cookie.",
       "limits": "Synthetic accounts and a loopback browser.",
@@ -351,14 +390,14 @@
     {
       "id": "devices",
       "path": "lib/new_you/identity/trusted_devices.ex",
-      "symbol": "expire_due",
-      "sha256": "5f5f6c1da3abeb78b52efabaf0c1d8f45b6bf9fd72e4a85ad652e39ea88fda8d"
+      "symbol": "trusted_records",
+      "sha256": "7c11555ea11f17eaba9167e97a3e5e40fc2ba824a0488c96c60f6131bbc0203f"
     },
     {
       "id": "resource",
       "path": "lib/new_you/identity/device_assurance.ex",
       "symbol": "record_consent",
-      "sha256": "cf71701a77261ef813b4e1aface1fbd0cc5c80c976a589028a64fd3a53d07711"
+      "sha256": "f4db3c3f7a1101ecc2c52bd58bca340e08e3ae07035ac62394763279aa78e817"
     },
     {
       "id": "hold",
@@ -400,13 +439,13 @@
       "id": "browser",
       "path": "lib/new_you_web/controllers/session_management_controller.ex",
       "symbol": "manage_device",
-      "sha256": "9e3eaabecda761d8ff0aca8a1dad963de01333b754cb2145ab014576812a5dc3"
+      "sha256": "04b3092f06f6e0cfa88ca4fd3c89abd8f9926888a99e4f5b624f9d907ba15d16"
     },
     {
       "id": "template",
       "path": "lib/new_you_web/controllers/session_management_html/trusted_devices.html.heex",
       "symbol": "revoke.confirm.body",
-      "sha256": "76fde63253e12787e9e4066dc8278bbed059d5ccee8118935b4c0a34062c7928"
+      "sha256": "29762a7dac4f7a9559762b1eb1ba436e96b1158fc38aac4a48353407c6f0b00c"
     },
     {
       "id": "copy",
@@ -424,19 +463,25 @@
       "id": "owner_proof",
       "path": "test/new_you/identity/session_management_test.exs",
       "symbol": "expired device artifacts are terminal",
-      "sha256": "ef44521b3e49db77d24f27a16626887c4fa5fb8230ab533947412c734e9a364e"
+      "sha256": "ee2dcff67cc708f794dc8fece3ddec6fc86e2556a28badc674061250c8ea5bf5"
     },
     {
       "id": "browser_proof",
       "path": "test/new_you_web/controllers/session_management_controller_test.exs",
       "symbol": "Chromium can consent",
-      "sha256": "8ff2cfe8a81c64da636cc68fffb2964ed3f71ef280a661af334453c3afef0e4a"
+      "sha256": "434541242461025b5b9b8a04ab0a2461bd0aafe5e50ce58acfa9cd882ea31314"
     },
     {
       "id": "hold_proof",
       "path": "test/new_you/identity/security_hold_test.exs",
       "symbol": "suspected compromise terminates participant device trust",
       "sha256": "f7da03b89eaccd23d65c35aae785a3917d5ca92e715cb31425371c2f70b97fa0"
+    },
+    {
+      "id": "bound_index",
+      "path": "priv/repo/migrations/20261123085658_well178_bound_trusted_collection.exs",
+      "symbol": "device_assurances_trusted_account_page",
+      "sha256": "4d249aa96fd3b17c2439be4ac4a6a32111bd320198186086a1292f0eea968dfd"
     }
   ]
 }
