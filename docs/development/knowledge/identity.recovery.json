@@ -18,7 +18,7 @@
     "WELL-183"
   ],
   "implementation_revision": {
-    "git_sha": "67f5f72e074dcf71ae89a3226cc9fc8c9413fbe8",
+    "git_sha": "dee6dcca5558cb1a3ddb34fd003a7934a1fd82c5",
     "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-153 changes TEST-only recovery restart diagnostics and proof; Identity and password-reset business semantics remain unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged. WELL-159 replaces the timed child sleep and mixed interruption/retry loop with an observed pre-commit checkpoint handshake, registered process-group termination, independent rollback assertions and a fresh-VM retry of the same case/operation. Fixed TEST-only transaction phases distinguish early failures; the 250ms public request cap and all Domain/business semantics are unchanged. PR271 failure diagnosis distinguishes a neutral public acknowledgement from committed fixture state. Initial unverified fixture setup and ordinary child resume use at most three same-operation requests with durable state reads; the child retains the historical ordinary :requested result. Interruption-enabled requests remain single-attempt. Explicit TEST rollback and bounded-exhaustion cases prove retry and fail-closed setup; fixed restart diagnostics survive aggregate exception redaction. WELL-159 independently proves real 250ms lease expiry at transaction entry, after Account lock and after uncommitted Token/MessageIntent work. The worker reports its own PostgreSQL XID; a separate parent connection observes aborted before release, then the old lease must raise DBConnection.ConnectionError. Full Case/Account and zero partial effects are checked before explicit fresh-BEAM retry, which must commit one version/proof/intent. Initial fixture requests now own isolated Scenario worker checkouts so a bounded request cannot disconnect the fixture owner. Shared atomics are TEST fault counters only. Failed cleaned-up requests log identifier-free durable observations and still fail the cut/retry assertion; skipped-cut control must have committed a valid request. WELL-157 advances current Product-route verification to v1.19.0 through the exact v1.18.0 predecessor; the existing Phase-8 content meanings and delivery boundaries remain unchanged. WELL-161 evaluates the accumulated TEST port output on the READY transition and after later data messages. It checks the existing absolute deadline and output cap before accepting the complete interruption handshake, and sends stdin only after verified process-group ownership and READY. WELL-148 moves the verified-channel resume test onto an isolated unboxed recovery request worker and shares the existing restart fixture request mechanism. The fixture guardian registers the worker before it acquires the checkout, and the test waits for worker cleanup before reading durable state. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes shared source references. Verified recovery containment also terminalizes an active Phase-9 primary-email change in its existing transaction where applicable. WELL-146 refreshes the shared EmailChangeScenarios source locator after the held-notice proof correction. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-143 reconciles the retained reset proof with the WELL-148 lease. A registered worker uses its own unboxed connection and observation scope under the single lease. The proof verifies the foreign reset remains valid and unchanged after the race. The stale-reset race uses the existing registered Recovery fixture request worker and verifies the committed operation before proceeding. WELL-164 adds fixed TEST diagnostics for restart child transaction failures. WELL-166 strengthens TEST-only request replay and completion guards with durable proof linkage and adds a separate same-VM request cut. It preserves fresh-BEAM and lease-expiry evidence and changes no runtime lifecycle or owner interface. WELL-168 gives Recovery signing-key unavailability its own source-guard outcome so Communications can retry the same obligation. WELL-167 adds TEST-only ownership-proxy exit and first-query-failure observation on the fresh hosted request. The second deliverable changes the actual request transaction budget to 350 ms and retains the 500 ms public response floor. The expiry and cut controls use the owning Recovery budget. WELL-175 verifies the exact current Product v1.20.0 pair before reading the historical approval chain. The routed Phase-9 applicability packet records four existing locale versions. The runtime still consumes the P8-15 packet, with no normal-entry Phase-9 path. WELL-183 adds the bounded ordinary Phase-9 entry and preserves the separate historical P8-15 transport. Identity persists the entry context on each RecoveryCase. Communications persists the corresponding render schema on each intent and revalidates Identity and the routed WELL-175 evidence before invocation. The browser renders only WELL-184 copy in the ordinary context and directs a completed claimant to the existing password-session route for fresh authentication. The WELL-183 review follow-up proves Phase-9 versus Phase-9 requests and both Phase-9 versus P8-15 commit orders on distinct PostgreSQL backends. The Master Gate follow-up proves historical operator approval and completion for the same synthetic target, then tests the separate Phase-9 approval and completion denials."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1331,13 +1331,13 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def request_recovery",
-      "sha256": "e93660c45847127887c5a71aab28250fc62a6543afa1bc4200dea5e103dc84bc"
+      "sha256": "5313f3e5b1be8327f9947f750cf77d615032ae27eb86f2d7ad94f6b6318dc63e"
     },
     {
       "id": "recovery",
       "path": "lib/new_you/identity/recovery.ex",
       "symbol": "defmodule NewYou.Identity.Recovery",
-      "sha256": "bf03e7c10b5abd1495b527610c5c00d0458762acc0ff89eb096ad9ec1e417a97"
+      "sha256": "e4ea6c3be8cd287caa0ad33af53d0127ffd316d9de7f7ab671c44c499327ef6f"
     },
     {
       "id": "delivery_eligibility",
@@ -1355,13 +1355,13 @@
       "id": "manual",
       "path": "lib/new_you/identity/manual_recovery.ex",
       "symbol": "defmodule NewYou.Identity.ManualRecovery",
-      "sha256": "82e28a34f5a815c88c62070ce96f29245d63e3e8e8249dd00fbb0f2edac361a6"
+      "sha256": "14e6f70502976858fda496b78a0f1439df403ddb4a7ba5f6aeda998754ea78f9"
     },
     {
       "id": "account",
       "path": "lib/new_you/identity/account.ex",
       "symbol": ":hold_for_recovery",
-      "sha256": "976dac1fdc3a55bbd3808e8e9cefe3a942e4482e7263fb53120f0c1faed526fa"
+      "sha256": "1bae4faef571d8f1b50f8d36759408c66656448f7d9721774c82c0f664b88e50"
     },
     {
       "id": "token",
@@ -1379,13 +1379,13 @@
       "id": "privilege",
       "path": "lib/new_you/identity/privileged_access.ex",
       "symbol": "defmodule NewYou.Identity.PrivilegedAccess",
-      "sha256": "f24d938f0a69254bb19d0a2a940b3ae71ecec846516707299a6fae2010d5cdfb"
+      "sha256": "35c226e145960c7f381a66401335b0aa3396286f4e2916cb48bc3040c19f4e47"
     },
     {
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def establish_recovery",
-      "sha256": "408e0c815a74e98317ab4d5e22b499a32369a83f3e42162d087bbad25e8b2baa"
+      "sha256": "da05bcf17b3265605034e8665a676243bc856f1b3b7964533dfada8334a3a41b"
     },
     {
       "id": "intent",
@@ -1397,13 +1397,13 @@
       "id": "executor",
       "path": "lib/new_you/communications/executor.ex",
       "symbol": "defp recovery_payload",
-      "sha256": "1c639bc33cb3c265e7400b63ca6e6468d25d89815992df8556e9472c9ed32276"
+      "sha256": "174cc6c1cb00d0a71b5dc7e3c26dcfd0ace536a76931398578a303e612b20a90"
     },
     {
       "id": "provider",
       "path": "lib/new_you/communications/delivery_provider.ex",
       "symbol": "defmodule NewYou.Communications.DeliveryProvider",
-      "sha256": "de22620f43bfd1a9129898d6034038290860d64e856c30ca5160d586a0f7ec2f"
+      "sha256": "aae6cea9588aa2411fa61a13d53d08d87174792edd5b0e6ad7732fc8b0636859"
     },
     {
       "id": "content",
@@ -1421,7 +1421,7 @@
       "id": "evidence",
       "path": "lib/new_you/audit/privileged_evidence.ex",
       "symbol": "defmodule NewYou.Audit.PrivilegedEvidence",
-      "sha256": "3f366df400fea2f24503fe53334bcc4c07f89db7cecd96c92b9c471e0f8106de"
+      "sha256": "6d3b5e2ef397bef2de5586e5e1f52f3cd59f7161383691db1c204445250f45ef"
     },
     {
       "id": "controller",

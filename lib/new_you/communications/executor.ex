@@ -30,7 +30,14 @@ defmodule NewYou.Communications.Executor do
   @safe [:rejected_before_submission, :bounced_or_failed]
   @observations [:accepted, :delivered, :rejected_before_submission, :bounced_or_failed, :unknown]
 
-  @spec execute(String.t()) :: {:ok, atom()} | {:error, atom()}
+  @doc """
+  Process one intent by ID outside any Repo transaction. Success describes the
+  executor's disposition. Even `:processed` only means a provider observation
+  was recorded, which can be `:unknown`. After an invocation marker, a retry
+  waits for evidence if submission cannot be ruled out.
+  """
+  @spec execute(binary()) ::
+          {:ok, Communications.execution_result()} | {:error, term()}
   def execute(id) do
     with {:ok, id} <- Ecto.UUID.cast(id),
          false <- NewYou.Repo.in_transaction?(),
@@ -452,7 +459,14 @@ defmodule NewYou.Communications.Executor do
     _, _ -> :unknown
   end
 
-  @spec reconcile(String.t(), atom(), String.t(), binary()) :: {:ok, :recorded} | {:error, atom()}
+  @doc """
+  Authenticate attempt evidence before applying it under the intent lock.
+  Duplicate or stale evidence can return `:recorded` without a new transition.
+  Invalid evidence returns `:unauthenticated`. Storage failures can return an
+  Ash error from the observation transaction.
+  """
+  @spec reconcile(binary(), Communications.evidence_outcome(), String.t(), binary()) ::
+          {:ok, :recorded} | {:error, term()}
   def reconcile(id, outcome, reference, signature) do
     with {:ok, id} <- Ecto.UUID.cast(id),
          true <- outcome in (@observations ++ [:confirmed_no_operation]),

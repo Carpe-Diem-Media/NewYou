@@ -10,6 +10,14 @@ defmodule NewYou.Identity.PrimaryEmailChange do
   @enabled Mix.env() in [:dev, :test] and
              Application.compile_env(:new_you, :verification_development_fixtures, false)
 
+  @spec status(map()) ::
+          {:ok, NewYou.Identity.email_change_status()}
+          | {:error, :primary_email_change_unavailable}
+
+  @spec apply_authenticated(map(), Ecto.UUID.t()) ::
+          {:ok, NewYou.Identity.email_change_decision()}
+          | {:error, :primary_email_change_unavailable}
+
   if @enabled do
     require Ash.Query
 
@@ -51,7 +59,6 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     def request(_, _, _, _), do: unavailable()
 
     @doc "Project the canonical address and bounded operation state for an eligible current Session."
-    @spec status(map()) :: {:ok, map()} | {:error, :primary_email_change_unavailable}
     def status(credentials) do
       with {:ok, locator} <- session_locator(credentials),
            {:ok, {:ok, result}} <-
@@ -151,9 +158,10 @@ defmodule NewYou.Identity.PrimaryEmailChange do
     @doc "Apply the Account-owned address change after current proof, version, delay and risk guards pass."
     def apply(operation_id), do: apply_with_authority(operation_id, :internal)
 
-    @doc "Apply only the current Phase-9 operation bound to the presenting Session."
-    @spec apply_authenticated(map(), Ecto.UUID.t()) ::
-            {:ok, atom()} | {:error, :primary_email_change_unavailable}
+    @doc """
+    Apply the Phase-9 operation bound to the presenting Session. The result can
+    reflect a terminal decision already recorded for the same operation.
+    """
     def apply_authenticated(credentials, operation_id) do
       case session_locator(credentials) do
         {:ok, locator} -> apply_with_authority(operation_id, {locator, credentials})
@@ -223,7 +231,11 @@ defmodule NewYou.Identity.PrimaryEmailChange do
       _, _ -> unavailable()
     end
 
-    @doc "Expire a bounded batch of persisted due operations, safe to retry after restart."
+    @doc """
+    Attempt expiry for up to 500 due operations. Each expiry has its own
+    transaction, so an unavailable batch result can follow committed expiries.
+    A retry reads the remaining due operations.
+    """
     def expire_due(limit) when is_integer(limit) and limit in 1..500 do
       now = now_usec()
 
