@@ -125,6 +125,47 @@ defmodule NewYou.Identity.SessionManagementTest do
     end)
   end
 
+  test "only one of two fresh artifacts can take the last device slot" do
+    P805.with_fixture(fn ->
+      credentials = verified_account() |> sign_in()
+      grant = fn artifact -> Identity.manage_trusted_devices(credentials, {:grant, artifact}) end
+
+      [{first_artifact, first_device} | _] =
+        for _ <- 1..9 do
+          artifact = :crypto.strong_rand_bytes(32)
+          assert {:ok, device} = grant.(artifact)
+          {artifact, device}
+        end
+
+      contenders =
+        for _ <- 1..2 do
+          artifact = :crypto.strong_rand_bytes(32)
+          {artifact, separate_connection(fn -> grant.(artifact) end)}
+        end
+
+      results =
+        Enum.map(contenders, fn {artifact, task} -> {artifact, Task.await(task)} end)
+
+      assert [{denied_artifact, {:error, :device_unavailable}}] =
+               Enum.filter(results, &match?({_, {:error, :device_unavailable}}, &1))
+
+      assert {:ok, devices} = Identity.manage_trusted_devices(credentials, :list)
+      assert length(devices) == 10
+      assert {:ok, ^first_device} = grant.(first_artifact)
+
+      Repo.query!("UPDATE device_assurances SET expires_at = now() WHERE id = $1", [
+        Ecto.UUID.dump!(first_device.id)
+      ])
+
+      assert {:ok, %{id: replacement}} = grant.(denied_artifact)
+      assert %{state: :expired} = Ash.get!(DeviceAssurance, first_device.id, authorize?: false)
+      assert {:error, :device_unavailable} = grant.(first_artifact)
+      assert {:ok, updated} = Identity.manage_trusted_devices(credentials, :list)
+      assert length(updated) == 10
+      assert Enum.any?(updated, &(&1.id == replacement))
+    end)
+  end
+
   test "global revocation requires fresh proof and a replay cannot affect a fresh Session" do
     P805.with_fixture(fn ->
       request = verified_account()

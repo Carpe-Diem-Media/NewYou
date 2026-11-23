@@ -74,7 +74,10 @@ defmodule NewYouWeb.SessionManagementController do
         render_list(conn, nil, nil, :ok)
 
       {:error, :device_result_uncertain} ->
-        device_result(conn, "item.name.uncertain", :service_unavailable)
+        conn
+        |> put_status(:see_other)
+        |> put_resp_header("cache-control", "no-store")
+        |> redirect(to: @device_path <> "?" <> URI.encode_query(%{locale: conn.assigns.locale}))
 
       _ ->
         device_result(conn, "item.name.failed", :unprocessable_entity)

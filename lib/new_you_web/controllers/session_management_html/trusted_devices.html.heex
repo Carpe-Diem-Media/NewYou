@@ -3,15 +3,7 @@
     {device_text(@copy, "page.title")}
   </h2>
   <p>{device_text(@copy, "page.body")}</p>
-  <p :if={@message} role="status">
-    {if @message == "item.name.uncertain" do
-      if @locale == "af",
-        do: "Verfris die lys om die toestelnaam na te gaan.",
-        else: "Refresh the list to check the device name."
-    else
-      device_text(@copy, @message)
-    end}
-  </p>
+  <p :if={@message} role="status">{device_text(@copy, @message)}</p>
 
   <%= if @inventory do %>
     <p :if={@inventory.devices == []}>{device_text(@copy, "active.empty")}</p>
@@ -38,15 +30,6 @@
         :for={device <- @inventory.devices}
         class="grid min-w-0 gap-design-sm rounded-design-xl border border-design-hairline p-design-base"
       >
-        <p :if={device.current?} class="font-design-bold">
-          {if @locale == "af", do: "Hierdie toestel", else: "This device"}
-        </p>
-        <p>
-          {if @locale == "af", do: "Verval", else: "Expires"}
-          <time datetime={DateTime.to_iso8601(device.expires_at)}>
-            {Calendar.strftime(device.expires_at, "%Y-%m-%d %H:%M UTC")}
-          </time>
-        </p>
         <.form for={%{}} action="/session/manage/devices" method="post" class="grid gap-design-sm">
           <input type="hidden" name="operation" value="rename" />
           <input type="hidden" name="locale" value={@locale} />

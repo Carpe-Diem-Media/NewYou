@@ -7,7 +7,7 @@ defmodule NewYouWeb.SessionManagementControllerTest do
   require Ash.Query
 
   alias NewYou.{Audit, Identity}
-  alias NewYou.Identity.{Account, PasswordSession, Session, Token}
+  alias NewYou.Identity.{Account, DeviceAssurance, PasswordSession, Session, Token}
   alias NewYou.Proof.{P805, P805Browser, P813HoldFixture, PrivilegedAccessSeam, SignInJourney}
 
   @endpoint NewYouWeb.Endpoint
@@ -57,6 +57,45 @@ defmodule NewYouWeb.SessionManagementControllerTest do
 
         assert get(recycle(removed), "/session/protected").status == 200
       end
+    end)
+  end
+
+  test "an Audit insertion rejection leaves neither device state nor a cookie" do
+    P805.with_fixture(fn ->
+      input = verified_input()
+      origin = login(input, "en")
+      session = session(get_session(origin, :identity_session_id))
+      page = get(recycle(origin), "/session/manage")
+      body = html_response(page, 200)
+      [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, body)
+      [_, proof] = Regex.run(~r/name="device_proof"[^>]*value="([^"]+)"/, body)
+      path = "/session/manage/devices"
+
+      params = %{
+        "locale" => "en",
+        "operation" => "consent",
+        "device_proof" => proof,
+        "_csrf_token" => csrf
+      }
+
+      P805.with_rejected_insert("evidence_obligations", fn reached ->
+        rejected = post(with_csrf(page), path, params)
+
+        assert html_response(rejected, 503) =~
+                 "We couldn&#39;t confirm whether this device was trusted."
+
+        assert reached.()
+        refute Map.has_key?(rejected.resp_cookies, "new_you_device")
+
+        assert {:ok, false} =
+                 DeviceAssurance
+                 |> Ash.Query.filter(account_id == ^session.account_id)
+                 |> Ash.exists(authorize?: false)
+      end)
+
+      accepted = post(with_csrf(page), path, params)
+      assert accepted.status == 200
+      assert Map.has_key?(accepted.resp_cookies, "new_you_device")
     end)
   end
 

@@ -6,12 +6,13 @@ defmodule NewYou.Identity.TrustedDevices do
   alias NewYou.Audit
   alias NewYou.Identity.DeviceAssurance
 
+  @device_limit 10
   @trust_seconds 30 * 24 * 60 * 60
 
   # The caller holds the Account lock and the presenting Token and Session locks.
   # All Account-wide invalidation and device mutations use the same Account lock.
   def execute(account, session, operation) do
-    with :ok <- expire_due(account) do
+    with :ok <- retire_unusable(account) do
       execute_current(account, session, operation)
     end
   end
@@ -22,12 +23,9 @@ defmodule NewYou.Identity.TrustedDevices do
   defp execute_current(account, _session, {:list, artifact}) do
     current = fingerprint(artifact)
 
-    with {:ok, rows} <-
-           account
-           |> current_devices()
-           |> Ash.Query.sort(id: :desc)
-           |> Ash.read(authorize?: false) do
-      {:device_result, Enum.map(rows, &projection(&1, current))}
+    with {:ok, rows} <- Ash.read(trusted_records(account), authorize?: false) do
+      devices = for row <- rows, current?(account, row), do: projection(row, current)
+      {:device_result, devices}
     end
   end
 
@@ -72,6 +70,19 @@ defmodule NewYou.Identity.TrustedDevices do
   defp execute_current(_account, _session, _operation), do: :denied
 
   defp grant(account, session, nil, digest) do
+    # Only new artifacts need a free slot. The Account lock serializes this
+    # check with every admission and with Account-wide invalidation.
+    with {:ok, rows} <-
+           account |> trusted_records() |> Ash.Query.select([:id]) |> Ash.read(authorize?: false) do
+      if length(rows) < @device_limit, do: create_grant(account, session, digest), else: :denied
+    end
+  end
+
+  defp grant(account, _session, record, digest) do
+    if current?(account, record), do: {:device_result, projection(record, digest)}, else: :denied
+  end
+
+  defp create_grant(account, session, digest) do
     attrs = %{
       account_id: account.id,
       fingerprint: digest,
@@ -86,10 +97,6 @@ defmodule NewYou.Identity.TrustedDevices do
            evidence(account, session, device, :identity_device_trust_granted, device.created_at) do
       {:device_result, projection(device, digest)}
     end
-  end
-
-  defp grant(account, _session, record, digest) do
-    if current?(account, record), do: {:device_result, projection(record, digest)}, else: :denied
   end
 
   defp revoke(account, session, device) do
@@ -122,25 +129,33 @@ defmodule NewYou.Identity.TrustedDevices do
     })
   end
 
-  defp expire_due(account) do
-    checked_at = DateTime.utc_now()
+  defp retire_unusable(account) do
+    with {:ok, rows} <- Ash.read(trusted_records(account), authorize?: false) do
+      checked_at = DateTime.utc_now()
 
-    with {:ok, rows} <-
-           account
-           |> devices()
-           |> Ash.Query.filter(state == :trusted and expires_at <= ^checked_at)
-           |> Ash.Query.sort(:id)
-           |> Ash.read(authorize?: false) do
-      Enum.reduce_while(rows, :ok, fn row, :ok -> expire(row, checked_at) end)
+      Enum.reduce_while(rows, :ok, fn row, :ok ->
+        retire(row, checked_at, account.security_version)
+      end)
     end
   end
 
-  defp expire(row, checked_at) do
-    case Ash.update(row, %{checked_at: checked_at}, action: :expire, authorize?: false) do
-      {:ok, _} -> {:cont, :ok}
-      {:error, _} = error -> {:halt, error}
+  defp retire(row, checked_at, security_version) do
+    cond do
+      not DateTime.after?(row.expires_at, checked_at) ->
+        retirement_result(
+          Ash.update(row, %{checked_at: checked_at}, action: :expire, authorize?: false)
+        )
+
+      row.security_version != security_version ->
+        retirement_result(Ash.update(row, %{}, action: :revoke, authorize?: false))
+
+      true ->
+        {:cont, :ok}
     end
   end
+
+  defp retirement_result({:ok, _}), do: {:cont, :ok}
+  defp retirement_result({:error, _} = error), do: {:halt, error}
 
   defp current?(account, device) do
     device.state == :trusted and device.security_version == account.security_version and
@@ -154,15 +169,12 @@ defmodule NewYou.Identity.TrustedDevices do
     |> Ash.read_one(authorize?: false)
   end
 
-  defp current_devices(account) do
-    checked_at = DateTime.utc_now()
-
+  defp trusted_records(account) do
     account
     |> devices()
-    |> Ash.Query.filter(
-      state == :trusted and security_version == ^account.security_version and
-        expires_at > ^checked_at
-    )
+    |> Ash.Query.filter(state == :trusted)
+    |> Ash.Query.sort(id: :desc)
+    |> Ash.Query.limit(@device_limit)
   end
 
   defp devices(account), do: Ash.Query.filter(DeviceAssurance, account_id == ^account.id)
