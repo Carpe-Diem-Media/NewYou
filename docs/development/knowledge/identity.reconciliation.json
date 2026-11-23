@@ -1,0 +1,764 @@
+{
+  "schema_version": 1,
+  "capability_id": "identity.reconciliation",
+  "purpose": "Detect and review one explicitly selected duplicate pair, then apply an authorized Identity decision that leaves one canonical active Account and PMR.",
+  "implementing_tickets": [
+    "WELL-15",
+    "WELL-174"
+  ],
+  "implementation_revision": {
+    "git_sha": "21f078c41363532fd947fb601b4ee21379bebb23",
+    "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation."
+  },
+  "authoritative_domain": "NewYou.Identity",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Audit",
+      "interface": "review_identity_reconciliation/2, admit_reconciliation/1 and establish_identity_security_obligation/1",
+      "ownership": "Audit owns its current provenance policy, independent E1 admission and append-only E2 evidence. Identity owns the decision.",
+      "source_ids": [
+        "audit",
+        "owner"
+      ]
+    },
+    {
+      "domain": "NewYou.Communications",
+      "interface": "review_identity_reconciliation/2",
+      "ownership": "Communications owns its current preserve-original-association policy and retains ownership of existing records.",
+      "source_ids": [
+        "communications",
+        "owner"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.ReconciliationCase",
+      "actions": [
+        "read",
+        "detect",
+        "record_review",
+        "apply_decision"
+      ],
+      "caller_boundary": "Private Ash resource. Browser writes go through the Identity Domain interface under case, grant and version checks.",
+      "source_ids": [
+        "case",
+        "owner"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.Account",
+      "actions": [
+        "retire_reconciled_identity",
+        "advance_reconciliation_version"
+      ],
+      "caller_boundary": "Only the owning apply transaction changes either Account. It revokes losing Sessions in the same transaction.",
+      "source_ids": [
+        "account",
+        "owner"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Identity",
+      "function": "open_reconciliation",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Explicit distinct candidate and canonical IDs, both grant IDs, current operator Session, operation ID and detection basis."
+      ],
+      "returns": [
+        "Detected or exact prior case, or neutral unavailable."
+      ],
+      "side_effects": [
+        "Records detection only."
+      ],
+      "caller_constraints": [
+        "Current review step-up and named reconciliation grant for each Account."
+      ],
+      "source_ids": [
+        "identity",
+        "owner",
+        "case"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "review_reconciliation",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Case ID, expected version, both grants, operator credentials, decision and current control Sessions for approval."
+      ],
+      "returns": [
+        "Current transitioned case or neutral unavailable."
+      ],
+      "side_effects": [
+        "Appends review history, records selected conflict or rejection E2, and captures two controls and affected-owner decisions on approval."
+      ],
+      "caller_constraints": [
+        "Current review step-up and exact versions. Approval requires both controlling Sessions and fixed permitted owner policies."
+      ],
+      "source_ids": [
+        "identity",
+        "owner",
+        "audit"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "apply_reconciliation",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Case ID, expected approved version, both grants, current operator Session and operation ID."
+      ],
+      "returns": [
+        "Committed or exactly replayed applied case, or neutral unavailable."
+      ],
+      "side_effects": [
+        "Commits Audit E1 separately, then rechecks and atomically records the applied case, Account/PMR retirement and linked result obligation."
+      ],
+      "caller_constraints": [
+        "Current apply step-up, fresh reviewed controls, Account versions, reviewer grants and current affected-owner policy."
+      ],
+      "source_ids": [
+        "identity",
+        "owner",
+        "audit",
+        "account"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "reconciliation_status",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Case ID, current operator Session and both named grants."
+      ],
+      "returns": [
+        "Only case ID, status, version and pair IDs, or neutral unavailable."
+      ],
+      "side_effects": [
+        "Reads current case under lock. The browser shows only reference and status on the case view."
+      ],
+      "caller_constraints": [
+        "Current review step-up and grants on the immutable pair, including when reopening an applied case."
+      ],
+      "source_ids": [
+        "identity",
+        "owner",
+        "controller"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "reconciliation_control_binding",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Current controlling Account Session and case reference."
+      ],
+      "returns": [
+        "Case ID and exact in-review version, or neutral unavailable."
+      ],
+      "side_effects": [
+        "Validates current Session and checks that Account is a member of the pair. The controller encrypts the binding and credentials as short-lived review-only evidence."
+      ],
+      "caller_constraints": [
+        "Only a current Session for either Account in the case may obtain a binding. Review verifies the controls again."
+      ],
+      "source_ids": [
+        "identity",
+        "owner",
+        "controller"
+      ]
+    },
+    {
+      "module": "NewYou.Identity",
+      "function": "prepare_reconciliation_apply",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Same case, version, operator, grants and operation ID as confirmed apply."
+      ],
+      "returns": [
+        "Success or neutral unavailable."
+      ],
+      "side_effects": [
+        "Performs locked apply preflight with no E1 or reconciliation write. The browser renders a separate confirmation step."
+      ],
+      "caller_constraints": [
+        "Same current owner guards as apply preflight. Confirmed apply repeats the checks."
+      ],
+      "source_ids": [
+        "identity",
+        "owner",
+        "controller"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261108150417_well15_reconciliation.exs",
+      "tables": [
+        "reconciliation_cases",
+        "accounts",
+        "evidence_records",
+        "evidence_obligations"
+      ],
+      "constraints": [
+        "reconciliation_cases_one_apply_operation_index",
+        "reconciliation_cases_one_detection_operation_index",
+        "reconciliation_cases_distinct_accounts",
+        "reconciliation_cases_decision_shape",
+        "accounts_reconciliation_shape",
+        "evidence_obligations_security_shape"
+      ],
+      "source_ids": [
+        "schema",
+        "case"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261108150423_well15_reconciliation_guards.exs",
+      "tables": [
+        "reconciliation_cases",
+        "accounts",
+        "evidence_obligations"
+      ],
+      "constraints": [
+        "identity_reconciliation_immutable",
+        "accounts_retired_pmr_permanent",
+        "audit_reconciliation_result_binding"
+      ],
+      "source_ids": [
+        "guards"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "A fixed development-only GET serves the existing operator shell after current Session validation. Browser fetch posts CSRF-protected body-only inputs to the fixed path.",
+      "source_ids": [
+        "boundary",
+        "controller",
+        "browser"
+      ]
+    },
+    {
+      "summary": "The operator explicitly submits a pair and both grants under review step-up. Identity detects the case. Reopen uses its opaque reference and fully reauthorizes access.",
+      "source_ids": [
+        "controller",
+        "owner"
+      ]
+    },
+    {
+      "summary": "Each Account obtains an encrypted case/version proof from its own authenticated Session. A current authorized reviewer submits both proofs, and Identity verifies the Sessions and checks both owner policies.",
+      "source_ids": [
+        "controller",
+        "owner",
+        "communications",
+        "audit"
+      ]
+    },
+    {
+      "summary": "Apply step-up and owner preflight reveal the exact pair for confirmation. Cancel discards the document state. Explicit confirmed POST calls the same Identity apply action that orders E1 before the source transaction.",
+      "source_ids": [
+        "controller",
+        "template",
+        "browser",
+        "owner"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "detected",
+      "candidate",
+      "review",
+      "approved",
+      "conflict",
+      "rejected",
+      "applied"
+    ],
+    "transitions": [
+      {
+        "from_state": "detected",
+        "to_state": "candidate",
+        "guards": [
+          "Current review authority and matching version."
+        ],
+        "side_effects": [
+          "Appends case history."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "candidate",
+        "to_state": "review",
+        "guards": [
+          "Current review authority and matching version."
+        ],
+        "side_effects": [
+          "Appends case history."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "review",
+        "to_state": "approved",
+        "guards": [
+          "Both control Sessions and both affected-owner policies are current."
+        ],
+        "side_effects": [
+          "Records reviewer versions, control evidence, Account versions and owner results."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "review",
+        "to_state": "conflict",
+        "guards": [
+          "Current review authority and matching version."
+        ],
+        "side_effects": [
+          "Appends conflict and records selected E2."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "conflict",
+        "to_state": "review",
+        "guards": [
+          "Current review authority and matching version."
+        ],
+        "side_effects": [
+          "Reopens with a new review version."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "approved",
+        "to_state": "review",
+        "guards": [
+          "Current review authority and matching version."
+        ],
+        "side_effects": [
+          "Preserves previous approval in immutable history."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "detected",
+        "to_state": "rejected",
+        "guards": [
+          "Current review authority and matching version."
+        ],
+        "side_effects": [
+          "Appends rejection and records selected E2."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "candidate",
+        "to_state": "rejected",
+        "guards": [
+          "Current review authority and matching version."
+        ],
+        "side_effects": [
+          "Appends rejection and records selected E2."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "review",
+        "to_state": "rejected",
+        "guards": [
+          "Current review authority and matching version."
+        ],
+        "side_effects": [
+          "Appends rejection and records selected E2."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "conflict",
+        "to_state": "rejected",
+        "guards": [
+          "Current review authority and matching version."
+        ],
+        "side_effects": [
+          "Appends rejection and records selected E2."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "approved",
+        "to_state": "rejected",
+        "guards": [
+          "Current review authority and matching version."
+        ],
+        "side_effects": [
+          "Appends rejection and records selected E2."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      },
+      {
+        "from_state": "approved",
+        "to_state": "applied",
+        "guards": [
+          "Current apply authority, review freshness, owner policies and committed E1 admission."
+        ],
+        "side_effects": [
+          "Commits one canonical Account, permanently retired candidate PMR, Session revocation and linked E2."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "owner",
+          "case",
+          "guards"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "The route is absent outside DEV/TEST and further limited by the current FP-001 development-entry gate. Reconciliation grants are provisioned through the existing synthetic fixture boundary.",
+      "source_ids": [
+        "boundary",
+        "controller",
+        "grant"
+      ]
+    },
+    {
+      "summary": "Separate active grants target each Account. Only the current step-up purpose is accepted. Independent grant approval and both current control Sessions are required by Identity.",
+      "source_ids": [
+        "owner",
+        "privilege",
+        "grant"
+      ]
+    },
+    {
+      "summary": "Sealed browser step data is bound to the current operator Session and kept in the live document. Each control proof is encrypted, short-lived and bound to the exact case version. Passwords, TOTP codes and submitted control proofs are never reflected.",
+      "source_ids": [
+        "controller",
+        "browser",
+        "template"
+      ]
+    },
+    {
+      "summary": "POSTs use the private dispatcher, current CSRF and no-store. It scrubs connections before response telemetry and suppresses value-bearing SQL telemetry. The installed Oban notifier emits its fixed Audit queue wakeup.",
+      "source_ids": [
+        "boundary",
+        "web_test"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Identity locks Accounts and grant pairs in consistent order, then rereads case/version and current authority. Existing transaction, unique keys, and exact Audit binding arbitrate overlapping and repeated attempts.",
+      "source_ids": [
+        "owner",
+        "case",
+        "owner_test",
+        "guards"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Detection uses one operation ID per live detection form. A repeated confirmed apply uses one operation ID derived from the Session, case, review version and grant pair. That identifier supplies no authority.",
+      "source_ids": [
+        "controller",
+        "owner"
+      ]
+    },
+    {
+      "summary": "Exact-bound committed apply replays through Identity. When a response is unknown, reopening requires current review step-up and scope and reports the durable case. If E2 records failure, the operator can return to review to establish a new version.",
+      "source_ids": [
+        "controller",
+        "owner",
+        "owner_test"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Denials and stale or unknown submissions use neutral unavailable copy. A recorded conflict is visible only to the authorized operator. Cancel makes no Identity transition.",
+      "source_ids": [
+        "controller",
+        "template",
+        "browser",
+        "web_test"
+      ]
+    },
+    {
+      "summary": "Failure after E1 preserves admission and rolls back Account and PMR changes. A durable failed attempt records that outcome. A lost response after source commit resolves to the committed case under current authority.",
+      "source_ids": [
+        "owner",
+        "owner_test",
+        "web_test"
+      ]
+    },
+    {
+      "summary": "Pagehide removes the sensitive DOM and aborts pending browser work. A persisted pageshow replaces the document with a clean authenticated GET. The browser never uses persistent storage or the history API.",
+      "source_ids": [
+        "browser",
+        "chromium"
+      ]
+    },
+    {
+      "summary": "The original WELL-15 rollback refuses to delete populated reconciliation cases, retired PMRs or linked Audit evidence. WELL-174 adds no migration.",
+      "source_ids": [
+        "schema",
+        "guards"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you_web/controllers/reconciliation_controller_test.exs",
+      "cases": [
+        "Detection with CSRF/no-store and no retirement or E1.",
+        "Generic existence denial, cross-Session and stale state denial, unavailable Audit owner review, revoked controls, and failure after E1.",
+        "Real Chromium through conflict, separate control Sessions, cancellation, apply, history restoration, and durable owner-state verification."
+      ],
+      "proves": "Three focused tests passed, including keyboard focus, 320 px reflow, private transport and reopening committed state.",
+      "limits": "Synthetic DEV/TEST browser fixture. Browser reconnect uses fresh HTTP against the test process. The separate owner tests cover fresh BEAM restart.",
+      "source_ids": [
+        "web_test",
+        "chromium",
+        "controller"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/reconciliation_test.exs",
+      "cases": [
+        "Pair-scoped authority, approval and control freshness, E1/E2 ordering, permanent PMR retirement and untouched foreign-Domain ownership.",
+        "Conflicting and repeated apply attempts and interrupted effects recover against the persisted case."
+      ],
+      "proves": "Existing PostgreSQL and fresh BEAM assertions exercise the durable lifecycle and failure paths used by the browser.",
+      "limits": "The approved owner inventory is fixed. This proof does not establish later-Domain integration.",
+      "source_ids": [
+        "owner_test",
+        "scenarios",
+        "owner",
+        "history"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Use the existing Identity transition API for an approved extension. Expanding the relevant Domain set requires evidence from each new contributing owner.",
+      "source_ids": [
+        "owner",
+        "identity"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Reuses WELL-173's private dispatcher, shared operator shell and browser privacy patterns. No schema, package, background worker or production route is added.",
+      "source_ids": [
+        "boundary",
+        "template",
+        "browser",
+        "owner"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Never infer a match from demographic similarity, treat a browser proof as a Session outside this review, bypass both grants or Audit E1, or rewrite another Domain's provenance.",
+      "source_ids": [
+        "owner",
+        "case",
+        "controller",
+        "guards"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "Runtime inventory remains Identity, Communications, Audit, Privacy and Analytics. Communications and Audit supply fixed policy evidence. Privacy and Analytics do not contribute reconciliation commands.",
+    "Bandit request-start precedes application dispatch and observes the existing encrypted Session-cookie transport. Operators send all case and control data in POST bodies and request-stop metadata is scrubbed.",
+    "Hallmark sloplint rendered seven synthetic HEEx states at desktop and narrow sizes with 0 FAIL, 0 WARN, and 3 occurrences of REFLEX 39b. The 58 px input height is waived for these states because WELL-173 uses the same shared input token and the Chromium narrow layout passed.",
+    "The Hallmark finish reviewer accepted the inherited auth shell and input token waiver. Runtime keyboard behavior was checked separately in Chromium. The page reuses existing stylesheet tokens and has no new Hallmark theme stylesheet or hero."
+  ],
+  "follow_up_tickets": [],
+  "sources": [
+    {
+      "id": "identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "open_reconciliation",
+      "sha256": "6ec3c8f615b2c0812f6d353a4321f1abce0c23b72fbdebd038cb914f2e81baef"
+    },
+    {
+      "id": "owner",
+      "path": "lib/new_you/identity/reconciliation.ex",
+      "symbol": "defmodule NewYou.Identity.Reconciliation",
+      "sha256": "8080055c19ac823085abca1bac203522ec955b3b400a5e17b6f65a5f78a5ea3c"
+    },
+    {
+      "id": "case",
+      "path": "lib/new_you/identity/reconciliation_case.ex",
+      "symbol": "defmodule NewYou.Identity.ReconciliationCase",
+      "sha256": "a01ffc607e6539d70c62b3e6670e82744ceb001f2666b5d3a230b28849a5913c"
+    },
+    {
+      "id": "account",
+      "path": "lib/new_you/identity/account.ex",
+      "symbol": ":retire_reconciled_identity",
+      "sha256": "976dac1fdc3a55bbd3808e8e9cefe3a942e4482e7263fb53120f0c1faed526fa"
+    },
+    {
+      "id": "privilege",
+      "path": "lib/new_you/identity/privileged_access.ex",
+      "symbol": "authorize_locked",
+      "sha256": "f24d938f0a69254bb19d0a2a940b3ae71ecec846516707299a6fae2010d5cdfb"
+    },
+    {
+      "id": "grant",
+      "path": "lib/new_you/identity/identity_grant.ex",
+      "symbol": ":identity_reconciliation",
+      "sha256": "6d38ba53f70790e9735979930c8dc02f038d8f8fa54cee76e76369a64b2c6bc9"
+    },
+    {
+      "id": "audit",
+      "path": "lib/new_you/audit.ex",
+      "symbol": "admit_reconciliation",
+      "sha256": "4c526021acbd6c1eddbe723815c2a35a7a6f0beec6ca06c2892f829386d2f0e7"
+    },
+    {
+      "id": "communications",
+      "path": "lib/new_you/communications.ex",
+      "symbol": "review_identity_reconciliation",
+      "sha256": "408e0c815a74e98317ab4d5e22b499a32369a83f3e42162d087bbad25e8b2baa"
+    },
+    {
+      "id": "controller",
+      "path": "lib/new_you_web/controllers/reconciliation_controller.ex",
+      "symbol": "defmodule NewYouWeb.ReconciliationController",
+      "sha256": "5fefaa27c4d7db27441837d1bd3df48001b80e656cff8233a62eba14c8b3a14d"
+    },
+    {
+      "id": "boundary",
+      "path": "lib/new_you_web/registration_boundary.ex",
+      "symbol": "/dev/support/reconciliation",
+      "sha256": "5722d91fff6b21c41d51222a09e04cd8778afc64227b31c0ff72027c0ab14a65"
+    },
+    {
+      "id": "template",
+      "path": "lib/new_you_web/controllers/reconciliation_html/index.html.heex",
+      "symbol": "reconciliation-result",
+      "sha256": "c8d4a1be0869d3ce4fbbe86683313c86c0b0fc6e1793eb09deea8f36f2b86c8b"
+    },
+    {
+      "id": "browser",
+      "path": "assets/js/reconciliation.js",
+      "symbol": "pagehide",
+      "sha256": "696f44d27745933740229e80fa5b727309da07a9e6bf9d28dd08b4e1e298fb8d"
+    },
+    {
+      "id": "owner_test",
+      "path": "test/new_you/identity/reconciliation_test.exs",
+      "symbol": "NewYou.Identity.ReconciliationTest",
+      "sha256": "6a532cd7ccc6a3f2a584e2ae3ba926e9b4728504227e69c4a327866eca1af049"
+    },
+    {
+      "id": "web_test",
+      "path": "test/new_you_web/controllers/reconciliation_controller_test.exs",
+      "symbol": "NewYouWeb.ReconciliationControllerTest",
+      "sha256": "4e32f861a8c08fdc4512396a72f14947a52b4c091a2cbc5e69b5c24f57d501c1"
+    },
+    {
+      "id": "chromium",
+      "path": "test/proof/p8_05_browser.mjs",
+      "symbol": "operator_reconciliation",
+      "sha256": "d274577381d1cb65d0a4ec15257b4dffbfc8d109eb9dfae4e8da5835c6c31dfe"
+    },
+    {
+      "id": "scenarios",
+      "path": "test/support/proof/reconciliation_scenarios.ex",
+      "symbol": "NewYou.Proof.ReconciliationScenarios",
+      "sha256": "4868cc6e35f16ac9f6d40fbc47f20541db1727e965eddb57b5f03c88a0b6a7b5"
+    },
+    {
+      "id": "history",
+      "path": "docs/development/p8-14-reconciliation-handoff.md",
+      "symbol": "P8-14",
+      "sha256": "3633be4b11075b90503717c5ce4e292b591cae15495a563ab3ebb7d53c7e914c"
+    },
+    {
+      "id": "schema",
+      "path": "priv/repo/migrations/20261108150417_well15_reconciliation.exs",
+      "symbol": "reconciliation_cases",
+      "sha256": "8ebd19b8250b908b904a412b9840409eed610238085c6f0c04801272895cc685"
+    },
+    {
+      "id": "guards",
+      "path": "priv/repo/migrations/20261108150423_well15_reconciliation_guards.exs",
+      "symbol": "identity_reconciliation_guard",
+      "sha256": "33df96d8bdaf700dc984e453a2e4d5bb9faacb4102616524bf3b06a588561b37"
+    }
+  ]
+}
