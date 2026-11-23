@@ -424,6 +424,143 @@ try {
     } finally {
       await call('Target.disposeBrowserContext', {browserContextId: second.browserContextId});
     }
+  } else if (input.mode === 'operator_reconciliation') {
+    const path = '/dev/support/reconciliation';
+    const result = state => `document.querySelector('#case-status')?.textContent.trim() === ${JSON.stringify(state)}`;
+    const wait = (condition, session) => evaluate(`(async () => {
+      const deadline = performance.now() + 7000;
+      while (performance.now() < deadline) {
+        if (${condition}) return true;
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      return false;
+    })()`, session);
+    const open = (pathname, session = sessionId) =>
+      navigation(() => call('Page.navigate', {url: base + pathname}, session), session);
+    const signIn = async (account, session = sessionId) => {
+      await open(loginPath, session);
+      await evaluate(`
+        document.querySelector('#email').value = ${JSON.stringify(account.email)};
+        document.querySelector('#password').value = ${JSON.stringify(account.password)};
+      `, session);
+      await navigation(() => evaluate("document.querySelector('#password-login').requestSubmit()", session), session);
+      await open(path, session);
+      return wait("!!document.querySelector('#detect button:enabled')", session);
+    };
+
+    const history = async () => {
+      const entries = await cdp('Page.getNavigationHistory');
+      return entries.entries[entries.currentIndex].id;
+    };
+    let requestCount = 0;
+    const submit = async (form, values, condition, session = sessionId, decision = '') => {
+      checkpoint = `operator_reconciliation.${decision || form}`;
+      const selector = decision ? `button[value="${decision}"]` : 'button[type="submit"]';
+      const payload = {...values};
+      if ('password' in payload) payload.code = input.codes[requestCount];
+      requestCount++;
+      const started = await evaluate(`(() => {
+        const form = document.getElementById(${JSON.stringify(form)});
+        if (!form) return false;
+        form.closest('details')?.setAttribute('open', '');
+        for (const [name, value] of Object.entries(${JSON.stringify(payload)})) {
+          form.elements.namedItem(name).value = value;
+        }
+        form.querySelector(${JSON.stringify(selector)}).click();
+        return true;
+      })()`, session);
+      if (!started || !await wait(`(${condition}) && !document.querySelector('#reconciliation[aria-busy]')`, session)) {
+        throw new Error('browser.evaluation');
+      }
+      return true;
+    };
+
+    checkpoint = 'operator_reconciliation.sign_in';
+    checks.signed_in = await signIn(input.operator);
+    await cdp('Emulation.setDeviceMetricsOverride', {width: 320, height: 900, deviceScaleFactor: 1, mobile: true});
+    await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+    checks.reflow = await evaluate('document.documentElement.scrollWidth <= innerWidth && document.getAnimations().length === 0');
+    for (let tab = 0; tab < 3 && !(await evaluate("document.activeElement.id === 'detect-candidate_id'")); tab++) {
+      await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+      await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    }
+    checks.keyboard = await evaluate(`document.activeElement.id === 'detect-candidate_id'
+      && document.activeElement.labels.length === 1 && document.activeElement.matches(':focus-visible')
+      && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+    const authority = {...input.grants, password: input.operator.password};
+    checks.detected = await submit('detect', {...authority, ...input.pair}, result('Detected'));
+    const reference = await evaluate("document.querySelector('#case-reference')?.textContent");
+    checks.focused_result = await evaluate("document.activeElement.id === 'reconciliation-result'");
+    checks.candidate = await submit('progress-case', {}, result('Candidate'), sessionId, 'candidate');
+    checks.review = await submit('progress-case', {}, result('In review'), sessionId, 'review');
+    checks.conflict = await submit('progress-case', {}, result('Conflict recorded'), sessionId, 'conflict');
+    checks.review_again = await submit('progress-case', {}, result('In review'), sessionId, 'review');
+
+    const controls = [];
+    for (const account of input.accounts) {
+      const controlContext = await createBrowserContext(call);
+      try {
+        const target = await call('Target.createTarget', {url: 'about:blank', browserContextId: controlContext.browserContextId});
+        const {sessionId: controlSession} = await call('Target.attachToTarget', {targetId: target.targetId, flatten: true});
+        await call('Page.enable', {}, controlSession);
+        await call('Runtime.enable', {}, controlSession);
+        const signedIn = await signIn(account, controlSession);
+        const issued = signedIn && await submit('control', {case_id: reference}, "!!document.querySelector('#control-proof')", controlSession);
+        if (issued) controls.push(await evaluate("document.querySelector('#control-proof').value", controlSession));
+      } finally {
+        await call('Target.disposeBrowserContext', {browserContextId: controlContext.browserContextId});
+      }
+    }
+    checks.independent_controls = controls.length === 2 && controls[0] !== controls[1];
+    if (!checks.independent_controls) throw new Error('browser.evaluation');
+
+    checks.approved = await submit('progress-case', {
+      candidate_control: controls[0], canonical_control: controls[1],
+    }, result('Approved'), sessionId, 'approved');
+
+    const confirmation = "!!document.querySelector('#apply-case button:enabled')";
+    checks.confirmation = await submit('progress-case', {password: input.operator.password}, confirmation);
+    checks.confirmed_pair = await evaluate(`Object.values(${JSON.stringify(input.pair)})
+      .every(id => document.querySelector('#reconciliation-result dl')?.textContent.includes(id))
+      && document.documentElement.scrollWidth <= innerWidth`);
+    checkpoint = 'operator_reconciliation.cancel';
+    await navigation(() => evaluate("document.querySelector('#apply-case [data-operator-reset]').click()"));
+    checks.cancelled = await wait("!!document.querySelector('#detect button:enabled') && !document.querySelector('#apply-case')");
+    const firstEntry = await history();
+    checks.resumed_approved = await submit('resume', {...authority, case_id: reference}, result('Approved'));
+    checks.reconfirmed = await submit('progress-case', {password: input.operator.password}, confirmation);
+    const applyState = await evaluate("document.querySelector('#apply-case [name=state]').value");
+    checks.applied = await submit('apply-case', {}, result('Applied'));
+
+    checks.private_history = (await history()) === firstEntry && await evaluate(`location.pathname === ${JSON.stringify(path)}
+      && !location.search && history.state === null && sessionStorage.length === 0 && localStorage.length === 0
+      && ${JSON.stringify([...Object.values(input.grants), ...Object.values(input.pair), input.operator.password, ...controls, applyState])}
+        .every(value => !document.body.innerHTML.includes(value))`);
+    await evaluate(`window.addEventListener('pagehide', () => {
+      sessionStorage.setItem('well174_cleared', String(!document.querySelector('#case-reference')));
+    }, {once: true})`);
+    await open('/legal/privacy');
+    checks.scrubbed_on_leave = await evaluate("sessionStorage.getItem('well174_cleared') === 'true'");
+    const neutralEntry = await history();
+    checkpoint = 'operator_reconciliation.history';
+    const traverse = async (entryId, condition) => {
+      const previous = await evaluate('performance.timeOrigin');
+      await cdp('Page.navigateToHistoryEntry', {entryId});
+      const deadline = performance.now() + 5000;
+      while (performance.now() < deadline) {
+        try {
+          if (await evaluate(`performance.timeOrigin !== ${previous} && (${condition})`)) return true;
+        } catch (error) {
+          if (error.message !== 'browser.context_lost') throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      return false;
+    };
+    checks.back_blank = await traverse(firstEntry, "!!document.querySelector('#detect button:enabled') && !document.querySelector('#case-reference')");
+    checks.forward = await traverse(neutralEntry, "location.pathname === '/legal/privacy'");
+    await open(path);
+    checks.resumed_applied = await submit('resume', {...authority, case_id: reference}, result('Applied'));
   } else if (input.mode === 'support_lookup') {
     const path = '/dev/support/account-access';
     const openLookup = () => navigation(() => cdp('Page.navigate', {url: base + path}));

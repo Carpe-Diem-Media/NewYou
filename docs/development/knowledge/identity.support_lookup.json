@@ -7,8 +7,8 @@
     "WELL-173"
   ],
   "implementation_revision": {
-    "git_sha": "0fcbc8191d370f8439f2eb8fb634729cf051b2e9",
-    "semantics": "WELL-173 adds the private DEV/TEST operator browser workflow around the existing Identity lookup. The owning interface, grant lifecycle and standard Audit selection are preserved. The review correction clears form values and diagnostics on pagehide and navigate-replaces persisted restorations with an authorized GET."
+    "git_sha": "21f078c41363532fd947fb601b4ee21379bebb23",
+    "semantics": "WELL-173 adds the private DEV/TEST operator browser workflow around the existing Identity lookup. The owning interface, grant lifecycle and standard Audit selection are preserved. The review correction clears form values and diagnostics on pagehide and navigate-replaces persisted restorations with an authorized GET. WELL-174 wraps private parsing and dispatch so response scrubbing covers parser failures and removes Set-Cookie from returned telemetry metadata."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -365,7 +365,7 @@
       "id": "identity_api",
       "path": "lib/new_you/identity.ex",
       "symbol": "lookup_support_identity",
-      "sha256": "612edc267bf4d63204e78ea5054e5d65bcf171de20df620b36620eedd82c897b"
+      "sha256": "6ec3c8f615b2c0812f6d353a4321f1abce0c23b72fbdebd038cb914f2e81baef"
     },
     {
       "id": "lookup",
@@ -425,7 +425,7 @@
       "id": "browser_dispatch",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "/dev/support/account-access",
-      "sha256": "3da225c8dd247100776d8770bb404cb04e3ec9d26c2a06026f0e33d85de75ea8"
+      "sha256": "5722d91fff6b21c41d51222a09e04cd8778afc64227b31c0ff72027c0ab14a65"
     },
     {
       "id": "browser_controller",
@@ -455,7 +455,7 @@
       "id": "chromium",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'support_lookup'",
-      "sha256": "daf05e7eb4e1baed9b69f821d3c21f93bbebc8bc050a9bb3f26520e927c3b390"
+      "sha256": "d274577381d1cb65d0a4ec15257b4dffbfc8d109eb9dfae4e8da5835c6c31dfe"
     },
     {
       "id": "privilege_test",

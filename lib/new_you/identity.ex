@@ -365,6 +365,23 @@ defmodule NewYou.Identity do
           {:ok, NewYou.Identity.ReconciliationCase.t()} | {:error, :reconciliation_unavailable}
   defdelegate open_reconciliation(request), to: NewYou.Identity.Reconciliation, as: :open
 
+  @doc "Return the minimum current reconciliation state under review step-up and grants for both Accounts."
+  @spec reconciliation_status(map()) :: {:ok, map()} | {:error, :reconciliation_unavailable}
+  defdelegate reconciliation_status(request), to: NewYou.Identity.Reconciliation, as: :status
+
+  @doc "Bind a current Account Session to the exact review generation for its own case."
+  @spec reconciliation_control_binding(map(), Ecto.UUID.t()) ::
+          {:ok, {Ecto.UUID.t(), pos_integer()}} | {:error, :reconciliation_unavailable}
+  defdelegate reconciliation_control_binding(credentials, case_id),
+    to: NewYou.Identity.Reconciliation,
+    as: :control_binding
+
+  @doc "Check current apply prerequisites for confirmation. Apply repeats these checks and admits Audit E1 separately."
+  @spec prepare_reconciliation_apply(map()) :: :ok | {:error, :reconciliation_unavailable}
+  defdelegate prepare_reconciliation_apply(request),
+    to: NewYou.Identity.Reconciliation,
+    as: :prepare_apply
+
   @doc "Advance review under grants for both Accounts. Approval requires verified controls and owner review; reopening approval preserves its evidence and requires fresh review."
   @spec review_reconciliation(map()) ::
           {:ok, NewYou.Identity.ReconciliationCase.t()} | {:error, :reconciliation_unavailable}
