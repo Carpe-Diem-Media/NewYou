@@ -864,8 +864,23 @@ try {
     };
     const requestUrl = `${base}/recovery?locale=${input.locale}`;
 
+    checkpoint = 'recovery.sign_in_discovery';
+    await navigate(`${base}/login?locale=${input.locale}`);
+    const recoveryLink = `a[href="/recovery?locale=${input.locale}"]`;
+    const linkSelector = JSON.stringify(recoveryLink);
+    checks.discovery_copy = await evaluate(`document.querySelector(${linkSelector})?.textContent.trim() === ${text('identity.recovery.request.title')}`);
+    const key = async (name, code) => {
+      await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: name, code: name, text: name === 'Enter' ? '\r' : undefined, windowsVirtualKeyCode: code});
+      await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: name, code: name, windowsVirtualKeyCode: code});
+    };
+    for (let step = 0; step < 16; step++) {
+      await key('Tab', 9);
+      if (await evaluate(`document.activeElement.matches(${linkSelector})`)) break;
+    }
+    checks.discovery_keyboard = await evaluate(`document.activeElement.matches(${linkSelector} + ':focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+    await navigation(() => key('Enter', 13));
+    checks.discovery_destination = await evaluate(`location.href === ${JSON.stringify(requestUrl)}`);
     checkpoint = 'recovery.request';
-    await navigate(requestUrl);
     checks.request_copy = await stage('request');
     checks.usable_form = await evaluate(`!!document.querySelector('#recovery-form[method="post"] [name="_csrf_token"]') && document.querySelector('label[for="email"]')?.textContent.trim() === ${text('identity.registration.email.label')} && document.querySelector('#email')?.autocomplete === 'email' && document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
     await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});

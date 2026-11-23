@@ -2,7 +2,7 @@ defmodule NewYouWeb.PasswordSessionController do
   use NewYouWeb, :controller
 
   alias NewYou.Identity
-  alias NewYouWeb.{DevelopmentEntry, SignInCopy}
+  alias NewYouWeb.{DevelopmentEntry, RecoveryController, SignInCopy}
   @development_environment Mix.env() in [:dev, :test]
   plug :require_proof_environment
 
@@ -127,8 +127,12 @@ defmodule NewYouWeb.PasswordSessionController do
       token: get_session(conn, :identity_token)
     }
 
-  defp page(conn, locale, error_key),
-    do: render_page(conn, :login, locale, %{error_key: error_key})
+  defp page(conn, locale, error_key) do
+    render_page(conn, :login, locale, %{
+      error_key: error_key,
+      recovery_title: RecoveryController.discovery_title(locale)
+    })
+  end
 
   defp render_page(conn, template, locale, assigns) do
     script_policy = if template == :protected, do: " script-src 'self';", else: ""

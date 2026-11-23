@@ -7,7 +7,7 @@
     "WELL-174"
   ],
   "implementation_revision": {
-    "git_sha": "371553d77a25c1b11e3d3cad937ef413522685b5",
+    "git_sha": "67f5f72e074dcf71ae89a3226cc9fc8c9413fbe8",
     "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -737,7 +737,7 @@
       "id": "chromium",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "operator_reconciliation",
-      "sha256": "91114726432370e93b55ae58fc7445dd90a2eb088388f5b9607c6257c56de27e"
+      "sha256": "754113bad63950379b66867714c0213d424114dccd9b48b132578ae51b9db04e"
     },
     {
       "id": "scenarios",

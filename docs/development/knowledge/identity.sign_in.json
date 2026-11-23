@@ -10,11 +10,12 @@
     "WELL-86",
     "WELL-163",
     "WELL-170",
-    "WELL-177"
+    "WELL-177",
+    "WELL-187"
   ],
   "implementation_revision": {
-    "git_sha": "7842f30beb92aeb8c533819c2080efe25bef87f7",
-    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. WELL-163 adds a bounded EN/AF participant Session inventory and individual remote revocation with material Audit E2. WELL-170 serializes global termination with issuance under the Account lock, reuses reset's linked-token and device invalidation actions, and establishes Audit E2 within the same transaction. The PR #292 review follow-up extends the proof without changing the application transaction or policy. WELL-177 adds a current self-only PMR projection inside the existing Account, Token and Session lock boundary. The protected browser response displays the projection in the selected locale with a local clipboard control. The protected controller removes the PMR assign after Phoenix renders and before sending so Bandit request telemetry cannot retain the reference."
+    "git_sha": "67f5f72e074dcf71ae89a3226cc9fc8c9413fbe8",
+    "semantics": "Snapshot of the committed WELL-134 application and proof source. This map is descriptive; inspect current source, routed authority and live Plane before reuse. WELL-134 author review strengthens the shared browser boundary: all endpoint events are redacted, legal routes avoid router telemetry, unknown routes fail closed, and parsing/method handling runs inside bounded class-only failure handling. Master Gate AC-12 correction verifies the same artifact bytes before embedding and both pinned sources at compile time, retaining runtime fail-closed eligibility. Ordinary browser proof now doubles computed text sizes at each of five widths and restores inline styles. WELL-112 preserves both session CSP directives, the owning sign-in interfaces and the encrypted Identity cookie transport. The shared endpoint/boundary isolates the DEV-only guide with a fresh rendering connection and a cookie-free, origin-checked LiveView transport. The normal /live socket and sign-in controller dispatch remain unchanged. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. WELL-163 adds a bounded EN/AF participant Session inventory and individual remote revocation with material Audit E2. WELL-170 serializes global termination with issuance under the Account lock, reuses reset's linked-token and device invalidation actions, and establishes Audit E2 within the same transaction. The PR #292 review follow-up extends the proof without changing the application transaction or policy. WELL-177 adds a current self-only PMR projection inside the existing Account, Token and Session lock boundary. The protected browser response displays the projection in the selected locale with a local clipboard control. The protected controller removes the PMR assign after Phoenix renders and before sending so Bandit request telemetry cannot retain the reference. WELL-187 adds locale-exact ordinary Recovery discovery to sign-in, gated by the existing Recovery entry and approved Content reader."
   },
   "authoritative_domain": "Identity",
   "collaborating_domains": [
@@ -522,6 +523,16 @@
         "journey_test",
         "journey",
         "browser"
+      ]
+    },
+    {
+      "summary": "Signed-out EN/AF sign-in offers a separate ordinary Recovery link when the existing bounded route and exact Content are eligible. The link carries the selected locale and opens the read-only Recovery request form.",
+      "source_ids": [
+        "password_web",
+        "recovery_discovery_gate",
+        "recovery_discovery_link",
+        "recovery_discovery_test",
+        "recovery_discovery_driver"
       ]
     },
     {
@@ -1196,6 +1207,32 @@
         "browser",
         "self_member_reference_template"
       ]
+    },
+    {
+      "path": "test/new_you_web/controllers/password_session_controller_test.exs",
+      "cases": [
+        "signed-out sign-in links to ordinary Recovery in the selected locale",
+        "sign-in hides ordinary Recovery when its copy or development entry is unavailable"
+      ],
+      "proves": "Exact EN/AF labels and destinations, preserved existing authentication links, passive GET without observed database writes or authenticated Session, and suppression when copy or ordinary entry is unavailable.",
+      "limits": "Synthetic DEV/TEST eligibility exercised through the TEST endpoint.",
+      "source_ids": [
+        "recovery_discovery_test",
+        "recovery_discovery_eligibility_test"
+      ]
+    },
+    {
+      "path": "test/new_you_web/controllers/well183_browser_test.exs",
+      "cases": [
+        "bounded en browser Recovery with fresh sign-in",
+        "bounded af browser Recovery with fresh sign-in"
+      ],
+      "proves": "Chromium reads the approved sign-in link in both locales, reaches it with Tab and visible focus, and activates it with Enter to open the existing locale-specific Recovery request.",
+      "limits": "Synthetic loopback Chromium proof in TEST.",
+      "source_ids": [
+        "recovery_discovery_browser_test",
+        "recovery_discovery_driver"
+      ]
     }
   ],
   "safe_extensions": [
@@ -1309,7 +1346,7 @@
       "id": "password_web",
       "path": "lib/new_you_web/controllers/password_session_controller.ex",
       "symbol": "def protected",
-      "sha256": "9451b0f03fc74a8b31ce66ac235074f10df9007af5b6f6ee727a99959ca5992c"
+      "sha256": "92b5e7adbee8e5e61bac91d81878ed4f892c9c6d6b376226dbf276be16283723"
     },
     {
       "id": "magic_web",
@@ -1405,7 +1442,7 @@
       "id": "browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'signin'",
-      "sha256": "91114726432370e93b55ae58fc7445dd90a2eb088388f5b9607c6257c56de27e"
+      "sha256": "754113bad63950379b66867714c0213d424114dccd9b48b132578ae51b9db04e"
     },
     {
       "id": "password_test",
@@ -1417,7 +1454,7 @@
       "id": "password_web_test",
       "path": "test/new_you_web/controllers/password_session_controller_test.exs",
       "symbol": "known wrong-password and unknown-account",
-      "sha256": "ffcf1b81b03e0a20e5f243996d208b6d44a3ef5c1500d011faca19645e494092"
+      "sha256": "f4b088444455e61e789b71cdc59c26fc95190beafcff45f05fe022fda95aec07"
     },
     {
       "id": "magic_test",
@@ -1573,7 +1610,7 @@
       "id": "session_inventory_driver",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'session_management'",
-      "sha256": "91114726432370e93b55ae58fc7445dd90a2eb088388f5b9607c6257c56de27e"
+      "sha256": "754113bad63950379b66867714c0213d424114dccd9b48b132578ae51b9db04e"
     },
     {
       "id": "session_inventory_index",
@@ -1712,6 +1749,42 @@
       "path": "test/new_you/identity/self_member_reference_test.exs",
       "symbol": "concurrent reads and reauthentication",
       "sha256": "5e98751a96b206564c2a5817fe929dc1371613ce5f17c0d71a5afac4bc67f54b"
+    },
+    {
+      "id": "recovery_discovery_gate",
+      "path": "lib/new_you_web/controllers/recovery_controller.ex",
+      "symbol": "def discovery_title",
+      "sha256": "d26599c20e81e086387766558e7906002b32828aa5af7605d655e08ea0d0264a"
+    },
+    {
+      "id": "recovery_discovery_link",
+      "path": "lib/new_you_web/controllers/password_session_html/login.html.heex",
+      "symbol": "@recovery_title",
+      "sha256": "e785c8c4816bd58f92377752dfa251020c21b937e9b05dd5fbd17ed951e3887b"
+    },
+    {
+      "id": "recovery_discovery_test",
+      "path": "test/new_you_web/controllers/password_session_controller_test.exs",
+      "symbol": "signed-out sign-in links to ordinary Recovery",
+      "sha256": "f4b088444455e61e789b71cdc59c26fc95190beafcff45f05fe022fda95aec07"
+    },
+    {
+      "id": "recovery_discovery_driver",
+      "path": "test/proof/p8_05_browser.mjs",
+      "symbol": "input.mode === 'ordinary_recovery'",
+      "sha256": "754113bad63950379b66867714c0213d424114dccd9b48b132578ae51b9db04e"
+    },
+    {
+      "id": "recovery_discovery_browser_test",
+      "path": "test/new_you_web/controllers/well183_browser_test.exs",
+      "symbol": "NewYou.Proof.Well183Browser.run(@locale)",
+      "sha256": "8b7d7d72f1b15d946e59475d6c5ce07002cfce8b056fe5aa6e19a7f4c5e04a2c"
+    },
+    {
+      "id": "recovery_discovery_eligibility_test",
+      "path": "test/new_you_web/controllers/password_session_controller_test.exs",
+      "symbol": "sign-in hides ordinary Recovery when its copy or development entry is unavailable",
+      "sha256": "f4b088444455e61e789b71cdc59c26fc95190beafcff45f05fe022fda95aec07"
     }
   ]
 }

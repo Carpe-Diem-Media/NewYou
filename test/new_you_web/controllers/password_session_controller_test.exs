@@ -18,6 +18,74 @@ defmodule NewYouWeb.PasswordSessionControllerTest do
     end)
   end
 
+  test "signed-out sign-in links to ordinary Recovery in the selected locale" do
+    P805.with_fixture(fn ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
+
+      observer = make_ref()
+      parent = self()
+
+      :ok =
+        :telemetry.attach(
+          observer,
+          [:new_you, :repo, :query],
+          fn _event, _measurements, metadata, _config ->
+            if self() == parent and
+                 Regex.match?(~r/\b(?:INSERT|UPDATE|DELETE|TRUNCATE)\b/i, metadata.query) do
+              send(parent, {observer, :write})
+            end
+          end,
+          nil
+        )
+
+      try do
+        for {locale, title} <- [{"en", "Recover your account"}, {"af", "Herstel jou rekening"}] do
+          login = get(build_conn(), "/login?locale=#{locale}")
+          document = LazyHTML.from_document(html_response(login, 200))
+          recovery = LazyHTML.query(document, ~s(a[href="/recovery?locale=#{locale}"]))
+          assert String.trim(LazyHTML.text(recovery)) == title
+
+          for path <- ["/password/reset", "/login/magic", "/register"] do
+            assert [_] =
+                     document
+                     |> LazyHTML.query(~s(a[href="#{path}?locale=#{locale}"]))
+                     |> LazyHTML.attribute("href")
+          end
+
+          [href] = LazyHTML.attribute(recovery, "href")
+          request = get(recycle(login), href)
+          assert html_response(request, 200) =~ title
+          assert request.resp_body =~ ~r/<html[^>]* lang="#{locale}">/
+          refute get_session(login, :identity_session_id)
+          refute get_session(request, :identity_session_id)
+        end
+
+        refute_received {^observer, :write}
+        assert get(build_conn(), "/login?locale=af-ZA").status == 404
+      after
+        :telemetry.detach(observer)
+      end
+    end)
+  end
+
+  test "sign-in hides ordinary Recovery when its copy or development entry is unavailable" do
+    P805.with_fixture(fn ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
+      Process.put({NewYou.Content.RecoveryBrowserCopy, :evidence_root}, :unavailable)
+
+      refute html_response(get(build_conn(), "/login?locale=af"), 200) =~ "/recovery?"
+      assert get(build_conn(), "/recovery?locale=af").status == 503
+
+      Process.delete({NewYou.Content.RecoveryBrowserCopy, :evidence_root})
+      Application.put_env(:new_you, :fp001_development_entry, false)
+      Application.put_env(:new_you, :p8_15_browser_development_fixtures, false)
+      assert get(build_conn(), "/recovery?locale=af").status == 404
+      refute html_response(get(build_conn(), "/login?locale=af"), 200) =~ "/recovery?"
+    end)
+  after
+    Process.delete({NewYou.Content.RecoveryBrowserCopy, :evidence_root})
+  end
+
   test "browser login requires CSRF and protected access rechecks current Session" do
     P805.with_fixture(fn ->
       request = P805.request()
