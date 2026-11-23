@@ -227,6 +227,102 @@ defmodule NewYouWeb.ReconciliationControllerTest do
     Process.delete(ReconciliationSeam)
   end
 
+  test "control proof requires authentic, current evidence for this case and review generation" do
+    Proof.with_case(fn fixture ->
+      Application.put_env(:new_you, :fp001_development_entry, true)
+      operator = transport(fixture.actor.credentials)
+      candidate = transport(fixture.target.credentials)
+      canonical = transport(fixture.survivor.credentials)
+      unrelated = transport(fixture.approver.credentials)
+      time = System.os_time(:second)
+
+      request = Proof.review_request(fixture)
+      first = fixture.case |> transition(request, :candidate) |> transition(request, :review)
+
+      assert {:ok, second_detected} =
+               Identity.open_reconciliation(
+                 request
+                 |> Map.take([:credentials, :grant_id, :canonical_grant_id])
+                 |> Map.merge(%{
+                   candidate_id: fixture.target.id,
+                   canonical_id: fixture.survivor.id,
+                   operation_id: Ecto.UUID.generate(),
+                   detection_basis: :reported_duplicate
+                 })
+               )
+
+      second =
+        second_detected |> transition(request, :candidate) |> transition(request, :review)
+
+      assert first.id != second.id
+      assert first.version == second.version
+      case_ids = [first.id, second.id]
+
+      {unrelated_conn, unrelated_csrf} = unrelated
+
+      assert {:ok, %{account_id: unrelated_id}} =
+               Identity.authorize_session(fixture.approver.credentials)
+
+      assert unrelated_id == fixture.approver.id
+
+      assert_reconciliation_denied(fixture, case_ids, fn ->
+        response =
+          post_intent(unrelated_conn, unrelated_csrf, "control", %{"case_id" => first.id})
+
+        proof_rendered? = String.contains?(response.resp_body, ~s(id="control-proof"))
+        refute proof_rendered?
+        response
+      end)
+
+      first_candidate = control_proof(candidate, first.id)
+      first_canonical = control_proof(canonical, first.id)
+      first_state = review_state(operator, fixture, first.id, time + 30)
+
+      assert_reconciliation_denied(fixture, case_ids, fn ->
+        submit_approval(operator, first_state, tamper_control(first_candidate), first_canonical)
+      end)
+
+      assert_reconciliation_denied(fixture, case_ids, fn ->
+        submit_approval(operator, first_state, expire_control(first_candidate), first_canonical)
+      end)
+
+      second_state = review_state(operator, fixture, second.id, time + 60)
+      second_candidate = control_proof(candidate, second.id)
+      second_canonical = control_proof(canonical, second.id)
+
+      assert_reconciliation_denied(fixture, case_ids, fn ->
+        submit_approval(operator, second_state, first_candidate, second_canonical)
+      end)
+
+      # Keep the pair and the per-case generation equal in the wrong-case check.
+      assert html_response(
+               submit_approval(operator, second_state, second_candidate, second_canonical),
+               200
+             ) =~ "Approved"
+
+      latest = first |> transition(request, :conflict) |> transition(request, :review)
+      latest_state = review_state(operator, fixture, latest.id, time + 90)
+      latest_candidate = control_proof(candidate, latest.id)
+      latest_canonical = control_proof(canonical, latest.id)
+
+      assert_reconciliation_denied(fixture, case_ids, fn ->
+        submit_approval(operator, latest_state, first_candidate, latest_canonical)
+      end)
+
+      assert html_response(
+               submit_approval(operator, latest_state, latest_candidate, latest_canonical),
+               200
+             ) =~ "Approved"
+
+      assert Ash.get!(Identity.ReconciliationCase, latest.id, authorize?: false).status ==
+               :approved
+
+      assert Proof.admissions_for_target(fixture.target.id) == []
+    end)
+  after
+    Process.delete(PrivilegedAccessSeam)
+  end
+
   test "Chromium verifies both Accounts, cancels, applies, and reopens the committed case" do
     P813HoldFixture.with_fixture(fn fixture ->
       Application.put_env(:new_you, :fp001_development_entry, true)
@@ -390,6 +486,100 @@ defmodule NewYouWeb.ReconciliationControllerTest do
 
   defp post_intent(conn, csrf, intent, fields),
     do: post(conn.(), @path, Map.merge(fields, %{"_csrf_token" => csrf, "intent" => intent}))
+
+  defp transition(record, request, decision) do
+    {:ok, next} =
+      Identity.review_reconciliation(%{
+        request
+        | case_id: record.id,
+          expected_version: record.version,
+          decision: decision
+      })
+
+    next
+  end
+
+  defp review_state({conn, csrf}, fixture, case_id, time) do
+    scope = %{
+      "grant_id" => fixture.reconciliation_grant.id,
+      "canonical_grant_id" => fixture.canonical_grant.id,
+      "case_id" => case_id
+    }
+
+    response = post_intent(conn, csrf, "resume", Map.merge(scope, step_up(fixture.actor, time)))
+    assert html_response(response, 200) =~ "In review"
+    state!(response)
+  end
+
+  defp control_proof({conn, csrf}, case_id) do
+    response = post_intent(conn, csrf, "control", %{"case_id" => case_id})
+    [_, proof] = Regex.run(~r/id="control-proof"[^>]*>([^<]+)</, html_response(response, 200))
+    String.trim(proof)
+  end
+
+  defp submit_approval({conn, csrf}, state, candidate, canonical) do
+    post_intent(conn, csrf, "review", %{
+      "state" => state,
+      "decision" => "approved",
+      "candidate_control" => candidate,
+      "canonical_control" => canonical
+    })
+  end
+
+  defp tamper_control(proof) do
+    [prefix, payload] = String.split(proof, ".", parts: 2)
+    <<first, rest::binary>> = Base.url_decode64!(payload, padding: false)
+    prefix <> "." <> Base.url_encode64(<<Bitwise.bxor(first, 1), rest::binary>>, padding: false)
+  end
+
+  defp expire_control(proof) do
+    salt = "operator-reconciliation-control-v1"
+    {:ok, evidence} = Phoenix.Token.decrypt(@endpoint, salt, proof, max_age: 300)
+
+    expired =
+      Phoenix.Token.encrypt(@endpoint, salt, evidence, signed_at: System.os_time(:second) - 301)
+
+    result = Phoenix.Token.decrypt(@endpoint, salt, expired, max_age: 300)
+    expired? = match?({:error, :expired}, result)
+    assert expired?
+    expired
+  end
+
+  defp assert_reconciliation_denied(fixture, case_ids, submit) do
+    before = reconciliation_snapshot(fixture, case_ids)
+    response = submit.()
+    assert response.status == 403
+    assert html_response(response, 403) =~ "Reconciliation unavailable."
+    assert reconciliation_snapshot(fixture, case_ids) == before
+    assert Enum.all?(before.admissions, &(&1 == []))
+  end
+
+  defp reconciliation_snapshot(fixture, case_ids) do
+    accounts = [fixture.target.id, fixture.survivor.id]
+
+    %{
+      cases:
+        Enum.map(case_ids, fn id ->
+          Identity.ReconciliationCase
+          |> Ash.get!(id, authorize?: false)
+          |> Map.take([:version, :status, :review, :history, :applied_operation_id])
+        end),
+      admissions: Enum.map(accounts, &Proof.admissions_for_target/1),
+      accounts:
+        Enum.map(accounts, fn id ->
+          P805.account!(id)
+          |> Map.take([
+            :account_status,
+            :security_version,
+            :reconciliation_version,
+            :pmr,
+            :pmr_status,
+            :canonical_account_id,
+            :updated_at
+          ])
+        end)
+    }
+  end
 
   defp step_up(actor, time) do
     Process.put(PrivilegedAccessSeam, time)
