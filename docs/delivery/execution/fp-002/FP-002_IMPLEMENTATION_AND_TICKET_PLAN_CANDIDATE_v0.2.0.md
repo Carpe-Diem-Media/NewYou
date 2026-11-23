@@ -109,3 +109,126 @@ After P1 is Ready, start with failing proof at the owning interfaces, including 
 For executable candidates, apply the repository's Mise/DevCore TEST verification and exact-head requirements, including focused tests, `mise exec -- devcore-project run test -- mix check` and applicable `mix check.deep`. Maintain the source-linked capability handoff. Review required CI and independent proof against the exact candidate. Revalidate evidence after material changes. FP-002 exit additionally requires all governed Roadmap outcomes and evidence. Paid release remains separately gated.
 
 See the [manifest](../../jit/paystack_validation/NEWYOU_PAYSTACK_EMPIRICAL_MANIFEST_WORKING_v1.0.2.md) and [WELL-176 accepted evidence](https://app.plane.so/symphony-development/browse/WELL-176). Preserve the temporary EV-050 A pass, limited EV-001A observation, unexecuted EV-001B and original quarantined attempt. A mock never promotes a provider stage. Record explicit authority for any `GOVERNED_NA`.
+
+---
+
+## FP-002 complete execution blueprint: committed choices, scope and handoff
+
+This section is the **single programme execution index** for all ten proposed units. The seven [engineering review passes](planning/README.md) are supporting evidence and alternatives, not additional Product/Architecture/Domain authorities or seven separate Plane tickets. The [certified Phase 7C Feature Pack](../../feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md), [Product/Decision law](../../../governance/product/00_PLATFORM_v1.20.0.md), [Architecture](../../../governance/architecture/03_ARCHITECTURE_v1.1.1.md), [Domain Map](../../../governance/domain/04_DOMAIN_MAP_v1.2.0.md), [Roadmap](../../../governance/roadmap/05_ROADMAP_v1.2.5.md), and exact accountable-human-approved [P1 proof design](../../proof/fp-002/FP-002_TRACER_BULLET_DESIGN_CANDIDATE_v0.1.0.md) take precedence. This is implementation planning, not a unilateral change to upstream durable semantics.
+
+### Authority, approval, publication and development gates
+
+| Gate | Entry / independent verification | Exit / exclusions |
+| --- | --- | --- |
+| Plan | Current routed 7B/7C, selected `NEW_TRACER_BULLET`, exact approved P1 proof design, seven technical passes, inspected live stack | Review and explicitly approve **the exact bytes** of this candidate plan. No development authority from a draft PR |
+| `/to-tickets` | Approved exact plan and explicit approval of the scoped near-term breakdown | Create **only one** P1 child under WELL-22; preserve other nine units as plan outlines. New child starts non-Ready |
+| Independent Ready | Published P1 child, source links and P1-01..07 coherent, dependency cleared, current main and package APIs verified, proof-source candidate status reconciled where necessary | Move that child to `Ready`. Never mark Ready just because a task exists |
+| `/ticket-implement` | Exact Ready P1 child; worktree/branch isolation; current authority checked | TDD implementation through owners and PostgreSQL; open exact-head PR; no Paystack I/O |
+| Technical certification | Complete code PR diff, risks, migrations, review, targeted tests, required exact-head CI, independent crash/concurrency/security proof | Independent Master Gate and human merge instruction; candidate-head change invalidates review |
+| Post-merge | Verify resulting-main SHA/tree, no drift, integration CI and original proof conditions | Mark P1 Done and assess next eligible scoped work. Not an FP-002 programme exit |
+| Later provider/release | Specific provider-operation authorization, WELL-176 stage receipts and exact ticket Ready; legal/clinical/privacy/copy/channel gates | Stage-specific evidence only. No blanket Paystack grant or automatic live release |
+
+The user's authorization to prepare and commit the comprehensive implementation direction is not a substitute for accountable approval of the final exact bytes, a separate `/to-tickets` decision, a Ready gate or merge authority. Human-approved P1 proof semantics remain unchanged even though its GitHub source filename still contains `CANDIDATE`.
+
+### Explicit dependency decisions and versions for FP-002
+
+The definitive dependency **version lock** remains actual [mix.exs](../../../../mix.exs) + [mix.lock](../../../../mix.lock), verified on base main `1bfb351e295d8e03704e6b057b334f84429581aa`; every implementation handoff rechecks current main. A package capability may be selected without mandating that every new Resource use it. No dependency installation is part of this documentation plan.
+
+| Technology | Verified baseline | Selection / exact scope | Correctness boundary / future trigger |
+| --- | --- | --- | --- |
+| Elixir/BEAM, Phoenix, LiveView | Existing modular release; Phoenix `~> 1.8.17`, LiveView `~> 1.2.0` declared | **RETAIN**; one application/release family, presentation boundary only | LiveView/session/ETS do not own commercial or entitlement state |
+| Ash | `== 3.37.2` | **SELECT / P1**, all authoritative Commerce and Entitlements business writes through owning Ash interfaces | No parallel ordinary Repo/Ecto.Multi/raw SQL cross-Domain writes |
+| AshPostgres + PostgreSQL | `== 2.15.2`; PostgreSQL 18.6 in Application CI | **SELECT / P1** as structured business authority, unique/foreign/check constraints, independent transactions, replay and recovery | CI database version does not independently prove production version; check migrations and actual production compatibility when needed |
+| AshStateMachine | `== 0.3.0` | **RETAIN / use where material state-machine semantics benefit from extension** | Explicit transitions/guards/authorization/concurrency/idempotency required regardless of DSL choice |
+| Oban + AshOban | Oban `== 2.24.2`, AshOban `== 0.10.2`; PostgreSQL Basic engine | **SELECT / P1 execution**, durable work processing and background rediscovery from persisted owner state | Queue uniqueness and successful job execution do not substitute for source-level idempotency or durable consequence |
+| Reactor / Ash.Reactor | Reactor `== 1.0.1`, intentionally pinned | **RETAIN / OPTIONAL** for bounded coordination in later stages; **NOT REQUIRED FOR P1** | Reactor compensation is not cross-transaction ACID rollback or financial durable-state authority; no untested upgrade to prerelease dependencies |
+| AshAuthentication, AshCloak | `== 5.0.0-rc.17`, `== 0.4.0` | **RETAIN** current identity/security implementation | No parallel Account/session authority or privileged synthetic browser input |
+| AshPhoenix | Not installed | **CONDITIONALLY SELECT** `AshPhoenix.Form` for first suitable Ash-backed Phoenix UI slice (likely S2); **NOT P1** | At that ticket resolve exact compatible version with Igniter/locked graph and test actor/policy, validation, nested forms and sensitive errors |
+| AshAdmin | Not installed | **DEFER** restricted dev/staging evaluation, no generic production Finance/Support super-admin | Any trial proves access restrictions, actor context, per-action policies, audit and PII protection; never bypass owner interfaces |
+| Ash.Signals | Available in core Ash | **OPTIONAL NON-AUTHORITATIVE**, not mandatory payment-to-right delivery | Committed Commerce consequence must survive absent listeners/signals and restart |
+| Ash Temporal Resources | Experimental Ash capability | **EXCLUDE FROM P1**; reevaluate for actual temporal-validity requirement | Not a substitute for immutable money facts, source identity, unique grant or financial audit history |
+| AshStorage | Not installed | **DEFER**; current Hex release status not independently verified | First approved binary-object feature must prove registry/compatibility, metadata ownership, S3 data security, deletion/orphan recovery |
+| AshMoney, PaperTrail/Archival, AuthenticationPhoenix, JsonApi/Graphql, AshAI and rate limiting | Not adopted in current P1 | **DEFER** to owning feature with concrete requirement | Cannot take over Commerce, Entitlements, Audit, Identity, Finance or Privacy law |
+| Extra Repo, Redis/cache authority, Kafka, microservices, Rustler, extra services, app replicas, external workflow engine | Not justified by P1 | **NO NEW INFRASTRUCTURE** | Need measured bottleneck or proven invariant and explicit architecture/operations approval |
+
+**Package-resolution rule:** installed dependency versions are locked by the current repository. Uninstalled future packages are *choices conditioned on a future scope*, **not** a fabricated exact version pin. Any new package must show alternatives, real compatible resolver output, security and transitive graph review, deliberate lock change, risk-appropriate tests and independent review. Primary-source links and more detailed comparative reasoning are in [Pass 7](planning/pass_07_technology_dependency_scalability_decisions.md).
+
+### End-to-end ownership flow and invariant boundary
+
+```text
+Authenticated Identity Account + current actor
+  -> Commerce-owned accept (immutable payer/recipient/Plan version/ZAR 39900 minor units)
+  -> Commerce-owned known pending attempt
+  -> TEST-only internal qualified observation through genuine Commerce owning action
+  -> Commerce PostgreSQL atomic verified-payment + mandatory durable consequence
+  -> restart/absence-of-job-safe discovery and Entitlements own source verification
+  -> Entitlements PostgreSQL apply-once one held_unconsumed Plan component right
+  -> authorised recipient can read the held right AFTER its commit only
+
+Not included in P1: Paystack, public checkout, Plan fulfilment/content,
+consumption, Assessment, bundle, refund, dispute or production synthetic producer.
+```
+
+**One authoritative owner per durable truth:** Identity owns Account/session/provenance, Commerce owns admission/purchase binding/attempt/payment and correction obligations plus committed outgoing consequence, Entitlements owns the resulting rights and their corrections. Audit/Communications/Privacy/Analytics keep their existing Domain ownership. Cross-Domain mutation traverses the owning Ash interface, and Entitlements verifies a committed source rather than trusting a caller-provided amount/status. Reactors, signals, PubSub, webhooks, callbacks, job acknowledgements, search projections and process-local data are never money or access authority.
+
+### Meaningful lifecycle model — owner-visible contracts
+
+The following describes required observable states and transitions without pre-selecting internal Resource names, columns or framework mechanics.
+
+| Owned concept | States / transitions | Guards, consequences and terminal/recovery behavior |
+| --- | --- | --- |
+| Accepted purchase + attempt (Commerce) | immutable accepted binding -> known pending attempt -> qualified verified payment, or later proven nonpayable/closed outcome | Verified Identity actor, canonical payer/recipient, exact version/amount/currency and idempotency; same acceptance replays, changed binding denied. A pending/unqualified attempt cannot grant rights. Provider ambiguous state may not be silently replaced while payable |
+| Payment source truth (Commerce) | absent/unqualified -> verified committed; later correction-affected status governed separately | Only Commerce qualifies matching genuine source/environment/attempt/binding; equivalent concurrent evidence must converge to one payment. On verify, one payment and one mandatory consequence commit atomically; never rewrite original accepted facts to mimic correction |
+| Mandatory grant consequence (Commerce) | open -> being applied/claimed -> applied/reconciled; recoverable failed/stale/exhausted | Source identity, owning authorization, concurrency/idempotency; missed job or crash cannot erase the obligation. After grant-before-ack, fresh execution detects existing right and settles original consequence, no duplicate |
+| Plan source right (Entitlements) | absent -> `held_unconsumed`; future governed delivered/consumed/reversed states **out of P1** | Verified committed Commerce source + correct recipient/component + owner action; one source-specific right; no direct Commerce write. Held is not delivered and authorizes no Plan content, delivery or consumption |
+| Identity owner reconciliation | current proven acceptance; negative, unknown, missing, conflict, stale -> denied | New registered Commerce/Entitlements owner reviews must join the same fail-closed review; verify positive, negative, unknown and fresh-BEAM/restart regression without altering Identity owner truth |
+| Later correction/refund/dispute (Commerce -> Entitlements) | owed/unresolved -> verified attributable correction -> reconciled or terminal lawful disposition | Approved scoped source and component allocation, concurrency fence, no duplicate refund/excess obligation, preserve independent rights and historical collections; do not infer full attribution from partial reversal |
+
+**P1 access guard:** verified canonical Account + authorised recipient + committed qualified Commerce payment + correct persisted source consequence + committed Entitlements held right. A missing conjunct denies access; no inference from UI, browser return, fixture presence, Reactor/Oban success or signal emission.
+
+**Concurrency and failure proof:** P1-02 uses **two independent PostgreSQL transactions**, not an in-memory serialization or sequential helper. Unique and source-binding DB constraints complement Ash policy checks. P1-03 rollback before Commerce commit leaves zero payment/consequence/right; P1-04 crash after Commerce commit before grant leaves discoverable consequence and one eventual held right; P1-05 crash after grant commit before ack reconciles without duplication. Proof must cross a genuinely fresh process/restart and include relevant SQL row identities/effect counts; a job may be missing/exhausted and discovery must still work.
+
+### Ten-unit staged roadmap with entry, evidence and exclusions
+
+| Proposed unit | Direct blockers | Executable outcome and proof boundary |
+| --- | --- | --- |
+| **P1** | Approved Phase 7/P1 exact design/plan/publication/Ready; FP-001 Done; **NOT WELL-176** | One real Commerce payment/durable consequence -> one Entitlements held right, P1-01..07, genuine independent SQL races and crash cuts. Zero provider network/Plan delivery/assessment/bundle |
+| **E1a** | P1 + applicable WELL-176 Wave-1 provider authorization | Persist known payable attempt before hosted Initialize; ambiguity, lost send response, exact outbound mutation counts; no inbound webhook or bulk scan |
+| **E1b** | E1a + applicable provider payment/ingress evidence | Signed endpoint intake, known-reference independently scheduled recovery without browser/webhook/E1c, absent/failed job recovery and double-restart proof |
+| **E2a** | P1 + approved synthetic correction proof | Source-specific excess/duplicate distinction, adjustment obligation and affected-right convergence; no external refund/dispute |
+| **E2b** | E1b + E2a + refund-stage operation/evidence | Provider refund attempt and recovery, genuine double collection, exactly-one excess obligation, no over-refund, provider-stage receipt |
+| **E2c** | E2b + dispute-stage authorization/evidence | Dispute overlap/late evidence/refund concurrency, affected rights and history, secure dispute material |
+| **E1c** | E2c for complete cross-object scan | Mixed payment/refund/dispute pagination, late objects, checkpoint crash, rate limiting, no skipped source; E1b does **not** depend on E1c |
+| **S1** | Independent P1 certification + distinct scope approval + own Ready | Synthetic versioned offers, R249 Assessment/R399 Plan/R549 bundle eligibility, held credit/annual-delivery interlocks. Real bundle requires separately approved R99 allocation/disclosure; no provider dispatch/fulfilment |
+| **S2** | S1 + E1b | Real Phoenix hosted checkout and authoritative pending/payment/held-right status. EN/AF, accessibility, privacy, identity and actor verification; no false Plan delivery |
+| **S3** | S1 + E2c | Purpose-built, least-privilege Finance correction/Support visibility, concurrent repairs, lost ack and scoped disclosures; not an AshAdmin superuser shortcut |
+
+**Ticket publication policy:** P1 only is near-term at the initial gate. The other nine are **planning outlines, not ten immediately publishable work items**. Following independently certified P1, E2a and separately approved S1 may be next when their own entry is satisfied. Paystack-related E1/E2 work waits for operation-specific approval and the relevant WELL-176/OQ-004 provider evidence; never block synthetic P1 on the provider. Preserve wider FP exit and paid-release gates separately.
+
+### Security, performance, scalability and reliability acceptance
+
+1. **Security/PII:** prove incorrect actor/payer/recipient/environment/attempt/amount/currency/version denial, missing source evidence, direct foreign-right grant/read denial, test-only fixture compile exclusion in production, sanitized logs, and no bypass through Phoenix or raw Repo. Different provider/Finance/health risks receive their own later HIGH proof.
+2. **Financial correctness:** database-enforced uniqueness and source-binding constraints are correctness mechanisms, not optional indexes. Count real writes and identities under two independent SQL transactions. Duplicate provider messages are not evidence of two collections; distinct verified excess creates an exact make-whole obligation and source-specific correction, never a second paid right.
+3. **Durability:** use PostgreSQL-committed immutable source+consequence, independently rediscoverable across deployment/process failure and absent/failed jobs. Oban queue uniqueness does not replace it. Exercise all P1-03..05 commit boundaries and fresh execution.
+4. **Migration safety:** additive/reviewable migrations where possible, constraints validated against actual data, adjacent-version upgrade/restart/rollback strategy, no competing Repo and no destructive financial rewrite. HIGH migration/integrity proof recorded per exact code PR.
+5. **Measured scalability:** start by profiling Ash query shapes, N+1/loading, bounded pagination, `EXPLAIN`/indexes, transaction lock waits, and a platform-wide finite PostgreSQL pool budget. Calibrate existing Oban queue throughput/backlog/reconciliation age against DB/provider limits. Do **not** assert universal TPS, p95, worker counts or a second service before representative measurements. Horizontal app replicas/Redis are evidence-gated, not P1 requirements.
+6. **Observability:** instrument qualification rejection, payment commit, outstanding consequence, grant convergence, recovery lag, mutation count and denied foreign access with stable low-cardinality names. No health text, provider keys, high-cardinality Account labels or raw sensitive payloads in metrics/logs. Exporter/telemetry failure cannot block a correct payment.
+7. **Release:** internal synthetic P1 is not a public paid feature, provider proof-stage certification or whole FP-002 completion. All stage-specific security, Legal/Privacy, content, EN/AF, provider environment, settlement and release-runbook requirements retain independent gates.
+
+### First-ticket implementation handoff — what to verify, what to leave JIT
+
+Before a **Ready** P1 ticket starts, inspect [AGENTS.md](../../../../AGENTS.md), current routers, the approved P1 design, [Identity reconciliation](../../../../lib/new_you/identity/reconciliation.ex) and its [negative regression tests](../../../../test/new_you/identity/reconciliation_test.exs), [registration operation](../../../../lib/new_you/identity/registration_operation.ex), [Audit durable obligations](../../../../lib/new_you/audit/evidence_obligation.ex), [Communications intent](../../../../lib/new_you/communications/message_intent.ex), [mix.exs](../../../../mix.exs), current migrations and package APIs. Existing `owner_reviews/1` must account for new Domains **in the same implementation change** with positive/negative/stale/restart cases. Follow current `.agents/skills/ash-framework/SKILL.md`, `.agents/skills/ticket-implement/SKILL.md`, Igniter-first supported structural changes, and repository implementation knowledge standard.
+
+**Test-first:** start with P1-01..07 fail cases through real owning Ash interfaces, not fixture-only mocks; two independent database transaction races, fresh restart cut tests, read/authorization denials, production synthetic compile-proof, durable identity review. Choose the minimal owner actions, Resources, keys, migrations, constraints, transaction shapes, workers and internal modules during implementation and prove them; this document does not freeze those representations. Record all HIGH financial/entitlement proof-menu applicability decisions and exact-head CI; use repository Mise/DevCore TEST commands, focused `mix test`, `mise exec -- devcore-project run test -- mix check` and applicable deep checks. Produce a source-linked capability handoff under `docs/development/knowledge/` in the code PR.
+
+The final master gate independently inspects the **exact base/head, full diff, immutable ownership and lifecycle, migration/locking/idempotency/restart/security, live Plane acceptance and same-head CI**. No merge without a specific user request. Once merged, validate resulting-main SHA/tree and required evidence before moving P1 Done/opening a dependent ticket.
+
+### Explicitly deferred and unapproved questions
+
+- Final Ash Resource/field/action/index/transaction/worker design remains ordinary **JIT**; omission alone is not a governance STOP.
+- AshPhoenix exact package version waits for its relevant UI ticket; AshAdmin production management surface is **not approved**; Reactor upgrades and temporal/storage libraries need concrete compatibility/security proof.
+- Approved commercial live bundle allocation and component disclosure, actual Paystack provider environment and mutation limits, stage EV receipts, Finance roles, EN/AF final channel copy and production scale topology are not silently settled here.
+- P1 proof-design GitHub candidate filename remains exactly human-approved; resolve focused source-status/routing treatment if the workflow requires it without changing accepted design semantics.
+- A true upstream STOP requires conflicting/insufficient exact governing statements, no reasonable compliant JIT implementation and the durable semantic that would otherwise be invented; ordinary engineering choices continue.
+
+**Execution conclusion:** This detailed package establishes one concrete starting slice and a complete, dependency-ordered ten-unit FP-002 path. It does not automatically create Ready status, approve provider work, merge code or grant production release.
