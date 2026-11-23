@@ -1,0 +1,203 @@
+<.auth_shell
+  title="Duplicate Account reconciliation"
+  locale="en"
+  heading_id="reconciliation-heading"
+>
+  <script defer src={~p"/assets/js/reconciliation.js"}>
+  </script>
+  <noscript>This operator form requires JavaScript.</noscript>
+  <div id="reconciliation" class="grid w-full max-w-prose gap-design-lg">
+    <section
+      id="reconciliation-result"
+      tabindex="-1"
+      aria-label="Reconciliation"
+      class="grid min-w-0 gap-design-base focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-design-primary"
+    >
+      <div :if={@view == :start} class="grid gap-design-base">
+        <p>Use this form only with synthetic Accounts and scoped Support grants.</p>
+        <details
+          :for={
+            {intent, label} <- [
+              {"detect", "Detect an explicit pair"},
+              {"resume", "Open an existing case"},
+              {"control", "Provide Account control evidence"}
+            ]
+          }
+          open={intent == "detect"}
+          class="min-w-0"
+        >
+          <summary class="min-h-11 cursor-pointer content-center font-design-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary">
+            {label}
+          </summary>
+          <.form
+            for={%{}}
+            id={intent}
+            action="/dev/support/reconciliation"
+            method="post"
+            autocomplete="off"
+          >
+            <fieldset disabled data-operator-fields class="grid min-w-0 gap-design-sm">
+              <input type="hidden" name="intent" value={intent} />
+              <input
+                :if={intent == "detect"}
+                type="hidden"
+                name="operation_id"
+                value={@operation_id}
+              />
+              <.field
+                :if={intent != "detect"}
+                prefix={intent}
+                name="case_id"
+                label="Case reference"
+              />
+              <.field
+                :if={intent == "detect"}
+                prefix={intent}
+                name="candidate_id"
+                label="Candidate Account ID"
+              />
+              <.field
+                :if={intent == "detect"}
+                prefix={intent}
+                name="canonical_id"
+                label="Canonical Account ID"
+              />
+              <.grant_fields :if={intent != "control"} prefix={intent} />
+              <.step_up_fields :if={intent != "control"} prefix={intent} />
+              <p :if={intent == "control"}>Use the current Session of one Account in review.</p>
+              <div><.primary_button type="submit" adaptive>{label}</.primary_button></div>
+            </fieldset>
+          </.form>
+        </details>
+      </div>
+
+      <div :if={@view == :case} class="grid min-w-0 gap-design-base">
+        <h2 id="case-status" class="text-design-body-lg font-design-bold">
+          {status_label(@status)}
+        </h2>
+        <p class="break-all">Case reference <span id="case-reference">{@reference}</span></p>
+        <p :if={@status == :review}>
+          Collect control evidence from each Account’s own Session before approval.
+        </p>
+        <p :if={@status == :applied}>Identity recorded the canonical decision.</p>
+        <.form
+          :if={@state}
+          for={%{}}
+          id="progress-case"
+          action="/dev/support/reconciliation"
+          method="post"
+          autocomplete="off"
+        >
+          <fieldset disabled data-operator-fields class="grid min-w-0 gap-design-sm">
+            <input
+              type="hidden"
+              name="intent"
+              value={if @status == :approved, do: "prepare", else: "review"}
+            />
+            <input type="hidden" name="state" value={@state} />
+            <.step_up_fields :if={@status == :approved} prefix="prepare" />
+            <.field
+              :if={@status == :review}
+              prefix="review"
+              name="candidate_control"
+              label="Candidate control evidence"
+              maximum={8192}
+            />
+            <.field
+              :if={@status == :review}
+              prefix="review"
+              name="canonical_control"
+              label="Canonical control evidence"
+              maximum={8192}
+            />
+            <div class="flex flex-wrap gap-design-sm">
+              <.primary_button
+                :if={@status == :detected}
+                type="submit"
+                {%{name: "decision", value: "candidate"}}
+                adaptive
+              >Mark as candidate</.primary_button>
+              <.primary_button
+                :if={@status in [:candidate, :conflict]}
+                type="submit"
+                {%{name: "decision", value: "review"}}
+                adaptive
+              >Start review</.primary_button>
+              <.primary_button
+                :if={@status == :review}
+                type="submit"
+                {%{name: "decision", value: "approved"}}
+                adaptive
+              >Approve review</.primary_button>
+              <.primary_button :if={@status == :approved} type="submit" adaptive>Continue to confirmation</.primary_button>
+              <.secondary_button
+                :if={@status == :review}
+                type="submit"
+                {%{name: "decision", value: "conflict", formnovalidate: true}}
+              >Record conflict</.secondary_button>
+              <.secondary_button
+                :if={@status != :approved}
+                type="submit"
+                {%{name: "decision", value: "rejected", formnovalidate: true}}
+              >Reject case</.secondary_button>
+            </div>
+          </fieldset>
+        </.form>
+        <.form
+          :if={@status == :approved}
+          for={%{}}
+          id="reopen-review"
+          action="/dev/support/reconciliation"
+          method="post"
+        >
+          <fieldset disabled data-operator-fields>
+            <input type="hidden" name="intent" value="review" />
+            <input type="hidden" name="state" value={@state} />
+            <.secondary_button type="submit" {%{name: "decision", value: "review"}}>Return to review</.secondary_button>
+          </fieldset>
+        </.form>
+      </div>
+
+      <div :if={@view == :confirm} class="grid min-w-0 gap-design-base">
+        <h2 class="text-design-body-lg font-design-bold">Confirm the canonical decision</h2>
+        <p>Applying permanently retires the candidate’s Platform Member Reference.</p>
+        <dl class="grid gap-design-xs break-all">
+          <dt class="font-design-bold">Candidate Account</dt>
+          <dd>{elem(@pair, 0)}</dd>
+          <dt class="font-design-bold">Canonical Account</dt>
+          <dd>{elem(@pair, 1)}</dd>
+        </dl>
+        <.form for={%{}} id="apply-case" action="/dev/support/reconciliation" method="post">
+          <fieldset disabled data-operator-fields class="flex min-w-0 flex-wrap gap-design-sm">
+            <input type="hidden" name="intent" value="apply" />
+            <input type="hidden" name="state" value={@state} />
+            <.primary_button type="submit" adaptive>Apply canonical decision</.primary_button>
+            <.secondary_button type="button" data-operator-reset>Cancel</.secondary_button>
+          </fieldset>
+        </.form>
+      </div>
+
+      <div :if={@view == :control} class="grid min-w-0 gap-design-sm">
+        <h2 class="text-design-body-lg font-design-bold">Account control evidence</h2>
+        <p>Share this case-bound proof with the reviewer within five minutes.</p>
+        <label for="control-proof" class="font-design-bold">Control evidence</label>
+        <textarea
+          id="control-proof"
+          readonly
+          spellcheck="false"
+          autocomplete="off"
+          rows="3"
+          class="w-full min-w-0 rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+        >{@proof}</textarea>
+      </div>
+
+      <p :if={@view == :unavailable} role="alert">
+        Reconciliation unavailable. Open the case again to check its current status.
+      </p>
+      <div :if={@view not in [:start, :confirm]}>
+        <.secondary_button type="button" data-operator-reset>Back to reconciliation</.secondary_button>
+      </div>
+    </section>
+    <p id="reconciliation-request-status" role="status"></p>
+  </div>
+</.auth_shell>

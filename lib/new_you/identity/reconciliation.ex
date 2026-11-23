@@ -63,6 +63,53 @@ defmodule NewYou.Identity.Reconciliation do
 
   def open(_), do: unavailable()
 
+  def status(request) do
+    with {:ok, initial} <- find_case(request),
+         false <- Ash.DataLayer.in_transaction?(Account) do
+      transaction(fn ->
+        with {:ok, _, _} <- authority(request, initial, :review_reconciliation),
+             {:ok, current} <- locked_case(initial.id) do
+          {:ok, Map.take(current, [:id, :status, :version, :candidate_id, :canonical_id])}
+        end
+      end)
+    else
+      _ -> unavailable()
+    end
+  rescue
+    _ -> unavailable()
+  end
+
+  def control_binding(credentials, case_id) do
+    with {:ok, %{account_id: id}} <- Identity.authorize_session(credentials),
+         {:ok, %{status: :review} = record} <- find_case(%{case_id: case_id}),
+         true <- id in [record.candidate_id, record.canonical_id] do
+      {:ok, {record.id, record.version}}
+    else
+      _ -> unavailable()
+    end
+  rescue
+    _ -> unavailable()
+  end
+
+  def prepare_apply(request) do
+    with {:ok, initial} <- find_case(request),
+         false <- Ash.DataLayer.in_transaction?(Account),
+         {:ok, _} <- preflight(initial, request) do
+      :ok
+    else
+      _ -> unavailable()
+    end
+  rescue
+    _ -> unavailable()
+  end
+
+  defp find_case(%{case_id: id}) do
+    case Ash.get(ReconciliationCase, id, authorize?: false) do
+      {:ok, %ReconciliationCase{} = record} -> {:ok, record}
+      _ -> unavailable()
+    end
+  end
+
   defp open_locked(request) do
     with {:ok, authority, accounts} <- authority(request, request, :review_reconciliation),
          :ok <- eligible_accounts(request, accounts),
@@ -503,6 +550,7 @@ defmodule NewYou.Identity.Reconciliation do
              current.candidate_id,
              current.canonical_id
            ),
+         :ok <- checkpoint(:before_audit_owner_review),
          {:ok, audit} <-
            Audit.review_identity_reconciliation(current.candidate_id, current.canonical_id) do
       {:ok, %{"communications" => communications, "audit" => audit}}
