@@ -7,8 +7,8 @@
     "WELL-174"
   ],
   "implementation_revision": {
-    "git_sha": "43057d8f02ee0ae32320a0bba886099f752bcf7b",
-    "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation."
+    "git_sha": "b835776381525d1115c0dffcbf6b958d70a39176",
+    "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -581,9 +581,10 @@
       "cases": [
         "Detection with CSRF/no-store and no retirement or E1.",
         "Generic existence denial, cross-Session and stale state denial, unavailable Audit owner review, revoked controls, and failure after E1.",
+        "Tampered, wrong-case, stale review generation and expired control proofs deny. An unrelated Account with a valid Session cannot mint a proof. Each denial preserves case and Account/PMR state and creates no E1 admission.",
         "Real Chromium through conflict, separate control Sessions, cancellation, apply, history restoration, and durable owner-state verification."
       ],
-      "proves": "Three focused tests passed, including keyboard focus, 320 px reflow, private transport and reopening committed state.",
+      "proves": "Controller tests exercise control-proof denials and successful approvals with matching proofs. Chromium exercises keyboard focus, 320 px reflow, private transport and reopening committed state.",
       "limits": "Synthetic DEV/TEST browser fixture. Browser reconnect uses fresh HTTP against the test process. The separate owner tests cover fresh BEAM restart.",
       "source_ids": [
         "web_test",
@@ -642,7 +643,9 @@
     "Runtime inventory remains Identity, Communications, Audit, Privacy and Analytics. Communications and Audit supply fixed policy evidence. Privacy and Analytics do not contribute reconciliation commands.",
     "Bandit request-start precedes application dispatch and observes the existing encrypted Session-cookie transport. Operators send all case and control data in POST bodies and request-stop metadata is scrubbed.",
     "Hallmark sloplint rendered seven synthetic HEEx states at desktop and narrow sizes with 0 FAIL, 0 WARN, and 3 occurrences of REFLEX 39b. The 58 px input height is waived for these states because WELL-173 uses the same shared input token and the Chromium narrow layout passed.",
-    "The Hallmark finish reviewer accepted the inherited auth shell and input token waiver. Runtime keyboard behavior was checked separately in Chromium. The page reuses existing stylesheet tokens and has no new Hallmark theme stylesheet or hero."
+    "The Hallmark finish reviewer accepted the inherited auth shell and input token waiver. Runtime keyboard behavior was checked separately in Chromium. The page reuses existing stylesheet tokens and has no new Hallmark theme stylesheet or hero.",
+    "A transferable encrypted control proof carries the issuing Session credentials and is scoped to synthetic DEV/TEST use. The protocol would need separate security review before wider reuse.",
+    "A fresh GET after an unknown detection response creates a new operation ID. A second detected case can be opened for the same pair. Identity apply guards arbitrate the Account/PMR outcome."
   ],
   "follow_up_tickets": [],
   "sources": [
@@ -728,7 +731,7 @@
       "id": "web_test",
       "path": "test/new_you_web/controllers/reconciliation_controller_test.exs",
       "symbol": "NewYouWeb.ReconciliationControllerTest",
-      "sha256": "619582cea3ffe238ef3958f6cead126272f06cf8d7caea0df4b09f6993de01e2"
+      "sha256": "03ecff8582a6007cb6cc41900679bdc0844593666e28edd058e53407fd6ce659"
     },
     {
       "id": "chromium",
