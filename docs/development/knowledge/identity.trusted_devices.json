@@ -1,0 +1,442 @@
+{
+  "schema_version": 1,
+  "capability_id": "identity.trusted_devices",
+  "purpose": "An ordinary verified participant can explicitly trust a device for a bounded period and inspect, name or remove their own trusted devices in the development entry.",
+  "implementing_tickets": [
+    "WELL-178"
+  ],
+  "implementation_revision": {
+    "git_sha": "371553d77a25c1b11e3d3cad937ef413522685b5",
+    "semantics": "WELL-178 extends the existing private DeviceAssurance Resource and Session management page with participant-owned device trust."
+  },
+  "authoritative_domain": "NewYou.Identity",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Audit",
+      "interface": "NewYou.Audit.establish_identity_security_obligation/1",
+      "ownership": "Audit owns the selected E2 obligations. The source transaction owns the grant and removal. Audit evidence cannot grant device trust.",
+      "source_ids": [
+        "audit",
+        "devices"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.DeviceAssurance",
+      "actions": [
+        "read",
+        "record_consent",
+        "trust",
+        "name",
+        "expire",
+        "revoke"
+      ],
+      "caller_boundary": "Private actions used by Identity under the Account lock. The browser receives only a narrow owner projection.",
+      "source_ids": [
+        "resource",
+        "devices",
+        "session"
+      ]
+    },
+    {
+      "domain": "NewYou.Audit",
+      "resource": "NewYou.Audit.EvidenceObligation",
+      "actions": [
+        "establish_identity_security"
+      ],
+      "caller_boundary": "Identity establishes the selected obligation inside the source transaction through the Audit interface.",
+      "source_ids": [
+        "audit",
+        "devices"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Identity",
+      "function": "manage_trusted_devices",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Presenting Session identifier and bearer.",
+        "List, grant with a fresh random 32-byte artifact, rename with a bounded name, or remove by identifier."
+      ],
+      "returns": [
+        "A self-only list, a granted device projection or outcome.",
+        "Generic denial or uncertain transaction result."
+      ],
+      "side_effects": [
+        "Records due expiry. Explicit consent and manual removal establish selected evidence atomically."
+      ],
+      "caller_constraints": [
+        "Revalidates current Account, Token, Session and ordinary eligibility under lock. The browser only submits the grant after CSRF-protected consent."
+      ],
+      "source_ids": [
+        "identity",
+        "devices",
+        "browser",
+        "session"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261123081212_well178_trusted_devices.exs",
+      "tables": [
+        "device_assurances",
+        "evidence_obligations"
+      ],
+      "constraints": [
+        "device_assurances_account_artifact_index",
+        "evidence_obligations_evidence_type"
+      ],
+      "source_ids": [
+        "migration",
+        "resource",
+        "audit"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "The existing Session management page loads routed bilingual copy, reads only the presenting Account's current trust and issues a random, encrypted, Session-bound consent form proof.",
+      "source_ids": [
+        "browser",
+        "copy",
+        "session"
+      ]
+    },
+    {
+      "summary": "The consent POST verifies CSRF and the ten-minute proof. Identity creates a pending record and moves it to trusted within the source transaction. A confirmed grant sets the scoped Secure, HttpOnly, SameSite=Lax cookie with the remaining expiry.",
+      "source_ids": [
+        "browser",
+        "session",
+        "devices",
+        "resource"
+      ]
+    },
+    {
+      "summary": "Identity matches the cookie by SHA-256 and projects device id, name, expiry and whether the artifact matches. Explicit removal and name/save use the target's Account-scoped id.",
+      "source_ids": [
+        "browser",
+        "devices",
+        "template"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "pending",
+      "trusted",
+      "expired",
+      "revoked"
+    ],
+    "transitions": [
+      {
+        "from_state": "pending",
+        "to_state": "trusted",
+        "guards": [
+          "Explicit consent and current ordinary Account, bearer, Session and device deadline."
+        ],
+        "side_effects": [
+          "Durable consent row and selected grant obligation commit together. Trust lasts 30 days."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "devices",
+          "resource",
+          "session",
+          "audit"
+        ]
+      },
+      {
+        "from_state": "trusted",
+        "to_state": "expired",
+        "guards": [
+          "The application clock is sampled after acquiring current authority. Expired trust is excluded from inventory and persisted as expired on observation."
+        ],
+        "side_effects": [
+          "The digest remains bound and cannot be reused."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "devices",
+          "resource"
+        ]
+      },
+      {
+        "from_state": "trusted",
+        "to_state": "revoked",
+        "guards": [
+          "The current owner confirms removal, or Identity commits an Account security invalidation."
+        ],
+        "side_effects": [
+          "Trust ends. Manual removal records selected Audit and leaves the Session active. Existing Account security transitions record their own selected evidence."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "devices",
+          "hold",
+          "revocation",
+          "reset",
+          "recovery",
+          "email_change"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "All operations require a currently usable ordinary Account Session and bearer. Active governed grants deny this participant path.",
+      "source_ids": [
+        "session"
+      ]
+    },
+    {
+      "summary": "Raw artifacts are carried by the browser only. Identity stores a hash, Account security version, name and deadline. The browser receives no raw Artifact in rendered HTML.",
+      "source_ids": [
+        "resource",
+        "devices",
+        "browser"
+      ]
+    },
+    {
+      "summary": "Trust supplies no login, idle or absolute Session lifetime, MFA or high-risk step-up authority.",
+      "source_ids": [
+        "session",
+        "devices",
+        "identity"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Operations hold the Account lock, then the presenting Token and Session locks before device access. Account-wide invalidations serialize on the same Account lock.",
+      "source_ids": [
+        "session",
+        "devices",
+        "hold",
+        "revocation",
+        "recovery"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Replays of one current consent artifact return the original row and deadline. Expired, revoked and stale-version artifacts cannot re-grant. A new device requires fresh consent.",
+      "source_ids": [
+        "devices",
+        "resource",
+        "migration"
+      ]
+    },
+    {
+      "summary": "Repeated removal returns already ended without a duplicate Audit obligation. A foreign or missing id returns the same denial.",
+      "source_ids": [
+        "devices",
+        "audit"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "The source write rolls back if Audit cannot establish the obligation. An uncertain write result is handled by reading the current inventory. No cookie is issued before a confirmed grant.",
+      "source_ids": [
+        "devices",
+        "browser",
+        "owner_proof"
+      ]
+    },
+    {
+      "summary": "Device state is reconstructed from PostgreSQL. Existing source security writes terminate trust before commitment. A database down-migration after real use cannot narrow the Audit check while selected evidence remains and would remove names. Use a forward correction to retain evidence.",
+      "source_ids": [
+        "resource",
+        "migration",
+        "hold",
+        "revocation",
+        "recovery",
+        "reset"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/identity/session_management_test.exs",
+      "cases": [
+        "Consent, duplicate replay, cross-Account denial, rename, removal, fresh consent, expiry, concurrent consent and Audit rejection.",
+        "Global sign-out invalidates a device issued through the owner interface."
+      ],
+      "proves": "Durable Account scoping, terminal states, convergence, rollback and selected E2.",
+      "limits": "Elapsed time is represented by a synthetic persisted deadline fixture.",
+      "source_ids": [
+        "owner_proof"
+      ]
+    },
+    {
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "cases": [
+        "EN/AF CSRF and cookie flags.",
+        "Chromium consent, rename, keyboard confirmation, fresh inventory and surviving Session."
+      ],
+      "proves": "The real development endpoint renders eligible localized copy and carries the opaque artifact in a private cookie.",
+      "limits": "Synthetic accounts and a loopback browser.",
+      "source_ids": [
+        "browser_proof"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/security_hold_test.exs",
+      "cases": [
+        "Compromise hold terminates a previously granted device."
+      ],
+      "proves": "The existing security hold source transaction revokes participant trust.",
+      "limits": "Uses the approved synthetic Support and participant fixture.",
+      "source_ids": [
+        "hold_proof"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Keep any future browser or delivery extension behind the Identity interface and revalidate the current Account, Session, grant posture and deadline.",
+      "source_ids": [
+        "identity",
+        "session",
+        "devices"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Reuses private Ash DeviceAssurance, current Session authority, Account-wide invalidation, Audit source obligations and the approved bilingual packet. No new dependency is needed.",
+      "source_ids": [
+        "resource",
+        "revocation",
+        "session",
+        "audit",
+        "copy"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Do not treat the cookie as authentication, bypass step-up, set trust silently, log raw artifacts, or use a reversible state change to re-enroll a terminal artifact.",
+      "source_ids": [
+        "devices",
+        "resource",
+        "browser",
+        "session"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "Synthetic DEV/TEST only. Production activation, privileged device policy and optional login convenience are outside this increment."
+  ],
+  "follow_up_tickets": [],
+  "sources": [
+    {
+      "id": "identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "manage_trusted_devices",
+      "sha256": "e93660c45847127887c5a71aab28250fc62a6543afa1bc4200dea5e103dc84bc"
+    },
+    {
+      "id": "session",
+      "path": "lib/new_you/identity/password_session.ex",
+      "symbol": "with_current_session",
+      "sha256": "d74154060a49bc3211501e5b0ba9cd3215a79a91b10754a601925dc8bd3a69ca"
+    },
+    {
+      "id": "devices",
+      "path": "lib/new_you/identity/trusted_devices.ex",
+      "symbol": "expire_due",
+      "sha256": "4449cc5eeaecf179f3fe3ce285a7d8839f1acefc1f0112ac463a2902a3556699"
+    },
+    {
+      "id": "resource",
+      "path": "lib/new_you/identity/device_assurance.ex",
+      "symbol": "record_consent",
+      "sha256": "cf71701a77261ef813b4e1aface1fbd0cc5c80c976a589028a64fd3a53d07711"
+    },
+    {
+      "id": "hold",
+      "path": "lib/new_you/identity/security_hold.ex",
+      "symbol": "SessionRevocation.revoke_devices",
+      "sha256": "bf2bed613d84ff9e7e456edf8e572f6d521c156a1ebc175463c9b6f981d6dc5f"
+    },
+    {
+      "id": "revocation",
+      "path": "lib/new_you/identity/session_revocation.ex",
+      "symbol": "revoke_devices",
+      "sha256": "6cfdc40095d684fc832ef58d604781a255cc75350067cf8af7ca85aabbd13580"
+    },
+    {
+      "id": "recovery",
+      "path": "lib/new_you/identity/recovery.ex",
+      "symbol": "invalidate_sessions_and_devices",
+      "sha256": "bf03e7c10b5abd1495b527610c5c00d0458762acc0ff89eb096ad9ec1e417a97"
+    },
+    {
+      "id": "reset",
+      "path": "lib/new_you/identity/password_reset.ex",
+      "symbol": "SessionRevocation.revoke_devices",
+      "sha256": "c5de3460936191496b8268c76c3e2139fa076ce631a9b4ca5b466c5b8e685c6e"
+    },
+    {
+      "id": "email_change",
+      "path": "lib/new_you/identity/primary_email_change.ex",
+      "symbol": "invalidate_sessions_and_devices",
+      "sha256": "b30c1105c92f5b3a7fabdc930f9579225e1ad1c71a00fc08f2bbf3deb385272a"
+    },
+    {
+      "id": "audit",
+      "path": "lib/new_you/audit/evidence_obligation.ex",
+      "symbol": "identity_device_trust_granted",
+      "sha256": "434d0728c3fd643b6ae4cd2a289d1e1f0c16c316bebbcf0eacb342537a445a5c"
+    },
+    {
+      "id": "browser",
+      "path": "lib/new_you_web/controllers/session_management_controller.ex",
+      "symbol": "manage_device",
+      "sha256": "9e3eaabecda761d8ff0aca8a1dad963de01333b754cb2145ab014576812a5dc3"
+    },
+    {
+      "id": "template",
+      "path": "lib/new_you_web/controllers/session_management_html/trusted_devices.html.heex",
+      "symbol": "revoke.confirm.body",
+      "sha256": "76fde63253e12787e9e4066dc8278bbed059d5ccee8118935b4c0a34062c7928"
+    },
+    {
+      "id": "copy",
+      "path": "lib/new_you/content/session_management_copy.ex",
+      "symbol": "load_devices",
+      "sha256": "33ba44c53cee28fde8f89eb730070566bf4dbe70b83ea706cbe63dde95148e87"
+    },
+    {
+      "id": "migration",
+      "path": "priv/repo/migrations/20261123081212_well178_trusted_devices.exs",
+      "symbol": "device_assurances_account_artifact_index",
+      "sha256": "46bb891e00980487e81058a4df8e3d9460eacfd20b057d33d602dbb7828c099a"
+    },
+    {
+      "id": "owner_proof",
+      "path": "test/new_you/identity/session_management_test.exs",
+      "symbol": "expired device artifacts are terminal",
+      "sha256": "ef44521b3e49db77d24f27a16626887c4fa5fb8230ab533947412c734e9a364e"
+    },
+    {
+      "id": "browser_proof",
+      "path": "test/new_you_web/controllers/session_management_controller_test.exs",
+      "symbol": "Chromium can consent",
+      "sha256": "8ff2cfe8a81c64da636cc68fffb2964ed3f71ef280a661af334453c3afef0e4a"
+    },
+    {
+      "id": "hold_proof",
+      "path": "test/new_you/identity/security_hold_test.exs",
+      "symbol": "suspected compromise terminates participant device trust",
+      "sha256": "f7da03b89eaccd23d65c35aae785a3917d5ca92e715cb31425371c2f70b97fa0"
+    }
+  ]
+}
