@@ -1,7 +1,7 @@
 # FP-002 planning enhancement — Pass 5 of 7
 ## P1 acceptance, negative-case and exact-head evidence matrix
 
-**Status:** Draft enhancement to approved-in-Plane P1-01 through P1-07; this is **not** a substitute proof contract and not a test run. **Source baseline:** NewYou `main` `1bfb351e295d8e03704e6b057b334f84429581aa`, 2026-11-23. **Risk:** `HIGH`, tags `financial` and `entitlement` under [Engineering Standards v1.1.0](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md#tests-review-and-proof). Scope and exact cases: [P1 design](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/delivery/proof/fp-002/FP-002_TRACER_BULLET_DESIGN_CANDIDATE_v0.1.0.md), [certified 7C](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md).
+**Status:** Draft enhancement to approved-in-Plane P1-01 through P1-07; this is **not** a substitute proof contract and not a test run. **Source baseline:** NewYou `main` `1bfb351e295d8e03704e6b057b334f84429581aa`, 2026-11-23. **Risk:** `HIGH`, tags `financial` and `entitlement` under [Engineering Standards v1.1.0](../../../../governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md#tests-review-and-proof). Scope and exact cases: [P1 design](../../../proof/fp-002/FP-002_TRACER_BULLET_DESIGN_CANDIDATE_v0.1.0.md), [certified 7C](../../../feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md).
 
 ### 5.1 Shared test setup and observation contract
 
@@ -27,7 +27,7 @@
 
 ### 5.3 HIGH-risk proof applicability worksheet
 
-Use [Engineering Standards §Tests, review and proof](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md#tests-review-and-proof). For the exact P1 change, the reviewer must record justified applicability (not blanket 100% coverage):
+Use [Engineering Standards §Tests, review and proof](../../../../governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md#tests-review-and-proof). For the exact P1 change, the reviewer must record justified applicability (not blanket 100% coverage):
 
 | Proof consideration | P1 disposition and evidence requirement |
 |---|---|

@@ -1,13 +1,13 @@
 # FP-002 planning enhancement — Pass 6 of 7
 ## JIT engineering decision boundary, P1 handoff and ticket-publication gate
 
-**Status:** Draft engineering handoff, not a finished implementation design or a Ready ticket. **Verified basis:** `main` `1bfb351e295d8e03704e6b057b334f84429581aa`, 2026-11-23; [plan v0.1.0 blob `11bd7a2...`](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.1.0.md), [human-approved P1 design](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/delivery/proof/fp-002/FP-002_TRACER_BULLET_DESIGN_CANDIDATE_v0.1.0.md), [AGENTS.md](https://github.com/Carpe-Diem-Media/NewYou/blob/main/AGENTS.md).
+**Status:** Draft engineering handoff, not a finished implementation design or a Ready ticket. **Verified basis:** `main` `1bfb351e295d8e03704e6b057b334f84429581aa`, 2026-11-23; [plan v0.1.0 blob `11bd7a2...`](../FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.1.0.md), [human-approved P1 design](../../../proof/fp-002/FP-002_TRACER_BULLET_DESIGN_CANDIDATE_v0.1.0.md), [AGENTS.md](../../../../../AGENTS.md).
 
 ### 6.1 Three-way classification of the remaining P1 decisions
 
 | Question / choice | Classification | Reason / required action |
 |---|---|---|
-| Who owns accepted purchase, attempt, payment and mandatory consequence? | **LOCKED** | Commerce only, [Domain §6.10](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md). |
+| Who owns accepted purchase, attempt, payment and mandatory consequence? | **LOCKED** | Commerce only, [Domain §6.10](../../../../governance/domain/04_DOMAIN_MAP_v1.2.0.md). |
 | Who creates/owns purchased Plan right and current read authorisation? | **LOCKED** | Entitlements only, §6.11. Cross-Domain calls are through owning Ash interfaces. |
 | Does synthetic verified evidence from a fixture mean provider evidence is verified? | **LOCKED: NO** | Qualified TEST-only source, bounded P1 sub-proof; zero Paystack evidence stage promotion. |
 | Which source/amount/value must P1 exercise? | **LOCKED** | One R399 / 39,900-minor-unit ZAR Plan, one known attempt, synthetic verified payer=recipient. |
@@ -58,7 +58,7 @@ For example, **which PostgreSQL uniqueness fence to use** is JIT; **the requirem
 
 | Finding | Verified status | Focused treatment before publishing executable ticket |
 |---|---|---|
-| Base plan's first approval gates still say approve 7B/7C and classification | [7B and 7C](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/delivery/CURRENT_DELIVERY_ROUTER.json) are **CERTIFIED/CURRENT**; [WELL-22](https://app.plane.so/symphony-development/browse/WELL-22) has selected NEW_TRACER_BULLET and exact P1 owner approval | Reword next plan revision's status ledger to **completed** decisions; do not repeat approvals or restart `/grilling`/`to-spec`. Plan and `/to-tickets` **still pending**. |
+| Base plan's first approval gates still say approve 7B/7C and classification | [7B and 7C](../../../CURRENT_DELIVERY_ROUTER.json) are **CERTIFIED/CURRENT**; [WELL-22](https://app.plane.so/symphony-development/browse/WELL-22) has selected NEW_TRACER_BULLET and exact P1 owner approval | Reword next plan revision's status ledger to **completed** decisions; do not repeat approvals or restart `/grilling`/`to-spec`. Plan and `/to-tickets` **still pending**. |
 | P1 proof design file says candidate | Owner approved exact bytes (WELL-22 comment `aa879dbc-ba02-4026-ae23-d43731691652`); candidate wording remains on GitHub | Resolve whether focused routing/status promotion is needed for executable proof; preserve the approved design semantics and approval byte receipt. |
 | FP-002 7A skeleton still has candidate status | 7B/7C certified with 7A as recorded preparation/provenance input | Reconcile source-status hygiene only as required by actual workflow; do not claim candidate 7A is certified. |
 | Provider evidence blocked | [WELL-176](https://app.plane.so/symphony-development/browse/WELL-176) is **Blocked** at current Plane state and latest Master Gate says provider execution STOP; OQ-004 remains open | No WELL-176 dependency on **TEST-only** P1; E1/E2 provider work requires stage-specific receipts and scoped operation approval. |

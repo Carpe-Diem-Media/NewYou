@@ -1,7 +1,7 @@
 # FP-002 planning enhancement — Pass 2 of 7
 ## Scope, non-scope, dependencies and completion boundary
 
-**Status:** Draft planning analysis. **P1 approved design is unchanged.** [Plan v0.1.0](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.1.0.md) is the base partition, not yet approved for publication. Read with [Phase 7C](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md) and [P1 design](https://github.com/Carpe-Diem-Media/NewYou/blob/main/docs/delivery/proof/fp-002/FP-002_TRACER_BULLET_DESIGN_CANDIDATE_v0.1.0.md).
+**Status:** Draft planning analysis. **P1 approved design is unchanged.** [Plan v0.1.0](../FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.1.0.md) is the base partition, not yet approved for publication. Read with [Phase 7C](../../../feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md) and [P1 design](../../../proof/fp-002/FP-002_TRACER_BULLET_DESIGN_CANDIDATE_v0.1.0.md).
 
 ### P1: single bounded transaction-to-entitlement proof
 
