@@ -7,7 +7,7 @@
     "WELL-174"
   ],
   "implementation_revision": {
-    "git_sha": "21f078c41363532fd947fb601b4ee21379bebb23",
+    "git_sha": "43057d8f02ee0ae32320a0bba886099f752bcf7b",
     "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -656,7 +656,7 @@
       "id": "owner",
       "path": "lib/new_you/identity/reconciliation.ex",
       "symbol": "defmodule NewYou.Identity.Reconciliation",
-      "sha256": "8080055c19ac823085abca1bac203522ec955b3b400a5e17b6f65a5f78a5ea3c"
+      "sha256": "2f9b35e42df82b0f0c7cc143048b08191bcad108f295c12f9f852b6bac36b8aa"
     },
     {
       "id": "case",
@@ -728,7 +728,7 @@
       "id": "web_test",
       "path": "test/new_you_web/controllers/reconciliation_controller_test.exs",
       "symbol": "NewYouWeb.ReconciliationControllerTest",
-      "sha256": "4e32f861a8c08fdc4512396a72f14947a52b4c091a2cbc5e69b5c24f57d501c1"
+      "sha256": "619582cea3ffe238ef3958f6cead126272f06cf8d7caea0df4b09f6993de01e2"
     },
     {
       "id": "chromium",
