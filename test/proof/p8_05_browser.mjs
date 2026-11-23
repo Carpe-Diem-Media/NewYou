@@ -444,14 +444,63 @@ try {
     checks.reflow = await evaluate(`document.documentElement.scrollWidth <= innerWidth`);
     await cdp('Emulation.clearDeviceMetricsOverride');
 
-    const submitLookup = async code => {
+    const fillLookup = code => {
       const values = {grant_id: input.grant_id, target_account_id: input.target_account_id,
         email: input.target_email, password: input.password, code};
-      await evaluate(`Object.entries(${JSON.stringify(values)}).forEach(([id, value]) => {
+      return evaluate(`Object.entries(${JSON.stringify(values)}).forEach(([id, value]) => {
         document.getElementById(id).value = value;
       });`);
+    };
+    const submitLookup = async code => {
+      await fillLookup(code);
       await navigation(() => evaluate(`document.querySelector('#support-lookup').requestSubmit()`));
     };
+    const cleanLookup = `!document.querySelector('#support-diagnostics') &&
+      [...document.querySelectorAll('#support-lookup input:not([type=hidden])')].every(input => input.value === '')`;
+    const loadedAt = pathname => `location.pathname === ${JSON.stringify(pathname)} && document.readyState === 'complete'`;
+    const open = pathname => navigation(() => cdp('Page.navigate', {url: base + pathname}));
+    const currentEntry = async () => {
+      const entries = await cdp('Page.getNavigationHistory');
+      return entries.entries[entries.currentIndex].id;
+    };
+    const waitForPage = async (previous, condition) => {
+      const deadline = performance.now() + 5000;
+      while (performance.now() < deadline) {
+        try {
+          if (await evaluate(`performance.timeOrigin !== ${previous} && (${condition})`)) return true;
+        } catch (error) {
+          if (error.message !== 'browser.context_lost') throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      return false;
+    };
+    const traverse = async (entryId, condition) => {
+      const previous = await evaluate('performance.timeOrigin');
+      await cdp('Page.navigateToHistoryEntry', {entryId});
+      return waitForPage(previous, condition);
+    };
+    const observePagehide = () => evaluate(`
+      sessionStorage.removeItem('lookup_pagehide');
+      window.addEventListener('pagehide', () => sessionStorage.setItem('lookup_pagehide', String(${cleanLookup})), {once: true});
+    `);
+    const authorizeBlankForm = `${loadedAt(path)} && !!document.querySelector('#support-lookup') && (${cleanLookup})`;
+
+    const form = await currentEntry();
+    const formDocument = await evaluate('performance.timeOrigin');
+    await fillLookup(input.codes[0]);
+    await observePagehide();
+    await open('/legal/privacy');
+    checks.form_cleared_on_leave = await evaluate(`sessionStorage.getItem('lookup_pagehide') === 'true'`);
+    const neutral = await currentEntry();
+    checks.form_back_blank = await traverse(form, `${authorizeBlankForm} && performance.timeOrigin !== ${formDocument}`);
+    const restoredForm = await currentEntry();
+    const restoredDocument = await evaluate('performance.timeOrigin');
+    await fillLookup(input.codes[0]);
+    await observePagehide();
+    checks.form_forward = await traverse(neutral, loadedAt('/legal/privacy')) &&
+      await evaluate(`sessionStorage.getItem('lookup_pagehide') === 'true'`);
+    checks.form_back_again_blank = await traverse(restoredForm, `${authorizeBlankForm} && performance.timeOrigin !== ${restoredDocument}`);
 
     await submitLookup(input.codes[0]);
     checks.diagnostics = await evaluate(`document.querySelector('#support-diagnostics')?.textContent.includes('Email verified')`);
@@ -459,10 +508,52 @@ try {
     checks.private_response = await evaluate(`location.pathname === ${JSON.stringify(path)} && !location.search &&
       ${JSON.stringify(sensitive)}.every(value => !document.body.innerHTML.includes(value))`);
 
-    await openLookup();
+    // Exercise the persisted event on the actual POST document even when
+    // Chromium elects not to retain a no-store history entry.
+    await fillLookup(input.codes[1]);
+    checks.result_cleared_on_leave = await evaluate(`
+      window.dispatchEvent(new PageTransitionEvent('pagehide', {persisted: true}));
+      ${cleanLookup};
+    `);
+    const resultDocument = await evaluate('performance.timeOrigin');
+    await evaluate(`window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}));`)
+      .catch(error => { if (error.message !== 'browser.context_lost') throw error; });
+    checks.result_restored_as_get = await waitForPage(resultDocument, authorizeBlankForm);
+
+    const cleanResultEntry = await currentEntry();
+    const cleanResultDocument = await evaluate('performance.timeOrigin');
+    await open('/legal/privacy');
+    const afterResult = await currentEntry();
+    checks.revoked_back_blank = await traverse(cleanResultEntry,
+      `${authorizeBlankForm} && performance.timeOrigin !== ${cleanResultDocument}`);
+    const restoredResultEntry = await currentEntry();
+    const restoredResultDocument = await evaluate('performance.timeOrigin');
+    checks.revoked_forward = await traverse(afterResult, loadedAt('/legal/privacy'));
+    checks.revoked_back_again_blank = await traverse(restoredResultEntry,
+      `${authorizeBlankForm} && performance.timeOrigin !== ${restoredResultDocument}`);
+
     await submitLookup(input.codes[1]);
     checks.revoked = await evaluate(`document.querySelector('[role="alert"]')?.textContent.includes('Lookup unavailable') &&
       !document.querySelector('#support-diagnostics')`);
+
+    await openLookup();
+    const firstBeforeLogout = await currentEntry();
+    await fillLookup(input.codes[0]);
+    await open('/legal/privacy');
+    await openLookup();
+    const secondBeforeLogout = await currentEntry();
+    await fillLookup(input.codes[1]);
+    await open('/session/protected');
+    await navigation(() => evaluate(`document.querySelector('#session-logout').requestSubmit()`));
+    const restoreSignedOut = async entry => {
+      const blank = await traverse(entry, `document.readyState === 'complete' &&
+        !document.querySelector('#support-lookup') && (${cleanLookup})`);
+      // Chromium may present its internal error document for an empty 404.
+      const {frameTree: {frame}} = await cdp('Page.getFrameTree');
+      return blank && (frame.unreachableUrl || frame.url) === base + path;
+    };
+    checks.logout_back_denied = await restoreSignedOut(firstBeforeLogout);
+    checks.logout_forward_denied = await restoreSignedOut(secondBeforeLogout);
   } else if (input.mode === 'ordinary_email_change') {
     const packet = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED_v0.1.1.json', 'utf8'));
     const copy = key => JSON.stringify(packet.copy_items.find(item => item.semantic_key === `identity.change_email.${key}`)[input.locale]);

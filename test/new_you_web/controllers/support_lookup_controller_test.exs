@@ -89,7 +89,7 @@ defmodule NewYouWeb.SupportLookupControllerTest do
     end)
   end
 
-  test "Chromium reauthenticates and loses lookup access on a fresh request after revocation" do
+  test "Chromium clears history state and rechecks current authority after revocation and logout" do
     P813HoldFixture.with_fixture(fn fixture ->
       Application.put_env(:new_you, :fp001_development_entry, true)
       Mix.Task.run("assets.build")
@@ -147,13 +147,20 @@ defmodule NewYouWeb.SupportLookupControllerTest do
 
         assert result["cleanup"]
 
-        for check <- ~w(signed_in keyboard reflow diagnostics private_response revoked) do
+        for check <- ~w(
+              signed_in keyboard reflow form_cleared_on_leave form_back_blank form_forward form_back_again_blank
+              diagnostics private_response result_cleared_on_leave result_restored_as_get
+              revoked_back_blank revoked_forward revoked_back_again_blank revoked
+              logout_back_denied logout_forward_denied
+            ) do
           assert result["checks"][check] == true, "Support lookup browser check failed: #{check}"
         end
 
         assert_receive {:lookup_transport, 200, true}
         assert_receive {:lookup_transport, 403, true}
-        refute_received {:lookup_transport, _, false}
+        refute_received {:lookup_transport, _, _}
+        assert_receive {:lookup_get, 404}
+        assert_receive {:lookup_get, 404}
         refute_received :lookup_query_telemetry
       after
         :telemetry.detach(handler)
@@ -172,6 +179,10 @@ defmodule NewYouWeb.SupportLookupControllerTest do
   end
 
   def observe_transport([:bandit, :request, :stop], _measurements, %{conn: conn}, test_pid) do
+    if conn.request_path == @path and conn.method == "GET" do
+      send(test_pid, {:lookup_get, conn.status})
+    end
+
     if conn.request_path == @path and conn.method == "POST" do
       safe =
         conn.params == %{} and conn.body_params == %{} and conn.assigns == %{} and
