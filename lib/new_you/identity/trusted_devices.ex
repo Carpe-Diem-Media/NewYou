@@ -131,12 +131,14 @@ defmodule NewYou.Identity.TrustedDevices do
            |> Ash.Query.filter(state == :trusted and expires_at <= ^checked_at)
            |> Ash.Query.sort(:id)
            |> Ash.read(authorize?: false) do
-      Enum.reduce_while(rows, :ok, fn row, :ok ->
-        case Ash.update(row, %{checked_at: checked_at}, action: :expire, authorize?: false) do
-          {:ok, _} -> {:cont, :ok}
-          {:error, _} = error -> {:halt, error}
-        end
-      end)
+      Enum.reduce_while(rows, :ok, fn row, :ok -> expire(row, checked_at) end)
+    end
+  end
+
+  defp expire(row, checked_at) do
+    case Ash.update(row, %{checked_at: checked_at}, action: :expire, authorize?: false) do
+      {:ok, _} -> {:cont, :ok}
+      {:error, _} = error -> {:halt, error}
     end
   end
 
