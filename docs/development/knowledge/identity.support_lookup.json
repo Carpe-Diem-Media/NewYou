@@ -7,7 +7,7 @@
     "WELL-173"
   ],
   "implementation_revision": {
-    "git_sha": "4f30a7279af9caf280e8dcc9fbcd37efa77946ea",
+    "git_sha": "0fcbc8191d370f8439f2eb8fb634729cf051b2e9",
     "semantics": "WELL-173 adds the private DEV/TEST operator browser workflow around the existing Identity lookup. The owning interface, grant lifecycle and standard Audit selection are preserved. The review correction clears form values and diagnostics on pagehide and navigate-replaces persisted restorations with an authorized GET."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -449,7 +449,7 @@
       "id": "browser_test",
       "path": "test/new_you_web/controllers/support_lookup_controller_test.exs",
       "symbol": "defmodule NewYouWeb.SupportLookupControllerTest",
-      "sha256": "52665c8578539b81dfd5370629dcfa0496668bfa63ed9c053f2556256515552d"
+      "sha256": "ad6a3a8d3416572c78a478758330984bd5058717f2217776b1b817d256508a9a"
     },
     {
       "id": "chromium",
