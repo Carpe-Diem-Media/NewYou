@@ -18,7 +18,7 @@ defmodule NewYou.Communications.DeliveryProvider do
   """
   @spec invoke(
           NewYou.Communications.DeliveryAttempt.t(),
-          %NewYou.Communications.DeliveryPayload{}
+          NewYou.Communications.DeliveryPayload.t()
         ) ::
           term()
   def invoke(attempt, payload), do: adapter().invoke(attempt, payload)
