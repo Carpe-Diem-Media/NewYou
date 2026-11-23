@@ -66,17 +66,19 @@ defmodule NewYou.Identity.Reconciliation do
   def status(request) do
     with {:ok, initial} <- find_case(request),
          false <- Ash.DataLayer.in_transaction?(Account) do
-      transaction(fn ->
-        with {:ok, _, _} <- authority(request, initial, :review_reconciliation),
-             {:ok, current} <- locked_case(initial.id) do
-          {:ok, Map.take(current, [:id, :status, :version, :candidate_id, :canonical_id])}
-        end
-      end)
+      transaction(fn -> status_locked(initial, request) end)
     else
       _ -> unavailable()
     end
   rescue
     _ -> unavailable()
+  end
+
+  defp status_locked(initial, request) do
+    with {:ok, _, _} <- authority(request, initial, :review_reconciliation),
+         {:ok, current} <- locked_case(initial.id) do
+      {:ok, Map.take(current, [:id, :status, :version, :candidate_id, :canonical_id])}
+    end
   end
 
   def control_binding(credentials, case_id) do

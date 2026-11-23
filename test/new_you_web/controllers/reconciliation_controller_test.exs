@@ -31,6 +31,7 @@ defmodule NewYouWeb.ReconciliationControllerTest do
       {conn, csrf} = transport(credentials)
 
       assert html_response(get(conn.(), @path), 200) =~ "Duplicate Account reconciliation"
+      assert response(get(conn.(), @path <> "?case_id=" <> Ecto.UUID.generate()), 404) == ""
 
       timestamp = System.os_time(:second)
       Process.put(PrivilegedAccessSeam, timestamp)
@@ -80,8 +81,27 @@ defmodule NewYouWeb.ReconciliationControllerTest do
     Proof.with_case(fn fixture ->
       Application.put_env(:new_you, :fp001_development_entry, true)
       {conn, csrf} = transport(fixture.actor.credentials)
-      {other, other_csrf} = transport(fixture.reviewer.credentials)
       timestamp = System.os_time(:second)
+      account = P805.account!(fixture.actor.id)
+
+      {:ok, other_credentials} =
+        Identity.authenticate_password(account.email, fixture.actor.password)
+
+      {other, other_csrf} = transport(other_credentials)
+
+      assert {:ok, :ok} =
+               P813HoldFixture.step_up(
+                 %{fixture.actor | credentials: other_credentials},
+                 :review_reconciliation
+               )
+
+      assert {:ok, %{status: :detected}} =
+               Identity.reconciliation_status(%{
+                 credentials: other_credentials,
+                 case_id: fixture.case.id,
+                 grant_id: fixture.reconciliation_grant.id,
+                 canonical_grant_id: fixture.canonical_grant.id
+               })
 
       scope = %{
         "grant_id" => fixture.reconciliation_grant.id,
@@ -194,6 +214,10 @@ defmodule NewYouWeb.ReconciliationControllerTest do
 
       assert Ash.get!(Identity.ReconciliationCase, approved.id, authorize?: false).status ==
                :approved
+
+      assert post_intent(conn, csrf, "apply", %{"state" => state!(confirmation)}).status == 403
+      assert [%{attempt_id: ^attempt}] = Proof.admissions_for_target(target.id)
+      assert [%{outcome: :failed}] = Proof.outcomes(attempt)
 
       assert :ok = Identity.logout(fixture.actor.credentials)
       assert post_intent(conn, csrf, "apply", %{"state" => state!(confirmation)}).status == 404
