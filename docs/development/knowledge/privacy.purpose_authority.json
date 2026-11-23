@@ -968,7 +968,7 @@
       "id": "p818_browser",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'stale_session'",
-      "sha256": "fe5ba0d4aa88cc5c05f10ffc8c5b6deb7942a0105df44d8a78eae81357a41455"
+      "sha256": "daf05e7eb4e1baed9b69f821d3c21f93bbebc8bc050a9bb3f26520e927c3b390"
     },
     {
       "id": "p818_browser_owner_interface",
