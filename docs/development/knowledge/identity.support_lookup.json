@@ -7,7 +7,7 @@
     "WELL-173"
   ],
   "implementation_revision": {
-    "git_sha": "21f078c41363532fd947fb601b4ee21379bebb23",
+    "git_sha": "371553d77a25c1b11e3d3cad937ef413522685b5",
     "semantics": "WELL-173 adds the private DEV/TEST operator browser workflow around the existing Identity lookup. The owning interface, grant lifecycle and standard Audit selection are preserved. The review correction clears form values and diagnostics on pagehide and navigate-replaces persisted restorations with an authorized GET. WELL-174 wraps private parsing and dispatch so response scrubbing covers parser failures and removes Set-Cookie from returned telemetry metadata."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -365,7 +365,7 @@
       "id": "identity_api",
       "path": "lib/new_you/identity.ex",
       "symbol": "lookup_support_identity",
-      "sha256": "6ec3c8f615b2c0812f6d353a4321f1abce0c23b72fbdebd038cb914f2e81baef"
+      "sha256": "e93660c45847127887c5a71aab28250fc62a6543afa1bc4200dea5e103dc84bc"
     },
     {
       "id": "lookup",
@@ -425,7 +425,7 @@
       "id": "browser_dispatch",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "/dev/support/account-access",
-      "sha256": "5722d91fff6b21c41d51222a09e04cd8778afc64227b31c0ff72027c0ab14a65"
+      "sha256": "eeb8f8f76bdb9b5da3ffdbb2d1ef6ec10a0c8ca91ffa49aa3b307bc863513460"
     },
     {
       "id": "browser_controller",
@@ -455,7 +455,7 @@
       "id": "chromium",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "input.mode === 'support_lookup'",
-      "sha256": "d274577381d1cb65d0a4ec15257b4dffbfc8d109eb9dfae4e8da5835c6c31dfe"
+      "sha256": "91114726432370e93b55ae58fc7445dd90a2eb088388f5b9607c6257c56de27e"
     },
     {
       "id": "privilege_test",

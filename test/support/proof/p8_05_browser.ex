@@ -23,6 +23,7 @@ defmodule NewYou.Proof.P805Browser do
     operator_reconciliation.resume operator_reconciliation.apply-case operator_reconciliation.history
     session_management.other_login session_management.initiator_login session_management.list session_management.cancel session_management.confirm
     session_management.initiator_reload
+    trusted_devices.consent trusted_devices.granted trusted_devices.rename trusted_devices.remove trusted_devices.removed
 
     reset.public_entry reset.prior_login reset.request_entry reset.request_layout
     reset.request_csrf reset.request_submit reset.delivery reset.confirm_entry

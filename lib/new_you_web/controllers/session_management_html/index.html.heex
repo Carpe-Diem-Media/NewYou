@@ -94,6 +94,14 @@
     </a>
   </section>
 
+  <.trusted_devices
+    :if={@inventory || @device_message}
+    inventory={@inventory}
+    copy={@device_copy}
+    message={@device_message}
+    locale={@locale}
+  />
+
   <a
     :if={!@page && @message == "revoke.uncertain"}
     href={"/session/manage?locale=#{@locale}"}

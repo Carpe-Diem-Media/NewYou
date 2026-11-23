@@ -7,7 +7,7 @@
     "WELL-174"
   ],
   "implementation_revision": {
-    "git_sha": "b835776381525d1115c0dffcbf6b958d70a39176",
+    "git_sha": "371553d77a25c1b11e3d3cad937ef413522685b5",
     "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -653,7 +653,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "open_reconciliation",
-      "sha256": "6ec3c8f615b2c0812f6d353a4321f1abce0c23b72fbdebd038cb914f2e81baef"
+      "sha256": "e93660c45847127887c5a71aab28250fc62a6543afa1bc4200dea5e103dc84bc"
     },
     {
       "id": "owner",
@@ -707,7 +707,7 @@
       "id": "boundary",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "/dev/support/reconciliation",
-      "sha256": "5722d91fff6b21c41d51222a09e04cd8778afc64227b31c0ff72027c0ab14a65"
+      "sha256": "eeb8f8f76bdb9b5da3ffdbb2d1ef6ec10a0c8ca91ffa49aa3b307bc863513460"
     },
     {
       "id": "template",
@@ -737,7 +737,7 @@
       "id": "chromium",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "operator_reconciliation",
-      "sha256": "d274577381d1cb65d0a4ec15257b4dffbfc8d109eb9dfae4e8da5835c6c31dfe"
+      "sha256": "91114726432370e93b55ae58fc7445dd90a2eb088388f5b9607c6257c56de27e"
     },
     {
       "id": "scenarios",

@@ -139,6 +139,23 @@ defmodule NewYou.Identity.PasswordSession do
     end
   end
 
+  def manage_trusted_devices(credentials, operation) do
+    manager = fn session, account, token, _linked ->
+      with {:ok, _} <- ordinary_revocation_factor(account),
+           true <- usable_deadlines?(session) and future?(token.expires_at) do
+        NewYou.Identity.TrustedDevices.execute(account, session, operation)
+      else
+        _ -> :denied
+      end
+    end
+
+    case with_current_session(credentials, manager) do
+      {:ok, {:device_result, value}} -> {:ok, value}
+      {:error, :transaction_unconfirmed} -> {:error, :device_result_uncertain}
+      _ -> {:error, :device_unavailable}
+    end
+  end
+
   def revoke_other(credentials, target_id) do
     case Ecto.UUID.cast(target_id) do
       {:ok, id} ->

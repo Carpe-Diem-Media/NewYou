@@ -7,10 +7,97 @@ defmodule NewYouWeb.SessionManagementControllerTest do
   require Ash.Query
 
   alias NewYou.{Audit, Identity}
-  alias NewYou.Identity.{Account, PasswordSession, Session, Token}
+  alias NewYou.Identity.{Account, DeviceAssurance, PasswordSession, Session, Token}
   alias NewYou.Proof.{P805, P805Browser, P813HoldFixture, PrivilegedAccessSeam, SignInJourney}
 
   @endpoint NewYouWeb.Endpoint
+
+  test "explicit EN/AF device consent uses a private cookie and removal leaves the Session active" do
+    P805.with_fixture(fn ->
+      input = verified_input()
+
+      for locale <- ["en", "af"] do
+        origin = login(input, locale)
+        page = get(recycle(origin), "/session/manage")
+        body = html_response(page, 200)
+        assert body =~ if(locale == "af", do: "Vertroude toestelle", else: "Trusted devices")
+        refute Map.has_key?(page.resp_cookies, "new_you_device")
+
+        [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, body)
+        [_, proof] = Regex.run(~r/name="device_proof"[^>]*value="([^"]+)"/, body)
+
+        path = "/session/manage/devices"
+        params = %{"locale" => locale, "operation" => "consent", "device_proof" => proof}
+        assert post(with_csrf(page), path, params).status == 403
+
+        result = post(with_csrf(page), path, Map.put(params, "_csrf_token", csrf))
+        updated = html_response(result, 200)
+
+        assert %{secure: true, http_only: true, same_site: "Lax", value: artifact} =
+                 result.resp_cookies["new_you_device"]
+
+        refute updated =~ artifact
+
+        [_, target] = Regex.run(~r/name="device_id"[^>]*value="([^"]+)"/, updated)
+        [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, updated)
+
+        removed =
+          post(with_csrf(result), path, %{
+            "locale" => locale,
+            "_csrf_token" => csrf,
+            "operation" => "revoke",
+            "device_id" => target
+          })
+
+        assert html_response(removed, 200) =~
+                 if(locale == "af",
+                   do: "Vertroue vir hierdie toestel is verwyder.",
+                   else: "Trust removed from this device."
+                 )
+
+        assert get(recycle(removed), "/session/protected").status == 200
+      end
+    end)
+  end
+
+  test "an Audit insertion rejection leaves neither device state nor a cookie" do
+    P805.with_fixture(fn ->
+      input = verified_input()
+      origin = login(input, "en")
+      session = session(get_session(origin, :identity_session_id))
+      page = get(recycle(origin), "/session/manage")
+      body = html_response(page, 200)
+      [_, csrf] = Regex.run(~r/name="_csrf_token"[^>]*value="([^"]+)"/, body)
+      [_, proof] = Regex.run(~r/name="device_proof"[^>]*value="([^"]+)"/, body)
+      path = "/session/manage/devices"
+
+      params = %{
+        "locale" => "en",
+        "operation" => "consent",
+        "device_proof" => proof,
+        "_csrf_token" => csrf
+      }
+
+      P805.with_rejected_insert("evidence_obligations", fn reached ->
+        rejected = post(with_csrf(page), path, params)
+
+        assert html_response(rejected, 503) =~
+                 "We couldn&#39;t confirm whether this device was trusted."
+
+        assert reached.()
+        refute Map.has_key?(rejected.resp_cookies, "new_you_device")
+
+        assert {:ok, false} =
+                 DeviceAssurance
+                 |> Ash.Query.filter(account_id == ^session.account_id)
+                 |> Ash.exists(authorize?: false)
+      end)
+
+      accepted = post(with_csrf(page), path, params)
+      assert accepted.status == 200
+      assert Map.has_key?(accepted.resp_cookies, "new_you_device")
+    end)
+  end
 
   test "global confirmation is read-only and requires a bound CSRF-protected POST in EN and AF" do
     P805.with_fixture(fn ->
@@ -394,6 +481,19 @@ defmodule NewYouWeb.SessionManagementControllerTest do
         refreshed = html_response(get(recycle(uncertain), path), 200)
         refute refreshed =~ ~s(value="#{unconfirmed_id}")
         assert refreshed =~ ~s(value="#{rollback_id}")
+      end)
+    end
+
+    @tag timeout: 120_000
+    test "Chromium can consent, name and remove a trusted device in #{@locale}" do
+      P805.with_fixture(fn ->
+        input = verified_input()
+        result = run_browser(input, @locale, SignInJourney.Endpoint, %{trusted_devices: true})
+
+        assert_browser_checks(
+          result,
+          ~w(empty responsive reduced_motion cookie_private current name_saved explicit_confirm removed refreshed session_survives)
+        )
       end)
     end
 
