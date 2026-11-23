@@ -532,7 +532,7 @@
         "recovery_discovery_gate",
         "recovery_discovery_link",
         "recovery_discovery_test",
-        "browser"
+        "recovery_discovery_driver"
       ]
     },
     {
@@ -1207,6 +1207,32 @@
         "browser",
         "self_member_reference_template"
       ]
+    },
+    {
+      "path": "test/new_you_web/controllers/password_session_controller_test.exs",
+      "cases": [
+        "signed-out sign-in links to ordinary Recovery in the selected locale",
+        "sign-in hides ordinary Recovery when its copy or development entry is unavailable"
+      ],
+      "proves": "Exact EN/AF labels and destinations, preserved existing authentication links, passive GET without observed database writes or authenticated Session, and suppression when copy or ordinary entry is unavailable.",
+      "limits": "Synthetic DEV/TEST eligibility exercised through the TEST endpoint.",
+      "source_ids": [
+        "recovery_discovery_test",
+        "recovery_discovery_eligibility_test"
+      ]
+    },
+    {
+      "path": "test/new_you_web/controllers/well183_browser_test.exs",
+      "cases": [
+        "bounded en browser Recovery with fresh sign-in",
+        "bounded af browser Recovery with fresh sign-in"
+      ],
+      "proves": "Chromium reads the approved sign-in link in both locales, reaches it with Tab and visible focus, and activates it with Enter to open the existing locale-specific Recovery request.",
+      "limits": "Synthetic loopback Chromium proof in TEST.",
+      "source_ids": [
+        "recovery_discovery_browser_test",
+        "recovery_discovery_driver"
+      ]
     }
   ],
   "safe_extensions": [
@@ -1740,6 +1766,24 @@
       "id": "recovery_discovery_test",
       "path": "test/new_you_web/controllers/password_session_controller_test.exs",
       "symbol": "signed-out sign-in links to ordinary Recovery",
+      "sha256": "f4b088444455e61e789b71cdc59c26fc95190beafcff45f05fe022fda95aec07"
+    },
+    {
+      "id": "recovery_discovery_driver",
+      "path": "test/proof/p8_05_browser.mjs",
+      "symbol": "input.mode === 'ordinary_recovery'",
+      "sha256": "754113bad63950379b66867714c0213d424114dccd9b48b132578ae51b9db04e"
+    },
+    {
+      "id": "recovery_discovery_browser_test",
+      "path": "test/new_you_web/controllers/well183_browser_test.exs",
+      "symbol": "NewYou.Proof.Well183Browser.run(@locale)",
+      "sha256": "8b7d7d72f1b15d946e59475d6c5ce07002cfce8b056fe5aa6e19a7f4c5e04a2c"
+    },
+    {
+      "id": "recovery_discovery_eligibility_test",
+      "path": "test/new_you_web/controllers/password_session_controller_test.exs",
+      "symbol": "sign-in hides ordinary Recovery when its copy or development entry is unavailable",
       "sha256": "f4b088444455e61e789b71cdc59c26fc95190beafcff45f05fe022fda95aec07"
     }
   ]
