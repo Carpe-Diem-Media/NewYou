@@ -66,7 +66,7 @@ For example, **which PostgreSQL uniqueness fence to use** is JIT; **the requirem
 
 ### 6.5 Ticket-publication decision — one near-term P1 child, not six tickets
 
-The **six passes are review lenses**, not six implementation work units. The existing ten-slice graph P1, E1a–c, E2a–c and S1–S3 remains appropriate. One near-term P1 ticket is cohesive because acceptance, evidence qualification, Commerce consequence, Entitlements grant and Identity registration must prove a single architectural crossing together.
+The **seven planning passes are review lenses**, not seven implementation work units. The existing ten-slice graph P1, E1a–c, E2a–c and S1–S3 remains appropriate. One near-term P1 ticket is cohesive because acceptance, evidence qualification, Commerce consequence, Entitlements grant and Identity registration must prove a single architectural crossing together.
 
 **Required order before creating P1 in Plane:** (A) independent approval of exact expanded planning artifact; (B) separate final `/to-tickets` decomposition/publication approval; (C) if required, P1 design source-status resolution; (D) create one child of WELL-22 with exact P1-01..07 acceptance and references, no WELL-176 direct blocker; (E) independent Ready assessment; (F) only then `/ticket-implement`. S1 conditional human approval is already recorded but S1 stays blocked on independently certified P1 and its own scope/Ready.
 
@@ -82,4 +82,4 @@ The **six passes are review lenses**, not six implementation work units. The exi
 - **S1:** owner-approved conditional bounded synthetic continuation only after certified P1 + exact S1 scope and own Ready; genuine bundle activation also needs exact component allocation/disclosure approval.
 - **S2/S3:** browser and Finance scopes require separately eligible content/roles and provider/correction proofs; paid release is independently gated.
 
-**Pass-6 disposition:** Ready to submit the six-draft package for focused plan and `/to-tickets` approval. **Not yet** authority to publish, mark Ready, implement, call Paystack or merge. Planning is now substantially more actionable without creating a speculative code specification.
+**Pass-6 disposition:** Prepared for review within the seven-pass consolidated candidate; exact plan and separate `/to-tickets` approval remain pending. **Not yet** authority to publish, mark Ready, implement, call Paystack or merge. Planning is now substantially more actionable without creating a speculative code specification.
