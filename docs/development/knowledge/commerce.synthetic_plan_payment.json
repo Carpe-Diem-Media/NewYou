@@ -6,8 +6,8 @@
     "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "b2e8b575f38aec1d28af9dcb2e0fa1e84b58051c",
-    "semantics": "Bounded FP-002 P1 covers ownership and recovery from acceptance to the held right."
+    "git_sha": "1933b0595e74a1c317881c89e70bc62d45603c2d",
+    "semantics": "Bounded FP-002 P1 implementation and strengthened recovery, migration and concurrency proof."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
