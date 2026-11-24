@@ -21,7 +21,8 @@ defmodule NewYou.Repo.Migrations.Well189Payment do
             name: "commerce_payment_consequences_purchase_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
     end
 
     create unique_index(:commerce_payment_consequences, [:purchase_id],
@@ -61,7 +62,8 @@ defmodule NewYou.Repo.Migrations.Well189Payment do
             name: "commerce_verified_payments_purchase_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
     end
 
     create unique_index(:commerce_verified_payments, [:purchase_id],
