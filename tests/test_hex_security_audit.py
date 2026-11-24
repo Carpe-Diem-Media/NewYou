@@ -62,9 +62,9 @@ class AuditEvidenceTests(unittest.TestCase):
             with self.subTest(status=status), self.assertRaises(audit.AuditError):
                 audit.disposition(evidence, status)
 
-    def test_locked_graph_contains_rc17_and_patched_assent(self):
+    def test_locked_graph_contains_rc18_and_patched_assent(self):
         deps = audit.locked_dependencies((ROOT / "mix.lock").read_text())
-        self.assertIn('{:ash_authentication, "== 5.0.0-rc.17"', deps)
+        self.assertIn('{:ash_authentication, "== 5.0.0-rc.18"', deps)
         self.assertIn('{:assent, "== 0.3.2"', deps)
 
     def test_old_exception_binding_is_removed_from_audit(self):
