@@ -27,7 +27,7 @@ permissions:
 jobs:
   route:
     name: Route CI lanes
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     outputs:
       hex_audit_changes: ${{ steps.classify.outputs.hex_audit_changes }}
       application_changes: ${{ steps.classify.outputs.application_changes }}
@@ -49,7 +49,7 @@ jobs:
 
   foundation-smoke:
     name: Foundation Smoke
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - name: Check out repository
@@ -65,6 +65,11 @@ jobs:
       - name: Detect whether knowledge extraction needs Elixir
         id: knowledge_parser
         run: python -m tools.knowledge_capture needs-parser --metadata-json "$GITHUB_EVENT_PATH"
+      - name: Set Blacksmith BEAM image
+        run: |
+          if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
+            echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
+          fi
       - name: Set up Elixir parser from .tool-versions
         if: steps.knowledge_parser.outputs.parser_required == 'true'
         uses: erlef/setup-beam@v1
@@ -130,7 +135,7 @@ jobs:
     name: Foundation Integrity
     needs: [route, foundation-smoke, application-ci, hex-security-audit]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     steps:
       - name: Require Smoke and routed Application CI
         env:
