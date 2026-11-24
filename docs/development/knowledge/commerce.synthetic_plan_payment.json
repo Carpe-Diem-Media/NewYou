@@ -6,7 +6,7 @@
     "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "d71d61ca5c14b740d6416ab923f686886eba2b9c",
+    "git_sha": "b2e8b575f38aec1d28af9dcb2e0fa1e84b58051c",
     "semantics": "Bounded FP-002 P1 covers ownership and recovery from acceptance to the held right."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -471,7 +471,7 @@
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "defmodule NewYou.Commerce",
-      "sha256": "aab1221c94ddb23d6c91043860d4ca8ef8ac47d57b45b57347b086564f033134"
+      "sha256": "4cb284d0609cb6d55a58cf0771efdd3909207629c1d9125513ff57d62d8d8798"
     },
     {
       "id": "purchase",
@@ -495,7 +495,7 @@
       "id": "entitlements",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def grant_paid_plan",
-      "sha256": "6469ceb01358530be8f16243815ed9dc7b9338be50ea7fc9ceb1967f1ac80782"
+      "sha256": "688b21f5c29a7b4eff87bfb837be3a495aa613c08ff9ae621e82606dbab43664"
     },
     {
       "id": "right",
@@ -525,7 +525,7 @@
       "id": "cases",
       "path": "test/new_you/commerce/plan_payment_test.exs",
       "symbol": "independent PostgreSQL transactions converge",
-      "sha256": "3c7cfab9230a56a9823649f416159a62bafa84d0ac900e802b51eb4c8ebec9c4"
+      "sha256": "9ac30d5dac6b2ab978f4d4e27c9efb1ef0191e3ba6133688baf19ccb6aec7e1c"
     },
     {
       "id": "identity_cases",
