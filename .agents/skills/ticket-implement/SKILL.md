@@ -229,7 +229,7 @@ Check new or materially changed public Domain/application interfaces for appropr
 
 ## 10. Open the PR and hand off exact evidence
 
-Before creating or updating a routine PR, run `gh api user --jq .login` and `python3 -m tools.newyou_attest pr-preflight`, adding `--pr NUMBER` for an existing PR. Use authenticated `JC-Agents` or `JCSchoeman96`. The authenticated account must own the PR and its branch updates. The other account independently reviews the exact final head. Git commit name and email do not verify GitHub identity. Stop on mismatched or unverifiable authentication. Each account authenticates separately.
+Before creating or updating a routine PR, run `gh api user --jq .login` and `python3 -m tools.newyou_attest pr-preflight`, adding `--pr NUMBER` for an existing PR. Use authenticated `JC-Agents` or `JCSchoeman96`. Use the PR author's account for routine implementation updates; synchronization events from the other account do not fail CI. The other account independently reviews the exact final head and must not have made the latest reviewable push. Git commit name and email do not verify GitHub identity. Stop on mismatched or unverifiable authentication. Each account authenticates separately.
 
 Keep the PR Draft while mandatory local verification or exact-head hosted CI is incomplete or blocked; OCR is optional. Ordinary PR discovery uses the actual worktree and HEAD, not T3Code attached metadata. Any source correction invalidates affected local, CI, OCR and review evidence and requires refreshed affected proof; OCR remains optional.
 

@@ -49,18 +49,26 @@ class PRPreflightTests(unittest.TestCase):
                 with patch('tools.ci_attestation._api', return_value=actor):
                     self.assertEqual(login, attest.pr_preflight())
 
-    def test_pr_events_require_allowed_author_and_author_push(self):
+    def test_pr_events_accept_either_account_and_cross_account_sync(self):
         for login, account_id in attest.PR_ACCOUNTS.items():
             author = {'login': login, 'id': account_id}
             other = attest.counterpart(author)
             opened = {'action': 'opened', 'pull_request': {'user': author}}
-            attest.verify_pr_event(opened)
-            attest.verify_pr_event(dict(opened, action='synchronize', sender=author))
-            with self.assertRaises(attest.AttestationError):
-                attest.verify_pr_event(dict(opened, pull_request={'user': dict(author, id=1)}))
-            with self.assertRaises(attest.AttestationError):
+            with self.subTest(author=login):
+                attest.verify_pr_event(opened)
+                attest.verify_pr_event(dict(opened, action='synchronize', sender=author))
                 attest.verify_pr_event(dict(opened, action='synchronize',
                                             sender={'login': other, 'id': attest.PR_ACCOUNTS[other]}))
+
+    def test_pr_events_reject_invalid_author_even_with_valid_sender(self):
+        sender = {'login': attest.AGENT_LOGIN, 'id': attest.AGENT_ID}
+        for author in ({}, {'login': attest.AGENT_LOGIN, 'id': 1},
+                       {'login': 'someone', 'id': attest.AGENT_ID}):
+            for action in ('opened', 'synchronize'):
+                with self.subTest(author=author, action=action):
+                    with self.assertRaises(attest.AttestationError):
+                        attest.verify_pr_event({'action': action, 'sender': sender,
+                                                'pull_request': {'user': author}})
 
     def test_wrong_missing_or_unavailable_authentication_fails_closed(self):
         from unittest.mock import patch

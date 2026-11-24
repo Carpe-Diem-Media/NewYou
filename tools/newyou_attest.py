@@ -26,9 +26,10 @@ def counterpart(user: dict) -> str:
 
 
 def verify_pr_event(event: dict) -> None:
-    author = pr_account(event['pull_request']['user'])
-    if event['action'] == 'synchronize':
-        require(pr_account(event['sender']) == author, 'only the PR author may push PR updates')
+    """Validate PR authorship; native review rules govern the latest push."""
+    # A synchronization event can be triggered by the other authorized account.
+    # Do not conflate the event sender with the PR author or final reviewer.
+    pr_account(event['pull_request']['user'])
 
 
 def founder_account_id(repository: dict) -> int:
