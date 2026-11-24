@@ -63,3 +63,5 @@ At actual P1 Ready dispatch, the agent should answer in its implementation plan:
 **No scope expansion:** This pass does not direct the agent to add providers, a general payment service, Redis, a new Repo, standalone workers or a broad extension framework.
 
 **Pass-4 disposition:** The existing code has usable identity/replay/recovery patterns and exposes one mandatory integration hotspot (`owner_reviews/1`). New Commerce and Entitlements owner interfaces and DB persistence are legitimate P1 work; their precise internal form stays JIT. Re-verify file blobs/dependencies when dispatching from actual `Ready`.
+
+**Cross-ticket integration seam:** E1a/E1b must consume the immutable accepted snapshot from real Commerce, not a Plan-only amount constant. S1 supplies the owning admission/eligibility contract; S2 extends owning Commerce/Entitlements actions as needed for the complete three-product component grant and Phoenix proof. S3 uses committed owner facts or authorized isolated TEST setup and does not require S2. Recheck code and Store candidates at the affected Ready gate; see [v0.2.0 execution plan](../FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md).

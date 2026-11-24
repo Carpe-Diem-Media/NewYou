@@ -14,10 +14,12 @@
 6. [Pass 6 — JIT and publication](pass_06_jit_decisions_and_execution_handoff.md): engineering freedom versus governance STOP, implementation handoff and near-term-ticket discipline.
 7. [Pass 7 — Technology, dependency and scalability selection](pass_07_technology_dependency_scalability_decisions.md): existing pinned Ash ecosystem, AshPhoenix, AshAdmin, Reactor, signals, temporal resources, storage maturity, profiling and load/capacity evidence.
 
-**Prepared but not published:** [P1 Plane ticket draft](P1_PLANE_TICKET_DRAFT_NOT_PUBLISHED.md). Once the exact reviewed plan and `/to-tickets` breakdown are separately approved, publish **one near-term P1 child**, not seven planning tasks or ten premature implementation children. Leave it non-Ready pending an independent readiness gate.
+**Existing Planning cards:** All ten are present under WELL-22. [P1 drafting reference](P1_PLANE_TICKET_DRAFT_NOT_PUBLISHED.md) is historical ticket input, subordinate to the exact owner-approved P1 design and live WELL-189. Reconcile existing cards against the final exact approved plan and separately accept the decomposition; no duplicate publication. Independent Ready assessment is required for P1; the remaining nine may stay Planning.
 
 ## Classification and version discipline
 
 These reviews are **supporting implementation planning**. Existing [v0.1.0 plan](../FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.1.0.md) remains historical candidate provenance; the v0.2.0 successor updates the ledger while preserving the approved original P1-01..07 design. User approval to **conduct and incorporate** Pass 7 is not exact-source approval of v0.2.0 or permission to merge. No Product/Architecture/Domain governance changes or router promotion are proposed by these files.
 
 The source material contains some point-in-time package facts; all exact dependency selections are checked against `mix.exs`, `mix.lock`, official package docs and the running toolchain at the first affected implementation ticket. **For P1, no new package is required merely because it was evaluated.**
+
+**Focused delivery-coverage reconciliation:** [v0.2.0 execution plan](../FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md) assigns E1a/E1b accepted-snapshot binding, S1 real admission, S2 three-product owning grants/browser proof, S3 both bundle corrections and WELL-22 integrated exit. The supporting passes retain their original bounded P1 reconnaissance and technical choices; current plan and live Plane govern execution. See WELL-22 findings `f509acd0-da67-4d10-a0ec-3ecf653e7766` and correction receipt `a179b4f1-d891-4295-8ea1-eb37ac22925b`.

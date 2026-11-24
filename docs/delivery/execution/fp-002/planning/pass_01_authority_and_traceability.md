@@ -41,3 +41,5 @@ Current repository routing is [docs/README.md](../../../../README.md) → [gover
 5. No new Product or Domain decisions identified by this pass. The only recorded follow-up is focused proof-document **status/routing hygiene**; do not silently modify approved design bytes.
 
 **Pass-1 disposition:** Source coverage is sufficient for P1. Enrich the plan/ticket with this matrix; no fresh `/grilling` or broad governance rewrite justified.
+
+**Delivery-coverage correction (2026-11-24):** Phase 7C and Roadmap require one valid right per eligible purchased component, not just the P1 Plan fixture. The [v0.2.0 execution plan](../FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md) now assigns the real three-product grant completion to S2 through owning Commerce/Entitlements interfaces, with E1a/E1b accepted snapshot binding and S3/WELL-22 source-specific correction and integrated evidence. All ten existing Planning cards require decomposition reconciliation; P1 proof and upstream authority remain unchanged.

@@ -64,22 +64,22 @@ For example, **which PostgreSQL uniqueness fence to use** is JIT; **the requirem
 | Provider evidence blocked | [WELL-176](https://app.plane.so/symphony-development/browse/WELL-176) is **Blocked** at current Plane state and latest Master Gate says provider execution STOP; OQ-004 remains open | No WELL-176 dependency on **TEST-only** P1; E1/E2 provider work requires stage-specific receipts and scoped operation approval. |
 | Performance/observability currently broad in plan | 7C/Roadmap require callback bursts, bounded latency/backlog under interruption at **FP exit** | Assign costed, quantitative, stage-appropriate evidence to E1a/E1b/E1c and E2 tickets as they approach Ready; avoid inventing P1-only SLA or global load-test mandate. |
 
-### 6.5 Ticket-publication decision — one near-term P1 child, not six tickets
+### 6.5 Existing ticket-decomposition acceptance and Ready gate
 
 The **seven planning passes are review lenses**, not seven implementation work units. The existing ten-slice graph P1, E1a–c, E2a–c and S1–S3 remains appropriate. One near-term P1 ticket is cohesive because acceptance, evidence qualification, Commerce consequence, Entitlements grant and Identity registration must prove a single architectural crossing together.
 
-**Required order before creating P1 in Plane:** (A) independent approval of exact expanded planning artifact; (B) separate final `/to-tickets` decomposition/publication approval; (C) if required, P1 design source-status resolution; (D) create one child of WELL-22 with exact P1-01..07 acceptance and references, no WELL-176 direct blocker; (E) independent Ready assessment; (F) only then `/ticket-implement`. S1 conditional human approval is already recorded but S1 stays blocked on independently certified P1 and its own scope/Ready.
+**Required order before dispatch:** (A) independently approve the exact expanded plan; (B) separately accept and reconcile the existing ten Planning cards and native dependencies; (C) if required reconcile P1 design source status and bind final integrated plan/approval receipts; (D) independently assess existing WELL-189 P1-01..07 and dependency-cleared Ready (no WELL-176 direct blocker); (E) only then `/ticket-implement`. S1 requires certified P1 and its own approved scope/Ready.
 
-**Suggested P1 ticket title:** `FP-002 P1 — Prove synthetic Plan payment → one held Entitlements right (P1-01..07)`.
+**Existing P1 card:** [WELL-189](https://app.plane.so/symphony-development/browse/WELL-189) — synthetic payment to held right.
 
-**Minimum ticket description fields:** approved exact plan/file SHA and P1 owner receipt; scope and exclusions (Pass 2); lock/Domain/lifecycle sources (Passes 1/3); verified code hotspots (Pass 4); the **full seven-case matrix** (Pass 5) or precise reference; risk HIGH (`financial`, `entitlement`); production fixture exclusion; migration/recovery/Identity gates; explicit definition of done and exact-head CI. State should remain non-executable until own Ready gate. A draft ticket description is supplied separately; **no Plane ticket is created by these passes**.
+**Minimum ticket description fields:** approved exact plan/file SHA and P1 owner receipt; scope and exclusions (Pass 2); lock/Domain/lifecycle sources (Passes 1/3); verified code hotspots (Pass 4); the **full seven-case matrix** (Pass 5) or precise reference; risk HIGH (`financial`, `entitlement`); production fixture exclusion; migration/recovery/Identity gates; explicit definition of done and exact-head CI. State should remain non-executable until own Ready gate. The historical P1 drafting reference is supporting input only; all ten Plane Planning cards already exist.
 
-### 6.6 Handoff decisions for later slices (do not publish now)
+### 6.6 Handoff decisions for existing later Planning slices
 
 - **E1a → E1b:** provider-dispatch ambiguity and a **known pending reference recovery** with absent browser/webhook must be independently proven, even when E1c doesn't exist.
 - **E1c after E2c:** retained only for the chosen mixed payment/refund/dispute cross-object pagination claim and full FP exit, **not** a blanket dependency on E1b.
 - **E2a:** purely synthetic Commerce correction/source-right convergence may follow P1 without a provider dependency; **E2b/E2c** require their relevant Paystack stage entry.
 - **S1:** owner-approved conditional bounded synthetic continuation only after certified P1 + exact S1 scope and own Ready; genuine bundle activation also needs exact component allocation/disclosure approval.
-- **S2/S3:** browser and Finance scopes require separately eligible content/roles and provider/correction proofs; paid release is independently gated.
+- **S2/S3:** S2 completes the three actual purchase-to-right journeys through owning Commerce/Entitlements and real Phoenix; S3 delivers operator correction and both bundle component tests with approved role semantics and isolated TEST actors independent of S2. Applicable provider, copy and release gates remain separate. WELL-22 owns integrated exit; see [v0.2.0 execution plan](../FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md).
 
-**Pass-6 disposition:** Prepared for review within the seven-pass consolidated candidate; exact plan and separate `/to-tickets` approval remain pending. **Not yet** authority to publish, mark Ready, implement, call Paystack or merge. Planning is now substantially more actionable without creating a speculative code specification.
+**Pass-6 disposition:** exact plan and existing `/to-tickets` decomposition acceptance remain pending; all ten cards already exist in Planning. No new cards, Ready, implementation, provider work or merge authorized by this reference.

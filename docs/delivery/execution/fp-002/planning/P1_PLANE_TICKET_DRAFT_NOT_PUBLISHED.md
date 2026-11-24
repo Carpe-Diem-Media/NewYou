@@ -1,10 +1,10 @@
-# DRAFT ONLY — FP-002 P1 Plane child of WELL-22
+# HISTORICAL DRAFTING REFERENCE — FP-002 P1 / WELL-189
 
-**Proposed title:** `FP-002 P1 — Prove one synthetic Plan payment creates one held right (P1-01..07)`  
-**Proposed parent:** [WELL-22](https://app.plane.so/symphony-development/browse/WELL-22)  
-**Proposed status on publication:** Backlog/Planning until independent dependency-cleared Ready; **do not use Ready merely by creating ticket**.  
-**Risk:** HIGH — `financial`, `entitlement`.  
-**Direct blocking relations:** none on `WELL-176`. FP-001 prerequisite via existing WELL-21→WELL-22 is already satisfied. **Publication is nevertheless gated by approval of the exact plan and `/to-tickets` breakdown.**  
+- **Ticket:** [WELL-189](https://app.plane.so/symphony-development/browse/WELL-189) — synthetic Plan payment to held right (P1-01..07).
+- **Parent:** [WELL-22](https://app.plane.so/symphony-development/browse/WELL-22).
+- **State:** existing provisional Planning; no execution authority until independent dependency-cleared Ready.
+- **Risk:** HIGH — `financial`, `entitlement`.
+- **Direct blocking relations:** none; no WELL-176 edge. FP-001 prerequisite via WELL-21 is satisfied. Exact plan approval and separate acceptance of existing `/to-tickets` decomposition precede Ready.
 **Current snapshot:** NewYou `main` `1bfb351e295d8e03704e6b057b334f84429581aa`, checked 2026-11-23. Recheck before publication.
 
 ## Governing sources and approvals
@@ -14,7 +14,7 @@
 - [Certified Phase 7B v0.2.0](../../../proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md), [certified Phase 7C v0.2.0](../../../feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md).
 - **Classification:** `NEW_TRACER_BULLET` selected in WELL-22 comment `eacdaba6-7b02-420c-869c-d1ec25a3ab73`.
 - **P1 exact owner-approved source:** [P1 design candidate v0.1.0](../../../proof/fp-002/FP-002_TRACER_BULLET_DESIGN_CANDIDATE_v0.1.0.md), Git blob `9edee4c2b4a5206474a3499897ad615a2028f9e7`, owner receipt `aa879dbc-ba02-4026-ae23-d43731691652` in WELL-22.
-- **Planning:** [implementation plan candidate v0.2.0](../FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md) and [seven supporting review passes](README.md) are **not yet approved**. Separate exact plan and `/to-tickets` approval remain required. On publication, record the final approved plan Git blob/SHA and the relevant user approval receipt; do not cite a pending PR as an accepted plan.
+- **Planning:** [implementation plan candidate v0.2.0](../FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md) and [seven supporting review passes](README.md) are **not yet approved**. Separate exact plan and `/to-tickets` approval remain required. Reconcile the existing card with the final approved integrated plan Git blob/SHA and approval receipts before Ready; do not cite a pending PR as an accepted plan.
 
 ## Objective
 
@@ -28,7 +28,7 @@ Using existing NewYou real Ash owner interfaces and PostgreSQL, one **synthetic 
 - **P1-04 After Commerce commit / before Entitlements apply:** payment + one open durable consequence persist. Fresh execution independently rediscovers it and Entitlements grants exactly one held right; access denied until grant commit.
 - **P1-05 After Entitlements commit / before acknowledgement:** fresh retry recognises the existing source-specific held right and completes original consequence without duplicate payment, right, delivery or consumption.
 - **P1-06 Production isolation:** TEST-only synthetic source is absent in production compilation and unreachable via runtime switches, browser/provider inputs, headers or public endpoints. Ordinary forged paths fail closed.
-- **P1-07 Identity registration/reconciliation:** newly registered Commerce and Entitlements both provide owner reviews in same change. Existing authorised positive case, provenance preservation, missing/conflict/unknown Domain denial, separate-transaction stale review rejection, existing `UnreviewedProofDomain` regression and fresh-BEAM applied/conflict replay all pass. No Identity write to Commerce payment or Entitlements right truth.
+- **P1-07 Identity registration/reconciliation:** register both owner reviews in the same change; Apply the full exact human-approved P1-07, including authorized empty scope preserving the canonical Account, one active PMR, losing-PMR retirement and Communications/Audit provenance; preserve purchase/right/payer provenance in any supported uncontested history; deny unsupported nonempty scope, mismatched pair, missing/unknown/conflicting owner and independently committed stale review without retirement or financial/right effects; fresh BEAM applied replay preserves provenance and conflict replay stays denied. Retain `UnreviewedProofDomain` regression. No Identity write to Commerce payment or Entitlements right truth.
 
 ## Technology selection before code
 
@@ -54,4 +54,4 @@ No Paystack network/SDK/keys/test provider operations, hosted checkout, public c
 
 Plan and `/to-tickets` exact approvals confirmed; P1 proof source-status/routing treatment reconciled if required; child ticket exists and is independently `Ready`; live dependencies clear; current `main`, AC and pinned package APIs reverified; no newly discovered upstream contradiction. Only then invoke `/ticket-implement` and transition Ready → In Progress.
 
-**DRAFT — DO NOT PUBLISH OR SET READY UNTIL THE ABOVE GATES.**
+**Historical drafting reference — do not publish a duplicate or set Ready until independent readiness assessment.**
