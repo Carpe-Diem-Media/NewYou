@@ -4,11 +4,12 @@
   "purpose": "Detect and review one explicitly selected duplicate pair, then apply an authorized Identity decision that leaves one canonical active Account and PMR.",
   "implementing_tickets": [
     "WELL-15",
-    "WELL-174"
+    "WELL-174",
+    "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "564bb36e934e7781f6b9358db2d5646b7ee1eafa",
-    "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures."
+    "git_sha": "d2dc4fee1120051d756a4070e4b0f19da0f97dbf",
+    "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures. WELL-189 binds the empty-scope Commerce and Entitlements reviews. Earlier approvals need fresh review before apply."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -28,6 +29,22 @@
       "source_ids": [
         "communications",
         "owner"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "interface": "review_identity_reconciliation/2",
+      "ownership": "Rejects a pair with an accepted purchase. Preserves existing commercial provenance.",
+      "source_ids": [
+        "commerce_review"
+      ]
+    },
+    {
+      "domain": "NewYou.Entitlements",
+      "interface": "review_identity_reconciliation/2",
+      "ownership": "Rejects a pair with a Plan right. Preserves existing commercial provenance.",
+      "source_ids": [
+        "entitlements_review"
       ]
     }
   ],
@@ -258,7 +275,7 @@
       ]
     },
     {
-      "summary": "Each Account obtains an encrypted case/version proof from its own authenticated Session. A current authorized reviewer submits both proofs, and Identity verifies the Sessions and checks both owner policies.",
+      "summary": "Each Account obtains an encrypted case/version proof from its own authenticated Session. A current authorized reviewer submits both proofs, and Identity verifies the Sessions and checks all affected-owner policies.",
       "source_ids": [
         "controller",
         "owner",
@@ -323,7 +340,7 @@
         "from_state": "review",
         "to_state": "approved",
         "guards": [
-          "Both control Sessions and both affected-owner policies are current."
+          "Both control Sessions and all affected-owner policies are current."
         ],
         "side_effects": [
           "Records reviewer versions, control evidence, Account versions and owner results."
@@ -653,13 +670,13 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "open_reconciliation",
-      "sha256": "5313f3e5b1be8327f9947f750cf77d615032ae27eb86f2d7ad94f6b6318dc63e"
+      "sha256": "ead01b1ce5b7a22f0b4d0bcb7346677e464317afccf9953faa7be729506edb80"
     },
     {
       "id": "owner",
       "path": "lib/new_you/identity/reconciliation.ex",
       "symbol": "defmodule NewYou.Identity.Reconciliation",
-      "sha256": "74de842258f39ee572373c86378a866837493fc71efd343bc70ca3776044accc"
+      "sha256": "ad8a72d1e1953d97fee5bc3d95d2b4d70d8f6e559258455585c42cde3a971626"
     },
     {
       "id": "case",
@@ -725,7 +742,7 @@
       "id": "owner_test",
       "path": "test/new_you/identity/reconciliation_test.exs",
       "symbol": "NewYou.Identity.ReconciliationTest",
-      "sha256": "6a532cd7ccc6a3f2a584e2ae3ba926e9b4728504227e69c4a327866eca1af049"
+      "sha256": "b9fff440d3c05377e0918dec798183b944bce78557897d0d1fe2c2a4fea3099b"
     },
     {
       "id": "web_test",
@@ -762,6 +779,18 @@
       "path": "priv/repo/migrations/20261108150423_well15_reconciliation_guards.exs",
       "symbol": "identity_reconciliation_guard",
       "sha256": "33df96d8bdaf700dc984e453a2e4d5bb9faacb4102616524bf3b06a588561b37"
+    },
+    {
+      "id": "commerce_review",
+      "path": "lib/new_you/commerce.ex",
+      "symbol": "def review_identity_reconciliation",
+      "sha256": "aab1221c94ddb23d6c91043860d4ca8ef8ac47d57b45b57347b086564f033134"
+    },
+    {
+      "id": "entitlements_review",
+      "path": "lib/new_you/entitlements.ex",
+      "symbol": "def review_identity_reconciliation",
+      "sha256": "6469ceb01358530be8f16243815ed9dc7b9338be50ea7fc9ceb1967f1ac80782"
     }
   ]
 }
