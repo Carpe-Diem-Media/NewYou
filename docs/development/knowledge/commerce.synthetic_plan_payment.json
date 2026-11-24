@@ -6,7 +6,7 @@
     "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "1933b0595e74a1c317881c89e70bc62d45603c2d",
+    "git_sha": "c7923acb57e47be85170509b1c44954451fd9cd1",
     "semantics": "Bounded FP-002 P1 implementation and strengthened recovery, migration and concurrency proof."
   },
   "authoritative_domain": "NewYou.Commerce",

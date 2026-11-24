@@ -8,7 +8,7 @@
     "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "b2e8b575f38aec1d28af9dcb2e0fa1e84b58051c",
+    "git_sha": "c7923acb57e47be85170509b1c44954451fd9cd1",
     "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures. WELL-189 binds the empty-scope Commerce and Entitlements reviews. Earlier approvals need fresh review before apply."
   },
   "authoritative_domain": "NewYou.Identity",
