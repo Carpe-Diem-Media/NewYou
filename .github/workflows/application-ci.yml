@@ -101,7 +101,7 @@ jobs:
         run: mix assets.build
       - name: Run canonical fast gate
         env:
-          P815_BLACKSMITH_RUNNER: ${{ vars.CI_RUNNER == 'blacksmith-4vcpu-ubuntu-2404' }}
+          P815_BLACKSMITH_RUNNER: ${{ vars.CI_RUNNER == 'blacksmith-2vcpu-ubuntu-2404' }}
           DESIGN_SYSTEM_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           TEST_DATABASE_HOST: "127.0.0.1"
           TEST_DATABASE_PORT: "55433"

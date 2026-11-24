@@ -7,7 +7,7 @@ Foundation Full remains a nightly historical/provenance check against `main`.
 ## Runner selection
 
 Set the repository Actions variable `CI_RUNNER` under **Settings → Secrets and
-variables → Actions → Variables**. Use `blacksmith-4vcpu-ubuntu-2404` for
+variables → Actions → Variables**. Use `blacksmith-2vcpu-ubuntu-2404` for
 Blacksmith or `ubuntu-latest` for GitHub-hosted runners. An unset or empty
 variable defaults to `ubuntu-latest`. The setting applies to new workflow runs,
 including reusable workflows and nightly jobs. Dependency and Dialyzer caches
