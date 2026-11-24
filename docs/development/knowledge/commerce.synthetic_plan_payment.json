@@ -6,7 +6,7 @@
     "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "d2dc4fee1120051d756a4070e4b0f19da0f97dbf",
+    "git_sha": "d71d61ca5c14b740d6416ab923f686886eba2b9c",
     "semantics": "Bounded FP-002 P1 covers ownership and recovery from acceptance to the held right."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -525,13 +525,13 @@
       "id": "cases",
       "path": "test/new_you/commerce/plan_payment_test.exs",
       "symbol": "independent PostgreSQL transactions converge",
-      "sha256": "8b6b685122e45a4984f0381183d5180502ce0f8b49e20179be4ab26e3f04cf11"
+      "sha256": "3c7cfab9230a56a9823649f416159a62bafa84d0ac900e802b51eb4c8ebec9c4"
     },
     {
       "id": "identity_cases",
       "path": "test/new_you/identity/reconciliation_test.exs",
       "symbol": "Commerce history committed on another connection",
-      "sha256": "b9fff440d3c05377e0918dec798183b944bce78557897d0d1fe2c2a4fea3099b"
+      "sha256": "7f7fe7fc13ae947d7086c930fccaa97ca5c17b01f76ddbcaf7ee57b34b970308"
     },
     {
       "id": "production",
@@ -561,7 +561,7 @@
       "id": "migration_payment",
       "path": "priv/repo/migrations/20261124054552_well189_payment.exs",
       "symbol": "commerce_verified_payments_purchase_index",
-      "sha256": "806e731d145f0422871c9e59145a3cd5329377849bc0098a4848909a5cf4d4f1"
+      "sha256": "ca8d8517888ae9d6c4adea97f6fa92fdd653324d73397c28c3cc8e00f1c0b201"
     },
     {
       "id": "migration_plan_right",
