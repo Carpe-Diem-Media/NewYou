@@ -355,7 +355,7 @@
   ],
   "concurrency": [
     {
-      "summary": "Independent SQL calls wait on the purchase row. Unique identities bind the payment, consequence and component right.",
+      "summary": "Independent payment transactions contend on the purchase row. Two concurrent delivery calls remain outstanding behind a locked consequence and converge on one source-specific right and acknowledgement.",
       "source_ids": [
         "cases",
         "commerce",
@@ -377,12 +377,13 @@
   ],
   "failure_recovery": [
     {
-      "summary": "Rollback leaves a pending attempt. AshOban can rediscover an open consequence after either committed cut.",
+      "summary": "A connection-scoped consequence insertion cut tests Commerce rollback. A fresh BEAM runs the generated AshOban scheduler against a fixture-scoped view of the committed open consequence; the persisted job is executed through the Oban test executor for both recovery cuts.",
       "source_ids": [
         "commerce",
         "consequence",
         "cases",
-        "restart"
+        "restart",
+        "scheduler_restart"
       ]
     }
   ],
@@ -396,11 +397,12 @@
         "P1-04",
         "P1-05"
       ],
-      "proves": "Admission, forged input denial, real SQL contention, rollback and fresh recovery through the generated worker.",
-      "limits": "Synthetic only.",
+      "proves": "Admission, forged input denial, independent SQL contention, a consequence-insert rollback, overlapping delivery and fresh scheduler rediscovery at both recovery cuts.",
+      "limits": "Synthetic only. The scheduler reads a connection-local view restricted to the owned fixture; the persisted job is executed through Oban.Testing, not by a running queue.",
       "source_ids": [
         "cases",
-        "restart"
+        "restart",
+        "scheduler_restart"
       ]
     },
     {
@@ -420,11 +422,22 @@
       "cases": [
         "P1-07"
       ],
-      "proves": "Empty scope approval and replay, unknown and absent owners, stale review after separate commit, and fresh conflict denial.",
+      "proves": "Empty scope approval and replay, unknown and absent owners, stale review with committed financial provenance, legacy owner snapshot denial and fresh approval, and fresh conflict denial.",
       "limits": "Empty-scope owners only.",
       "source_ids": [
         "identity_cases",
         "review"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "cases": [
+        "P1-07"
+      ],
+      "proves": "Migration modules run up, down and up in a transaction-owned schema; the schema is absent after rollback.",
+      "limits": "Public-qualified foreign keys and migration ledger are not isolated or exercised.",
+      "source_ids": [
+        "migration_roundtrip"
       ]
     }
   ],
@@ -459,7 +472,9 @@
     }
   ],
   "proof_limitations": [
-    "One synthetic R399 Plan only. Provider, public checkout, production release, Plan delivery and consumption remain outside this proof."
+    "One synthetic R399 Plan only. Provider, public checkout, production release, Plan delivery and consumption remain outside this proof.",
+    "Migration up/down/up uses the actual migration modules and a transaction-owned schema. Hard-coded public foreign-key references remain directed to public tables; this is not a full isolated database migration or migration-ledger proof.",
+    "The scheduler test restricts its read to a fixture-scoped temporary view and invokes the persisted job via Oban.Testing; it does not prove live queue polling or execution of exhausted jobs."
   ],
   "follow_up_tickets": [
     "WELL-190",
@@ -525,13 +540,13 @@
       "id": "cases",
       "path": "test/new_you/commerce/plan_payment_test.exs",
       "symbol": "independent PostgreSQL transactions converge",
-      "sha256": "9ac30d5dac6b2ab978f4d4e27c9efb1ef0191e3ba6133688baf19ccb6aec7e1c"
+      "sha256": "dd05a68e1be57594aa7c1b9f45ff9285ddca854950a9e77eb5ceb23e957dfa4e"
     },
     {
       "id": "identity_cases",
       "path": "test/new_you/identity/reconciliation_test.exs",
       "symbol": "Commerce history committed on another connection",
-      "sha256": "7f7fe7fc13ae947d7086c930fccaa97ca5c17b01f76ddbcaf7ee57b34b970308"
+      "sha256": "5691dfa1734a8689d96200a54ec7808198e73ddf13019dce84bfa6bc786f1fa3"
     },
     {
       "id": "production",
@@ -542,8 +557,8 @@
     {
       "id": "restart",
       "path": "test/proof/well189_plan_payment_restart.exs",
-      "symbol": "P1_RIGHT",
-      "sha256": "26e987389fbb347b53cdbdbae689e97512a552e525852b2d65fd750a299cde2a"
+      "symbol": "P1_COMPLETED",
+      "sha256": "3edc72fc32e63a26b09e7408e5241684c71194e4c7c3cd171256751e36931e44"
     },
     {
       "id": "worker",
@@ -568,6 +583,18 @@
       "path": "priv/repo/migrations/20261124054748_well189_plan_right.exs",
       "symbol": "commerce_payment_consequences_open",
       "sha256": "bce4a708c41b09b10aaa7f7a1e712adebecee81062e0c2cd230b7fa940b8f6ba"
+    },
+    {
+      "id": "scheduler_restart",
+      "path": "test/proof/well189_scheduler_restart.exs",
+      "symbol": "Schedulers.DeliverPlanPayment.perform",
+      "sha256": "6299e16126cf2aa4afad516edb5650b4241d8091891bf744fac7829765859f07"
+    },
+    {
+      "id": "migration_roundtrip",
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "symbol": "P1 migrations apply",
+      "sha256": "36cfe4564d4c9afda53c2fade0115b37fb336f9a1be6eb216e6dbcca696d1aa2"
     }
   ]
 }

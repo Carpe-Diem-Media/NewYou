@@ -25,7 +25,7 @@ try do
     end
 
   :held_unconsumed = right.state
-  IO.puts("P1_RIGHT=#{right.id}")
+  IO.puts("P1_COMPLETED")
 after
   Sandbox.checkin(Repo)
 end

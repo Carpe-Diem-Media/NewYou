@@ -12,7 +12,7 @@ defmodule NewYou.Proof.P805 do
 
   @terms "NEWYOU-TERMS-EN-DEV-2026-10-27-001"
   @privacy "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
-  @tables ~w(accounts tokens registration_operations resend_operations message_intents communications_protected_envelopes communications_envelope_nonces evidence_obligations oban_jobs identity_pmr_reservations identity_grants privacy_purpose_authorities privacy_purpose_events)
+  @tables ~w(accounts tokens registration_operations resend_operations message_intents communications_protected_envelopes communications_envelope_nonces evidence_obligations oban_jobs identity_pmr_reservations identity_grants privacy_purpose_authorities privacy_purpose_events commerce_payment_consequences)
   @environment ~w(fp001_development_entry identity_registration_binding_keys identity_token_signing_secret identity_mfa_keyring communications_keyring p8_05_browser_development_fixtures p8_07_browser_development_fixtures p8_09_browser_development_fixtures p8_08_browser_development_fixtures p8_12_browser_development_fixtures p8_15_browser_development_fixtures identity_pmr_generator)a
 
   def run(case_id), do: with_fixture(fn -> execute(case_id) end)
@@ -1704,6 +1704,11 @@ defmodule NewYou.Proof.P805 do
       end)
 
     if operations != [] do
+      Repo.query!(
+        "DELETE FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT c.id::text FROM commerce_payment_consequences c JOIN commerce_plan_purchases p ON p.id = c.purchase_id WHERE p.operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
       Repo.query!(
         "DELETE FROM entitlements_plan_rights WHERE purchase_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
         [operations]

@@ -1607,7 +1607,7 @@
       "id": "restart_port",
       "path": "test/support/proof/p8_15_port.ex",
       "symbol": "defmodule NewYou.Proof.P815Port",
-      "sha256": "8a2b7baad451358a3a18118210b7db2b7709b521cce06713a9fc587343955d50"
+      "sha256": "09feef4ded7cd17437db18e9273df22ca8b5a10bbae7e3e472b65ca543e0edaf"
     },
     {
       "id": "restart_port_test",
@@ -1619,7 +1619,7 @@
       "id": "restart_fixture",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defmodule NewYou.Proof.P805",
-      "sha256": "d21511300b6d05f0f95932d35319eeb478bb49dd74b25d942a42071ca0548ba4"
+      "sha256": "4dd0bf40454b5da614820831ea5863eb2fbe34574a3cfe482d3339f344032fd7"
     },
     {
       "id": "fixture_ownership",

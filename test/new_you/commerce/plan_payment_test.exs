@@ -8,6 +8,7 @@ defmodule NewYou.Commerce.PlanPaymentTest do
   alias NewYou.Proof.{FreshMix, P805}
 
   use AshOban.Test, repo: Repo
+  require Ash.Query
 
   test "a verified payer accepts exactly one immutable standalone Plan purchase" do
     P805.with_fixture(fn ->
@@ -77,6 +78,7 @@ defmodule NewYou.Commerce.PlanPaymentTest do
       end
 
       assert counts(purchase.id) == {0, 0}
+      assert durable_counts(purchase.id) == {1, 1, 0, 0, 0}
 
       evidence = PlanPaymentObservation.produce(matching)
       altered = %{evidence | fields: Map.put(matching, :attempt_id, Ecto.UUID.generate())}
@@ -89,23 +91,24 @@ defmodule NewYou.Commerce.PlanPaymentTest do
     end)
   end
 
-  test "rolling back the Commerce transaction leaves the accepted attempt with no payment or right" do
+  test "a consequence insertion failure rolls back Commerce payment and permits retry" do
     P805.with_fixture(fn ->
       payer = verified_session()
       purchase = accept!(payer)
       evidence = observation(purchase)
 
-      assert {:error, _} =
-               Ash.transact(Purchase, fn ->
-                 assert {:ok, _} = Commerce.apply_payment_observation(evidence)
-                 assert counts(purchase.id) == {1, 1}
-                 {:error, :proof_rollback}
-               end)
+      P805.with_rejected_insert("commerce_payment_consequences", fn reached? ->
+        assert {:error, :payment_unavailable} = Commerce.apply_payment_observation(evidence)
+        assert reached?.()
+      end)
 
       assert counts(purchase.id) == {0, 0}
+      assert durable_counts(purchase.id) == {1, 1, 0, 0, 0}
       assert {:ok, []} == Commerce.open_plan_payment_consequences(purchase.id)
       assert {:ok, []} == Entitlements.plan_rights(payer.credentials)
-      assert {:ok, _} = Commerce.apply_payment_observation(evidence)
+      assert Ash.get!(Purchase, purchase.id, authorize?: false).attempt_id == purchase.attempt_id
+      assert {:ok, payment} = Commerce.apply_payment_observation(evidence)
+      assert payment.purchase_id == purchase.id
       assert counts(purchase.id) == {1, 1}
     end)
   end
@@ -145,6 +148,90 @@ defmodule NewYou.Commerce.PlanPaymentTest do
     end)
   end
 
+  test "overlapping consequence deliveries preserve one right and the first acknowledgement" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      purchase = accept!(payer)
+      assert {:ok, payment} = Commerce.apply_payment_observation(observation(purchase))
+      assert {:ok, [consequence_id]} = Commerce.open_plan_payment_consequences(purchase.id)
+      parent = self()
+
+      locker =
+        tracked_task(fn ->
+          :ok = Sandbox.checkout(Repo, sandbox: false)
+
+          Ash.transact(PaymentConsequence, fn ->
+            query =
+              PaymentConsequence
+              |> Ash.Query.filter(id == ^consequence_id)
+              |> Ash.Query.lock(:for_update)
+
+            assert %PaymentConsequence{} = Ash.read_one!(query, authorize?: false)
+            [[backend]] = Repo.query!("SELECT pg_backend_pid()").rows
+            send(parent, {:locked, backend})
+            await_checkpoint(:release)
+            :ok
+          end)
+        end)
+
+      assert_receive {:locked, blocker}, 5_000
+
+      deliveries =
+        for role <- [:delivery_one, :delivery_two] do
+          tracked_task(fn ->
+            :ok = Sandbox.checkout(Repo, sandbox: false)
+
+            Repo.checkout(fn ->
+              [[backend]] = Repo.query!("SELECT pg_backend_pid()").rows
+              send(parent, {role, backend})
+              await_checkpoint(:deliver)
+              Commerce.deliver_plan_payment_consequence(consequence_id)
+            end)
+          end)
+        end
+
+      results =
+        try do
+          assert_receive {:delivery_one, first_backend}, 5_000
+          assert_receive {:delivery_two, second_backend}, 5_000
+          refute first_backend == second_backend
+          Enum.each(deliveries, &send(&1.pid, :deliver))
+          assert_any_blocked_by(blocker, 150)
+          assert_waiting(first_backend, 150)
+          assert_waiting(second_backend, 150)
+          assert Task.yield(Enum.at(deliveries, 0), 100) == nil
+          assert Task.yield(Enum.at(deliveries, 1), 100) == nil
+          send(locker.pid, :release)
+          assert {:ok, :ok} = Task.await(locker)
+          Enum.map(deliveries, &Task.await(&1, 10_000))
+        after
+          send(locker.pid, :release)
+          Enum.each(deliveries, &send(&1.pid, :deliver))
+
+          [locker | deliveries]
+          |> Enum.filter(&Process.alive?(&1.pid))
+          |> Task.yield_many(10_000)
+        end
+
+      [{:ok, first}, {:ok, second}] = results
+      assert first.id == second.id
+      assert first.purchase_id == purchase.id
+      assert first.payment_id == payment.id
+      assert first.recipient_id == payer.account_id
+      assert first.state == :held_unconsumed
+      assert durable_counts(purchase.id) == {1, 1, 1, 1, 1}
+      acknowledged = Ash.get!(PaymentConsequence, consequence_id, authorize?: false)
+      assert acknowledged.fulfilled_at
+      assert {:ok, replay} = Commerce.deliver_plan_payment_consequence(consequence_id)
+      assert replay.id == first.id
+
+      assert Ash.get!(PaymentConsequence, consequence_id, authorize?: false).fulfilled_at ==
+               acknowledged.fulfilled_at
+
+      assert Ash.get!(Purchase, purchase.id, authorize?: false).attempt_id == purchase.attempt_id
+    end)
+  end
+
   test "a committed payment can be recovered after a separate grant commits without acknowledgement" do
     P805.with_fixture(fn ->
       payer = verified_session()
@@ -154,23 +241,25 @@ defmodule NewYou.Commerce.PlanPaymentTest do
 
       {worker, monitor} =
         spawn_monitor(fn ->
+          await_checkpoint(:start)
           :ok = Sandbox.checkout(Repo, sandbox: false)
           {:ok, payment} = Commerce.apply_payment_observation(observation(purchase))
           send(parent, {:payment_committed, payment.id})
-          exit(:lost_before_grant)
         end)
 
+      :ok = P805.register_cleanup_worker(worker)
+      send(worker, :start)
+
       assert_receive {:payment_committed, payment_id}, 5_000
-      assert_receive {:DOWN, ^monitor, :process, ^worker, :lost_before_grant}, 5_000
+      assert_receive {:DOWN, ^monitor, :process, ^worker, :normal}, 5_000
       assert {:ok, []} = Entitlements.plan_rights(payer.credentials)
       {:ok, [consequence]} = Commerce.open_plan_payment_consequences(purchase.id)
       open = Ash.get!(PaymentConsequence, consequence, authorize?: false)
       assert_would_schedule(open, :deliver_plan_payment)
 
       assert {:error, :grant_unavailable} = Entitlements.grant_paid_plan(Ecto.UUID.generate())
-      right_id = fresh_vm!("grant", purchase.id)
+      fresh_vm!("grant", purchase.id)
       assert {:ok, [right]} = Entitlements.plan_rights(payer.credentials)
-      assert right.id == right_id
       assert right.purchase_id == purchase.id
       assert right.recipient_id == payer.account_id
       assert right.state == :held_unconsumed
@@ -178,7 +267,7 @@ defmodule NewYou.Commerce.PlanPaymentTest do
       assert right.payment_id == payment_id
       assert {:ok, [consequence]} == Commerce.open_plan_payment_consequences(purchase.id)
 
-      assert fresh_vm!("recover", purchase.id) == right.id
+      fresh_vm!("recover", purchase.id)
       fulfilled = Ash.get!(PaymentConsequence, consequence, authorize?: false)
       refute_would_schedule(fulfilled, :deliver_plan_payment)
       assert {:ok, []} == Commerce.open_plan_payment_consequences(purchase.id)
@@ -203,6 +292,88 @@ defmodule NewYou.Commerce.PlanPaymentTest do
     end)
   end
 
+  test "fixture cleanup removes its scheduled job and financial effects" do
+    {purchase_id, job_id} =
+      P805.with_fixture(fn ->
+        payer = verified_session()
+        purchase = accept!(payer)
+        assert {:ok, _} = Commerce.apply_payment_observation(observation(purchase))
+        assert {:ok, [id]} = Commerce.open_plan_payment_consequences(purchase.id)
+        consequence = Ash.get!(PaymentConsequence, id, authorize?: false)
+        job = AshOban.run_trigger(consequence, :deliver_plan_payment)
+        assert job.id
+
+        assert %{status: :timeout, cleanup: :confirmed} =
+                 NewYou.Proof.P815Port.run(
+                   System.find_executable("sh"),
+                   ["-c", "sleep 30"],
+                   "",
+                   500
+                 )
+
+        {purchase.id, job.id}
+      end)
+
+    :ok = Sandbox.checkout(Repo, sandbox: false)
+
+    try do
+      assert durable_counts(purchase_id) == {0, 0, 0, 0, 0}
+      assert [[0]] = Repo.query!("SELECT count(*) FROM oban_jobs WHERE id = $1", [job_id]).rows
+    after
+      Sandbox.checkin(Repo)
+    end
+  end
+
+  for stage <- [:before_grant, :after_grant] do
+    test "scheduler rediscovers an open consequence #{stage} without its id" do
+      P805.with_fixture(fn ->
+        payer = verified_session()
+        purchase = accept!(payer)
+        assert {:ok, payment} = Commerce.apply_payment_observation(observation(purchase))
+        assert {:ok, [consequence_id]} = Commerce.open_plan_payment_consequences(purchase.id)
+
+        existing_right =
+          if unquote(stage) == :after_grant do
+            assert {:ok, right} = Entitlements.grant_paid_plan(consequence_id)
+            right.id
+          end
+
+        assert [[0]] =
+                 Repo.query!(
+                   "SELECT count(*) FROM oban_jobs WHERE args->'primary_key'->>'id' = $1",
+                   [consequence_id]
+                 ).rows
+
+        {executable, arguments} =
+          FreshMix.command([
+            "run",
+            "test/proof/well189_scheduler_restart.exs",
+            purchase.operation_id
+          ])
+
+        assert %{status: :ok, marker: :p1_completed, cleanup: :confirmed} =
+                 NewYou.Proof.P815Port.run(executable, arguments, "", 60_000)
+
+        assert [[job_id]] =
+                 Repo.query!(
+                   "SELECT id FROM oban_jobs WHERE args->'primary_key'->>'id' = $1 AND worker = $2",
+                   [consequence_id, "NewYou.Commerce.Workers.DeliverPlanPayment"]
+                 ).rows
+
+        # perform_job accepts a persisted job; supply the claim timestamp that
+        # Oban's queue normally sets before handing it to its executor.
+        job = %{Repo.get!(Oban.Job, job_id) | attempted_at: DateTime.utc_now()}
+        assert :ok = Oban.Testing.perform_job(job, repo: Repo)
+        assert {:ok, []} = Commerce.open_plan_payment_consequences(purchase.id)
+        assert {:ok, [right]} = Entitlements.plan_rights(payer.credentials)
+        if existing_right, do: assert(right.id == existing_right)
+        assert right.payment_id == payment.id
+        assert right.state == :held_unconsumed
+        assert durable_counts(purchase.id) == {1, 1, 1, 1, 1}
+      end)
+    end
+  end
+
   defp accept!(payer) do
     request = %{operation_id: operation_id(), price_version: "synthetic-plan-v1"}
     {:ok, purchase} = Commerce.accept_plan_purchase(payer.credentials, request)
@@ -210,21 +381,39 @@ defmodule NewYou.Commerce.PlanPaymentTest do
   end
 
   defp payment_transaction(purchase, parent, role) do
-    Task.async(fn ->
-      :ok = Sandbox.checkout(Repo, sandbox: false)
+    task =
+      Task.async(fn ->
+        await_checkpoint(:start)
+        :ok = Sandbox.checkout(Repo, sandbox: false)
 
-      Ash.transact(Purchase, fn ->
-        [[backend_id, transaction_id]] =
-          Repo.query!("SELECT pg_backend_pid(), txid_current()").rows
+        Ash.transact(Purchase, fn ->
+          [[backend_id, transaction_id]] =
+            Repo.query!("SELECT pg_backend_pid(), txid_current()").rows
 
-        send(parent, {role, backend_id, transaction_id})
+          send(parent, {role, backend_id, transaction_id})
 
-        await_checkpoint(:apply)
-        {:ok, payment} = Commerce.apply_payment_observation(observation(purchase))
-        pause_before_commit(role, parent)
-        payment
+          await_checkpoint(:apply)
+          {:ok, payment} = Commerce.apply_payment_observation(observation(purchase))
+          pause_before_commit(role, parent)
+          payment
+        end)
       end)
-    end)
+
+    :ok = P805.register_cleanup_worker(task.pid)
+    send(task.pid, :start)
+    task
+  end
+
+  defp tracked_task(callback) do
+    task =
+      Task.async(fn ->
+        await_checkpoint(:start)
+        callback.()
+      end)
+
+    :ok = P805.register_cleanup_worker(task.pid)
+    send(task.pid, :start)
+    task
   end
 
   defp pause_before_commit(:second, _parent), do: :ok
@@ -239,6 +428,35 @@ defmodule NewYou.Commerce.PlanPaymentTest do
       ^checkpoint -> :ok
     after
       10_000 -> flunk("payment #{checkpoint} checkpoint timed out")
+    end
+  end
+
+  defp assert_waiting(_, 0), do: flunk("delivery connection did not wait")
+
+  defp assert_waiting(backend, attempts) do
+    case Repo.query!("SELECT cardinality(pg_blocking_pids($1)) > 0", [backend]).rows do
+      [[true]] ->
+        :ok
+
+      [[false]] ->
+        Process.sleep(20)
+        assert_waiting(backend, attempts - 1)
+    end
+  end
+
+  defp assert_any_blocked_by(_, 0), do: flunk("delivery never waited on the consequence lock")
+
+  defp assert_any_blocked_by(blocker, attempts) do
+    case Repo.query!(
+           "SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE $1::integer = ANY(pg_blocking_pids(pid)))",
+           [blocker]
+         ).rows do
+      [[true]] ->
+        :ok
+
+      [[false]] ->
+        Process.sleep(20)
+        assert_any_blocked_by(blocker, attempts - 1)
     end
   end
 
@@ -259,15 +477,8 @@ defmodule NewYou.Commerce.PlanPaymentTest do
     {executable, arguments} =
       FreshMix.command(["run", "test/proof/well189_plan_payment_restart.exs", stage, purchase_id])
 
-    {output, status} =
-      System.cmd(executable, arguments,
-        env: [{"MIX_ENV", "test"}, {"ERL_FLAGS", "+S 2:2"}],
-        stderr_to_stdout: true
-      )
-
-    assert status == 0, output
-    assert [_, right_id] = Regex.run(~r/^P1_RIGHT=([a-f0-9-]+)$/m, output)
-    right_id
+    result = NewYou.Proof.P815Port.run(executable, arguments, "", 60_000)
+    assert %{status: :ok, marker: :p1_completed, cleanup: :confirmed} = result
   end
 
   defp observation(purchase) do
@@ -300,6 +511,23 @@ defmodule NewYou.Commerce.PlanPaymentTest do
       ).rows
 
     {payments, consequences}
+  end
+
+  defp durable_counts(purchase_id) do
+    [[purchases, attempts, payments, consequences, rights]] =
+      Repo.query!(
+        """
+        SELECT
+          (SELECT count(*) FROM commerce_plan_purchases WHERE id = $1),
+          (SELECT count(attempt_id) FROM commerce_plan_purchases WHERE id = $1),
+          (SELECT count(*) FROM commerce_verified_payments WHERE purchase_id = $1),
+          (SELECT count(*) FROM commerce_payment_consequences WHERE purchase_id = $1),
+          (SELECT count(*) FROM entitlements_plan_rights WHERE purchase_id = $1)
+        """,
+        [Ecto.UUID.dump!(purchase_id)]
+      ).rows
+
+    {purchases, attempts, payments, consequences, rights}
   end
 
   defp verified_session do
