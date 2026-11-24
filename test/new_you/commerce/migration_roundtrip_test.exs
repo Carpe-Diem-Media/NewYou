@@ -24,10 +24,12 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
                  Repo.query!("CREATE SCHEMA #{schema}")
                  Enum.each(@migrations, &run_migration(&1, :up, schema))
                  assert table_count(schema) == 4
+                 assert foreign_key_targets(schema) == {3, 3}
                  @migrations |> Enum.reverse() |> Enum.each(&run_migration(&1, :down, schema))
                  assert table_count(schema) == 0
                  Enum.each(@migrations, &run_migration(&1, :up, schema))
                  assert table_count(schema) == 4
+                 assert foreign_key_targets(schema) == {3, 3}
                  Repo.rollback(:probe_complete)
                end)
 
@@ -63,5 +65,23 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
       ).rows
 
     count
+  end
+
+  defp foreign_key_targets(schema) do
+    [[total, local]] =
+      Repo.query!(
+        """
+          SELECT count(*), count(*) FILTER (WHERE target_ns.nspname = $1)
+          FROM pg_constraint c
+          JOIN pg_class source ON source.oid = c.conrelid
+          JOIN pg_namespace source_ns ON source_ns.oid = source.relnamespace
+          JOIN pg_class target ON target.oid = c.confrelid
+          JOIN pg_namespace target_ns ON target_ns.oid = target.relnamespace
+          WHERE c.contype = 'f' AND source_ns.nspname = $1
+        """,
+        [schema]
+      ).rows
+
+    {total, local}
   end
 end

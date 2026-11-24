@@ -434,8 +434,8 @@
       "cases": [
         "P1-07"
       ],
-      "proves": "Migration modules run up, down and up in a transaction-owned schema; the schema is absent after rollback.",
-      "limits": "Public-qualified foreign keys and migration ledger are not isolated or exercised.",
+      "proves": "Migration modules run up, down and up in a transaction-owned schema with all three foreign keys targeting that schema; the schema is absent after rollback.",
+      "limits": "Uses the migration runner directly; migration ledger is not exercised.",
       "source_ids": [
         "migration_roundtrip"
       ]
@@ -473,7 +473,7 @@
   ],
   "proof_limitations": [
     "One synthetic R399 Plan only. Provider, public checkout, production release, Plan delivery and consumption remain outside this proof.",
-    "Migration up/down/up uses the actual migration modules and a transaction-owned schema. Hard-coded public foreign-key references remain directed to public tables; this is not a full isolated database migration or migration-ledger proof.",
+    "Migration up/down/up uses the actual migration modules and a transaction-owned schema. The three foreign keys target the isolated schema. This uses the migration runner directly and does not exercise the migration ledger.",
     "The scheduler test restricts its read to a fixture-scoped temporary view and invokes the persisted job via Oban.Testing; it does not prove live queue polling or execution of exhausted jobs."
   ],
   "follow_up_tickets": [
@@ -576,7 +576,7 @@
       "id": "migration_payment",
       "path": "priv/repo/migrations/20261124054552_well189_payment.exs",
       "symbol": "commerce_verified_payments_purchase_index",
-      "sha256": "ca8d8517888ae9d6c4adea97f6fa92fdd653324d73397c28c3cc8e00f1c0b201"
+      "sha256": "c8584e575fd1195aa58133a96ab9eae88b4d026c7ced844eb0eb0a4ecc675102"
     },
     {
       "id": "migration_plan_right",
@@ -594,7 +594,7 @@
       "id": "migration_roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "P1 migrations apply",
-      "sha256": "36cfe4564d4c9afda53c2fade0115b37fb336f9a1be6eb216e6dbcca696d1aa2"
+      "sha256": "d23a4b96920a93aaf3cb125cd49f859275a4c08ff9ce1adafe9ca5736d700eb6"
     }
   ]
 }

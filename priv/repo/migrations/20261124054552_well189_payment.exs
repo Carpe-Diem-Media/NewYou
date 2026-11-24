@@ -19,8 +19,7 @@ defmodule NewYou.Repo.Migrations.Well189Payment do
           references(:commerce_plan_purchases,
             column: :id,
             name: "commerce_payment_consequences_purchase_id_fkey",
-            type: :uuid,
-            prefix: "public"
+            type: :uuid
           ),
           null: false
     end
@@ -46,8 +45,7 @@ defmodule NewYou.Repo.Migrations.Well189Payment do
              references(:commerce_verified_payments,
                column: :id,
                name: "commerce_payment_consequences_payment_id_fkey",
-               type: :uuid,
-               prefix: "public"
+               type: :uuid
              )
     end
 
@@ -60,8 +58,7 @@ defmodule NewYou.Repo.Migrations.Well189Payment do
           references(:commerce_plan_purchases,
             column: :id,
             name: "commerce_verified_payments_purchase_id_fkey",
-            type: :uuid,
-            prefix: "public"
+            type: :uuid
           ),
           null: false
     end
