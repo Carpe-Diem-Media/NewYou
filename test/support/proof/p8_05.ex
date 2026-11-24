@@ -1703,6 +1703,27 @@ defmodule NewYou.Proof.P805 do
         :ok
       end)
 
+    if operations != [] do
+      Repo.query!(
+        "DELETE FROM entitlements_plan_rights WHERE purchase_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_payment_consequences WHERE purchase_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_verified_payments WHERE purchase_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!("DELETE FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])", [
+        operations
+      ])
+    end
+
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
   end
 

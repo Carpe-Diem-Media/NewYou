@@ -592,6 +592,135 @@ defmodule NewYou.Identity.ReconciliationTest do
     end)
   end
 
+  @tag timeout: 60_000
+  test "Commerce history committed on another connection invalidates the empty owner review" do
+    with_case(fn f ->
+      {:ok, approved} = approve(f)
+      reviews = approved.review["domains"]
+
+      for {owner, policy} <- [
+            {"commerce", "empty_commerce_scope"},
+            {"entitlements", "empty_entitlements_scope"}
+          ] do
+        assert reviews[owner] == %{
+                 "policy" => policy,
+                 "candidate_id" => f.target.id,
+                 "canonical_id" => f.survivor.id,
+                 "commands" => []
+               }
+      end
+
+      operation_id = Ecto.UUID.generate()
+      P805.track_operation(operation_id)
+
+      task =
+        Task.async(fn ->
+          :ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo, sandbox: false)
+
+          NewYou.Commerce.accept_plan_purchase(f.target.credentials, %{
+            operation_id: operation_id,
+            price_version: "synthetic-plan-v1"
+          })
+        end)
+
+      assert {:ok, purchase} = Task.await(task)
+      assert purchase.payer_id == f.target.id
+      assert {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      request = apply_request(f, approved)
+
+      assert {:error, :reconciliation_unavailable} = Identity.apply_reconciliation(request)
+      assert {:ok, :ok} = P813HoldFixture.step_up(f.actor, :review_reconciliation)
+      review = review_request(f)
+
+      assert {:ok, reopened} =
+               Identity.review_reconciliation(%{
+                 review
+                 | expected_version: approved.version,
+                   decision: :review
+               })
+
+      assert {:error, :reconciliation_unavailable} =
+               Identity.review_reconciliation(%{review | expected_version: reopened.version})
+
+      assert {:ok, conflict} =
+               Identity.review_reconciliation(%{
+                 review
+                 | expected_version: reopened.version,
+                   decision: :conflict
+               })
+
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      assert_conflict_after_restart(apply_request(f, conflict))
+
+      assert P805.account!(f.target.id).pmr_status == :active
+      assert P805.account!(f.survivor.id).pmr_status == :active
+      assert {:ok, []} = NewYou.Entitlements.plan_rights(f.target.credentials)
+      assert {:ok, []} = NewYou.Commerce.open_plan_payment_consequences(purchase.id)
+      refute Enum.any?(outcomes(request.operation_id), &(&1.outcome == :succeeded))
+    end)
+  end
+
+  test "a missing Commerce or Entitlements owner prevents reconciliation approval" do
+    with_case(fn f ->
+      domains = Application.fetch_env!(:new_you, :ash_domains)
+      request = review_request(f)
+      {:ok, candidate} = Identity.review_reconciliation(%{request | decision: :candidate})
+
+      {:ok, review} =
+        Identity.review_reconciliation(%{
+          request
+          | expected_version: candidate.version,
+            decision: :review
+        })
+
+      request = %{request | expected_version: review.version}
+
+      try do
+        for missing <- [NewYou.Commerce, NewYou.Entitlements] do
+          Application.put_env(:new_you, :ash_domains, List.delete(domains, missing))
+          assert {:error, :reconciliation_unavailable} = Identity.review_reconciliation(request)
+          assert P805.account!(f.target.id).pmr_status == :active
+        end
+      after
+        Application.put_env(:new_you, :ash_domains, domains)
+      end
+
+      assert {:ok, %{status: :approved}} = Identity.review_reconciliation(request)
+    end)
+  end
+
+  defp assert_conflict_after_restart(request) do
+    input = %{
+      mode: "deny_conflict",
+      request: request,
+      signing_secret:
+        Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
+    }
+
+    port =
+      Port.open({:spawn_executable, System.find_executable("mise")}, [
+        :binary,
+        :exit_status,
+        args: [
+          "exec",
+          "--",
+          "devcore-project",
+          "run",
+          "test",
+          "--",
+          "mix",
+          "run",
+          "test/proof/p8_14_restart.exs"
+        ],
+        env: [{~c"MIX_ENV", ~c"test"}, {~c"ERL_FLAGS", ~c"+S 2:2"}]
+      ])
+
+    true = Port.command(port, Jason.encode!(input) <> "\n")
+
+    assert restart_output(port, "", System.monotonic_time(:millisecond) + 30_000) ==
+             "P814_CONFLICT_DENIED"
+  end
+
   test "resource policies deny caller-supplied authority and expiry blocks the privileged action" do
     with_case(fn f ->
       assert {:error, _} = Ash.get(Identity.ReconciliationCase, f.case.id)

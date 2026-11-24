@@ -116,6 +116,24 @@ defmodule NewYou.Identity.PasswordSession do
     end
   end
 
+  @doc false
+  def authorize_canonical(credentials) do
+    result =
+      with_current_session(credentials, fn session, account, _token, _linked ->
+        with %Account{canonical_account_id: nil, pmr_status: :active, pmr: pmr} <- account,
+             true <- PMR.valid?(pmr) do
+          validate_and_touch(session, account)
+        else
+          _ -> :denied
+        end
+      end)
+
+    case result do
+      {:ok, %Account{id: id}} -> {:ok, %{account_id: id}}
+      _ -> {:error, :authentication_unavailable}
+    end
+  end
+
   def self_member_reference(credentials) do
     case with_current_session(credentials, &member_reference_locked/4) do
       {:ok, {:member_reference, pmr}} -> {:ok, pmr}
