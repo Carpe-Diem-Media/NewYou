@@ -5,7 +5,7 @@ defmodule NewYou.Commerce.PlanPaymentTest do
   alias NewYou.{Commerce, Entitlements, Identity, Repo}
   alias NewYou.Commerce.{PaymentConsequence, Purchase}
   alias NewYou.Proof.PlanPaymentObservation
-  alias NewYou.Proof.P805
+  alias NewYou.Proof.{FreshMix, P805}
 
   use AshOban.Test, repo: Repo
 
@@ -256,22 +256,11 @@ defmodule NewYou.Commerce.PlanPaymentTest do
   end
 
   defp fresh_vm!(stage, purchase_id) do
+    {executable, arguments} =
+      FreshMix.command(["run", "test/proof/well189_plan_payment_restart.exs", stage, purchase_id])
+
     {output, status} =
-      System.cmd(
-        System.find_executable("mise"),
-        [
-          "exec",
-          "--",
-          "devcore-project",
-          "run",
-          "test",
-          "--",
-          "mix",
-          "run",
-          "test/proof/well189_plan_payment_restart.exs",
-          stage,
-          purchase_id
-        ],
+      System.cmd(executable, arguments,
         env: [{"MIX_ENV", "test"}, {"ERL_FLAGS", "+S 2:2"}],
         stderr_to_stdout: true
       )

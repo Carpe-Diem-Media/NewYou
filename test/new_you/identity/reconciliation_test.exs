@@ -2,7 +2,7 @@ defmodule NewYou.Identity.ReconciliationTest do
   use ExUnit.Case, async: false
   import NewYou.Proof.ReconciliationScenarios
   alias NewYou.Identity
-  alias NewYou.Proof.{P805, P813HoldFixture}
+  alias NewYou.Proof.{FreshMix, P805, P813HoldFixture}
 
   test "scoped detection, verified review and apply preserve history and retire the losing PMR" do
     NewYou.Proof.ReconciliationScenarios.scenario_scoped_detection_verified_review_and_apply_preserve_history_and_retire_the_losing_pmr()
@@ -697,21 +697,13 @@ defmodule NewYou.Identity.ReconciliationTest do
         Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
     }
 
+    {executable, arguments} = FreshMix.command(["run", "test/proof/p8_14_restart.exs"])
+
     port =
-      Port.open({:spawn_executable, System.find_executable("mise")}, [
+      Port.open({:spawn_executable, executable}, [
         :binary,
         :exit_status,
-        args: [
-          "exec",
-          "--",
-          "devcore-project",
-          "run",
-          "test",
-          "--",
-          "mix",
-          "run",
-          "test/proof/p8_14_restart.exs"
-        ],
+        args: arguments,
         env: [{~c"MIX_ENV", ~c"test"}, {~c"ERL_FLAGS", ~c"+S 2:2"}]
       ])
 
