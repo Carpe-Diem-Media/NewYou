@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import unittest
 from pathlib import Path
 
@@ -43,7 +44,20 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
                 restore = block.split("      - name: Restore dependency cache\n", 1)[1].split("      - name:", 1)[0]
                 self.assertIn("continue-on-error: true\n        uses: actions/cache/restore@v4", restore)
                 self.assertNotIn("run: mix deps.get\n", block)
-                self.assertNotIn("if:", block.split("    steps:", 1)[1])
+                steps = block.split("    steps:", 1)[1].split("      - name: ")[1:]
+                conditional_steps = {
+                    step.splitlines()[0]: re.findall(r"^        if: (.*)$", step, re.MULTILINE)
+                    for step in steps if "        if:" in step
+                }
+                if job == "mix-check":
+                    self.assertIn("runs-on: ubuntu-24.04", header)
+                    self.assertEqual({}, conditional_steps)
+                else:
+                    self.assertIn("runs-on: blacksmith-2vcpu-ubuntu-2404", header)
+                    self.assertEqual({
+                        "Restore dependency cache": ["steps.cache_platform.outputs.image != ''"],
+                        "Restore Dialyzer PLT cache": ["steps.cache_platform.outputs.image != ''"],
+                    }, conditional_steps)
 
     def test_cache_writer_is_main_only_and_pr_jobs_restore_only(self):
         warmer = (WORKFLOWS / "application-cache.yml").read_text(encoding="utf-8")
@@ -64,7 +78,6 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
                 self.assertIn(f"      - '{path}'", warmer)
         # Exact filter ownership prevents a broad docs/lib/** entry from
         # accidentally restoring the every-merge workflow trigger.
-        import re
         filters = re.findall(r"^      - '([^']+)'$", warmer, re.MULTILINE)
         self.assertEqual({"mix.exs", "mix.lock", ".tool-versions", "config/**/*.exs",
                           ".github/workflows/application-cache.yml",
