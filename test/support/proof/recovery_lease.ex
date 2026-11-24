@@ -39,8 +39,22 @@ defmodule NewYou.Proof.RecoveryLease do
 
   defp valid_job?(marker) do
     hosted?() and System.get_env("GITHUB_EVENT_NAME") == "pull_request" and
-      System.get_env("RUNNER_ENVIRONMENT") == "github-hosted" and
+      disposable_runner?() and
       is_binary(marker) and Regex.match?(~r/\A[0-9a-f]{32}\z/, marker)
+  end
+
+  defp disposable_runner? do
+    case System.get_env("RUNNER_ENVIRONMENT") do
+      "github-hosted" ->
+        true
+
+      "self-hosted" ->
+        System.get_env("P815_BLACKSMITH_RUNNER") == "true" and
+          String.starts_with?(System.get_env("RUNNER_NAME", ""), "blacksmith-")
+
+      _ ->
+        false
+    end
   end
 
   defp expected_endpoint?(config) do

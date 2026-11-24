@@ -17,12 +17,13 @@ permissions:
   contents: read
 
 env:
+  ImageOS: ubuntu24
   MIX_ENV: test
 
 jobs:
   warm:
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
@@ -32,9 +33,13 @@ jobs:
           version-type: strict
       - name: Identify runner image
         id: cache_platform
-        run: echo "image=${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+        run: |
+          if [[ -n "${ImageVersion:-}" ]]; then
+            echo "image=blacksmith-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+          fi
       - name: Restore existing cache
         id: cache
+        if: steps.cache_platform.outputs.image != ''
         continue-on-error: true
         uses: actions/cache/restore@v4
         with:
@@ -51,9 +56,10 @@ jobs:
       - name: Reject unused dependency locks
         run: mix deps.unlock --check-unused
       - name: Create cache integrity manifest
+        if: steps.cache_platform.outputs.image != ''
         run: python3 tools/ci/cache_manifest.py write
       - name: Save trusted dependency cache
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache_platform.outputs.image != '' && steps.cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: |

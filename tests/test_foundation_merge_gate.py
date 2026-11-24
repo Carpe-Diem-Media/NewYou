@@ -49,15 +49,11 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
                     step.splitlines()[0]: re.findall(r"^        if: (.*)$", step, re.MULTILINE)
                     for step in steps if "        if:" in step
                 }
-                if job == "mix-check":
-                    self.assertIn("runs-on: ubuntu-24.04", header)
-                    self.assertEqual({}, conditional_steps)
-                else:
-                    self.assertIn("runs-on: blacksmith-2vcpu-ubuntu-2404", header)
-                    self.assertEqual({
-                        "Restore dependency cache": ["steps.cache_platform.outputs.image != ''"],
-                        "Restore Dialyzer PLT cache": ["steps.cache_platform.outputs.image != ''"],
-                    }, conditional_steps)
+                self.assertIn("runs-on: blacksmith-4vcpu-ubuntu-2404", header)
+                allowed = {"Restore dependency cache": ["steps.cache_platform.outputs.image != ''"]}
+                if job == "mix-check-deep":
+                    allowed["Restore Dialyzer PLT cache"] = ["steps.cache_platform.outputs.image != ''"]
+                self.assertEqual(allowed, conditional_steps)
 
     def test_cache_writer_is_main_only_and_pr_jobs_restore_only(self):
         warmer = (WORKFLOWS / "application-cache.yml").read_text(encoding="utf-8")

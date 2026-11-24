@@ -24,10 +24,13 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  ImageOS: ubuntu24
+
 jobs:
   route:
     name: Route CI lanes
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     outputs:
       hex_audit_changes: ${{ steps.classify.outputs.hex_audit_changes }}
       application_changes: ${{ steps.classify.outputs.application_changes }}
@@ -49,7 +52,7 @@ jobs:
 
   foundation-smoke:
     name: Foundation Smoke
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     timeout-minutes: 10
     steps:
       - name: Check out repository
@@ -130,7 +133,7 @@ jobs:
     name: Foundation Integrity
     needs: [route, foundation-smoke, application-ci, hex-security-audit]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Require Smoke and routed Application CI
         env:
