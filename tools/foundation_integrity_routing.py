@@ -88,6 +88,12 @@ APPLICATION_FILES = frozenset(
         "docs/README.md",
         ".github/workflows/application-ci.yml",
         ".github/workflows/application-cache.yml",
+        ".github/workflows/application-timing.yml",
+        ".github/actions/application-test-setup/action.yml",
+        "tools/exunit_ci.py",
+        "tools/exunit_timing.py",
+        "tools/ci/exunit-bootstrap.json",
+        "tools/ci/fixtures/exunit_events.exs",
         ".github/workflows/phase8-proof.yml",
     }
 )

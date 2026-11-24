@@ -20,16 +20,30 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 env:
   MIX_ENV: test
+  TEST_DATABASE_HOST: 127.0.0.1
+  TEST_DATABASE_PORT: "55433"
+  TEST_DATABASE_USERNAME: new_you_test
+  TEST_DATABASE_NAME: new_you_test
+  P815_BLACKSMITH_RUNNER: ${{ vars.CI_RUNNER == 'blacksmith-2vcpu-ubuntu-2404' }}
+  DESIGN_SYSTEM_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  CI_BASE: ${{ github.event.pull_request.base.sha }}
+  CI_HEAD: ${{ github.event.pull_request.head.sha }}
+  CI_PR: ${{ github.event.pull_request.number }}
+  CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.id }}
 
 jobs:
-  mix-check:
-    name: mix check
+  discover:
+    name: Discover application tests
     runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
-    timeout-minutes: 25
-    services:
+    timeout-minutes: 12
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      seed: ${{ steps.seed.outputs.value }}
+    services: &isolated_services
       postgres:
         image: postgres:18.6-alpine
         env:
@@ -42,72 +56,122 @@ jobs:
           --health-timeout 5s
           --health-retries 20
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        with: &candidate_checkout
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Prepare isolated test environment
+        uses: ./.github/actions/application-test-setup
         with:
+          postgres: ${{ job.services.postgres.id }}
+          cache: restore
+          assets: "false"
+      - name: Choose common ExUnit seed
+        id: seed
+        run: echo "value=$((1 + RANDOM * 29 + RANDOM % 29))" >> "$GITHUB_OUTPUT"
+      - name: Discover independent inventory and schedule files
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SEED: ${{ steps.seed.outputs.value }}
+        run: python3 -m tools.exunit_ci plan application-evidence "$SEED" >> "$GITHUB_OUTPUT"
+      - name: Preserve declared inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-evidence-plan-attempt-${{ github.run_attempt }}
+          path: application-evidence/
+          if-no-files-found: error
+          retention-days: 14
+
+  static:
+    name: Static application checks
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 15
+    services: *isolated_services
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
-      - name: Set Blacksmith BEAM image
-        run: |
-          if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
-            echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
-          fi
-      - name: Set up Erlang and Elixir from .tool-versions
-        uses: erlef/setup-beam@v1
+          persist-credentials: false
+      - name: Prepare isolated test environment
+        uses: ./.github/actions/application-test-setup
         with:
-          version-file: .tool-versions
-          version-type: strict
-      - name: Identify runner image
-        id: cache_platform
-        run: |
-          if [[ -n "${ImageVersion:-}" ]]; then
-            echo "image=${RUNNER_ENVIRONMENT}-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Restore dependency cache
-        id: cache
-        if: steps.cache_platform.outputs.image != ''
-        continue-on-error: true
-        uses: actions/cache/restore@v4
+          postgres: ${{ job.services.postgres.id }}
+          cache: restore
+      - name: Run canonical static obligations
+        run: mix check.static
+      - name: Verify actual pinned ExUnit event contract
+        run: python3 -m unittest tests.test_exunit_ci_events tests.test_exunit_timing
+
+  shards:
+    name: Test shard ${{ matrix.shard }}
+    needs: discover
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    services: *isolated_services
+    steps:
+      - uses: actions/checkout@v7
+        with: *candidate_checkout
+      - name: Prepare isolated test environment
+        uses: ./.github/actions/application-test-setup
         with:
-          path: |
-            deps
-            _build/test/lib
-            _build/ci-dependency-cache.json
-          key: app-deps-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', '.github/workflows/application-cache.yml', '.github/workflows/application-ci.yml', 'tools/ci/**') }}
-      - name: Prepare locked dependencies
+          postgres: ${{ job.services.postgres.id }}
+          cache: restore
+      - name: Run complete assigned files
         env:
-          CACHE_RESTORE_OUTCOME: ${{ steps.cache.outcome }}
-          CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
-        run: bash tools/ci/prepare_cached_dependencies.sh
-      - name: Reject unused dependency locks
-        run: mix deps.unlock --check-unused
-      - name: Provision isolated TEST role and database
-        shell: bash
+          SEED: ${{ needs.discover.outputs.seed }}
+          FILES: ${{ toJSON(matrix.files) }}
+        run: python3 -m tools.exunit_ci execute application-evidence "$SEED" "$FILES"
+      - name: Preserve shard outcomes and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-evidence-${{ matrix.shard }}-attempt-${{ github.run_attempt }}
+          path: application-evidence/
+          if-no-files-found: warn
+          retention-days: 14
+
+  coverage:
+    name: Verify application coverage
+    needs: [discover, static, shards]
+    if: always()
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 5
+    steps:
+      - name: Require complete and successful prerequisites
         env:
-          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+          DISCOVERY: ${{ needs.discover.result }}
+          STATIC: ${{ needs.static.result }}
+          SHARDS: ${{ needs.shards.result }}
         run: |
-          set -euo pipefail
-          password="$(openssl rand -hex 24)"
-          echo "::add-mask::${password}"
-          echo "TEST_DATABASE_PASSWORD=${password}" >> "$GITHUB_ENV"
-          marker="$(openssl rand -hex 16)"
-          echo "::add-mask::${marker}"
-          echo "P815_JOB_DATABASE=${marker}" >> "$GITHUB_ENV"
-          docker exec -i "$POSTGRES_CONTAINER" psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -U postgres -d postgres <<SQL
-          CREATE ROLE new_you_test LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD '${password}';
-          CREATE DATABASE new_you_test OWNER new_you_test;
-          ALTER DATABASE new_you_test SET newyou.p815_job TO '${marker}';
-          SQL
-      - name: Build browser assets
-        run: mix assets.build
-      - name: Run canonical fast gate
+          if [[ "$DISCOVERY" != success || "$STATIC" != success || "$SHARDS" != success ]]; then
+            echo "Coverage rejected: discovery=$DISCOVERY static=$STATIC shards=$SHARDS" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+      - uses: actions/checkout@v7
+        with: *candidate_checkout
+      - name: Download same-attempt test evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: application-evidence-*-attempt-${{ github.run_attempt }}
+          path: evidence
+      - name: Verify independent inventory and publish measurements
         env:
-          P815_BLACKSMITH_RUNNER: ${{ vars.CI_RUNNER == 'blacksmith-2vcpu-ubuntu-2404' }}
-          DESIGN_SYSTEM_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-          TEST_DATABASE_HOST: "127.0.0.1"
-          TEST_DATABASE_PORT: "55433"
-          TEST_DATABASE_USERNAME: new_you_test
-          TEST_DATABASE_NAME: new_you_test
-        run: mix check
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          python3 -m tools.exunit_ci verify evidence report.json | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: application-timings-attempt-${{ github.run_attempt }}
+          path: report.json
+          if-no-files-found: error
+          retention-days: 21
 
   mix-check-deep:
     name: mix check.deep
