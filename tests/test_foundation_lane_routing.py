@@ -79,6 +79,11 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertEqual("application", classify_path(path))
 
+    def test_phase8_proof_workflow_routes_application_ci(self):
+        self.assertEqual(
+            {"application_changes": True}, _route([".github/workflows/phase8-proof.yml"])
+        )
+
     def test_cache_warmer_is_explicitly_routed_and_unknown_workflows_fail(self):
         path = ".github/workflows/application-cache.yml"
         self.assertEqual("application", classify_path(path))

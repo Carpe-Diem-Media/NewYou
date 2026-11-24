@@ -27,7 +27,7 @@ env:
 jobs:
   mix-check:
     name: mix check
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 25
     services:
       postgres:
@@ -46,6 +46,11 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - name: Set Blacksmith BEAM image
+        run: |
+          if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
+            echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
+          fi
       - name: Set up Erlang and Elixir from .tool-versions
         uses: erlef/setup-beam@v1
         with:
@@ -53,9 +58,13 @@ jobs:
           version-type: strict
       - name: Identify runner image
         id: cache_platform
-        run: echo "image=${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+        run: |
+          if [[ -n "${ImageVersion:-}" ]]; then
+            echo "image=${RUNNER_ENVIRONMENT}-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+          fi
       - name: Restore dependency cache
         id: cache
+        if: steps.cache_platform.outputs.image != ''
         continue-on-error: true
         uses: actions/cache/restore@v4
         with:
@@ -73,6 +82,8 @@ jobs:
         run: mix deps.unlock --check-unused
       - name: Provision isolated TEST role and database
         shell: bash
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
         run: |
           set -euo pipefail
           password="$(openssl rand -hex 24)"
@@ -81,7 +92,7 @@ jobs:
           marker="$(openssl rand -hex 16)"
           echo "::add-mask::${marker}"
           echo "P815_JOB_DATABASE=${marker}" >> "$GITHUB_ENV"
-          psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 55433 -U postgres -d postgres <<SQL
+          docker exec -i "$POSTGRES_CONTAINER" psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -U postgres -d postgres <<SQL
           CREATE ROLE new_you_test LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD '${password}';
           CREATE DATABASE new_you_test OWNER new_you_test;
           ALTER DATABASE new_you_test SET newyou.p815_job TO '${marker}';
@@ -90,6 +101,7 @@ jobs:
         run: mix assets.build
       - name: Run canonical fast gate
         env:
+          P815_BLACKSMITH_RUNNER: ${{ vars.CI_RUNNER == 'blacksmith-2vcpu-ubuntu-2404' }}
           DESIGN_SYSTEM_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           TEST_DATABASE_HOST: "127.0.0.1"
           TEST_DATABASE_PORT: "55433"
@@ -100,7 +112,7 @@ jobs:
   mix-check-deep:
     name: mix check.deep
     if: inputs.deep_application_changes
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 35
     services:
       postgres:
@@ -119,6 +131,11 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
+      - name: Set Blacksmith BEAM image
+        run: |
+          if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
+            echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
+          fi
       - name: Set up Erlang and Elixir from .tool-versions
         uses: erlef/setup-beam@v1
         with:
@@ -126,9 +143,13 @@ jobs:
           version-type: strict
       - name: Identify runner image
         id: cache_platform
-        run: echo "image=${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+        run: |
+          if [[ -n "${ImageVersion:-}" ]]; then
+            echo "image=${RUNNER_ENVIRONMENT}-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+          fi
       - name: Restore dependency cache
         id: cache
+        if: steps.cache_platform.outputs.image != ''
         continue-on-error: true
         uses: actions/cache/restore@v4
         with:
@@ -138,10 +159,11 @@ jobs:
             _build/ci-dependency-cache.json
           key: app-deps-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', '.github/workflows/application-cache.yml', '.github/workflows/application-ci.yml', 'tools/ci/**') }}
       - name: Restore Dialyzer PLT cache
+        if: steps.cache_platform.outputs.image != ''
         uses: actions/cache@v4
         with:
           path: _build/plts
-          key: dialyzer-plt-${{ runner.os }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
+          key: dialyzer-plt-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
       - name: Prepare locked dependencies
         env:
           CACHE_RESTORE_OUTCOME: ${{ steps.cache.outcome }}
@@ -151,12 +173,14 @@ jobs:
         run: mix deps.unlock --check-unused
       - name: Provision isolated TEST role and database
         shell: bash
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
         run: |
           set -euo pipefail
           password="$(openssl rand -hex 24)"
           echo "::add-mask::${password}"
           echo "TEST_DATABASE_PASSWORD=${password}" >> "$GITHUB_ENV"
-          psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 55433 -U postgres -d postgres <<SQL
+          docker exec -i "$POSTGRES_CONTAINER" psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -U postgres -d postgres <<SQL
           CREATE ROLE new_you_test LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD '${password}';
           CREATE DATABASE new_you_test OWNER new_you_test;
           SQL

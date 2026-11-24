@@ -88,6 +88,7 @@ APPLICATION_FILES = frozenset(
         "docs/README.md",
         ".github/workflows/application-ci.yml",
         ".github/workflows/application-cache.yml",
+        ".github/workflows/phase8-proof.yml",
     }
 )
 
