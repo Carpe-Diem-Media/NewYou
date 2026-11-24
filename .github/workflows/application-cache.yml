@@ -17,16 +17,20 @@ permissions:
   contents: read
 
 env:
-  ImageOS: ubuntu24
   MIX_ENV: test
 
 jobs:
   warm:
     if: github.ref == 'refs/heads/main'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+      - name: Set Blacksmith BEAM image
+        run: |
+          if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
+            echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
+          fi
       - uses: erlef/setup-beam@v1
         with:
           version-file: .tool-versions
@@ -35,7 +39,7 @@ jobs:
         id: cache_platform
         run: |
           if [[ -n "${ImageVersion:-}" ]]; then
-            echo "image=blacksmith-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+            echo "image=${RUNNER_ENVIRONMENT}-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
           fi
       - name: Restore existing cache
         id: cache

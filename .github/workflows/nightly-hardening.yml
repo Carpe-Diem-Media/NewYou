@@ -12,7 +12,6 @@ permissions:
   contents: read
 
 env:
-  ImageOS: ubuntu24
   MIX_ENV: test
 
 jobs:
@@ -23,7 +22,7 @@ jobs:
   mix-check-deep:
     name: Nightly mix check.deep
     if: github.ref == 'refs/heads/main'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 35
     services:
       postgres:
@@ -43,6 +42,11 @@ jobs:
         with:
           ref: ${{ github.sha }}
           fetch-depth: 1
+      - name: Set Blacksmith BEAM image
+        run: |
+          if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
+            echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
+          fi
       - name: Set up Erlang and Elixir from .tool-versions
         uses: erlef/setup-beam@v1
         with:

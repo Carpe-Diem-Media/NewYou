@@ -49,7 +49,7 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
                     step.splitlines()[0]: re.findall(r"^        if: (.*)$", step, re.MULTILINE)
                     for step in steps if "        if:" in step
                 }
-                self.assertIn("runs-on: blacksmith-4vcpu-ubuntu-2404", header)
+                self.assertIn("runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}", header)
                 allowed = {"Restore dependency cache": ["steps.cache_platform.outputs.image != ''"]}
                 if job == "mix-check-deep":
                     allowed["Restore Dialyzer PLT cache"] = ["steps.cache_platform.outputs.image != ''"]

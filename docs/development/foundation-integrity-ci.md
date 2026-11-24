@@ -4,6 +4,16 @@ This document describes the Foundation Integrity lanes. Pull requests run the
 always-on current-state Smoke check and applicable engineering checks.
 Foundation Full remains a nightly historical/provenance check against `main`.
 
+## Runner selection
+
+Set the repository Actions variable `CI_RUNNER` under **Settings → Secrets and
+variables → Actions → Variables**. Use `blacksmith-4vcpu-ubuntu-2404` for
+Blacksmith or `ubuntu-latest` for GitHub-hosted runners. An unset or empty
+variable defaults to `ubuntu-latest`. The setting applies to new workflow runs,
+including reusable workflows and nightly jobs. Dependency and Dialyzer caches
+use the runner environment and image version so the two providers use separate
+cache entries.
+
 ## Canonical commands
 
 Run the always-on Smoke lane from the repository root:

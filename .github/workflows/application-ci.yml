@@ -22,13 +22,12 @@ permissions:
   contents: read
 
 env:
-  ImageOS: ubuntu24
   MIX_ENV: test
 
 jobs:
   mix-check:
     name: mix check
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 25
     services:
       postgres:
@@ -47,6 +46,11 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - name: Set Blacksmith BEAM image
+        run: |
+          if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
+            echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
+          fi
       - name: Set up Erlang and Elixir from .tool-versions
         uses: erlef/setup-beam@v1
         with:
@@ -56,7 +60,7 @@ jobs:
         id: cache_platform
         run: |
           if [[ -n "${ImageVersion:-}" ]]; then
-            echo "image=blacksmith-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+            echo "image=${RUNNER_ENVIRONMENT}-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
           fi
       - name: Restore dependency cache
         id: cache
@@ -97,7 +101,7 @@ jobs:
         run: mix assets.build
       - name: Run canonical fast gate
         env:
-          P815_BLACKSMITH_RUNNER: 'true'
+          P815_BLACKSMITH_RUNNER: ${{ vars.CI_RUNNER == 'blacksmith-4vcpu-ubuntu-2404' }}
           DESIGN_SYSTEM_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           TEST_DATABASE_HOST: "127.0.0.1"
           TEST_DATABASE_PORT: "55433"
@@ -108,7 +112,7 @@ jobs:
   mix-check-deep:
     name: mix check.deep
     if: inputs.deep_application_changes
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 35
     services:
       postgres:
@@ -127,6 +131,11 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
+      - name: Set Blacksmith BEAM image
+        run: |
+          if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
+            echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
+          fi
       - name: Set up Erlang and Elixir from .tool-versions
         uses: erlef/setup-beam@v1
         with:
@@ -136,7 +145,7 @@ jobs:
         id: cache_platform
         run: |
           if [[ -n "${ImageVersion:-}" ]]; then
-            echo "image=blacksmith-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+            echo "image=${RUNNER_ENVIRONMENT}-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
           fi
       - name: Restore dependency cache
         id: cache

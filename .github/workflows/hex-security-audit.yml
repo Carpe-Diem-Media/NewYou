@@ -8,14 +8,11 @@ on:
 permissions:
   contents: read
 
-env:
-  ImageOS: ubuntu24
-
 jobs:
   audit:
     name: Fresh Hex advisory and retirement audit
     if: github.event_name != 'schedule' || github.ref == 'refs/heads/main'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       - name: Check out current main for nightly or exact caller revision
@@ -23,6 +20,11 @@ jobs:
         with:
           ref: ${{ github.event_name == 'schedule' && 'main' || github.sha }}
           persist-credentials: false
+      - name: Set Blacksmith BEAM image
+        run: |
+          if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
+            echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
+          fi
       - name: Set up supported toolchain
         uses: erlef/setup-beam@v1
         with:
