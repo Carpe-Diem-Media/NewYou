@@ -88,6 +88,9 @@ APPLICATION_FILES = frozenset(
         "docs/README.md",
         ".github/workflows/application-ci.yml",
         ".github/workflows/application-cache.yml",
+        ".github/workflows/exunit-shadow.yml",
+        ".github/actions/exunit-shadow-setup/action.yml",
+        "tools/exunit_shadow.py",
         ".github/workflows/phase8-proof.yml",
     }
 )

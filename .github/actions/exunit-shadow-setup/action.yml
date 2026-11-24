@@ -1,0 +1,106 @@
+name: Prepare isolated ExUnit shadow runner
+description: Prepare locked dependencies and verify the disposable WELL-202 test database.
+inputs:
+  postgres:
+    description: Job-local PostgreSQL service container
+    required: true
+  cache:
+    description: cold or restore
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Set Blacksmith BEAM image
+      shell: bash
+      run: |
+        if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
+          echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
+        fi
+    - name: Set up pinned Erlang and Elixir
+      uses: erlef/setup-beam@v1
+      with:
+        version-file: .tool-versions
+        version-type: strict
+    - name: Identify runner image
+      id: platform
+      shell: bash
+      run: |
+        if [[ -n "${ImageVersion:-}" ]]; then
+          echo "image=${RUNNER_ENVIRONMENT}-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+        fi
+    - name: Restore exact trusted-main cache
+      id: cache
+      if: inputs.cache == 'restore' && steps.platform.outputs.image != ''
+      continue-on-error: true
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          deps
+          _build/test/lib
+          _build/ci-dependency-cache.json
+        key: app-deps-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', '.github/workflows/application-cache.yml', '.github/workflows/application-ci.yml', 'tools/ci/**') }}
+    - name: Prepare locked dependencies
+      shell: bash
+      env:
+        CACHE_RESTORE_OUTCOME: ${{ steps.cache.outcome }}
+        CACHE_HIT: ${{ steps.cache.outputs.cache-hit }}
+        CACHE_KEY: ${{ steps.cache.outputs.cache-primary-key }}
+        CACHE_MODE: ${{ inputs.cache }}
+      run: |
+        set -euo pipefail
+        result=cold
+        if [[ "$CACHE_MODE" == restore && "$CACHE_RESTORE_OUTCOME" == skipped ]]; then
+          result=unavailable
+        elif [[ "$CACHE_MODE" == restore ]]; then
+          result=miss
+          if [[ "$CACHE_RESTORE_OUTCOME" != success ]]; then
+            result=restore-failed
+          elif [[ "$CACHE_HIT" == true ]]; then
+            result=manifest-rejected
+            if python3 tools/ci/cache_manifest.py check; then result=verified-hit; fi
+          fi
+        fi
+        bash tools/ci/prepare_cached_dependencies.sh | tee "$RUNNER_TEMP/shadow-dependency-prep.log"
+        if grep -Fq 'retrying once without cached files.' "$RUNNER_TEMP/shadow-dependency-prep.log"; then
+          result=rebuilt-after-failure
+        fi
+        echo "SHADOW_CACHE_RESULT=$result" >> "$GITHUB_ENV"
+        echo "SHADOW_CACHE_KEY=$CACHE_KEY" >> "$GITHUB_ENV"
+    - name: Reject unused dependency locks
+      shell: bash
+      run: mix deps.unlock --check-unused
+    - name: Provision and verify isolated TEST
+      shell: bash
+      env:
+        POSTGRES_CONTAINER: ${{ inputs.postgres }}
+      run: |
+        set -euo pipefail
+        password="$(openssl rand -hex 24)"
+        marker="$(openssl rand -hex 16)"
+        echo "::add-mask::$password"
+        echo "::add-mask::$marker"
+        docker exec -i "$POSTGRES_CONTAINER" psql -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -U postgres -d postgres <<SQL
+        CREATE ROLE new_you_test LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD '${password}';
+        CREATE DATABASE new_you_test OWNER new_you_test;
+        ALTER DATABASE new_you_test SET newyou.p815_job TO '${marker}';
+        SQL
+        # Verify the exact endpoint and role the BEAM uses, before enabling the
+        # existing child-process proof guard. Publish only a hash of the marker.
+        proof="$(PGPASSWORD="$password" psql -XAt -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 55433 -U new_you_test -d new_you_test <<'SQL'
+        SELECT current_setting('newyou.p815_job', true)
+        FROM pg_roles JOIN pg_database ON datname = current_database()
+        WHERE current_database() = 'new_you_test' AND current_user = 'new_you_test'
+          AND rolname = current_user AND datdba = pg_roles.oid
+          AND NOT (rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls);
+        SQL
+        )"
+        [[ "$proof" == "$marker" ]]
+        {
+          echo "TEST_DATABASE_PASSWORD=$password"
+          echo "P815_JOB_DATABASE=$marker"
+          echo "SHADOW_DATABASE_ID=$(printf '%s' "$marker" | sha256sum | cut -d' ' -f1)"
+          echo "SHADOW_POSTGRES_VERSION=$(PGPASSWORD="$password" psql -XAt -h 127.0.0.1 -p 55433 -U new_you_test -d new_you_test -c 'SHOW server_version')"
+        } >> "$GITHUB_ENV"
+    - name: Build browser assets
+      shell: bash
+      run: mix assets.build
