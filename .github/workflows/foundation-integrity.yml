@@ -38,6 +38,11 @@ jobs:
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
+          persist-credentials: false
+      - name: Verify PR author
+        run: >-
+          python -c 'import json, os; from tools.newyou_attest import verify_pr_event;
+          verify_pr_event(json.load(open(os.environ["GITHUB_EVENT_PATH"])))'
       - name: Classify changed paths
         id: classify
         env:

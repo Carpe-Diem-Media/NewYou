@@ -59,10 +59,10 @@ ChatGPT must:
 - verify exact base/head SHA, complete diff, authority, Plane acceptance criteria, scope exclusions, tests and workflows;
 - challenge speculative complexity and weak assumptions;
 - require corrections until the exact reviewed head satisfies its contract;
-- complete technical review and standing merge authorization for eligible development, publish one authenticated JCSchoeman96 APPROVED review for the exact final head, then run the required merge checks; and
+- complete the independent technical review, have the account opposite the PR author submit its authenticated APPROVED review for the exact final head, then run the required merge checks; and
 - verify resulting-main integration and required CI/proof before reconciling Plane or opening dependent work.
 
-The authenticated final-head APPROVED review is standing merge authorization for eligible development after the technical Master Gate review. It does not authorize a stronger approval or settings change required by an actual governing or external obligation. The implementing agent must not use founder credentials. Any changed reviewed head invalidates prior exact-head certification until re-reviewed.
+The authenticated final-head APPROVED review is standing merge authorization for eligible development after the technical Master Gate review. Follow any stronger approval or separate settings authorization required by an applicable obligation. Each account authenticates separately. Any changed head requires fresh review.
 
 ## Planning proportionality
 
@@ -148,7 +148,7 @@ Do not wait for Foundation Full during PR verification. Investigate material reg
 
 ## Eligible development approval and merge
 
-After completing the technical Master Gate review, publish one authenticated JCSchoeman96 APPROVED GitHub review for the exact final head. This review supplies standing merge authorization for eligible development. Do not add a base-SHA line or a second founder comment. The implementing agent cannot publish this review using founder credentials.
+For eligible development work, after the independent Master Gate technical review, the other account submits one authenticated GitHub APPROVED review for the exact final head. That review supplies technical approval and standing merge authorization. Any head change requires fresh approval.
 
 Before merge, independently verify the PR base/head, current required CI, and live branch protection. From trusted integrated `main`, run:
 
