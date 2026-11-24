@@ -219,27 +219,27 @@ defmodule NewYou.Commerce.PlanPaymentTest do
 
         send(parent, {role, backend_id, transaction_id})
 
-        receive do
-          :apply -> :ok
-        after
-          5_000 -> raise "payment apply checkpoint timed out"
-        end
-
+        await_checkpoint(:apply)
         {:ok, payment} = Commerce.apply_payment_observation(observation(purchase))
-
-        if role == :first do
-          send(parent, {:first, :applied})
-
-          receive do
-            :commit -> :ok
-          after
-            10_000 -> raise "payment commit checkpoint timed out"
-          end
-        end
-
+        pause_before_commit(role, parent)
         payment
       end)
     end)
+  end
+
+  defp pause_before_commit(:second, _parent), do: :ok
+
+  defp pause_before_commit(:first, parent) do
+    send(parent, {:first, :applied})
+    await_checkpoint(:commit)
+  end
+
+  defp await_checkpoint(checkpoint) do
+    receive do
+      ^checkpoint -> :ok
+    after
+      10_000 -> flunk("payment #{checkpoint} checkpoint timed out")
+    end
   end
 
   defp assert_blocked_by(_, _, 0), do: flunk("second transaction never waited on the first")

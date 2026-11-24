@@ -38,18 +38,20 @@ defmodule NewYou.Entitlements do
   """
   @spec plan_rights(map()) :: {:ok, [PlanRight.t()]} | {:error, :rights_unavailable}
   def plan_rights(credentials) do
-    case Ash.transact(PlanRight, fn ->
-           with {:ok, %{account_id: recipient_id}} <-
-                  Identity.authorize_canonical_session(credentials),
-                {:ok, rights} <-
-                  PlanRight
-                  |> Ash.Query.filter(recipient_id == ^recipient_id)
-                  |> Ash.read(authorize?: false) do
-             rights
-           end
-         end) do
+    case Ash.transact(PlanRight, fn -> recipient_rights(credentials) end) do
       {:ok, rights} when is_list(rights) -> {:ok, rights}
       _ -> {:error, :rights_unavailable}
+    end
+  end
+
+  defp recipient_rights(credentials) do
+    with {:ok, %{account_id: recipient_id}} <-
+           Identity.authorize_canonical_session(credentials),
+         {:ok, rights} <-
+           PlanRight
+           |> Ash.Query.filter(recipient_id == ^recipient_id)
+           |> Ash.read(authorize?: false) do
+      rights
     end
   end
 

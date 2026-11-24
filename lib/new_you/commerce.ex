@@ -33,16 +33,7 @@ defmodule NewYou.Commerce do
         when map_size(request) == 2 do
       with {:ok, operation_id} <- Ecto.UUID.cast(id),
            {:ok, %Purchase{} = purchase} <-
-             Ash.transact(Purchase, fn ->
-               with {:ok, %{account_id: account_id}} <-
-                      NewYou.Identity.authorize_canonical_session(credentials),
-                    {:ok, %Purchase{payer_id: ^account_id} = purchase} <-
-                      accept_once(operation_id, account_id) do
-                 purchase
-               else
-                 _ -> {:error, :purchase_unavailable}
-               end
-             end) do
+             Ash.transact(Purchase, fn -> accept_locked(credentials, operation_id) end) do
         {:ok, purchase}
       else
         _ -> {:error, :purchase_unavailable}
@@ -50,6 +41,17 @@ defmodule NewYou.Commerce do
     end
 
     def accept_plan_purchase(_, _), do: {:error, :purchase_unavailable}
+
+    defp accept_locked(credentials, operation_id) do
+      with {:ok, %{account_id: account_id}} <-
+             NewYou.Identity.authorize_canonical_session(credentials),
+           {:ok, %Purchase{payer_id: ^account_id} = purchase} <-
+             accept_once(operation_id, account_id) do
+        purchase
+      else
+        _ -> {:error, :purchase_unavailable}
+      end
+    end
 
     defp accept_once(operation_id, account_id) do
       Ash.create(
@@ -216,24 +218,26 @@ defmodule NewYou.Commerce do
   end
 
   defp acknowledge(consequence_id) do
-    with {:ok, %PaymentConsequence{} = consequence} <-
-           PaymentConsequence
-           |> Ash.Query.filter(id == ^consequence_id)
-           |> Ash.Query.lock(:for_update)
-           |> Ash.read_one(authorize?: false) do
-      if consequence.fulfilled_at do
-        consequence
-      else
-        case Ash.update(consequence, %{fulfilled_at: DateTime.utc_now()},
+    query =
+      PaymentConsequence
+      |> Ash.Query.filter(id == ^consequence_id)
+      |> Ash.Query.lock(:for_update)
+
+    case Ash.read_one(query, authorize?: false) do
+      {:ok, %PaymentConsequence{fulfilled_at: nil} = open} ->
+        case Ash.update(open, %{fulfilled_at: DateTime.utc_now()},
                action: :acknowledge,
                authorize?: false
              ) do
           {:ok, fulfilled} -> fulfilled
           {:error, error} -> {:error, error}
         end
-      end
-    else
-      _ -> {:error, :delivery_unavailable}
+
+      {:ok, %PaymentConsequence{} = fulfilled} ->
+        fulfilled
+
+      _ ->
+        {:error, :delivery_unavailable}
     end
   end
 end
