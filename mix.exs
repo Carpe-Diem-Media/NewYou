@@ -111,7 +111,7 @@ defmodule NewYou.MixProject do
       {:ash_authentication, "== 5.0.0-rc.17"},
       {:tidewave, "== 0.9.2", only: [:dev]},
       {:ash_postgres, "== 2.15.2"},
-      {:ash, "== 3.37.2"},
+      {:ash, "== 3.38.0"},
       # Reactor >= 1.0.2 requires prerelease multigraph; keep the dependency tree stable.
       {:reactor, "== 1.0.1"},
       {:igniter, "~> 0.8.4", only: [:dev, :test]},
