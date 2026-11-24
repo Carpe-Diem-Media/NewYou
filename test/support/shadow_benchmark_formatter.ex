@@ -57,10 +57,12 @@ defmodule NewYou.ShadowBenchmarkFormatter do
 
   def handle_cast({:suite_finished, timings}, state) do
     true = map_size(state.starts) == 0
+
     emit(
       state,
       Map.merge(timings, %{kind: "suite", seed: state.seed, max_cases: state.max_cases})
     )
+
     :ok = File.close(state.output)
     {:noreply, state}
   end
