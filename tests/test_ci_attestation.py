@@ -463,7 +463,13 @@ class NativeReviewTests(unittest.TestCase):
             with self.subTest(reviews=reviews), self.assertRaises(AttestationError):
                 verify_native_review(self.pr, reviews)
 
-    def test_implementer_cannot_use_founder_identity(self):
+    def test_agent_can_approve_founder_pr(self):
+        from tools.ci_attestation import verify_native_review
+        pr = dict(self.pr, user=self.review["user"])
+        review = dict(self.review, user=self.pr["user"])
+        self.assertEqual(review, verify_native_review(pr, [review]))
+
+    def test_author_cannot_approve_own_pr(self):
         from tools.ci_attestation import verify_native_review
         with self.assertRaises(AttestationError):
             verify_native_review(dict(self.pr, user=self.review["user"]), [self.review])
@@ -512,7 +518,7 @@ class NativeCollectionTests(unittest.TestCase):
         self.e['effective_rules'] = [{'type': 'pull_request', 'parameters': params, 'ruleset_id': 24191860}]
         self.pr = NativeReviewTests()
         self.pr.setUp()
-        self.owners = {'encoding': 'base64', 'content': base64.b64encode(b'* @JCSchoeman96\n').decode()}
+        self.owners = {'encoding': 'base64', 'content': base64.b64encode(b'* @JCSchoeman96 @JC-Agents\n').decode()}
 
     def api(self, path):
         if path == 'user':
@@ -541,7 +547,7 @@ class NativeCollectionTests(unittest.TestCase):
              self.patch('tools.newyou_attest.founder_account_id', return_value=216185530), \
              self.patch('builtins.open') as file:
             proof = ci.collect_native(42, self.e['head'], 100)
-            self.assertEqual(7, proof['founder_review']['id'])
+            self.assertEqual(7, proof['independent_review']['id'])
             self.assertEqual(('gh', 'api', '--paginate', '--slurp',
                               'repos/Carpe-Diem-Media/NewYou/pulls/42/reviews?per_page=100'), command.call_args.args)
             file.assert_not_called()
@@ -567,11 +573,32 @@ class NativeCollectionTests(unittest.TestCase):
                                               candidate_sha=self.e['candidate'] if after_merge else None,
                                               after_merge=after_merge)
                     candidate = proof['candidate'] if after_merge else proof
-                    self.assertEqual(7, candidate['founder_review']['id'])
+                    self.assertEqual(7, candidate['independent_review']['id'])
                     collect.assert_called_once_with(
                         42, self.e['head'], 100,
                         candidate_sha=self.e['candidate'] if after_merge else None,
                         after_merge=after_merge, trust_mode='public-protected')
+
+    def test_founder_pr_requires_dual_codeowners_and_agent_approval(self):
+        import base64
+        import json
+        from tools import ci_attestation as ci
+
+        def api(path):
+            if path.endswith('/pulls/42'):
+                return dict(self.api(path), user=self.pr.review['user'])
+            return self.api(path)
+
+        review = dict(self.pr.review, user=self.pr.pr['user'])
+        with self.patch.object(ci, 'collect', return_value=self.e), \
+             self.patch.object(ci, '_api', side_effect=api), \
+             self.patch.object(ci, '_command', return_value=json.dumps([[review]])), \
+             self.patch('tools.newyou_attest.founder_account_id', return_value=216185530):
+            proof = ci.collect_native(42, self.e['head'], 100)
+            self.assertEqual(review['user'], proof['independent_review']['user'])
+            self.owners['content'] = base64.b64encode(b'* @JCSchoeman96\n').decode()
+            with self.assertRaisesRegex(AttestationError, 'previous base-branch CODEOWNERS'):
+                ci.collect_native(42, self.e['head'], 100)
 
     def test_unapproved_or_inconsistent_agent_permissions_fail(self):
         import json
@@ -608,7 +635,7 @@ class NativeCollectionTests(unittest.TestCase):
                  self.patch.object(ci, '_api', side_effect=api), \
                  self.patch.object(ci, '_command', return_value=json.dumps([reviews])), \
                  self.patch('tools.newyou_attest.founder_account_id', return_value=216185530), \
-                 self.assertRaisesRegex(AttestationError, 'founder approval'):
+                 self.assertRaisesRegex(AttestationError, 'counterpart approval'):
                 ci.collect_native(42, self.e['head'], 100)
 
     def test_wrong_base_codeowners_unapproved_agent_and_changed_head_fail(self):
@@ -621,7 +648,7 @@ class NativeCollectionTests(unittest.TestCase):
                 if change == 'permission' and path.endswith('/JC-Agents/permission'):
                     return {'permission': 'read', 'role_name': 'read'}
                 if change == 'actor' and path == 'user':
-                    return {'login': 'JCSchoeman96', 'id': 216185530}
+                    return {'login': 'unrelated', 'id': 216185530}
                 if change == 'actor_id' and path == 'user':
                     return {'login': 'JC-Agents', 'id': 216185530}
                 if change == 'actor_login' and path == 'user':

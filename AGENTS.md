@@ -459,7 +459,7 @@ APPROVED requires authenticated independent Master Gate approval for the exact f
 
 ### Routine PR identity preflight
 
-Before creating or updating a routine PR, run `gh api user --jq .login` and `python3 -m tools.newyou_attest pr-preflight`, adding `--pr NUMBER` for an existing PR. Require actual authenticated `JC-Agents` identity and an agent-authored existing PR. Git commit name/email is insufficient. Wrong, missing or unverifiable authentication stops PR creation/update. Never request founder credentials. `JCSchoeman96` remains the independent code-owner reviewer; do not self-approve, relax protection or merge without independent authority.
+Before creating or updating a routine PR, run `gh api user --jq .login` and `python3 -m tools.newyou_attest pr-preflight`, adding `--pr NUMBER` for an existing PR. Use authenticated `JC-Agents` or `JCSchoeman96`. The authenticated account must own the PR and its branch updates. The other account independently reviews the exact final head. Git commit name and email do not verify GitHub identity. Stop on mismatched or unverifiable authentication. Each account authenticates separately.
 
 ### Optional OCR advisory review
 
@@ -494,7 +494,7 @@ Any reviewed-head change invalidates prior certification.
 
 ### Founder-development merge
 
-Follow `docs/development/foundation-integrity-merge-gate.md`. For eligible development work, ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the exact final head. That review is both technical approval and standing merge authorization. Do not add a second founder comment or a base-SHA line to the review. The implementing agent must not use founder credentials.
+Follow `docs/development/foundation-integrity-merge-gate.md`. For eligible development work, after the independent Master Gate technical review, the other account submits one authenticated GitHub APPROVED review for the exact final head. That review supplies technical approval and standing merge authorization. Any head change requires fresh approval.
 
 Before merge, verify the current required CI and live branch protection, then run the read-only native candidate check from trusted integrated `main`. Merge with the normal GitHub merge command bound to the reviewed head. Run the read-only native result check afterward. A merge response with an uncertain outcome requires reading the PR and `main` before taking any further action. Do not blindly retry. Mark Plane Done only after resulting-main proof succeeds.
 
@@ -504,7 +504,7 @@ Apply stronger approval only when a governing or external obligation requires it
 
 PR #224 remains under current-main requirements. Its current exact-head transition needs explicit owner authorization after fresh complete review and CI. Collection-only comment 6821263762 is not authorization. Do not self-approve or self-merge it. `.github/CODEOWNERS` read from the base cannot enforce review on PR #224.
 
-After authorized integration of PR #224, a one-time GitHub settings change may be made only under separate authorization. Preserve ruleset 24191860's Foundation Integrity requirement, PR-only integration, no bypass, force-push and deletion protections, and regular merge-only behavior. Require one approval, code-owner approval using `.github/CODEOWNERS` with `* @JCSchoeman96`, stale-review dismissal, latest-push approval and resolved review threads. The founder has approved retaining JC-Agents' All-repository Admin, CI/CD Admin and Security manager roles. Native verification accepts only the authenticated JC-Agents account with effective repository Admin or Write and active organization Member access. Do not attempt further permission changes. Admin access grants no merge bypass or founder-review authority. Preserve JCSchoeman96's existing owner/admin access. Independently inspect and verify the live rules and access before describing enforcement as active.
+The one-time PR #224 transition established the earlier single-code-owner configuration under separate authorization. The routine workflow uses both code owners after the reciprocal policy reaches main. Ruleset 24191860 must preserve one code-owner approval, stale-review dismissal, approval of the latest push by someone other than its pusher, resolved threads, required Foundation Integrity, regular merges, PR-only integration, and protections against bypass, force pushes, and deletion. Verify live rules and access before claiming enforcement.
 
 For the separate historical WELL-125 / PR #244 closeout only, follow section 10.1 of the current routed Delivery Governance Standard and its cross-reference in `docs/development/foundation-integrity-merge-gate.md`. The amendment itself follows the ordinary integration procedure.
 

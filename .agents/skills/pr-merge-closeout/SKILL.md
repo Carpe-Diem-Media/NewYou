@@ -12,26 +12,26 @@ Finish an **already approved** NewYou implementation PR without adding an indepe
 Read **live** before acting:
 
 1. `AGENTS.md` — approval, identity, implementation and Plane closeout rules.
-2. `docs/development/foundation-integrity-merge-gate.md` — **canonical** native founder-development merge procedure.
+2. `docs/development/foundation-integrity-merge-gate.md` — **canonical** native development merge procedure.
 3. `.agents/skills/code-change-verification/SKILL.md` — exact-head evidence and review requirements.
 4. Applicable `docs/governance/CURRENT_GOVERNANCE_ROUTER.json`, `docs/delivery/CURRENT_DELIVERY_ROUTER.json`, and the live Plane ticket where the merge could affect legal, release, Domain, security or lifecycle authority.
 5. Actual `tools/ci_attestation.py` and `tools/newyou_attest.py` at trusted integrated `main`.
 
-If these documents or tools disagree with this skill, **follow the higher authority and stop on material uncertainty**. Never infer release authorization from a development merge. The normal eligible founder-development path uses **one authenticated `JCSchoeman96` APPROVED review**, which is both technical approval and standing merge authorization. An ordinary PR comment, author self-assessment, or OCR pass is not approval. Apply stronger approval only if actual governing/external obligations require it.
+If these documents or tools disagree with this skill, **follow the higher authority and stop on material uncertainty**. Never infer release authorization from a development merge. Eligible development requires one authenticated APPROVED review on the final head from the account opposite the PR author. That review supplies technical approval and standing merge authorization. An ordinary PR comment, author self-assessment, or OCR pass is not approval. Apply stronger approval only if actual governing/external obligations require it.
 
 ## Entry conditions and inputs
 
 Required live inputs (read them, do **not** hardcode a prior PR's values):
 
-- `PR_NUMBER`: eligible PR authored by `JC-Agents` targeting `main`.
-- `REVIEWED_HEAD_SHA`: complete 40-character commit approved by `JCSchoeman96`.
+- `PR_NUMBER`: eligible PR targeting `main` authored by `JC-Agents` or `JCSchoeman96`.
+- `REVIEWED_HEAD_SHA`: complete 40-character commit approved by the other account.
 - `CI_RUN_ID`: latest qualifying successful exact-head Foundation Integrity workflow run.
 - `PLANE_TICKET`: actual linked `WELL-N` work item, including live state, dependencies and acceptance criteria.
 - `EXPECTED_BASE_SHA`: PR's currently approved/verified base commit at entry.
 
-**Entry gate:** Verify the exact full PR diff and original independent Master Gate disposition have no unresolved material blockers; all mandatory checks and any material OCR finding dispositions are complete; the PR is open, not Draft and not merged; latest decisive founder review is `APPROVED` for the exact current head; and the current base is the trusted `main` used for candidate verification. Do not reuse an earlier review after a head change. Do not treat Plane as an override of GitHub or durable governance.
+**Entry gate:** Verify the exact full PR diff and original independent Master Gate disposition have no unresolved material blockers; all mandatory checks and any material OCR finding dispositions are complete; the PR is open, not Draft and not merged; latest decisive review from the other account is `APPROVED` for the exact current head; and the current base is the trusted `main` used for candidate verification. Do not reuse an earlier review after a head change. Do not treat Plane as an override of GitHub or durable governance.
 
-The implementing agent must use its own `JC-Agents` GitHub credentials, **never founder credentials**, and must not bypass branch protection or approve its own work.
+The integrating PR author uses its own GitHub credentials. The other account submits the review separately. Do not bypass branch protection or self-approve.
 
 ## State machine and stop conditions
 
@@ -58,8 +58,7 @@ PR_NUMBER='REPLACE_WITH_PR_NUMBER'
 REVIEWED_HEAD_SHA='REPLACE_WITH_EXACT_40_CHARACTER_HEAD_SHA'
 CI_RUN_ID='REPLACE_WITH_QUALIFYING_WORKFLOW_RUN_ID'
 
-# Identity, worktree and trusted branch guards.
-test "$(gh api user --jq .login)" = 'JC-Agents'
+# Worktree and trusted branch guards.
 test -z "$(git status --porcelain)"
 test "$(git branch --show-current)" = 'main'
 git fetch origin main

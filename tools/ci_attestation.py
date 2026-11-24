@@ -263,23 +263,21 @@ def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: s
 
 
 def verify_native_review(pr: dict, reviews: list) -> dict:
-    """Read the founder's latest decisive GitHub review, bound to the final head."""
-    from tools.newyou_attest import FOUNDER_ID, FOUNDER_LOGIN
-    require(pr.get("user", {}).get("id") == 355419376
-            and pr.get("user", {}).get("login") == "JC-Agents",
-            "routine integration must use the implementing agent account")
+    """Read the other account's latest decisive GitHub review for the final head."""
+    from tools.newyou_attest import PR_ACCOUNTS, counterpart
+    reviewer = counterpart(pr.get("user", {}))
     require(isinstance(reviews, list) and all(isinstance(r, dict) for r in reviews),
             "GitHub review evidence is incomplete")
-    opinions = [r for r in reviews if r.get("user", {}).get("id") == FOUNDER_ID
-                and r.get("user", {}).get("login") == FOUNDER_LOGIN
+    opinions = [r for r in reviews if r.get("user", {}).get("id") == PR_ACCOUNTS[reviewer]
+                and r.get("user", {}).get("login") == reviewer
                 and r.get("state") in ("APPROVED", "CHANGES_REQUESTED", "DISMISSED")]
     require(opinions and all(type(r.get("id")) is int for r in opinions),
-            "authenticated founder approval is missing")
+            "authenticated counterpart approval is missing")
     review = max(opinions, key=lambda r: r["id"])
     require(review.get("state") == "APPROVED" and review.get("commit_id") == pr["head"]["sha"]
             and review.get("submitted_at")
             and review.get("html_url") == f'https://github.com/Carpe-Diem-Media/NewYou/pull/{pr["number"]}#pullrequestreview-{review["id"]}',
-            "founder approval is stale, dismissed, withdrawn or unverifiable")
+            "counterpart approval is stale, dismissed, withdrawn or unverifiable")
     return review
 
 
@@ -308,7 +306,7 @@ def collect_native(pr_number: int, reviewed_head: str, run_id: int, *,
     """
     import base64
     import json
-    from tools.newyou_attest import founder_account_id
+    from tools.newyou_attest import AGENT_LOGIN, CODEOWNERS, FOUNDER_LOGIN, founder_account_id, pr_account
     repo = "Carpe-Diem-Media/NewYou"
     require(after_merge == (candidate_sha is not None), "result verification requires the tested candidate SHA")
     proof = collect(pr_number, reviewed_head, run_id, candidate_sha=candidate_sha,
@@ -317,9 +315,7 @@ def collect_native(pr_number: int, reviewed_head: str, run_id: int, *,
     verify_native_review_rules(candidate["ruleset"]["rules"])
     effective = [r for r in candidate["effective_rules"] if r.get("ruleset_id") == 24191860]
     verify_native_review_rules(effective)
-    actor = _api("user")
-    require(actor.get("login") == "JC-Agents" and actor.get("id") == 355419376,
-            "implementer must not use founder credentials")
+    pr_account(_api("user"))
     agent_permission = _api(f"repos/{repo}/collaborators/JC-Agents/permission")
     founder_permission = _api(f"repos/{repo}/collaborators/JCSchoeman96/permission")
     require(agent_permission.get("permission") in ("write", "admin")
@@ -333,16 +329,20 @@ def collect_native(pr_number: int, reviewed_head: str, run_id: int, *,
     owners = _api(f'repos/{repo}/contents/.github/CODEOWNERS?ref={candidate["base"]}')
     require(owners.get("encoding") == "base64" and isinstance(owners.get("content"), str),
             "base-branch CODEOWNERS is missing")
-    require(base64.b64decode(owners["content"]).decode() == "* @JCSchoeman96\n",
+    ownership = base64.b64decode(owners["content"]).decode()
+    require(ownership in (CODEOWNERS, f"* @{FOUNDER_LOGIN}\n"),
             "base-branch CODEOWNERS must cover every file and itself")
     pr = _api(f"repos/{repo}/pulls/{pr_number}")
     require(pr["head"]["sha"] == reviewed_head and pr["base"]["sha"] == candidate["base"]
             and pr.get("merged") is after_merge, "PR changed after CI verification")
+    if ownership != CODEOWNERS:
+        require(pr_account(pr["user"]) == AGENT_LOGIN,
+                "the previous base-branch CODEOWNERS requires a JC-Agents PR")
     pages = json.loads(_command("gh", "api", "--paginate", "--slurp", f"repos/{repo}/pulls/{pr_number}/reviews?per_page=100"))
     require(isinstance(pages, list) and all(isinstance(page, list) for page in pages),
             "GitHub review pagination is incomplete")
     review = verify_native_review(pr, [r for page in pages for r in page])
-    candidate["founder_review"] = {k: review[k] for k in ("id", "commit_id", "html_url", "submitted_at")}
+    candidate["independent_review"] = {k: review[k] for k in ("id", "commit_id", "html_url", "submitted_at", "user")}
     # GitHub enforces review threads, latest push approval and all required checks
     # atomically when the ordinary expected-head merge request is made.
     return proof

@@ -231,15 +231,17 @@ class HandoffTests(unittest.TestCase):
         r['comments'] = [dict(path='.agents/skills/code-change-verification/scripts/handoff.py', start_line=10, severity='high', content='Check this')]
         r['summary']['comments'] = 1
         summary = gate.validate_ocr(r, PREVIEW, BINDING, 100000)
+        author = dict(login="JC-Agents", id=355419376)
         with self.assertRaises(gate.GateError):
-            gate.validate_findings(summary, None, HEAD)
-        review = dict(user=dict(login='JCSchoeman96'), commit_id=HEAD, state='COMMENTED',
+            gate.validate_findings(summary, None, HEAD, author)
+        review = dict(user=dict(login='JCSchoeman96', id=216185530), commit_id=HEAD, state='COMMENTED',
                       body='OCR session-1 finding 1: FALSE POSITIVE. The guard rejects that state.')
-        gate.validate_findings(summary, review, HEAD)
+        gate.validate_findings(summary, review, HEAD, author)
+        gate.validate_findings(summary, dict(review, user=author), HEAD, review['user'])
         for change in [dict(commit_id=BASE), dict(user=dict(login='JC-Agents')), dict(body='Looks good'),
                        dict(state='DISMISSED'), dict(body='OCR session-1 finding 1: NEEDS EVIDENCE. More proof.')]:
             with self.assertRaises(gate.GateError):
-                gate.validate_findings(summary, dict(review, **change), HEAD)
+                gate.validate_findings(summary, dict(review, **change), HEAD, author)
 
     def test_discovery_prefers_worktree_branch_and_exact_remote_sha(self):
         with patch.object(gate, 'api', side_effect=lambda path: [PR] if path.endswith('/pulls?per_page=100') else PR), \
