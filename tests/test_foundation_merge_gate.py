@@ -52,8 +52,8 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
             ".tool-versions",
             "config/**/*.exs",
             ".github/workflows/application-cache.yml",
-            ".github/workflows/application-ci.yml",
-            "tools/ci/**",
+            "tools/ci/cache_manifest.py",
+            "tools/ci/prepare_cached_dependencies.sh",
         ):
             with self.subTest(path=path):
                 self.assertIn(f"      - '{path}'", warmer)
@@ -62,7 +62,7 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
         filters = re.findall(r"^      - '([^']+)'$", warmer, re.MULTILINE)
         self.assertEqual({"mix.exs", "mix.lock", ".tool-versions", "config/**/*.exs",
                           ".github/workflows/application-cache.yml",
-                          ".github/workflows/application-ci.yml", "tools/ci/**"}, set(filters))
+                          "tools/ci/cache_manifest.py", "tools/ci/prepare_cached_dependencies.sh"}, set(filters))
         save = warmer.split("      - name: Save trusted dependency cache", 1)[1]
         self.assertNotIn("continue-on-error", save)
         self.assertLess(warmer.index("run: bash tools/ci/prepare_cached_dependencies.sh"),
@@ -76,8 +76,10 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
         self.assertEqual(2, (application + setup).count("actions/cache/restore@v4"))
         self.assertNotIn("actions/cache/save@v4", application)
         self.assertNotIn("pull_request_target", warmer + application)
-        key = "app-deps-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', '.github/workflows/application-cache.yml', '.github/workflows/application-ci.yml', 'tools/ci/**') }}"
-        self.assertEqual(3, (application + setup + warmer).count(key))
+        key = "app-deps-v4-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', 'tools/ci/cache_manifest.py', 'tools/ci/prepare_cached_dependencies.sh') }}"
+        self.assertEqual(3, (application + warmer).count(key))
+        self.assertIn(key.replace("steps.cache_platform", "steps.platform"), setup)
+        self.assertNotIn("cache_manifest.py check", setup)
 
     def test_mix_aliases_enforce_warnings_and_strict_security_parsing(self):
         mix = (ROOT / "mix.exs").read_text(encoding="utf-8")

@@ -41,7 +41,7 @@ runs:
           deps
           _build/test/lib
           _build/ci-dependency-cache.json
-        key: app-deps-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', '.github/workflows/application-cache.yml', '.github/workflows/application-ci.yml', 'tools/ci/**') }}
+        key: app-deps-v4-${{ runner.os }}-${{ runner.arch }}-${{ steps.platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', 'tools/ci/cache_manifest.py', 'tools/ci/prepare_cached_dependencies.sh') }}
     - name: Prepare locked dependencies
       shell: bash
       env:
@@ -60,10 +60,12 @@ runs:
             result=restore-failed
           elif [[ "$CACHE_HIT" == true ]]; then
             result=manifest-rejected
-            if python3 tools/ci/cache_manifest.py check; then result=verified-hit; fi
           fi
         fi
         bash tools/ci/prepare_cached_dependencies.sh | tee "$RUNNER_TEMP/application-dependency-prep.log"
+        if grep -Fxq 'Verified dependency cache manifest.' "$RUNNER_TEMP/application-dependency-prep.log"; then
+          result=verified-hit
+        fi
         if grep -Fq 'retrying once without cached files.' "$RUNNER_TEMP/application-dependency-prep.log"; then
           result=rebuilt-after-failure
         fi

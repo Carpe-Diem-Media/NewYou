@@ -221,7 +221,7 @@ jobs:
             deps
             _build/test/lib
             _build/ci-dependency-cache.json
-          key: app-deps-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', '.github/workflows/application-cache.yml', '.github/workflows/application-ci.yml', 'tools/ci/**') }}
+          key: app-deps-v4-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', 'tools/ci/cache_manifest.py', 'tools/ci/prepare_cached_dependencies.sh') }}
       - name: Restore Dialyzer PLT cache
         if: steps.cache_platform.outputs.image != ''
         uses: actions/cache@v4
