@@ -75,6 +75,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SEED: ${{ steps.seed.outputs.value }}
+          # TEMPORARY WELL-167 budget characterization. Revert before any merge.
+          # Must match the shards so discovery declares the same test identities.
+          P815_CHARACTERIZE_BUDGET: "1"
         run: python3 -m tools.exunit_ci plan application-evidence "$SEED" >> "$GITHUB_OUTPUT"
       - name: Preserve declared inventory
         uses: actions/upload-artifact@v4
