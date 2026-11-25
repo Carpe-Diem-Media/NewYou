@@ -107,17 +107,32 @@ def verify_result(candidate: dict, result: dict) -> None:
     require(result.get("tree") == candidate["tree"], "resulting tree differs from tested tree")
 
 
+# Executables observed in actions/checkout logs: GitHub-hosted runners use
+# /usr/bin/git and Blacksmith runners use /usr/local/bin/git.
+CHECKOUT_COMMANDS = {f"[command]{git} log -1 --format=%H" for git in ("/usr/bin/git", "/usr/local/bin/git")}
+RUNNER_PREFIX = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z "
+EXPORTED_PREFIX = r"[^\t]*\t[^\t]*\t\S+ "
+
+
+def _log_message(line: str) -> str | None:
+    """Return the message after a runner timestamp or exported job prefix, or None."""
+    for prefix in (RUNNER_PREFIX, EXPORTED_PREFIX):
+        match = re.match(prefix, line)
+        if match:
+            return line[match.end():]
+    return None
+
+
 def checkout_from_log(log: str) -> str:
     """Read the full checkout SHA emitted by actions/checkout, or fail closed."""
-    lines = log.splitlines()
-    found = []
-    for left, right in zip(lines, lines[1:]):
-        if "[command]/usr/bin/git log -1 --format=%H" in left:
-            match = re.search(r"\s([0-9a-f]{40})$", right)
-            if match:
-                found.append(match.group(1))
-    require(len(found) == 1, "job has missing or ambiguous checkout evidence")
-    return found[0]
+    # Split on "\n" only: splitlines() also breaks on "\r", so forged text could stand alone.
+    messages = [_log_message(line) for line in log.split("\n")]
+    commands = [index for index, message in enumerate(messages) if message in CHECKOUT_COMMANDS]
+    require(len(commands) == 1, "job has missing, duplicate or conflicting checkout evidence")
+    index = commands[0]
+    sha = messages[index + 1] if index + 1 < len(messages) else None
+    require(sha is not None and re.fullmatch(r"[0-9a-f]{40}", sha), "job checkout evidence has no full SHA")
+    return sha
 
 
 def _command(*args: str) -> str:

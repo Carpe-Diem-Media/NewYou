@@ -90,6 +90,70 @@ class CheckoutLogTest(unittest.TestCase):
             with self.subTest(log=invalid), self.assertRaises(AttestationError):
                 checkout_from_log(invalid)
 
+    def test_accepts_each_observed_checkout_git_executable_in_both_log_formats(self):
+        from tools.ci_attestation import checkout_from_log
+        sha = "c" * 40
+        for git in ("/usr/bin/git", "/usr/local/bin/git"):
+            command = f"[command]{git} log -1 --format=%H"
+            runner = f"2026-11-25T06:19:13.6410352Z {command}\n2026-11-25T06:19:13.6410550Z {sha}\n"
+            exported = f"job\tstep\ttime {command}\njob\tstep\ttime {sha}\n"
+            for log in (runner, exported):
+                with self.subTest(git=git, log=log):
+                    self.assertEqual(sha, checkout_from_log(log))
+
+    def test_ignores_other_git_commands_in_the_checkout_log(self):
+        from tools.ci_attestation import checkout_from_log
+        sha = "c" * 40
+        log = (f"2026-11-25T06:19:13.6410352Z [command]/usr/local/bin/git rev-parse --verify --quiet {sha}^{{object}}\n"
+               f"2026-11-25T06:19:13.6410550Z {sha}\n"
+               f"2026-11-25T06:19:13.6410650Z [command]/usr/local/bin/git log -1 --format=%H\n"
+               f"2026-11-25T06:19:13.6410650Z {sha}\n")
+        self.assertEqual(sha, checkout_from_log(log))
+
+    def test_rejects_missing_malformed_duplicate_conflicting_and_spoofed_checkout_evidence(self):
+        from tools.ci_attestation import checkout_from_log
+        sha = "c" * 40
+        command = "[command]/usr/bin/git log -1 --format=%H"
+        local = "[command]/usr/local/bin/git log -1 --format=%H"
+
+        def record(message, result):
+            return f"2026-11-25T06:19:13.6410352Z {message}\n2026-11-25T06:19:13.6410550Z {result}\n"
+
+        self.assertEqual(sha, checkout_from_log(record(command, sha)))
+        invalid = {
+            "no checkout command": record("echo done", sha),
+            "command without SHA": f"2026-11-25T06:19:13.6410352Z {command}\n",
+            "unrelated line between command and SHA": (
+                f"2026-11-25T06:19:13.6410352Z {command}\n"
+                f"2026-11-25T06:19:13.6410352Z noise\n"
+                f"2026-11-25T06:19:13.6410550Z {sha}\n"),
+            "SHA without runner prefix": f"2026-11-25T06:19:13.6410352Z {command}\n{sha}\n",
+            "truncated SHA": record(command, sha[:39]),
+            "uppercase SHA": record(command, sha.upper()),
+            "SHA with trailing text": record(command, f"{sha} extra"),
+            "SHA with leading text": record(command, f"sha {sha}"),
+            "SHA terminated by carriage return": (
+                f"2026-11-25T06:19:13.6410352Z {command}\n"
+                f"2026-11-25T06:19:13.6410550Z {sha}\r\n"),
+            "duplicate command with the same SHA": record(command, sha) + record(command, sha),
+            "duplicate command with a malformed SHA": record(command, sha) + record(command, sha[:7]),
+            "conflicting SHAs": record(command, sha) + record(command, "d" * 40),
+            "conflicting git executables": record(command, sha) + record(local, sha),
+            "command inside another message": record(f"echo {command}", sha),
+            "command with suffix": record(f"{command}.bak", sha),
+            "command with extra argument": record(f"{command} --no-walk", sha),
+            "unknown git executable": record("[command]/usr/sbin/git log -1 --format=%H", sha),
+            "path with prefix": record("[command]/opt/usr/bin/git log -1 --format=%H", sha),
+            "command without runner prefix": f"{command}\n{sha}\n",
+            "carriage return forging a record": (
+                f"2026-11-25T06:19:13.6410352Z harmless\r"
+                f"2026-11-25T06:19:13.6410352Z {command}\n"
+                f"2026-11-25T06:19:13.6410550Z {sha}\n"),
+        }
+        for name, log in invalid.items():
+            with self.subTest(case=name), self.assertRaises(AttestationError):
+                checkout_from_log(log)
+
 class GitHubCollectionTest(unittest.TestCase):
     def setUp(self):
         from unittest.mock import patch
@@ -228,6 +292,15 @@ class GitHubCollectionTest(unittest.TestCase):
         self.assertEqual(result["candidate"], self.e["candidate"])
         self.assertEqual(result["job_ids"], [1, 2])
         self.assertEqual(result["check_suite_id"], 77)
+
+    def test_collector_accepts_checkout_from_local_git_runner(self):
+        local_log = (f"job\tstep\ttime [command]/usr/local/bin/git log -1 --format=%H\n"
+                     f"job\tstep\ttime {self.e['candidate']}\n")
+        with self.patch("tools.ci_attestation._api", side_effect=self.api), \
+                self.patch("tools.ci_attestation._command", return_value=local_log):
+            from tools.ci_attestation import collect
+            result = collect(42, self.e["head"], 100, trust_mode="private-procedural")
+        self.assertEqual([self.e["candidate"]] * 2, result["checkout_shas"])
 
     def test_collector_requires_opt_in_and_rejects_api_failure(self):
         from tools.ci_attestation import collect
