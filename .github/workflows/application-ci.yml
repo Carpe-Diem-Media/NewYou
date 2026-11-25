@@ -28,7 +28,8 @@ env:
   TEST_DATABASE_PORT: "55433"
   TEST_DATABASE_USERNAME: new_you_test
   TEST_DATABASE_NAME: new_you_test
-  P815_BLACKSMITH_RUNNER: ${{ vars.CI_RUNNER == 'blacksmith-2vcpu-ubuntu-2404' }}
+  # Supported Blacksmith disposable runner profiles
+  P815_BLACKSMITH_RUNNER: ${{ contains(fromJSON('["blacksmith-2vcpu-ubuntu-2404","blacksmith-4vcpu-ubuntu-2404"]'), vars.CI_RUNNER) }}
   DESIGN_SYSTEM_BASE_SHA: ${{ github.event.pull_request.base.sha }}
   CI_BASE: ${{ github.event.pull_request.base.sha }}
   CI_HEAD: ${{ github.event.pull_request.head.sha }}
