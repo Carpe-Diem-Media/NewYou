@@ -13,24 +13,24 @@
   "governing_documents": [
     {
       "document_id": "NORTH_STAR_AND_MVP",
-      "canonical_filename": "PROJECT_NORTH_STAR_AND_MVP_v1.3.0.md",
-      "repository_path": "docs/governance/product/PROJECT_NORTH_STAR_AND_MVP_v1.3.0.md",
-      "sha256": "fae39c9c18247498b658452a9b68504d1bd7f295a6d31daea594547ac3c1b035",
-      "semver": "1.3.0"
+      "canonical_filename": "PROJECT_NORTH_STAR_AND_MVP_v1.4.0.md",
+      "repository_path": "docs/governance/product/PROJECT_NORTH_STAR_AND_MVP_v1.4.0.md",
+      "sha256": "86bf967244dd671f701592444c9f272a6f363a1f0e8b06c5f63f25d2b9cc2c02",
+      "semver": "1.4.0"
     },
     {
       "document_id": "PLATFORM_PRODUCT_LAW",
-      "canonical_filename": "00_PLATFORM_v1.20.0.md",
-      "repository_path": "docs/governance/product/00_PLATFORM_v1.20.0.md",
-      "sha256": "5308e09f668b4a9762f98fb0bcbddf2f84595703b69c6ed511e8f511c3da36b1",
-      "semver": "1.20.0"
+      "canonical_filename": "00_PLATFORM_v1.21.0.md",
+      "repository_path": "docs/governance/product/00_PLATFORM_v1.21.0.md",
+      "sha256": "d366c68e6d5f012f59f7f98071030f739dc3314287d59989e6433a3b62f2f9ff",
+      "semver": "1.21.0"
     },
     {
       "document_id": "PRODUCT_DECISIONS",
-      "canonical_filename": "01_DECISIONS_v1.20.0.md",
-      "repository_path": "docs/governance/product/01_DECISIONS_v1.20.0.md",
-      "sha256": "7282344c42e850a2683e15dcce21b46bb3ecca28d9fac22b91b01ec7e8f32b16",
-      "semver": "1.20.0"
+      "canonical_filename": "01_DECISIONS_v1.21.0.md",
+      "repository_path": "docs/governance/product/01_DECISIONS_v1.21.0.md",
+      "sha256": "722dce49c248987ea00fe237319083d26062fbbc2132c72eb32edca3ecd0013a",
+      "semver": "1.21.0"
     },
     {
       "document_id": "ARCHITECTURE_LAW",

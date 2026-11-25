@@ -282,6 +282,10 @@ def validate_development(root: Path, packet: dict) -> list[str]:
                     "PLATFORM_PRODUCT_LAW": "5308e09f668b4a9762f98fb0bcbddf2f84595703b69c6ed511e8f511c3da36b1",
                     "PRODUCT_DECISIONS": "7282344c42e850a2683e15dcce21b46bb3ecca28d9fac22b91b01ec7e8f32b16",
                 }),
+                ("1.21.0", {
+                    "PLATFORM_PRODUCT_LAW": "d366c68e6d5f012f59f7f98071030f739dc3314287d59989e6433a3b62f2f9ff",
+                    "PRODUCT_DECISIONS": "722dce49c248987ea00fe237319083d26062fbbc2132c72eb32edca3ecd0013a",
+                }),
             ):
                 path = prior_authority["repository_path"].replace("v1.15.0", "v" + version)
                 successor_bytes = load_artifact({"path": path, "sha256": digests[document["document_id"]]})

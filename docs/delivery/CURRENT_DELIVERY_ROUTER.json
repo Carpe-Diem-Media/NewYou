@@ -50,9 +50,9 @@
     },
     {
       "document_id": "FP002_FINAL_FEATURE_PACK",
-      "canonical_filename": "FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md",
-      "repository_path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md",
-      "sha256": "b0bbb66c81f60db68d2d9fcd15e688e3358c02bc0c371612880a4224f3e9cf43",
+      "canonical_filename": "FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+      "repository_path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+      "sha256": "3f244024bee42333d114a4cebef4195d7959f2cdab9dc52d5c88be0342948b2f",
       "contract_type": "feature_contract",
       "status": "COMPLETE; CERTIFIED; CURRENT; NO_DEVELOPMENT_OR_RELEASE_AUTHORITY"
     },

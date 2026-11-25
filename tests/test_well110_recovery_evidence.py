@@ -155,10 +155,17 @@ class RecoveryEvidenceTest(unittest.TestCase):
             self.assertEqual(old_body.rstrip() + '\n\n' + clause.strip().replace('### ', '## ', 1) + '\n',
                              new_body)
             self.assertEqual(record['sha256'], sha(new.encode()))
+            # The packet records the 1.20.0 authority it approved. The current
+            # router is the 1.21.0 successor, so the packet record must remain
+            # its exact predecessor; the packet evidence itself is not edited.
             routes = [row for row in governance['governing_documents']
                       if row['document_id'] == record['document_id']]
-            self.assertEqual([(record['path'], record['sha256'], '1.20.0')],
-                             [(row['repository_path'], row['sha256'], row['semver']) for row in routes])
+            self.assertEqual(1, len(routes))
+            current = routes[0]
+            self.assertEqual('1.21.0', current['semver'])
+            successor = (ROOT / current['repository_path']).read_text()
+            self.assertIn(f"**Predecessor:** `{record['path']}`", successor)
+            self.assertIn('**SemVer transition:** `v1.20.0 → v1.21.0`', successor)
 
 
 if __name__ == '__main__':
