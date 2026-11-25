@@ -349,6 +349,95 @@ class GitHubCollectionTest(unittest.TestCase):
                 with self.assertRaises(AttestationError):
                     self.collect()
 
+class SubprocessCollectionTest(unittest.TestCase):
+    """Run the real gh subprocess boundary, with a stub gh first on PATH."""
+
+    def setUp(self):
+        import os
+        import pathlib
+        import tempfile
+        from unittest.mock import patch
+        GitHubCollectionTest.setUp(self)
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        self.gh = pathlib.Path(directory.name, "gh")
+        self.output = pathlib.Path(directory.name, "output")
+        environment = patch.dict(os.environ, {"PATH": os.pathsep.join([directory.name, os.environ.get("PATH", "")])})
+        environment.start()
+        self.addCleanup(environment.stop)
+
+    def stub_gh(self, output: bytes, status: int = 0):
+        """Make the next gh call print output exactly, then exit with status."""
+        import shlex
+        self.output.write_bytes(output)
+        self.gh.write_text(f"#!/bin/sh\ncat {shlex.quote(str(self.output))}\nexit {status}\n")
+        self.gh.chmod(0o755)
+
+    def api(self, path):
+        return GitHubCollectionTest.api(self, path)
+
+    def checkout_logs(self):
+        """Return one LF checkout log and the carriage-return variants that must fail closed."""
+        sha = self.e["candidate"]
+        command = "[command]/usr/bin/git log -1 --format=%H"
+        lf = f"2026-11-25T06:19:13.6410352Z {command}\n2026-11-25T06:19:13.6410550Z {sha}\n"
+        variants = {
+            "SHA terminated by carriage return": (
+                f"2026-11-25T06:19:13.6410352Z {command}\n"
+                f"2026-11-25T06:19:13.6410550Z {sha}\r\n"),
+            "carriage return forging a record": (
+                f"2026-11-25T06:19:13.6410352Z harmless\r"
+                f"2026-11-25T06:19:13.6410352Z {command}\n"
+                f"2026-11-25T06:19:13.6410550Z {sha}\n"),
+        }
+        return lf, variants
+
+    def test_command_returns_subprocess_output_without_newline_translation(self):
+        from tools.ci_attestation import _command
+        self.stub_gh(b"first\r\nsecond\rthird\n")
+        self.assertEqual("first\r\nsecond\rthird\n", _command("gh", "api", "repos/Carpe-Diem-Media/NewYou"))
+
+    def test_checkout_log_from_subprocess_accepts_lf_and_rejects_carriage_returns(self):
+        from tools.ci_attestation import _command, checkout_from_log
+        path = "repos/Carpe-Diem-Media/NewYou/actions/jobs/1/logs"
+        lf, variants = self.checkout_logs()
+        self.stub_gh(lf.encode())
+        self.assertEqual(self.e["candidate"], checkout_from_log(_command("gh", "api", path)))
+        for name, log in variants.items():
+            with self.subTest(case=name):
+                self.stub_gh(log.encode())
+                with self.assertRaises(AttestationError):
+                    checkout_from_log(_command("gh", "api", path))
+
+    def test_collector_through_subprocess_accepts_lf_and_rejects_carriage_returns(self):
+        from tools.ci_attestation import collect
+        lf, variants = self.checkout_logs()
+        self.stub_gh(lf.encode())
+        with self.patch("tools.ci_attestation._api", side_effect=self.api):
+            result = collect(42, self.e["head"], 100, trust_mode="private-procedural")
+        self.assertEqual([self.e["candidate"]] * 2, result["checkout_shas"])
+        for name, log in variants.items():
+            with self.subTest(case=name):
+                self.stub_gh(log.encode())
+                with self.patch("tools.ci_attestation._api", side_effect=self.api), \
+                        self.assertRaises(AttestationError):
+                    collect(42, self.e["head"], 100, trust_mode="private-procedural")
+
+    def test_api_json_through_subprocess_remains_compatible(self):
+        from tools.ci_attestation import _api
+        self.stub_gh('{\r\n  "id": 1332946467,\r\n  "description": "café"\r\n}\r\n'.encode())
+        self.assertEqual({"id": 1332946467, "description": "café"}, _api("repos/Carpe-Diem-Media/NewYou"))
+
+    def test_subprocess_failure_and_invalid_utf8_fail_closed(self):
+        from tools.ci_attestation import _api, _command
+        self.stub_gh(b"", status=1)
+        with self.assertRaises(AttestationError):
+            _command("gh", "api", "repos/Carpe-Diem-Media/NewYou")
+        self.stub_gh(b'{"id": \xff}\n')
+        with self.assertRaises(AttestationError):
+            _api("repos/Carpe-Diem-Media/NewYou")
+
+
 class ResultCollectionTest(GitHubCollectionTest):
     def test_postmerge_rechecks_live_run_and_exact_main_tree(self):
         from tools.ci_attestation import collect
