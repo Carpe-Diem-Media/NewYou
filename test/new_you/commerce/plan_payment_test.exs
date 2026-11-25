@@ -4,6 +4,8 @@ defmodule NewYou.Commerce.PlanPaymentTest do
   alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.{Commerce, Entitlements, Identity, Repo}
   alias NewYou.Commerce.{PaymentConsequence, Purchase}
+  alias NewYou.Commerce.SyntheticCorrections
+  alias NewYou.Privacy.SyntheticSuppression
   alias NewYou.Proof.PlanPaymentObservation
   alias NewYou.Proof.{FreshMix, P805}
 
@@ -110,6 +112,144 @@ defmodule NewYou.Commerce.PlanPaymentTest do
       assert {:ok, payment} = Commerce.apply_payment_observation(evidence)
       assert payment.purchase_id == purchase.id
       assert counts(purchase.id) == {1, 1}
+    end)
+  end
+
+  test "qualified receipts with different delivery IDs still identify one genuine collection" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      assert :ok = SyntheticSuppression.register(payer.credentials)
+      purchase = accept!(payer)
+      collection_id = Ecto.UUID.generate()
+
+      fields =
+        Map.merge(observation(purchase).fields, %{
+          collection_id: collection_id,
+          payer_id: purchase.payer_id,
+          recipient_id: purchase.recipient_id,
+          price_version: purchase.price_version
+        })
+
+      receipts =
+        for _ <- 1..2 do
+          PlanPaymentObservation.produce(Map.put(fields, :receipt_id, Ecto.UUID.generate()))
+        end
+
+      [latest, earlier] = receipts
+      assert {:ok, payment} = Commerce.apply_payment_observation(latest)
+      assert {:ok, %{id: payment_id}} = Commerce.apply_payment_observation(earlier)
+      assert payment_id == payment.id
+      assert {:ok, %{id: ^payment_id}} = Commerce.apply_payment_observation(latest)
+      assert {:ok, [consequence_id]} = Commerce.open_plan_payment_consequences(purchase.id)
+
+      assert {:ok, %{state: :held_unconsumed}} =
+               Commerce.deliver_plan_payment_consequence(consequence_id)
+
+      assert durable_counts(purchase.id) == {1, 1, 1, 1, 1}
+
+      assert [[^collection_id]] =
+               Repo.query!(
+                 "SELECT collection_id::text FROM commerce_synthetic_collections WHERE source_id = $1::text::uuid",
+                 [purchase.id]
+               ).rows
+    end)
+  end
+
+  test "two genuine collections leave one applied payment and one exact excess obligation" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      assert :ok = SyntheticSuppression.register(payer.credentials)
+      purchase = accept!(payer)
+
+      fields =
+        Map.merge(observation(purchase).fields, %{
+          payer_id: purchase.payer_id,
+          recipient_id: purchase.recipient_id,
+          price_version: purchase.price_version
+        })
+
+      [original, excess] =
+        for _ <- 1..2 do
+          PlanPaymentObservation.produce(
+            Map.merge(fields, %{
+              collection_id: Ecto.UUID.generate(),
+              receipt_id: Ecto.UUID.generate()
+            })
+          )
+        end
+
+      assert {:ok, payment} = Commerce.apply_payment_observation(original)
+      assert {:ok, %{id: payment_id}} = Commerce.apply_payment_observation(excess)
+      assert payment_id == payment.id
+      assert {:ok, %{id: ^payment_id}} = Commerce.apply_payment_observation(excess)
+      assert {:ok, %{id: ^payment_id}} = Commerce.apply_payment_observation(original)
+      assert {:ok, [consequence_id]} = Commerce.open_plan_payment_consequences(purchase.id)
+
+      assert {:ok, %{state: :held_unconsumed}} =
+               Commerce.deliver_plan_payment_consequence(consequence_id)
+
+      assert durable_counts(purchase.id) == {1, 1, 1, 1, 1}
+
+      claimant = payer.account_id
+      excess_collection_id = excess.fields.collection_id
+
+      assert [[^claimant, ^excess_collection_id, 39_900, "ZAR", nil]] =
+               Repo.query!(
+                 """
+                 SELECT claimant_id::text, collection_id::text, amount_minor, currency, satisfied_at
+                 FROM commerce_synthetic_excess_claims WHERE source_id = $1::text::uuid
+                 """,
+                 [purchase.id]
+               ).rows
+
+      assert [[2]] =
+               Repo.query!(
+                 "SELECT count(*) FROM commerce_synthetic_collections WHERE source_id = $1::text::uuid",
+                 [purchase.id]
+               ).rows
+    end)
+  end
+
+  test "a committed Plan correction prevails over the outstanding original grant" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      purchase = accept!(payer)
+      assert :ok = SyntheticSuppression.register(payer.credentials)
+
+      fields =
+        Map.merge(observation(purchase).fields, %{
+          collection_id: Ecto.UUID.generate(),
+          receipt_id: Ecto.UUID.generate(),
+          payer_id: purchase.payer_id,
+          recipient_id: purchase.recipient_id,
+          price_version: purchase.price_version
+        })
+
+      original = PlanPaymentObservation.produce(fields)
+      assert {:ok, payment} = Commerce.apply_payment_observation(original)
+      assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(purchase.id)
+
+      correction =
+        fields
+        |> Map.merge(%{
+          scope: :correction,
+          status: :final,
+          receipt_id: Ecto.UUID.generate(),
+          source_id: purchase.id,
+          operation_id: purchase.operation_id,
+          component: :plan,
+          reason: :unused_component
+        })
+        |> PlanPaymentObservation.produce()
+
+      assert {:ok, %{id: correction_id}} = SyntheticCorrections.observe_correction(correction)
+      assert {:ok, :withheld} = Commerce.deliver_plan_payment_consequence(grant)
+      assert {:ok, _} = SyntheticCorrections.deliver(correction_id)
+      assert {:ok, %{id: applied_id}} = Commerce.apply_payment_observation(original)
+      assert applied_id == payment.id
+      assert {:ok, []} = Entitlements.plan_rights(payer.credentials)
+      assert {:ok, []} = Commerce.open_plan_payment_consequences(purchase.id)
+      assert durable_counts(purchase.id) == {1, 1, 1, 1, 0}
     end)
   end
 

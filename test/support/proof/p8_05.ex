@@ -1706,6 +1706,58 @@ defmodule NewYou.Proof.P805 do
 
     if operations != [] do
       Repo.query!(
+        """
+        DELETE FROM commerce_synthetic_correction_receipts WHERE correction_id IN (
+          SELECT c.id FROM commerce_synthetic_corrections c WHERE c.source_id IN (
+            SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[])
+            UNION SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])
+          )
+        )
+        """,
+        [operations]
+      )
+
+      Repo.query!(
+        """
+        DELETE FROM commerce_synthetic_corrections WHERE source_id IN (
+          SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[])
+          UNION SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])
+        )
+        """,
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM entitlements_plan_rights WHERE purchase_id IN (SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_synthetic_excess_claims WHERE source_id IN (SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_synthetic_collections WHERE source_id IN (SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[])",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_synthetic_excess_claims WHERE source_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_synthetic_collections WHERE source_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
         "DELETE FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT c.id::text FROM commerce_payment_consequences c JOIN commerce_plan_purchases p ON p.id = c.purchase_id WHERE p.operation_id = ANY($1::uuid[]))",
         [operations]
       )
@@ -1729,6 +1781,11 @@ defmodule NewYou.Proof.P805 do
         operations
       ])
     end
+
+    Repo.query!(
+      "DELETE FROM privacy_synthetic_deletion_scopes WHERE subject_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+      [emails]
+    )
 
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
   end
