@@ -683,8 +683,7 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
           assert %SyntheticOrder{} = Ash.read_one!(query, authorize?: false)
           [[backend]] = Repo.query!("SELECT pg_backend_pid()").rows
           send(parent, :recovery_source_locked)
-          assert has_waiter?(backend, 1_000)
-          :ok
+          has_waiter?(backend, System.monotonic_time(:millisecond) + 12_000)
         end)
       end)
 
@@ -692,12 +691,14 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
     send(holder.pid, :run)
     assert_receive :recovery_source_locked, 5_000
     fresh_vm!("apply", source_id)
-    assert {:ok, :ok} = Task.await(holder)
+    assert {:ok, true} = Task.await(holder)
   end
 
-  defp has_waiter?(_holder, 0), do: false
+  defp has_waiter?(holder, deadline) do
+    # PostgreSQL retains the activity snapshot within a transaction. Include
+    # the fresh BEAM's backend even if it connected after the first observation.
+    Repo.query!("SELECT pg_stat_clear_snapshot()")
 
-  defp has_waiter?(holder, attempts) do
     case Repo.query!(
            "SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE $1::integer = ANY(pg_blocking_pids(pid)))",
            [holder]
@@ -707,7 +708,7 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
 
       [[false]] ->
         Process.sleep(20)
-        has_waiter?(holder, attempts - 1)
+        System.monotonic_time(:millisecond) < deadline and has_waiter?(holder, deadline)
     end
   end
 
