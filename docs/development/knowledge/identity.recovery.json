@@ -1696,15 +1696,15 @@
     },
     {
       "id": "phase9_browser_approval",
-      "path": "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json",
+      "path": "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json",
       "symbol": "development_approved",
-      "sha256": "8a9466ce2b91e6311154bea13d085959d550f77ba63b6f9b4585ad3d3a67c5da"
+      "sha256": "eae5ea169d30278a70f97621f559d1669b8a897dcad5e276b74e4d1c9e15a06d"
     },
     {
       "id": "phase9_browser_copy",
       "path": "lib/new_you/content/recovery_browser_copy.ex",
       "symbol": "def load",
-      "sha256": "f749f87ff3f61babcbb3bf53d66ed310744713e3ad86dba2da54142ced292119"
+      "sha256": "33d7f7ba133d3d854f47ad9dcb867e16a8168c75429e007e78225163b6664cc2"
     },
     {
       "id": "sign_in_controller",

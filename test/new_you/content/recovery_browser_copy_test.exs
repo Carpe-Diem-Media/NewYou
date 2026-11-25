@@ -7,7 +7,7 @@ defmodule NewYou.Content.RecoveryBrowserCopyTest do
   @route_id "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED"
   @delivery "docs/delivery/CURRENT_DELIVERY_ROUTER.json"
   @governance "docs/governance/CURRENT_GOVERNANCE_ROUTER.json"
-  @packet "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json"
+  @packet "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json"
   @candidate "docs/delivery/content-evidence/copy/evidence/WELL183_RECOVERY_PHASE9_BROWSER_COPY_CANDIDATE_v0.3.0.json"
   @product_documents [
     "docs/governance/product/00_PLATFORM_v1.19.0.md",

@@ -255,9 +255,9 @@
     },
     {
       "document_id": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED",
-      "canonical_filename": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json",
-      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json",
-      "sha256": "8a9466ce2b91e6311154bea13d085959d550f77ba63b6f9b4585ad3d3a67c5da",
+      "canonical_filename": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json",
+      "sha256": "eae5ea169d30278a70f97621f559d1669b8a897dcad5e276b74e4d1c9e15a06d",
       "contract_type": "content_evidence",
       "status": "OWNER_APPROVED_BOUNDED_NONPRODUCTION_BROWSER_COPY; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
     },
