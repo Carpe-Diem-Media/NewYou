@@ -7,8 +7,8 @@
     "WELL-192"
   ],
   "implementation_revision": {
-    "git_sha": "398a4d7f6d510bfba665642e458cc37637e947bf",
-    "semantics": "WELL-189 P1 and WELL-192 E2a with the Master Gate receipt, Privacy, contention and restart corrections."
+    "git_sha": "3973f23feb7fdb52a68e984323fa01186e230eee",
+    "semantics": "WELL-192 E2a with immutable receipt binding, fail-closed grants, terminal convergence under suppression, and rejected and unresolved correction evidence."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -718,7 +718,8 @@
         "from_state": "component_end_open",
         "to_state": "correction_acknowledged",
         "guards": [
-          "Entitlements commits an idempotent component end or observes its absence under current policy."
+          "Entitlements commits an idempotent component end or observes its absence under current policy.",
+          "Terminal Privacy suppression remains intact while an existing refunded component ends. Missing or unavailable authority leaves the committed consequence pending."
         ],
         "side_effects": [
           "Acknowledge the consequence, preserving the original payment, independent rights and recorded disposition."
@@ -726,7 +727,8 @@
         "terminal": true,
         "source_ids": [
           "right_convergence",
-          "adjudication"
+          "adjudication",
+          "suppressed_correction_case"
         ]
       },
       {
@@ -796,6 +798,16 @@
         "suppression",
         "cases"
       ]
+    },
+    {
+      "summary": "Terminal Privacy suppression keeps existing rights hidden and prevents grants. A verified component correction still ends the exact existing right, leaving unrelated rows and monetary facts intact. The correction acknowledges an absent component without creating a row.",
+      "source_ids": [
+        "right_convergence",
+        "suppression",
+        "cases",
+        "suppressed_correction_case",
+        "correction_cases"
+      ]
     }
   ],
   "concurrency": [
@@ -854,6 +866,15 @@
         "collection_receipt_binding",
         "correction_cases"
       ]
+    },
+    {
+      "summary": "Known source and operation with qualified but unattributable evidence durably bind one unresolved receipt and disposition. Unresolved effects cannot be delivered or acknowledged. Invalid signatures and source or operation binding failures create neither row.",
+      "source_ids": [
+        "adjudication",
+        "correction_receipt",
+        "unresolved_receipt_cases",
+        "unbound_receipt_cases"
+      ]
     }
   ],
   "failure_recovery": [
@@ -883,6 +904,15 @@
         "ledger",
         "collection_receipt_binding"
       ]
+    },
+    {
+      "summary": "A database lock timeout during ending of a suppressed right leaves the original right held and Commerce acknowledgement unset. A fresh BEAM discovers the pending source effect and ends the existing right before a separate retry acknowledges it.",
+      "source_ids": [
+        "suppressed_correction_case",
+        "correction_restart",
+        "right_convergence",
+        "adjudication"
+      ]
     }
   ],
   "tests": [
@@ -904,7 +934,7 @@
         "E2a-09",
         "E2a-10"
       ],
-      "proves": "Admission, forged input denial, independent SQL contention, a consequence-insert rollback, overlapping delivery and fresh scheduler rediscovery after missing or exhausted jobs. Separately qualified receipts preserve one P1 applied payment and a committed correction can withhold an outstanding original grant. Rejects conflicting receipt reuse across purchases, proves rollback after consequence insertion failure, and exercises missing, unavailable, and suppressed Privacy authority with observed contention.",
+      "proves": "Admission, forged input denial, independent SQL contention, a consequence-insert rollback, overlapping delivery and fresh scheduler rediscovery after missing or exhausted jobs. Separately qualified receipts preserve one P1 applied payment and a committed correction can withhold an outstanding original grant. Rejects conflicting receipt reuse across purchases, proves rollback after consequence insertion failure, and exercises missing, unavailable, and suppressed Privacy authority with observed contention. Verifies the original suppressed P1 right reaches ended before acknowledgement and the same acknowledgement is preserved on replay.",
       "limits": "Synthetic only. The scheduler reads a connection-local view restricted to the owned fixture; the persisted job is executed through Oban.Testing, not by a running queue.",
       "source_ids": [
         "cases",
@@ -964,11 +994,14 @@
         "E2a-14",
         "E2a-02"
       ],
-      "proves": "Exact distinct payer, immutable allocation, partial refusal, exact rights, scoped access, independent SQL connections, killed Commerce transaction and fresh BEAM retry. Verifies cross-source receipt arbitration, exact correction and Entitlements blocking, and source-only restart after each commit boundary.",
+      "proves": "Exact distinct payer, immutable allocation, partial refusal, exact rights, scoped access, independent SQL connections, killed Commerce transaction and fresh BEAM retry. Verifies cross-source receipt arbitration, exact correction and Entitlements blocking, and source-only restart after each commit boundary. Proves existing suppressed-right convergence after a failed update, sibling and independent right preservation, and unresolved versus rejected evidence for both correction effects.",
       "limits": "Provider stages, runtime release, live job polling and an actual deletion journey are outside this fixture.",
       "source_ids": [
         "correction_cases",
-        "correction_restart"
+        "correction_restart",
+        "suppressed_correction_case",
+        "unresolved_receipt_cases",
+        "unbound_receipt_cases"
       ]
     }
   ],
@@ -1089,7 +1122,7 @@
       "id": "cases",
       "path": "test/new_you/commerce/plan_payment_test.exs",
       "symbol": "independent PostgreSQL transactions converge",
-      "sha256": "158323f31e2922ce88e8cd6d41e3686c33d162528df9bf3f50a62d1b6c2bebc1"
+      "sha256": "2030e8a201debb11f8a62367020ed65140979d0e000b93e018c12ef5ce0539b6"
     },
     {
       "id": "identity_cases",
@@ -1203,7 +1236,7 @@
       "id": "right_convergence",
       "path": "test/support/entitlements/synthetic_rights.ex",
       "symbol": "def apply_correction",
-      "sha256": "669c10b1d933a1cd92f05c670b1de107c8022fd5e3654ee7563329ec5f08e9b8"
+      "sha256": "1eb352ffc0769e9f501a98a2ccb733768d17bc14c92d81ce9a64c23208f75c94"
     },
     {
       "id": "synthetic_audit",
@@ -1215,7 +1248,7 @@
       "id": "correction_cases",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "equivalent correction receipts wait for the winning Commerce transaction",
-      "sha256": "9bd0c69be83e931dfede97085af73d6730487156bc3ebcd3d491a24f0fb08fac"
+      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
     },
     {
       "id": "correction_restart",
@@ -1264,6 +1297,24 @@
       "path": "priv/repo/migrations/20261125153016_well192_collection_receipt_binding.exs",
       "symbol": "commerce_synthetic_collection_receipts_fingerprint_length",
       "sha256": "71065612051ad69c2980bca0885778cb748fc37dfd14cb8625c1b54f8a6e5171"
+    },
+    {
+      "id": "suppressed_correction_case",
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "symbol": "a suppressed component is ended before acknowledgement",
+      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+    },
+    {
+      "id": "unresolved_receipt_cases",
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "symbol": "qualified but unattributable correction receipts remain unresolved",
+      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+    },
+    {
+      "id": "unbound_receipt_cases",
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "symbol": "forged and unbound correction receipts persist neither a disposition nor a binding",
+      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
     }
   ]
 }
