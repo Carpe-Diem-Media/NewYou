@@ -1,23 +1,25 @@
 {
   "schema_version": 1,
   "capability_id": "commerce.synthetic_plan_payment",
-  "purpose": "Prove that one synthetic accepted Plan payment creates one held right for its verified payer and recipient.",
+  "purpose": "Prove synthetic payment application, financial correction, and component-right convergence in TEST.",
   "implementing_tickets": [
-    "WELL-189"
+    "WELL-189",
+    "WELL-192"
   ],
   "implementation_revision": {
-    "git_sha": "326716c9e73ce391116691f9b5e8d84801c6b750",
-    "semantics": "Bounded FP-002 P1 implementation and strengthened recovery, migration and concurrency proof."
+    "git_sha": "3a25a37d2eac6a5893b8f02e08c57f20ca27c059",
+    "semantics": "WELL-189 P1 with WELL-192 bounded corrections and current source-right checks."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
     {
       "domain": "NewYou.Entitlements",
-      "interface": "grant_paid_plan/1 and plan_rights/1",
+      "interface": "grant_paid_plan/1 and plan_rights/1; TEST SyntheticRights.converge/1 and apply_correction/1",
       "ownership": "Owns the source-bound Plan right.",
       "source_ids": [
         "entitlements",
-        "right"
+        "right",
+        "right_convergence"
       ]
     },
     {
@@ -27,6 +29,24 @@
       "source_ids": [
         "identity",
         "review"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "interface": "SyntheticSuppression.locked_status/1",
+      "ownership": "Owns the TEST-only, terminal completed-deletion fixture.",
+      "source_ids": [
+        "suppression",
+        "suppression_scope"
+      ]
+    },
+    {
+      "domain": "NewYou.Audit",
+      "interface": "SyntheticCorrectionEvidence.read/3",
+      "ownership": "Reads only recorded disposition kinds under an explicit source-scoped TEST grant.",
+      "source_ids": [
+        "synthetic_audit",
+        "adjudication"
       ]
     }
   ],
@@ -74,11 +94,94 @@
       "resource": "NewYou.Entitlements.PlanRight",
       "actions": [
         "read",
-        "grant"
+        "grant",
+        "end_component"
       ],
       "caller_boundary": "Private actions require the paid source or current recipient.",
       "source_ids": [
         "right"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.SyntheticOrder",
+      "actions": [
+        "read",
+        "accept_fixture"
+      ],
+      "caller_boundary": "TEST-only after signed exact-pair authorization and current canonical sessions.",
+      "source_ids": [
+        "synthetic_order",
+        "adjudication"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.SyntheticCollection",
+      "actions": [
+        "read",
+        "record"
+      ],
+      "caller_boundary": "Commerce records immutable collection facts while holding the owner source lock.",
+      "source_ids": [
+        "collection",
+        "ledger"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.SyntheticExcessClaim",
+      "actions": [
+        "read",
+        "establish",
+        "satisfy"
+      ],
+      "caller_boundary": "Commerce ties one claim to the source and genuine excess and settles only on qualified exact return.",
+      "source_ids": [
+        "excess_claim",
+        "ledger",
+        "adjudication"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.SyntheticCorrection",
+      "actions": [
+        "read",
+        "record",
+        "acknowledge"
+      ],
+      "caller_boundary": "Commerce records the decision before asking Entitlements to apply it and acknowledges after Entitlements commits.",
+      "source_ids": [
+        "correction",
+        "adjudication"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.SyntheticCorrectionReceipt",
+      "actions": [
+        "read",
+        "bind"
+      ],
+      "caller_boundary": "Commerce binds each qualified receipt to its fingerprint and existing or new effect.",
+      "source_ids": [
+        "correction_receipt",
+        "adjudication"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "resource": "NewYou.Privacy.SyntheticDeletionScope",
+      "actions": [
+        "read",
+        "register",
+        "suppress"
+      ],
+      "caller_boundary": "Privacy records terminal completion only for an admitted TEST subject.",
+      "source_ids": [
+        "suppression",
+        "suppression_scope"
       ]
     }
   ],
@@ -119,7 +222,8 @@
         "VerifiedPayment or payment_unavailable."
       ],
       "side_effects": [
-        "Atomically commits payment and consequence."
+        "Atomically commits payment and consequence.",
+        "Explicit qualified collection IDs add an immutable collection and, for a genuine second collection, the one excess claim."
       ],
       "caller_constraints": [
         "TEST-only application."
@@ -128,7 +232,8 @@
         "commerce",
         "fixture",
         "payment",
-        "consequence"
+        "consequence",
+        "ledger"
       ]
     },
     {
@@ -140,7 +245,7 @@
         "Durable consequence UUID."
       ],
       "returns": [
-        "Held PlanRight or delivery_unavailable."
+        "PlanRight, withheld for an already corrected or suppressed TEST grant, or delivery_unavailable."
       ],
       "side_effects": [
         "Replays or grants the right and acknowledges the consequence."
@@ -152,7 +257,8 @@
         "commerce",
         "entitlements",
         "consequence",
-        "worker"
+        "worker",
+        "right_convergence"
       ]
     },
     {
@@ -176,6 +282,73 @@
         "entitlements",
         "identity",
         "right"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.SyntheticCorrections",
+      "function": "observe_correction",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Signed TEST observation."
+      ],
+      "returns": [
+        "Unresolved decision or final durable consequence, or correction_unavailable."
+      ],
+      "side_effects": [
+        "Binds the receipt, records the decision and settles only an exact returned excess."
+      ],
+      "caller_constraints": [
+        "Requires an exact accepted operation and signed fixture evidence."
+      ],
+      "source_ids": [
+        "adjudication",
+        "correction",
+        "correction_receipt"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.SyntheticCorrections",
+      "function": "deliver",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Durable corrective consequence UUID."
+      ],
+      "returns": [
+        "Acknowledged effect or delivery_unavailable."
+      ],
+      "side_effects": [
+        "Applies the exact current component effect in Entitlements, then acknowledges in Commerce."
+      ],
+      "caller_constraints": [
+        "Call outside the owner transactions. Recover pending effects with open_consequences/1."
+      ],
+      "source_ids": [
+        "adjudication",
+        "right_convergence"
+      ]
+    },
+    {
+      "module": "NewYou.Privacy.SyntheticSuppression",
+      "function": "suppress",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Signed completed-deletion TEST observation."
+      ],
+      "returns": [
+        "ok or suppression_unavailable."
+      ],
+      "side_effects": [
+        "Locks the admitted subject and records terminal suppression."
+      ],
+      "caller_constraints": [
+        "TEST only. No production Identity or Privacy lifecycle is implemented."
+      ],
+      "source_ids": [
+        "suppression",
+        "suppression_scope"
       ]
     }
   ],
@@ -224,6 +397,74 @@
       "source_ids": [
         "migration_plan_right"
       ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261125135231_well192_synthetic_collection.exs",
+      "tables": [
+        "commerce_synthetic_collections"
+      ],
+      "constraints": [
+        "commerce_synthetic_collections_positive_amount"
+      ],
+      "source_ids": [
+        "migration_collection"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261125135359_well192_synthetic_excess.exs",
+      "tables": [
+        "commerce_synthetic_excess_claims"
+      ],
+      "constraints": [
+        "commerce_synthetic_excess_claims_excess_collection_index",
+        "commerce_synthetic_excess_claims_collection_id_fkey"
+      ],
+      "source_ids": [
+        "migration_excess"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261125135554_well192_accepted_correction_fixture.exs",
+      "tables": [
+        "commerce_synthetic_correction_orders"
+      ],
+      "constraints": [
+        "commerce_synthetic_order_allocation",
+        "commerce_synthetic_correction_orders_operation_index"
+      ],
+      "source_ids": [
+        "migration_fixture"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261125135844_well192_correction_convergence.exs",
+      "tables": [
+        "commerce_synthetic_corrections",
+        "entitlements_plan_rights",
+        "privacy_synthetic_deletion_scopes"
+      ],
+      "constraints": [
+        "commerce_synthetic_corrections_component_key",
+        "commerce_synthetic_corrections_excess_key",
+        "commerce_synthetic_corrections_open",
+        "commerce_synthetic_correction_shape",
+        "entitlements_plan_rights_state"
+      ],
+      "source_ids": [
+        "migration_correction"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261125140557_well192_correction_receipt.exs",
+      "tables": [
+        "commerce_synthetic_correction_receipts"
+      ],
+      "constraints": [
+        "commerce_synthetic_correction_receipts_correction_id_fkey"
+      ],
+      "source_ids": [
+        "migration_receipt"
+      ]
     }
   ],
   "request_flow": [
@@ -250,6 +491,29 @@
         "entitlements",
         "right"
       ]
+    },
+    {
+      "summary": "The standalone P1 control remains R399. The signed bundle fixture freezes minor-unit lists, discounts and the resulting 5100 ZAR minor units under its own operation.",
+      "source_ids": [
+        "purchase",
+        "synthetic_order",
+        "correction_cases"
+      ]
+    },
+    {
+      "summary": "Commerce qualifies real synthetic collection identity separately from receipt identity. The first collection pays the source. A second genuine collection establishes one claim for the accepted payer.",
+      "source_ids": [
+        "ledger",
+        "excess_claim"
+      ]
+    },
+    {
+      "summary": "Commerce checks exact return or component amount against the accepted snapshot and writes either unresolved or a committed consequence. Entitlements applies only its authorized change under current source and Privacy locks.",
+      "source_ids": [
+        "adjudication",
+        "right_convergence",
+        "suppression"
+      ]
     }
   ],
   "lifecycle": {
@@ -258,7 +522,17 @@
       "accepted_pending",
       "verified_open",
       "held_open",
-      "held_fulfilled"
+      "held_fulfilled",
+      "withheld_fulfilled",
+      "excess_unrecorded",
+      "excess_owed",
+      "excess_satisfied",
+      "correction_unrecorded",
+      "correction_unresolved",
+      "component_end_open",
+      "correction_acknowledged",
+      "synthetic_access_allowed",
+      "synthetic_access_suppressed"
     ],
     "transitions": [
       {
@@ -324,6 +598,112 @@
           "entitlements",
           "consequence"
         ]
+      },
+      {
+        "from_state": "verified_open",
+        "to_state": "withheld_fulfilled",
+        "guards": [
+          "TEST correction ended the Plan component or Privacy suppressed the recipient."
+        ],
+        "side_effects": [
+          "Acknowledge the original delivery without creating a right."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "entitlements",
+          "right_convergence"
+        ]
+      },
+      {
+        "from_state": "excess_unrecorded",
+        "to_state": "excess_owed",
+        "guards": [
+          "A separately qualified second collection belongs to the same intended obligation."
+        ],
+        "side_effects": [
+          "Preserve the original application and record one payer-bound excess obligation."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "ledger",
+          "excess_claim"
+        ]
+      },
+      {
+        "from_state": "excess_owed",
+        "to_state": "excess_satisfied",
+        "guards": [
+          "Exact final return references the original excess collection and matches the claimant, source, currency and amount."
+        ],
+        "side_effects": [
+          "Settle the claim once and record the additive consequence. Entitlements preserves existing valid rights."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "adjudication",
+          "excess_claim",
+          "right_convergence"
+        ]
+      },
+      {
+        "from_state": "correction_unrecorded",
+        "to_state": "correction_unresolved",
+        "guards": [
+          "Owner-correlated evidence cannot prove an exact final result."
+        ],
+        "side_effects": [
+          "Retain the limited unresolved disposition without affecting payment, claim or right."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "adjudication",
+          "correction"
+        ]
+      },
+      {
+        "from_state": "correction_unrecorded",
+        "to_state": "component_end_open",
+        "guards": [
+          "Exact final unused-component refund matches the original collection and the accepted allocation."
+        ],
+        "side_effects": [
+          "Record the component-only correction before Entitlements applies it."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "adjudication",
+          "correction"
+        ]
+      },
+      {
+        "from_state": "component_end_open",
+        "to_state": "correction_acknowledged",
+        "guards": [
+          "Entitlements commits an idempotent component end or observes its absence under current policy."
+        ],
+        "side_effects": [
+          "Acknowledge the consequence, preserving the original payment, independent rights and recorded disposition."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "right_convergence",
+          "adjudication"
+        ]
+      },
+      {
+        "from_state": "synthetic_access_allowed",
+        "to_state": "synthetic_access_suppressed",
+        "guards": [
+          "Privacy accepts signed completed-deletion fixture evidence."
+        ],
+        "side_effects": [
+          "Persist the opaque suppression guard. Late grants and corrections cannot establish access."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "suppression",
+          "suppression_scope"
+        ]
       }
     ]
   },
@@ -351,6 +731,23 @@
         "commerce",
         "entitlements"
       ]
+    },
+    {
+      "summary": "Distinct parties are bound to the exact operation and current canonical sessions. Commerce reconciliation fails closed on either party's accepted fixture history.",
+      "source_ids": [
+        "adjudication",
+        "commerce",
+        "correction_cases"
+      ]
+    },
+    {
+      "summary": "Missing TEST Privacy authority fails closed. Suppression prevents creation and visibility of synthetic rights. Staff or Audit reads require a signed exact principal, source and purpose grant and return narrow projections.",
+      "source_ids": [
+        "suppression",
+        "right_convergence",
+        "synthetic_audit",
+        "correction_cases"
+      ]
     }
   ],
   "concurrency": [
@@ -362,6 +759,15 @@
         "payment",
         "right"
       ]
+    },
+    {
+      "summary": "The Commerce purchase or fixture lock serializes collection and correction. Entitlements acquires source then Privacy locks before changing rights. Acknowledgement locks the consequence in a separate transaction.",
+      "source_ids": [
+        "adjudication",
+        "right_convergence",
+        "suppression",
+        "correction_cases"
+      ]
     }
   ],
   "idempotency_retry": [
@@ -372,6 +778,15 @@
         "purchase",
         "right",
         "cases"
+      ]
+    },
+    {
+      "summary": "Direct replay binds the exact receipt fingerprint. A separate equivalent receipt resolves to the same final component or excess effect. A different accepted operation keeps its own payment and rights.",
+      "source_ids": [
+        "adjudication",
+        "correction_receipt",
+        "migration_correction",
+        "correction_cases"
       ]
     }
   ],
@@ -385,6 +800,14 @@
         "restart",
         "scheduler_restart"
       ]
+    },
+    {
+      "summary": "Discarding the pre-commit Commerce process rolls back the uncommitted decision. Fresh BEAM workers reapply or acknowledge from persisted owner facts and the open consequence index without a job.",
+      "source_ids": [
+        "adjudication",
+        "correction_restart",
+        "correction_cases"
+      ]
     }
   ],
   "tests": [
@@ -395,9 +818,14 @@
         "P1-02",
         "P1-03",
         "P1-04",
-        "P1-05"
+        "P1-05",
+        "E2a-01",
+        "E2a-02",
+        "E2a-07",
+        "E2a-08",
+        "E2a-11"
       ],
-      "proves": "Admission, forged input denial, independent SQL contention, a consequence-insert rollback, overlapping delivery and fresh scheduler rediscovery after missing or exhausted jobs.",
+      "proves": "Admission, forged input denial, independent SQL contention, a consequence-insert rollback, overlapping delivery and fresh scheduler rediscovery after missing or exhausted jobs. Separately qualified receipts preserve one P1 applied payment and a committed correction can withhold an outstanding original grant.",
       "limits": "Synthetic only. The scheduler reads a connection-local view restricted to the owned fixture; the persisted job is executed through Oban.Testing, not by a running queue.",
       "source_ids": [
         "cases",
@@ -432,12 +860,35 @@
     {
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "cases": [
-        "P1-07"
+        "P1-07",
+        "E2a-15"
       ],
-      "proves": "Migration modules run up, down and up in a transaction-owned schema with all three foreign keys targeting that schema; the schema is absent after rollback.",
+      "proves": "Runs the P1 and E2a migrations up, down and up in an isolated transaction-owned schema. Verifies local foreign keys, correction CHECKs and partial indexes.",
       "limits": "Uses the migration runner directly; migration ledger is not exercised.",
       "source_ids": [
         "migration_roundtrip"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "cases": [
+        "E2a-03",
+        "E2a-04",
+        "E2a-05",
+        "E2a-06",
+        "E2a-07",
+        "E2a-08",
+        "E2a-09",
+        "E2a-10",
+        "E2a-11",
+        "E2a-12",
+        "E2a-14"
+      ],
+      "proves": "Exact distinct payer, immutable allocation, partial refusal, exact rights, scoped access, independent SQL connections, killed Commerce transaction and fresh BEAM retry.",
+      "limits": "Provider stages, runtime release, live job polling and an actual deletion journey are outside this fixture.",
+      "source_ids": [
+        "correction_cases",
+        "correction_restart"
       ]
     }
   ],
@@ -447,6 +898,13 @@
       "source_ids": [
         "commerce",
         "entitlements"
+      ]
+    },
+    {
+      "summary": "Use WELL-197's shared purchase snapshot before production-shaped integration. Synthetic fixture admission deliberately has its own TEST contract.",
+      "source_ids": [
+        "synthetic_order",
+        "adjudication"
       ]
     }
   ],
@@ -458,6 +916,14 @@
         "commerce",
         "consequence",
         "right"
+      ]
+    },
+    {
+      "summary": "Reused P1 payment uniqueness and the original commerce recovery boundary. Adapted Store Interlocks source locking, PaymentApplication uniqueness, RefundAdjustment history, Refund identities and SourceConvergence component scoping. Used Ash actions and PostgreSQL constraints. Signals and Temporal Resources are deferred because the durable scan and immutable facts cover TEST recovery and history.",
+      "source_ids": [
+        "adjudication",
+        "ledger",
+        "right_convergence"
       ]
     }
   ],
@@ -472,21 +938,23 @@
     }
   ],
   "proof_limitations": [
-    "One synthetic R399 Plan only. Provider, public checkout, production release, Plan delivery and consumption remain outside this proof.",
-    "Migration up/down/up uses the actual migration modules and a transaction-owned schema. The three foreign keys target the isolated schema. This uses the migration runner directly and does not exercise the migration ledger.",
-    "The scheduler test restricts its read to a fixture-scoped temporary view and invokes the persisted job via Oban.Testing; it does not prove live queue polling."
+    "P1 uses one R399 Plan. E2a additionally uses approved TEST-only allocations and distinct verified parties. Real offers, provider cash flows, fulfilment and release remain out of scope.",
+    "Migration up/down/up uses isolated schemas and verifies foreign key targets, shape constraints and partial indexes. It does not exercise the migration ledger. The E2a rollback to P1 requires removal of TEST-only assessment and ended-right fixture rows by their owning test cleanup.",
+    "The scheduler test restricts its read to a fixture-scoped temporary view and invokes the persisted job via Oban.Testing; it does not prove live queue polling.",
+    "E2a manual recovery discovers persisted open consequences without relying on jobs. It does not certify a production scheduler for corrections or provider dispatch.",
+    "EV-012, EV-024 and EV-042 coverage is synthetic only. WELL-194 and later work retain the real provider refund, dispute and actual-stack obligations."
   ],
   "follow_up_tickets": [
     "WELL-190",
-    "WELL-192",
-    "WELL-197"
+    "WELL-197",
+    "WELL-194"
   ],
   "sources": [
     {
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "defmodule NewYou.Commerce",
-      "sha256": "4cb284d0609cb6d55a58cf0771efdd3909207629c1d9125513ff57d62d8d8798"
+      "sha256": "4a8cc22d7cc18b894bf20a7c4058efa0e024f7c3a0e53904fd9df69f79d1351c"
     },
     {
       "id": "purchase",
@@ -510,13 +978,13 @@
       "id": "entitlements",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def grant_paid_plan",
-      "sha256": "688b21f5c29a7b4eff87bfb837be3a495aa613c08ff9ae621e82606dbab43664"
+      "sha256": "d9d9a01b65935fadfcab80be67dce7349f67a1b04c81e17956868e019b294625"
     },
     {
       "id": "right",
       "path": "lib/new_you/entitlements/plan_right.ex",
       "symbol": "create :grant",
-      "sha256": "61c85d5c230223deb86901e70030c16ec0c92efda358a34ba6c7106d3ce60617"
+      "sha256": "f1e7a3c3d938941fa401b59c386df8d89ecb4d1704cbfeadbd88c0aac1146ecf"
     },
     {
       "id": "identity",
@@ -534,13 +1002,13 @@
       "id": "fixture",
       "path": "test/support/proof/plan_payment_observation.ex",
       "symbol": "def verify",
-      "sha256": "f5356412f51bd46c738174c4f2c782c482c04996454175d5c1f894e1553c702a"
+      "sha256": "6cb7b55c9860fc1ac242320b2d215f772e14398c0cdabe5b1401aade860d07f4"
     },
     {
       "id": "cases",
       "path": "test/new_you/commerce/plan_payment_test.exs",
       "symbol": "independent PostgreSQL transactions converge",
-      "sha256": "f721a6e43ae68a4f20800a2f730421ca03eea8bcb9611a5d54a50b0117a46ae1"
+      "sha256": "ce222a2e3e0d601a5c7f0f116a22b73190439baf80bf22e4385df856f32baad7"
     },
     {
       "id": "identity_cases",
@@ -552,7 +1020,7 @@
       "id": "production",
       "path": "test/proof/well189_plan_payment_production.exs",
       "symbol": "P1 production fixture exclusion passed",
-      "sha256": "f66d99e9bcc0272e6db81f178995ee8e29b30370efcf09e7d10a6f67bb27c865"
+      "sha256": "812851cf59ed6437b054c3d4683b00f5b83124afef1d8432b438803c114d0c27"
     },
     {
       "id": "restart",
@@ -594,7 +1062,115 @@
       "id": "migration_roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "P1 migrations apply",
-      "sha256": "d23a4b96920a93aaf3cb125cd49f859275a4c08ff9ce1adafe9ca5736d700eb6"
+      "sha256": "6a8de0aa1aed1fee89a464645074e0fcd52f691238dcea76e979e44e1ef1a7bd"
+    },
+    {
+      "id": "adjudication",
+      "path": "test/support/commerce/synthetic_corrections.ex",
+      "symbol": "def observe_correction",
+      "sha256": "298527ac10dcb6ec2253f45da483f1dcdcce3163368bab8e6df6bd409c56fd82"
+    },
+    {
+      "id": "ledger",
+      "path": "test/support/commerce/synthetic_collection_ledger.ex",
+      "symbol": "def record",
+      "sha256": "e429a99301a37add941c229dc2f1f864ba6fafd164865b5bbb1f589db17f14f9"
+    },
+    {
+      "id": "collection",
+      "path": "lib/new_you/commerce/synthetic_collection.ex",
+      "symbol": "create :record",
+      "sha256": "5cb5a913c10fa923657149ce7c8edbbed467404366a0f57b9c4faaeeee983369"
+    },
+    {
+      "id": "synthetic_order",
+      "path": "lib/new_you/commerce/synthetic_order.ex",
+      "symbol": "create :accept_fixture",
+      "sha256": "f938f16b7e8a27ca72f3fa336b5233ac4f85362c7082bd8ffb124785e0a8399d"
+    },
+    {
+      "id": "excess_claim",
+      "path": "lib/new_you/commerce/synthetic_excess_claim.ex",
+      "symbol": "update :satisfy",
+      "sha256": "8fe8a4c64886e4c8b37bef347a42fc5539193502476fa55a64630f721324edd4"
+    },
+    {
+      "id": "correction",
+      "path": "lib/new_you/commerce/synthetic_correction.ex",
+      "symbol": "update :acknowledge",
+      "sha256": "fcafe4da051f3241aeb832ee94344cab188dea784be814375910e4c5a03b2b6d"
+    },
+    {
+      "id": "correction_receipt",
+      "path": "lib/new_you/commerce/synthetic_correction_receipt.ex",
+      "symbol": "create :bind",
+      "sha256": "c4bf7f3f16e444c886164daf677b952589d2b969f009a59180a146cb796b3229"
+    },
+    {
+      "id": "suppression",
+      "path": "test/support/privacy/synthetic_suppression.ex",
+      "symbol": "def locked_status",
+      "sha256": "3af256de9d48363a41075d0f8becf6fc7ec3a929a8c49e81e90bd4be6b0ad210"
+    },
+    {
+      "id": "suppression_scope",
+      "path": "lib/new_you/privacy/synthetic_deletion_scope.ex",
+      "symbol": "update :suppress",
+      "sha256": "c32a48db80dc1146d3351f80374bcc34ab3d0263e2eb799500767972105aa4b8"
+    },
+    {
+      "id": "right_convergence",
+      "path": "test/support/entitlements/synthetic_rights.ex",
+      "symbol": "def apply_correction",
+      "sha256": "e3dea918686fb1cc71499bd3ffe8e075dfe4702ff77064657c97c573ae573e2f"
+    },
+    {
+      "id": "synthetic_audit",
+      "path": "test/support/audit/synthetic_correction_evidence.ex",
+      "symbol": "def read",
+      "sha256": "156b6250f4d109204febbe2bae0161614404e31deb80638e53d2c064949ef1df"
+    },
+    {
+      "id": "correction_cases",
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "symbol": "independent SQL transactions converge",
+      "sha256": "13ed6a4a70404c5d4777a0f55eaab9546203df3ec53f9c2f2527c262d6dec7ec"
+    },
+    {
+      "id": "correction_restart",
+      "path": "test/proof/well192_correction_restart.exs",
+      "symbol": "E2A_COMPLETED",
+      "sha256": "16827a19610fe3f3bff951dc10704d078047a9dd2583026f64a69b5a7864ddd2"
+    },
+    {
+      "id": "migration_collection",
+      "path": "priv/repo/migrations/20261125135231_well192_synthetic_collection.exs",
+      "symbol": "commerce_synthetic_collections_positive_amount",
+      "sha256": "23fc596d957efbd634dfcacf7f35d2c1abecac8ba91a4d115bbc344cf78088e4"
+    },
+    {
+      "id": "migration_excess",
+      "path": "priv/repo/migrations/20261125135359_well192_synthetic_excess.exs",
+      "symbol": "commerce_synthetic_excess_claims_excess_collection_index",
+      "sha256": "df25a93577841a71b03941dde735e8e51042beed307b39174d2e5e59f6602f3c"
+    },
+    {
+      "id": "migration_fixture",
+      "path": "priv/repo/migrations/20261125135554_well192_accepted_correction_fixture.exs",
+      "symbol": "commerce_synthetic_order_allocation",
+      "sha256": "8dde7d785933d5decfff93b8504d1ffce5f54285cc5ae9d9788f44c58ea6cfba"
+    },
+    {
+      "id": "migration_correction",
+      "path": "priv/repo/migrations/20261125135844_well192_correction_convergence.exs",
+      "symbol": "commerce_synthetic_corrections_component_key",
+      "sha256": "7f33ed6e75ed36ecf8e190f4d0a5e59de87287716caa9188c928471f8400a486"
+    },
+    {
+      "id": "migration_receipt",
+      "path": "priv/repo/migrations/20261125140557_well192_correction_receipt.exs",
+      "symbol": "commerce_synthetic_correction_receipts_correction_id_fkey",
+      "sha256": "ed7375e0ed927a4c9a834807abe0a1b67bdea6efd363537da7fe4d7b970a00b7"
     }
   ]
 }
