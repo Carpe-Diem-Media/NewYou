@@ -374,6 +374,85 @@ defmodule NewYou.Commerce.PlanPaymentTest do
     end
   end
 
+  test "the scheduler replaces an exhausted delivery job for the original open consequence" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      purchase = accept!(payer)
+      assert {:ok, payment} = Commerce.apply_payment_observation(observation(purchase))
+      assert {:ok, [consequence_id]} = Commerce.open_plan_payment_consequences(purchase.id)
+      consequence = Ash.get!(PaymentConsequence, consequence_id, authorize?: false)
+      original_job = AshOban.run_trigger(consequence, :deliver_plan_payment)
+      assert original_job.queue == "commerce"
+      assert original_job.max_attempts == 1
+
+      # The initial available job must suppress a duplicate scheduler insertion.
+      schedule_fixture!(purchase.operation_id)
+
+      assert [[1]] =
+               Repo.query!(
+                 "SELECT count(*) FROM oban_jobs WHERE args->'primary_key'->>'id' = $1",
+                 [consequence_id]
+               ).rows
+
+      P805.with_rejected_insert("entitlements_plan_rights", fn reached? ->
+        # Claim only this fixture's job for its single configured attempt; the
+        # real Oban executor runs and persists its terminal result below.
+        assert %{num_rows: 1} =
+                 Repo.query!(
+                   "UPDATE oban_jobs SET state = 'executing', attempt = 1, attempted_at = now() WHERE id = $1 AND state = 'available' AND attempt = 0",
+                   [original_job.id]
+                 )
+
+        job = Repo.get!(Oban.Job, original_job.id)
+        executor = Oban.Queues.Executor.new(Oban.config(), job) |> Oban.Queues.Executor.call()
+        assert executor.state == :exhausted
+        assert reached?.()
+      end)
+
+      exhausted = Repo.get!(Oban.Job, original_job.id)
+      assert exhausted.state == "discarded"
+      assert exhausted.attempt == exhausted.max_attempts
+      assert {:ok, [^consequence_id]} = Commerce.open_plan_payment_consequences(purchase.id)
+      assert durable_counts(purchase.id) == {1, 1, 1, 1, 0}
+
+      schedule_fixture!(purchase.operation_id)
+
+      assert [[new_job_id]] =
+               Repo.query!(
+                 "SELECT id FROM oban_jobs WHERE args->'primary_key'->>'id' = $1 AND id <> $2 AND state = 'available'",
+                 [consequence_id, original_job.id]
+               ).rows
+
+      replacement = Repo.get!(Oban.Job, new_job_id)
+      assert replacement.queue == original_job.queue
+      assert replacement.worker == original_job.worker
+      assert replacement.args == exhausted.args
+      job = %{replacement | attempted_at: DateTime.utc_now()}
+      assert :ok = Oban.Testing.perform_job(job, repo: Repo)
+      assert {:ok, []} = Commerce.open_plan_payment_consequences(purchase.id)
+      assert {:ok, [right]} = Entitlements.plan_rights(payer.credentials)
+      assert right.payment_id == payment.id
+      assert right.purchase_id == purchase.id
+      assert right.state == :held_unconsumed
+      assert durable_counts(purchase.id) == {1, 1, 1, 1, 1}
+      assert Repo.get!(Oban.Job, original_job.id).state == "discarded"
+
+      assert [[2]] =
+               Repo.query!(
+                 "SELECT count(*) FROM oban_jobs WHERE args->'primary_key'->>'id' = $1",
+                 [consequence_id]
+               ).rows
+    end)
+  end
+
+  defp schedule_fixture!(operation_id) do
+    {executable, arguments} =
+      FreshMix.command(["run", "test/proof/well189_scheduler_restart.exs", operation_id])
+
+    assert %{status: :ok, marker: :p1_completed, cleanup: :confirmed} =
+             NewYou.Proof.P815Port.run(executable, arguments, "", 60_000)
+  end
+
   defp accept!(payer) do
     request = %{operation_id: operation_id(), price_version: "synthetic-plan-v1"}
     {:ok, purchase} = Commerce.accept_plan_purchase(payer.credentials, request)
