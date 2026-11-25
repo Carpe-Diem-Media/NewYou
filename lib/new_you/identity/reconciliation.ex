@@ -553,7 +553,15 @@ defmodule NewYou.Identity.Reconciliation do
     # only derived projections and likewise contributes no reconciliation truth.
     with true <-
            Enum.sort(Application.get_env(:new_you, :ash_domains, [])) ==
-             Enum.sort([Identity, Communications, Audit, NewYou.Privacy, NewYou.Analytics]),
+             Enum.sort([
+               Identity,
+               Communications,
+               Audit,
+               NewYou.Privacy,
+               NewYou.Analytics,
+               NewYou.Commerce,
+               NewYou.Entitlements
+             ]),
          {:ok, communications} <-
            Communications.review_identity_reconciliation(
              current.candidate_id,
@@ -561,8 +569,24 @@ defmodule NewYou.Identity.Reconciliation do
            ),
          :ok <- checkpoint(:before_audit_owner_review),
          {:ok, audit} <-
-           Audit.review_identity_reconciliation(current.candidate_id, current.canonical_id) do
-      {:ok, %{"communications" => communications, "audit" => audit}}
+           Audit.review_identity_reconciliation(current.candidate_id, current.canonical_id),
+         {:ok, commerce} <-
+           NewYou.Commerce.review_identity_reconciliation(
+             current.candidate_id,
+             current.canonical_id
+           ),
+         {:ok, entitlements} <-
+           NewYou.Entitlements.review_identity_reconciliation(
+             current.candidate_id,
+             current.canonical_id
+           ) do
+      {:ok,
+       %{
+         "communications" => communications,
+         "audit" => audit,
+         "commerce" => commerce,
+         "entitlements" => entitlements
+       }}
     else
       _ -> unavailable()
     end
