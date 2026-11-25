@@ -8,8 +8,8 @@
     "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "fad576a2c2ce8cbbfae65250fcf3eeae420a796e",
-    "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures. WELL-189 binds the empty-scope Commerce and Entitlements reviews. Earlier approvals need fresh review before apply."
+    "git_sha": "63e4224811e3e0ac3de83b51f3c97c6db0b7858c",
+    "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures. WELL-189 binds the empty-scope Commerce and Entitlements reviews. Earlier approvals need fresh review before apply. WELL-210 refreshes the shared browser proof source reference after the Recovery packet path moved to v0.3.0. The mapped behavior is unchanged. WELL-210 reconciles source evidence from integrated main b7e0e1fb6f600d6ad9fddf5b41633b1e19a46c14 and draft 63e4224811e3e0ac3de83b51f3c97c6db0b7858c."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -754,7 +754,7 @@
       "id": "chromium",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "operator_reconciliation",
-      "sha256": "754113bad63950379b66867714c0213d424114dccd9b48b132578ae51b9db04e"
+      "sha256": "8d75ab58bbf06909e134731ea9868ba774fd60f46ca36254e988a51f41cfe465"
     },
     {
       "id": "scenarios",

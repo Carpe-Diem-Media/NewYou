@@ -50,9 +50,9 @@
     },
     {
       "document_id": "FP002_FINAL_FEATURE_PACK",
-      "canonical_filename": "FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md",
-      "repository_path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.2.0.md",
-      "sha256": "b0bbb66c81f60db68d2d9fcd15e688e3358c02bc0c371612880a4224f3e9cf43",
+      "canonical_filename": "FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+      "repository_path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+      "sha256": "3f244024bee42333d114a4cebef4195d7959f2cdab9dc52d5c88be0342948b2f",
       "contract_type": "feature_contract",
       "status": "COMPLETE; CERTIFIED; CURRENT; NO_DEVELOPMENT_OR_RELEASE_AUTHORITY"
     },
@@ -255,9 +255,9 @@
     },
     {
       "document_id": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED",
-      "canonical_filename": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json",
-      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json",
-      "sha256": "8a9466ce2b91e6311154bea13d085959d550f77ba63b6f9b4585ad3d3a67c5da",
+      "canonical_filename": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json",
+      "sha256": "eae5ea169d30278a70f97621f559d1669b8a897dcad5e276b74e4d1c9e15a06d",
       "contract_type": "content_evidence",
       "status": "OWNER_APPROVED_BOUNDED_NONPRODUCTION_BROWSER_COPY; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
     },

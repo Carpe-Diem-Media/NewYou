@@ -851,7 +851,7 @@ try {
     await signIn(input.target);
     checks.held_login = await evaluate(`location.pathname === '/login' && !!document.querySelector('#password-login')`);
   } else if (input.mode === 'ordinary_recovery') {
-    const approved = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json', 'utf8'));
+    const approved = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json', 'utf8'));
     const text = key => JSON.stringify(approved.candidate.copy_items.find(item => item.key === key).locales[input.locale].text);
     const stage = name => evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && document.querySelector('h1')?.textContent.trim() === ${text(`identity.recovery.${name}.title`)} && document.querySelector('[role="status"]')?.textContent.trim() === ${text(`identity.recovery.${name}.body`)}`);
     const navigate = url => navigation(() => cdp('Page.navigate', {url}));

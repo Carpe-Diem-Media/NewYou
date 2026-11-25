@@ -26,7 +26,7 @@ defmodule NewYouWeb.RecoveryControllerTest do
 
       for locale <- ["en", "af"] do
         packet =
-          "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json"
+          "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json"
           |> File.read!()
           |> Jason.decode!()
 

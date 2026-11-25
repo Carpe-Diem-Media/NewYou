@@ -29,22 +29,26 @@ CAPACITY_SHA256 = "a3c84d4458afaaf8df2cf0f4e9fcaf4040e424da8950a1d6ef3f63efbf225
 
 PRODUCT_DOCUMENTS = {
     "PLATFORM_PRODUCT_LAW": {
-        "path": Path("docs/governance/product/00_PLATFORM_v1.20.0.md"),
-        "sha256": "5308e09f668b4a9762f98fb0bcbddf2f84595703b69c6ed511e8f511c3da36b1",
-        "predecessor": Path("docs/governance/product/00_PLATFORM_v1.19.0.md"),
+        "path": Path("docs/governance/product/00_PLATFORM_v1.21.0.md"),
+        "sha256": "d366c68e6d5f012f59f7f98071030f739dc3314287d59989e6433a3b62f2f9ff",
+        "predecessor": Path("docs/governance/product/00_PLATFORM_v1.20.0.md"),
+        "v1_19": Path("docs/governance/product/00_PLATFORM_v1.19.0.md"),
+        "v1_19_sha256": "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9",
         "v1_18": Path("docs/governance/product/00_PLATFORM_v1.18.0.md"),
         "v1_18_sha256": "a4f59321e6de36314633bf3bd202d365cd2f99fa52bfcb5639482a71ddcd392f",
-        "predecessor_sha256": "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9",
-        "transition": "**SemVer transition:** `v1.19.0 → v1.20.0`",
+        "predecessor_sha256": "5308e09f668b4a9762f98fb0bcbddf2f84595703b69c6ed511e8f511c3da36b1",
+        "transition": "**SemVer transition:** `v1.20.0 → v1.21.0`",
     },
     "PRODUCT_DECISIONS": {
-        "path": Path("docs/governance/product/01_DECISIONS_v1.20.0.md"),
-        "sha256": "7282344c42e850a2683e15dcce21b46bb3ecca28d9fac22b91b01ec7e8f32b16",
-        "predecessor": Path("docs/governance/product/01_DECISIONS_v1.19.0.md"),
+        "path": Path("docs/governance/product/01_DECISIONS_v1.21.0.md"),
+        "sha256": "722dce49c248987ea00fe237319083d26062fbbc2132c72eb32edca3ecd0013a",
+        "predecessor": Path("docs/governance/product/01_DECISIONS_v1.20.0.md"),
+        "v1_19": Path("docs/governance/product/01_DECISIONS_v1.19.0.md"),
+        "v1_19_sha256": "ed90a1ec6adb201de094f130fc091c10bca6145e142a6e225fc840794553f4c2",
         "v1_18": Path("docs/governance/product/01_DECISIONS_v1.18.0.md"),
         "v1_18_sha256": "937c4555c8f0d319c85a2f1fca02c60f181e9ad157d0f1c4349d2ab1f38996d0",
-        "predecessor_sha256": "ed90a1ec6adb201de094f130fc091c10bca6145e142a6e225fc840794553f4c2",
-        "transition": "**SemVer transition:** `v1.19.0 → v1.20.0`",
+        "predecessor_sha256": "7282344c42e850a2683e15dcce21b46bb3ecca28d9fac22b91b01ec7e8f32b16",
+        "transition": "**SemVer transition:** `v1.20.0 → v1.21.0`",
     },
 }
 
@@ -150,6 +154,7 @@ def check_product_lineage(root: Path, router: dict[str, Any], errors: list[str])
         try:
             current_bytes = read_bytes(root, path)
             predecessor_bytes = read_bytes(root, expected["predecessor"])
+            v1_19_bytes = read_bytes(root, expected["v1_19"])
             v1_18_bytes = read_bytes(root, expected["v1_18"])
         except OSError:
             errors.append(f"Product successor or predecessor is unreadable: {document_id}")
@@ -160,7 +165,7 @@ def check_product_lineage(root: Path, router: dict[str, Any], errors: list[str])
             "canonical_filename": path.name,
             "repository_path": path.as_posix(),
             "sha256": expected["sha256"],
-            "semver": "1.20.0",
+            "semver": "1.21.0",
         }
         if {key: route.get(key) for key in expected_route} != expected_route:
             errors.append(f"current Product route mismatch: {document_id}")
@@ -169,6 +174,8 @@ def check_product_lineage(root: Path, router: dict[str, Any], errors: list[str])
         if sha256(predecessor_bytes) != expected["predecessor_sha256"]:
             errors.append(f"Product predecessor digest mismatch: {document_id}")
 
+        if sha256(v1_19_bytes) != expected["v1_19_sha256"]:
+            errors.append(f"Product v1.19.0 digest mismatch: {document_id}")
         if sha256(v1_18_bytes) != expected["v1_18_sha256"]:
             errors.append(f"Product v1.18.0 digest mismatch: {document_id}")
 

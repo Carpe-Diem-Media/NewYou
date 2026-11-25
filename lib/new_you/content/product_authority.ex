@@ -4,31 +4,40 @@ defmodule NewYou.Content.ProductAuthority do
   @product_directory "docs/governance/product"
   @routes [
     {"PLATFORM_PRODUCT_LAW", "00_PLATFORM",
+     "d366c68e6d5f012f59f7f98071030f739dc3314287d59989e6433a3b62f2f9ff",
      "5308e09f668b4a9762f98fb0bcbddf2f84595703b69c6ed511e8f511c3da36b1",
      "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9"},
     {"PRODUCT_DECISIONS", "01_DECISIONS",
+     "722dce49c248987ea00fe237319083d26062fbbc2132c72eb32edca3ecd0013a",
      "7282344c42e850a2683e15dcce21b46bb3ecca28d9fac22b91b01ec7e8f32b16",
      "ed90a1ec6adb201de094f130fc091c10bca6145e142a6e225fc840794553f4c2"}
   ]
 
   @doc """
-  Checks the current v1.20 Product and Decision pair before returning the
-  verified v1.19 bindings used by immutable pre-WELL-175 approval evidence.
+  Checks the current v1.21 Product and Decision pair and its verified v1.20
+  predecessor, then returns the verified v1.19 bindings used by immutable
+  pre-WELL-175 approval evidence.
   """
   @spec historical_bindings(map(), (String.t() -> {:ok, binary()} | {:error, term()})) ::
           {:ok, [map()]} | {:error, :content_ineligible}
   def historical_bindings(%{"governing_documents" => documents}, read)
       when is_list(documents) do
-    Enum.reduce_while(@routes, {:ok, []}, fn {id, stem, current_sha, prior_sha},
+    Enum.reduce_while(@routes, {:ok, []}, fn {id, stem, current_sha, previous_sha, prior_sha},
                                              {:ok, bindings} ->
-      current = entry(id, stem, "1.20.0", current_sha)
+      current = entry(id, stem, "1.21.0", current_sha)
+      previous = entry(id, stem, "1.20.0", previous_sha)
       prior = entry(id, stem, "1.19.0", prior_sha)
 
       with [^current] <- Enum.filter(documents, &(&1["document_id"] == id)),
            {:ok, bytes} <- read.(current["repository_path"]),
            true <- digest(bytes) == current_sha,
-           true <- String.contains?(bytes, "**Predecessor:** `#{prior["repository_path"]}`"),
-           true <- String.contains?(bytes, "**SemVer transition:** `v1.19.0 → v1.20.0`"),
+           true <- String.contains?(bytes, "**Predecessor:** `#{previous["repository_path"]}`"),
+           true <- String.contains?(bytes, "**SemVer transition:** `v1.20.0 → v1.21.0`"),
+           {:ok, previous_bytes} <- read.(previous["repository_path"]),
+           true <- digest(previous_bytes) == previous_sha,
+           true <-
+             String.contains?(previous_bytes, "**Predecessor:** `#{prior["repository_path"]}`"),
+           true <- String.contains?(previous_bytes, "**SemVer transition:** `v1.19.0 → v1.20.0`"),
            {:ok, prior_bytes} <- read.(prior["repository_path"]),
            true <- digest(prior_bytes) == prior_sha do
         {:cont, {:ok, [prior | bindings]}}

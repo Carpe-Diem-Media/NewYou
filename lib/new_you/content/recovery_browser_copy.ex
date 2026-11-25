@@ -6,9 +6,9 @@ defmodule NewYou.Content.RecoveryBrowserCopy do
   @enabled Mix.env() in [:dev, :test]
   @root Path.expand("../../..", __DIR__)
   @document "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED"
-  @filename "#{@document}_v0.2.0.json"
+  @filename "#{@document}_v0.3.0.json"
   @path "docs/delivery/content-evidence/copy/evidence/#{@filename}"
-  @sha "8a9466ce2b91e6311154bea13d085959d550f77ba63b6f9b4585ad3d3a67c5da"
+  @sha "eae5ea169d30278a70f97621f559d1669b8a897dcad5e276b74e4d1c9e15a06d"
 
   @doc "Load the exact approved wording for the requested locale. Missing or changed evidence denies use."
   @spec load(String.t()) :: {:ok, %{String.t() => String.t()}} | {:error, :content_ineligible}

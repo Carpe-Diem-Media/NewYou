@@ -12,8 +12,8 @@
     "WELL-143"
   ],
   "implementation_revision": {
-    "git_sha": "3a25a37d2eac6a5893b8f02e08c57f20ca27c059",
-    "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-168 refreshes shared source references after a Recovery-only delivery fix. WELL-189 refreshes shared source references. The mapped behavior is unchanged."
+    "git_sha": "63e4224811e3e0ac3de83b51f3c97c6db0b7858c",
+    "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-168 refreshes shared source references after a Recovery-only delivery fix. WELL-189 refreshes shared source references. The mapped behavior is unchanged. WELL-210 refreshes shared source references after semantic review: the magic-login checker predecessor chain also accepts v1.21.0 Product Law and Decisions digests, and the primary-email-change content test tampers the current v1.21.0 Product Law. The v1.16 through v1.19 rejection cases are unchanged. The mapped behavior is unchanged. WELL-210 reconciles source evidence from integrated main b7e0e1fb6f600d6ad9fddf5b41633b1e19a46c14 and draft 63e4224811e3e0ac3de83b51f3c97c6db0b7858c."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -1726,7 +1726,7 @@
       "id": "magic_approval_checker",
       "path": "tools/check_magic_login_evidence.py",
       "symbol": "def validate_development",
-      "sha256": "13339b0fb8248d28d85126840cc1fcad32587b0308c9adf078d7a675cf1c98aa"
+      "sha256": "82201ada648ed26c0ed457613942af8e1c8ce629cb99d522e7a20eea8d1bafab"
     },
     {
       "id": "magic_approval_test",
@@ -1768,7 +1768,7 @@
       "id": "phase9_content_test",
       "path": "test/new_you/content/primary_email_change_message_test.exs",
       "symbol": "defmodule NewYou.Content.PrimaryEmailChangeMessageTest",
-      "sha256": "17ade818ba5f28744302bc9d6d969cd098a1e6c43401c0767121b66ae0ecd318"
+      "sha256": "f6e0a3df0a6d6ea87a2b70e7b45668d1cafa5a59fb4a8390e91233ea88bf34ce"
     },
     {
       "id": "phase9_browser",
@@ -1792,7 +1792,7 @@
       "id": "phase9_browser_driver",
       "path": "test/proof/p8_05_browser.mjs",
       "symbol": "ordinary_email_change",
-      "sha256": "754113bad63950379b66867714c0213d424114dccd9b48b132578ae51b9db04e"
+      "sha256": "8d75ab58bbf06909e134731ea9868ba774fd60f46ca36254e988a51f41cfe465"
     },
     {
       "id": "security_hold_owner",

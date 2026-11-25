@@ -115,15 +115,25 @@ EXPECTED_PROMOTED_GOVERNANCE = {
 }
 EXPECTED_CURRENT_GOVERNANCE = {
     "PLATFORM_PRODUCT_LAW": {
-        "repository_path": "docs/governance/product/00_PLATFORM_v1.20.0.md",
-        "sha256": "5308e09f668b4a9762f98fb0bcbddf2f84595703b69c6ed511e8f511c3da36b1", "semver": "1.20.0",
+        "repository_path": "docs/governance/product/00_PLATFORM_v1.21.0.md",
+        "sha256": "d366c68e6d5f012f59f7f98071030f739dc3314287d59989e6433a3b62f2f9ff", "semver": "1.21.0",
     },
     "PRODUCT_DECISIONS": {
-        "repository_path": "docs/governance/product/01_DECISIONS_v1.20.0.md",
-        "sha256": "7282344c42e850a2683e15dcce21b46bb3ecca28d9fac22b91b01ec7e8f32b16", "semver": "1.20.0",
+        "repository_path": "docs/governance/product/01_DECISIONS_v1.21.0.md",
+        "sha256": "722dce49c248987ea00fe237319083d26062fbbc2132c72eb32edca3ecd0013a", "semver": "1.21.0",
     },
 }
 EXPECTED_CURRENT_GOVERNANCE_PREDECESSORS = {
+    "PLATFORM_PRODUCT_LAW": {
+        "repository_path": "docs/governance/product/00_PLATFORM_v1.20.0.md",
+        "sha256": "5308e09f668b4a9762f98fb0bcbddf2f84595703b69c6ed511e8f511c3da36b1",
+    },
+    "PRODUCT_DECISIONS": {
+        "repository_path": "docs/governance/product/01_DECISIONS_v1.20.0.md",
+        "sha256": "7282344c42e850a2683e15dcce21b46bb3ecca28d9fac22b91b01ec7e8f32b16",
+    },
+}
+EXPECTED_V1_19_GOVERNANCE = {
     "PLATFORM_PRODUCT_LAW": {
         "repository_path": "docs/governance/product/00_PLATFORM_v1.19.0.md",
         "sha256": "e94fd66f09aa4033fb66ffa3d73ab6f28a650c589dce33c086c746e2e508e9b9",
@@ -1249,6 +1259,14 @@ def validate_development(root: Path) -> dict[str, Any]:
                 "current Product authority predecessor digest mismatch",
                 findings,
             )
+        v1_19 = EXPECTED_V1_19_GOVERNANCE[document_id]
+        v1_19_path = safe_source_path(root, v1_19["repository_path"], findings)
+        if v1_19_path:
+            record(
+                sha256(v1_19_path.read_bytes()) == v1_19["sha256"],
+                "current Product authority predecessor digest mismatch: v1.19.0",
+                findings,
+            )
         v1_18 = EXPECTED_V1_18_GOVERNANCE[document_id]
         v1_18_path = safe_source_path(root, v1_18["repository_path"], findings)
         if v1_18_path:
@@ -1260,6 +1278,14 @@ def validate_development(root: Path) -> dict[str, Any]:
         if immediate_predecessor:
             historical = immediate_predecessor.read_text(encoding="utf-8")
             record(
+                f"**Predecessor:** `{v1_19['repository_path']}`" in historical
+                and "**SemVer transition:** `v1.19.0 → v1.20.0`" in historical,
+                "historical Product authority lineage mismatch: v1.20.0",
+                findings,
+            )
+        if v1_19_path:
+            historical = v1_19_path.read_text(encoding="utf-8")
+            record(
                 f"**Predecessor:** `{v1_18['repository_path']}`" in historical
                 and "**SemVer transition:** `v1.18.0 → v1.19.0`" in historical,
                 "historical Product authority lineage mismatch: v1.19.0",
@@ -1269,7 +1295,7 @@ def validate_development(root: Path) -> dict[str, Any]:
             text = successor.read_text(encoding="utf-8")
             record(
                 f"**Predecessor:** `{current_predecessor['repository_path']}`" in text
-                and f"**SemVer transition:** `v1.19.0 → v1.20.0`" in text,
+                and f"**SemVer transition:** `v1.20.0 → v1.21.0`" in text,
                 "current Product authority lineage mismatch",
                 findings,
             )
