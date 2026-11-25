@@ -1318,7 +1318,8 @@
     "Latest a4dc89d6 hosted run44371632198 failed998/999,seed476398: final cut reached await_proof then transaction_error without checkpoint. Cause remains unclassified. New actual-deadline proofs passed normal focused testing; deterministic negative control rejects a normal committed request. Severe2core/2CPUworker timeout-only experiment passed0/3 before fixture isolation, exposing two lost fixture-owner leases and one unavailable retry after successful rollback checks. After isolated setup, four distinct cases passed0/4: two target prerequisites were not reached and two bounded manual retries stayed unavailable. This is not observed corruption and is not a production capacity or automatic retry certification. The old17/35 metric is heterogeneous test failures in one treatment, not repeated single-test probability. Independent reliability/impact adjudication and fresh exact-head CI remain mandatory; no timeout was increased and missed checkpoint still fails.",
     "WELL-168 uses the existing synthetic Recovery fixture and its TEST provider. The signing-key recovery proof covers restoration of the same key before expiry. The intermittent hosted transaction failure remains tracked by WELL-167.",
     "WELL-183 reconciles only the bounded Recovery portion of WELL-172 and FP-001 Q.3/AC-08. WELL-115/WELL-167 and OQ-035/036 still govern release. WELL-183 does not close WELL-21.",
-    "WELL-183 AC1 entry is direct at /recovery?locale=en and /recovery?locale=af. WELL-184 approves the Recovery screens and completion link to sign-in. A sign-in or registration link into Recovery needs eligible localized navigation copy in that context."
+    "WELL-183 AC1 entry is direct at /recovery?locale=en and /recovery?locale=af. WELL-184 approves the Recovery screens and completion link to sign-in. A sign-in or registration link into Recovery needs eligible localized navigation copy in that context.",
+    "WELL-167 PR #326 changes only the P815 proof harness budget_effect so non-committing neutral, unknown, malformed and contended characterization scenarios are classified instead of crashing. No Recovery business behavior, timeout, response contract or security guard changed; the refreshed p8_15.ex digest records only that harness edit. Hosted budget characterization is observational and does not certify the 350 ms budget or a production warm-up."
   ],
   "follow_up_tickets": [
     "WELL-17",
@@ -1451,7 +1452,7 @@
       "id": "concurrent_helper",
       "path": "test/support/proof/p8_15.ex",
       "symbol": "defmodule NewYou.Proof.P815",
-      "sha256": "63bef579d981f1b14f3cbde00e6e71adc755de6ea9bae0aef6c1993ded9327f5"
+      "sha256": "5024c799402cb15f7f1725dff384daad098640f4ccc2134d1b0660f79395e3bd"
     },
     {
       "id": "lifecycle_test",
