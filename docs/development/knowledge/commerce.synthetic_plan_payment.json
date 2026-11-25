@@ -6,7 +6,7 @@
     "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "c7923acb57e47be85170509b1c44954451fd9cd1",
+    "git_sha": "326716c9e73ce391116691f9b5e8d84801c6b750",
     "semantics": "Bounded FP-002 P1 implementation and strengthened recovery, migration and concurrency proof."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -377,7 +377,7 @@
   ],
   "failure_recovery": [
     {
-      "summary": "A connection-scoped consequence insertion cut tests Commerce rollback. A fresh BEAM runs the generated AshOban scheduler against a fixture-scoped view of the committed open consequence; the persisted job is executed through the Oban test executor for both recovery cuts.",
+      "summary": "A connection-scoped consequence insertion cut tests Commerce rollback. Fresh BEAM scheduler runs rediscover committed open consequences through a fixture-scoped view, including after a real worker execution exhausts its configured attempt and leaves a discarded job.",
       "source_ids": [
         "commerce",
         "consequence",
@@ -397,7 +397,7 @@
         "P1-04",
         "P1-05"
       ],
-      "proves": "Admission, forged input denial, independent SQL contention, a consequence-insert rollback, overlapping delivery and fresh scheduler rediscovery at both recovery cuts.",
+      "proves": "Admission, forged input denial, independent SQL contention, a consequence-insert rollback, overlapping delivery and fresh scheduler rediscovery after missing or exhausted jobs.",
       "limits": "Synthetic only. The scheduler reads a connection-local view restricted to the owned fixture; the persisted job is executed through Oban.Testing, not by a running queue.",
       "source_ids": [
         "cases",
@@ -474,7 +474,7 @@
   "proof_limitations": [
     "One synthetic R399 Plan only. Provider, public checkout, production release, Plan delivery and consumption remain outside this proof.",
     "Migration up/down/up uses the actual migration modules and a transaction-owned schema. The three foreign keys target the isolated schema. This uses the migration runner directly and does not exercise the migration ledger.",
-    "The scheduler test restricts its read to a fixture-scoped temporary view and invokes the persisted job via Oban.Testing; it does not prove live queue polling or execution of exhausted jobs."
+    "The scheduler test restricts its read to a fixture-scoped temporary view and invokes the persisted job via Oban.Testing; it does not prove live queue polling."
   ],
   "follow_up_tickets": [
     "WELL-190",
@@ -540,7 +540,7 @@
       "id": "cases",
       "path": "test/new_you/commerce/plan_payment_test.exs",
       "symbol": "independent PostgreSQL transactions converge",
-      "sha256": "dd05a68e1be57594aa7c1b9f45ff9285ddca854950a9e77eb5ceb23e957dfa4e"
+      "sha256": "f721a6e43ae68a4f20800a2f730421ca03eea8bcb9611a5d54a50b0117a46ae1"
     },
     {
       "id": "identity_cases",
