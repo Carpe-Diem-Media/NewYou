@@ -88,7 +88,7 @@ defmodule NewYou.Content.RecoveryBrowserCopyTest do
     assert {:error, :content_ineligible} = RecoveryBrowserCopy.load("en")
   end
 
-  test "denies an unapproved candidate placed at the served path", %{root: root} do
+  test "denies a candidate file at the served path by its unpinned digest", %{root: root} do
     File.cp!(Path.join(@root, @candidate), Path.join(root, @packet))
 
     assert {:error, :content_ineligible} = RecoveryBrowserCopy.load("en")
