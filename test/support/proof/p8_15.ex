@@ -1489,6 +1489,12 @@ defmodule NewYou.Proof.P815 do
         assert_resumed_request(fixture)
         :issued
 
+      # Neutral and contended requests must not commit, so their case keeps the
+      # fixture state. Compare it with the fixture rather than a state name.
+      {kind, _} when kind in [:unknown, :malformed, :contended] ->
+        assert_resume_rolled_back(fixture)
+        :unchanged
+
       {_, :held_manual_review} ->
         assert_resume_rolled_back(fixture)
         :unchanged

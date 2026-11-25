@@ -126,6 +126,8 @@ jobs:
         env:
           SEED: ${{ needs.discover.outputs.seed }}
           FILES: ${{ toJSON(matrix.files) }}
+          # TEMPORARY WELL-167 budget characterization. Revert before any merge.
+          P815_CHARACTERIZE_BUDGET: "1"
         run: python3 -m tools.exunit_ci execute application-evidence "$SEED" "$FILES"
       - name: Preserve shard outcomes and diagnostics
         if: always()
