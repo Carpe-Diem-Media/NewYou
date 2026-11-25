@@ -9,7 +9,9 @@ defmodule NewYou.Proof.P815 do
   alias NewYou.Proof.{
     CutPoints,
     P805,
+    RecoveryBudget,
     RecoveryLease,
+    RecoveryLoad,
     RecoveryScenarios,
     RecoverySeam,
     RegistrationSeam,
@@ -1406,7 +1408,10 @@ defmodule NewYou.Proof.P815 do
     P805.with_fixture(fn ->
       fixtures = for _ <- 1..2, do: resumable_fixture()
 
-      samples = Enum.map(fixtures, &budget_input(&1, scenario))
+      samples =
+        fixtures
+        |> Enum.with_index(1)
+        |> Enum.map(fn {fixture, ordinal} -> budget_input(fixture, scenario, ordinal) end)
 
       diagnostic =
         run_restart(%{
@@ -1424,6 +1429,8 @@ defmodule NewYou.Proof.P815 do
       Enum.zip([fixtures, diagnostic.budget_reports, diagnostic.lease_reports])
       |> Enum.with_index(1)
       |> Enum.each(fn {{fixture, timing, lease}, ordinal} ->
+        {report_ordinal, timing} = Map.pop!(timing, :ordinal)
+        assert report_ordinal == ordinal
         {transaction, timing} = Map.pop!(timing, :transaction)
         {success_count, timing} = Map.pop!(timing, :account_success_count)
         effect = budget_effect(fixture, scenario, transaction, lease)
@@ -1449,7 +1456,7 @@ defmodule NewYou.Proof.P815 do
     end)
   end
 
-  defp budget_input(fixture, scenario) do
+  defp budget_input(fixture, scenario, ordinal \\ 0) do
     case_id = fixture.recovery.id
     operation_id = fixture.recovery.operation_id
     RecoveryLease.verify_fixture!(case_id, operation_id)
@@ -1467,6 +1474,7 @@ defmodule NewYou.Proof.P815 do
       end
 
     %{
+      ordinal: ordinal,
       email: email,
       case_id: case_id,
       operation_id: operation_id,
@@ -1503,15 +1511,14 @@ defmodule NewYou.Proof.P815 do
 
   @load_batch_size 8
 
-  # Predeclared in docs/development/well-167-recovery-load-plan.md. The cold
-  # sample is the first report, batch reports follow in completion order, and an
-  # authorized follow-up is the last report.
+  # Predeclared in docs/development/well-167-recovery-load-plan.md and amended by
+  # Addendum A1. The child record is printed before any acceptance assertion, so
+  # a failed criterion still leaves its observations on record.
   def characterize_load(scenario, concurrency, replicate) do
     P805.with_fixture(fn ->
       cold_fixture = resumable_fixture()
       cold = budget_input(cold_fixture, :known)
       load = load_scenario(scenario)
-      expected = 1 + length(load.batch) + if(load.after, do: 1, else: 0)
 
       diagnostic =
         run_restart(%{
@@ -1525,41 +1532,105 @@ defmodule NewYou.Proof.P815 do
             Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
         })
 
-      assert diagnostic.status == :ok and diagnostic.cleanup == :confirmed
-      assert diagnostic.marker == :requested
-      assert length(diagnostic.budget_reports) == expected
-      assert length(diagnostic.lease_reports) == expected
-
-      batch_leases = Enum.slice(diagnostic.lease_reports, 1, length(load.batch))
-      assert Enum.all?(batch_leases, &(&1.closure == load.closure))
-      if load.after, do: assert(List.last(diagnostic.lease_reports).closure == :none)
-      assert Enum.all?(diagnostic.budget_reports, &(&1.public >= 500_000))
-
-      Enum.each([cold_fixture | load.issued], &assert_resumed_request/1)
-      Enum.each(load.unchanged, &assert_resume_rolled_back/1)
-
-      IO.puts(
-        :stderr,
-        "P815_LOAD_CHILD " <>
-          Jason.encode!(%{
-            scenario: scenario,
-            concurrency: concurrency,
-            replicate: replicate,
-            budget: diagnostic.budget_reports,
-            lease: diagnostic.lease_reports
-          })
-      )
+      record = RecoveryLoad.record(scenario, concurrency, replicate, diagnostic)
+      IO.puts(:stderr, "P815_LOAD_CHILD " <> Jason.encode!(record))
+      assert_load_child(diagnostic, cold_fixture, load)
     end)
+  end
+
+  # Criteria 1 to 10 of the load plan and Addendum A1. Ordinals are 0 for the cold
+  # request, 1 to 8 for the batch and 9 for the authorized follow-up.
+  defp assert_load_child(diagnostic, cold_fixture, load) do
+    assert diagnostic.status == :ok and diagnostic.cleanup == :confirmed
+    assert diagnostic.marker == :requested
+
+    batch = Enum.map(load.batch, & &1.ordinal)
+    expected = Enum.to_list(0..(length(batch) + if(load.after, do: 1, else: 0)))
+    tasks = Enum.filter(diagnostic.load_reports, &(&1.kind == :task))
+    leases = diagnostic.lease_reports
+
+    assert ordinals(diagnostic.budget_reports) == expected
+    assert ordinals(leases) == expected
+    assert ordinals(tasks) == batch
+    assert Enum.all?(tasks, &(&1.status == :completed))
+
+    Enum.each(leases, fn lease ->
+      assert lease.closure == if(lease.ordinal in batch, do: load.closure, else: :none)
+    end)
+
+    assert Enum.all?(diagnostic.budget_reports, &(&1.public >= 500_000))
+    assert_held(load, diagnostic.load_reports)
+    assert_replays(load, diagnostic.budget_reports, leases)
+    assert_follow_up(load, diagnostic.load_reports)
+
+    Enum.each([cold_fixture | load.issued], &assert_resumed_request/1)
+    Enum.each(load.unchanged, &assert_resume_rolled_back/1)
+  end
+
+  defp ordinals(reports), do: reports |> Enum.map(& &1.ordinal) |> Enum.sort()
+
+  defp assert_held(%{hold: nil}, _reports), do: :ok
+
+  defp assert_held(load, reports) do
+    hold = Enum.find(reports, &(&1.kind == :hold))
+    assert hold != nil
+
+    reports
+    |> Enum.filter(&(&1.kind == :task))
+    |> Enum.each(fn task ->
+      assert task.admitted_us >= 0 and task.admitted_us < hold.released_us
+      assert_granted(load.grants, task.granted_us, hold.released_us)
+    end)
+  end
+
+  defp assert_granted(:after_release, granted_us, released_us),
+    do: assert(granted_us >= released_us)
+
+  defp assert_granted(:never, granted_us, _released_us), do: assert(granted_us == -1)
+
+  defp assert_replays(load, budgets, leases) do
+    Enum.each(load.replays, fn ordinal ->
+      budget = Enum.find(budgets, &(&1.ordinal == ordinal))
+      lease = Enum.find(leases, &(&1.ordinal == ordinal))
+      assert RecoveryBudget.replay_effect(budget.transaction, lease) == :replayed
+    end)
+  end
+
+  defp assert_follow_up(%{after: nil}, _reports), do: :ok
+
+  defp assert_follow_up(_load, reports) do
+    state = Enum.find(reports, &(&1.kind == :state))
+    assert %{settled: :settled, durable: :unchanged, tokens: 0, intents: 0} = state
+  end
+
+  # Batch and follow-up ordinals are assigned in input order. The contention
+  # target keeps its case and operation so the child can verify it first.
+  defp numbered(inputs) do
+    inputs
+    |> Enum.with_index(1)
+    |> Enum.map(fn {input, ordinal} -> %{input | ordinal: ordinal} end)
+  end
+
+  defp hold(fixture, hold_ms) do
+    %{
+      case_id: fixture.recovery.id,
+      operation_id: fixture.recovery.operation_id,
+      account_id: fixture.recovery.account_id,
+      hold_ms: hold_ms
+    }
   end
 
   defp load_scenario(:independent) do
     fixtures = for _ <- 1..@load_batch_size, do: resumable_fixture()
+    batch = numbered(Enum.map(fixtures, &budget_input(&1, :known)))
 
     %{
       hold: nil,
       after: nil,
-      batch: Enum.map(fixtures, &budget_input(&1, :known)),
+      batch: batch,
       closure: :none,
+      grants: nil,
+      replays: [],
       issued: fixtures,
       unchanged: []
     }
@@ -1568,12 +1639,15 @@ defmodule NewYou.Proof.P815 do
   defp load_scenario(:replay) do
     fixture = resumable_fixture()
     input = budget_input(fixture, :replay)
+    batch = numbered(List.duplicate(input, @load_batch_size))
 
     %{
       hold: nil,
       after: nil,
-      batch: List.duplicate(input, @load_batch_size),
+      batch: batch,
       closure: :none,
+      grants: nil,
+      replays: Enum.map(batch, & &1.ordinal),
       issued: [fixture],
       unchanged: []
     }
@@ -1584,10 +1658,12 @@ defmodule NewYou.Proof.P815 do
     input = budget_input(fixture, :known)
 
     %{
-      hold: %{case_id: fixture.recovery.id, hold_ms: 150},
+      hold: hold(fixture, 150),
       after: nil,
-      batch: List.duplicate(input, @load_batch_size),
+      batch: numbered(List.duplicate(input, @load_batch_size)),
       closure: :none,
+      grants: :after_release,
+      replays: [],
       issued: [fixture],
       unchanged: []
     }
@@ -1598,10 +1674,12 @@ defmodule NewYou.Proof.P815 do
     input = budget_input(fixture, :known)
 
     %{
-      hold: %{case_id: fixture.recovery.id, hold_ms: 1_000},
-      after: input,
-      batch: List.duplicate(input, @load_batch_size),
+      hold: hold(fixture, 1_000),
+      after: %{input | ordinal: @load_batch_size + 1},
+      batch: numbered(List.duplicate(input, @load_batch_size)),
       closure: :checkout_deadline,
+      grants: :never,
+      replays: [],
       issued: [fixture],
       unchanged: []
     }
@@ -1613,16 +1691,22 @@ defmodule NewYou.Proof.P815 do
     [unknown_fixture, malformed_fixture] = for _ <- 1..2, do: resumable_fixture()
 
     batch =
-      Enum.map(known, &budget_input(&1, :known)) ++
-        Enum.map(replayed, &budget_input(&1, :replay)) ++
-        List.duplicate(budget_input(unknown_fixture, :unknown), 2) ++
-        List.duplicate(budget_input(malformed_fixture, :malformed), 2)
+      numbered(
+        Enum.map(known, &budget_input(&1, :known)) ++
+          Enum.map(replayed, &budget_input(&1, :replay)) ++
+          List.duplicate(budget_input(unknown_fixture, :unknown), 2) ++
+          List.duplicate(budget_input(malformed_fixture, :malformed), 2)
+      )
 
     %{
       hold: nil,
       after: nil,
       batch: batch,
       closure: :none,
+      grants: nil,
+      # Ordinals 1 and 2 are known issuances, 3 and 4 replay, and 5 to 8 are
+      # neutral requests that must roll back.
+      replays: [3, 4],
       issued: known ++ replayed,
       unchanged: [unknown_fixture, malformed_fixture]
     }
