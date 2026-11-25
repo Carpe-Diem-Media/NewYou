@@ -110,29 +110,43 @@ def verify_result(candidate: dict, result: dict) -> None:
 # Executables observed in actions/checkout logs: GitHub-hosted runners use
 # /usr/bin/git and Blacksmith runners use /usr/local/bin/git.
 CHECKOUT_COMMANDS = {f"[command]{git} log -1 --format=%H" for git in ("/usr/bin/git", "/usr/local/bin/git")}
-RUNNER_PREFIX = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z "
-EXPORTED_PREFIX = r"[^\t]*\t[^\t]*\t\S+ "
+RUNNER_TIMESTAMP = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z"
+RUNNER_PREFIX = rf"{RUNNER_TIMESTAMP} "
+# Exported lines begin with a job, a step and a runner timestamp. Job and step must be
+# nonempty and must not contain a tab or carriage return.
+EXPORTED_PREFIX = rf"([^\t\r]+)\t([^\t\r]+)\t{RUNNER_TIMESTAMP} "
 
 
-def _log_message(line: str) -> str | None:
-    """Return the message after a runner timestamp or exported job prefix, or None."""
-    for prefix in (RUNNER_PREFIX, EXPORTED_PREFIX):
-        match = re.match(prefix, line)
-        if match:
-            return line[match.end():]
+def _log_record(line: str) -> tuple[tuple[str, ...], str] | None:
+    """Return (metadata, message) for a runner or exported line, or None without a record prefix.
+
+    Raw runner lines have no metadata. Exported lines carry (job, step), so a checkout
+    command and its SHA must share both the format and the metadata.
+    """
+    match = re.match(RUNNER_PREFIX, line)
+    if match:
+        return (), line[match.end():]
+    match = re.match(EXPORTED_PREFIX, line)
+    if match:
+        return match.groups(), line[match.end():]
     return None
 
 
 def checkout_from_log(log: str) -> str:
     """Read the full checkout SHA emitted by actions/checkout, or fail closed."""
     # Split on "\n" only: splitlines() also breaks on "\r", so forged text could stand alone.
-    messages = [_log_message(line) for line in log.split("\n")]
-    commands = [index for index, message in enumerate(messages) if message in CHECKOUT_COMMANDS]
+    lines = log.split("\n")
+    # Any line that names a checkout command counts, so a malformed copy beside a real record still fails closed.
+    commands = [index for index, line in enumerate(lines) if any(known in line for known in CHECKOUT_COMMANDS)]
     require(len(commands) == 1, "job has missing, duplicate or conflicting checkout evidence")
     index = commands[0]
-    sha = messages[index + 1] if index + 1 < len(messages) else None
-    require(sha is not None and re.fullmatch(r"[0-9a-f]{40}", sha), "job checkout evidence has no full SHA")
-    return sha
+    command = _log_record(lines[index])
+    require(command is not None and command[1] in CHECKOUT_COMMANDS, "job checkout command record is malformed")
+    # The SHA must be the very next line, in the same format and with the same exported job and step.
+    result = _log_record(lines[index + 1]) if index + 1 < len(lines) else None
+    require(result is not None and result[0] == command[0] and re.fullmatch(r"[0-9a-f]{40}", result[1]),
+            "job checkout evidence has no full SHA in the command's record format")
+    return result[1]
 
 
 def _command(*args: str) -> str:
@@ -142,7 +156,10 @@ def _command(*args: str) -> str:
     except (OSError, subprocess.SubprocessError) as exc:
         raise AttestationError(f"cannot collect GitHub evidence: {exc}") from exc
     # Keep CR and CRLF: text mode would rewrite them as LF before the checkout parser runs.
-    return output.decode("utf-8")
+    try:
+        return output.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise AttestationError("GitHub evidence is not valid UTF-8") from exc
 
 
 def _api(path: str) -> dict:

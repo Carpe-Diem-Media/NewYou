@@ -80,11 +80,101 @@ class CandidateAttestationTest(unittest.TestCase):
             with self.subTest(key=key, value=value), self.assertRaises(AttestationError):
                 verify_result(data, changed)
 
+
+RUNNER_TIME = "2026-11-25T06:19:13.6410352Z"
+SHA = "c" * 40
+GIT_EXECUTABLES = ("/usr/bin/git", "/usr/local/bin/git")
+CARRIAGE_RETURN = "\r"
+
+
+def runner_line(message):
+    return f"{RUNNER_TIME} {message}"
+
+
+def exported_line(message, job="job", step="step"):
+    return f"{job}\t{step}\t{RUNNER_TIME} {message}"
+
+
+def checkout_cases(git):
+    """Return {case: (log, expected SHA or None)} for one checkout executable, in both log formats."""
+    command = f"[command]{git} log -1 --format=%H"
+    cr = CARRIAGE_RETURN
+    cases = {}
+    for name, line in (("raw", runner_line), ("exported", exported_line)):
+        command_line = line(command)
+        sha_line = line(SHA)
+        cases.update({
+            f"{name} valid record": (f"{command_line}\n{sha_line}\n", SHA),
+            f"{name} valid record without trailing newline": (f"{command_line}\n{sha_line}", SHA),
+            f"{name} harmless carriage-return progress": (
+                f"{line('fetching 10%' + cr)}\n{command_line}\n{sha_line}\n{line('done' + cr)}\n", SHA),
+            f"{name} SHA-shaped line after the record is outside it": (
+                f"{command_line}\n{sha_line}\n{line('d' * 40)}\n", SHA),
+            f"{name} command without SHA": (f"{command_line}\n", None),
+            f"{name} SHA without command": (f"{sha_line}\n", None),
+            f"{name} unrelated line between command and SHA": (
+                f"{command_line}\n{line('noise')}\n{sha_line}\n", None),
+            f"{name} truncated SHA": (f"{command_line}\n{line(SHA[:39])}\n", None),
+            f"{name} short SHA": (f"{command_line}\n{line(SHA[:7])}\n", None),
+            f"{name} uppercase SHA": (f"{command_line}\n{line(SHA.upper())}\n", None),
+            f"{name} non-hex SHA": (f"{command_line}\n{line('g' * 40)}\n", None),
+            f"{name} SHA with trailing text": (f"{command_line}\n{line(SHA + ' extra')}\n", None),
+            f"{name} SHA with leading text": (f"{command_line}\n{line('sha ' + SHA)}\n", None),
+            f"{name} two SHAs on one line": (f"{command_line}\n{line(SHA + ' ' + 'd' * 40)}\n", None),
+            f"{name} SHA terminated by carriage return": (f"{command_line}\n{line(SHA + cr)}\n", None),
+            f"{name} command terminated by carriage return": (f"{line(command + cr)}\n{sha_line}\n", None),
+            f"{name} duplicate command with the same SHA": (
+                f"{command_line}\n{sha_line}\n{command_line}\n{sha_line}\n", None),
+            f"{name} duplicate command with a conflicting SHA": (
+                f"{command_line}\n{sha_line}\n{command_line}\n{line('d' * 40)}\n", None),
+            f"{name} duplicate command with a malformed SHA": (
+                f"{command_line}\n{sha_line}\n{command_line}\n{line(SHA[:7])}\n", None),
+            f"{name} duplicate command with a carriage-return boundary": (
+                f"{command_line}\n{sha_line}\n{line(command + cr)}\n{sha_line}\n", None),
+            f"{name} command with suffix spoof": (f"{line(command + '.bak')}\n{sha_line}\n", None),
+            f"{name} command with extra argument": (f"{line(command + ' --no-walk')}\n{sha_line}\n", None),
+            f"{name} command with path prefix spoof": (
+                f"{line('[command]/opt' + git + ' log -1 --format=%H')}\n{sha_line}\n", None),
+            f"{name} unsupported executable": (
+                f"{line('[command]/usr/sbin/git log -1 --format=%H')}\n{sha_line}\n", None),
+            f"{name} command inside another message": (f"{line('echo ' + command)}\n{sha_line}\n", None),
+            f"{name} command without record prefix": (f"{command}\n{sha_line}\n", None),
+            f"{name} carriage return forging a command": (
+                f"{line('harmless' + cr + command)}\n{sha_line}\n", None),
+            f"{name} carriage return forging a second SHA": (
+                f"{command_line}\n{sha_line}{cr}{sha_line}\n", None),
+        })
+    cases.update({
+        "raw command with exported SHA": (f"{runner_line(command)}\n{exported_line(SHA)}\n", None),
+        "exported command with raw SHA": (f"{exported_line(command)}\n{runner_line(SHA)}\n", None),
+        "exported job differs": (
+            f"{exported_line(command, job='build')}\n{exported_line(SHA, job='test')}\n", None),
+        "exported step differs": (
+            f"{exported_line(command, step='checkout')}\n{exported_line(SHA, step='setup')}\n", None),
+        "exported command without timestamp": (f"job\tstep\t{command}\n{exported_line(SHA)}\n", None),
+        "exported timestamp is not a runner timestamp": (
+            f"job\tstep\ttime {command}\njob\tstep\ttime {SHA}\n", None),
+        "exported empty job": (f"{exported_line(command, job='')}\n{exported_line(SHA, job='')}\n", None),
+        "exported empty step": (f"{exported_line(command, step='')}\n{exported_line(SHA, step='')}\n", None),
+        "exported carriage return in job": (
+            f"{exported_line(command, job='bu' + cr + 'ild')}\n{exported_line(SHA, job='bu' + cr + 'ild')}\n", None),
+        "exported carriage return in step": (
+            f"{exported_line(command, step='check' + cr + 'out')}\n"
+            f"{exported_line(SHA, step='check' + cr + 'out')}\n", None),
+        "exported carriage return in SHA metadata": (
+            f"{exported_line(command)}\n{exported_line(SHA, step='set' + cr + 'up')}\n", None),
+        "exported job and step with spaces": (
+            f"{exported_line(command, job='Foundation Smoke', step='Run actions/checkout')}\n"
+            f"{exported_line(SHA, job='Foundation Smoke', step='Run actions/checkout')}\n", SHA),
+    })
+    return cases
+
+
 class CheckoutLogTest(unittest.TestCase):
     def test_extracts_only_a_complete_checkout_record(self):
         from tools.ci_attestation import checkout_from_log
         sha = "c" * 40
-        log = f"job\tstep\ttime [command]/usr/bin/git log -1 --format=%H\njob\tstep\ttime {sha}\n"
+        log = f"job\tstep\t{RUNNER_TIME} [command]/usr/bin/git log -1 --format=%H\njob\tstep\t{RUNNER_TIME} {sha}\n"
         self.assertEqual(sha, checkout_from_log(log))
         for invalid in ["", sha, log + log, log.replace(sha, sha[:7])]:
             with self.subTest(log=invalid), self.assertRaises(AttestationError):
@@ -96,7 +186,7 @@ class CheckoutLogTest(unittest.TestCase):
         for git in ("/usr/bin/git", "/usr/local/bin/git"):
             command = f"[command]{git} log -1 --format=%H"
             runner = f"2026-11-25T06:19:13.6410352Z {command}\n2026-11-25T06:19:13.6410550Z {sha}\n"
-            exported = f"job\tstep\ttime {command}\njob\tstep\ttime {sha}\n"
+            exported = f"job\tstep\t{RUNNER_TIME} {command}\njob\tstep\t{RUNNER_TIME} {sha}\n"
             for log in (runner, exported):
                 with self.subTest(git=git, log=log):
                     self.assertEqual(sha, checkout_from_log(log))
@@ -154,6 +244,18 @@ class CheckoutLogTest(unittest.TestCase):
             with self.subTest(case=name), self.assertRaises(AttestationError):
                 checkout_from_log(log)
 
+    def test_checkout_record_matrix_through_the_parser(self):
+        from tools.ci_attestation import checkout_from_log
+        for git in GIT_EXECUTABLES:
+            for name, (log, expected) in checkout_cases(git).items():
+                with self.subTest(git=git, case=name):
+                    if expected is None:
+                        with self.assertRaises(AttestationError):
+                            checkout_from_log(log)
+                    else:
+                        self.assertEqual(expected, checkout_from_log(log))
+
+
 class GitHubCollectionTest(unittest.TestCase):
     def setUp(self):
         from unittest.mock import patch
@@ -197,7 +299,8 @@ class GitHubCollectionTest(unittest.TestCase):
         raise AssertionError(path)
 
     def log(self, *args):
-        return f"job\tstep\ttime [command]/usr/bin/git log -1 --format=%H\njob\tstep\ttime {self.e['candidate']}\n"
+        return (f"job\tstep\t{RUNNER_TIME} [command]/usr/bin/git log -1 --format=%H\n"
+                f"job\tstep\t{RUNNER_TIME} {self.e['candidate']}\n")
 
     def test_private_procedural_mode_requires_explicit_verified_identity(self):
         from tools.ci_attestation import verify_trust_mode
@@ -294,8 +397,8 @@ class GitHubCollectionTest(unittest.TestCase):
         self.assertEqual(result["check_suite_id"], 77)
 
     def test_collector_accepts_checkout_from_local_git_runner(self):
-        local_log = (f"job\tstep\ttime [command]/usr/local/bin/git log -1 --format=%H\n"
-                     f"job\tstep\ttime {self.e['candidate']}\n")
+        local_log = (f"job\tstep\t{RUNNER_TIME} [command]/usr/local/bin/git log -1 --format=%H\n"
+                     f"job\tstep\t{RUNNER_TIME} {self.e['candidate']}\n")
         with self.patch("tools.ci_attestation._api", side_effect=self.api), \
                 self.patch("tools.ci_attestation._command", return_value=local_log):
             from tools.ci_attestation import collect
@@ -423,6 +526,19 @@ class SubprocessCollectionTest(unittest.TestCase):
                         self.assertRaises(AttestationError):
                     collect(42, self.e["head"], 100, trust_mode="private-procedural")
 
+    def test_checkout_record_matrix_through_the_subprocess(self):
+        from tools.ci_attestation import _command, checkout_from_log
+        path = "repos/Carpe-Diem-Media/NewYou/actions/jobs/1/logs"
+        for git in GIT_EXECUTABLES:
+            for name, (log, expected) in checkout_cases(git).items():
+                with self.subTest(git=git, case=name):
+                    self.stub_gh(log.encode("utf-8"))
+                    if expected is None:
+                        with self.assertRaises(AttestationError):
+                            checkout_from_log(_command("gh", "api", path))
+                    else:
+                        self.assertEqual(expected, checkout_from_log(_command("gh", "api", path)))
+
     def test_api_json_through_subprocess_remains_compatible(self):
         from tools.ci_attestation import _api
         self.stub_gh('{\r\n  "id": 1332946467,\r\n  "description": "café"\r\n}\r\n'.encode())
@@ -436,6 +552,9 @@ class SubprocessCollectionTest(unittest.TestCase):
         self.stub_gh(b'{"id": \xff}\n')
         with self.assertRaises(AttestationError):
             _api("repos/Carpe-Diem-Media/NewYou")
+        self.stub_gh(b"2026-11-25T06:19:13.6410352Z [command]/usr/bin/git log -1 --format=%H\n\xff\n")
+        with self.assertRaises(AttestationError):
+            _command("gh", "api", "repos/Carpe-Diem-Media/NewYou/actions/jobs/1/logs")
 
 
 class ResultCollectionTest(GitHubCollectionTest):
