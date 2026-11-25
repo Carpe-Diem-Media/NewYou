@@ -22,6 +22,7 @@ defmodule NewYou.Privacy do
   resources do
     resource PurposeAuthority
     resource PurposeEvent
+    resource NewYou.Privacy.SyntheticDeletionScope
   end
 
   @doc false
