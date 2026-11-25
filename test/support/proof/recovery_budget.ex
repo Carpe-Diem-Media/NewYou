@@ -7,7 +7,9 @@ defmodule NewYou.Proof.RecoveryBudget do
   @outcomes ~w(unobserved transaction_returned transaction_error transaction_exception)a
   @limit 9_999_999
 
-  def measure(callback) do
+  # The ordinal joins this report to the lease and task reports of one request.
+  # Concurrent tasks print in completion order, so the ordinal is the only key.
+  def measure(ordinal, callback) when ordinal in 0..9 do
     started = System.monotonic_time(:microsecond)
     Process.put({__MODULE__, :account_queries}, {0, 0, 0})
     Process.put({__MODULE__, :outcome}, :unobserved)
@@ -22,7 +24,11 @@ defmodule NewYou.Proof.RecoveryBudget do
       {count, total, query} = Process.get({__MODULE__, :account_queries})
       values = values ++ [count, total, query]
       outcome = Process.get({__MODULE__, :outcome})
-      IO.puts("P815_BUDGET #{outcome} " <> Enum.map_join(values, " ", &min(&1, @limit)))
+
+      IO.puts(
+        "P815_BUDGET #{outcome} #{ordinal} " <> Enum.map_join(values, " ", &min(&1, @limit))
+      )
+
       result
     after
       Process.delete({__MODULE__, :account_queries})
@@ -67,6 +73,8 @@ defmodule NewYou.Proof.RecoveryBudget do
 
   # Called inside the child after RecoveryLease verified the parent's committed
   # fixture and this disposable database. Hold one fixture row on another lease.
+  # Returns the callback result with the monotonic times of lock acquisition and
+  # of release. The release time is taken before the holder is released.
   def with_account_lock(case_id, callback) do
     parent = self()
     ref = make_ref()
@@ -75,10 +83,15 @@ defmodule NewYou.Proof.RecoveryBudget do
 
     try do
       receive do
-        {^ref, :locked} -> callback.()
+        {^ref, :locked} -> :ok
       after
         5_000 -> raise "Recovery budget lock acquisition deadline"
       end
+
+      acquired = System.monotonic_time(:microsecond)
+      result = callback.()
+      released = System.monotonic_time(:microsecond)
+      {result, %{acquired: acquired, released: released}}
     after
       send(holder.pid, {ref, :release})
       {:ok, :ok} = Task.await(holder, 6_000)
@@ -127,10 +140,12 @@ defmodule NewYou.Proof.RecoveryBudget do
     outcome = Enum.find(@outcomes, &(Atom.to_string(&1) == label))
 
     fields =
-      [:public | @stages] ++ [:account_success_count, :account_adapter_total, :account_query]
+      [:ordinal, :public | @stages] ++
+        [:account_success_count, :account_adapter_total, :account_query]
 
     if outcome != nil and length(parts) == length(fields) and
-         Enum.all?(parts, &Regex.match?(~r/\A(?:-1|[0-9]{1,7})\z/, &1)) do
+         Enum.all?(parts, &Regex.match?(~r/\A(?:-1|[0-9]{1,7})\z/, &1)) and
+         Regex.match?(~r/\A[0-9]\z/, hd(parts)) do
       [
         Map.put(
           Map.new(Enum.zip(fields, Enum.map(parts, &String.to_integer/1))),

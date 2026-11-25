@@ -483,6 +483,7 @@ defmodule NewYou.Proof.P815Port do
       database_failures: database_failures,
       budget_reports: Enum.flat_map(lines, &NewYou.Proof.RecoveryBudget.parse/1),
       lease_reports: Enum.flat_map(lines, &NewYou.Proof.RecoveryLease.parse/1),
+      load_reports: Enum.flat_map(lines, &NewYou.Proof.RecoveryLoad.parse/1),
       rollback_checkpoint?: "P815_ROLLBACK_CHECKPOINT" in lines,
       failure_class: failure_class(lines),
       phases: phases(lines)

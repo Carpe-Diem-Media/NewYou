@@ -63,6 +63,7 @@ defmodule NewYou.Proof.RecoveryLease do
   end
 
   def observe(input, callback) do
+    ordinal = Map.get(input, "ordinal", 0)
     mode = Map.get(input, "lease_probe", "observe")
     verify_fixture!(input["case_id"], input["operation_id"])
     true = mode in ~w(observe baseline expiry checkin)
@@ -77,7 +78,7 @@ defmodule NewYou.Proof.RecoveryLease do
       {operation, error, query_us} = first_failure(state)
       pre = duration(state, :before_transact, :transaction_entered)
       post = duration(state, :transaction_entered, :finished)
-      IO.puts("P815_LEASE #{closure} #{operation} #{error} #{pre} #{post} #{query_us}")
+      IO.puts("P815_LEASE #{ordinal} #{closure} #{operation} #{error} #{pre} #{post} #{query_us}")
       result
     after
       if probe, do: Process.demonitor(elem(probe, 1), [:flush])
@@ -210,7 +211,8 @@ defmodule NewYou.Proof.RecoveryLease do
   def classify(_, _), do: :unknown
 
   def parse("P815_LEASE " <> fields) when byte_size(fields) < 120 do
-    with [c, op, err, pre, post, query] <- :binary.split(fields, " ", [:global]),
+    with [ordinal, c, op, err, pre, post, query] <- :binary.split(fields, " ", [:global]),
+         true <- Regex.match?(~r/\A[0-9]\z/, ordinal),
          closure when not is_nil(closure) <- allowed(c, @closures),
          operation when not is_nil(operation) <- allowed(op, @operations),
          error when not is_nil(error) <- allowed(err, @errors),
@@ -223,6 +225,7 @@ defmodule NewYou.Proof.RecoveryLease do
            ) do
       [
         %{
+          ordinal: String.to_integer(ordinal),
           closure: closure,
           operation: operation,
           error: error,
