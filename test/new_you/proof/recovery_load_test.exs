@@ -100,6 +100,25 @@ defmodule NewYou.Proof.RecoveryLoadTest do
     assert RecoveryLoad.parse("private data") == []
   end
 
+  test "settlement requires a successful transaction that locked exactly one Account" do
+    locked = %Postgrex.Result{num_rows: 1, rows: [[1]]}
+
+    assert RecoveryLoad.settlement({:ok, locked}) == :settled
+
+    for result <- [
+          {:error, :rollback},
+          {:error, locked},
+          {:ok, %{locked | num_rows: 0, rows: []}},
+          {:ok, %{locked | num_rows: 2, rows: [[1], [1]]}},
+          {:ok, %{locked | rows: [[nil]]}},
+          {:ok, :unexpected},
+          locked,
+          nil
+        ] do
+      assert RecoveryLoad.settlement(result) == :unsettled
+    end
+  end
+
   test "record joins each timed request with its budget, lease and task by ordinal" do
     diagnostic = %{
       status: :ok,
@@ -122,7 +141,40 @@ defmodule NewYou.Proof.RecoveryLoadTest do
     assert [
              %{ordinal: 0, lease: %{ordinal: 0}, task: nil},
              %{ordinal: 1, lease: %{ordinal: 1}, task: %{status: :completed}}
+             | _
            ] = record.requests
+
+    assert Enum.map(record.requests, & &1.ordinal) == Enum.to_list(0..8)
+  end
+
+  test "a failed child preserves every planned ordinal and any partial evidence" do
+    diagnostic = %{
+      status: {:exit_status, 1},
+      marker: nil,
+      cleanup: :confirmed,
+      budget_reports: [],
+      lease_reports: [%{ordinal: 2, closure: :none}],
+      load_reports: [
+        %{kind: :task, ordinal: 1, status: :timeout, admitted_us: 15, granted_us: -1}
+      ]
+    }
+
+    record = RecoveryLoad.record(:prolonged, 8, 1, diagnostic)
+
+    assert record.status == :exit
+    assert Enum.map(record.requests, & &1.ordinal) == Enum.to_list(0..9)
+    assert Enum.at(record.requests, 0) == %{ordinal: 0, budget: nil, lease: nil, task: nil}
+
+    assert %{budget: nil, lease: nil, task: %{status: :timeout, admitted_us: 15, granted_us: -1}} =
+             Enum.at(record.requests, 1)
+
+    assert %{budget: nil, lease: %{closure: :none}, task: %{status: :incomplete}} =
+             Enum.at(record.requests, 2)
+
+    assert %{task: %{status: :incomplete, admitted_us: -1, granted_us: -1}} =
+             Enum.at(record.requests, 8)
+
+    assert Enum.at(record.requests, 9) == %{ordinal: 9, budget: nil, lease: nil, task: nil}
   end
 
   defp parse_lines(output) do

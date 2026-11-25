@@ -12,6 +12,7 @@ defmodule NewYou.Proof.RecoveryLoad do
   @statuses ~w(completed raised timeout exit incomplete)a
   @settled ~w(settled unsettled)a
   @durable ~w(unchanged changed unknown)a
+  @batch_ordinals 1..8
   @maximum 9_999_999
 
   # Batch tasks record admission and lock grant. Other stages go to the budget
@@ -112,17 +113,19 @@ defmodule NewYou.Proof.RecoveryLoad do
         Repo.query!("SET LOCAL lock_timeout = '3s'", [], log: false)
 
         Repo.query!(
-          "SELECT a.id FROM accounts a JOIN recovery_cases c ON c.account_id = a.id WHERE c.id = $1 FOR UPDATE OF a",
+          "SELECT 1 FROM accounts a JOIN recovery_cases c ON c.account_id = a.id WHERE c.id = $1 FOR UPDATE OF a",
           [Ecto.UUID.dump!(case_id)],
           log: false
         )
       end)
     end)
-
-    :settled
+    |> settlement()
   rescue
     _ -> :unsettled
   end
+
+  def settlement({:ok, %Postgrex.Result{num_rows: 1, rows: [[1]]}}), do: :settled
+  def settlement(_result), do: :unsettled
 
   defp compare(hold, before) do
     later = snapshot(hold)
@@ -132,9 +135,10 @@ defmodule NewYou.Proof.RecoveryLoad do
     _ -> {:unknown, -1, -1}
   end
 
-  # One record per child, printed before any acceptance assertion. Each timed
-  # request joins its budget report with its lease and task reports by ordinal.
+  # Keep the predeclared ordinals even if the child emits no reports. A missing
+  # budget or lease report is nil, while a missing batch task is incomplete.
   def record(scenario, concurrency, replicate, diagnostic) do
+    expected_ordinals = if scenario == :prolonged, do: 0..9, else: 0..8
     tasks = Enum.filter(diagnostic.load_reports, &(&1.kind == :task))
 
     %{
@@ -147,16 +151,24 @@ defmodule NewYou.Proof.RecoveryLoad do
       hold: Enum.find(diagnostic.load_reports, &(&1.kind == :hold)),
       state: Enum.find(diagnostic.load_reports, &(&1.kind == :state)),
       requests:
-        Enum.map(diagnostic.budget_reports, fn budget ->
+        Enum.map(expected_ordinals, fn ordinal ->
+          task = Enum.find(tasks, &(&1.ordinal == ordinal))
+
           %{
-            ordinal: budget.ordinal,
-            budget: budget,
-            lease: Enum.find(diagnostic.lease_reports, &(&1.ordinal == budget.ordinal)),
-            task: Enum.find(tasks, &(&1.ordinal == budget.ordinal))
+            ordinal: ordinal,
+            budget: Enum.find(diagnostic.budget_reports, &(&1.ordinal == ordinal)),
+            lease: Enum.find(diagnostic.lease_reports, &(&1.ordinal == ordinal)),
+            task: task || incomplete_task(ordinal)
           }
         end)
     }
   end
+
+  defp incomplete_task(ordinal) when ordinal in @batch_ordinals do
+    %{kind: :task, ordinal: ordinal, status: :incomplete, admitted_us: -1, granted_us: -1}
+  end
+
+  defp incomplete_task(_ordinal), do: nil
 
   defp status_name(status) when is_atom(status), do: status
   defp status_name(_status), do: :exit

@@ -240,3 +240,42 @@ run and fixed in this addendum.
   run is not repeated to obtain a pass.
 - Pre-correction runs stay on record. They do not count as passing evidence for
   the corrected instrument.
+
+## Hosted observations and final diagnostic cleanup
+
+[Run 45615917313](https://github.com/Carpe-Diem-Media/NewYou/actions/runs/45615917313)
+tested head `518e7dafd111129e08e7f5becf854f52f86bf272` against base
+`86ed70ad58ca7675cb152602c3047481177b03a0`. The job used the configured
+`blacksmith-4vcpu-ubuntu-2404` label. This differs from the predeclared
+`ubuntu-latest` and the GitHub-hosted environment used in Step 2.
+
+The 18 children reported all 165 timed requests and all 144 batch tasks
+completed. The 24 prolonged batch requests reported `checkout_deadline`.
+The other 141 requests reported no lease closure. All 24 released-contention
+batch requests returned, with transaction callbacks from 157.046 to
+160.878 ms. Their Account grants followed the release signal. Public
+responses ranged from 500.039 to 502.634 ms. Mixed ordinals 7 and 8 in each
+replicate use malformed email input. Recovery rejects that input during email
+canonicalization, before transaction entry. These are the six `unobserved`
+transaction outcomes. In the mixed batch, public response ranges in
+milliseconds were 500.039 to 500.823 for known requests, 500.185 to 500.968
+for replay, 500.264 to 500.471 for unknown accounts and 500.068 to 500.852
+for malformed input.
+
+The run recorded unchanged Account and RecoveryCase state, zero Tokens and
+zero MessageIntents before each prolonged follow-up. All three follow-ups
+returned and passed the issuance assertions. The settlement observer
+at that head could report success for a failed transaction result or a query
+that locked no rows. MG-326-09 now requires an explicitly successful
+transaction with exactly one locked Account row. MG-326-10 retains all planned
+ordinals even when reports are absent. Missing budget and lease reports are
+null. Missing batch results are `incomplete`, with unavailable timings.
+The original observations still belong to the original head. The final
+corrections have focused regression tests. The normal hosted inventory omits
+both characterization batches after the temporary workflow switches are removed.
+
+Independent Master Gate retained the 350 ms transaction budget and 500 ms
+public response floor. The experiment did not measure concurrent cold starts,
+pool oversubscription or a grant in the 350–450 ms band. The historical
+lease-loss initiating event remains UNKNOWN. Causal attribution or explicit
+independent release-risk disposition remains required before Recovery activation.
