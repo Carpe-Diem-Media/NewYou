@@ -5,17 +5,19 @@ defmodule NewYou.Proof.RecoveryBudgetTest do
   test "phase durations partition the call and absent stages remain distinguishable" do
     line =
       ExUnit.CaptureIO.capture_io(fn ->
-        assert :ok == RecoveryBudget.measure(fn -> RecoveryBudget.stage(:padding) end)
+        assert :ok == RecoveryBudget.measure(0, fn -> RecoveryBudget.stage(:padding) end)
       end)
       |> String.trim()
 
     assert [timing] = RecoveryBudget.parse(line)
+    assert timing.ordinal == 0
     assert timing.prepare + timing.padding == timing.public
     assert timing.account == -1
     assert RecoveryBudget.parse(line <> " private") == []
 
-    assert RecoveryBudget.parse(String.replace_prefix(line, "P815_BUDGET ", "P815_BUDGET -3")) ==
-             []
+    # The ordinal must be a single digit from 0 to 9, so both values below are rejected.
+    assert RecoveryBudget.parse(String.replace(line, " 0 ", " -3 ", global: false)) == []
+    assert RecoveryBudget.parse(String.replace(line, " 0 ", " 10 ", global: false)) == []
 
     assert Process.get(RecoveryBudget) == nil
   end
@@ -37,7 +39,7 @@ defmodule NewYou.Proof.RecoveryBudgetTest do
 
     line =
       ExUnit.CaptureIO.capture_io(fn ->
-        RecoveryBudget.measure(fn ->
+        RecoveryBudget.measure(0, fn ->
           event.(measurements, self())
           RecoveryBudget.stage(:account)
           event.(measurements, :unrelated)
@@ -54,20 +56,24 @@ defmodule NewYou.Proof.RecoveryBudgetTest do
     assert report.account_query == -1
   end
 
-  test "two calls in one child retain their own terminal outcomes" do
+  test "two calls in one child retain their own terminal outcomes and ordinals" do
     lines =
       ExUnit.CaptureIO.capture_io(fn ->
-        RecoveryBudget.measure(fn -> RecoveryBudget.observe_outcome(:transaction_returned) end)
-        RecoveryBudget.measure(fn -> RecoveryBudget.observe_outcome(:transaction_error) end)
-        RecoveryBudget.measure(fn -> :ok end)
+        RecoveryBudget.measure(1, fn -> RecoveryBudget.observe_outcome(:transaction_returned) end)
+        RecoveryBudget.measure(2, fn -> RecoveryBudget.observe_outcome(:transaction_error) end)
+        RecoveryBudget.measure(3, fn -> :ok end)
       end)
 
-    outcomes =
+    reports =
       for line <- String.split(lines, "\n"),
           report <- RecoveryBudget.parse(line),
-          do: report.transaction
+          do: {report.ordinal, report.transaction}
 
-    assert outcomes == [:transaction_returned, :transaction_error, :unobserved]
+    assert reports == [
+             {1, :transaction_returned},
+             {2, :transaction_error},
+             {3, :unobserved}
+           ]
   end
 
   test "previously issued durable effects only count as replay with a successful measured transaction" do
@@ -84,7 +90,7 @@ defmodule NewYou.Proof.RecoveryBudgetTest do
 
   test "exception clears the process-local measurement" do
     assert_raise RuntimeError, "fixture", fn ->
-      RecoveryBudget.measure(fn -> raise "fixture" end)
+      RecoveryBudget.measure(0, fn -> raise "fixture" end)
     end
 
     assert Process.get(RecoveryBudget) == nil
