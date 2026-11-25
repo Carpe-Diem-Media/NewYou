@@ -556,6 +556,18 @@ class SubprocessCollectionTest(unittest.TestCase):
         with self.assertRaises(AttestationError):
             _command("gh", "api", "repos/Carpe-Diem-Media/NewYou/actions/jobs/1/logs")
 
+    def test_subprocess_timeout_fails_closed(self):
+        import subprocess
+        from unittest.mock import patch
+        from tools.ci_attestation import _command
+
+        args = ("gh", "api", "repos/Carpe-Diem-Media/NewYou")
+        with patch("subprocess.run", side_effect=subprocess.TimeoutExpired(args, timeout=60)) as run:
+            with self.assertRaises(AttestationError) as raised:
+                _command(*args)
+        self.assertIsInstance(raised.exception.__cause__, subprocess.TimeoutExpired)
+        run.assert_called_once_with(args, check=True, capture_output=True, timeout=60)
+
 
 class ResultCollectionTest(GitHubCollectionTest):
     def test_postmerge_rechecks_live_run_and_exact_main_tree(self):
