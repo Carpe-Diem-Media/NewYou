@@ -1,0 +1,243 @@
+defmodule NewYou.Commerce do
+  @moduledoc """
+  Commerce owns accepted Plan purchase facts, payment application, and the
+  obligation to hand the resulting source to Entitlements.
+  """
+  use Ash.Domain, otp_app: :new_you
+
+  alias NewYou.Commerce.{PaymentConsequence, Purchase, VerifiedPayment}
+  alias NewYou.Entitlements
+
+  require Ash.Query
+
+  resources do
+    resource Purchase
+    resource VerifiedPayment
+    resource PaymentConsequence
+  end
+
+  @doc """
+  Accept the fixed synthetic Plan price for the current canonical Account.
+  The same operation and payer replay the original purchase and attempt.
+  Changed input or an ineligible session returns `{:error, :purchase_unavailable}`.
+  """
+  @spec accept_plan_purchase(map(), map()) ::
+          {:ok, Purchase.t()} | {:error, :purchase_unavailable}
+  if Mix.env() == :test do
+    @price_version "synthetic-plan-v1"
+
+    def accept_plan_purchase(
+          credentials,
+          %{operation_id: id, price_version: @price_version} = request
+        )
+        when map_size(request) == 2 do
+      with {:ok, operation_id} <- Ecto.UUID.cast(id),
+           {:ok, %Purchase{} = purchase} <-
+             Ash.transact(Purchase, fn -> accept_locked(credentials, operation_id) end) do
+        {:ok, purchase}
+      else
+        _ -> {:error, :purchase_unavailable}
+      end
+    end
+
+    def accept_plan_purchase(_, _), do: {:error, :purchase_unavailable}
+
+    defp accept_locked(credentials, operation_id) do
+      with {:ok, %{account_id: account_id}} <-
+             NewYou.Identity.authorize_canonical_session(credentials),
+           {:ok, %Purchase{payer_id: ^account_id} = purchase} <-
+             accept_once(operation_id, account_id) do
+        purchase
+      else
+        _ -> {:error, :purchase_unavailable}
+      end
+    end
+
+    defp accept_once(operation_id, account_id) do
+      Ash.create(
+        Purchase,
+        %{
+          operation_id: operation_id,
+          payer_id: account_id,
+          recipient_id: account_id,
+          price_version: @price_version,
+          amount_minor: 39_900,
+          currency: "ZAR"
+        },
+        action: :accept,
+        authorize?: false
+      )
+    end
+  else
+    def accept_plan_purchase(_credentials, _request), do: {:error, :purchase_unavailable}
+  end
+
+  @doc """
+  Review whether the Account pair has Commerce history. P1 only supports an
+  empty scope. Any recorded purchase requires a separately supported review.
+  """
+  @spec review_identity_reconciliation(String.t(), String.t()) ::
+          {:ok, map()} | {:error, :commerce_scope_unavailable}
+  def review_identity_reconciliation(candidate_id, canonical_id)
+      when candidate_id != canonical_id do
+    query = Ash.Query.filter(Purchase, payer_id in ^[candidate_id, canonical_id])
+
+    case Ash.exists(query, authorize?: false) do
+      {:ok, false} ->
+        {:ok,
+         %{
+           "candidate_id" => candidate_id,
+           "canonical_id" => canonical_id,
+           "policy" => "empty_commerce_scope",
+           "commands" => []
+         }}
+
+      _ ->
+        {:error, :commerce_scope_unavailable}
+    end
+  end
+
+  def review_identity_reconciliation(_, _), do: {:error, :commerce_scope_unavailable}
+
+  @doc """
+  Apply qualified payment evidence to an exact accepted attempt. Commerce
+  commits payment and its consequence together. Equivalent evidence replays
+  the committed result. The synthetic verifier is compiled only in TEST.
+  """
+  @spec apply_payment_observation(term()) ::
+          {:ok, VerifiedPayment.t()} | {:error, :payment_unavailable}
+  if Mix.env() == :test do
+    def apply_payment_observation(observation) do
+      with {:ok, %{status: :succeeded, integration: :synthetic, environment: :test} = fields} <-
+             NewYou.Proof.PlanPaymentObservation.verify(observation),
+           {:ok, %VerifiedPayment{} = payment} <-
+             Ash.transact([Purchase, VerifiedPayment, PaymentConsequence], fn ->
+               apply_qualified(fields)
+             end) do
+        {:ok, payment}
+      else
+        _ -> {:error, :payment_unavailable}
+      end
+    end
+
+    defp apply_qualified(%{
+           purchase_id: purchase_id,
+           attempt_id: attempt_id,
+           amount_minor: amount_minor,
+           currency: currency
+         }) do
+      with {:ok,
+            %Purchase{attempt_id: ^attempt_id, amount_minor: ^amount_minor, currency: ^currency}} <-
+             Purchase
+             |> Ash.Query.filter(id == ^purchase_id)
+             |> Ash.Query.lock(:for_update)
+             |> Ash.read_one(authorize?: false),
+           {:ok, prior} <-
+             VerifiedPayment
+             |> Ash.Query.filter(purchase_id == ^purchase_id)
+             |> Ash.read_one(authorize?: false) do
+        commit_payment(prior, purchase_id)
+      else
+        _ -> {:error, :payment_unavailable}
+      end
+    end
+
+    defp apply_qualified(_), do: {:error, :payment_unavailable}
+
+    defp commit_payment(%VerifiedPayment{} = prior, _purchase_id), do: prior
+
+    defp commit_payment(nil, purchase_id) do
+      with {:ok, payment} <-
+             Ash.create(VerifiedPayment, %{purchase_id: purchase_id},
+               action: :apply,
+               authorize?: false
+             ),
+           {:ok, _consequence} <-
+             Ash.create(PaymentConsequence, %{purchase_id: purchase_id, payment_id: payment.id},
+               action: :establish,
+               authorize?: false
+             ) do
+        payment
+      end
+    end
+  else
+    def apply_payment_observation(_observation), do: {:error, :payment_unavailable}
+  end
+
+  @doc """
+  Return the immutable paid source for Entitlements. This internal interface
+  exposes only source and recipient identifiers. Call after the payment commit.
+  """
+  @spec paid_plan_source(String.t()) :: {:ok, map()} | {:error, :source_unavailable}
+  def paid_plan_source(consequence_id) do
+    with {:ok, %PaymentConsequence{} = consequence} <-
+           Ash.get(PaymentConsequence, consequence_id, authorize?: false),
+         {:ok, %VerifiedPayment{purchase_id: purchase_id}} <-
+           Ash.get(VerifiedPayment, consequence.payment_id, authorize?: false),
+         true <- purchase_id == consequence.purchase_id,
+         {:ok, %Purchase{recipient_id: recipient_id}} <-
+           Ash.get(Purchase, purchase_id, authorize?: false) do
+      {:ok,
+       %{purchase_id: purchase_id, payment_id: consequence.payment_id, recipient_id: recipient_id}}
+    else
+      _ -> {:error, :source_unavailable}
+    end
+  end
+
+  @doc """
+  Recover the open consequence for an accepted purchase. The background
+  scheduler independently locates the same open rows after process loss.
+  """
+  @spec open_plan_payment_consequences(String.t()) ::
+          {:ok, [String.t()]} | {:error, :source_unavailable}
+  def open_plan_payment_consequences(purchase_id) do
+    query =
+      Ash.Query.filter(PaymentConsequence, purchase_id == ^purchase_id and is_nil(fulfilled_at))
+
+    case Ash.read(query, authorize?: false) do
+      {:ok, consequences} -> {:ok, Enum.map(consequences, & &1.id)}
+      _ -> {:error, :source_unavailable}
+    end
+  end
+
+  @doc """
+  Deliver the committed payment consequence and acknowledge it after the
+  Entitlements transaction commits. Retry reuses the original right and
+  completes the original consequence after either process-loss cut.
+  """
+  @spec deliver_plan_payment_consequence(String.t()) ::
+          {:ok, Entitlements.PlanRight.t()} | {:error, :delivery_unavailable}
+  def deliver_plan_payment_consequence(consequence_id) do
+    with {:ok, right} <- Entitlements.grant_paid_plan(consequence_id),
+         {:ok, %PaymentConsequence{}} <-
+           Ash.transact(PaymentConsequence, fn -> acknowledge(consequence_id) end) do
+      {:ok, right}
+    else
+      _ -> {:error, :delivery_unavailable}
+    end
+  end
+
+  defp acknowledge(consequence_id) do
+    query =
+      PaymentConsequence
+      |> Ash.Query.filter(id == ^consequence_id)
+      |> Ash.Query.lock(:for_update)
+
+    case Ash.read_one(query, authorize?: false) do
+      {:ok, %PaymentConsequence{fulfilled_at: nil} = open} ->
+        case Ash.update(open, %{fulfilled_at: DateTime.utc_now()},
+               action: :acknowledge,
+               authorize?: false
+             ) do
+          {:ok, fulfilled} -> fulfilled
+          {:error, error} -> {:error, error}
+        end
+
+      {:ok, %PaymentConsequence{} = fulfilled} ->
+        fulfilled
+
+      _ ->
+        {:error, :delivery_unavailable}
+    end
+  end
+end

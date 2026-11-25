@@ -1,0 +1,600 @@
+{
+  "schema_version": 1,
+  "capability_id": "commerce.synthetic_plan_payment",
+  "purpose": "Prove that one synthetic accepted Plan payment creates one held right for its verified payer and recipient.",
+  "implementing_tickets": [
+    "WELL-189"
+  ],
+  "implementation_revision": {
+    "git_sha": "326716c9e73ce391116691f9b5e8d84801c6b750",
+    "semantics": "Bounded FP-002 P1 implementation and strengthened recovery, migration and concurrency proof."
+  },
+  "authoritative_domain": "NewYou.Commerce",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Entitlements",
+      "interface": "grant_paid_plan/1 and plan_rights/1",
+      "ownership": "Owns the source-bound Plan right.",
+      "source_ids": [
+        "entitlements",
+        "right"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "interface": "authorize_canonical_session/1 and owner_reviews/1",
+      "ownership": "Owns canonical Account eligibility and reconciliation.",
+      "source_ids": [
+        "identity",
+        "review"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.Purchase",
+      "actions": [
+        "read",
+        "accept"
+      ],
+      "caller_boundary": "Commerce admission holds the canonical Account lock.",
+      "source_ids": [
+        "purchase"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.VerifiedPayment",
+      "actions": [
+        "read",
+        "apply"
+      ],
+      "caller_boundary": "Commerce applies qualified evidence under the purchase lock.",
+      "source_ids": [
+        "payment"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.PaymentConsequence",
+      "actions": [
+        "read",
+        "establish",
+        "deliver",
+        "acknowledge"
+      ],
+      "caller_boundary": "Commerce establishes and acknowledges. AshOban rediscovers and delivers.",
+      "source_ids": [
+        "consequence"
+      ]
+    },
+    {
+      "domain": "NewYou.Entitlements",
+      "resource": "NewYou.Entitlements.PlanRight",
+      "actions": [
+        "read",
+        "grant"
+      ],
+      "caller_boundary": "Private actions require the paid source or current recipient.",
+      "source_ids": [
+        "right"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Commerce",
+      "function": "accept_plan_purchase",
+      "arity": 2,
+      "visibility": "internal",
+      "arguments": [
+        "Current Identity Session credentials.",
+        "Operation UUID and synthetic-plan-v1."
+      ],
+      "returns": [
+        "Immutable Purchase or purchase_unavailable."
+      ],
+      "side_effects": [
+        "Establishes one accepted snapshot and attempt."
+      ],
+      "caller_constraints": [
+        "TEST-only admission."
+      ],
+      "source_ids": [
+        "commerce",
+        "purchase",
+        "identity"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce",
+      "function": "apply_payment_observation",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Qualified synthetic observation with exact purchase, attempt, amount, currency, environment, integration and status."
+      ],
+      "returns": [
+        "VerifiedPayment or payment_unavailable."
+      ],
+      "side_effects": [
+        "Atomically commits payment and consequence."
+      ],
+      "caller_constraints": [
+        "TEST-only application."
+      ],
+      "source_ids": [
+        "commerce",
+        "fixture",
+        "payment",
+        "consequence"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce",
+      "function": "deliver_plan_payment_consequence",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Durable consequence UUID."
+      ],
+      "returns": [
+        "Held PlanRight or delivery_unavailable."
+      ],
+      "side_effects": [
+        "Replays or grants the right and acknowledges the consequence."
+      ],
+      "caller_constraints": [
+        "Use outside any enclosing transaction."
+      ],
+      "source_ids": [
+        "commerce",
+        "entitlements",
+        "consequence",
+        "worker"
+      ]
+    },
+    {
+      "module": "NewYou.Entitlements",
+      "function": "plan_rights",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Current canonical Account Session credentials."
+      ],
+      "returns": [
+        "Held PlanRights for the recipient or rights_unavailable."
+      ],
+      "side_effects": [
+        "Touches the current Session and reads owned rights."
+      ],
+      "caller_constraints": [
+        "Provides no delivered-content authorization."
+      ],
+      "source_ids": [
+        "entitlements",
+        "identity",
+        "right"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261124054400_well189_plan_purchase.exs",
+      "tables": [
+        "commerce_plan_purchases"
+      ],
+      "constraints": [
+        "commerce_plan_purchases_operation_index",
+        "commerce_plan_purchases_attempt_index",
+        "commerce_plan_purchases_same_account",
+        "commerce_plan_purchases_price"
+      ],
+      "source_ids": [
+        "migration_plan_purchase"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261124054552_well189_payment.exs",
+      "tables": [
+        "commerce_payment_consequences",
+        "commerce_verified_payments"
+      ],
+      "constraints": [
+        "commerce_verified_payments_purchase_index",
+        "commerce_payment_consequences_purchase_index",
+        "commerce_payment_consequences_payment_id_fkey"
+      ],
+      "source_ids": [
+        "migration_payment"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261124054748_well189_plan_right.exs",
+      "tables": [
+        "commerce_payment_consequences",
+        "entitlements_plan_rights"
+      ],
+      "constraints": [
+        "commerce_payment_consequences_open",
+        "entitlements_plan_rights_purchase_component_index",
+        "entitlements_plan_rights_state"
+      ],
+      "source_ids": [
+        "migration_plan_right"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "Commerce accepts the verified canonical Account for one R399 Plan version and attempt.",
+      "source_ids": [
+        "commerce",
+        "identity",
+        "purchase"
+      ]
+    },
+    {
+      "summary": "Commerce qualifies evidence, locks the purchase and commits verified payment and the open obligation.",
+      "source_ids": [
+        "commerce",
+        "payment",
+        "consequence"
+      ]
+    },
+    {
+      "summary": "Entitlements applies the original source in its own transaction. Commerce then acknowledges the obligation.",
+      "source_ids": [
+        "commerce",
+        "entitlements",
+        "right"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "unaccepted",
+      "accepted_pending",
+      "verified_open",
+      "held_open",
+      "held_fulfilled"
+    ],
+    "transitions": [
+      {
+        "from_state": "unaccepted",
+        "to_state": "accepted_pending",
+        "guards": [
+          "Canonical Account and exact synthetic version."
+        ],
+        "side_effects": [
+          "Persist the immutable purchase and attempt."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "commerce",
+          "purchase",
+          "identity"
+        ]
+      },
+      {
+        "from_state": "accepted_pending",
+        "to_state": "verified_open",
+        "guards": [
+          "Qualified evidence matches the locked attempt."
+        ],
+        "side_effects": [
+          "Commit payment and open consequence atomically."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "commerce",
+          "payment",
+          "consequence"
+        ]
+      },
+      {
+        "from_state": "verified_open",
+        "to_state": "held_open",
+        "guards": [
+          "Committed consequence matches payment, purchase and recipient."
+        ],
+        "side_effects": [
+          "Commit one held Plan right."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "commerce",
+          "entitlements",
+          "right"
+        ]
+      },
+      {
+        "from_state": "held_open",
+        "to_state": "held_fulfilled",
+        "guards": [
+          "Original right has committed or replayed."
+        ],
+        "side_effects": [
+          "Acknowledge the consequence and keep the right held."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "commerce",
+          "entitlements",
+          "consequence"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Only a current canonical recipient session can read rights. Direct Ash grants and reads are denied.",
+      "source_ids": [
+        "right",
+        "identity",
+        "entitlements"
+      ]
+    },
+    {
+      "summary": "Production excludes the producer and synthetic acceptance and application paths.",
+      "source_ids": [
+        "fixture",
+        "production",
+        "commerce"
+      ]
+    },
+    {
+      "summary": "Identity checks exact owner registration and rechecks bound results. Both new owners support only empty scope.",
+      "source_ids": [
+        "review",
+        "commerce",
+        "entitlements"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Independent payment transactions contend on the purchase row. Two concurrent delivery calls remain outstanding behind a locked consequence and converge on one source-specific right and acknowledgement.",
+      "source_ids": [
+        "cases",
+        "commerce",
+        "payment",
+        "right"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Replay preserves the attempt, verified payment, right and first acknowledgement time.",
+      "source_ids": [
+        "commerce",
+        "purchase",
+        "right",
+        "cases"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "A connection-scoped consequence insertion cut tests Commerce rollback. Fresh BEAM scheduler runs rediscover committed open consequences through a fixture-scoped view, including after a real worker execution exhausts its configured attempt and leaves a discarded job.",
+      "source_ids": [
+        "commerce",
+        "consequence",
+        "cases",
+        "restart",
+        "scheduler_restart"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/commerce/plan_payment_test.exs",
+      "cases": [
+        "P1-01",
+        "P1-02",
+        "P1-03",
+        "P1-04",
+        "P1-05"
+      ],
+      "proves": "Admission, forged input denial, independent SQL contention, a consequence-insert rollback, overlapping delivery and fresh scheduler rediscovery after missing or exhausted jobs.",
+      "limits": "Synthetic only. The scheduler reads a connection-local view restricted to the owned fixture; the persisted job is executed through Oban.Testing, not by a running queue.",
+      "source_ids": [
+        "cases",
+        "restart",
+        "scheduler_restart"
+      ]
+    },
+    {
+      "path": "test/proof/well189_plan_payment_production.exs",
+      "cases": [
+        "P1-06"
+      ],
+      "proves": "Production BEAM excludes fixture and rejects raw evidence.",
+      "limits": "Run against production build.",
+      "source_ids": [
+        "production",
+        "commerce"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/reconciliation_test.exs",
+      "cases": [
+        "P1-07"
+      ],
+      "proves": "Empty scope approval and replay, unknown and absent owners, stale review with committed financial provenance, legacy owner snapshot denial and fresh approval, and fresh conflict denial.",
+      "limits": "Empty-scope owners only.",
+      "source_ids": [
+        "identity_cases",
+        "review"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "cases": [
+        "P1-07"
+      ],
+      "proves": "Migration modules run up, down and up in a transaction-owned schema with all three foreign keys targeting that schema; the schema is absent after rollback.",
+      "limits": "Uses the migration runner directly; migration ledger is not exercised.",
+      "source_ids": [
+        "migration_roundtrip"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Offers, provider verification, corrections and delivery each require their approved owner contract.",
+      "source_ids": [
+        "commerce",
+        "entitlements"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Reused Identity session authorization and AshOban rediscovery. Adapted Store patterns for immutable snapshots, SQL arbitration and exact-source grants.",
+      "source_ids": [
+        "identity",
+        "commerce",
+        "consequence",
+        "right"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "No raw business writes, provider fixture entry points, right reassignment or process-local authority.",
+      "source_ids": [
+        "commerce",
+        "entitlements",
+        "review"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "One synthetic R399 Plan only. Provider, public checkout, production release, Plan delivery and consumption remain outside this proof.",
+    "Migration up/down/up uses the actual migration modules and a transaction-owned schema. The three foreign keys target the isolated schema. This uses the migration runner directly and does not exercise the migration ledger.",
+    "The scheduler test restricts its read to a fixture-scoped temporary view and invokes the persisted job via Oban.Testing; it does not prove live queue polling."
+  ],
+  "follow_up_tickets": [
+    "WELL-190",
+    "WELL-192",
+    "WELL-197"
+  ],
+  "sources": [
+    {
+      "id": "commerce",
+      "path": "lib/new_you/commerce.ex",
+      "symbol": "defmodule NewYou.Commerce",
+      "sha256": "4cb284d0609cb6d55a58cf0771efdd3909207629c1d9125513ff57d62d8d8798"
+    },
+    {
+      "id": "purchase",
+      "path": "lib/new_you/commerce/purchase.ex",
+      "symbol": "create :accept",
+      "sha256": "2a938f06805400011cf9ed7fccaec5a5df2b1ea70c40e3b33cd06a41923723ff"
+    },
+    {
+      "id": "payment",
+      "path": "lib/new_you/commerce/verified_payment.ex",
+      "symbol": "create :apply",
+      "sha256": "040d2262c1250f372e3d69cebc9adb7e5428375b336814591fc4a8eb85edd157"
+    },
+    {
+      "id": "consequence",
+      "path": "lib/new_you/commerce/payment_consequence.ex",
+      "symbol": "trigger :deliver_plan_payment",
+      "sha256": "b25278148b50f735c92cba6921c0aed85abe0af75cabcfe59f149d2ccd3ee3c6"
+    },
+    {
+      "id": "entitlements",
+      "path": "lib/new_you/entitlements.ex",
+      "symbol": "def grant_paid_plan",
+      "sha256": "688b21f5c29a7b4eff87bfb837be3a495aa613c08ff9ae621e82606dbab43664"
+    },
+    {
+      "id": "right",
+      "path": "lib/new_you/entitlements/plan_right.ex",
+      "symbol": "create :grant",
+      "sha256": "61c85d5c230223deb86901e70030c16ec0c92efda358a34ba6c7106d3ce60617"
+    },
+    {
+      "id": "identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def authorize_canonical_session",
+      "sha256": "ead01b1ce5b7a22f0b4d0bcb7346677e464317afccf9953faa7be729506edb80"
+    },
+    {
+      "id": "review",
+      "path": "lib/new_you/identity/reconciliation.ex",
+      "symbol": "defp owner_reviews",
+      "sha256": "ad8a72d1e1953d97fee5bc3d95d2b4d70d8f6e559258455585c42cde3a971626"
+    },
+    {
+      "id": "fixture",
+      "path": "test/support/proof/plan_payment_observation.ex",
+      "symbol": "def verify",
+      "sha256": "f5356412f51bd46c738174c4f2c782c482c04996454175d5c1f894e1553c702a"
+    },
+    {
+      "id": "cases",
+      "path": "test/new_you/commerce/plan_payment_test.exs",
+      "symbol": "independent PostgreSQL transactions converge",
+      "sha256": "f721a6e43ae68a4f20800a2f730421ca03eea8bcb9611a5d54a50b0117a46ae1"
+    },
+    {
+      "id": "identity_cases",
+      "path": "test/new_you/identity/reconciliation_test.exs",
+      "symbol": "Commerce history committed on another connection",
+      "sha256": "5691dfa1734a8689d96200a54ec7808198e73ddf13019dce84bfa6bc786f1fa3"
+    },
+    {
+      "id": "production",
+      "path": "test/proof/well189_plan_payment_production.exs",
+      "symbol": "P1 production fixture exclusion passed",
+      "sha256": "f66d99e9bcc0272e6db81f178995ee8e29b30370efcf09e7d10a6f67bb27c865"
+    },
+    {
+      "id": "restart",
+      "path": "test/proof/well189_plan_payment_restart.exs",
+      "symbol": "P1_COMPLETED",
+      "sha256": "3edc72fc32e63a26b09e7408e5241684c71194e4c7c3cd171256751e36931e44"
+    },
+    {
+      "id": "worker",
+      "path": "lib/new_you/commerce/deliver_plan_payment.ex",
+      "symbol": "def run",
+      "sha256": "98cbd4f1c12bc3b6e779e8b877b8415cda46a8246081620818b53c027ea70493"
+    },
+    {
+      "id": "migration_plan_purchase",
+      "path": "priv/repo/migrations/20261124054400_well189_plan_purchase.exs",
+      "symbol": "commerce_plan_purchases_operation_index",
+      "sha256": "908018179ef2a425bb53465973f4763b4e38ebfd9da82aa21b75e1451914ad87"
+    },
+    {
+      "id": "migration_payment",
+      "path": "priv/repo/migrations/20261124054552_well189_payment.exs",
+      "symbol": "commerce_verified_payments_purchase_index",
+      "sha256": "c8584e575fd1195aa58133a96ab9eae88b4d026c7ced844eb0eb0a4ecc675102"
+    },
+    {
+      "id": "migration_plan_right",
+      "path": "priv/repo/migrations/20261124054748_well189_plan_right.exs",
+      "symbol": "commerce_payment_consequences_open",
+      "sha256": "bce4a708c41b09b10aaa7f7a1e712adebecee81062e0c2cd230b7fa940b8f6ba"
+    },
+    {
+      "id": "scheduler_restart",
+      "path": "test/proof/well189_scheduler_restart.exs",
+      "symbol": "Schedulers.DeliverPlanPayment.perform",
+      "sha256": "6299e16126cf2aa4afad516edb5650b4241d8091891bf744fac7829765859f07"
+    },
+    {
+      "id": "migration_roundtrip",
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "symbol": "P1 migrations apply",
+      "sha256": "d23a4b96920a93aaf3cb125cd49f859275a4c08ff9ce1adafe9ca5736d700eb6"
+    }
+  ]
+}

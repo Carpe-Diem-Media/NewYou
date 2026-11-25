@@ -281,6 +281,16 @@ defmodule NewYou.Identity do
   def authorize_session(credentials), do: NewYou.Identity.PasswordSession.authorize(credentials)
 
   @doc """
+  Authorize a current verified session whose Account still owns an active
+  member reference. The transaction holds the Account lock until the owning
+  caller's transaction ends when called within the same data layer.
+  """
+  @spec authorize_canonical_session(map()) ::
+          {:ok, %{account_id: String.t()}} | {:error, :authentication_unavailable}
+  def authorize_canonical_session(credentials),
+    do: NewYou.Identity.PasswordSession.authorize_canonical(credentials)
+
+  @doc """
   Return the presenting Session holder's current canonical Platform Member Reference.
   The Session ID and bearer must resolve to the same active verified Account. This
   reuses the normal Session activity refresh and returns one generic error on
