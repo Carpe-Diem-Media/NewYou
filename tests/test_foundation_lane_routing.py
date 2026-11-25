@@ -66,6 +66,19 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     _route([path])
 
+    def test_claude_code_project_skill_registration_runs_application_ci(self):
+        for path in [".claude/settings.json", ".claude/skills/ticket-implement"]:
+            with self.subTest(path=path):
+                self.assertEqual("application", classify_path(path))
+                self.assertEqual({"application_changes": True}, _route([path]))
+                self.assertFalse(classify_deep_application_changes([path]))
+
+        for path in [".claude/settings.local.json", ".claude/agents/worker.md", ".claude"]:
+            with self.subTest(path=path):
+                self.assertEqual("unknown", classify_path(path))
+                with self.assertRaises(ValueError):
+                    _route([path])
+
     def test_engineering_tooling_and_ci_are_classified_intentionally(self):
         for path in [
             "mix.exs",

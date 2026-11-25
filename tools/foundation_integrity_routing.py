@@ -84,6 +84,7 @@ APPLICATION_FILES = frozenset(
         "DESIGN.md",
         ".hallmark/log.json",
         ".hallmark/preflight.json",
+        ".claude/settings.json",
         "AGENTS.md",
         "docs/README.md",
         ".github/workflows/application-ci.yml",
@@ -94,6 +95,7 @@ APPLICATION_FILES = frozenset(
 
 APPLICATION_PREFIXES = (
     ".agents/",
+    ".claude/skills/",
     ".devcore/",
     "assets/",
     "config/",

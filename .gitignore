@@ -42,3 +42,6 @@ new_you-*.tar
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
 /assets/node_modules/
+
+# Personal Claude Code settings stay local; .claude/settings.json holds project-wide policy.
+/.claude/settings.local.json
