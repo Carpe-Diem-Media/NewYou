@@ -5,6 +5,7 @@ defmodule NewYou.Commerce.PlanPaymentTest do
   alias NewYou.{Commerce, Entitlements, Identity, Repo}
   alias NewYou.Commerce.{PaymentConsequence, Purchase}
   alias NewYou.Commerce.SyntheticCorrections
+  alias NewYou.Entitlements.PlanRight
   alias NewYou.Privacy.SyntheticDeletionScope
   alias NewYou.Privacy.SyntheticSuppression
   alias NewYou.Proof.PlanPaymentObservation
@@ -358,12 +359,16 @@ defmodule NewYou.Commerce.PlanPaymentTest do
         |> PlanPaymentObservation.produce()
 
       assert {:ok, %{id: effect}} = SyntheticCorrections.observe_correction(correction)
-      assert {:ok, _} = SyntheticCorrections.deliver(effect)
+      assert {:ok, %{acknowledged_at: acknowledged_at}} = SyntheticCorrections.deliver(effect)
+      assert acknowledged_at
+      assert %PlanRight{state: :ended} = Ash.get!(PlanRight, right.id, authorize?: false)
+      assert {:ok, %{acknowledged_at: ^acknowledged_at}} = SyntheticCorrections.deliver(effect)
       assert :ok = SyntheticSuppression.register(payer.credentials)
       assert {:ok, :withheld} = Commerce.deliver_plan_payment_consequence(grant)
       assert {:ok, :withheld} = Commerce.deliver_plan_payment_consequence(late_grant)
       assert {:ok, []} = Commerce.open_plan_payment_consequences(pending.id)
       assert {:ok, []} = Entitlements.plan_rights(payer.credentials)
+      assert %PlanRight{state: :ended} = Ash.get!(PlanRight, right.id, authorize?: false)
       assert durable_counts(purchase.id) == {1, 1, 1, 1, 1}
       assert durable_counts(pending.id) == {1, 1, 1, 1, 0}
     end)

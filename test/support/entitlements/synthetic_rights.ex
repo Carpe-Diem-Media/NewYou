@@ -26,7 +26,8 @@ defmodule NewYou.Entitlements.SyntheticRights do
 
   @doc """
   Apply only the effect committed by Commerce. A correction may end an
-  existing right or leave it absent. Only the original grant may create rights.
+  existing right or leave it absent. Suppression still permits ending an
+  existing right. Only the original grant may create rights.
   """
   @spec apply_correction(String.t()) :: :ok | {:error, :grant_unavailable}
   def apply_correction(id) do
@@ -54,13 +55,15 @@ defmodule NewYou.Entitlements.SyntheticRights do
 
   defp apply_effect(scope, effect) do
     case SyntheticSuppression.locked_status(scope.recipient_id) do
-      {:ok, :allowed} -> apply_allowed_effect(scope, effect)
-      {:ok, :suppressed} -> :ok
-      _ -> {:error, :grant_unavailable}
+      {:ok, status} when status in [:allowed, :suppressed] ->
+        apply_committed_effect(scope, effect)
+
+      _ ->
+        {:error, :grant_unavailable}
     end
   end
 
-  defp apply_allowed_effect(scope, %{kind: :component_end, component: component}) do
+  defp apply_committed_effect(scope, %{kind: :component_end, component: component}) do
     if MapSet.member?(scope.ended_components, component) do
       with {:ok, _} <- end_component(scope, component), do: :ok
     else
@@ -68,7 +71,7 @@ defmodule NewYou.Entitlements.SyntheticRights do
     end
   end
 
-  defp apply_allowed_effect(_scope, %{kind: :excess_satisfied}), do: :ok
+  defp apply_committed_effect(_scope, %{kind: :excess_satisfied}), do: :ok
 
   @doc "Apply the original P1 grant under current Commerce and Privacy authority."
   @spec grant_p1(String.t()) :: {:ok, PlanRight.t() | :withheld} | {:error, :grant_unavailable}

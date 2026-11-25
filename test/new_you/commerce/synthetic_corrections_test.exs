@@ -4,7 +4,7 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
   alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.{Commerce, Entitlements, Identity, Repo}
   alias NewYou.Commerce.{SyntheticCorrection, SyntheticCorrections, SyntheticExcessClaim}
-  alias NewYou.Commerce.SyntheticOrder
+  alias NewYou.Commerce.{SyntheticCorrectionReceipt, SyntheticOrder}
   alias NewYou.Entitlements.PlanRight
   alias NewYou.Entitlements.SyntheticRights
   alias NewYou.Privacy.SyntheticSuppression
@@ -342,6 +342,129 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
     end)
   end
 
+  test "a suppressed component is ended before acknowledgement, including after failed delivery" do
+    P805.with_fixture(fn ->
+      fixture = paid_correction_sources()
+      %{source: source, independent: independent, payer: payer, recipient: recipient} = fixture
+      [assessment, plan] = fixture.rights
+      claim = [[payer.id, fixture.excess, 5_100, "ZAR", nil]]
+      assert claims(source) == claim
+      assert :ok = SyntheticSuppression.suppress(completed_deletion(recipient))
+      assert {:ok, []} = Entitlements.plan_rights(recipient.credentials)
+
+      refund = correction(source, fixture.payment, %{component: :plan, amount_minor: 3_500})
+
+      assert {:ok, %{id: effect, kind: :component_end}} =
+               SyntheticCorrections.observe_correction(refund)
+
+      assert_suppressed_delivery_waits_for_update(effect, plan.id)
+      assert %PlanRight{state: :held_unconsumed} = Ash.get!(PlanRight, plan.id, authorize?: false)
+
+      assert %SyntheticCorrection{acknowledged_at: nil} =
+               Ash.get!(SyntheticCorrection, effect, authorize?: false)
+
+      assert {:ok, [^effect]} = SyntheticCorrections.open_consequences(source.id)
+      assert claims(source) == claim
+
+      fresh_vm!("apply", source.id)
+      assert %PlanRight{state: :ended} = Ash.get!(PlanRight, plan.id, authorize?: false)
+      assert {:ok, [^effect]} = SyntheticCorrections.open_consequences(source.id)
+
+      fresh_vm!("deliver", source.id)
+
+      assert %SyntheticCorrection{acknowledged_at: acknowledged_at} =
+               Ash.get!(SyntheticCorrection, effect, authorize?: false)
+
+      assert acknowledged_at
+      assert {:ok, []} = SyntheticCorrections.open_consequences(source.id)
+      assert {:ok, %{id: ^effect}} = SyntheticCorrections.observe_correction(refund)
+      assert {:ok, %{acknowledged_at: ^acknowledged_at}} = SyntheticCorrections.deliver(effect)
+      assert {:ok, []} = SyntheticRights.converge(source.id)
+      assert {:ok, []} = Entitlements.plan_rights(recipient.credentials)
+
+      assert %PlanRight{state: :held_unconsumed} =
+               Ash.get!(PlanRight, assessment.id, authorize?: false)
+
+      assert right_states(source) == [["assessment", "held_unconsumed"], ["plan", "ended"]]
+      assert_unchanged_rights(fixture.independent_rights)
+
+      assert right_states(independent) == [
+               ["assessment", "held_unconsumed"],
+               ["plan", "held_unconsumed"]
+             ]
+
+      assert claims(source) == claim
+      assert claims(independent) == []
+      assert collection_count(source.id) == 2
+      assert {:ok, %{id: payment}} = SyntheticCorrections.observe_collection(fixture.original)
+      assert payment == fixture.payment
+    end)
+  end
+
+  test "qualified but unattributable correction receipts remain unresolved for both effect kinds" do
+    P805.with_fixture(fn ->
+      fixture = paid_correction_sources()
+
+      mismatches = [
+        status: :pending,
+        status: :unknown,
+        payer_id: fixture.recipient.id,
+        recipient_id: fixture.payer.id,
+        price_version: "synthetic-bundle-v2",
+        currency: "USD",
+        collection_id: fixture.independent_payment
+      ]
+
+      for control <- final_correction_controls(fixture), {field, value} <- mismatches do
+        receipt =
+          PlanPaymentObservation.produce(
+            control.fields
+            |> Map.put(:receipt_id, Ecto.UUID.generate())
+            |> Map.put(field, value)
+          )
+
+        assert_unresolved_receipt(receipt, fixture.source.id)
+      end
+
+      count = 2 * length(mismatches)
+      assert correction_counts(fixture.source.id) == {count, count}
+      assert_no_correction_effects(fixture)
+      assert_final_controls(fixture)
+    end)
+  end
+
+  test "forged and unbound correction receipts persist neither a disposition nor a binding" do
+    P805.with_fixture(fn ->
+      fixture = paid_correction_sources()
+      unknown_source = Ecto.UUID.generate()
+
+      for control <- final_correction_controls(fixture) do
+        forged = %{control | signature: corrupt_signature(control.signature)}
+
+        unbound =
+          for overrides <- [
+                %{source_id: unknown_source},
+                %{source_id: fixture.independent.id},
+                %{operation_id: fixture.independent.operation_id},
+                %{operation_id: Ecto.UUID.generate()}
+              ] do
+            PlanPaymentObservation.produce(
+              control.fields
+              |> Map.put(:receipt_id, Ecto.UUID.generate())
+              |> Map.merge(overrides)
+            )
+          end
+
+        Enum.each([forged | unbound], &assert_rejected_receipt/1)
+      end
+
+      assert correction_counts(unknown_source) == {0, 0}
+      assert correction_counts(fixture.source.id) == {0, 0}
+      assert_no_correction_effects(fixture)
+      assert_final_controls(fixture)
+    end)
+  end
+
   test "independent SQL transactions contend and converge on one owed claim" do
     P805.with_fixture(fn ->
       payer = verified_session()
@@ -644,6 +767,154 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
                  actor: %{role: :finance}
                )
     end)
+  end
+
+  defp paid_correction_sources do
+    payer = verified_session()
+    recipient = verified_session()
+    source = accept_fixture(payer, recipient)
+    independent = accept_fixture(payer, recipient)
+    assert :ok = SyntheticSuppression.register(recipient.credentials)
+
+    original = collection(source)
+    assert {:ok, %{id: payment}} = SyntheticCorrections.observe_collection(original)
+    excess = collection(source)
+    assert {:ok, %{id: ^payment}} = SyntheticCorrections.observe_collection(excess)
+
+    assert {:ok, %{id: independent_payment}} =
+             SyntheticCorrections.observe_collection(collection(independent))
+
+    assert {:ok, rights} = SyntheticRights.converge(source.id)
+    assert {:ok, independent_rights} = SyntheticRights.converge(independent.id)
+
+    %{
+      payer: payer,
+      recipient: recipient,
+      source: source,
+      independent: independent,
+      original: original,
+      payment: payment,
+      excess: excess.fields.collection_id,
+      independent_payment: independent_payment,
+      rights: rights,
+      independent_rights: independent_rights
+    }
+  end
+
+  defp final_correction_controls(fixture) do
+    [
+      correction(fixture.source, fixture.payment, %{component: :plan, amount_minor: 3_500}),
+      correction(fixture.source, fixture.excess, %{reason: :excess_returned, amount_minor: 5_100})
+    ]
+  end
+
+  defp assert_unresolved_receipt(receipt, source_id) do
+    assert {:ok, %SyntheticCorrection{id: id, source_id: ^source_id, kind: :unresolved}} =
+             SyntheticCorrections.observe_correction(receipt)
+
+    assert {:ok, %{id: ^id}} = SyntheticCorrections.observe_correction(receipt)
+    assert {:error, :delivery_unavailable} = SyntheticCorrections.deliver(id)
+
+    assert %SyntheticCorrection{
+             kind: :unresolved,
+             component: nil,
+             amount_minor: nil,
+             acknowledged_at: nil
+           } =
+             Ash.get!(SyntheticCorrection, id, authorize?: false)
+
+    assert %SyntheticCorrectionReceipt{correction_id: ^id} =
+             Ash.get!(SyntheticCorrectionReceipt, receipt.fields.receipt_id, authorize?: false)
+  end
+
+  defp assert_rejected_receipt(receipt) do
+    assert {:error, :correction_unavailable} = SyntheticCorrections.observe_correction(receipt)
+
+    assert {:ok, nil} =
+             Ash.get(SyntheticCorrectionReceipt, receipt.fields.receipt_id,
+               authorize?: false,
+               error?: false
+             )
+  end
+
+  defp assert_no_correction_effects(fixture) do
+    assert {:ok, []} = SyntheticCorrections.open_consequences(fixture.source.id)
+    assert {:ok, []} = SyntheticCorrections.open_consequences(fixture.independent.id)
+    assert correction_counts(fixture.independent.id) == {0, 0}
+    assert claims(fixture.source) == [[fixture.payer.id, fixture.excess, 5_100, "ZAR", nil]]
+    assert claims(fixture.independent) == []
+    assert_unchanged_rights(fixture.rights ++ fixture.independent_rights)
+  end
+
+  defp assert_unchanged_rights(rights) do
+    for right <- rights do
+      persisted = Ash.get!(PlanRight, right.id, authorize?: false)
+      assert persisted.state == :held_unconsumed
+      assert persisted.payment_id == right.payment_id
+      assert persisted.recipient_id == right.recipient_id
+    end
+  end
+
+  defp assert_final_controls(fixture) do
+    [refund, returned] = final_correction_controls(fixture)
+
+    assert {:ok, %{id: end_effect, kind: :component_end, amount_minor: 3_500, component: :plan}} =
+             SyntheticCorrections.observe_correction(refund)
+
+    assert {:ok, %{id: money_effect, kind: :excess_satisfied, amount_minor: 5_100}} =
+             SyntheticCorrections.observe_correction(returned)
+
+    assert {:ok, _} = SyntheticCorrections.deliver(end_effect)
+    assert {:ok, _} = SyntheticCorrections.deliver(money_effect)
+    assert right_states(fixture.source) == [["assessment", "held_unconsumed"], ["plan", "ended"]]
+    assert {:ok, []} = SyntheticCorrections.open_consequences(fixture.source.id)
+    assert_unchanged_rights(fixture.independent_rights)
+    assert [[payer, collection, 5_100, "ZAR", satisfied_at]] = claims(fixture.source)
+    assert payer == fixture.payer.id
+    assert collection == fixture.excess
+    assert satisfied_at
+  end
+
+  defp corrupt_signature(<<first, rest::binary>>), do: <<Bitwise.bxor(first, 1), rest::binary>>
+
+  defp assert_suppressed_delivery_waits_for_update(effect, right_id) do
+    parent = self()
+
+    holder =
+      race_worker(parent, :suppressed_right_holder, fn ->
+        Ash.transact(PlanRight, fn ->
+          query = PlanRight |> Ash.Query.filter(id == ^right_id) |> Ash.Query.lock(:for_update)
+          assert %PlanRight{state: :held_unconsumed} = Ash.read_one!(query, authorize?: false)
+          send(parent, :suppressed_right_locked)
+          await(:commit)
+        end)
+      end)
+
+    delivery =
+      race_worker(parent, :suppressed_delivery, fn ->
+        [[previous]] = Repo.query!("SELECT current_setting('lock_timeout')").rows
+        Repo.query!("SELECT set_config('lock_timeout', '1500ms', false)")
+
+        try do
+          SyntheticCorrections.deliver(effect)
+        after
+          Repo.query!("SELECT set_config('lock_timeout', $1, false)", [previous])
+        end
+      end)
+
+    try do
+      assert_receive {:suppressed_right_holder, blocker}, 5_000
+      assert_receive {:suppressed_delivery, waiter}, 5_000
+      send(holder.pid, :run)
+      assert_receive :suppressed_right_locked, 5_000
+      send(delivery.pid, :run)
+      assert blocked_by?(waiter, blocker, 50)
+      assert {:error, :delivery_unavailable} = Task.await(delivery)
+      send(holder.pid, :commit)
+      assert {:ok, :ok} = Task.await(holder)
+    after
+      finish_race([holder, delivery])
+    end
   end
 
   defp read_grant(staff, source, role) do
