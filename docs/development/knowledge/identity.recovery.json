@@ -18,7 +18,7 @@
     "WELL-183"
   ],
   "implementation_revision": {
-    "git_sha": "7aa725beb293346a1cae26f874d9668e64eaf592",
+    "git_sha": "92de6c24c00cbee44f72e669c4468a191100536f",
     "semantics": "WELL-16 recovery capability introduced in PR #228. WELL-17 changes shared Identity, Account and Token source bytes without changing recovery authority; the real primary-email-change/recovery PostgreSQL race in both commit orders is linked here and in identity.primary_email_change.json. File hashes bind inspected implementation bytes; this is not independent merge certification. WELL-20 extracts existing proof assertions into shared scenarios; original test names remain callable wrappers. Business semantics are unchanged. WELL-131 refreshes source evidence for shared files only; this capability lifecycle is unchanged. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 adds exact DEV-only guide dispatch in the shared browser boundary. Recovery controller dispatch and all owning recovery interfaces, guards and durable state remain unchanged. WELL-137 updates exact current Product and Decision lineage checks to v1.18.0 while retaining existing recovery content and approval boundaries. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-153 changes TEST-only recovery restart diagnostics and proof; Identity and password-reset business semantics remain unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged. WELL-159 replaces the timed child sleep and mixed interruption/retry loop with an observed pre-commit checkpoint handshake, registered process-group termination, independent rollback assertions and a fresh-VM retry of the same case/operation. Fixed TEST-only transaction phases distinguish early failures; the 250ms public request cap and all Domain/business semantics are unchanged. PR271 failure diagnosis distinguishes a neutral public acknowledgement from committed fixture state. Initial unverified fixture setup and ordinary child resume use at most three same-operation requests with durable state reads; the child retains the historical ordinary :requested result. Interruption-enabled requests remain single-attempt. Explicit TEST rollback and bounded-exhaustion cases prove retry and fail-closed setup; fixed restart diagnostics survive aggregate exception redaction. WELL-159 independently proves real 250ms lease expiry at transaction entry, after Account lock and after uncommitted Token/MessageIntent work. The worker reports its own PostgreSQL XID; a separate parent connection observes aborted before release, then the old lease must raise DBConnection.ConnectionError. Full Case/Account and zero partial effects are checked before explicit fresh-BEAM retry, which must commit one version/proof/intent. Initial fixture requests now own isolated Scenario worker checkouts so a bounded request cannot disconnect the fixture owner. Shared atomics are TEST fault counters only. Failed cleaned-up requests log identifier-free durable observations and still fail the cut/retry assertion; skipped-cut control must have committed a valid request. WELL-157 advances current Product-route verification to v1.19.0 through the exact v1.18.0 predecessor; the existing Phase-8 content meanings and delivery boundaries remain unchanged. WELL-161 evaluates the accumulated TEST port output on the READY transition and after later data messages. It checks the existing absolute deadline and output cap before accepting the complete interruption handshake, and sends stdin only after verified process-group ownership and READY. WELL-148 moves the verified-channel resume test onto an isolated unboxed recovery request worker and shares the existing restart fixture request mechanism. The fixture guardian registers the worker before it acquires the checkout, and the test waits for worker cleanup before reading durable state. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes shared source references. Verified recovery containment also terminalizes an active Phase-9 primary-email change in its existing transaction where applicable. WELL-146 refreshes the shared EmailChangeScenarios source locator after the held-notice proof correction. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-143 reconciles the retained reset proof with the WELL-148 lease. A registered worker uses its own unboxed connection and observation scope under the single lease. The proof verifies the foreign reset remains valid and unchanged after the race. The stale-reset race uses the existing registered Recovery fixture request worker and verifies the committed operation before proceeding. WELL-164 adds fixed TEST diagnostics for restart child transaction failures. WELL-166 strengthens TEST-only request replay and completion guards with durable proof linkage and adds a separate same-VM request cut. It preserves fresh-BEAM and lease-expiry evidence and changes no runtime lifecycle or owner interface. WELL-168 gives Recovery signing-key unavailability its own source-guard outcome so Communications can retry the same obligation. WELL-167 adds TEST-only ownership-proxy exit and first-query-failure observation on the fresh hosted request. The second deliverable changes the actual request transaction budget to 350 ms and retains the 500 ms public response floor. The expiry and cut controls use the owning Recovery budget. WELL-175 verifies the exact current Product v1.20.0 pair before reading the historical approval chain. The routed Phase-9 applicability packet records four existing locale versions. The runtime still consumes the P8-15 packet, with no normal-entry Phase-9 path. WELL-183 adds the bounded ordinary Phase-9 entry and preserves the separate historical P8-15 transport. Identity persists the entry context on each RecoveryCase. Communications persists the corresponding render schema on each intent and revalidates Identity and the routed WELL-175 evidence before invocation. The browser renders only WELL-184 copy in the ordinary context and directs a completed claimant to the existing password-session route for fresh authentication. The WELL-183 review follow-up proves Phase-9 versus Phase-9 requests and both Phase-9 versus P8-15 commit orders on distinct PostgreSQL backends. The Master Gate follow-up proves historical operator approval and completion for the same synthetic target, then tests the separate Phase-9 approval and completion denials. WELL-189 refreshes shared source references. The mapped behavior is unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1319,7 +1319,7 @@
     "WELL-168 uses the existing synthetic Recovery fixture and its TEST provider. The signing-key recovery proof covers restoration of the same key before expiry. The intermittent hosted transaction failure remains tracked by WELL-167.",
     "WELL-183 reconciles only the bounded Recovery portion of WELL-172 and FP-001 Q.3/AC-08. WELL-115/WELL-167 and OQ-035/036 still govern release. WELL-183 does not close WELL-21.",
     "WELL-183 AC1 entry is direct at /recovery?locale=en and /recovery?locale=af. WELL-184 approves the Recovery screens and completion link to sign-in. A sign-in or registration link into Recovery needs eligible localized navigation copy in that context.",
-    "WELL-167 PR #326 changes only the P815 proof harness budget_effect so non-committing neutral, unknown, malformed and contended characterization scenarios are classified instead of crashing. No Recovery business behavior, timeout, response contract or security guard changed; the refreshed p8_15.ex digest records only that harness edit. Hosted budget characterization is observational and does not certify the 350 ms budget or a production warm-up. WELL-167 Step 3 adds a predeclared controlled-load mode to the same P815 harness: one child runs a cold request, a batch of eight concurrent requests and, for prolonged contention, an authorized follow-up. The mode runs only behind the temporary P815_CHARACTERIZE_LOAD switch, which the Draft PR removes before merge. It changes TEST proof code and workflow inputs only. The load evidence is observational, does not certify production capacity and does not authorize a budget change."
+    "WELL-167 PR #326 changes only the P815 proof harness budget_effect so non-committing neutral, unknown, malformed and contended characterization scenarios are classified instead of crashing. No Recovery business behavior, timeout, response contract or security guard changed; the refreshed p8_15.ex digest records only that harness edit. Hosted budget characterization is observational and does not certify the 350 ms budget or a production warm-up. WELL-167 Step 3 adds a predeclared controlled-load mode to the same P815 harness: one child runs a cold request, a batch of eight concurrent requests and, for prolonged contention, an authorized follow-up. The mode runs only behind the temporary P815_CHARACTERIZE_LOAD switch, which the Draft PR removes before merge. It changes TEST proof code and workflow inputs only. The load evidence is observational, does not certify production capacity and does not authorize a budget change. Addendum A1 corrects the load instrument before the corrected run: per-request ordinals, fixed task statuses, acquisition boundaries and a prolonged rollback proof before the follow-up. Its pre-correction hosted findings remain on record and do not count as passing evidence for the corrected instrument."
   ],
   "follow_up_tickets": [
     "WELL-17",
@@ -1452,7 +1452,7 @@
       "id": "concurrent_helper",
       "path": "test/support/proof/p8_15.ex",
       "symbol": "defmodule NewYou.Proof.P815",
-      "sha256": "b4462172008ed36851470b113a3a066ffef8ac1d583bf99f47969ef774dce41a"
+      "sha256": "c721c269b0963799b48c5a7d7aae28a31a0636f06e643ce5063836dcd3e74abc"
     },
     {
       "id": "lifecycle_test",
@@ -1602,13 +1602,13 @@
       "id": "restart_child",
       "path": "test/proof/p8_15_restart.exs",
       "symbol": "defmodule NewYou.Proof.P815RestartRequest",
-      "sha256": "36aa387840304e1ee43c95b04d0c240b087ea25dc2a8c263e9af9855def05ac6"
+      "sha256": "3f779bf92e02790686979839beda5b7b0f0a3ceb6840f0e165c9e6179f124fbd"
     },
     {
       "id": "restart_port",
       "path": "test/support/proof/p8_15_port.ex",
       "symbol": "defmodule NewYou.Proof.P815Port",
-      "sha256": "09feef4ded7cd17437db18e9273df22ca8b5a10bbae7e3e472b65ca543e0edaf"
+      "sha256": "7c90c1696bc2d246d7e6400b1da5dd309091207d771cc0a54c9e07f1e999bdd5"
     },
     {
       "id": "restart_port_test",
@@ -1656,25 +1656,37 @@
       "id": "recovery_lease",
       "path": "test/support/proof/recovery_lease.ex",
       "symbol": "defmodule NewYou.Proof.RecoveryLease",
-      "sha256": "467f71bc63e00d3a0ea216530a1354e1ed82f58bdbc8224db1f2d0c1634fd5d7"
+      "sha256": "0ba4f40efcfb6d5786f49a5b96cc79683e67412ed95cf65174d14acdcd36f331"
     },
     {
       "id": "recovery_lease_test",
       "path": "test/new_you/proof/recovery_lease_test.exs",
       "symbol": "defmodule NewYou.Proof.RecoveryLeaseTest",
-      "sha256": "91c886b50fd727169e580a11e93cfff6a45cc649253b5ebfda99641c4e80b6d5"
+      "sha256": "00a752f0be1ba418a1f8ea137abad8ccfa64ff1d4d5b136017bfbdcb8ba6085c"
     },
     {
       "id": "recovery_budget",
       "path": "test/support/proof/recovery_budget.ex",
       "symbol": "defmodule NewYou.Proof.RecoveryBudget",
-      "sha256": "46050726713e86684eee217db98ebb0a5b253e5dbce808a20ecac5b210d0b4b4"
+      "sha256": "f1a3532b5a1c550426e36cee14b90f04ad69e34e391006fa23fa4fbcbc60d764"
     },
     {
       "id": "recovery_budget_test",
       "path": "test/new_you/proof/recovery_budget_test.exs",
       "symbol": "defmodule NewYou.Proof.RecoveryBudgetTest",
-      "sha256": "746aac666b3e640fd0a2ff255cfd1e39732f340bd343d2710af19430c5bcf3b8"
+      "sha256": "3665ece291babc19a7dfd783f031130c60cf27ee6d4ca79cc16a3236b0c00090"
+    },
+    {
+      "id": "recovery_load",
+      "path": "test/support/proof/recovery_load.ex",
+      "symbol": "defmodule NewYou.Proof.RecoveryLoad",
+      "sha256": "56539318d8ce899337df936f1c901b3bca42cd8fa17eb5b1b974afebd34a9572"
+    },
+    {
+      "id": "recovery_load_test",
+      "path": "test/new_you/proof/recovery_load_test.exs",
+      "symbol": "defmodule NewYou.Proof.RecoveryLoadTest",
+      "sha256": "1e6f90515e416ccf69e7ddf866b82afdb2e3e392a73acf49c76cc4c2660d591f"
     },
     {
       "id": "phase9_message",
