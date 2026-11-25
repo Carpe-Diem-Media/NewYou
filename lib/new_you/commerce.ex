@@ -1,7 +1,8 @@
 defmodule NewYou.Commerce do
   @moduledoc """
   Commerce owns accepted Plan purchase facts, payment application, and the
-  obligation to hand the resulting source to Entitlements.
+  obligation to hand the resulting source to Entitlements. Qualified TEST
+  collections may also establish a source-bound excess claim.
   """
   use Ash.Domain, otp_app: :new_you
 
@@ -14,6 +15,12 @@ defmodule NewYou.Commerce do
     resource Purchase
     resource VerifiedPayment
     resource PaymentConsequence
+    resource NewYou.Commerce.SyntheticCollection
+    resource NewYou.Commerce.SyntheticCollectionReceipt
+    resource NewYou.Commerce.SyntheticExcessClaim
+    resource NewYou.Commerce.SyntheticOrder
+    resource NewYou.Commerce.SyntheticCorrection
+    resource NewYou.Commerce.SyntheticCorrectionReceipt
   end
 
   @doc """
@@ -74,7 +81,8 @@ defmodule NewYou.Commerce do
 
   @doc """
   Review whether the Account pair has Commerce history. P1 only supports an
-  empty scope. Any recorded purchase requires a separately supported review.
+  empty scope. A recorded purchase or TEST fixture involving either party
+  requires a separately supported review.
   """
   @spec review_identity_reconciliation(String.t(), String.t()) ::
           {:ok, map()} | {:error, :commerce_scope_unavailable}
@@ -82,36 +90,50 @@ defmodule NewYou.Commerce do
       when candidate_id != canonical_id do
     query = Ash.Query.filter(Purchase, payer_id in ^[candidate_id, canonical_id])
 
-    case Ash.exists(query, authorize?: false) do
-      {:ok, false} ->
-        {:ok,
-         %{
-           "candidate_id" => candidate_id,
-           "canonical_id" => canonical_id,
-           "policy" => "empty_commerce_scope",
-           "commands" => []
-         }}
-
-      _ ->
-        {:error, :commerce_scope_unavailable}
+    with {:ok, false} <- Ash.exists(query, authorize?: false),
+         {:ok, false} <- synthetic_order_history?(candidate_id, canonical_id) do
+      {:ok,
+       %{
+         "candidate_id" => candidate_id,
+         "canonical_id" => canonical_id,
+         "policy" => "empty_commerce_scope",
+         "commands" => []
+       }}
+    else
+      _ -> {:error, :commerce_scope_unavailable}
     end
   end
 
   def review_identity_reconciliation(_, _), do: {:error, :commerce_scope_unavailable}
 
+  if Mix.env() == :test do
+    defp synthetic_order_history?(candidate_id, canonical_id) do
+      ids = [candidate_id, canonical_id]
+
+      NewYou.Commerce.SyntheticOrder
+      |> Ash.Query.filter(payer_id in ^ids or recipient_id in ^ids)
+      |> Ash.exists(authorize?: false)
+    end
+  else
+    defp synthetic_order_history?(_, _), do: {:ok, false}
+  end
+
   @doc """
   Apply qualified payment evidence to an exact accepted attempt. Commerce
-  commits payment and its consequence together. Equivalent evidence replays
-  the committed result. The synthetic verifier is compiled only in TEST.
+  commits payment and its consequence together. Explicit collection proofs bind
+  their receipt to the accepted observation in the same transaction. Exact
+  replay returns the committed result. The verifier is compiled only in TEST.
   """
   @spec apply_payment_observation(term()) ::
           {:ok, VerifiedPayment.t()} | {:error, :payment_unavailable}
   if Mix.env() == :test do
+    alias NewYou.Commerce.SyntheticCollectionLedger
+
     def apply_payment_observation(observation) do
       with {:ok, %{status: :succeeded, integration: :synthetic, environment: :test} = fields} <-
              NewYou.Proof.PlanPaymentObservation.verify(observation),
            {:ok, %VerifiedPayment{} = payment} <-
-             Ash.transact([Purchase, VerifiedPayment, PaymentConsequence], fn ->
+             Ash.transact(Purchase, fn ->
                apply_qualified(fields)
              end) do
         {:ok, payment}
@@ -120,14 +142,17 @@ defmodule NewYou.Commerce do
       end
     end
 
-    defp apply_qualified(%{
-           purchase_id: purchase_id,
-           attempt_id: attempt_id,
-           amount_minor: amount_minor,
-           currency: currency
-         }) do
+    defp apply_qualified(
+           %{
+             purchase_id: purchase_id,
+             attempt_id: attempt_id,
+             amount_minor: amount_minor,
+             currency: currency
+           } = fields
+         ) do
       with {:ok,
-            %Purchase{attempt_id: ^attempt_id, amount_minor: ^amount_minor, currency: ^currency}} <-
+            %Purchase{attempt_id: ^attempt_id, amount_minor: ^amount_minor, currency: ^currency} =
+              purchase} <-
              Purchase
              |> Ash.Query.filter(id == ^purchase_id)
              |> Ash.Query.lock(:for_update)
@@ -135,7 +160,8 @@ defmodule NewYou.Commerce do
            {:ok, prior} <-
              VerifiedPayment
              |> Ash.Query.filter(purchase_id == ^purchase_id)
-             |> Ash.read_one(authorize?: false) do
+             |> Ash.read_one(authorize?: false),
+           :ok <- record_collection(fields, purchase, prior) do
         commit_payment(prior, purchase_id)
       else
         _ -> {:error, :payment_unavailable}
@@ -143,6 +169,15 @@ defmodule NewYou.Commerce do
     end
 
     defp apply_qualified(_), do: {:error, :payment_unavailable}
+
+    defp record_collection(fields, purchase, prior)
+         when is_map_key(fields, :collection_id) or is_map_key(fields, :receipt_id) do
+      with {:ok, _} <- SyntheticCollectionLedger.record(purchase, fields, is_nil(prior)) do
+        :ok
+      end
+    end
+
+    defp record_collection(_fields, _purchase, _prior), do: :ok
 
     defp commit_payment(%VerifiedPayment{} = prior, _purchase_id), do: prior
 
@@ -203,10 +238,11 @@ defmodule NewYou.Commerce do
   @doc """
   Deliver the committed payment consequence and acknowledge it after the
   Entitlements transaction commits. Retry reuses the original right and
-  completes the original consequence after either process-loss cut.
+  completes the original consequence after either process-loss cut. A TEST-only
+  suppression or prior correction can settle delivery as `:withheld`.
   """
   @spec deliver_plan_payment_consequence(String.t()) ::
-          {:ok, Entitlements.PlanRight.t()} | {:error, :delivery_unavailable}
+          {:ok, Entitlements.PlanRight.t() | :withheld} | {:error, :delivery_unavailable}
   def deliver_plan_payment_consequence(consequence_id) do
     with {:ok, right} <- Entitlements.grant_paid_plan(consequence_id),
          {:ok, %PaymentConsequence{}} <-

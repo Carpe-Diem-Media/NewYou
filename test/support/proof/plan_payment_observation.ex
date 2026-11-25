@@ -4,6 +4,7 @@ defmodule NewYou.Proof.PlanPaymentObservation do
 
   @enforce_keys [:fields, :signature]
   defstruct [:fields, :signature]
+  @type t :: %__MODULE__{fields: map(), signature: binary()}
 
   @doc false
   def produce(fields) when is_map(fields) do

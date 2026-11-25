@@ -8,7 +8,7 @@
     "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "c7923acb57e47be85170509b1c44954451fd9cd1",
+    "git_sha": "fad576a2c2ce8cbbfae65250fcf3eeae420a796e",
     "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures. WELL-189 binds the empty-scope Commerce and Entitlements reviews. Earlier approvals need fresh review before apply."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -742,7 +742,7 @@
       "id": "owner_test",
       "path": "test/new_you/identity/reconciliation_test.exs",
       "symbol": "NewYou.Identity.ReconciliationTest",
-      "sha256": "5691dfa1734a8689d96200a54ec7808198e73ddf13019dce84bfa6bc786f1fa3"
+      "sha256": "126dc3626fceffc4e8c4e140bdab01277d4b066be8ebb4adc32ae65ba3af4983"
     },
     {
       "id": "web_test",
@@ -784,13 +784,13 @@
       "id": "commerce_review",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def review_identity_reconciliation",
-      "sha256": "4cb284d0609cb6d55a58cf0771efdd3909207629c1d9125513ff57d62d8d8798"
+      "sha256": "1203f805ecefc62979b2798ea0d56c81b2b43b9aa5c002f2f4e9826c55ed1e7a"
     },
     {
       "id": "entitlements_review",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def review_identity_reconciliation",
-      "sha256": "688b21f5c29a7b4eff87bfb837be3a495aa613c08ff9ae621e82606dbab43664"
+      "sha256": "a2e9819f09d6a661b48fe4f54511ddc8e9aabe7895136b2d3d1f948164c4e3ac"
     }
   ]
 }

@@ -11,6 +11,7 @@ defmodule NewYou.Proof.P815Port do
     "P815_COMPLETED" => :completed,
     "P815_ALREADY_COMPLETED" => :already_completed,
     "P1_COMPLETED" => :p1_completed,
+    "E2A_COMPLETED" => :e2a_completed,
     "P814_RECONSTRUCTED" => :p814_reconstructed,
     "P814_CONFLICT_DENIED" => :p814_conflict_denied,
     "P814_REVIEW_RECOVERED" => :p814_review_recovered

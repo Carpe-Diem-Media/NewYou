@@ -1,6 +1,11 @@
 alias NewYou.Commerce
 
 false = Code.ensure_loaded?(NewYou.Proof.PlanPaymentObservation)
+false = Code.ensure_loaded?(NewYou.Commerce.SyntheticCorrections)
+false = Code.ensure_loaded?(NewYou.Commerce.SyntheticCollectionLedger)
+false = Code.ensure_loaded?(NewYou.Entitlements.SyntheticRights)
+false = Code.ensure_loaded?(NewYou.Privacy.SyntheticSuppression)
+false = Code.ensure_loaded?(NewYou.Audit.SyntheticCorrectionEvidence)
 {:ok, {Commerce, [imports: imports]}} = :beam_lib.chunks(:code.which(Commerce), [:imports])
 
 false =

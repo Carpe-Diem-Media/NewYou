@@ -13,10 +13,10 @@ defmodule NewYou.Entitlements.PlanRight do
 
     check_constraints do
       check_constraint :component, "entitlements_plan_rights_component",
-        check: "component = 'plan'"
+        check: "component IN ('assessment', 'plan')"
 
       check_constraint :state, "entitlements_plan_rights_state",
-        check: "state = 'held_unconsumed'"
+        check: "state IN ('held_unconsumed', 'ended')"
     end
 
     custom_indexes do
@@ -32,11 +32,17 @@ defmodule NewYou.Entitlements.PlanRight do
 
     create :grant do
       public? false
-      accept [:purchase_id, :payment_id, :recipient_id]
+      accept [:purchase_id, :payment_id, :recipient_id, :component]
       upsert? true
       upsert_identity :purchase_component
       upsert_fields []
       return_skipped_upsert? true
+    end
+
+    update :end_component do
+      public? false
+      accept []
+      change atomic_update(:state, :ended)
     end
   end
 
@@ -51,12 +57,16 @@ defmodule NewYou.Entitlements.PlanRight do
     attribute :purchase_id, :uuid, allow_nil?: false
     attribute :payment_id, :uuid, allow_nil?: false
     attribute :recipient_id, :uuid, allow_nil?: false
-    attribute :component, :atom, allow_nil?: false, default: :plan, constraints: [one_of: [:plan]]
+
+    attribute :component, :atom,
+      allow_nil?: false,
+      default: :plan,
+      constraints: [one_of: [:assessment, :plan]]
 
     attribute :state, :atom,
       default: :held_unconsumed,
       allow_nil?: false,
-      constraints: [one_of: [:held_unconsumed]]
+      constraints: [one_of: [:held_unconsumed, :ended]]
 
     create_timestamp :granted_at
   end
