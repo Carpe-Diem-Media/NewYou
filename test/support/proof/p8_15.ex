@@ -1501,6 +1501,133 @@ defmodule NewYou.Proof.P815 do
     end
   end
 
+  @load_batch_size 8
+
+  # Predeclared in docs/development/well-167-recovery-load-plan.md. The cold
+  # sample is the first report, batch reports follow in completion order, and an
+  # authorized follow-up is the last report.
+  def characterize_load(scenario, concurrency, replicate) do
+    P805.with_fixture(fn ->
+      cold_fixture = resumable_fixture()
+      cold = budget_input(cold_fixture, :known)
+      load = load_scenario(scenario)
+      expected = 1 + length(load.batch) + if(load.after, do: 1, else: 0)
+
+      diagnostic =
+        run_restart(%{
+          mode: "sample_load",
+          cold: cold,
+          hold: load.hold,
+          batch: load.batch,
+          concurrency: concurrency,
+          after: load.after,
+          signing_secret:
+            Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
+        })
+
+      assert diagnostic.status == :ok and diagnostic.cleanup == :confirmed
+      assert diagnostic.marker == :requested
+      assert length(diagnostic.budget_reports) == expected
+      assert length(diagnostic.lease_reports) == expected
+
+      batch_leases = Enum.slice(diagnostic.lease_reports, 1, length(load.batch))
+      assert Enum.all?(batch_leases, &(&1.closure == load.closure))
+      if load.after, do: assert(List.last(diagnostic.lease_reports).closure == :none)
+      assert Enum.all?(diagnostic.budget_reports, &(&1.public >= 500_000))
+
+      Enum.each([cold_fixture | load.issued], &assert_resumed_request/1)
+      Enum.each(load.unchanged, &assert_resume_rolled_back/1)
+
+      IO.puts(
+        :stderr,
+        "P815_LOAD_CHILD " <>
+          Jason.encode!(%{
+            scenario: scenario,
+            concurrency: concurrency,
+            replicate: replicate,
+            budget: diagnostic.budget_reports,
+            lease: diagnostic.lease_reports
+          })
+      )
+    end)
+  end
+
+  defp load_scenario(:independent) do
+    fixtures = for _ <- 1..@load_batch_size, do: resumable_fixture()
+
+    %{
+      hold: nil,
+      after: nil,
+      batch: Enum.map(fixtures, &budget_input(&1, :known)),
+      closure: :none,
+      issued: fixtures,
+      unchanged: []
+    }
+  end
+
+  defp load_scenario(:replay) do
+    fixture = resumable_fixture()
+    input = budget_input(fixture, :replay)
+
+    %{
+      hold: nil,
+      after: nil,
+      batch: List.duplicate(input, @load_batch_size),
+      closure: :none,
+      issued: [fixture],
+      unchanged: []
+    }
+  end
+
+  defp load_scenario(:released) do
+    fixture = resumable_fixture()
+    input = budget_input(fixture, :known)
+
+    %{
+      hold: %{case_id: fixture.recovery.id, hold_ms: 150},
+      after: nil,
+      batch: List.duplicate(input, @load_batch_size),
+      closure: :none,
+      issued: [fixture],
+      unchanged: []
+    }
+  end
+
+  defp load_scenario(:prolonged) do
+    fixture = resumable_fixture()
+    input = budget_input(fixture, :known)
+
+    %{
+      hold: %{case_id: fixture.recovery.id, hold_ms: 1_000},
+      after: input,
+      batch: List.duplicate(input, @load_batch_size),
+      closure: :checkout_deadline,
+      issued: [fixture],
+      unchanged: []
+    }
+  end
+
+  defp load_scenario(:mixed) do
+    known = for _ <- 1..2, do: resumable_fixture()
+    replayed = for _ <- 1..2, do: resumable_fixture()
+    [unknown_fixture, malformed_fixture] = for _ <- 1..2, do: resumable_fixture()
+
+    batch =
+      Enum.map(known, &budget_input(&1, :known)) ++
+        Enum.map(replayed, &budget_input(&1, :replay)) ++
+        List.duplicate(budget_input(unknown_fixture, :unknown), 2) ++
+        List.duplicate(budget_input(malformed_fixture, :malformed), 2)
+
+    %{
+      hold: nil,
+      after: nil,
+      batch: batch,
+      closure: :none,
+      issued: known ++ replayed,
+      unchanged: [unknown_fixture, malformed_fixture]
+    }
+  end
+
   def calibrate_recovery_lease(mode) when mode in [:observe, :baseline, :expiry, :checkin] do
     P805.with_fixture(fn ->
       fixture = resumable_fixture()

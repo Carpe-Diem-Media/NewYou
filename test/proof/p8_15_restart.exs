@@ -42,10 +42,60 @@ defmodule NewYou.Proof.P815RestartRequest do
     :requested
   end
 
+  # Report order: the cold sample first, batch samples in completion order,
+  # then the optional authorized follow-up. Batch tasks set their own observer
+  # because seam state lives in each process dictionary.
+  def load(input) do
+    Logger.configure(level: :emergency)
+    RecoverySeam.observe(&NewYou.Proof.RecoveryBudget.observe_outcome/1)
+    if input["cold"], do: request(input["cold"])
+    run_batch(input)
+    if input["after"], do: request(input["after"])
+    :requested
+  end
+
   defp requested_result(%{"rollback_request_once" => true}, attempt) when attempt > 1,
     do: :request_retried
 
   defp requested_result(_input, _attempt), do: :requested
+
+  defp run_batch(%{"batch" => batch, "concurrency" => concurrency} = input) do
+    # Batch tasks check out their own connections. Releasing this process's
+    # sandbox connection keeps the nine-connection batch inside pool size 10.
+    Ecto.Adapters.SQL.Sandbox.checkin(NewYou.Repo)
+
+    case input["hold"] do
+      nil ->
+        batch_tasks(batch, concurrency)
+
+      %{"case_id" => case_id, "hold_ms" => hold_ms} ->
+        # The batch starts while the holder owns the Account row. The lock is
+        # released after hold_ms, and the batch is awaited after release.
+        task =
+          NewYou.Proof.RecoveryBudget.with_account_lock(case_id, fn ->
+            task = Task.async(fn -> batch_tasks(batch, concurrency) end)
+            Process.sleep(hold_ms)
+            task
+          end)
+
+        Task.await(task, 10_000)
+    end
+  end
+
+  defp batch_tasks(batch, concurrency) do
+    batch
+    |> Task.async_stream(&request_in_task/1,
+      max_concurrency: concurrency,
+      ordered: false,
+      timeout: 10_000
+    )
+    |> Stream.run()
+  end
+
+  defp request_in_task(input) do
+    RecoverySeam.observe(&NewYou.Proof.RecoveryBudget.observe_outcome/1)
+    request(input)
+  end
 
   defp request(input) do
     {:ok, failures} =
@@ -154,6 +204,9 @@ Ecto.Adapters.SQL.Sandbox.unboxed_run(NewYou.Repo, fn ->
       case input["mode"] do
         "sample_budget" ->
           NewYou.Proof.P815RestartRequest.sample(input["samples"])
+
+        "sample_load" ->
+          NewYou.Proof.P815RestartRequest.load(input)
 
         "request" ->
           NewYou.Proof.P815RestartRequest.run(input)

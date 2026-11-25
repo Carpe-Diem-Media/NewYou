@@ -78,6 +78,8 @@ jobs:
           # TEMPORARY WELL-167 budget characterization. Revert before any merge.
           # Must match the shards so discovery declares the same test identities.
           P815_CHARACTERIZE_BUDGET: "1"
+          # TEMPORARY WELL-167 load characterization. Revert before any merge.
+          P815_CHARACTERIZE_LOAD: "1"
         run: python3 -m tools.exunit_ci plan application-evidence "$SEED" >> "$GITHUB_OUTPUT"
       - name: Preserve declared inventory
         uses: actions/upload-artifact@v4
@@ -131,6 +133,8 @@ jobs:
           FILES: ${{ toJSON(matrix.files) }}
           # TEMPORARY WELL-167 budget characterization. Revert before any merge.
           P815_CHARACTERIZE_BUDGET: "1"
+          # TEMPORARY WELL-167 load characterization. Revert before any merge.
+          P815_CHARACTERIZE_LOAD: "1"
         run: python3 -m tools.exunit_ci execute application-evidence "$SEED" "$FILES"
       - name: Preserve shard outcomes and diagnostics
         if: always()

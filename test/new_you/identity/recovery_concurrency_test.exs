@@ -405,6 +405,29 @@ defmodule NewYou.Identity.RecoveryConcurrencyTest do
     end
   end
 
+  # Predeclared load conditions. Discovery and shards must set the same value.
+  load_conditions =
+    case System.get_env("P815_CHARACTERIZE_LOAD") do
+      "1" ->
+        [
+          {:independent, 1},
+          {:independent, 8},
+          {:replay, 8},
+          {:released, 8},
+          {:prolonged, 8},
+          {:mixed, 8}
+        ]
+
+      _ ->
+        []
+    end
+
+  for {scenario, concurrency} <- load_conditions, replicate <- 1..3 do
+    test "hosted load #{scenario} concurrency #{concurrency} replicate #{replicate}" do
+      P815.characterize_load(unquote(scenario), unquote(concurrency), unquote(replicate))
+    end
+  end
+
   # These additional fault controls require the per-job provisioner marker.
   # Existing interruption and skip-cut proofs run in every environment.
   if System.get_env("GITHUB_ACTIONS") == "true" do
