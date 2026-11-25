@@ -7,6 +7,8 @@ defmodule NewYou.Content.ProductAuthorityTest do
   @platform_v1_21 "docs/governance/product/00_PLATFORM_v1.21.0.md"
   @platform_v1_20 "docs/governance/product/00_PLATFORM_v1.20.0.md"
   @platform_v1_19 "docs/governance/product/00_PLATFORM_v1.19.0.md"
+  @decisions_v1_21 "docs/governance/product/01_DECISIONS_v1.21.0.md"
+  @decisions_v1_20 "docs/governance/product/01_DECISIONS_v1.20.0.md"
 
   setup do
     governance =
@@ -64,6 +66,30 @@ defmodule NewYou.Content.ProductAuthorityTest do
 
     assert {:error, :content_ineligible} =
              ProductAuthority.historical_bindings(governance, reader(replacements))
+  end
+
+  test "denies when the current 1.21 Product Decisions changed", %{governance: governance} do
+    replacements = %{@decisions_v1_21 => tampered(@decisions_v1_21)}
+
+    assert {:error, :content_ineligible} =
+             ProductAuthority.historical_bindings(governance, reader(replacements))
+  end
+
+  test "denies when the 1.20 predecessor Product Decisions changed, even though 1.21 still matches",
+       %{governance: governance} do
+    replacements = %{@decisions_v1_20 => tampered(@decisions_v1_20)}
+
+    assert {:error, :content_ineligible} =
+             ProductAuthority.historical_bindings(governance, reader(replacements))
+  end
+
+  test "denies when the 1.20 predecessor cannot be read", %{governance: governance} do
+    unreadable = fn path ->
+      if path == @platform_v1_20, do: {:error, :enoent}, else: reader().(path)
+    end
+
+    assert {:error, :content_ineligible} =
+             ProductAuthority.historical_bindings(governance, unreadable)
   end
 
   test "denies when the 1.19 binding that backs pre-WELL-175 evidence changed", %{
