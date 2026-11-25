@@ -7,6 +7,8 @@ if [[ "${CACHE_RESTORE_OUTCOME:-success}" != success ]] ||
    [[ "${CACHE_HIT:-false}" != true ]] ||
    ! python3 tools/ci/cache_manifest.py check; then
   rm -rf deps _build/test
+else
+  echo "Verified dependency cache manifest."
 fi
 
 prepare() {
