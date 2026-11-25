@@ -4,9 +4,12 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
   alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.{Commerce, Entitlements, Identity, Repo}
   alias NewYou.Commerce.{SyntheticCorrection, SyntheticCorrections, SyntheticExcessClaim}
+  alias NewYou.Commerce.SyntheticOrder
+  alias NewYou.Entitlements.PlanRight
   alias NewYou.Entitlements.SyntheticRights
   alias NewYou.Privacy.SyntheticSuppression
   alias NewYou.Proof.{P805, PlanPaymentObservation}
+  require Ash.Query
 
   test "the authorized payer keeps the exact excess claim on one intended purchase" do
     P805.with_fixture(fn ->
@@ -63,6 +66,109 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
 
       refute independent_payment == application_id
       assert claims(independent) == []
+    end)
+  end
+
+  test "bundle collection receipts are immutable across observations and accepted sources" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      recipient = verified_session()
+      source = accept_fixture(payer, recipient)
+      independent = accept_fixture(payer, recipient)
+      original = collection(source)
+      receipt_id = original.fields.receipt_id
+      assert {:ok, %{id: applied}} = SyntheticCorrections.observe_collection(original)
+
+      for changed_source <- [source, independent] do
+        changed = collection(changed_source, receipt_id: receipt_id)
+        assert {:error, :payment_unavailable} = SyntheticCorrections.observe_collection(changed)
+        assert claims(changed_source) == []
+      end
+
+      assert {:ok, %{id: ^applied}} = SyntheticCorrections.observe_collection(original)
+      another_receipt = collection(source, collection_id: applied)
+      assert {:ok, %{id: ^applied}} = SyntheticCorrections.observe_collection(another_receipt)
+      assert claims(source) == []
+      assert collection_count(source.id) == 1
+      assert collection_count(independent.id) == 0
+
+      assert {:ok, %{id: other}} =
+               SyntheticCorrections.observe_collection(collection(independent))
+
+      refute other == applied
+    end)
+  end
+
+  test "failed bundle receipt binding rolls back the proposed excess collection and claim" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      recipient = verified_session()
+      source = accept_fixture(payer, recipient)
+      assert {:ok, %{id: payment}} = SyntheticCorrections.observe_collection(collection(source))
+      excess = collection(source)
+
+      P805.with_rejected_insert("commerce_synthetic_collection_receipts", fn reached? ->
+        assert {:error, :payment_unavailable} = SyntheticCorrections.observe_collection(excess)
+        assert reached?.()
+      end)
+
+      assert collection_count(source.id) == 1
+      assert claims(source) == []
+      assert {:ok, %{id: ^payment}} = SyntheticCorrections.observe_collection(excess)
+      assert collection_count(source.id) == 2
+      assert [[_, _, 5_100, "ZAR", nil]] = claims(source)
+    end)
+  end
+
+  test "the receipt primary key arbitrates conflicting evidence across independent sources" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      recipient = verified_session()
+      source = accept_fixture(payer, recipient)
+      independent = accept_fixture(payer, recipient)
+      assert {:ok, %{id: payment}} = SyntheticCorrections.observe_collection(collection(source))
+      assert {:ok, _} = SyntheticCorrections.observe_collection(collection(independent))
+      accepted = collection(source)
+      conflict = collection(independent, receipt_id: accepted.fields.receipt_id)
+      parent = self()
+
+      first =
+        race_worker(parent, :first, fn ->
+          Ash.transact(SyntheticExcessClaim, fn ->
+            {:ok, result} = SyntheticCorrections.observe_collection(accepted)
+            send(parent, :receipt_bound)
+            await(:commit)
+            result
+          end)
+        end)
+
+      second =
+        race_worker(parent, :second, fn -> SyntheticCorrections.observe_collection(conflict) end)
+
+      try do
+        assert_receive {:first, backend_one}, 5_000
+        assert_receive {:second, backend_two}, 5_000
+        refute backend_one == backend_two
+        send(first.pid, :run)
+        assert_receive :receipt_bound, 5_000
+        send(second.pid, :run)
+        assert blocked_by?(backend_two, backend_one, 100)
+        assert collection_count(source.id) == 1
+        assert collection_count(independent.id) == 1
+        assert claims(source) == []
+        assert claims(independent) == []
+        send(first.pid, :commit)
+        assert {:ok, %{id: ^payment}} = Task.await(first)
+        assert {:error, :payment_unavailable} = Task.await(second)
+      after
+        finish_race([first, second])
+      end
+
+      assert {:ok, %{id: ^payment}} = SyntheticCorrections.observe_collection(accepted)
+      assert [[_, _, 5_100, "ZAR", nil]] = claims(source)
+      assert claims(independent) == []
+      assert collection_count(source.id) == 2
+      assert collection_count(independent.id) == 1
     end)
   end
 
@@ -157,7 +263,8 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
                  correction(source, payment, %{component: :plan, amount_minor: 3_500})
                )
 
-      fresh_vm!("deliver", effect)
+      assert_correction_job_absent(effect)
+      fresh_vm!("deliver", source.id)
       assert {:ok, %{id: ^payment}} = SyntheticCorrections.observe_collection(original)
       assert {:ok, []} = SyntheticRights.converge(source.id)
       assert {:ok, []} = Entitlements.plan_rights(recipient.credentials)
@@ -177,6 +284,8 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
       source = accept_fixture(payer, recipient)
       assert :ok = SyntheticSuppression.register(recipient.credentials)
       assert {:ok, %{id: payment}} = SyntheticCorrections.observe_collection(collection(source))
+      excess = collection(source)
+      assert {:ok, %{id: ^payment}} = SyntheticCorrections.observe_collection(excess)
       assert {:ok, _} = SyntheticRights.converge(source.id)
       receipt = correction(source, payment, %{component: :plan, amount_minor: 3_500})
       parent = self()
@@ -205,22 +314,35 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
 
       assert {:ok, %{id: effect}} = SyntheticCorrections.observe_correction(receipt)
       assert {:ok, [^effect]} = SyntheticCorrections.open_consequences(source.id)
+      assert_correction_job_absent(effect)
+      claimant = payer.id
+      excess_id = excess.fields.collection_id
+      assert [[^claimant, ^excess_id, 5_100, "ZAR", nil]] = claims(source)
 
       assert right_states(source) == [
                ["assessment", "held_unconsumed"],
                ["plan", "held_unconsumed"]
              ]
 
-      fresh_vm!("apply", effect)
+      recover_while_source_is_locked(source.id)
       assert right_states(source) == [["assessment", "held_unconsumed"], ["plan", "ended"]]
       assert {:ok, [^effect]} = SyntheticCorrections.open_consequences(source.id)
-      fresh_vm!("deliver", effect)
+      assert_correction_job_absent(effect)
+      fresh_vm!("deliver", source.id)
       assert {:ok, []} = SyntheticCorrections.open_consequences(source.id)
+      committed = Ash.get!(SyntheticCorrection, effect, authorize?: false)
+      assert committed.component == :plan
+      assert committed.amount_minor == 3_500
+      assert committed.acknowledged_at
+      fresh_vm!("replay", source.id)
+      replayed = Ash.get!(SyntheticCorrection, effect, authorize?: false)
+      assert replayed.acknowledged_at == committed.acknowledged_at
+      assert [[^claimant, ^excess_id, 5_100, "ZAR", nil]] = claims(source)
       assert right_states(source) == [["assessment", "held_unconsumed"], ["plan", "ended"]]
     end)
   end
 
-  test "independent SQL transactions converge on one owed claim and one component end" do
+  test "independent SQL transactions contend and converge on one owed claim" do
     P805.with_fixture(fn ->
       payer = verified_session()
       recipient = verified_session()
@@ -262,31 +384,159 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
         Task.yield_many([first, second], 5_000)
       end
 
-      assert [_] = claims(source)
-      receipt = correction(source, payment, %{component: :plan, amount_minor: 3_500})
-      assert {:ok, %{id: effect}} = SyntheticCorrections.observe_correction(receipt)
+      assert [[_, _, 5_100, "ZAR", nil]] = claims(source)
+      assert collection_count(source.id) == 2
 
-      racers =
-        for name <- [:apply_one, :apply_two] do
-          race_worker(parent, name, fn -> SyntheticRights.apply_correction(effect) end)
-        end
+      assert right_states(source) == [
+               ["assessment", "held_unconsumed"],
+               ["plan", "held_unconsumed"]
+             ]
+    end)
+  end
+
+  test "equivalent correction receipts wait for the winning Commerce transaction" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      recipient = verified_session()
+      source = accept_fixture(payer, recipient)
+      independent = accept_fixture(payer, recipient)
+      assert :ok = SyntheticSuppression.register(recipient.credentials)
+      assert {:ok, %{id: payment}} = SyntheticCorrections.observe_collection(collection(source))
+      assert {:ok, _} = SyntheticCorrections.observe_collection(collection(independent))
+      assert {:ok, _} = SyntheticRights.converge(source.id)
+      assert {:ok, _} = SyntheticRights.converge(independent.id)
+
+      original = correction(source, payment, %{component: :plan, amount_minor: 3_500})
+      equivalent = correction(source, payment, %{component: :plan, amount_minor: 3_500})
+      parent = self()
+
+      first =
+        race_worker(parent, :first, fn ->
+          Ash.transact(SyntheticCorrection, fn ->
+            {:ok, effect} = SyntheticCorrections.observe_correction(original)
+            send(parent, {:effect_uncommitted, effect.id})
+            await(:commit)
+            effect
+          end)
+        end)
+
+      second =
+        race_worker(parent, :same, fn -> SyntheticCorrections.observe_correction(original) end)
+
+      third =
+        race_worker(parent, :fresh, fn -> SyntheticCorrections.observe_correction(equivalent) end)
 
       try do
-        assert_receive {:apply_one, apply_one}, 5_000
-        assert_receive {:apply_two, apply_two}, 5_000
-        refute apply_one == apply_two
-        Enum.each(racers, &send(&1.pid, :run))
-        assert Enum.map(racers, &Task.await/1) == [:ok, :ok]
+        assert_receive {:first, first_backend}, 5_000
+        assert_receive {:same, second_backend}, 5_000
+        assert_receive {:fresh, third_backend}, 5_000
+        assert MapSet.size(MapSet.new([first_backend, second_backend, third_backend])) == 3
+
+        send(first.pid, :run)
+        assert_receive {:effect_uncommitted, effect}, 5_000
+        assert {:ok, []} = SyntheticCorrections.open_consequences(source.id)
+        send(second.pid, :run)
+        assert blocked_by?(second_backend, first_backend, 100)
+        send(third.pid, :run)
+        assert blocked_by?(third_backend, [first_backend, second_backend], 100)
+        send(first.pid, :commit)
+
+        for task <- [first, second, third] do
+          assert {:ok, %{id: ^effect, component: :plan, amount_minor: 3_500}} = Task.await(task)
+        end
+
+        assert {:ok, [^effect]} = SyntheticCorrections.open_consequences(source.id)
+        assert correction_counts(source.id) == {1, 2}
+        assert correction_counts(independent.id) == {0, 0}
+
+        assert right_states(source) == [
+                 ["assessment", "held_unconsumed"],
+                 ["plan", "held_unconsumed"]
+               ]
+
+        assert right_states(independent) == right_states(source)
       after
-        Enum.each(racers, &send(&1.pid, :run))
-        Task.yield_many(racers, 5_000)
+        finish_race([first, second, third])
       end
+    end)
+  end
+
+  test "Entitlements contenders wait in PostgreSQL and end only the original Plan right" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      recipient = verified_session()
+      source = accept_fixture(payer, recipient)
+      independent = accept_fixture(payer, recipient)
+      assert :ok = SyntheticSuppression.register(recipient.credentials)
+      assert {:ok, %{id: payment}} = SyntheticCorrections.observe_collection(collection(source))
+      assert {:ok, _} = SyntheticCorrections.observe_collection(collection(independent))
+      assert {:ok, [assessment, plan]} = SyntheticRights.converge(source.id)
+      assert {:ok, independent_rights} = SyntheticRights.converge(independent.id)
+
+      receipt = correction(source, payment, %{component: :plan, amount_minor: 3_500})
+      assert {:ok, %{id: effect}} = SyntheticCorrections.observe_correction(receipt)
+      race_entitlements(effect, plan.id)
+
+      assert Ash.get!(PlanRight, plan.id, authorize?: false).state == :ended
+      assert Ash.get!(PlanRight, assessment.id, authorize?: false).state == :held_unconsumed
+
+      for right <- independent_rights do
+        assert Ash.get!(PlanRight, right.id, authorize?: false).state == :held_unconsumed
+      end
+
+      assert right_states(source) == [["assessment", "held_unconsumed"], ["plan", "ended"]]
+
+      assert right_states(independent) == [
+               ["assessment", "held_unconsumed"],
+               ["plan", "held_unconsumed"]
+             ]
 
       assert {:ok, [^effect]} = SyntheticCorrections.open_consequences(source.id)
       assert {:ok, _} = SyntheticCorrections.deliver(effect)
-      assert right_states(source) == [["assessment", "held_unconsumed"], ["plan", "ended"]]
       assert {:ok, []} = SyntheticCorrections.open_consequences(source.id)
+      assert correction_counts(source.id) == {1, 1}
     end)
+  end
+
+  defp race_entitlements(effect, right_id) do
+    parent = self()
+
+    holder =
+      race_worker(parent, :holder, fn ->
+        Ash.transact(PlanRight, fn ->
+          query = PlanRight |> Ash.Query.filter(id == ^right_id) |> Ash.Query.lock(:for_update)
+          assert %PlanRight{state: :held_unconsumed} = Ash.read_one!(query, authorize?: false)
+          send(parent, :right_locked)
+          await(:commit)
+        end)
+      end)
+
+    first = race_worker(parent, :first_apply, fn -> SyntheticRights.apply_correction(effect) end)
+
+    second =
+      race_worker(parent, :second_apply, fn -> SyntheticRights.apply_correction(effect) end)
+
+    try do
+      assert_receive {:holder, holder_backend}, 5_000
+      assert_receive {:first_apply, first_backend}, 5_000
+      assert_receive {:second_apply, second_backend}, 5_000
+      assert MapSet.size(MapSet.new([holder_backend, first_backend, second_backend])) == 3
+
+      send(holder.pid, :run)
+      assert_receive :right_locked, 5_000
+      send(first.pid, :run)
+      assert blocked_by?(first_backend, holder_backend, 100)
+      send(second.pid, :run)
+      assert blocked_by?(second_backend, first_backend, 100)
+      assert Ash.get!(PlanRight, right_id, authorize?: false).state == :held_unconsumed
+
+      send(holder.pid, :commit)
+      assert {:ok, :ok} = Task.await(holder)
+      assert :ok = Task.await(first)
+      assert :ok = Task.await(second)
+    after
+      finish_race([holder, first, second])
+    end
   end
 
   test "qualified return settles the excess once and scoped readers see only their projection" do
@@ -421,17 +671,78 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
     assert %{status: :ok, marker: :e2a_completed, cleanup: :confirmed} = result
   end
 
-  defp race_worker(parent, name, action) do
-    Task.async(fn ->
-      :ok = Sandbox.checkout(Repo, sandbox: false)
+  defp recover_while_source_is_locked(source_id) do
+    parent = self()
 
-      Repo.checkout(fn ->
-        [[backend]] = Repo.query!("SELECT pg_backend_pid()").rows
-        send(parent, {name, backend})
-        await(:run)
-        action.()
+    holder =
+      race_worker(parent, :recovery_holder, fn ->
+        Ash.transact(SyntheticOrder, fn ->
+          query =
+            SyntheticOrder |> Ash.Query.filter(id == ^source_id) |> Ash.Query.lock(:for_update)
+
+          assert %SyntheticOrder{} = Ash.read_one!(query, authorize?: false)
+          [[backend]] = Repo.query!("SELECT pg_backend_pid()").rows
+          send(parent, :recovery_source_locked)
+          assert has_waiter?(backend, 1_000)
+          :ok
+        end)
       end)
+
+    assert_receive {:recovery_holder, _}, 5_000
+    send(holder.pid, :run)
+    assert_receive :recovery_source_locked, 5_000
+    fresh_vm!("apply", source_id)
+    assert {:ok, :ok} = Task.await(holder)
+  end
+
+  defp has_waiter?(_holder, 0), do: false
+
+  defp has_waiter?(holder, attempts) do
+    case Repo.query!(
+           "SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE $1::integer = ANY(pg_blocking_pids(pid)))",
+           [holder]
+         ).rows do
+      [[true]] ->
+        true
+
+      [[false]] ->
+        Process.sleep(20)
+        has_waiter?(holder, attempts - 1)
+    end
+  end
+
+  defp assert_correction_job_absent(effect) do
+    assert [[0]] =
+             Repo.query!(
+               "SELECT count(*) FROM oban_jobs WHERE args->'primary_key'->>'id' = $1",
+               [effect]
+             ).rows
+  end
+
+  defp race_worker(parent, name, action) do
+    task =
+      Task.async(fn ->
+        :ok = Sandbox.checkout(Repo, sandbox: false)
+
+        Repo.checkout(fn ->
+          [[backend]] = Repo.query!("SELECT pg_backend_pid()").rows
+          send(parent, {name, backend})
+          await(:run)
+          action.()
+        end)
+      end)
+
+    :ok = P805.register_cleanup_worker(task.pid)
+    task
+  end
+
+  defp finish_race(tasks) do
+    Enum.each(tasks, fn task ->
+      send(task.pid, :run)
+      send(task.pid, :commit)
     end)
+
+    Task.yield_many(tasks, 5_000)
   end
 
   defp await(message) do
@@ -445,7 +756,10 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
   defp blocked_by?(_waiter, _blocker, 0), do: false
 
   defp blocked_by?(waiter, blocker, attempts) do
-    case Repo.query!("SELECT $2 = ANY(pg_blocking_pids($1))", [waiter, blocker]).rows do
+    case Repo.query!("SELECT pg_blocking_pids($1) && $2::integer[]", [
+           waiter,
+           List.wrap(blocker)
+         ]).rows do
       [[true]] ->
         true
 
@@ -520,8 +834,8 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
     })
   end
 
-  defp collection(source) do
-    PlanPaymentObservation.produce(%{
+  defp collection(source, overrides \\ []) do
+    fields = %{
       scope: :collection,
       integration: :synthetic,
       environment: :test,
@@ -535,7 +849,34 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
       amount_minor: source.amount_minor,
       collection_id: Ecto.UUID.generate(),
       receipt_id: Ecto.UUID.generate()
-    })
+    }
+
+    PlanPaymentObservation.produce(Map.merge(fields, Map.new(overrides)))
+  end
+
+  defp collection_count(id) do
+    [[count]] =
+      Repo.query!("SELECT count(*) FROM commerce_synthetic_collections WHERE source_id = $1", [
+        Ecto.UUID.dump!(id)
+      ]).rows
+
+    count
+  end
+
+  defp correction_counts(id) do
+    [[effects, receipts]] =
+      Repo.query!(
+        """
+        SELECT
+          (SELECT count(*) FROM commerce_synthetic_corrections WHERE source_id = $1),
+          (SELECT count(*) FROM commerce_synthetic_correction_receipts receipt
+          JOIN commerce_synthetic_corrections effect ON effect.id = receipt.correction_id
+          WHERE effect.source_id = $1)
+        """,
+        [Ecto.UUID.dump!(id)]
+      ).rows
+
+    {effects, receipts}
   end
 
   defp claims(source) do

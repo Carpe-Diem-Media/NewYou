@@ -4,9 +4,18 @@ alias NewYou.Entitlements.SyntheticRights
 
 :ok = Sandbox.checkout(NewYou.Repo, sandbox: false)
 
-case System.argv() do
-  ["apply", id] -> :ok = SyntheticRights.apply_correction(id)
-  ["deliver", id] -> {:ok, _} = SyntheticCorrections.deliver(id)
+[stage, source_id] = System.argv()
+{:ok, open_effects} = SyntheticCorrections.open_consequences(source_id)
+
+case {stage, open_effects} do
+  {"apply", [_ | _] = effects} ->
+    Enum.each(effects, fn id -> :ok = SyntheticRights.apply_correction(id) end)
+
+  {"deliver", [_ | _] = effects} ->
+    Enum.each(effects, fn id -> {:ok, _} = SyntheticCorrections.deliver(id) end)
+
+  {"replay", []} ->
+    :ok
 end
 
 IO.puts("E2A_COMPLETED")

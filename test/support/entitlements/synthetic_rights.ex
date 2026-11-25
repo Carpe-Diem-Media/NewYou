@@ -89,7 +89,7 @@ defmodule NewYou.Entitlements.SyntheticRights do
 
   defp apply_p1({:legacy, scope}) do
     case SyntheticSuppression.locked_status(scope.recipient_id) do
-      {:ok, status} when status in [:missing, :allowed] ->
+      {:ok, :allowed} ->
         with {:ok, right} <- Ash.create(PlanRight, scope, action: :grant, authorize?: false) do
           right
         end

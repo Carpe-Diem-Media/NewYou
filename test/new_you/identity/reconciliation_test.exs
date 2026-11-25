@@ -635,6 +635,7 @@ defmodule NewYou.Identity.ReconciliationTest do
 
       assert {:ok, payment} = NewYou.Commerce.apply_payment_observation(evidence)
       assert {:ok, [consequence_id]} = NewYou.Commerce.open_plan_payment_consequences(purchase.id)
+      assert :ok = NewYou.Privacy.SyntheticSuppression.register(f.target.credentials)
       assert {:ok, right} = NewYou.Entitlements.grant_paid_plan(consequence_id)
       assert {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
       request = apply_request(f, approved)

@@ -24,7 +24,10 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
     {20_261_125_135_844, "priv/repo/migrations/20261125135844_well192_correction_convergence.exs",
      NewYou.Repo.Migrations.Well192CorrectionConvergence},
     {20_261_125_140_557, "priv/repo/migrations/20261125140557_well192_correction_receipt.exs",
-     NewYou.Repo.Migrations.Well192CorrectionReceipt}
+     NewYou.Repo.Migrations.Well192CorrectionReceipt},
+    {20_261_125_153_016,
+     "priv/repo/migrations/20261125153016_well192_collection_receipt_binding.exs",
+     NewYou.Repo.Migrations.Well192CollectionReceiptBinding}
   ]
 
   test "P1 migrations apply, roll back and reapply in a transaction-owned schema" do
@@ -32,10 +35,21 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
   end
 
   test "E2a migrations roundtrip with isolated foreign keys and correction constraints" do
-    roundtrip(@migrations ++ @correction_migrations, 10, fn schema ->
-      assert foreign_key_targets(schema) == {5, 5}
+    roundtrip(@migrations ++ @correction_migrations, 11, fn schema ->
+      assert foreign_key_targets(schema) == {6, 6}
+
+      assert [["commerce_synthetic_collection_receipts_pkey", "p"]] ==
+               Repo.query!(
+                 """
+                 SELECT conname::text, contype::text FROM pg_constraint c JOIN pg_namespace n
+                   ON c.connamespace = n.oid
+                 WHERE n.nspname = $1 AND conname = 'commerce_synthetic_collection_receipts_pkey'
+                 """,
+                 [schema]
+               ).rows
 
       assert [
+               ["commerce_synthetic_collection_receipts_fingerprint_length"],
                ["commerce_synthetic_correction_shape"],
                ["commerce_synthetic_excess_claims_amount"],
                ["commerce_synthetic_order_allocation"]
@@ -49,7 +63,7 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
                  """,
                  [
                    schema,
-                   ~w(commerce_synthetic_correction_shape commerce_synthetic_excess_claims_amount commerce_synthetic_order_allocation)
+                   ~w(commerce_synthetic_collection_receipts_fingerprint_length commerce_synthetic_correction_shape commerce_synthetic_excess_claims_amount commerce_synthetic_order_allocation)
                  ]
                ).rows
 

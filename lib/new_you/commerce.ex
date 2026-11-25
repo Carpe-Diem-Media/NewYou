@@ -16,6 +16,7 @@ defmodule NewYou.Commerce do
     resource VerifiedPayment
     resource PaymentConsequence
     resource NewYou.Commerce.SyntheticCollection
+    resource NewYou.Commerce.SyntheticCollectionReceipt
     resource NewYou.Commerce.SyntheticExcessClaim
     resource NewYou.Commerce.SyntheticOrder
     resource NewYou.Commerce.SyntheticCorrection
@@ -119,8 +120,9 @@ defmodule NewYou.Commerce do
 
   @doc """
   Apply qualified payment evidence to an exact accepted attempt. Commerce
-  commits payment and its consequence together. Equivalent evidence replays
-  the committed result. The synthetic verifier is compiled only in TEST.
+  commits payment and its consequence together. Explicit collection proofs bind
+  their receipt to the accepted observation in the same transaction. Exact
+  replay returns the committed result. The verifier is compiled only in TEST.
   """
   @spec apply_payment_observation(term()) ::
           {:ok, VerifiedPayment.t()} | {:error, :payment_unavailable}
@@ -168,7 +170,8 @@ defmodule NewYou.Commerce do
 
     defp apply_qualified(_), do: {:error, :payment_unavailable}
 
-    defp record_collection(fields, purchase, prior) when is_map_key(fields, :collection_id) do
+    defp record_collection(fields, purchase, prior)
+         when is_map_key(fields, :collection_id) or is_map_key(fields, :receipt_id) do
       with {:ok, _} <- SyntheticCollectionLedger.record(purchase, fields, is_nil(prior)) do
         :ok
       end

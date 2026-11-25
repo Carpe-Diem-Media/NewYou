@@ -18,7 +18,8 @@ defmodule NewYou.Entitlements do
   Apply or replay one Plan right for the given Commerce consequence. The
   executor cannot supply the recipient, component or paid purchase. Those
   fields come from the committed source. A committed TEST correction or
-  suppression may withhold the grant. Call outside any existing transaction.
+  suppression may withhold the grant. Missing or unavailable TEST Privacy
+  authority leaves the grant open for retry. Call outside any existing transaction.
   """
   @spec grant_paid_plan(String.t()) ::
           {:ok, PlanRight.t() | :withheld} | {:error, :grant_unavailable}
@@ -34,7 +35,7 @@ defmodule NewYou.Entitlements do
 
     defp scope_visible?(recipient_id) do
       case NewYou.Privacy.SyntheticSuppression.locked_status(recipient_id) do
-        {:ok, status} -> {:ok, status != :suppressed}
+        {:ok, status} -> {:ok, status == :allowed}
         {:error, _} = error -> error
       end
     end

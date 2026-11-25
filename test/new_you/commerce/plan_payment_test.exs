@@ -5,6 +5,7 @@ defmodule NewYou.Commerce.PlanPaymentTest do
   alias NewYou.{Commerce, Entitlements, Identity, Repo}
   alias NewYou.Commerce.{PaymentConsequence, Purchase}
   alias NewYou.Commerce.SyntheticCorrections
+  alias NewYou.Privacy.SyntheticDeletionScope
   alias NewYou.Privacy.SyntheticSuppression
   alias NewYou.Proof.PlanPaymentObservation
   alias NewYou.Proof.{FreshMix, P805}
@@ -97,13 +98,16 @@ defmodule NewYou.Commerce.PlanPaymentTest do
     P805.with_fixture(fn ->
       payer = verified_session()
       purchase = accept!(payer)
-      evidence = observation(purchase)
+      evidence = qualified_observation(purchase)
+      receipt_id = evidence.fields.receipt_id
 
       P805.with_rejected_insert("commerce_payment_consequences", fn reached? ->
         assert {:error, :payment_unavailable} = Commerce.apply_payment_observation(evidence)
         assert reached?.()
       end)
 
+      assert collection_counts(purchase.id) == {0, 0}
+      assert receipt_count(receipt_id) == 0
       assert counts(purchase.id) == {0, 0}
       assert durable_counts(purchase.id) == {1, 1, 0, 0, 0}
       assert {:ok, []} == Commerce.open_plan_payment_consequences(purchase.id)
@@ -112,13 +116,14 @@ defmodule NewYou.Commerce.PlanPaymentTest do
       assert {:ok, payment} = Commerce.apply_payment_observation(evidence)
       assert payment.purchase_id == purchase.id
       assert counts(purchase.id) == {1, 1}
+      assert collection_counts(purchase.id) == {1, 0}
+      assert receipt_count(receipt_id) == 1
     end)
   end
 
   test "qualified receipts with different delivery IDs still identify one genuine collection" do
     P805.with_fixture(fn ->
       payer = verified_session()
-      assert :ok = SyntheticSuppression.register(payer.credentials)
       purchase = accept!(payer)
       collection_id = Ecto.UUID.generate()
 
@@ -158,7 +163,6 @@ defmodule NewYou.Commerce.PlanPaymentTest do
   test "two genuine collections leave one applied payment and one exact excess obligation" do
     P805.with_fixture(fn ->
       payer = verified_session()
-      assert :ok = SyntheticSuppression.register(payer.credentials)
       purchase = accept!(payer)
 
       fields =
@@ -210,11 +214,165 @@ defmodule NewYou.Commerce.PlanPaymentTest do
     end)
   end
 
+  test "a P1 receipt cannot bind another collection or accepted source" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      source = accept!(payer)
+      independent = accept!(payer)
+      original = qualified_observation(source)
+      receipt_id = original.fields.receipt_id
+      assert {:ok, %{id: payment}} = Commerce.apply_payment_observation(original)
+
+      same_source = qualified_observation(source, receipt_id: receipt_id)
+      other_source = qualified_observation(independent, receipt_id: receipt_id)
+      partial = observation(independent).fields |> Map.put(:receipt_id, receipt_id)
+
+      assert {:error, :payment_unavailable} =
+               Commerce.apply_payment_observation(PlanPaymentObservation.produce(partial))
+
+      assert {:error, :payment_unavailable} = Commerce.apply_payment_observation(same_source)
+      assert {:error, :payment_unavailable} = Commerce.apply_payment_observation(other_source)
+      assert {:ok, %{id: ^payment}} = Commerce.apply_payment_observation(original)
+      assert counts(source.id) == {1, 1}
+      assert counts(independent.id) == {0, 0}
+      assert collection_counts(source.id) == {1, 0}
+      assert collection_counts(independent.id) == {0, 0}
+
+      assert {:ok, %{id: ^payment}} =
+               Commerce.apply_payment_observation(
+                 qualified_observation(source, collection_id: original.fields.collection_id)
+               )
+
+      assert {:ok, %{purchase_id: id}} =
+               Commerce.apply_payment_observation(qualified_observation(independent))
+
+      assert id == independent.id
+    end)
+  end
+
+  test "a legacy P1 grant waits for explicit Privacy authority" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      request = %{operation_id: operation_id(), price_version: "synthetic-plan-v1"}
+      assert {:ok, purchase} = Commerce.accept_plan_purchase(payer.credentials, request)
+      assert {:ok, _} = Commerce.apply_payment_observation(observation(purchase))
+      assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(purchase.id)
+
+      assert {:error, :delivery_unavailable} = Commerce.deliver_plan_payment_consequence(grant)
+      assert {:ok, [^grant]} = Commerce.open_plan_payment_consequences(purchase.id)
+      assert durable_counts(purchase.id) == {1, 1, 1, 1, 0}
+
+      assert :ok = SyntheticSuppression.register(payer.credentials)
+      assert {:ok, %{state: :held_unconsumed}} = Commerce.deliver_plan_payment_consequence(grant)
+      assert {:ok, []} = Commerce.open_plan_payment_consequences(purchase.id)
+      assert durable_counts(purchase.id) == {1, 1, 1, 1, 1}
+    end)
+  end
+
+  test "an unavailable Privacy read leaves the P1 grant open for retry" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      purchase = accept!(payer)
+      assert {:ok, _} = Commerce.apply_payment_observation(observation(purchase))
+      assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(purchase.id)
+      parent = self()
+
+      holder =
+        hold_privacy_transaction(parent, fn ->
+          assert {:ok, :allowed} = SyntheticSuppression.locked_status(payer.account_id)
+        end)
+
+      delivery = grant_on_connection(parent, grant, lock_timeout: "1500ms")
+
+      try do
+        assert_receive {:privacy_locked, blocker}, 5_000
+        assert_receive {:delivery_connection, waiter}, 5_000
+        send(delivery.pid, :deliver)
+        assert_blocked_by(waiter, blocker, 50)
+        assert {:error, :delivery_unavailable} = Task.await(delivery)
+        assert {:ok, [^grant]} = Commerce.open_plan_payment_consequences(purchase.id)
+        assert durable_counts(purchase.id) == {1, 1, 1, 1, 0}
+        send(holder.pid, :release_privacy)
+        assert {:ok, :ok} = Task.await(holder)
+      after
+        release_privacy_workers(holder, delivery)
+      end
+
+      assert {:ok, %{state: :held_unconsumed}} = Commerce.deliver_plan_payment_consequence(grant)
+    end)
+  end
+
+  test "committing Privacy suppression hides existing rights and wins against a late grant" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      purchase = accept!(payer)
+      original = qualified_observation(purchase)
+      assert {:ok, _} = Commerce.apply_payment_observation(original)
+      assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(purchase.id)
+      assert {:ok, right} = Commerce.deliver_plan_payment_consequence(grant)
+      assert {:ok, [%{id: id}]} = Entitlements.plan_rights(payer.credentials)
+      assert id == right.id
+
+      pending = accept!(payer)
+      assert {:ok, _} = Commerce.apply_payment_observation(observation(pending))
+      assert {:ok, [late_grant]} = Commerce.open_plan_payment_consequences(pending.id)
+      parent = self()
+
+      deletion =
+        PlanPaymentObservation.produce(%{
+          scope: :completed_deletion,
+          subject_id: payer.account_id
+        })
+
+      holder =
+        hold_privacy_transaction(parent, fn ->
+          assert :ok = SyntheticSuppression.suppress(deletion)
+        end)
+
+      delivery = grant_on_connection(parent, late_grant, [])
+
+      try do
+        assert_receive {:privacy_locked, blocker}, 5_000
+        assert_receive {:delivery_connection, waiter}, 5_000
+        send(delivery.pid, :deliver)
+        assert_blocked_by(waiter, blocker, 50)
+        assert durable_counts(pending.id) == {1, 1, 1, 1, 0}
+        send(holder.pid, :release_privacy)
+        assert {:ok, :ok} = Task.await(holder)
+        assert {:ok, :withheld} = Task.await(delivery)
+      after
+        release_privacy_workers(holder, delivery)
+      end
+
+      correction =
+        original.fields
+        |> Map.merge(%{
+          scope: :correction,
+          status: :final,
+          receipt_id: Ecto.UUID.generate(),
+          source_id: purchase.id,
+          operation_id: purchase.operation_id,
+          component: :plan,
+          reason: :unused_component
+        })
+        |> PlanPaymentObservation.produce()
+
+      assert {:ok, %{id: effect}} = SyntheticCorrections.observe_correction(correction)
+      assert {:ok, _} = SyntheticCorrections.deliver(effect)
+      assert :ok = SyntheticSuppression.register(payer.credentials)
+      assert {:ok, :withheld} = Commerce.deliver_plan_payment_consequence(grant)
+      assert {:ok, :withheld} = Commerce.deliver_plan_payment_consequence(late_grant)
+      assert {:ok, []} = Commerce.open_plan_payment_consequences(pending.id)
+      assert {:ok, []} = Entitlements.plan_rights(payer.credentials)
+      assert durable_counts(purchase.id) == {1, 1, 1, 1, 1}
+      assert durable_counts(pending.id) == {1, 1, 1, 1, 0}
+    end)
+  end
+
   test "a committed Plan correction prevails over the outstanding original grant" do
     P805.with_fixture(fn ->
       payer = verified_session()
       purchase = accept!(payer)
-      assert :ok = SyntheticSuppression.register(payer.credentials)
 
       fields =
         Map.merge(observation(purchase).fields, %{
@@ -258,9 +416,10 @@ defmodule NewYou.Commerce.PlanPaymentTest do
       payer = verified_session()
       purchase = accept!(payer)
       parent = self()
+      evidence = qualified_observation(purchase)
 
-      first = payment_transaction(purchase, parent, :first)
-      second = payment_transaction(purchase, parent, :second)
+      first = payment_transaction(evidence, parent, :first)
+      second = payment_transaction(evidence, parent, :second)
 
       assert_receive {:first, first_backend, first_transaction}, 5_000
       assert_receive {:second, second_backend, second_transaction}, 5_000
@@ -279,6 +438,8 @@ defmodule NewYou.Commerce.PlanPaymentTest do
       assert {:ok, second_payment} = Task.await(second)
       assert first_payment.id == second_payment.id
       assert counts(purchase.id) == {1, 1}
+      assert receipt_count(evidence.fields.receipt_id) == 1
+      assert collection_counts(purchase.id) == {1, 0}
 
       assert {:ok, [consequence]} = Commerce.open_plan_payment_consequences(purchase.id)
       assert {:ok, right} = Commerce.deliver_plan_payment_consequence(consequence)
@@ -594,12 +755,13 @@ defmodule NewYou.Commerce.PlanPaymentTest do
   end
 
   defp accept!(payer) do
+    assert :ok = SyntheticSuppression.register(payer.credentials)
     request = %{operation_id: operation_id(), price_version: "synthetic-plan-v1"}
     {:ok, purchase} = Commerce.accept_plan_purchase(payer.credentials, request)
     purchase
   end
 
-  defp payment_transaction(purchase, parent, role) do
+  defp payment_transaction(evidence, parent, role) do
     task =
       Task.async(fn ->
         await_checkpoint(:start)
@@ -612,7 +774,7 @@ defmodule NewYou.Commerce.PlanPaymentTest do
           send(parent, {role, backend_id, transaction_id})
 
           await_checkpoint(:apply)
-          {:ok, payment} = Commerce.apply_payment_observation(observation(purchase))
+          {:ok, payment} = Commerce.apply_payment_observation(evidence)
           pause_before_commit(role, parent)
           payment
         end)
@@ -633,6 +795,46 @@ defmodule NewYou.Commerce.PlanPaymentTest do
     :ok = P805.register_cleanup_worker(task.pid)
     send(task.pid, :start)
     task
+  end
+
+  defp hold_privacy_transaction(parent, callback) do
+    tracked_task(fn ->
+      :ok = Sandbox.checkout(Repo, sandbox: false)
+
+      Ash.transact(SyntheticDeletionScope, fn ->
+        callback.()
+        [[backend]] = Repo.query!("SELECT pg_backend_pid()").rows
+        send(parent, {:privacy_locked, backend})
+        await_checkpoint(:release_privacy)
+      end)
+    end)
+  end
+
+  defp grant_on_connection(parent, grant, options) do
+    tracked_task(fn ->
+      :ok = Sandbox.checkout(Repo, sandbox: false)
+
+      Repo.checkout(fn ->
+        timeout = Keyword.get(options, :lock_timeout, "0")
+        [[previous]] = Repo.query!("SELECT current_setting('lock_timeout')").rows
+        Repo.query!("SELECT set_config('lock_timeout', $1, false)", [timeout])
+
+        try do
+          [[backend]] = Repo.query!("SELECT pg_backend_pid()").rows
+          send(parent, {:delivery_connection, backend})
+          await_checkpoint(:deliver)
+          Commerce.deliver_plan_payment_consequence(grant)
+        after
+          Repo.query!("SELECT set_config('lock_timeout', $1, false)", [previous])
+        end
+      end)
+    end)
+  end
+
+  defp release_privacy_workers(holder, delivery) do
+    send(holder.pid, :release_privacy)
+    send(delivery.pid, :deliver)
+    Task.yield_many([holder, delivery], 5_000)
   end
 
   defp pause_before_commit(:second, _parent), do: :ok
@@ -710,6 +912,45 @@ defmodule NewYou.Commerce.PlanPaymentTest do
       integration: :synthetic,
       status: :succeeded
     })
+  end
+
+  defp qualified_observation(purchase, overrides \\ []) do
+    fields =
+      Map.merge(observation(purchase).fields, %{
+        collection_id: Ecto.UUID.generate(),
+        receipt_id: Ecto.UUID.generate(),
+        payer_id: purchase.payer_id,
+        recipient_id: purchase.recipient_id,
+        price_version: purchase.price_version
+      })
+
+    PlanPaymentObservation.produce(Map.merge(fields, Map.new(overrides)))
+  end
+
+  defp receipt_count(id) do
+    [[count]] =
+      Repo.query!(
+        "SELECT count(*) FROM commerce_synthetic_collection_receipts WHERE receipt_id = $1",
+        [
+          Ecto.UUID.dump!(id)
+        ]
+      ).rows
+
+    count
+  end
+
+  defp collection_counts(id) do
+    [[collections, claims]] =
+      Repo.query!(
+        """
+        SELECT
+          (SELECT count(*) FROM commerce_synthetic_collections WHERE source_id = $1),
+          (SELECT count(*) FROM commerce_synthetic_excess_claims WHERE source_id = $1)
+        """,
+        [Ecto.UUID.dump!(id)]
+      ).rows
+
+    {collections, claims}
   end
 
   defp operation_id do

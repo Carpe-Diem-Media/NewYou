@@ -1,7 +1,7 @@
 defmodule NewYou.Commerce.SyntheticCollectionLedger do
   @moduledoc false
 
-  alias NewYou.Commerce.{SyntheticCollection, SyntheticExcessClaim}
+  alias NewYou.Commerce.{SyntheticCollection, SyntheticCollectionReceipt, SyntheticExcessClaim}
   require Ash.Query
 
   @doc false
@@ -10,12 +10,36 @@ defmodule NewYou.Commerce.SyntheticCollectionLedger do
     with %{payer_id: payer, recipient_id: recipient, price_version: version} <- fields,
          %{payer_id: ^payer, recipient_id: ^recipient, price_version: ^version} <- source,
          {:ok, id} <- Ecto.UUID.cast(Map.get(fields, :collection_id)),
-         {:ok, _} <- Ecto.UUID.cast(Map.get(fields, :receipt_id)),
+         {:ok, receipt_id} <- Ecto.UUID.cast(Map.get(fields, :receipt_id)),
+         fingerprint = :crypto.hash(:sha256, :erlang.term_to_binary(fields, [:deterministic])),
+         {:ok, binding} <-
+           Ash.get(SyntheticCollectionReceipt, receipt_id, authorize?: false, error?: false),
+         true <- compatible_binding?(binding, id, fingerprint),
          {:ok, saved} <- Ash.get(SyntheticCollection, id, authorize?: false, error?: false),
-         {:ok, original} <- accepted_collection(source.id) do
-      persist(saved, id, source, original, allow_initial?)
+         {:ok, original} <- accepted_collection(source.id),
+         {:ok, applied} <- persist(saved, id, source, original, allow_initial?),
+         :ok <- bind_receipt(binding, receipt_id, id, fingerprint) do
+      {:ok, applied}
     else
       _ -> {:error, :payment_unavailable}
+    end
+  end
+
+  defp compatible_binding?(nil, _collection_id, _fingerprint), do: true
+
+  defp compatible_binding?(binding, collection_id, fingerprint),
+    do: binding.collection_id == collection_id and binding.fingerprint == fingerprint
+
+  defp bind_receipt(%SyntheticCollectionReceipt{}, _receipt_id, _id, _fingerprint), do: :ok
+
+  defp bind_receipt(nil, receipt_id, collection_id, fingerprint) do
+    attrs = %{receipt_id: receipt_id, collection_id: collection_id, fingerprint: fingerprint}
+
+    # Independent source transactions can both see an absent receipt. The
+    # receipt primary key arbitrates across sources inside the owner transaction.
+    with {:ok, _} <-
+           Ash.create(SyntheticCollectionReceipt, attrs, action: :bind, authorize?: false) do
+      :ok
     end
   end
 
