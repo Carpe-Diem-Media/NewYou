@@ -39,7 +39,7 @@ defmodule NewYou.MixProject do
 
   def cli do
     [
-      preferred_envs: [check: :test, "check.deep": :test]
+      preferred_envs: [check: :test, "check.deep": :test, "check.static": :test]
     ]
   end
 
@@ -170,15 +170,15 @@ defmodule NewYou.MixProject do
       ],
       # Fast, blocking, fail-fast gate ordered cheapest and highest-signal first.
       # Historical Foundation Full is never part of this alias.
-      check: [
+      check: ["check.static", "test"],
+      "check.static": [
         "format --check-formatted",
         "compile --warnings-as-errors",
         "design.check",
         "check.architecture",
         "usage_rules.sync --check",
         "credo --strict",
-        "sobelow --exit --skip --private --strict --router lib/new_you_web/router.ex",
-        "test"
+        "sobelow --exit --skip --private --strict --router lib/new_you_web/router.ex"
       ],
       # Slower engineering gate. Dialyzer owns its PLT build and caching.
       "check.deep": ["dialyzer --format dialyxir"],
