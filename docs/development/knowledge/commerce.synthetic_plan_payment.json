@@ -7,7 +7,7 @@
     "WELL-192"
   ],
   "implementation_revision": {
-    "git_sha": "fad576a2c2ce8cbbfae65250fcf3eeae420a796e",
+    "git_sha": "398a4d7f6d510bfba665642e458cc37637e947bf",
     "semantics": "WELL-189 P1 and WELL-192 E2a with the Master Gate receipt, Privacy, contention and restart corrections."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -1215,7 +1215,7 @@
       "id": "correction_cases",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "equivalent correction receipts wait for the winning Commerce transaction",
-      "sha256": "903339e0833b66717f137f83fbdbfe4487a26b801e26f92f7614ac7c06012f36"
+      "sha256": "9bd0c69be83e931dfede97085af73d6730487156bc3ebcd3d491a24f0fb08fac"
     },
     {
       "id": "correction_restart",
