@@ -111,3 +111,132 @@ are seen.
 Each child writes one `P815_LOAD_CHILD` JSON line to stderr. The line contains
 the scenario, concurrency, replicate, every budget report and every lease
 report.
+
+Addendum A1 amends this section. The parent writes the `P815_LOAD_CHILD` line
+and prints it before any acceptance assertion. See Addendum A1.
+
+## Addendum A1 (2026-11-25): corrections after Master Gate review
+
+This addendum is committed before any corrected code and before any corrected
+hosted run. It amends the instrument and adds criteria. It leaves the workload
+unchanged. The scenario table, the sample counts, the concurrency, the runner,
+the durable-effect expectations, criteria 1 to 6 and the stopping conditions
+still apply.
+
+### Reasons for the correction
+
+The Master Gate returned CHANGES REQUIRED for four instrument defects.
+
+- MG-326-05: The prolonged scenario checked rollback only after the child exited.
+  The authorized follow-up ran before any proof that the batch had rolled back.
+- MG-326-06: Batch reports printed in completion order, without an ordinal.
+  Budget, lease and task outcomes could not be tied to one request. Concurrent
+  task exits and missing results had no explicit status.
+- MG-326-07: The child did not verify the contention case and operation before
+  it acquired the Account lock. The run did not record when the lock was
+  acquired, released or granted. It therefore did not show that batch requests
+  waited on the lock.
+- MG-326-08: The load summary printed after the acceptance assertions. A failed
+  assertion discarded the observations.
+
+The static CI job also failed Credo nesting at `test/proof/p8_15_restart.exs:76`.
+That is a code-quality finding. It is not a measurement result.
+
+### Pre-correction evidence
+
+These results stay on record. They are not discarded, and they do not count as
+evidence for the corrected instrument.
+
+- Run 45610376935 on head `76faf83d` was cancelled. It produced no evidence.
+- Run 45610585106 on head `3ba289d9` concluded with failure. The Static job
+  failed at Credo nesting. All eight test shards passed. The coverage and
+  Foundation Integrity aggregators failed because the Static job failed.
+- Shard 3 of run 45610585106 printed 18 `P815_LOAD_CHILD` records. All 18
+  children passed their assertions. Their 165 timed requests each produced one
+  budget report and one lease report.
+
+| Scenario (concurrency) | Children | Reports | Transaction outcomes | Lease closures |
+| --- | --- | --- | --- | --- |
+| Independent (1) | 3 | 27 | `transaction_returned` 27 | `none` 27 |
+| Independent (8) | 3 | 27 | `transaction_returned` 27 | `none` 27 |
+| Same-operation replay (8) | 3 | 27 | `transaction_returned` 27 | `none` 27 |
+| Released contention (8) | 3 | 27 | `transaction_returned` 27 | `none` 27 |
+| Prolonged contention (8) | 3 | 30 | `transaction_returned` 6, `transaction_error` 24 | `none` 6, `checkout_deadline` 24 |
+| Mixed public timing (8) | 3 | 27 | `transaction_returned` 15, `transaction_error` 6, `unobserved` 6 | `none` 27 |
+
+Public durations ranged from 500 to 505 ms. The table does not attribute the
+mixed-scenario outcomes to individual requests, because the pre-correction
+output had no ordinals. The prolonged table includes the cold and follow-up
+reports.
+
+Accounting for the original predeclared run is 165 = 18 cold + 144 batch + 3
+follow-up.
+
+### Corrections
+
+1. Ordinals. Each timed request has one ordinal. The cold request is 0. Batch
+   requests are 1 to 8, in batch order. The authorized follow-up is 9. Each
+   `P815_BUDGET` and `P815_LEASE` line prints its ordinal. The parent joins
+   reports by ordinal. Its assertions compare the sorted ordinals with the
+   expected set, which also detects duplicates.
+2. Task handling. Batch requests run under `Task.async_stream` with
+   `ordered: true`, `on_timeout: :kill_task` and the existing 10-second deadline.
+   Each request maps to one status: `completed`, `raised`, `timeout`, `exit` or
+   `incomplete` when no result exists. The child does not print exit reasons.
+   Each batch task reports its admission and lock-grant times. The output carries
+   no identifiers, PIDs, tokens or request data.
+3. Contention boundaries. Before it acquires the Account lock, the child verifies
+   the contention case and operation with `RecoveryLease.verify_fixture!/2`.
+   `RecoveryBudget.with_account_lock/2` returns the acquisition and release
+   times. It records the release time before it sends the release message. The
+   child prints `P815_HOLD` with the release time relative to acquisition.
+   `P815_TASK` lines give each admission and grant relative to acquisition. The
+   admission event is `:transaction_entered`. The grant event is `:account_locked`.
+4. Prolonged rollback proof. Before the batch, the child reads the contention
+   Account and RecoveryCase and counts their Tokens and MessageIntents. After the
+   batch, it takes the Account row lock with `FOR UPDATE` under a three-second
+   `lock_timeout`. Acquiring the lock shows that no batch transaction still holds
+   the row. The child then reads the same state and prints `P815_STATE
+   after_batch <settled|unsettled> <unchanged|changed|unknown> <tokens>
+   <intents>`. The child runs the authorized follow-up only when the state is
+   settled and unchanged, with zero Tokens and zero MessageIntents.
+5. Replay. Each replay batch request must report `transaction_returned` with
+   closure `none` and no error. This is the replay effect. Durable state is
+   checked separately: one version increment, one Token and one MessageIntent.
+6. Emission before assertions. The parent builds the `P815_LOAD_CHILD` record
+   from the parsed reports and prints it before any acceptance assertion. The
+   record lists every timed request by ordinal, with its budget, lease and task
+   categories. Each child reports 1 + 8 + f requests, where f is 1 for the
+   prolonged scenario and 0 otherwise. The three children of a scenario report
+   the same count, and all 18 children together report 165.
+7. Credo nesting. The held-batch logic moves into helper functions. Its behavior
+   does not change.
+8. Step 2 format. The Step 2 budget line gains the ordinal field. The recorded
+   Step 2 evidence at head `8291aa0a` stays as recorded. The Step 2 switch stays
+   on in the corrected run.
+
+### Added criteria
+
+Criteria 1 to 6 are unchanged. These criteria are added before the corrected
+run and fixed in this addendum.
+
+7. Each timed request has exactly one budget report and one lease report. Each
+   batch request has one `completed` task status.
+8. Released contention: every batch request is admitted before release, and is
+   granted at or after release. Prolonged contention: every batch request is
+   admitted before release, and none is granted.
+9. Prolonged rollback: before the follow-up, the state is settled, unchanged,
+   with zero Tokens and zero MessageIntents. The follow-up then produces exactly
+   one issuance.
+10. Replay: every replay batch request has the replay effect. The durable state
+    after the batch shows one issuance.
+
+### Runner, switches and stopping rules
+
+- The runner stays `ubuntu-latest`, the `CI_RUNNER` default.
+- Temporary switches `P815_CHARACTERIZE_BUDGET` and `P815_CHARACTERIZE_LOAD`
+  stay on in the Draft PR. Both are removed before merge review.
+- A failed criterion in the corrected run is recorded as an observed result. The
+  run is not repeated to obtain a pass.
+- Pre-correction runs stay on record. They do not count as passing evidence for
+  the corrected instrument.
