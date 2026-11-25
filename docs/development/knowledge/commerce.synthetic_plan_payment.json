@@ -7,8 +7,8 @@
     "WELL-192"
   ],
   "implementation_revision": {
-    "git_sha": "3a25a37d2eac6a5893b8f02e08c57f20ca27c059",
-    "semantics": "WELL-189 P1 with WELL-192 bounded corrections and current source-right checks."
+    "git_sha": "fad576a2c2ce8cbbfae65250fcf3eeae420a796e",
+    "semantics": "WELL-189 P1 and WELL-192 E2a with the Master Gate receipt, Privacy, contention and restart corrections."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -183,6 +183,19 @@
         "suppression",
         "suppression_scope"
       ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.SyntheticCollectionReceipt",
+      "actions": [
+        "read",
+        "bind"
+      ],
+      "caller_boundary": "Commerce binds a qualified receipt in the same transaction as the collection, payment application or excess claim. The receipt primary key arbitrates across source transactions.",
+      "source_ids": [
+        "collection_receipt_binding",
+        "ledger"
+      ]
     }
   ],
   "interfaces": [
@@ -223,7 +236,7 @@
       ],
       "side_effects": [
         "Atomically commits payment and consequence.",
-        "Explicit qualified collection IDs add an immutable collection and, for a genuine second collection, the one excess claim."
+        "Explicit receipts bind the immutable qualified observation and collection in the same owner transaction as payment or excess effects."
       ],
       "caller_constraints": [
         "TEST-only application."
@@ -233,7 +246,8 @@
         "fixture",
         "payment",
         "consequence",
-        "ledger"
+        "ledger",
+        "collection_receipt_binding"
       ]
     },
     {
@@ -251,14 +265,16 @@
         "Replays or grants the right and acknowledges the consequence."
       ],
       "caller_constraints": [
-        "Use outside any enclosing transaction."
+        "Use outside any enclosing transaction.",
+        "Every TEST grant, including P1 without explicit collection evidence, requires an explicitly allowed and locked Privacy subject."
       ],
       "source_ids": [
         "commerce",
         "entitlements",
         "consequence",
         "worker",
-        "right_convergence"
+        "right_convergence",
+        "suppression"
       ]
     },
     {
@@ -276,12 +292,14 @@
         "Touches the current Session and reads owned rights."
       ],
       "caller_constraints": [
-        "Provides no delivered-content authorization."
+        "Provides no delivered-content authorization.",
+        "A TEST subject requires explicit Privacy permission for a held right to be visible."
       ],
       "source_ids": [
         "entitlements",
         "identity",
-        "right"
+        "right",
+        "suppression"
       ]
     },
     {
@@ -465,6 +483,19 @@
       "source_ids": [
         "migration_receipt"
       ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261125153016_well192_collection_receipt_binding.exs",
+      "tables": [
+        "commerce_synthetic_collection_receipts"
+      ],
+      "constraints": [
+        "commerce_synthetic_collection_receipts_fingerprint_length",
+        "commerce_synthetic_collection_receipts_collection_id_fkey"
+      ],
+      "source_ids": [
+        "migration_collection_receipt"
+      ]
     }
   ],
   "request_flow": [
@@ -513,6 +544,14 @@
         "adjudication",
         "right_convergence",
         "suppression"
+      ]
+    },
+    {
+      "summary": "Read and compare any prior receipt binding before recording collection effects. A fresh unique receipt binds its qualified fingerprint to the genuine collection. A collision rolls back the owner transaction.",
+      "source_ids": [
+        "ledger",
+        "collection_receipt_binding",
+        "commerce"
       ]
     }
   ],
@@ -748,6 +787,15 @@
         "synthetic_audit",
         "correction_cases"
       ]
+    },
+    {
+      "summary": "A missing or unavailable Privacy row leaves the original P1 grant open. A terminal suppression row withholds later grants, hides already materialized rights, and cannot be reset by registration.",
+      "source_ids": [
+        "entitlements",
+        "right_convergence",
+        "suppression",
+        "cases"
+      ]
     }
   ],
   "concurrency": [
@@ -766,6 +814,16 @@
         "adjudication",
         "right_convergence",
         "suppression",
+        "correction_cases"
+      ]
+    },
+    {
+      "summary": "Observed PostgreSQL blockers prove receipt-key contention across accepted sources, same and fresh correction receipt replays against a held source lock, and Entitlements convergence while a first worker is blocked on the original Plan right.",
+      "source_ids": [
+        "ledger",
+        "collection_receipt_binding",
+        "adjudication",
+        "right_convergence",
         "correction_cases"
       ]
     }
@@ -788,6 +846,14 @@
         "migration_correction",
         "correction_cases"
       ]
+    },
+    {
+      "summary": "The global collection receipt key binds a SHA-256 fingerprint and its collection. Conflicting qualified observations are rejected without a new collection or claim. Another receipt for the same genuine collection returns the original application.",
+      "source_ids": [
+        "ledger",
+        "collection_receipt_binding",
+        "correction_cases"
+      ]
     }
   ],
   "failure_recovery": [
@@ -802,11 +868,20 @@
       ]
     },
     {
-      "summary": "Discarding the pre-commit Commerce process rolls back the uncommitted decision. Fresh BEAM workers reapply or acknowledge from persisted owner facts and the open consequence index without a job.",
+      "summary": "Terminating the pre-commit Commerce process rolls back the uncommitted decision. Fresh BEAM workers receive only the accepted source ID, rediscover open effects, then apply and acknowledge across separate commits. The first worker encounters a real source lock. Replay after acknowledgement discovers an empty set.",
       "source_ids": [
         "adjudication",
         "correction_restart",
         "correction_cases"
+      ]
+    },
+    {
+      "summary": "A connection-scoped fault during collection receipt insert rolls back the proposed excess collection and claim. A later P1 consequence fault rolls back the receipt, collection and payment together.",
+      "source_ids": [
+        "cases",
+        "correction_cases",
+        "ledger",
+        "collection_receipt_binding"
       ]
     }
   ],
@@ -823,9 +898,13 @@
         "E2a-02",
         "E2a-07",
         "E2a-08",
-        "E2a-11"
+        "E2a-11",
+        "E2a-03",
+        "E2a-06",
+        "E2a-09",
+        "E2a-10"
       ],
-      "proves": "Admission, forged input denial, independent SQL contention, a consequence-insert rollback, overlapping delivery and fresh scheduler rediscovery after missing or exhausted jobs. Separately qualified receipts preserve one P1 applied payment and a committed correction can withhold an outstanding original grant.",
+      "proves": "Admission, forged input denial, independent SQL contention, a consequence-insert rollback, overlapping delivery and fresh scheduler rediscovery after missing or exhausted jobs. Separately qualified receipts preserve one P1 applied payment and a committed correction can withhold an outstanding original grant. Rejects conflicting receipt reuse across purchases, proves rollback after consequence insertion failure, and exercises missing, unavailable, and suppressed Privacy authority with observed contention.",
       "limits": "Synthetic only. The scheduler reads a connection-local view restricted to the owned fixture; the persisted job is executed through Oban.Testing, not by a running queue.",
       "source_ids": [
         "cases",
@@ -863,7 +942,7 @@
         "P1-07",
         "E2a-15"
       ],
-      "proves": "Runs the P1 and E2a migrations up, down and up in an isolated transaction-owned schema. Verifies local foreign keys, correction CHECKs and partial indexes.",
+      "proves": "Runs the P1 and E2a migrations up, down and up in an isolated transaction-owned schema. Verifies local foreign keys, correction CHECKs and partial indexes. Verifies the global collection receipt primary key, fingerprint length check and isolated collection foreign key.",
       "limits": "Uses the migration runner directly; migration ledger is not exercised.",
       "source_ids": [
         "migration_roundtrip"
@@ -882,9 +961,10 @@
         "E2a-10",
         "E2a-11",
         "E2a-12",
-        "E2a-14"
+        "E2a-14",
+        "E2a-02"
       ],
-      "proves": "Exact distinct payer, immutable allocation, partial refusal, exact rights, scoped access, independent SQL connections, killed Commerce transaction and fresh BEAM retry.",
+      "proves": "Exact distinct payer, immutable allocation, partial refusal, exact rights, scoped access, independent SQL connections, killed Commerce transaction and fresh BEAM retry. Verifies cross-source receipt arbitration, exact correction and Entitlements blocking, and source-only restart after each commit boundary.",
       "limits": "Provider stages, runtime release, live job polling and an actual deletion journey are outside this fixture.",
       "source_ids": [
         "correction_cases",
@@ -942,7 +1022,8 @@
     "Migration up/down/up uses isolated schemas and verifies foreign key targets, shape constraints and partial indexes. It does not exercise the migration ledger. The E2a rollback to P1 requires removal of TEST-only assessment and ended-right fixture rows by their owning test cleanup.",
     "The scheduler test restricts its read to a fixture-scoped temporary view and invokes the persisted job via Oban.Testing; it does not prove live queue polling.",
     "E2a manual recovery discovers persisted open consequences without relying on jobs. It does not certify a production scheduler for corrections or provider dispatch.",
-    "EV-012, EV-024 and EV-042 coverage is synthetic only. WELL-194 and later work retain the real provider refund, dispute and actual-stack obligations."
+    "EV-012, EV-024 and EV-042 coverage is synthetic only. WELL-194 and later work retain the real provider refund, dispute and actual-stack obligations.",
+    "Receipt binding applies to newly qualified synthetic observations. Earlier disposable fixtures did not retain the receipt payload for reconstruction. The review correction introduces no historical backfill or provider-data handling."
   ],
   "follow_up_tickets": [
     "WELL-190",
@@ -954,7 +1035,7 @@
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "defmodule NewYou.Commerce",
-      "sha256": "4a8cc22d7cc18b894bf20a7c4058efa0e024f7c3a0e53904fd9df69f79d1351c"
+      "sha256": "1203f805ecefc62979b2798ea0d56c81b2b43b9aa5c002f2f4e9826c55ed1e7a"
     },
     {
       "id": "purchase",
@@ -978,7 +1059,7 @@
       "id": "entitlements",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def grant_paid_plan",
-      "sha256": "d9d9a01b65935fadfcab80be67dce7349f67a1b04c81e17956868e019b294625"
+      "sha256": "a2e9819f09d6a661b48fe4f54511ddc8e9aabe7895136b2d3d1f948164c4e3ac"
     },
     {
       "id": "right",
@@ -1008,13 +1089,13 @@
       "id": "cases",
       "path": "test/new_you/commerce/plan_payment_test.exs",
       "symbol": "independent PostgreSQL transactions converge",
-      "sha256": "ce222a2e3e0d601a5c7f0f116a22b73190439baf80bf22e4385df856f32baad7"
+      "sha256": "158323f31e2922ce88e8cd6d41e3686c33d162528df9bf3f50a62d1b6c2bebc1"
     },
     {
       "id": "identity_cases",
       "path": "test/new_you/identity/reconciliation_test.exs",
       "symbol": "Commerce history committed on another connection",
-      "sha256": "5691dfa1734a8689d96200a54ec7808198e73ddf13019dce84bfa6bc786f1fa3"
+      "sha256": "126dc3626fceffc4e8c4e140bdab01277d4b066be8ebb4adc32ae65ba3af4983"
     },
     {
       "id": "production",
@@ -1062,7 +1143,7 @@
       "id": "migration_roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "P1 migrations apply",
-      "sha256": "6a8de0aa1aed1fee89a464645074e0fcd52f691238dcea76e979e44e1ef1a7bd"
+      "sha256": "3452f16c37f5dd43d5fe3da20ce0a0cbf929c9a784b0b9528f7921eb51dc7bde"
     },
     {
       "id": "adjudication",
@@ -1074,7 +1155,7 @@
       "id": "ledger",
       "path": "test/support/commerce/synthetic_collection_ledger.ex",
       "symbol": "def record",
-      "sha256": "e429a99301a37add941c229dc2f1f864ba6fafd164865b5bbb1f589db17f14f9"
+      "sha256": "b581908e05d28e3550f283fe3170e82acc8a2306603c8b6af263cf630ab8b427"
     },
     {
       "id": "collection",
@@ -1122,7 +1203,7 @@
       "id": "right_convergence",
       "path": "test/support/entitlements/synthetic_rights.ex",
       "symbol": "def apply_correction",
-      "sha256": "e3dea918686fb1cc71499bd3ffe8e075dfe4702ff77064657c97c573ae573e2f"
+      "sha256": "669c10b1d933a1cd92f05c670b1de107c8022fd5e3654ee7563329ec5f08e9b8"
     },
     {
       "id": "synthetic_audit",
@@ -1133,14 +1214,14 @@
     {
       "id": "correction_cases",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
-      "symbol": "independent SQL transactions converge",
-      "sha256": "13ed6a4a70404c5d4777a0f55eaab9546203df3ec53f9c2f2527c262d6dec7ec"
+      "symbol": "equivalent correction receipts wait for the winning Commerce transaction",
+      "sha256": "903339e0833b66717f137f83fbdbfe4487a26b801e26f92f7614ac7c06012f36"
     },
     {
       "id": "correction_restart",
       "path": "test/proof/well192_correction_restart.exs",
       "symbol": "E2A_COMPLETED",
-      "sha256": "16827a19610fe3f3bff951dc10704d078047a9dd2583026f64a69b5a7864ddd2"
+      "sha256": "67a2cf9eab405e406e486802ab077aa95cb8aa5c7c66d15c6d0ef1d2c1667e99"
     },
     {
       "id": "migration_collection",
@@ -1171,6 +1252,18 @@
       "path": "priv/repo/migrations/20261125140557_well192_correction_receipt.exs",
       "symbol": "commerce_synthetic_correction_receipts_correction_id_fkey",
       "sha256": "ed7375e0ed927a4c9a834807abe0a1b67bdea6efd363537da7fe4d7b970a00b7"
+    },
+    {
+      "id": "collection_receipt_binding",
+      "path": "lib/new_you/commerce/synthetic_collection_receipt.ex",
+      "symbol": "create :bind",
+      "sha256": "a4bb45b4f2a1ef3b7be339be4b08f4e4813781f78dc50bfe0f3ba162c811dbae"
+    },
+    {
+      "id": "migration_collection_receipt",
+      "path": "priv/repo/migrations/20261125153016_well192_collection_receipt_binding.exs",
+      "symbol": "commerce_synthetic_collection_receipts_fingerprint_length",
+      "sha256": "71065612051ad69c2980bca0885778cb748fc37dfd14cb8625c1b54f8a6e5171"
     }
   ]
 }
