@@ -126,6 +126,9 @@ jobs:
     name: Application CI
     needs: route
     if: needs.route.outputs.application_changes == 'true'
+    permissions:
+      contents: read
+      actions: read
     uses: ./.github/workflows/application-ci.yml
     with:
       deep_application_changes: ${{ needs.route.outputs.deep_application_changes == 'true' }}

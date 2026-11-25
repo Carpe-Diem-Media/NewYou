@@ -1,0 +1,32 @@
+name: Publish application timing registry
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Refresh from verified integrated PR evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 -m tools.exunit_timing registry.json
+      - uses: actions/upload-artifact@v4
+        if: hashFiles('registry.json') != ''
+        with:
+          name: application-timing-registry-attempt-${{ github.run_attempt }}
+          path: registry.json
+          if-no-files-found: error
+          retention-days: 21
