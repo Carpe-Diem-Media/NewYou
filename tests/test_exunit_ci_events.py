@@ -14,6 +14,16 @@ from tools import exunit_ci as ci
 
 
 class ExUnitEventTests(unittest.TestCase):
+    def test_missing_same_attempt_evidence_explains_full_rerun(self):
+        binding = {"run": 1, "attempt": 3, "head": "head"}
+        jobs = {ci.CAPACITY + "Test shard 3": {
+            "conclusion": "success", "run_id": 1, "run_attempt": 3, "head_sha": "head"
+        }}
+        key = "application-evidence-3-attempt-3"
+        with self.assertRaisesRegex(ValueError, f"missing artifact {key}.*all jobs"):
+            ci.verified_job(Path("."), jobs, {"application-evidence-3-attempt-2": {}},
+                            "Test shard 3", key, binding)
+
     def events(self, mode, profile, exit_code, names="only"):
         with TemporaryDirectory() as directory:
             output = Path(directory) / "events.jsonl"

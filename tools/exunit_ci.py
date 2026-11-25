@@ -182,11 +182,14 @@ def seconds(start, finish):
 
 
 def verified_job(evidence, jobs, artifacts, name, key, binding):
-    job = jobs[CAPACITY + name]
+    job = jobs.get(CAPACITY + name)
+    rerun = f"Run all jobs together for complete evidence (attempt {binding['attempt']})."
+    require(job is not None, f"{name}: missing job. {rerun}")
     require(job["conclusion"] == "success" and job["run_id"] == binding["run"]
             and job["run_attempt"] == binding["attempt"] and job["head_sha"] == binding["head"],
             f"{name}: missing, failed or stale job")
-    artifact = artifacts[key]
+    artifact = artifacts.get(key)
+    require(artifact is not None, f"{name}: missing artifact {key}. {rerun}")
     origin = artifact["workflow_run"]
     require(origin["id"] == binding["run"] and origin["head_sha"] == binding["head"]
             and origin["repository_id"] == int(os.environ["GITHUB_REPOSITORY_ID"])
@@ -195,7 +198,9 @@ def verified_job(evidence, jobs, artifacts, name, key, binding):
             and job["started_at"] <= artifact["created_at"] <= job["completed_at"],
             f"{name}: artifact is stale or has the wrong origin")
     path = evidence / key
-    env = json.loads((path / "job.json").read_text())
+    metadata = path / "job.json"
+    require(metadata.is_file(), f"{name}: missing downloaded metadata for {key}. {rerun}")
+    env = json.loads(metadata.read_text())
     require(all(env.get(field) == value for field, value in binding.items())
             and env["runner"] == job["runner_name"], f"{name}: wrong execution binding")
     return path, job, env
