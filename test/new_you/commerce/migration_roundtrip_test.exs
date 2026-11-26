@@ -30,6 +30,14 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
      NewYou.Repo.Migrations.Well192CollectionReceiptBinding}
   ]
 
+  @offer_migrations [
+    {20_261_126_073_120, "priv/repo/migrations/20261126073120_well197_versioned_offers.exs",
+     NewYou.Repo.Migrations.Well197VersionedOffers},
+    {20_261_126_073_624,
+     "priv/repo/migrations/20261126073624_well197_payment_consequence_scope.exs",
+     NewYou.Repo.Migrations.Well197PaymentConsequenceScope}
+  ]
+
   test "P1 migrations apply, roll back and reapply in a transaction-owned schema" do
     roundtrip(@migrations, 4, fn schema -> assert foreign_key_targets(schema) == {3, 3} end)
   end
@@ -82,11 +90,156 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
     end)
   end
 
-  defp roundtrip(migrations, table_count, assert_constraints) do
-    Enum.each(migrations, fn {_, path, module} ->
-      unless Code.ensure_loaded?(module), do: Code.require_file(path)
-    end)
+  test "versioned migrations roundtrip legacy P1 and E2a history and refuse to strip accepted S1 evidence" do
+    base = @migrations ++ @correction_migrations
+    load_migrations(base ++ @offer_migrations)
+    :ok = Sandbox.checkout(Repo, sandbox: false)
+    schema = "well197_" <> String.replace(Ecto.UUID.generate(), "-", "")
 
+    try do
+      assert {:error, :probe_complete} =
+               Repo.transaction(fn ->
+                 Repo.query!("CREATE SCHEMA #{schema}")
+                 Enum.each(base, &run_migration(&1, :up, schema))
+                 seed_legacy(schema)
+                 legacy = legacy_rows(schema, false)
+
+                 Enum.each(@offer_migrations, &run_migration(&1, :up, schema))
+                 assert table_count(schema) == 16
+                 assert legacy_rows(schema, true) == legacy
+
+                 assert [[nil, "plan"]] ==
+                          Repo.query!("""
+                          SELECT p.quote_id, c.delivery_kind FROM #{schema}.commerce_plan_purchases p
+                            JOIN #{schema}.commerce_payment_consequences c ON p.id = c.purchase_id
+                          """).rows
+
+                 assert_accepted_shape_and_rollback_guard(schema)
+
+                 @offer_migrations
+                 |> Enum.reverse()
+                 |> Enum.each(&run_migration(&1, :down, schema))
+
+                 assert table_count(schema) == 11
+                 assert legacy_rows(schema, false) == legacy
+
+                 Enum.each(@offer_migrations, &run_migration(&1, :up, schema))
+                 assert table_count(schema) == 16
+                 assert legacy_rows(schema, true) == legacy
+                 Repo.rollback(:probe_complete)
+               end)
+    after
+      Sandbox.checkin(Repo)
+    end
+  end
+
+  defp seed_legacy(schema) do
+    Repo.query!("""
+    WITH parties AS (
+      SELECT gen_random_uuid() AS account_id
+    ), purchase AS (
+      INSERT INTO #{schema}.commerce_plan_purchases
+        (operation_id, payer_id, recipient_id, price_version, amount_minor, currency)
+      SELECT gen_random_uuid(), account_id, account_id, 'synthetic-plan-v1', 39900, 'ZAR' FROM parties
+      RETURNING id, recipient_id
+    ), payment AS (
+      INSERT INTO #{schema}.commerce_verified_payments (purchase_id)
+      SELECT id FROM purchase RETURNING id, purchase_id
+    ), consequence AS (
+      INSERT INTO #{schema}.commerce_payment_consequences (purchase_id, payment_id, fulfilled_at)
+      SELECT purchase_id, id, now() FROM payment RETURNING purchase_id, payment_id
+    ), plan_right AS (
+      INSERT INTO #{schema}.entitlements_plan_rights (purchase_id, payment_id, recipient_id, component)
+      SELECT p.id, c.payment_id, p.recipient_id, 'plan'
+      FROM purchase p JOIN consequence c ON c.purchase_id = p.id RETURNING purchase_id
+    )
+    INSERT INTO #{schema}.commerce_synthetic_corrections
+      (source_id, receipt_id, kind, component, amount_minor, acknowledged_at)
+    SELECT purchase_id, gen_random_uuid(), 'component_end', 'plan', 39900, now() FROM plan_right
+    """)
+  end
+
+  defp legacy_rows(schema, versioned?) do
+    Enum.map(
+      ~w(commerce_plan_purchases commerce_verified_payments commerce_payment_consequences entitlements_plan_rights commerce_synthetic_corrections),
+      fn table ->
+        projection =
+          case {table, versioned?} do
+            {"commerce_plan_purchases", true} -> "to_jsonb(t) - 'quote_id'"
+            {"commerce_payment_consequences", true} -> "to_jsonb(t) - 'delivery_kind'"
+            _ -> "to_jsonb(t)"
+          end
+
+        Repo.query!("SELECT #{projection} FROM #{schema}.#{table} t ORDER BY t.id").rows
+      end
+    )
+  end
+
+  defp assert_accepted_shape_and_rollback_guard(schema) do
+    Repo.query!("SAVEPOINT s1_schema_probe")
+
+    Repo.query!("""
+    WITH offer AS (
+      INSERT INTO #{schema}.commerce_offer_versions
+        (id, product, price_version, currency, amount_minor, assessment_list_minor,
+         assessment_discount_minor, plan_list_minor, plan_discount_minor, state,
+         approval_id, approved_at, disclosure_en_id, disclosure_af_id)
+      VALUES (gen_random_uuid(), 'plan', 'roundtrip-offer-197', 'ZAR', 41700, 0, 0, 41700, 0,
+        'approved', gen_random_uuid(), now() - '1 second'::interval, gen_random_uuid(), gen_random_uuid())
+      RETURNING id, disclosure_en_id
+    )
+    INSERT INTO #{schema}.commerce_purchase_quotes
+      (operation_id, payer_id, recipient_id, offer_id, language, disclosure_id,
+       disclosure_fingerprint, state)
+    SELECT gen_random_uuid(), gen_random_uuid(), gen_random_uuid(), id, 'en', disclosure_en_id,
+      decode(repeat('00', 32), 'hex'), 'accepted' FROM offer
+    """)
+
+    Repo.query!("SAVEPOINT incomplete_acceptance")
+
+    assert {:error, %Postgrex.Error{postgres: %{constraint: "well197_complete_acceptance"}}} =
+             Repo.query("SET CONSTRAINTS ALL IMMEDIATE")
+
+    Repo.query!("ROLLBACK TO SAVEPOINT incomplete_acceptance")
+
+    Repo.query!("""
+    INSERT INTO #{schema}.commerce_plan_purchases
+      (operation_id, payer_id, recipient_id, quote_id, price_version, amount_minor, currency)
+    SELECT operation_id, payer_id, recipient_id, q.id, o.price_version, o.amount_minor, o.currency
+    FROM #{schema}.commerce_purchase_quotes q JOIN #{schema}.commerce_offer_versions o ON q.offer_id = o.id
+    """)
+
+    Repo.query!("SET CONSTRAINTS ALL IMMEDIATE")
+
+    for table <- ~w(commerce_plan_purchases commerce_purchase_quotes commerce_offer_versions) do
+      Repo.query!("SAVEPOINT immutable_financial_history")
+
+      assert {:error, %Postgrex.Error{postgres: %{constraint: "well197_history_update"}}} =
+               Repo.query("UPDATE #{schema}.#{table} SET id = id")
+
+      Repo.query!("ROLLBACK TO SAVEPOINT immutable_financial_history")
+    end
+
+    for migration <- @offer_migrations do
+      Repo.query!("SAVEPOINT refused_reverse")
+
+      assert_raise Postgrex.Error, ~r/accepted offer evidence/, fn ->
+        run_migration(migration, :down, schema)
+      end
+
+      Repo.query!("ROLLBACK TO SAVEPOINT refused_reverse")
+    end
+
+    assert [[41_700]] ==
+             Repo.query!(
+               "SELECT amount_minor FROM #{schema}.commerce_plan_purchases WHERE quote_id IS NOT NULL"
+             ).rows
+
+    Repo.query!("ROLLBACK TO SAVEPOINT s1_schema_probe")
+  end
+
+  defp roundtrip(migrations, table_count, assert_constraints) do
+    load_migrations(migrations)
     :ok = Sandbox.checkout(Repo, sandbox: false)
     schema = "well189_" <> String.replace(Ecto.UUID.generate(), "-", "")
 
@@ -110,6 +263,12 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
     after
       Sandbox.checkin(Repo)
     end
+  end
+
+  defp load_migrations(migrations) do
+    Enum.each(migrations, fn {_, path, module} ->
+      unless Code.ensure_loaded?(module), do: Code.require_file(path)
+    end)
   end
 
   defp run_migration({version, _, module}, operation, schema) do

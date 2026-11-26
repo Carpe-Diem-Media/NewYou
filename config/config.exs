@@ -75,6 +75,7 @@ config :new_you,
     NewYou.Communications,
     NewYou.Commerce,
     NewYou.Entitlements,
+    NewYou.Temperament,
     NewYou.Identity,
     NewYou.Audit,
     NewYou.Privacy

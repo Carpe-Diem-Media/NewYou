@@ -1,0 +1,319 @@
+{
+  "attributes": [
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": true,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "product",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "price_version",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "currency",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "amount_minor",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "assessment_list_minor",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "assessment_discount_minor",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "plan_list_minor",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "plan_discount_minor",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "allocation_version",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "promotion_version",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"draft\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "state",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "approval_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "allocation_approval_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "disclosure_en_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "disclosure_af_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "withdrawal_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "approved_at",
+      "type": "timestamptz(6)"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "expires_at",
+      "type": "timestamptz(6)"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "created_at",
+      "type": "utc_datetime_usec"
+    }
+  ],
+  "base_filter": null,
+  "check_constraints": [
+    {
+      "attribute": [
+        "product",
+        "amount_minor"
+      ],
+      "base_filter": null,
+      "check": "currency = 'ZAR' AND amount_minor > 0 AND\nplan_list_minor >= 0 AND assessment_list_minor >= 0 AND\nplan_discount_minor >= 0 AND assessment_discount_minor >= 0 AND\n(plan_list_minor = 0 AND plan_discount_minor = 0 OR plan_list_minor > plan_discount_minor) AND\n(assessment_list_minor = 0 AND assessment_discount_minor = 0 OR\n  assessment_list_minor > assessment_discount_minor) AND\n(plan_list_minor::numeric - plan_discount_minor) +\n  (assessment_list_minor::numeric - assessment_discount_minor) = amount_minor AND\n((product = 'plan' AND assessment_list_minor = 0 AND allocation_version IS NULL) OR\n (product = 'assessment' AND plan_list_minor = 0 AND allocation_version IS NULL) OR\n (product = 'bundle' AND plan_list_minor > 0 AND assessment_list_minor > 0 AND\n  (plan_discount_minor > 0 OR assessment_discount_minor > 0) AND allocation_version IS NOT NULL))\n",
+      "name": "commerce_offer_versions_amounts"
+    },
+    {
+      "attribute": [
+        "state",
+        "approval_id"
+      ],
+      "base_filter": null,
+      "check": "(state = 'draft' AND approval_id IS NULL AND approved_at IS NULL AND\n  disclosure_en_id IS NULL AND disclosure_af_id IS NULL AND allocation_approval_id IS NULL\n  AND withdrawal_id IS NULL) OR\n(state IN ('approved', 'superseded', 'withdrawn') AND approval_id IS NOT NULL\n  AND approved_at IS NOT NULL AND disclosure_en_id IS NOT NULL AND disclosure_af_id IS NOT NULL\n  AND disclosure_en_id <> disclosure_af_id\n  AND (expires_at IS NULL OR expires_at > approved_at)\n  AND ((product = 'bundle' AND allocation_approval_id IS NOT NULL\n    AND allocation_approval_id <> approval_id) OR\n    (product <> 'bundle' AND allocation_approval_id IS NULL))\n  AND ((state = 'withdrawn') = (withdrawal_id IS NOT NULL)))\n",
+      "name": "commerce_offer_versions_lifecycle"
+    }
+  ],
+  "create_table_options": null,
+  "custom_indexes": [
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "product"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "product"
+        }
+      ],
+      "include": null,
+      "include_base_filter?": true,
+      "message": null,
+      "name": "commerce_offer_versions_one_approved",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": true,
+      "using": null,
+      "where": "state = 'approved'"
+    }
+  ],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "5E483EC541A4EA5D106749B60E716EC3EBFDB40AE53E17F18E1D1EA264E3F6D2",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "commerce_offer_versions_price_version_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "price_version"
+        }
+      ],
+      "name": "price_version",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
+  "multitenancy": {
+    "attribute": null,
+    "global": null,
+    "strategy": null
+  },
+  "repo": "Elixir.NewYou.Repo",
+  "schema": null,
+  "table": "commerce_offer_versions",
+  "temporal": null
+}

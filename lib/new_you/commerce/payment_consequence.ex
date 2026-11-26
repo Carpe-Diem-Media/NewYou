@@ -12,8 +12,15 @@ defmodule NewYou.Commerce.PaymentConsequence do
     table "commerce_payment_consequences"
     repo NewYou.Repo
 
+    check_constraints do
+      check_constraint :delivery_kind, "commerce_payment_consequences_delivery_kind",
+        check: "delivery_kind IN ('plan', 's1_fixture')"
+    end
+
     custom_indexes do
-      index [:id], where: "fulfilled_at IS NULL", name: "commerce_payment_consequences_open"
+      index [:id],
+        where: "fulfilled_at IS NULL AND delivery_kind = 'plan'",
+        name: "commerce_payment_consequences_open"
     end
   end
 
@@ -21,7 +28,7 @@ defmodule NewYou.Commerce.PaymentConsequence do
     triggers do
       trigger :deliver_plan_payment do
         action :deliver
-        where expr(is_nil(fulfilled_at))
+        where expr(is_nil(fulfilled_at) and delivery_kind == :plan)
         scheduler_cron "* * * * *"
         queue :commerce
         worker_module_name NewYou.Commerce.Workers.DeliverPlanPayment
@@ -54,7 +61,7 @@ defmodule NewYou.Commerce.PaymentConsequence do
 
     create :establish do
       public? false
-      accept [:purchase_id, :payment_id]
+      accept [:purchase_id, :payment_id, :delivery_kind]
     end
   end
 
@@ -67,6 +74,12 @@ defmodule NewYou.Commerce.PaymentConsequence do
   attributes do
     uuid_v7_primary_key :id
     create_timestamp :established_at
+
+    attribute :delivery_kind, :atom,
+      default: :plan,
+      allow_nil?: false,
+      constraints: [one_of: [:plan, :s1_fixture]]
+
     attribute :fulfilled_at, AshPostgres.TimestamptzUsec
   end
 

@@ -5,6 +5,7 @@ defmodule NewYou.Commerce.SyntheticCorrections do
   """
 
   alias NewYou.Commerce.{
+    OfferAdmission,
     Purchase,
     SyntheticCollectionLedger,
     SyntheticCorrection,
@@ -195,6 +196,24 @@ defmodule NewYou.Commerce.SyntheticCorrections do
   end
 
   @doc """
+  Read the final Assessment component correction for the caller's locked paid
+  source. Its acknowledgement is written only after Entitlements commits the end.
+  """
+  @spec assessment_end_for_locked_source(Ecto.UUID.t()) ::
+          {:ok, SyntheticCorrection.t() | nil} | {:error, term()}
+  def assessment_end_for_locked_source(id) do
+    if Ash.DataLayer.in_transaction?(SyntheticCorrection) do
+      SyntheticCorrection
+      |> Ash.Query.filter(
+        source_id == ^id and kind == :component_end and component == :assessment
+      )
+      |> Ash.read_one(authorize?: false)
+    else
+      {:error, :source_unavailable}
+    end
+  end
+
+  @doc """
   Resolve the original P1 grant under the same source lock as adjudication.
   Receipts from the original P1 case have no explicit collection identity.
   """
@@ -221,6 +240,7 @@ defmodule NewYou.Commerce.SyntheticCorrections do
     id = source.id
 
     with {:ok, payment_id} <- applied_payment(source, collection_id),
+         {:ok, components} <- components(source),
          {:ok, rows} <-
            SyntheticCorrection
            |> Ash.Query.filter(source_id == ^id and kind == :component_end)
@@ -230,7 +250,8 @@ defmodule NewYou.Commerce.SyntheticCorrections do
          purchase_id: id,
          payment_id: payment_id,
          recipient_id: source.recipient_id,
-         components: components(source),
+         components: components,
+         materialize?: legacy_source?(source),
          ended_components: MapSet.new(rows, & &1.component)
        }}
     end
@@ -335,13 +356,18 @@ defmodule NewYou.Commerce.SyntheticCorrections do
     end
   end
 
-  defp attribute_correction(source, %{collection_id: collection}, _, %{
-         reason: :unused_component,
-         collection_id: collection,
-         component: component,
-         amount_minor: amount
-       }) do
-    case component_amount(source, component) do
+  defp attribute_correction(
+         source,
+         %{collection_id: collection},
+         _,
+         %{
+           reason: :unused_component,
+           collection_id: collection,
+           component: component,
+           amount_minor: amount
+         } = fields
+       ) do
+    case component_amount(source, component, fields) do
       ^amount when is_integer(amount) ->
         %{kind: :component_end, component: component, amount_minor: amount}
 
@@ -370,15 +396,23 @@ defmodule NewYou.Commerce.SyntheticCorrections do
   defp attribute_correction(_, _, _, _),
     do: %{kind: :unresolved, component: nil, amount_minor: nil}
 
-  defp component_amount(%Purchase{amount_minor: amount}, :plan), do: amount
+  defp component_amount(%Purchase{quote_id: nil, amount_minor: amount}, :plan, _), do: amount
 
-  defp component_amount(%SyntheticOrder{} = order, :plan),
+  defp component_amount(%Purchase{quote_id: id} = purchase, component, %{quote_id: id})
+       when not is_nil(id) do
+    with {:ok, %{components: components}} <- OfferAdmission.accepted_terms(purchase),
+         %{amount_minor: amount} <- Map.get(components, component) do
+      amount
+    end
+  end
+
+  defp component_amount(%SyntheticOrder{} = order, :plan, _),
     do: order.plan_list_minor - order.plan_discount_minor
 
-  defp component_amount(%SyntheticOrder{} = order, :assessment),
+  defp component_amount(%SyntheticOrder{} = order, :assessment, _),
     do: order.assessment_list_minor - order.assessment_discount_minor
 
-  defp component_amount(_, _), do: nil
+  defp component_amount(_, _, _), do: nil
 
   defp record_decision(source_id, receipt_id, decision, fields) do
     fingerprint = :crypto.hash(:sha256, :erlang.term_to_binary(fields, [:deterministic]))
@@ -482,6 +516,15 @@ defmodule NewYou.Commerce.SyntheticCorrections do
     end
   end
 
-  defp components(%Purchase{}), do: [:plan]
-  defp components(%SyntheticOrder{}), do: [:assessment, :plan]
+  defp legacy_source?(%Purchase{quote_id: id}), do: is_nil(id)
+  defp legacy_source?(%SyntheticOrder{}), do: true
+
+  defp components(%Purchase{quote_id: nil}), do: {:ok, [:plan]}
+
+  defp components(%Purchase{} = purchase) do
+    with {:ok, %{components: components}} <- OfferAdmission.accepted_terms(purchase),
+         do: {:ok, Map.keys(components)}
+  end
+
+  defp components(%SyntheticOrder{}), do: {:ok, [:assessment, :plan]}
 end

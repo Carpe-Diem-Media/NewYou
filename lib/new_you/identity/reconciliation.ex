@@ -560,7 +560,8 @@ defmodule NewYou.Identity.Reconciliation do
                NewYou.Privacy,
                NewYou.Analytics,
                NewYou.Commerce,
-               NewYou.Entitlements
+               NewYou.Entitlements,
+               NewYou.Temperament
              ]),
          {:ok, communications} <-
            Communications.review_identity_reconciliation(
@@ -579,13 +580,19 @@ defmodule NewYou.Identity.Reconciliation do
            NewYou.Entitlements.review_identity_reconciliation(
              current.candidate_id,
              current.canonical_id
+           ),
+         {:ok, temperament} <-
+           NewYou.Temperament.review_identity_reconciliation(
+             current.candidate_id,
+             current.canonical_id
            ) do
       {:ok,
        %{
          "communications" => communications,
          "audit" => audit,
          "commerce" => commerce,
-         "entitlements" => entitlements
+         "entitlements" => entitlements,
+         "temperament" => temperament
        }}
     else
       _ -> unavailable()

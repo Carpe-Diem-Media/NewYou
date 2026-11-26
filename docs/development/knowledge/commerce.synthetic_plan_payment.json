@@ -7,8 +7,8 @@
     "WELL-192"
   ],
   "implementation_revision": {
-    "git_sha": "3973f23feb7fdb52a68e984323fa01186e230eee",
-    "semantics": "WELL-192 E2a with immutable receipt binding, fail-closed grants, terminal convergence under suppression, and rejected and unresolved correction evidence."
+    "git_sha": "b159247491f34387b07b015331ed923552b0b830",
+    "semantics": "WELL-192 E2a with immutable receipt binding, fail-closed grants, terminal convergence under suppression, and rejected and unresolved correction evidence. WELL-197 preserves P1 and E2a while evolving the Purchase constraints and isolating S1 payment consequences from P1 delivery. The migration entries for WELL-189 describe the original schema. WELL-197 MG-01 reuses E2a's acknowledged Assessment end as the original S1 claim's terminal evidence. Existing P1 and E2a effect identities remain valid."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -1068,13 +1068,13 @@
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "defmodule NewYou.Commerce",
-      "sha256": "1203f805ecefc62979b2798ea0d56c81b2b43b9aa5c002f2f4e9826c55ed1e7a"
+      "sha256": "1488a15b2284f195cdcf74e81ad9cc63149e13c1e2c245565c88488daf95a218"
     },
     {
       "id": "purchase",
       "path": "lib/new_you/commerce/purchase.ex",
       "symbol": "create :accept",
-      "sha256": "2a938f06805400011cf9ed7fccaec5a5df2b1ea70c40e3b33cd06a41923723ff"
+      "sha256": "a8f90eeffbc7d682a6680e18ee56f5a77fc3d67c80c9e7c64f99deb05159393e"
     },
     {
       "id": "payment",
@@ -1086,13 +1086,13 @@
       "id": "consequence",
       "path": "lib/new_you/commerce/payment_consequence.ex",
       "symbol": "trigger :deliver_plan_payment",
-      "sha256": "b25278148b50f735c92cba6921c0aed85abe0af75cabcfe59f149d2ccd3ee3c6"
+      "sha256": "44a101fb38ae82e93279cfcfe0df4295050000703dc0cdc942c79afa84d5eff8"
     },
     {
       "id": "entitlements",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def grant_paid_plan",
-      "sha256": "a2e9819f09d6a661b48fe4f54511ddc8e9aabe7895136b2d3d1f948164c4e3ac"
+      "sha256": "43a545d2d2b31e3018df211943d6e0b1d7cc84b231bbe3e2d6189e564a84fcda"
     },
     {
       "id": "right",
@@ -1110,7 +1110,7 @@
       "id": "review",
       "path": "lib/new_you/identity/reconciliation.ex",
       "symbol": "defp owner_reviews",
-      "sha256": "ad8a72d1e1953d97fee5bc3d95d2b4d70d8f6e559258455585c42cde3a971626"
+      "sha256": "6b5ebcda73fceddc8ba10316e581e86e6d915a8f2294e9618967b189eb2f1dcd"
     },
     {
       "id": "fixture",
@@ -1128,7 +1128,7 @@
       "id": "identity_cases",
       "path": "test/new_you/identity/reconciliation_test.exs",
       "symbol": "Commerce history committed on another connection",
-      "sha256": "126dc3626fceffc4e8c4e140bdab01277d4b066be8ebb4adc32ae65ba3af4983"
+      "sha256": "801b9c3ae4d1d4003a2580ffb45cbf0732a418ca051589f5b77d0f7bf5c2d64b"
     },
     {
       "id": "production",
@@ -1176,13 +1176,13 @@
       "id": "migration_roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "P1 migrations apply",
-      "sha256": "3452f16c37f5dd43d5fe3da20ce0a0cbf929c9a784b0b9528f7921eb51dc7bde"
+      "sha256": "0d8b3453a1e8e4e845c2c0cdf88ed270c93a2e6f6bc7ec3fcd0880684248e37b"
     },
     {
       "id": "adjudication",
       "path": "test/support/commerce/synthetic_corrections.ex",
       "symbol": "def observe_correction",
-      "sha256": "298527ac10dcb6ec2253f45da483f1dcdcce3163368bab8e6df6bd409c56fd82"
+      "sha256": "81f573b84d5ac5f8103ba61af9cc8840f8ede8bb0bac50d3702ce331d444ba37"
     },
     {
       "id": "ledger",
@@ -1236,7 +1236,7 @@
       "id": "right_convergence",
       "path": "test/support/entitlements/synthetic_rights.ex",
       "symbol": "def apply_correction",
-      "sha256": "1eb352ffc0769e9f501a98a2ccb733768d17bc14c92d81ce9a64c23208f75c94"
+      "sha256": "fcc29e36baf0734301ed97ebdb4240076e8669efbca210c2f6d8540140144121"
     },
     {
       "id": "synthetic_audit",
