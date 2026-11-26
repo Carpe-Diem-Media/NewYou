@@ -1,5 +1,8 @@
 defmodule NewYou.Entitlements.SyntheticAssessmentCredit do
-  @moduledoc false
+  @moduledoc """
+  Entitlements' bounded TEST Assessment grant and terminal outcome for a paid
+  S1 source. Existing correction and right records establish the outcome.
+  """
 
   alias NewYou.Commerce.{AssessmentAdmissions, SyntheticCorrections}
   alias NewYou.Entitlements
@@ -50,9 +53,31 @@ defmodule NewYou.Entitlements.SyntheticAssessmentCredit do
     end
   end
 
-  @doc false
-  @spec grant_receipt(map()) :: {:ok, PlanRight.t() | nil} | {:error, term()}
-  def grant_receipt(%{purchase_id: id, payment_id: payment, recipient_id: recipient}) do
+  @doc """
+  Resolve the exact paid Assessment outcome under the caller's purchase and
+  Privacy locks. A live grant or an acknowledged correction is terminal.
+  Return the original right ID when it exists, or the correction ID when the
+  correction withheld the grant. An unacknowledged correction stays pending.
+  """
+  @spec terminal_resolution(map()) :: {:ok, Ecto.UUID.t()} | {:error, term()}
+  def terminal_resolution(source) do
+    with {:ok, right} <- grant_receipt(source),
+         {:ok, correction} <-
+           SyntheticCorrections.assessment_end_for_locked_source(source.purchase_id) do
+      resolution_id(right, correction)
+    end
+  end
+
+  defp resolution_id(%PlanRight{id: id, state: :held_unconsumed}, nil), do: {:ok, id}
+
+  defp resolution_id(%PlanRight{id: id, state: :ended}, %{acknowledged_at: %DateTime{}}),
+    do: {:ok, id}
+
+  defp resolution_id(nil, %{id: id, acknowledged_at: %DateTime{}}), do: {:ok, id}
+
+  defp resolution_id(_, _), do: {:error, :outcome_unavailable}
+
+  defp grant_receipt(%{purchase_id: id, payment_id: payment, recipient_id: recipient}) do
     PlanRight
     |> Ash.Query.filter(purchase_id == ^id and component == :assessment)
     |> Ash.read_one(authorize?: false)

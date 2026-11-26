@@ -196,6 +196,24 @@ defmodule NewYou.Commerce.SyntheticCorrections do
   end
 
   @doc """
+  Read the final Assessment component correction for the caller's locked paid
+  source. Its acknowledgement is written only after Entitlements commits the end.
+  """
+  @spec assessment_end_for_locked_source(Ecto.UUID.t()) ::
+          {:ok, SyntheticCorrection.t() | nil} | {:error, term()}
+  def assessment_end_for_locked_source(id) do
+    if Ash.DataLayer.in_transaction?(SyntheticCorrection) do
+      SyntheticCorrection
+      |> Ash.Query.filter(
+        source_id == ^id and kind == :component_end and component == :assessment
+      )
+      |> Ash.read_one(authorize?: false)
+    else
+      {:error, :source_unavailable}
+    end
+  end
+
+  @doc """
   Resolve the original P1 grant under the same source lock as adjudication.
   Receipts from the original P1 case have no explicit collection identity.
   """

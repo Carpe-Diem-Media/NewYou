@@ -1,8 +1,8 @@
 defmodule NewYou.Commerce.AssessmentAdmissions do
   @moduledoc """
   Commerce owns the Assessment-bearing claim from acceptance until proven
-  nonpayability or acknowledged owner grant. Missing outcomes leave the claim
-  active. The qualified payment and grant cuts exercise this boundary in TEST.
+  nonpayability or acknowledgement of a terminal Entitlements outcome. Missing
+  outcomes leave the claim active. S1 exercises these transitions in TEST.
   """
 
   alias NewYou.Commerce.{AssessmentAdmission, PaymentConsequence, Purchase, VerifiedPayment}
@@ -144,9 +144,9 @@ defmodule NewYou.Commerce.AssessmentAdmissions do
   end
 
   @doc """
-  Acknowledge an Assessment grant in TEST after the Entitlements transaction
-  commits. Commerce releases only this source's claim, under lock, after it
-  finds the exact committed owner right. A repeated acknowledgement is safe.
+  Acknowledge the source-specific Assessment outcome after Entitlements
+  commits in TEST. A grant or a delivered component correction can settle
+  the claim under lock. A repeated acknowledgement returns the committed result.
   """
   @spec acknowledge_credit(Ecto.UUID.t()) :: :ok | {:error, :reconciliation_unavailable}
   if Mix.env() == :test do
@@ -157,29 +157,29 @@ defmodule NewYou.Commerce.AssessmentAdmissions do
     end
 
     defp acknowledge_locked(id) do
-      with {:ok, %{admission: admission, consequence: consequence} = source} <-
-             locked_paid_source(id),
+      with {:ok, source} <- locked_paid_source(id),
            {:ok, :allowed} <-
-             NewYou.Privacy.SyntheticSuppression.locked_status(source.recipient_id),
-           {:ok, %{id: right_id}} <-
-             NewYou.Entitlements.SyntheticAssessmentCredit.grant_receipt(source) do
-        acknowledge_after_grant(admission, consequence, right_id)
+             NewYou.Privacy.SyntheticSuppression.locked_status(source.recipient_id) do
+        acknowledge_source(source)
       end
     end
 
-    defp acknowledge_after_grant(
-           %{state: :reconciled, resolution_id: id},
-           %{fulfilled_at: %DateTime{}},
-           id
-         ),
+    defp acknowledge_source(%{
+           admission: %{state: :reconciled},
+           consequence: %{fulfilled_at: %DateTime{}}
+         }),
          do: :ok
 
-    defp acknowledge_after_grant(
-           %{state: :paid} = admission,
-           %{fulfilled_at: nil} = consequence,
-           right_id
+    defp acknowledge_source(
+           %{
+             admission: %{state: :paid} = admission,
+             consequence: %{fulfilled_at: nil} = consequence
+           } =
+             source
          ) do
-      with :ok <- resolve(admission, right_id, :acknowledge_credit),
+      with {:ok, resolution_id} <-
+             NewYou.Entitlements.SyntheticAssessmentCredit.terminal_resolution(source),
+           :ok <- resolve(admission, resolution_id, :acknowledge_credit),
            {:ok, _} <-
              Ash.update(consequence, %{fulfilled_at: DateTime.utc_now()},
                action: :acknowledge,
@@ -189,7 +189,7 @@ defmodule NewYou.Commerce.AssessmentAdmissions do
       end
     end
 
-    defp acknowledge_after_grant(_, _, _), do: {:error, :reconciliation_unavailable}
+    defp acknowledge_source(_), do: {:error, :reconciliation_unavailable}
 
     defp reconcile(operation) do
       case Ash.transact(Purchase, operation) do

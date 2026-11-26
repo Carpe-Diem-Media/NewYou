@@ -13,7 +13,8 @@ defmodule NewYou.Commerce.AssessmentRecoveryTest do
   }
 
   alias NewYou.Commerce.SyntheticCorrections
-  alias NewYou.Entitlements.SyntheticAssessmentCredit
+  alias NewYou.Entitlements.{PlanRight, SyntheticAssessmentCredit, SyntheticRights}
+  alias NewYou.Privacy.SyntheticSuppression
   alias NewYou.Proof.{FreshMix, P805, P815Port}
   import NewYou.Commerce.OfferFixtures
   require Ash.Query
@@ -123,6 +124,134 @@ defmodule NewYou.Commerce.AssessmentRecoveryTest do
     end)
   end
 
+  test "a delivered Assessment correction before grant releases only its own paid admission" do
+    P805.with_fixture(fn ->
+      {payer, recipient} = ready_parties()
+      {accepted, observed, payment, consequence} = paid_purchase(payer, recipient, :bundle)
+      id = consequence.id
+
+      assert {:ok, %{kind: :unresolved, id: unresolved}} =
+               SyntheticCorrections.observe_correction(
+                 correction(accepted, observed, 1, :assessment)
+               )
+
+      assert {:error, :delivery_unavailable} = SyntheticCorrections.deliver(unresolved)
+
+      assert {:ok, %{component: :plan, id: plan_effect}} =
+               SyntheticCorrections.observe_correction(
+                 correction(accepted, observed, 34_900, :plan)
+               )
+
+      assert {:ok, _} = SyntheticCorrections.deliver(plan_effect)
+      assert {:error, :reconciliation_unavailable} = AssessmentAdmissions.acknowledge_credit(id)
+
+      receipt = correction(accepted, observed, 20_000, :assessment)
+
+      assert {:ok, %{component: :assessment, acknowledged_at: nil, id: effect}} =
+               SyntheticCorrections.observe_correction(receipt)
+
+      assert {:error, :grant_unavailable} = SyntheticAssessmentCredit.grant(id)
+      assert {:error, :reconciliation_unavailable} = AssessmentAdmissions.acknowledge_credit(id)
+      assert {:error, :assessment_unavailable} = compete(payer, recipient)
+
+      assert {:ok, %{id: ^effect, acknowledged_at: completed}} =
+               SyntheticCorrections.deliver(effect)
+
+      assert %DateTime{} = completed
+      assert {:error, :grant_unavailable} = SyntheticAssessmentCredit.grant(id)
+      assert [] == purchase_rights(accepted.purchase_id)
+
+      assert %{state: :paid} =
+               Ash.get!(AssessmentAdmission, accepted.purchase_id, authorize?: false)
+
+      assert :ok = AssessmentAdmissions.acknowledge_credit(id)
+
+      assert %{state: :reconciled, resolution_id: ^effect, resolved_at: at} =
+               Ash.get!(AssessmentAdmission, accepted.purchase_id, authorize?: false)
+
+      assert %{fulfilled_at: fulfilled} = consequence_for(accepted)
+      assert %DateTime{} = fulfilled
+      assert :ok = AssessmentAdmissions.acknowledge_credit(id)
+
+      assert {:ok, %{id: ^effect, acknowledged_at: ^completed}} =
+               SyntheticCorrections.observe_correction(
+                 proof(%{receipt.fields | receipt_id: uuid()})
+               )
+
+      assert {:ok, %{id: ^effect, acknowledged_at: ^completed}} =
+               SyntheticCorrections.deliver(effect)
+
+      assert %{resolved_at: ^at} =
+               Ash.get!(AssessmentAdmission, accepted.purchase_id, authorize?: false)
+
+      assert %{fulfilled_at: ^fulfilled} = consequence_for(accepted)
+      assert {:error, :grant_unavailable} = SyntheticAssessmentCredit.grant(id)
+      assert [] == purchase_rights(accepted.purchase_id)
+      assert {:ok, %{id: original_payment}} = Commerce.apply_payment_observation(observed)
+      assert original_payment == payment.id
+      assert {:ok, ^accepted} = OfferAdmission.snapshot(payer.credentials, accepted.purchase_id)
+
+      assert {:ok, subsequent} = compete(payer, recipient)
+      refute subsequent.purchase_id == accepted.purchase_id
+      assert :ok = AssessmentAdmissions.acknowledge_credit(id)
+      assert {:error, :assessment_unavailable} = compete(payer, recipient)
+    end)
+  end
+
+  test "a correction wins a database race with grant and a fresh BEAM settles its paid claim" do
+    P805.with_fixture(fn ->
+      {payer, recipient} = ready_parties()
+      {accepted, observed, _payment, consequence} = paid_purchase(payer, recipient, :assessment)
+      receipt = correction(accepted, observed, 24_900, :assessment)
+      effect = race_correction_and_grant(receipt, consequence.id)
+
+      assert %{kind: :component_end, acknowledged_at: nil} = effect
+      assert [] == purchase_rights(accepted.purchase_id)
+
+      assert {:error, :reconciliation_unavailable} =
+               AssessmentAdmissions.acknowledge_credit(consequence.id)
+
+      assert {:ok, %{acknowledged_at: %DateTime{}}} = SyntheticCorrections.deliver(effect.id)
+      assert %{fulfilled_at: nil} = consequence_for(accepted)
+      assert {:error, :assessment_unavailable} = compete(payer, recipient)
+
+      fresh_vm!("ack", accepted.purchase_id)
+      effect_id = effect.id
+
+      assert %{state: :reconciled, resolution_id: ^effect_id} =
+               Ash.get!(AssessmentAdmission, accepted.purchase_id, authorize?: false)
+
+      assert {:ok, nil} = AssessmentAdmissions.open_credit_consequence(accepted.purchase_id)
+      assert :ok = AssessmentAdmissions.acknowledge_credit(consequence.id)
+      assert {:error, :grant_unavailable} = SyntheticAssessmentCredit.grant(consequence.id)
+      assert [] == purchase_rights(accepted.purchase_id)
+      assert {:ok, _} = compete(payer, recipient)
+    end)
+  end
+
+  test "a delivered correction cannot bypass Privacy suppression" do
+    P805.with_fixture(fn ->
+      {payer, recipient} = ready_parties()
+      {accepted, observed, _payment, consequence} = paid_purchase(payer, recipient, :assessment)
+      receipt = correction(accepted, observed, 24_900, :assessment)
+      assert {:ok, %{id: effect}} = SyntheticCorrections.observe_correction(receipt)
+
+      assert :ok =
+               SyntheticSuppression.suppress(
+                 proof(%{scope: :completed_deletion, subject_id: recipient.account_id})
+               )
+
+      assert {:ok, %{acknowledged_at: %DateTime{}}} = SyntheticCorrections.deliver(effect)
+      assert {:error, :grant_unavailable} = SyntheticAssessmentCredit.grant(consequence.id)
+
+      assert {:error, :reconciliation_unavailable} =
+               AssessmentAdmissions.acknowledge_credit(consequence.id)
+
+      assert %{fulfilled_at: nil} = consequence_for(accepted)
+      assert [] == purchase_rights(accepted.purchase_id)
+    end)
+  end
+
   test "qualified component correction after repricing uses the accepted allocation and keeps an independent right" do
     P805.with_fixture(fn ->
       {payer, recipient} = ready_parties()
@@ -173,7 +302,28 @@ defmodule NewYou.Commerce.AssessmentRecoveryTest do
                  correction(accepted, observed, 20_000, :assessment)
                )
 
-      assert {:ok, _} = SyntheticCorrections.deliver(effect)
+      assert {:error, :reconciliation_unavailable} =
+               AssessmentAdmissions.acknowledge_credit(consequence.id)
+
+      assert :ok = SyntheticRights.apply_correction(effect)
+      assert %{state: :ended} = Ash.get!(PlanRight, assessment.id, authorize?: false)
+
+      assert {:error, :reconciliation_unavailable} =
+               AssessmentAdmissions.acknowledge_credit(consequence.id)
+
+      assert {:ok, %{acknowledged_at: %DateTime{}}} = SyntheticCorrections.deliver(effect)
+      assert :ok = AssessmentAdmissions.acknowledge_credit(consequence.id)
+      assert :ok = AssessmentAdmissions.acknowledge_credit(consequence.id)
+
+      assert %{state: :reconciled, resolution_id: right_id} =
+               Ash.get!(AssessmentAdmission, accepted.purchase_id, authorize?: false)
+
+      assert right_id == assessment.id
+
+      assert {:ok, %{id: ^right_id, state: :ended}} =
+               SyntheticAssessmentCredit.grant(consequence.id)
+
+      assert [%{id: ^right_id, state: :ended}] = purchase_rights(accepted.purchase_id)
 
       assert {:ok,
               %{kind: :component_end, component: :plan, amount_minor: 34_900, id: plan_effect}} =
@@ -249,6 +399,71 @@ defmodule NewYou.Commerce.AssessmentRecoveryTest do
     end)
   end
 
+  defp race_correction_and_grant(receipt, consequence_id) do
+    parent = self()
+
+    {correction, blocker} =
+      independent_connection(fn ->
+        Ash.transact(Commerce.Purchase, fn ->
+          {:ok, effect} = SyntheticCorrections.observe_correction(receipt)
+          send(parent, :correction_written)
+          receive do: (:commit -> effect)
+        end)
+      end)
+
+    assert_receive :correction_written, 5_000
+
+    {grant, waiter} =
+      independent_connection(fn -> SyntheticAssessmentCredit.grant(consequence_id) end)
+
+    refute waiter == blocker
+
+    assert blocked_on?(waiter, blocker, 120),
+           "grant must wait in PostgreSQL on the correction's transaction"
+
+    send(correction.pid, :commit)
+    assert {:ok, effect} = Task.await(correction)
+    assert {:error, :grant_unavailable} = Task.await(grant)
+    effect
+  end
+
+  defp independent_connection(operation) do
+    parent = self()
+
+    task =
+      Task.async(fn ->
+        receive do: (:start -> :ok)
+        :ok = Sandbox.checkout(Repo, sandbox: false)
+
+        try do
+          [[backend]] = Repo.query!("SELECT pg_backend_pid()").rows
+          send(parent, {self(), backend})
+          operation.()
+        after
+          Sandbox.checkin(Repo)
+        end
+      end)
+
+    :ok = P805.register_cleanup_worker(task.pid)
+    send(task.pid, :start)
+    pid = task.pid
+    assert_receive {^pid, backend}, 5_000
+    {task, backend}
+  end
+
+  defp blocked_on?(_, _, 0), do: false
+
+  defp blocked_on?(waiter, blocker, attempts) do
+    case Repo.query!("SELECT $2::integer = ANY(pg_blocking_pids($1::integer))", [waiter, blocker]).rows do
+      [[true]] ->
+        true
+
+      [[false]] ->
+        Process.sleep(20)
+        blocked_on?(waiter, blocker, attempts - 1)
+    end
+  end
+
   defp commit_without_response(authority, offered) do
     parent = self()
 
@@ -282,6 +497,18 @@ defmodule NewYou.Commerce.AssessmentRecoveryTest do
     publish!(:bundle)
     {payer, recipient}
   end
+
+  defp paid_purchase(payer, recipient, product) do
+    authority = parties(payer, recipient)
+    offered = quote!(authority, product)
+    {:ok, accepted} = OfferAdmission.accept(authority, acceptance(offered))
+    observed = payment(accepted)
+    {:ok, applied} = Commerce.apply_payment_observation(observed)
+    {accepted, observed, applied, consequence_for(accepted)}
+  end
+
+  defp purchase_rights(id),
+    do: Ash.read!(Ash.Query.filter(PlanRight, purchase_id == ^id), authorize?: false)
 
   defp compete(payer, recipient) do
     authority = parties(payer, recipient)

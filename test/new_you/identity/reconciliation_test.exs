@@ -1,7 +1,9 @@
 defmodule NewYou.Identity.ReconciliationTest do
   use ExUnit.Case, async: false
   import NewYou.Proof.ReconciliationScenarios
+  alias NewYou.Commerce.{OfferAdmission, OfferFixtures}
   alias NewYou.Identity
+  alias NewYou.Privacy.SyntheticSuppression
   alias NewYou.Proof.{FreshMix, P805, P813HoldFixture}
 
   test "scoped detection, verified review and apply preserve history and retire the losing PMR" do
@@ -717,6 +719,75 @@ defmodule NewYou.Identity.ReconciliationTest do
   end
 
   test "an unapplied legacy owner snapshot is denied until a fresh review succeeds" do
+    assert_legacy_owner_snapshot_requires_review(["commerce", "entitlements", "temperament"])
+  end
+
+  test "an approval from the owner set before Temperament requires fresh review" do
+    assert_legacy_owner_snapshot_requires_review(["temperament"])
+  end
+
+  test "a new versioned purchase with recipient-only Commerce history invalidates approval" do
+    assert_new_history_blocks_apply(fn f ->
+      payer = OfferFixtures.verified_party()
+      recipient = assessment_party(f.target)
+      :ok = SyntheticSuppression.register(recipient.credentials)
+      OfferFixtures.publish!(:plan)
+      authority = OfferFixtures.parties(payer, recipient)
+      quote = OfferFixtures.quote!(authority, :plan)
+
+      assert {:ok, purchase} = OfferAdmission.accept(authority, OfferFixtures.acceptance(quote))
+      assert purchase.payer_id == payer.account_id
+      assert purchase.payer_id not in [f.target.id, f.survivor.id]
+      assert purchase.recipient_id == f.target.id
+    end)
+  end
+
+  test "new Entitlements Assessment credit evidence invalidates approval" do
+    assert_new_history_blocks_apply(fn f ->
+      recipient = assessment_party(f.survivor)
+      :ok = SyntheticSuppression.register(recipient.credentials)
+
+      assert {:ok, %{recipient_id: id, ordinary_state: :available_unused}} =
+               OfferFixtures.set_credit(recipient, :available_unused, %{
+                 credit_id: OfferFixtures.uuid()
+               })
+
+      assert id == f.survivor.id
+    end)
+  end
+
+  test "new Temperament successful delivery evidence invalidates approval" do
+    assert_new_history_blocks_apply(fn f ->
+      recipient = assessment_party(f.target)
+      :ok = SyntheticSuppression.register(recipient.credentials)
+
+      assert {:ok, %{recipient_id: id, status: :successful}} =
+               OfferFixtures.set_delivery(recipient, :successful, %{
+                 successful_at: DateTime.add(DateTime.utc_now(), -1, :day)
+               })
+
+      assert id == f.target.id
+    end)
+  end
+
+  defp assessment_party(account), do: %{account_id: account.id, credentials: account.credentials}
+
+  defp assert_new_history_blocks_apply(establish) do
+    with_case(fn f ->
+      assert {:ok, %{status: :approved} = approved} = approve(f)
+      establish.(f)
+
+      assert {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      request = apply_request(f, approved)
+      assert {:error, :reconciliation_unavailable} = Identity.apply_reconciliation(request)
+      assert admissions(request.operation_id) == []
+      assert outcomes(request.operation_id) == []
+      assert %{canonical_account_id: nil, pmr_status: :active} = P805.account!(f.target.id)
+      assert %{canonical_account_id: nil, pmr_status: :active} = P805.account!(f.survivor.id)
+    end)
+  end
+
+  defp assert_legacy_owner_snapshot_requires_review(omit) do
     with_case(fn f ->
       {:ok, original} = approve(f)
       {:ok, :ok} = P813HoldFixture.step_up(f.actor, :review_reconciliation)
@@ -730,7 +801,7 @@ defmodule NewYou.Identity.ReconciliationTest do
                })
 
       legacy_review =
-        Map.update!(original.review, "domains", &Map.drop(&1, ["commerce", "entitlements"]))
+        Map.update!(original.review, "domains", &Map.drop(&1, omit))
 
       # Create the historical snapshot through the private fixture action, while
       # retaining the database's normal review transition and immutable history guard.
@@ -765,8 +836,8 @@ defmodule NewYou.Identity.ReconciliationTest do
       assert {:ok, refreshed} =
                Identity.review_reconciliation(%{review | expected_version: new_review.version})
 
-      assert Map.has_key?(refreshed.review["domains"], "commerce")
-      assert Map.has_key?(refreshed.review["domains"], "entitlements")
+      assert refreshed.review["domains"] == original.review["domains"]
+      assert refreshed.review["domains"]["temperament"]["policy"] == "empty_temperament_scope"
       {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
 
       assert {:ok, %{status: :applied}} =
