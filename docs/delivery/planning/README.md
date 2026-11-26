@@ -1,6 +1,6 @@
 # Derived development planning references
 
-These seven FP-002 references help readers navigate scoped requirements and proof guidance beneath current Product, Architecture, Domain, Roadmap and delivery contracts. Plane remains the authority for execution state. Git and PR history record review and integration of these references.
+These seven FP-002 references help readers navigate scoped requirements and proof guidance beneath current Product, Architecture, Domain, Roadmap and delivery contracts. Use them after independent approval and integration into `main`, as recorded in Git and PR history. Plane remains the authority for execution state.
 
 ## Select an explicit scoped record
 
