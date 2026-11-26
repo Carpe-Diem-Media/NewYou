@@ -1,0 +1,1011 @@
+{
+  "schema_version": 1,
+  "capability_id": "commerce.versioned_offer_admission",
+  "purpose": "Offer and accept an exact versioned Assessment, Plan or bundle in TEST. Preserve component allocations and prevent a competing ordinary Assessment sale while credit or the accepted obligation blocks admission.",
+  "implementing_tickets": [
+    "WELL-197"
+  ],
+  "implementation_revision": {
+    "git_sha": "38a49ecf1e09517a22ca6a21e86edbfe326be7bb",
+    "semantics": "WELL-197 S1 implementation and local proof sources."
+  },
+  "authoritative_domain": "NewYou.Commerce",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Identity",
+      "interface": "SyntheticPurchaseParties.authorize/1",
+      "ownership": "Current canonical Account, verified sessions and the signed TEST operation relationship.",
+      "source_ids": [
+        "parties"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "interface": "SyntheticSuppression.locked_status/1",
+      "ownership": "Current authorized TEST Privacy scope. Its per-subject row lock serializes the bounded owner observations and right writes.",
+      "source_ids": [
+        "privacy"
+      ]
+    },
+    {
+      "domain": "NewYou.Entitlements",
+      "interface": "ordinary_assessment_credit/1 and SyntheticAssessmentCredit.grant/1",
+      "ownership": "Ordinary paid credit truth, independent Premium evidence and one Assessment right for the qualified S1 paid source.",
+      "source_ids": [
+        "credit",
+        "credit_fixture"
+      ]
+    },
+    {
+      "domain": "NewYou.Temperament",
+      "interface": "latest_paid_assessment_delivery/1",
+      "ownership": "Successful complete paid Assessment delivery provenance. Explicit TEST fixture absence is authoritative within the bounded scope.",
+      "source_ids": [
+        "delivery",
+        "delivery_fixture"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.OfferVersion",
+      "actions": [
+        "draft",
+        "approve",
+        "supersede",
+        "withdraw"
+      ],
+      "caller_boundary": "Private Commerce actions after exact signed TEST evidence.",
+      "source_ids": [
+        "offer",
+        "catalogue"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.PurchaseQuote",
+      "actions": [
+        "offer",
+        "decide"
+      ],
+      "caller_boundary": "Commerce verifies parties and exact disclosure. State updates preserve the quote terms.",
+      "source_ids": [
+        "quote",
+        "admission"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.Purchase",
+      "actions": [
+        "accept"
+      ],
+      "caller_boundary": "Create once from the locked quote. Historical P1 retains its synthetic Plan fixture.",
+      "source_ids": [
+        "purchase",
+        "admission"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.AssessmentAdmission",
+      "actions": [
+        "admit",
+        "record_payment",
+        "confirm_nonpayable",
+        "acknowledge_credit"
+      ],
+      "caller_boundary": "Commerce holds the claim through a possible collection or outstanding grant.",
+      "source_ids": [
+        "claim",
+        "assessment"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.PaymentConsequence",
+      "actions": [
+        "establish",
+        "acknowledge"
+      ],
+      "caller_boundary": "P1 scheduler selects only its Plan lane. S1 TEST Assessment recovery uses its own durable consequence.",
+      "source_ids": [
+        "consequence",
+        "payment"
+      ]
+    },
+    {
+      "domain": "NewYou.Entitlements",
+      "resource": "NewYou.Entitlements.AssessmentCreditEvidence",
+      "actions": [
+        "establish_fixture",
+        "observe_fixture"
+      ],
+      "caller_boundary": "Signed TEST owner state, changed with the subject lock and previous evidence identity.",
+      "source_ids": [
+        "credit_resource",
+        "credit_fixture"
+      ]
+    },
+    {
+      "domain": "NewYou.Temperament",
+      "resource": "NewYou.Temperament.AssessmentDeliveryEvidence",
+      "actions": [
+        "establish_fixture",
+        "observe_fixture"
+      ],
+      "caller_boundary": "Signed TEST owner provenance, changed with the subject lock and previous evidence identity.",
+      "source_ids": [
+        "delivery_resource",
+        "delivery_fixture"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Commerce.OfferCatalogue",
+      "function": "approve",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Qualified TEST approval attesting exact immutable draft, EN and AF disclosures, and distinct bundle allocation approval."
+      ],
+      "returns": [
+        "Approved offer or offer_unavailable."
+      ],
+      "side_effects": [
+        "Supersedes the preceding version and approves the next in one transaction."
+      ],
+      "caller_constraints": [
+        "Internal qualified TEST Commerce authority."
+      ],
+      "source_ids": [
+        "catalogue",
+        "offer"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.OfferCatalogue",
+      "function": "effective",
+      "arity": 1,
+      "visibility": "supported",
+      "arguments": [
+        "Assessment, Plan or bundle product."
+      ],
+      "returns": [
+        "Current priced terms or offer_unavailable."
+      ],
+      "side_effects": [
+        "Reads the approved version within its effective interval."
+      ],
+      "caller_constraints": [
+        "Offer catalogue view excludes parties and quotes."
+      ],
+      "source_ids": [
+        "catalogue"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.OfferAdmission",
+      "function": "quote",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "The operation-bound authorization and current party credentials.",
+        "Product and EN or AF language."
+      ],
+      "returns": [
+        "Bound terms and disclosure fingerprint, or a denial."
+      ],
+      "side_effects": [
+        "Creates or replays one operation-bound quote."
+      ],
+      "caller_constraints": [
+        "Authorized TEST parties and current Privacy scope."
+      ],
+      "source_ids": [
+        "admission",
+        "parties",
+        "quote"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.OfferAdmission",
+      "function": "accept",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "The operation-bound authorization and current party credentials.",
+        "Operation ID, quote ID and exact disclosure fingerprint."
+      ],
+      "returns": [
+        "An immutable accepted snapshot, a conflict, or a scoped denial."
+      ],
+      "side_effects": [
+        "Creates Purchase and Assessment claim atomically when required. Persists a scoped decision for stale or denied quotes."
+      ],
+      "caller_constraints": [
+        "Authorized TEST parties. Rechecks open claims and both Assessment owner facts."
+      ],
+      "source_ids": [
+        "admission",
+        "purchase",
+        "assessment"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.OfferAdmission",
+      "function": "snapshot",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Current party credentials.",
+        "Accepted purchase ID."
+      ],
+      "returns": [
+        "Versioned purchase and disclosure snapshot, or purchase_unavailable."
+      ],
+      "side_effects": [
+        "Reads the frozen Purchase, quote and offer version."
+      ],
+      "caller_constraints": [
+        "Bound payer or recipient with current Identity and Privacy authority."
+      ],
+      "source_ids": [
+        "admission",
+        "purchase",
+        "quote",
+        "offer"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.OfferAdmission",
+      "function": "review_admission",
+      "arity": 2,
+      "visibility": "supported",
+      "arguments": [
+        "Current reviewer's canonical session.",
+        "Signed TEST grant scoped to this reviewer and exact quote."
+      ],
+      "returns": [
+        "Quote ID, state and decision, or purchase_unavailable."
+      ],
+      "side_effects": [
+        "Reads the minimum admission finding."
+      ],
+      "caller_constraints": [
+        "Exact TEST grant and current actor."
+      ],
+      "source_ids": [
+        "admission"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.AssessmentAdmissions",
+      "function": "open_credit_consequence",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Accepted Assessment-bearing purchase ID."
+      ],
+      "returns": [
+        "Current open S1 consequence ID, nil, or reconciliation_unavailable."
+      ],
+      "side_effects": [
+        "Finds a recoverable grant or acknowledgement from PostgreSQL."
+      ],
+      "caller_constraints": [
+        "Trusted TEST recovery caller."
+      ],
+      "source_ids": [
+        "assessment"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.AssessmentAdmissions",
+      "function": "acknowledge_credit",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Open S1 consequence ID."
+      ],
+      "returns": [
+        "ok or reconciliation_unavailable."
+      ],
+      "side_effects": [
+        "Confirms the exact committed owner right and completes Commerce consequence and claim atomically."
+      ],
+      "caller_constraints": [
+        "Call after the independent Entitlements transaction commits."
+      ],
+      "source_ids": [
+        "assessment",
+        "credit_fixture"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.AssessmentAdmissions",
+      "function": "confirm_nonpayable",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Qualified TEST evidence for the exact purchase, quote, attempt and final evidence identity."
+      ],
+      "returns": [
+        "ok or reconciliation_unavailable."
+      ],
+      "side_effects": [
+        "Releases only an unpaid matching claim. Exact replay is safe."
+      ],
+      "caller_constraints": [
+        "Synthetic irreversible nonpayability only."
+      ],
+      "source_ids": [
+        "assessment"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261126073120_well197_versioned_offers.exs",
+      "tables": [
+        "commerce_offer_versions",
+        "commerce_purchase_quotes",
+        "commerce_plan_purchases",
+        "commerce_assessment_admissions",
+        "entitlements_assessment_credit_evidence",
+        "temperament_assessment_delivery_evidence"
+      ],
+      "constraints": [
+        "commerce_offer_versions_one_approved",
+        "commerce_purchase_quotes_operation_index",
+        "commerce_plan_purchases_quote_index",
+        "commerce_assessment_admissions_active_recipient",
+        "well197_guard_update",
+        "well197_complete_acceptance"
+      ],
+      "source_ids": [
+        "migration"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261126073624_well197_payment_consequence_scope.exs",
+      "tables": [
+        "commerce_payment_consequences"
+      ],
+      "constraints": [
+        "commerce_payment_consequences_delivery_kind",
+        "commerce_payment_consequences_open"
+      ],
+      "source_ids": [
+        "payment_migration"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "Publish a draft with approval, priced components and separate promotion provenance. Product prices and allocations are data.",
+      "source_ids": [
+        "catalogue",
+        "offer"
+      ]
+    },
+    {
+      "summary": "Authorize the operation and both sessions, read the effective version and bind the requested language and approved disclosure ID to the exact terms.",
+      "source_ids": [
+        "admission",
+        "parties"
+      ]
+    },
+    {
+      "summary": "Lock the operation quote, both Privacy scopes and the exact offer. For Assessment-bearing products, check the active claim, Entitlements and Temperament. Commit Purchase, accepted quote and any claim together.",
+      "source_ids": [
+        "admission",
+        "assessment",
+        "credit",
+        "delivery",
+        "migration"
+      ]
+    },
+    {
+      "summary": "Apply qualified payment and the open consequence in Commerce. Each TEST Assessment grant and its acknowledgement runs in a separate transaction.",
+      "source_ids": [
+        "payment",
+        "assessment",
+        "credit_fixture"
+      ]
+    },
+    {
+      "summary": "E2a-style attribution uses the accepted versioned component after repricing. The existing scoped correction path can end only that component's right.",
+      "source_ids": [
+        "corrections",
+        "recovery_test"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "offer.draft",
+      "offer.approved",
+      "offer.superseded",
+      "offer.withdrawn",
+      "quote.offered",
+      "quote.reconciling",
+      "quote.rejected",
+      "quote.stale",
+      "quote.accepted",
+      "claim.pending",
+      "claim.paid",
+      "claim.nonpayable",
+      "claim.reconciled"
+    ],
+    "transitions": [
+      {
+        "from_state": "offer.draft",
+        "to_state": "offer.approved",
+        "guards": [
+          "Qualified exact draft approval with both disclosures and the bundle allocation approval."
+        ],
+        "side_effects": [
+          "Publish for the effective interval."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "catalogue"
+        ]
+      },
+      {
+        "from_state": "offer.approved",
+        "to_state": "offer.superseded",
+        "guards": [
+          "A successor is approved in the same transaction."
+        ],
+        "side_effects": [
+          "Stop new acceptance for the preceding version."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "catalogue"
+        ]
+      },
+      {
+        "from_state": "offer.approved",
+        "to_state": "offer.withdrawn",
+        "guards": [
+          "Qualified withdrawal tied to the version."
+        ],
+        "side_effects": [
+          "Stop new acceptance while preserving history."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "catalogue"
+        ]
+      },
+      {
+        "from_state": "quote.offered",
+        "to_state": "quote.reconciling",
+        "guards": [
+          "Missing, unavailable or contradictory owner evidence."
+        ],
+        "side_effects": [
+          "Record a retryable decision without a purchase."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "admission",
+          "assessment"
+        ]
+      },
+      {
+        "from_state": "quote.offered",
+        "to_state": "quote.rejected",
+        "guards": [
+          "Unused credit, the annual interval or a competing obligation blocks Assessment admission."
+        ],
+        "side_effects": [
+          "Record a terminal denial for this quote."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "admission",
+          "assessment"
+        ]
+      },
+      {
+        "from_state": "quote.offered",
+        "to_state": "quote.stale",
+        "guards": [
+          "The originally quoted offer no longer permits new acceptance."
+        ],
+        "side_effects": [
+          "Record a stale decision without substituting a new price."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "admission"
+        ]
+      },
+      {
+        "from_state": "quote.offered",
+        "to_state": "quote.accepted",
+        "guards": [
+          "Current verified bound parties, exact disclosure and active quote meet product eligibility."
+        ],
+        "side_effects": [
+          "Persist the immutable Purchase and necessary claim."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "admission",
+          "migration"
+        ]
+      },
+      {
+        "from_state": "quote.reconciling",
+        "to_state": "quote.accepted",
+        "guards": [
+          "Authoritative eligibility becomes available and the quoted offer remains effective."
+        ],
+        "side_effects": [
+          "Accept the identical previously offered terms."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "admission"
+        ]
+      },
+      {
+        "from_state": "quote.reconciling",
+        "to_state": "quote.rejected",
+        "guards": [
+          "Reconciliation finds an admission block."
+        ],
+        "side_effects": [
+          "Record a terminal denial for this quote."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "admission"
+        ]
+      },
+      {
+        "from_state": "quote.reconciling",
+        "to_state": "quote.stale",
+        "guards": [
+          "The offer stops being effective before reconciliation."
+        ],
+        "side_effects": [
+          "Record a terminal stale decision."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "admission"
+        ]
+      },
+      {
+        "from_state": "claim.pending",
+        "to_state": "claim.paid",
+        "guards": [
+          "Exact qualified payment is committed against the accepted attempt."
+        ],
+        "side_effects": [
+          "Keep the recipient fenced while the consequence remains open."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "assessment",
+          "payment"
+        ]
+      },
+      {
+        "from_state": "claim.pending",
+        "to_state": "claim.nonpayable",
+        "guards": [
+          "Qualified final nonpayability identifies the exact attempt and no applied payment exists."
+        ],
+        "side_effects": [
+          "Release this claim and preserve the Purchase snapshot."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "assessment"
+        ]
+      },
+      {
+        "from_state": "claim.paid",
+        "to_state": "claim.reconciled",
+        "guards": [
+          "Entitlements committed the exact source-bound right."
+        ],
+        "side_effects": [
+          "Acknowledge the consequence and release the claim. The unused right continues to block new Assessment purchase."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "assessment",
+          "credit_fixture"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Opaque identifiers cannot substitute for signed operation authority and current verified canonical sessions. Owner review exposes only a quote finding.",
+      "source_ids": [
+        "admission",
+        "parties",
+        "prices_test"
+      ]
+    },
+    {
+      "summary": "Commerce reads ordinary-credit and successful-delivery evidence under the Privacy subject lock. Premium evidence and Plan-only eligibility remain independent.",
+      "source_ids": [
+        "assessment",
+        "credit",
+        "delivery",
+        "privacy"
+      ]
+    },
+    {
+      "summary": "Private Ash policies deny direct caller access. S1 authority producers and payable proof run in TEST. The P1 scheduler, legacy E2a grant and S1 TEST grant have distinct scopes.",
+      "source_ids": [
+        "quote",
+        "offer",
+        "consequence",
+        "credit_fixture",
+        "recovery_test"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Identity locks canonical accounts in stable order. The quote row write lock and offer shared lock serialize acceptance with replay or catalogue changes. Privacy scope locks serialize admission with owner credit updates.",
+      "source_ids": [
+        "parties",
+        "admission",
+        "race_test"
+      ]
+    },
+    {
+      "summary": "The partial unique active-recipient index backs arbitration. One quote identity per operation and one Purchase per quote bind exact replay.",
+      "source_ids": [
+        "claim",
+        "migration",
+        "race_test"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Exact acceptance replay returns the original Purchase, attempt, timestamp and terms after promotion change or repricing. A request with changed evidence or parties cannot replay it.",
+      "source_ids": [
+        "admission",
+        "prices_test",
+        "recovery_test"
+      ]
+    },
+    {
+      "summary": "Payment, owner grant and acknowledgement each converge on their own source identity. A lost acknowledgement leaves the claim active until fresh recovery finds exact owner evidence.",
+      "source_ids": [
+        "assessment",
+        "payment",
+        "credit_fixture",
+        "restart"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Insert failure after proposed Purchase rolls back the purchase, quote decision and claim together. At commit PostgreSQL verifies the complete purchase, quote, allocation and applicable recipient claim.",
+      "source_ids": [
+        "migration",
+        "migration_test",
+        "recovery_test"
+      ]
+    },
+    {
+      "summary": "An unpaid claim remains active across missing or ambiguous outcomes. In TEST only, irreversible nonpayability can release it. A paid claim stays active until exact grant acknowledgement.",
+      "source_ids": [
+        "assessment",
+        "recovery_test"
+      ]
+    },
+    {
+      "summary": "Rollback restores both legacy constraints only when accepted versioned history is absent. Existing P1 and E2a source identities survive both migration directions.",
+      "source_ids": [
+        "migration",
+        "payment_migration",
+        "migration_test"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/commerce/versioned_offer_test.exs",
+      "cases": [
+        "Exact publication and EN/AF disclosure",
+        "Accepted versions, alternative component allocations, expiry, repricing and authorization"
+      ],
+      "proves": "Two priced snapshots and qualification failures at the governing boundary.",
+      "limits": "TEST evidence and no browser or commercial activation.",
+      "source_ids": [
+        "prices_test"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/assessment_admission_test.exs",
+      "cases": [
+        "Available, held and released ordinary credit",
+        "Premium independence, contradictory and missing history, anniversary"
+      ],
+      "proves": "Correct Assessment interlocks while Plan remains eligible.",
+      "limits": "Bounded owner fixtures for attempt and delivery state.",
+      "source_ids": [
+        "eligibility_test",
+        "credit_fixture",
+        "delivery_fixture"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/offer_concurrency_test.exs",
+      "cases": [
+        "Independent replay and competing intents",
+        "Catalogue replacement",
+        "Owner credit update",
+        "Query and pool measurements"
+      ],
+      "proves": "Distinct PostgreSQL connections and transaction IDs, visible blocking and exact committed outcomes.",
+      "limits": "Focused contention and query cost, independent of release load certification.",
+      "source_ids": [
+        "race_test"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/assessment_recovery_test.exs",
+      "cases": [
+        "Pre-commit rejection",
+        "Pending, paid and post-grant boundaries",
+        "Qualified nonpayability",
+        "Frozen correction amounts",
+        "Fresh-BEAM convergence"
+      ],
+      "proves": "Recovery reuses exact persisted source and right identities and preserves an unrelated Plan right.",
+      "limits": "Bounded synthetic payment/grant and E2a-style correction.",
+      "source_ids": [
+        "recovery_test",
+        "restart"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "cases": [
+        "P1, E2a and S1 roundtrip",
+        "Legacy row identity preservation",
+        "Incomplete snapshot denial and rollback refusal"
+      ],
+      "proves": "PostgreSQL constraints protect established financial evidence.",
+      "limits": "Transaction-owned isolated schema.",
+      "source_ids": [
+        "migration_test"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "S2 can use the exact accepted snapshot and replace bounded adapters with authorized owner facts and provider evidence. Keep the same acceptance and payment obligation identities.",
+      "source_ids": [
+        "admission",
+        "payment",
+        "assessment"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "Commerce extends the P1 Purchase, verified payment and consequence actions. Store checkout version reentry and Order's unique checkout key inform operation identity while the AshPostgres conditional upsert preserves immutable replay.",
+      "source_ids": [
+        "purchase",
+        "quote",
+        "payment",
+        "race_test"
+      ]
+    },
+    {
+      "summary": "Store's create-only SnapshotWriter, allocation set, component amounts and PostgreSQL commit proofs inform the NewYou typed offer columns and complete acceptance constraint. Fixed Assessment and Plan components fit one immutable offer row linked to the quote.",
+      "source_ids": [
+        "offer",
+        "quote",
+        "migration",
+        "migration_test"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Do not accept a different offer on replay or compute a historical refund from current prices. Remain fenced on incomplete or ambiguous money and owner evidence.",
+      "source_ids": [
+        "admission",
+        "assessment",
+        "corrections"
+      ]
+    },
+    {
+      "summary": "Do not route S1 to P1 or legacy E2a grant execution. Store tax, stock, shipping, subscription and provider rules are outside this scope.",
+      "source_ids": [
+        "consequence",
+        "credit_fixture",
+        "recovery_test"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "S1 is bounded TEST admission and recovery. There is no provider I/O, actual sale, checkout UI, production delivery evidence or full three-product materialization.",
+    "The approved synthetic amounts and both disclosure IDs are fixture evidence. Launch pricing and exact commercial copy require governed approval.",
+    "Store source inspection informs patterns. The Store tests were read rather than executed."
+  ],
+  "follow_up_tickets": [
+    "WELL-198",
+    "WELL-199",
+    "WELL-211"
+  ],
+  "sources": [
+    {
+      "id": "catalogue",
+      "path": "lib/new_you/commerce/offer_catalogue.ex",
+      "symbol": "defmodule NewYou.Commerce.OfferCatalogue",
+      "sha256": "625bf7f5cfdf8d33e744755ccdc0381996e35b441dfa93124678ef259486cc95"
+    },
+    {
+      "id": "offer",
+      "path": "lib/new_you/commerce/offer_version.ex",
+      "symbol": "defmodule NewYou.Commerce.OfferVersion",
+      "sha256": "c23453ae987c9e3ba771b5e273430e8032f9dba8cadc0623d5f8742116eddcb2"
+    },
+    {
+      "id": "admission",
+      "path": "lib/new_you/commerce/offer_admission.ex",
+      "symbol": "defmodule NewYou.Commerce.OfferAdmission",
+      "sha256": "2f5940a884fd914f3e97802f735237b98825a6cafd8d2881cb63dcc7aabacb71"
+    },
+    {
+      "id": "quote",
+      "path": "lib/new_you/commerce/purchase_quote.ex",
+      "symbol": "defmodule NewYou.Commerce.PurchaseQuote",
+      "sha256": "ca4575830e0b24f88171ddccc9c99683ce34009ba9df7d2f653d6154d037914f"
+    },
+    {
+      "id": "purchase",
+      "path": "lib/new_you/commerce/purchase.ex",
+      "symbol": "defmodule NewYou.Commerce.Purchase",
+      "sha256": "a8f90eeffbc7d682a6680e18ee56f5a77fc3d67c80c9e7c64f99deb05159393e"
+    },
+    {
+      "id": "assessment",
+      "path": "lib/new_you/commerce/assessment_admissions.ex",
+      "symbol": "defmodule NewYou.Commerce.AssessmentAdmissions",
+      "sha256": "084a87cba83840428195b4cb270c01c4576e49db56a89cf53182c637c67f0f1e"
+    },
+    {
+      "id": "claim",
+      "path": "lib/new_you/commerce/assessment_admission.ex",
+      "symbol": "defmodule NewYou.Commerce.AssessmentAdmission",
+      "sha256": "14632476d0cdc35d6f55d8dd1b3d8508b6ee1d129d189441adc9e8f66f6a59a2"
+    },
+    {
+      "id": "payment",
+      "path": "lib/new_you/commerce.ex",
+      "symbol": "def apply_payment_observation",
+      "sha256": "1488a15b2284f195cdcf74e81ad9cc63149e13c1e2c245565c88488daf95a218"
+    },
+    {
+      "id": "consequence",
+      "path": "lib/new_you/commerce/payment_consequence.ex",
+      "symbol": "defmodule NewYou.Commerce.PaymentConsequence",
+      "sha256": "44a101fb38ae82e93279cfcfe0df4295050000703dc0cdc942c79afa84d5eff8"
+    },
+    {
+      "id": "parties",
+      "path": "test/support/identity/synthetic_purchase_parties.ex",
+      "symbol": "def authorize(",
+      "sha256": "728bf02107725d78f9922782a3c7f406c5081571d50e0c7ad38314b74e762622"
+    },
+    {
+      "id": "privacy",
+      "path": "test/support/privacy/synthetic_suppression.ex",
+      "symbol": "def locked_status",
+      "sha256": "3af256de9d48363a41075d0f8becf6fc7ec3a929a8c49e81e90bd4be6b0ad210"
+    },
+    {
+      "id": "credit",
+      "path": "lib/new_you/entitlements.ex",
+      "symbol": "def ordinary_assessment_credit",
+      "sha256": "1dc441aca1776af00289ca4f7548ece34bb5ecb189b19a8eb385fb538bfa8391"
+    },
+    {
+      "id": "credit_resource",
+      "path": "lib/new_you/entitlements/assessment_credit_evidence.ex",
+      "symbol": "defmodule NewYou.Entitlements.AssessmentCreditEvidence",
+      "sha256": "168054396ef4691e24aa963ca54d0c7ab6902f1a759f7f9079a7a52c3b67ebf6"
+    },
+    {
+      "id": "credit_fixture",
+      "path": "test/support/entitlements/synthetic_assessment_credit.ex",
+      "symbol": "def grant(",
+      "sha256": "bb12bb501769bb9231ff989dd1b211e843968a4fcfca4313226ed1ce61ad9ecf"
+    },
+    {
+      "id": "delivery",
+      "path": "lib/new_you/temperament.ex",
+      "symbol": "def latest_paid_assessment_delivery",
+      "sha256": "e0079b7a334f713407f6566bd44b1342cf5f19d81858e4a7566240507f2f3bcb"
+    },
+    {
+      "id": "delivery_resource",
+      "path": "lib/new_you/temperament/assessment_delivery_evidence.ex",
+      "symbol": "defmodule NewYou.Temperament.AssessmentDeliveryEvidence",
+      "sha256": "290bc403ea71a1766b8d350c1f8dc2a75c27cb526fd1e95670881a08508244d4"
+    },
+    {
+      "id": "delivery_fixture",
+      "path": "test/support/temperament/synthetic_assessment_delivery.ex",
+      "symbol": "def establish(",
+      "sha256": "cc59a0045f4f08abce006807a55a9bb308c2dafd94da128778e58d09a4091741"
+    },
+    {
+      "id": "corrections",
+      "path": "test/support/commerce/synthetic_corrections.ex",
+      "symbol": "defp component_amount",
+      "sha256": "132577ecd3f23b9a991688d03a6e92aa80604c8cdad34dc11f89adaca566ce4a"
+    },
+    {
+      "id": "migration",
+      "path": "priv/repo/migrations/20261126073120_well197_versioned_offers.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.Well197VersionedOffers",
+      "sha256": "81f03b993c7a497f0811acc4a51b6733c7a3fbc0cc7f998590d472941efb6c95"
+    },
+    {
+      "id": "payment_migration",
+      "path": "priv/repo/migrations/20261126073624_well197_payment_consequence_scope.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.Well197PaymentConsequenceScope",
+      "sha256": "af0dd7b2e885d154e502c36f45baca7ee9a69ada30a91f30e745ad61e746acb3"
+    },
+    {
+      "id": "prices_test",
+      "path": "test/new_you/commerce/versioned_offer_test.exs",
+      "symbol": "repricing changes the active quote",
+      "sha256": "64a79b8644862e88aa9a9c9602fd6a9da73a1f46f129cd94d650dfdff8d2deb6"
+    },
+    {
+      "id": "eligibility_test",
+      "path": "test/new_you/commerce/assessment_admission_test.exs",
+      "symbol": "only a successful delivery sets the annual anchor",
+      "sha256": "2b041002605e8994564713dfdb96d43cb45de257b4a0cf263269c735cf6dcaae"
+    },
+    {
+      "id": "race_test",
+      "path": "test/new_you/commerce/offer_concurrency_test.exs",
+      "symbol": "independent PostgreSQL admissions serialize",
+      "sha256": "17d71207dd586b8ded243133b2a080963b2f3fc02df4ea3829af6178e2d0a335"
+    },
+    {
+      "id": "recovery_test",
+      "path": "test/new_you/commerce/assessment_recovery_test.exs",
+      "symbol": "fresh BEAM replay, grant and acknowledgement",
+      "sha256": "7e9fc0f3d8e47af99a51eeb383eb984829b8a014abcbf7efb1cce67d1bc0110b"
+    },
+    {
+      "id": "migration_test",
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "symbol": "versioned migrations roundtrip legacy P1 and E2a",
+      "sha256": "0d8b3453a1e8e4e845c2c0cdf88ed270c93a2e6f6bc7ec3fcd0880684248e37b"
+    },
+    {
+      "id": "restart",
+      "path": "test/proof/well197_admission_restart.exs",
+      "symbol": "S1_COMPLETED",
+      "sha256": "6cd5e687f57f415c8641628c879e009997d3d00a1af9aba970ecc9e6b8b9b222"
+    }
+  ]
+}
