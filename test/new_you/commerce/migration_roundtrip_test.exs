@@ -38,6 +38,12 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
      NewYou.Repo.Migrations.Well197PaymentConsequenceScope}
   ]
 
+  @dispatch_migration {
+    20_261_126_204_523,
+    "priv/repo/migrations/20261126204523_well218_hosted_dispatch.exs",
+    NewYou.Repo.Migrations.Well218HostedDispatch
+  }
+
   test "P1 migrations apply, roll back and reapply in a transaction-owned schema" do
     roundtrip(@migrations, 4, fn schema -> assert foreign_key_targets(schema) == {3, 3} end)
   end
@@ -131,6 +137,93 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
     after
       Sandbox.checkin(Repo)
     end
+  end
+
+  test "hosted dispatch migration preserves adjacent-version rows and will not erase a claim" do
+    base = @migrations ++ @correction_migrations ++ @offer_migrations
+    load_migrations(base ++ [@dispatch_migration])
+    :ok = Sandbox.checkout(Repo, sandbox: false)
+    schema = "well218_" <> String.replace(Ecto.UUID.generate(), "-", "")
+
+    try do
+      assert {:error, :probe_complete} =
+               Repo.transaction(fn ->
+                 Repo.query!("CREATE SCHEMA #{schema}")
+                 Enum.each(base, &run_migration(&1, :up, schema))
+                 seed_legacy(schema)
+                 old_rows = legacy_rows(schema, true)
+                 table = "#{schema}.commerce_hosted_dispatches"
+
+                 run_migration(@dispatch_migration, :up, schema)
+                 assert table_count(schema) == 17
+                 assert [[0]] = Repo.query!("SELECT count(*) FROM #{table}").rows
+                 assert legacy_rows(schema, true) == old_rows
+
+                 run_migration(@dispatch_migration, :down, schema)
+                 assert table_count(schema) == 16
+                 assert legacy_rows(schema, true) == old_rows
+
+                 run_migration(@dispatch_migration, :up, schema)
+                 assert table_count(schema) == 17
+                 {foreign_keys, local} = foreign_key_targets(schema)
+                 assert foreign_keys == local
+
+                 # This isolated DDL probe populates just the physical relation.
+                 # Domain tests exercise admission through the owning Ash actions.
+                 Repo.query!("""
+                 INSERT INTO #{table}
+                   (attempt_id, reference, source_digest, provider, integration, environment, channel, claim_id)
+                 SELECT attempt_id, repeat('a', 32), decode(repeat('11', 32), 'hex'),
+                   'paystack', 'local_fixture', 'test', 'card', gen_random_uuid()
+                 FROM #{schema}.commerce_plan_purchases
+                 """)
+
+                 assert_dispatch_constraints(table)
+
+                 Repo.query!("SAVEPOINT refuse_dispatch_rollback")
+
+                 assert_raise Postgrex.Error, ~r/Cannot remove the hosted dispatch fence/, fn ->
+                   run_migration(@dispatch_migration, :down, schema)
+                 end
+
+                 Repo.query!("ROLLBACK TO SAVEPOINT refuse_dispatch_rollback")
+
+                 assert [[1]] =
+                          Repo.query!("SELECT count(*) FROM #{table} WHERE claim_id IS NOT NULL").rows
+
+                 assert legacy_rows(schema, true) == old_rows
+                 Repo.rollback(:probe_complete)
+               end)
+    after
+      Sandbox.checkin(Repo)
+    end
+  end
+
+  defp assert_dispatch_constraints(table) do
+    for {sql, name} <- [
+          {"UPDATE #{table} SET attempt_id = gen_random_uuid()",
+           "commerce_hosted_dispatches_attempt_id_fkey"},
+          {"UPDATE #{table} SET environment = 'live'",
+           "commerce_hosted_dispatches_fixture_scope"},
+          {"UPDATE #{table} SET reference = 'wrong/path'", "commerce_hosted_dispatches_binding"},
+          {"UPDATE #{table} SET claim_id = NULL, fixture_code = 'fixture'",
+           "commerce_hosted_dispatches_claim"}
+        ] do
+      Repo.query!("SAVEPOINT dispatch_constraint")
+
+      assert {:error, %Postgrex.Error{postgres: %{constraint: ^name}}} = Repo.query(sql)
+
+      Repo.query!("ROLLBACK TO SAVEPOINT dispatch_constraint")
+    end
+
+    assert [[true]] =
+             Repo.query!(
+               """
+               SELECT indisunique FROM pg_index
+               WHERE indexrelid = to_regclass($1)
+               """,
+               [String.replace_suffix(table, "dispatches", "dispatches_scoped_reference_index")]
+             ).rows
   end
 
   defp seed_legacy(schema) do

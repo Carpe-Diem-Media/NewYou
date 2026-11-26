@@ -96,7 +96,7 @@ defmodule NewYou.Commerce.OfferAdmission do
   @doc "Read the accepted versioned snapshot as its verified payer or canonical recipient."
   @spec snapshot(map(), Ecto.UUID.t()) :: {:ok, snapshot()} | {:error, :purchase_unavailable}
   def snapshot(credentials, purchase_id),
-    do: read_as_party(Purchase, credentials, purchase_id, &purchase_projection/1)
+    do: read_as_party(Purchase, credentials, purchase_id, &bound_snapshot/1)
 
   @doc """
   Read the admission finding with a TEST owner grant for this exact quote and
@@ -209,11 +209,16 @@ defmodule NewYou.Commerce.OfferAdmission do
     end
   end
 
-  defp purchase_projection(purchase) do
+  @doc false
+  @spec bound_snapshot(Purchase.t()) :: snapshot() | {:error, :purchase_unavailable}
+  def bound_snapshot(purchase) do
     with {:ok, terms} <- accepted_terms(purchase), do: snapshot_for(purchase, terms)
   end
 
-  defp current_parties_privacy(%{payer_id: payer, recipient_id: recipient}) do
+  @doc false
+  @spec current_parties_privacy(%{payer_id: Ecto.UUID.t(), recipient_id: Ecto.UUID.t()}) ::
+          :ok | {:error, :purchase_unavailable}
+  def current_parties_privacy(%{payer_id: payer, recipient_id: recipient}) do
     [payer, recipient]
     |> Enum.uniq()
     |> Enum.sort()
