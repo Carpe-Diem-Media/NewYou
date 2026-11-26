@@ -14,7 +14,7 @@ defmodule NewYou.Proof.P805 do
   @privacy "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
   @tables ~w(accounts tokens registration_operations resend_operations message_intents communications_protected_envelopes communications_envelope_nonces evidence_obligations oban_jobs identity_pmr_reservations identity_grants privacy_purpose_authorities privacy_purpose_events)
   @fault_tables @tables ++
-                  ~w(commerce_payment_consequences commerce_synthetic_collection_receipts entitlements_plan_rights)
+                  ~w(commerce_payment_consequences commerce_synthetic_collection_receipts entitlements_plan_rights commerce_assessment_admissions)
   @environment ~w(fp001_development_entry identity_registration_binding_keys identity_token_signing_secret identity_mfa_keyring communications_keyring p8_05_browser_development_fixtures p8_07_browser_development_fixtures p8_09_browser_development_fixtures p8_08_browser_development_fixtures p8_12_browser_development_fixtures p8_15_browser_development_fixtures identity_pmr_generator)a
 
   def run(case_id), do: with_fixture(fn -> execute(case_id) end)
@@ -1790,9 +1790,28 @@ defmodule NewYou.Proof.P805 do
         [operations]
       )
 
+      Repo.query!(
+        "DELETE FROM commerce_assessment_admissions WHERE purchase_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
       Repo.query!("DELETE FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])", [
         operations
       ])
+
+      Repo.query!("DELETE FROM commerce_purchase_quotes WHERE operation_id = ANY($1::uuid[])", [
+        operations
+      ])
+
+      Repo.query!("DELETE FROM commerce_offer_versions WHERE id = ANY($1::uuid[])", [operations])
+    end
+
+    for table <-
+          ~w(entitlements_assessment_credit_evidence temperament_assessment_delivery_evidence) do
+      Repo.query!(
+        "DELETE FROM #{table} WHERE recipient_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+        [emails]
+      )
     end
 
     Repo.query!(

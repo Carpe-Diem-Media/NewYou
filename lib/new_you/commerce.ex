@@ -1,18 +1,28 @@
 defmodule NewYou.Commerce do
   @moduledoc """
-  Commerce owns accepted Plan purchase facts, payment application, and the
+  Commerce owns accepted purchases, payment application, and the
   obligation to hand the resulting source to Entitlements. Qualified TEST
   collections may also establish a source-bound excess claim.
   """
   use Ash.Domain, otp_app: :new_you
 
-  alias NewYou.Commerce.{PaymentConsequence, Purchase, VerifiedPayment}
+  alias NewYou.Commerce.{
+    AssessmentAdmissions,
+    OfferAdmission,
+    PaymentConsequence,
+    Purchase,
+    VerifiedPayment
+  }
+
   alias NewYou.Entitlements
 
   require Ash.Query
 
   resources do
     resource Purchase
+    resource NewYou.Commerce.OfferVersion
+    resource NewYou.Commerce.PurchaseQuote
+    resource NewYou.Commerce.AssessmentAdmission
     resource VerifiedPayment
     resource PaymentConsequence
     resource NewYou.Commerce.SyntheticCollection
@@ -52,7 +62,7 @@ defmodule NewYou.Commerce do
     defp accept_locked(credentials, operation_id) do
       with {:ok, %{account_id: account_id}} <-
              NewYou.Identity.authorize_canonical_session(credentials),
-           {:ok, %Purchase{payer_id: ^account_id} = purchase} <-
+           {:ok, %Purchase{payer_id: ^account_id, quote_id: nil} = purchase} <-
              accept_once(operation_id, account_id) do
         purchase
       else
@@ -68,7 +78,7 @@ defmodule NewYou.Commerce do
           payer_id: account_id,
           recipient_id: account_id,
           price_version: @price_version,
-          amount_minor: 39_900,
+          amount_minor: Application.fetch_env!(:new_you, :p1_synthetic_plan_amount_minor),
           currency: "ZAR"
         },
         action: :accept,
@@ -88,7 +98,8 @@ defmodule NewYou.Commerce do
           {:ok, map()} | {:error, :commerce_scope_unavailable}
   def review_identity_reconciliation(candidate_id, canonical_id)
       when candidate_id != canonical_id do
-    query = Ash.Query.filter(Purchase, payer_id in ^[candidate_id, canonical_id])
+    ids = [candidate_id, canonical_id]
+    query = Ash.Query.filter(Purchase, payer_id in ^ids or recipient_id in ^ids)
 
     with {:ok, false} <- Ash.exists(query, authorize?: false),
          {:ok, false} <- synthetic_order_history?(candidate_id, canonical_id) do
@@ -157,18 +168,39 @@ defmodule NewYou.Commerce do
              |> Ash.Query.filter(id == ^purchase_id)
              |> Ash.Query.lock(:for_update)
              |> Ash.read_one(authorize?: false),
+           {:ok, delivery} <- payment_scope(purchase, fields),
            {:ok, prior} <-
              VerifiedPayment
              |> Ash.Query.filter(purchase_id == ^purchase_id)
              |> Ash.read_one(authorize?: false),
            :ok <- record_collection(fields, purchase, prior) do
-        commit_payment(prior, purchase_id)
+        commit_payment(prior, purchase, delivery)
       else
         _ -> {:error, :payment_unavailable}
       end
     end
 
     defp apply_qualified(_), do: {:error, :payment_unavailable}
+
+    defp payment_scope(%Purchase{quote_id: nil}, fields) do
+      if Map.get(fields, :scope) == :s1_payment,
+        do: {:error, :payment_unavailable},
+        else: {:ok, :plan}
+    end
+
+    defp payment_scope(%Purchase{quote_id: id} = purchase, %{
+           scope: :s1_payment,
+           quote_id: id,
+           collection_id: _,
+           receipt_id: _
+         }) do
+      with {:ok, terms} <- OfferAdmission.accepted_terms(purchase),
+           :ok <- AssessmentAdmissions.check_payable(purchase, terms.product) do
+        {:ok, :s1_fixture}
+      end
+    end
+
+    defp payment_scope(_, _), do: {:error, :payment_unavailable}
 
     defp record_collection(fields, purchase, prior)
          when is_map_key(fields, :collection_id) or is_map_key(fields, :receipt_id) do
@@ -179,19 +211,22 @@ defmodule NewYou.Commerce do
 
     defp record_collection(_fields, _purchase, _prior), do: :ok
 
-    defp commit_payment(%VerifiedPayment{} = prior, _purchase_id), do: prior
+    defp commit_payment(%VerifiedPayment{} = prior, _purchase, _delivery), do: prior
 
-    defp commit_payment(nil, purchase_id) do
+    defp commit_payment(nil, %Purchase{id: purchase_id} = purchase, delivery) do
       with {:ok, payment} <-
              Ash.create(VerifiedPayment, %{purchase_id: purchase_id},
                action: :apply,
                authorize?: false
              ),
            {:ok, _consequence} <-
-             Ash.create(PaymentConsequence, %{purchase_id: purchase_id, payment_id: payment.id},
+             Ash.create(
+               PaymentConsequence,
+               %{purchase_id: purchase_id, payment_id: payment.id, delivery_kind: delivery},
                action: :establish,
                authorize?: false
-             ) do
+             ),
+           :ok <- AssessmentAdmissions.record_payment(purchase, delivery) do
         payment
       end
     end
@@ -205,7 +240,7 @@ defmodule NewYou.Commerce do
   """
   @spec paid_plan_source(String.t()) :: {:ok, map()} | {:error, :source_unavailable}
   def paid_plan_source(consequence_id) do
-    with {:ok, %PaymentConsequence{} = consequence} <-
+    with {:ok, %PaymentConsequence{delivery_kind: :plan} = consequence} <-
            Ash.get(PaymentConsequence, consequence_id, authorize?: false),
          {:ok, %VerifiedPayment{purchase_id: purchase_id}} <-
            Ash.get(VerifiedPayment, consequence.payment_id, authorize?: false),
@@ -227,7 +262,10 @@ defmodule NewYou.Commerce do
           {:ok, [String.t()]} | {:error, :source_unavailable}
   def open_plan_payment_consequences(purchase_id) do
     query =
-      Ash.Query.filter(PaymentConsequence, purchase_id == ^purchase_id and is_nil(fulfilled_at))
+      Ash.Query.filter(
+        PaymentConsequence,
+        purchase_id == ^purchase_id and delivery_kind == :plan and is_nil(fulfilled_at)
+      )
 
     case Ash.read(query, authorize?: false) do
       {:ok, consequences} -> {:ok, Enum.map(consequences, & &1.id)}

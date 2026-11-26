@@ -41,7 +41,10 @@ defmodule NewYou.Entitlements.SyntheticRights do
   end
 
   defp converge_from_source(id) do
-    with {:ok, scope} <- SyntheticCorrections.locked_paid_scope(id), do: converge_locked(scope)
+    case SyntheticCorrections.locked_paid_scope(id) do
+      {:ok, %{materialize?: true} = scope} -> converge_locked(scope)
+      _ -> {:error, :grant_unavailable}
+    end
   end
 
   defp apply_current_effect(id) do

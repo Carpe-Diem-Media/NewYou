@@ -1,6 +1,7 @@
 import Config
 
 config :new_you, :verification_development_fixtures, true
+config :new_you, :p1_synthetic_plan_amount_minor, 39_900
 
 config :new_you, Oban, testing: :manual
 config :new_you, :platform_name, "Test Platform"

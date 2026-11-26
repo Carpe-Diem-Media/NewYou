@@ -6,12 +6,46 @@ defmodule NewYou.Entitlements do
   use Ash.Domain, otp_app: :new_you
 
   alias NewYou.Identity
-  alias NewYou.Entitlements.PlanRight
+  alias NewYou.Entitlements.{AssessmentCreditEvidence, PlanRight}
 
   require Ash.Query
 
   resources do
     resource PlanRight
+    resource AssessmentCreditEvidence
+  end
+
+  @doc """
+  Read whether the canonical recipient has an unused ordinary paid Assessment
+  credit. The caller must hold the recipient's current Privacy scope lock in
+  this transaction. Premium credits and Plan rights do not enter the result.
+  Explicit owner evidence is required for an authoritative absence.
+  """
+  @spec ordinary_assessment_credit(Ecto.UUID.t()) ::
+          {:ok, :unused | :consumed | :none} | {:error, :credit_evidence_unavailable}
+  if Mix.env() == :test do
+    def ordinary_assessment_credit(recipient_id) do
+      with true <- Ash.DataLayer.in_transaction?(PlanRight),
+           {:ok, %{ordinary_state: state}} when state != :unavailable <-
+             Ash.get(AssessmentCreditEvidence, recipient_id, authorize?: false, error?: false),
+           {:ok, active?} <-
+             PlanRight
+             |> Ash.Query.filter(
+               recipient_id == ^recipient_id and component == :assessment and
+                 state == :held_unconsumed
+             )
+             |> Ash.exists(authorize?: false) do
+        cond do
+          active? or state in [:available_unused, :held_unconsumed] -> {:ok, :unused}
+          state == :consumed -> {:ok, :consumed}
+          true -> {:ok, :none}
+        end
+      else
+        _ -> {:error, :credit_evidence_unavailable}
+      end
+    end
+  else
+    def ordinary_assessment_credit(_), do: {:error, :credit_evidence_unavailable}
   end
 
   @doc """
