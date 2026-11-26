@@ -6,7 +6,7 @@
     "WELL-197"
   ],
   "implementation_revision": {
-    "git_sha": "38a49ecf1e09517a22ca6a21e86edbfe326be7bb",
+    "git_sha": "dce6dffb5ff155ca30409033392a6deaf32b9f88",
     "semantics": "WELL-197 S1 implementation and local proof sources."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -640,6 +640,15 @@
       ]
     },
     {
+      "summary": "Identity reconciliation requires each owning Domain to review its scope. Existing unapplied reviews must obtain current owner evidence after the Temperament owner joins; applied decisions retain their history.",
+      "source_ids": [
+        "identity_review",
+        "credit",
+        "delivery",
+        "eligibility_test"
+      ]
+    },
+    {
       "summary": "Commerce reads ordinary-credit and successful-delivery evidence under the Privacy subject lock. Premium evidence and Plan-only eligibility remain independent.",
       "source_ids": [
         "assessment",
@@ -738,7 +747,8 @@
       "path": "test/new_you/commerce/assessment_admission_test.exs",
       "cases": [
         "Available, held and released ordinary credit",
-        "Premium independence, contradictory and missing history, anniversary"
+        "Premium independence, contradictory and missing history, anniversary",
+        "Empty-scope Identity owner review"
       ],
       "proves": "Correct Assessment interlocks while Plan remains eligible.",
       "limits": "Bounded owner fixtures for attempt and delivery state.",
@@ -867,7 +877,7 @@
       "id": "admission",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "defmodule NewYou.Commerce.OfferAdmission",
-      "sha256": "2f5940a884fd914f3e97802f735237b98825a6cafd8d2881cb63dcc7aabacb71"
+      "sha256": "e9290c20f3e8aa3c0d0f879341ab246127975a28b541435524ba626b3c22f566"
     },
     {
       "id": "quote",
@@ -912,6 +922,12 @@
       "sha256": "728bf02107725d78f9922782a3c7f406c5081571d50e0c7ad38314b74e762622"
     },
     {
+      "id": "identity_review",
+      "path": "lib/new_you/identity/reconciliation.ex",
+      "symbol": "defp owner_reviews",
+      "sha256": "6b5ebcda73fceddc8ba10316e581e86e6d915a8f2294e9618967b189eb2f1dcd"
+    },
+    {
       "id": "privacy",
       "path": "test/support/privacy/synthetic_suppression.ex",
       "symbol": "def locked_status",
@@ -921,7 +937,7 @@
       "id": "credit",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def ordinary_assessment_credit",
-      "sha256": "1dc441aca1776af00289ca4f7548ece34bb5ecb189b19a8eb385fb538bfa8391"
+      "sha256": "43a545d2d2b31e3018df211943d6e0b1d7cc84b231bbe3e2d6189e564a84fcda"
     },
     {
       "id": "credit_resource",
@@ -939,7 +955,7 @@
       "id": "delivery",
       "path": "lib/new_you/temperament.ex",
       "symbol": "def latest_paid_assessment_delivery",
-      "sha256": "e0079b7a334f713407f6566bd44b1342cf5f19d81858e4a7566240507f2f3bcb"
+      "sha256": "a947c2587469266f9843a55f9d0f3d0428a4765000494ffd434e51113b67915b"
     },
     {
       "id": "delivery_resource",
@@ -975,13 +991,13 @@
       "id": "prices_test",
       "path": "test/new_you/commerce/versioned_offer_test.exs",
       "symbol": "repricing changes the active quote",
-      "sha256": "64a79b8644862e88aa9a9c9602fd6a9da73a1f46f129cd94d650dfdff8d2deb6"
+      "sha256": "281c0e62dd1c90f2a9d41be683e7ecd85fd94b31a4a2df40507c6b019f08e090"
     },
     {
       "id": "eligibility_test",
       "path": "test/new_you/commerce/assessment_admission_test.exs",
       "symbol": "only a successful delivery sets the annual anchor",
-      "sha256": "2b041002605e8994564713dfdb96d43cb45de257b4a0cf263269c735cf6dcaae"
+      "sha256": "cdf57faa6435049b1c5a48f8307620e939651d903deb58470d913e11e70f3ec1"
     },
     {
       "id": "race_test",
@@ -993,7 +1009,7 @@
       "id": "recovery_test",
       "path": "test/new_you/commerce/assessment_recovery_test.exs",
       "symbol": "fresh BEAM replay, grant and acknowledgement",
-      "sha256": "7e9fc0f3d8e47af99a51eeb383eb984829b8a014abcbf7efb1cce67d1bc0110b"
+      "sha256": "a8f32b8f413d0eb9c9f3cf839f936fa59aa3c5839c8e55ed5ed801bcdcbd750a"
     },
     {
       "id": "migration_test",

@@ -8,8 +8,8 @@
     "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "38a49ecf1e09517a22ca6a21e86edbfe326be7bb",
-    "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures. WELL-189 binds the empty-scope Commerce and Entitlements reviews. Earlier approvals need fresh review before apply. WELL-210 refreshes the shared browser proof source reference after the Recovery packet path moved to v0.3.0. The mapped behavior is unchanged. WELL-210 reconciles source evidence from integrated main b7e0e1fb6f600d6ad9fddf5b41633b1e19a46c14 and draft 63e4224811e3e0ac3de83b51f3c97c6db0b7858c. WELL-197 makes the Commerce review consider either party of an accepted purchase."
+    "git_sha": "dce6dffb5ff155ca30409033392a6deaf32b9f88",
+    "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures. WELL-189 binds the empty-scope Commerce and Entitlements reviews. Earlier approvals need fresh review before apply. WELL-210 refreshes the shared browser proof source reference after the Recovery packet path moved to v0.3.0. The mapped behavior is unchanged. WELL-210 reconciles source evidence from integrated main b7e0e1fb6f600d6ad9fddf5b41633b1e19a46c14 and draft 63e4224811e3e0ac3de83b51f3c97c6db0b7858c. WELL-197 makes Commerce review either party and requires empty Entitlements credit and Temperament delivery scopes. An unapplied approval from the prior owner set requires fresh review."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -676,7 +676,7 @@
       "id": "owner",
       "path": "lib/new_you/identity/reconciliation.ex",
       "symbol": "defmodule NewYou.Identity.Reconciliation",
-      "sha256": "ad8a72d1e1953d97fee5bc3d95d2b4d70d8f6e559258455585c42cde3a971626"
+      "sha256": "6b5ebcda73fceddc8ba10316e581e86e6d915a8f2294e9618967b189eb2f1dcd"
     },
     {
       "id": "case",
@@ -790,7 +790,7 @@
       "id": "entitlements_review",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def review_identity_reconciliation",
-      "sha256": "1dc441aca1776af00289ca4f7548ece34bb5ecb189b19a8eb385fb538bfa8391"
+      "sha256": "43a545d2d2b31e3018df211943d6e0b1d7cc84b231bbe3e2d6189e564a84fcda"
     }
   ]
 }
