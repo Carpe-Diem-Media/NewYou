@@ -6,8 +6,8 @@
     "WELL-197"
   ],
   "implementation_revision": {
-    "git_sha": "dce6dffb5ff155ca30409033392a6deaf32b9f88",
-    "semantics": "WELL-197 S1 implementation and local proof sources."
+    "git_sha": "b159247491f34387b07b015331ed923552b0b830",
+    "semantics": "WELL-197 S1 with Master Gate corrections for terminal Assessment reconciliation and integrated Identity owner reviews."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -308,20 +308,21 @@
       "arity": 1,
       "visibility": "internal",
       "arguments": [
-        "Open S1 consequence ID."
+        "Exact S1 consequence ID for a pending or reconciled claim."
       ],
       "returns": [
         "ok or reconciliation_unavailable."
       ],
       "side_effects": [
-        "Confirms the exact committed owner right and completes Commerce consequence and claim atomically."
+        "Atomically acknowledges the consequence and releases its paid claim on a terminal owner outcome. Replay preserves the original acknowledgement."
       ],
       "caller_constraints": [
-        "Call after the independent Entitlements transaction commits."
+        "Call after the independent Entitlements transaction commits. A recorded Assessment correction must also have completed E2a acknowledgement."
       ],
       "source_ids": [
         "assessment",
-        "credit_fixture"
+        "terminal_resolution",
+        "correction_outcome"
       ]
     },
     {
@@ -343,6 +344,31 @@
       ],
       "source_ids": [
         "assessment"
+      ]
+    },
+    {
+      "module": "NewYou.Entitlements.SyntheticAssessmentCredit",
+      "function": "terminal_resolution",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "The exact paid Assessment source, with Purchase and Privacy locks held."
+      ],
+      "returns": [
+        "Original right ID for a completed grant or delivered correction of an existing right.",
+        "Exact acknowledged E2a correction ID when delivery withheld the grant.",
+        "An error when owner evidence is unavailable, contradictory or pending."
+      ],
+      "side_effects": [
+        "Reads the matching owner right and final Assessment correction."
+      ],
+      "caller_constraints": [
+        "Caller holds the paid purchase and current Privacy locks. TEST entry only."
+      ],
+      "source_ids": [
+        "assessment",
+        "terminal_resolution",
+        "correction_outcome"
       ]
     }
   ],
@@ -421,6 +447,15 @@
       "source_ids": [
         "corrections",
         "recovery_test"
+      ]
+    },
+    {
+      "summary": "E2a acknowledges the exact Assessment correction after Entitlements commits its effect. Recovery can settle an original paid consequence even when that correction prevented the grant. The original accepted snapshot and both effect identities remain durable.",
+      "source_ids": [
+        "correction_outcome",
+        "terminal_resolution",
+        "assessment",
+        "correction_grant_race"
       ]
     }
   ],
@@ -617,15 +652,17 @@
         "from_state": "claim.paid",
         "to_state": "claim.reconciled",
         "guards": [
-          "Entitlements committed the exact source-bound right."
+          "Entitlements supplies a terminal outcome for the locked paid source. A live grant qualifies while no final Assessment correction is pending. A corrected component requires an acknowledged final E2a correction and a matching ended or absent right."
         ],
         "side_effects": [
-          "Acknowledge the consequence and release the claim. The unused right continues to block new Assessment purchase."
+          "Record the existing right ID, or the acknowledged correction ID if no right exists. Acknowledge the consequence and release that claim in the same transaction. Independently valid unused credit still prevents admission."
         ],
         "terminal": true,
         "source_ids": [
           "assessment",
-          "credit_fixture"
+          "terminal_resolution",
+          "correction_outcome",
+          "correction_before_grant"
         ]
       }
     ]
@@ -703,6 +740,13 @@
         "credit_fixture",
         "restart"
       ]
+    },
+    {
+      "summary": "A delivered correction and its admission acknowledgement each keep their first completion. Replay on an earlier purchase cannot release a later recipient claim.",
+      "source_ids": [
+        "assessment",
+        "correction_before_grant"
+      ]
     }
   ],
   "failure_recovery": [
@@ -715,10 +759,11 @@
       ]
     },
     {
-      "summary": "An unpaid claim remains active across missing or ambiguous outcomes. In TEST only, irreversible nonpayability can release it. A paid claim stays active until exact grant acknowledgement.",
+      "summary": "An unpaid claim remains active unless qualified irreversible nonpayability is recorded. A paid claim stays active until a terminal Entitlements outcome. Unresolved evidence, an acknowledged Plan correction, and a final Assessment correction with pending acknowledgement cannot settle an absent Assessment grant.",
       "source_ids": [
         "assessment",
-        "recovery_test"
+        "terminal_resolution",
+        "correction_before_grant"
       ]
     },
     {
@@ -779,13 +824,21 @@
         "Pending, paid and post-grant boundaries",
         "Qualified nonpayability",
         "Frozen correction amounts",
-        "Fresh-BEAM convergence"
+        "Fresh-BEAM convergence",
+        "MG-01 final correction before grant",
+        "MG-01 correction after grant and before original acknowledgement",
+        "Independent PostgreSQL correction/grant contention",
+        "Fresh BEAM after terminal correction",
+        "Pending and unrelated correction refusals",
+        "Privacy suppression and independent reentry"
       ],
-      "proves": "Recovery reuses exact persisted source and right identities and preserves an unrelated Plan right.",
+      "proves": "Recovery preserves payment, correction and right identities, refuses premature release, reconciles an absent or ended right after terminal correction, preserves an unrelated Plan right and permits an independently eligible next admission.",
       "limits": "Bounded synthetic payment/grant and E2a-style correction.",
       "source_ids": [
         "recovery_test",
-        "restart"
+        "restart",
+        "correction_before_grant",
+        "correction_grant_race"
       ]
     },
     {
@@ -799,6 +852,24 @@
       "limits": "Transaction-owned isolated schema.",
       "source_ids": [
         "migration_test"
+      ]
+    },
+    {
+      "path": "test/new_you/identity/reconciliation_test.exs",
+      "cases": [
+        "MG-02 previous owner set denied",
+        "Fresh empty-scope approval applies",
+        "Recipient-only Commerce history",
+        "Entitlements credit added after approval",
+        "Temperament delivery added after approval"
+      ],
+      "proves": "Identity's real apply entry point denies unsupported reconciliation before admission to Audit and before mutating account or PMR history. Fresh approval with the current empty owner scopes allows apply.",
+      "limits": "Current bounded owner reviews and TEST source fixtures.",
+      "source_ids": [
+        "identity_owner_test",
+        "identity_review",
+        "credit",
+        "delivery"
       ]
     }
   ],
@@ -895,7 +966,7 @@
       "id": "assessment",
       "path": "lib/new_you/commerce/assessment_admissions.ex",
       "symbol": "defmodule NewYou.Commerce.AssessmentAdmissions",
-      "sha256": "084a87cba83840428195b4cb270c01c4576e49db56a89cf53182c637c67f0f1e"
+      "sha256": "45dc19c8d61300ef779ca40a5017bd19618274ffe31815a3419b71abf247442e"
     },
     {
       "id": "claim",
@@ -949,7 +1020,7 @@
       "id": "credit_fixture",
       "path": "test/support/entitlements/synthetic_assessment_credit.ex",
       "symbol": "def grant(",
-      "sha256": "bb12bb501769bb9231ff989dd1b211e843968a4fcfca4313226ed1ce61ad9ecf"
+      "sha256": "9bfce5ee40b76b3da5812de3979d49ad9b35a7ec8037750997ddd65fd4843d83"
     },
     {
       "id": "delivery",
@@ -973,7 +1044,7 @@
       "id": "corrections",
       "path": "test/support/commerce/synthetic_corrections.ex",
       "symbol": "defp component_amount",
-      "sha256": "132577ecd3f23b9a991688d03a6e92aa80604c8cdad34dc11f89adaca566ce4a"
+      "sha256": "81f573b84d5ac5f8103ba61af9cc8840f8ede8bb0bac50d3702ce331d444ba37"
     },
     {
       "id": "migration",
@@ -1009,7 +1080,7 @@
       "id": "recovery_test",
       "path": "test/new_you/commerce/assessment_recovery_test.exs",
       "symbol": "fresh BEAM replay, grant and acknowledgement",
-      "sha256": "a8f32b8f413d0eb9c9f3cf839f936fa59aa3c5839c8e55ed5ed801bcdcbd750a"
+      "sha256": "d0574e3c8d85364fe59dde4772930156a86138ac0ae05c39e25ec7a5561e3493"
     },
     {
       "id": "migration_test",
@@ -1022,6 +1093,36 @@
       "path": "test/proof/well197_admission_restart.exs",
       "symbol": "S1_COMPLETED",
       "sha256": "6cd5e687f57f415c8641628c879e009997d3d00a1af9aba970ecc9e6b8b9b222"
+    },
+    {
+      "id": "terminal_resolution",
+      "path": "test/support/entitlements/synthetic_assessment_credit.ex",
+      "symbol": "def terminal_resolution",
+      "sha256": "9bfce5ee40b76b3da5812de3979d49ad9b35a7ec8037750997ddd65fd4843d83"
+    },
+    {
+      "id": "correction_outcome",
+      "path": "test/support/commerce/synthetic_corrections.ex",
+      "symbol": "def assessment_end_for_locked_source",
+      "sha256": "81f573b84d5ac5f8103ba61af9cc8840f8ede8bb0bac50d3702ce331d444ba37"
+    },
+    {
+      "id": "identity_owner_test",
+      "path": "test/new_you/identity/reconciliation_test.exs",
+      "symbol": "an approval from the owner set before Temperament",
+      "sha256": "801b9c3ae4d1d4003a2580ffb45cbf0732a418ca051589f5b77d0f7bf5c2d64b"
+    },
+    {
+      "id": "correction_before_grant",
+      "path": "test/new_you/commerce/assessment_recovery_test.exs",
+      "symbol": "a delivered Assessment correction before grant",
+      "sha256": "d0574e3c8d85364fe59dde4772930156a86138ac0ae05c39e25ec7a5561e3493"
+    },
+    {
+      "id": "correction_grant_race",
+      "path": "test/new_you/commerce/assessment_recovery_test.exs",
+      "symbol": "a correction wins a database race with grant",
+      "sha256": "d0574e3c8d85364fe59dde4772930156a86138ac0ae05c39e25ec7a5561e3493"
     }
   ]
 }
