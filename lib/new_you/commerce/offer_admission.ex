@@ -216,8 +216,11 @@ defmodule NewYou.Commerce.OfferAdmission do
   end
 
   @doc false
-  @spec current_parties_privacy(%{payer_id: Ecto.UUID.t(), recipient_id: Ecto.UUID.t()}) ::
-          :ok | {:error, :purchase_unavailable}
+  @spec current_parties_privacy(%{
+          required(:payer_id) => Ecto.UUID.t(),
+          required(:recipient_id) => Ecto.UUID.t(),
+          optional(atom()) => term()
+        }) :: :ok | {:error, :purchase_unavailable}
   def current_parties_privacy(%{payer_id: payer, recipient_id: recipient}) do
     [payer, recipient]
     |> Enum.uniq()
