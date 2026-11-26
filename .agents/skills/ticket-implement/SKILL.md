@@ -50,6 +50,8 @@ Before substantial-feature planning, inspect existing capabilities, Domain owner
 
 ### Ready-ticket discovery
 
+When the live ticket explicitly cites applicable, reviewed scoped planning IDs, resolve those exact IDs through `docs/delivery/planning/INDEX.json`. Read only the selected records and necessary direct governing sources. Check exclusions, the current routers, live Plane and actual code. Map applicable IDs to assertions in the existing Behaviour and Proof Matrix. Use related IDs for navigation only. Report missing, stale or conflicting references and resolve the affected scope under current authority and the existing STOP rules. Missing references alone do not block Ready intake. Apply this guidance prospectively within the live ticket scope.
+
 Do not restart feature planning for ordinary JIT implementation choices. Verify the approved outcome against current code: exact modules, functions, Ash actions and Resources, callers, consumers, tests, constraints, migrations, configuration and pinned dependency behaviour. Inspect framework return types and DSL compatibility against `mix.exs`, `mix.lock` and installed/version-matched sources before choosing a mechanism.
 
 Inspect only what is needed to implement the ticket correctly:

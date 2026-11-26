@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "as_of": "a9a7b1092365d904c2ec933d321dc720bbb55606",
+  "entries": {
+    "FP002-AC-004#E2a": {
+      "source_id": "FP002-AC-004",
+      "path": "fp-002/e2a.json",
+      "pointer": "/records/0",
+      "ticket": "WELL-192",
+      "dependencies": [],
+      "reference_class": "historical_synthetic_reuse"
+    },
+    "FP002-AC-015#E2a": {
+      "source_id": "FP002-AC-015",
+      "path": "fp-002/e2a.json",
+      "pointer": "/records/1",
+      "ticket": "WELL-192",
+      "dependencies": [],
+      "reference_class": "historical_synthetic_reuse"
+    },
+    "FP002-AC-016#E2a": {
+      "source_id": "FP002-AC-016",
+      "path": "fp-002/e2a.json",
+      "pointer": "/records/2",
+      "ticket": "WELL-192",
+      "dependencies": [],
+      "reference_class": "historical_synthetic_reuse"
+    },
+    "FP002-AC-030#E2a": {
+      "source_id": "FP002-AC-030",
+      "path": "fp-002/e2a.json",
+      "pointer": "/records/3",
+      "ticket": "WELL-192",
+      "dependencies": [],
+      "reference_class": "historical_synthetic_reuse"
+    },
+    "FP002-AC-001#S1": {
+      "source_id": "FP002-AC-001",
+      "path": "fp-002/s1.json",
+      "pointer": "/records/0",
+      "ticket": "WELL-197",
+      "dependencies": [],
+      "reference_class": "bounded_admission_guidance"
+    },
+    "FP002-AC-002#S1": {
+      "source_id": "FP002-AC-002",
+      "path": "fp-002/s1.json",
+      "pointer": "/records/1",
+      "ticket": "WELL-197",
+      "dependencies": [],
+      "reference_class": "bounded_admission_guidance"
+    },
+    "FP002-AC-005#S1": {
+      "source_id": "FP002-AC-005",
+      "path": "fp-002/s1.json",
+      "pointer": "/records/2",
+      "ticket": "WELL-197",
+      "dependencies": [],
+      "reference_class": "bounded_admission_guidance"
+    }
+  },
+  "source_id_lookup": {
+    "FP002-AC-004": [
+      "FP002-AC-004#E2a"
+    ],
+    "FP002-AC-015": [
+      "FP002-AC-015#E2a"
+    ],
+    "FP002-AC-016": [
+      "FP002-AC-016#E2a"
+    ],
+    "FP002-AC-030": [
+      "FP002-AC-030#E2a"
+    ],
+    "FP002-AC-001": [
+      "FP002-AC-001#S1"
+    ],
+    "FP002-AC-002": [
+      "FP002-AC-002#S1"
+    ],
+    "FP002-AC-005": [
+      "FP002-AC-005#S1"
+    ]
+  },
+  "limits": "Resolve explicit scope-qualified IDs only. Use source IDs, related IDs and ticket references for navigation. Review and integration are recorded in Git; current execution state belongs to Plane.",
+  "reference_class": "derived_navigation"
+}
