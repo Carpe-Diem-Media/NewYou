@@ -153,11 +153,11 @@
           "blob": "8a9e44d14d803009cfbb7b8d31294df750569cbf"
         }
       ],
-      "outcome": "In the synthetic scope, accept only approved offer versions with unambiguous terms and complete, deterministic allocation in currency minor units. Component amounts must sum to the accepted total. Preserve the immutable accepted snapshot. Under DEC-328, development amounts, savings and component splits are synthetic fixtures. Real sales require approved launch configuration from authorised Commerce operators and disclosure of the applicable allocation before checkout.",
+      "outcome": "In the synthetic scope, accept only approved offer versions with unambiguous terms, valid current disclosure evidence and complete, deterministic allocation in currency minor units. Component amounts must sum to the accepted total. Preserve the immutable accepted snapshot. Under DEC-328, development amounts, savings and component splits are synthetic fixtures. Real sales require approved launch configuration from authorised Commerce operators and disclosure of the applicable allocation before checkout.",
       "actor_journey": "Authorised payer and scoped recipient at the Commerce and Entitlements boundary.",
       "lifecycle": "Accept the current guarded offer version and preserve its immutable snapshot.",
       "invariant": "The allocation sums exactly in minor units. Historical obligations and refunds use the original snapshot.",
-      "acceptance_adversarial_and_proof": "Use S1-01–05 and applicable concurrency and replay checks. Cover at least two valid synthetic offer versions with different valid allocations, repricing after acceptance, stale quote rejection, a one-minor-unit mismatch and a historical refund based on the original accepted allocation. Apply the relevant HIGH proof guidance when the underlying work calls for it.",
+      "acceptance_adversarial_and_proof": "Use S1-01–05 and applicable concurrency and replay checks. Cover at least two valid synthetic offer versions with different valid allocations, repricing after acceptance, rejection of stale quotes and stale or mismatched disclosure evidence, a one-minor-unit mismatch and a historical refund based on the original accepted allocation. Apply the relevant HIGH proof guidance when the underlying work calls for it.",
       "exclusions": "Synthetic development and proof require no launch-price approval. Final split selection, actual launch pricing and real sale approval are outside this reference.",
       "source_navigation_only": {
         "outcome_ids": [

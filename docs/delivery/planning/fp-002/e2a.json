@@ -339,7 +339,7 @@
           "blob": "8a9e44d14d803009cfbb7b8d31294df750569cbf"
         }
       ],
-      "outcome": "Use current, effective owner-approved synthetic suppression evidence. A qualified late grant or correction preserves suppression of ordinary access and deleted data. Retain only the minimum commercial evidence required by law.",
+      "outcome": "Use current, effective owner-approved synthetic suppression evidence. A qualified late grant or correction preserves suppression of ordinary access and deleted data. Keep only the minimum lawful commercial evidence required for the purposes in Product §21I.12. Keep that evidence restricted and separate from the active participant profile. Never use it to reconstruct the deleted account.",
       "actor_journey": "Authorised payer and scoped recipient at the Commerce and Entitlements boundary.",
       "lifecycle": "Effective suppression blocks an ordinary grant or restoration. Reconcile late financial evidence while preserving suppression.",
       "invariant": "Preserve ordinary access suppression. Deletion alone creates neither refund nor forfeiture.",
