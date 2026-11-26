@@ -6,7 +6,7 @@
     "WELL-218"
   ],
   "implementation_revision": {
-    "git_sha": "bac5e0ab048bf790d1e1e64dead374d56ab44a60",
+    "git_sha": "e2388ac3d6f716b3a2d47c7ec72057fc0105b787",
     "semantics": "E1a-F provider-disabled Commerce dispatch foundation."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -368,7 +368,8 @@
       "source_ids": [
         "recovery_test",
         "receiver",
-        "restart"
+        "restart",
+        "test_discovery"
       ]
     },
     {
@@ -401,10 +402,11 @@
         "F-07 compile exclusion and runtime configuration denial"
       ],
       "proves": "The non-TEST BEAM has no wire builder or Ash/Req imports in the owner boundary. Public calls remain disabled.",
-      "limits": "Uses compiled modules without starting the application.",
+      "limits": "Uses compiled modules without starting the application. The existing runner contract checks that both standalone WELL-218 proof scripts stay out of ExUnit discovery.",
       "source_ids": [
         "disabled_test",
-        "checkout"
+        "checkout",
+        "test_discovery"
       ]
     }
   ],
@@ -553,6 +555,12 @@
       "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
       "symbol": "mandatory reuse-first matrix for FP-002",
       "sha256": "3292c3a21f7d0ce134445b54a539a28491c85b823c0026c7b073737d30aea6f7"
+    },
+    {
+      "id": "test_discovery",
+      "path": "mix.exs",
+      "symbol": "test_ignore_filters",
+      "sha256": "20f292f608c706957611cdfb75dc430996a8b5573b0408988f365fe451558024"
     }
   ]
 }
