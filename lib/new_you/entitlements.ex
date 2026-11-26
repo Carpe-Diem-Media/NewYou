@@ -118,25 +118,28 @@ defmodule NewYou.Entitlements do
   end
 
   @doc """
-  Review this Account pair for reconciliation. A pair with Plan rights is
-  outside P1's empty-scope review and cannot be reconciled by this policy.
+  Review an Identity reconciliation pair for an empty Entitlements scope.
+  A recorded right or Assessment credit observation requires separately
+  governed reconciliation.
   """
   @spec review_identity_reconciliation(String.t(), String.t()) ::
           {:ok, map()} | {:error, :entitlements_scope_unavailable}
   def review_identity_reconciliation(candidate_id, canonical_id)
       when candidate_id != canonical_id do
-    query = Ash.Query.filter(PlanRight, recipient_id in ^[candidate_id, canonical_id])
+    recipients = [candidate_id, canonical_id]
+    rights = Ash.Query.filter(PlanRight, recipient_id in ^recipients)
+    evidence = Ash.Query.filter(AssessmentCreditEvidence, recipient_id in ^recipients)
 
-    case Ash.exists(query, authorize?: false) do
-      {:ok, false} ->
-        {:ok,
-         %{
-           "candidate_id" => candidate_id,
-           "canonical_id" => canonical_id,
-           "policy" => "empty_entitlements_scope",
-           "commands" => []
-         }}
-
+    with {:ok, false} <- Ash.exists(rights, authorize?: false),
+         {:ok, false} <- Ash.exists(evidence, authorize?: false) do
+      {:ok,
+       %{
+         "candidate_id" => candidate_id,
+         "canonical_id" => canonical_id,
+         "policy" => "empty_entitlements_scope",
+         "commands" => []
+       }}
+    else
       _ ->
         {:error, :entitlements_scope_unavailable}
     end

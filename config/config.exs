@@ -71,11 +71,11 @@ config :spark,
 config :new_you,
   ecto_repos: [NewYou.Repo],
   ash_domains: [
-    NewYou.Temperament,
     NewYou.Analytics,
     NewYou.Communications,
     NewYou.Commerce,
     NewYou.Entitlements,
+    NewYou.Temperament,
     NewYou.Identity,
     NewYou.Audit,
     NewYou.Privacy

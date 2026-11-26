@@ -1,7 +1,8 @@
 defmodule NewYou.Commerce.AssessmentRecoveryTest do
   use ExUnit.Case, async: false
 
-  alias NewYou.Commerce
+  alias Ecto.Adapters.SQL.Sandbox
+  alias NewYou.{Commerce, Repo}
 
   alias NewYou.Commerce.{
     AssessmentAdmission,
@@ -197,7 +198,15 @@ defmodule NewYou.Commerce.AssessmentRecoveryTest do
       {payer, recipient} = ready_parties()
       authority = parties(payer, recipient)
       offered = quote!(authority, :assessment)
-      {:ok, accepted} = OfferAdmission.accept(authority, acceptance(offered))
+      commit_without_response(authority, offered)
+
+      assert {:ok, %Commerce.Purchase{id: id}} =
+               Ash.read_one(
+                 Ash.Query.filter(Commerce.Purchase, quote_id == ^offered.quote_id),
+                 authorize?: false
+               )
+
+      assert {:ok, accepted} = OfferAdmission.snapshot(payer.credentials, id)
 
       payload =
         Jason.encode!(%{
@@ -238,6 +247,23 @@ defmodule NewYou.Commerce.AssessmentRecoveryTest do
       assert {:ok, %{id: ^right_id}} = SyntheticAssessmentCredit.grant(consequence.id)
       assert {:error, :assessment_unavailable} = compete(payer, recipient)
     end)
+  end
+
+  defp commit_without_response(authority, offered) do
+    parent = self()
+
+    {worker, monitor} =
+      spawn_monitor(fn ->
+        receive do: (:start -> :ok)
+        :ok = Sandbox.checkout(Repo, sandbox: false)
+        {:ok, _discarded_response} = OfferAdmission.accept(authority, acceptance(offered))
+        send(parent, :acceptance_committed)
+      end)
+
+    :ok = P805.register_cleanup_worker(worker)
+    send(worker, :start)
+    assert_receive :acceptance_committed, 5_000
+    assert_receive {:DOWN, ^monitor, :process, ^worker, :normal}, 5_000
   end
 
   defp fresh_vm!(stage, id, payload \\ "") do

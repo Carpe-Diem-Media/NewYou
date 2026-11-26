@@ -1,6 +1,7 @@
 defmodule NewYou.Commerce.AssessmentAdmissionTest do
   use ExUnit.Case, async: false
 
+  alias NewYou.{Entitlements, Temperament}
   alias NewYou.Commerce.{OfferAdmission, PurchaseQuote}
   alias NewYou.Proof.P805
   import NewYou.Commerce.OfferFixtures
@@ -115,6 +116,31 @@ defmodule NewYou.Commerce.AssessmentAdmissionTest do
                })
 
       assert {:ok, _} = buy(payer, older, :bundle)
+    end)
+  end
+
+  test "new owner history participates in Identity's empty-scope reconciliation guard" do
+    P805.with_fixture(fn ->
+      candidate = verified_party()
+      survivor = verified_party()
+      first = candidate.account_id
+      second = survivor.account_id
+
+      assert {:ok, %{"policy" => "empty_entitlements_scope"}} =
+               Entitlements.review_identity_reconciliation(first, second)
+
+      assert {:ok, %{"policy" => "empty_temperament_scope"}} =
+               Temperament.review_identity_reconciliation(first, second)
+
+      assert {:ok, _} = set_credit(candidate, :none)
+
+      assert {:error, :entitlements_scope_unavailable} =
+               Entitlements.review_identity_reconciliation(first, second)
+
+      assert {:ok, _} = set_delivery(survivor, :none)
+
+      assert {:error, :temperament_scope_unavailable} =
+               Temperament.review_identity_reconciliation(first, second)
     end)
   end
 

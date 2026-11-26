@@ -8,9 +8,39 @@ defmodule NewYou.Temperament do
 
   alias NewYou.Temperament.AssessmentDeliveryEvidence
 
+  require Ash.Query
+
   resources do
     resource AssessmentDeliveryEvidence
   end
+
+  @doc """
+  Review an Identity reconciliation pair for an empty Temperament scope. A
+  recorded Assessment observation requires separately governed reconciliation.
+  """
+  @spec review_identity_reconciliation(Ecto.UUID.t(), Ecto.UUID.t()) ::
+          {:ok, map()} | {:error, :temperament_scope_unavailable}
+  def review_identity_reconciliation(candidate_id, canonical_id)
+      when candidate_id != canonical_id do
+    query =
+      Ash.Query.filter(AssessmentDeliveryEvidence, recipient_id in ^[candidate_id, canonical_id])
+
+    case Ash.exists(query, authorize?: false) do
+      {:ok, false} ->
+        {:ok,
+         %{
+           "candidate_id" => candidate_id,
+           "canonical_id" => canonical_id,
+           "policy" => "empty_temperament_scope",
+           "commands" => []
+         }}
+
+      _ ->
+        {:error, :temperament_scope_unavailable}
+    end
+  end
+
+  def review_identity_reconciliation(_, _), do: {:error, :temperament_scope_unavailable}
 
   @doc """
   Read the latest successful complete paid delivery for an established canonical

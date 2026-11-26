@@ -238,18 +238,25 @@ defmodule NewYou.Commerce.OfferAdmission do
          attrs = disclosure_attributes(parties, offer, language),
          {:ok, quoted} <-
            Ash.create(PurchaseQuote, attrs, action: :offer, authorize?: false) do
-      if Map.take(quoted, Map.keys(attrs)) == attrs,
-        do: disclosed(quoted, offer),
-        else: {:refused, :acceptance_conflict}
+      cond do
+        not same_parties?(quoted, parties) -> {:error, :purchase_unavailable}
+        Map.take(quoted, Map.keys(attrs)) == attrs -> disclosed(quoted, offer)
+        true -> {:refused, :acceptance_conflict}
+      end
     else
       {:error, :offer_unavailable} -> {:refused, :offer_unavailable}
       {:error, _} = error -> error
     end
   end
 
-  defp offer_quote(%PurchaseQuote{} = quote, parties, product, language) do
-    with true <- same_parties?(quote, parties),
-         ^language <- quote.language,
+  defp offer_quote(
+         %PurchaseQuote{} = quote,
+         %{payer_id: payer, recipient_id: recipient},
+         product,
+         language
+       )
+       when quote.payer_id == payer and quote.recipient_id == recipient do
+    with ^language <- quote.language,
          {:ok, %OfferVersion{product: ^product} = offer} <- fetch_offer(quote, nil),
          true <- exact_disclosure?(quote, offer) do
       disclosed(quote, offer)
@@ -257,6 +264,8 @@ defmodule NewYou.Commerce.OfferAdmission do
       _ -> {:refused, :acceptance_conflict}
     end
   end
+
+  defp offer_quote(%PurchaseQuote{}, _, _, _), do: {:error, :purchase_unavailable}
 
   defp accept_quote(%{state: :accepted} = quote, offer) do
     version = offer.price_version

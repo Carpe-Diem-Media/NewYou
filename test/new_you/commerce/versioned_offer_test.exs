@@ -194,6 +194,11 @@ defmodule NewYou.Commerce.VersionedOfferTest do
       assert {:error, :acceptance_conflict} =
                OfferAdmission.quote(authority, %{product: :plan, language: :af})
 
+      cross_account = parties(outsider, outsider, offered.operation_id)
+
+      assert {:error, :purchase_unavailable} =
+               OfferAdmission.quote(cross_account, %{product: :plan, language: :en})
+
       grant =
         proof(%{
           scope: :s1_admission_review,
