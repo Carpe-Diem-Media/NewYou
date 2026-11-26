@@ -1,0 +1,302 @@
+{
+  "schema_version": 1,
+  "scope": "S1",
+  "authority_snapshot": "a9a7b1092365d904c2ec933d321dc720bbb55606",
+  "records": [
+    {
+      "projection_id": "FP002-AC-001#S1",
+      "source_id": "FP002-AC-001",
+      "title": "Offer version eligibility",
+      "source": {
+        "archive": "INPUTS/FP-002_PLANNING_PACKAGE_v0.10.1.zip",
+        "archive_sha256": "d29bae8de7d93de67c30511c99e4500f63dfbdde07674801778b72f8e7d12046",
+        "member": "TRACEABILITY_INDEX.json",
+        "pointer": "/acceptance_cases/FP002-AC-001",
+        "source_record_sha256": "8dc834a8c5d0d29fb97d4ff212a6b60cbaf481b3b2ecb251d187183d12cb7709",
+        "source_record_hash_encoding": "UTF-8 json.dumps(record, ensure_ascii=False, indent=2), insertion order, trailing LF",
+        "member_sha256": "fa8510845f96e637cb28ca0e108764e184342d0faaf0bdd6c3928da3e2c6d79e",
+        "archive_location_kind": "External Master archive provenance. Resolve the scoped record within the repository.",
+        "master_version": "0.12.0",
+        "source_member_heading": "07_ACCEPTANCE_AND_PROOF.md#fp002-ac-001"
+      },
+      "authority_refs": [
+        {
+          "path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+          "section": "Outcome and purchase admission",
+          "blob": "c61f6e20d1a0422f048a7d1424367ddb117f5f42"
+        },
+        {
+          "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
+          "section": "S1",
+          "blob": "ca33cf309f08942617f83ed906a2766720be1ca1"
+        },
+        {
+          "path": "docs/governance/product/00_PLATFORM_v1.21.0.md",
+          "section": "§§21L.15, 21R.5–6",
+          "blob": "1d9c35093a2cc36e97a2011d9afdc268e3188878"
+        },
+        {
+          "path": "docs/governance/product/01_DECISIONS_v1.21.0.md",
+          "section": "DEC-299, DEC-303 and DEC-328",
+          "blob": "416d616ade29fddeb6dc9dd4126bd6ef0beb791e"
+        },
+        {
+          "path": "docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md",
+          "section": "§§6.10–6.11 and applicable Identity, Privacy and Temperament ownership",
+          "blob": "ab21976d659759b3e383b3e880d2f297494f2c82"
+        },
+        {
+          "path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md",
+          "section": "Tests, review and proof (applicable HIGH guidance)",
+          "blob": "4ab9d517895e6752e7d4f8d29fc9128852bfe507"
+        },
+        {
+          "path": "docs/delivery/proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+          "section": "Required commercial dossiers",
+          "blob": "bfafd5c5fffc6c1255367a39de918044a78d0e1b"
+        },
+        {
+          "path": "docs/governance/architecture/03_ARCHITECTURE_v1.1.1.md",
+          "section": "§§7–8",
+          "blob": "8a9e44d14d803009cfbb7b8d31294df750569cbf"
+        }
+      ],
+      "outcome": "An authorised pause or withdrawal prevents new acceptance. Existing accepted obligations remain immutable and reconcilable.",
+      "actor_journey": "Authorised payer and scoped recipient at the Commerce and Entitlements boundary.",
+      "lifecycle": "Pause or withdrawal makes the offer version unavailable for new admission. Preserve the accepted obligation.",
+      "invariant": "No automatic refund/revocation from offer withdrawal.",
+      "acceptance_adversarial_and_proof": "Use S1-01/05/20 as applicable to check stale quotes and races between pause and acceptance. Verify the durable acceptance count and the preserved historical order.",
+      "exclusions": "No full launch-stage lifecycle, pilot admission cap, public checkout, actual provider dispatch or forced refund/revocation.",
+      "source_navigation_only": {
+        "outcome_ids": [
+          "FP002-O-COM-01",
+          "FP002-O-COM-02",
+          "FP002-O-COM-06"
+        ],
+        "journey_ids": [
+          "FP002-J-001",
+          "FP002-J-002"
+        ],
+        "lifecycle_ids": [
+          "FP002-L-001"
+        ],
+        "invariant_ids": [
+          "FP002-I-L001-A",
+          "FP002-I-L001-B",
+          "FP002-I-L001-C",
+          "FP002-I-X003"
+        ],
+        "scenario_ids": [
+          "FP002-S-001"
+        ],
+        "proof_id": "FP002-P-AC001"
+      },
+      "proof_status": "Scoped proof guidance only. Use the linked ticket and implementation evidence to verify actual results.",
+      "ticket": "WELL-197",
+      "ticket_context": "Integrated historical implementation context. Apply this reference prospectively without reopening the original work."
+    },
+    {
+      "projection_id": "FP002-AC-002#S1",
+      "source_id": "FP002-AC-002",
+      "title": "Deterministic accepted allocation",
+      "source": {
+        "archive": "INPUTS/FP-002_PLANNING_PACKAGE_v0.10.1.zip",
+        "archive_sha256": "d29bae8de7d93de67c30511c99e4500f63dfbdde07674801778b72f8e7d12046",
+        "member": "TRACEABILITY_INDEX.json",
+        "pointer": "/acceptance_cases/FP002-AC-002",
+        "source_record_sha256": "a80038b07db45b99c5d446de87e5d1aa9edd85488922a090929464979af2563b",
+        "source_record_hash_encoding": "UTF-8 json.dumps(record, ensure_ascii=False, indent=2), insertion order, trailing LF",
+        "member_sha256": "fa8510845f96e637cb28ca0e108764e184342d0faaf0bdd6c3928da3e2c6d79e",
+        "archive_location_kind": "External Master archive provenance. Resolve the scoped record within the repository.",
+        "master_version": "0.12.0",
+        "source_member_heading": "07_ACCEPTANCE_AND_PROOF.md#fp002-ac-002"
+      },
+      "authority_refs": [
+        {
+          "path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+          "section": "Outcome and purchase admission",
+          "blob": "c61f6e20d1a0422f048a7d1424367ddb117f5f42"
+        },
+        {
+          "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
+          "section": "S1",
+          "blob": "ca33cf309f08942617f83ed906a2766720be1ca1"
+        },
+        {
+          "path": "docs/governance/product/00_PLATFORM_v1.21.0.md",
+          "section": "§§21R.1, 21L.15",
+          "blob": "1d9c35093a2cc36e97a2011d9afdc268e3188878"
+        },
+        {
+          "path": "docs/governance/product/01_DECISIONS_v1.21.0.md",
+          "section": "DEC-299 and DEC-328",
+          "blob": "416d616ade29fddeb6dc9dd4126bd6ef0beb791e"
+        },
+        {
+          "path": "docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md",
+          "section": "§§6.10–6.11 and applicable Identity, Privacy and Temperament ownership",
+          "blob": "ab21976d659759b3e383b3e880d2f297494f2c82"
+        },
+        {
+          "path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md",
+          "section": "Tests, review and proof (applicable HIGH guidance)",
+          "blob": "4ab9d517895e6752e7d4f8d29fc9128852bfe507"
+        },
+        {
+          "path": "docs/delivery/proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+          "section": "Required commercial dossiers",
+          "blob": "bfafd5c5fffc6c1255367a39de918044a78d0e1b"
+        },
+        {
+          "path": "docs/governance/architecture/03_ARCHITECTURE_v1.1.1.md",
+          "section": "§§7–8",
+          "blob": "8a9e44d14d803009cfbb7b8d31294df750569cbf"
+        }
+      ],
+      "outcome": "Accept only approved synthetic offer versions with unambiguous terms and complete, deterministic allocation in currency minor units. Component amounts must sum to the accepted total. Preserve the immutable accepted snapshot. Under DEC-328, development amounts, savings and component splits are synthetic fixtures. Before real sale, authorised Commerce operators must approve the launch configuration and disclose the applicable terms before purchase.",
+      "actor_journey": "Authorised payer and scoped recipient at the Commerce and Entitlements boundary.",
+      "lifecycle": "Accept the current guarded offer version and preserve its immutable snapshot.",
+      "invariant": "The allocation sums exactly in minor units. Historical obligations and refunds use the original snapshot.",
+      "acceptance_adversarial_and_proof": "Use S1-01–05 and applicable concurrency and replay checks. Cover at least two valid synthetic offer versions with different valid allocations, repricing after acceptance, stale quote rejection, a one-minor-unit mismatch and a historical refund based on the original accepted allocation. Apply the relevant HIGH proof guidance when the underlying work calls for it.",
+      "exclusions": "Synthetic development and proof require no launch-price approval. Final split selection, actual launch pricing and real sale approval are outside this reference.",
+      "source_navigation_only": {
+        "outcome_ids": [
+          "FP002-O-COM-03",
+          "FP002-O-COM-04",
+          "FP002-O-COM-05",
+          "FP002-O-COM-13"
+        ],
+        "journey_ids": [
+          "FP002-J-002",
+          "FP002-J-007"
+        ],
+        "lifecycle_ids": [
+          "FP002-L-002"
+        ],
+        "invariant_ids": [
+          "FP002-I-L002-A",
+          "FP002-I-L002-B",
+          "FP002-I-L002-C",
+          "FP002-I-X003"
+        ],
+        "scenario_ids": [
+          "FP002-S-002"
+        ],
+        "proof_id": "FP002-P-AC002"
+      },
+      "proof_status": "Scoped proof guidance only. Use the linked ticket and implementation evidence to verify actual results.",
+      "ticket": "WELL-197",
+      "ticket_context": "Integrated historical implementation context. Apply this reference prospectively without reopening the original work."
+    },
+    {
+      "projection_id": "FP002-AC-005#S1",
+      "source_id": "FP002-AC-005",
+      "title": "Unused ordinary Assessment credit guard",
+      "source": {
+        "archive": "INPUTS/FP-002_PLANNING_PACKAGE_v0.10.1.zip",
+        "archive_sha256": "d29bae8de7d93de67c30511c99e4500f63dfbdde07674801778b72f8e7d12046",
+        "member": "TRACEABILITY_INDEX.json",
+        "pointer": "/acceptance_cases/FP002-AC-005",
+        "source_record_sha256": "15a85adaa0648c09c47ffb12aba7ce70397858474196ce34d735d6c7c0bf8c5b",
+        "source_record_hash_encoding": "UTF-8 json.dumps(record, ensure_ascii=False, indent=2), insertion order, trailing LF",
+        "member_sha256": "fa8510845f96e637cb28ca0e108764e184342d0faaf0bdd6c3928da3e2c6d79e",
+        "archive_location_kind": "External Master archive provenance. Resolve the scoped record within the repository.",
+        "master_version": "0.12.0",
+        "source_member_heading": "07_ACCEPTANCE_AND_PROOF.md#fp002-ac-005"
+      },
+      "authority_refs": [
+        {
+          "path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+          "section": "Outcome and purchase admission",
+          "blob": "c61f6e20d1a0422f048a7d1424367ddb117f5f42"
+        },
+        {
+          "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
+          "section": "S1",
+          "blob": "ca33cf309f08942617f83ed906a2766720be1ca1"
+        },
+        {
+          "path": "docs/governance/product/00_PLATFORM_v1.21.0.md",
+          "section": "§§21R.5–6",
+          "blob": "1d9c35093a2cc36e97a2011d9afdc268e3188878"
+        },
+        {
+          "path": "docs/governance/product/01_DECISIONS_v1.21.0.md",
+          "section": "DEC-303, DEC-313 and DEC-314",
+          "blob": "416d616ade29fddeb6dc9dd4126bd6ef0beb791e"
+        },
+        {
+          "path": "docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md",
+          "section": "§§6.10–6.11 and applicable Identity, Privacy and Temperament ownership",
+          "blob": "ab21976d659759b3e383b3e880d2f297494f2c82"
+        },
+        {
+          "path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md",
+          "section": "Tests, review and proof (applicable HIGH guidance)",
+          "blob": "4ab9d517895e6752e7d4f8d29fc9128852bfe507"
+        },
+        {
+          "path": "docs/delivery/proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+          "section": "Required commercial dossiers",
+          "blob": "bfafd5c5fffc6c1255367a39de918044a78d0e1b"
+        },
+        {
+          "path": "docs/governance/architecture/03_ARCHITECTURE_v1.1.1.md",
+          "section": "§§7–8",
+          "blob": "8a9e44d14d803009cfbb7b8d31294df750569cbf"
+        }
+      ],
+      "outcome": "Active available_unused or held_unconsumed ordinary credit blocks a new Assessment or bundle. Plan-only admission remains independent and must satisfy its own guards. Missing, stale or contradictory required owner history fails affected admission closed. Commerce fences competing potentially collectible attempts and outstanding paid consequences.",
+      "actor_journey": "Authorised payer and scoped recipient at the Commerce and Entitlements boundary.",
+      "lifecycle": "Read credit and delivery history from their owners. Reject affected admission when required evidence is unavailable and preserve existing credit.",
+      "invariant": "Entitlements owns credit and Temperament owns delivery history. Commerce distinguishes verified absence from unavailable evidence.",
+      "acceptance_adversarial_and_proof": "Use S1-07–14 and applicable race proof with owner-approved synthetic credit and delivery-history facts. Exercise competing collectible attempts, outstanding paid consequences and the independent Plan-only path.",
+      "exclusions": "Exact annual calendar arithmetic, suspended-credit disposition, downstream Assessment implementation, real payment and pilot admission are outside this reference.",
+      "source_navigation_only": {
+        "outcome_ids": [
+          "FP002-O-COM-09",
+          "FP002-O-COM-10",
+          "FP002-O-COM-11",
+          "FP002-O-COM-12",
+          "FP002-O-ENT-09"
+        ],
+        "journey_ids": [
+          "FP002-J-008",
+          "FP002-J-009",
+          "FP002-J-010",
+          "FP002-J-039"
+        ],
+        "lifecycle_ids": [
+          "FP002-L-005",
+          "FP002-L-011",
+          "FP002-L-037",
+          "FP002-L-049"
+        ],
+        "invariant_ids": [
+          "FP002-I-L005-A",
+          "FP002-I-L005-B",
+          "FP002-I-L005-C",
+          "FP002-I-L011-A",
+          "FP002-I-L011-B",
+          "FP002-I-L011-C",
+          "FP002-I-L037-A",
+          "FP002-I-L037-B",
+          "FP002-I-L037-C",
+          "FP002-I-L049-A",
+          "FP002-I-L049-B",
+          "FP002-I-L049-C",
+          "FP002-I-X002"
+        ],
+        "scenario_ids": [
+          "FP002-S-005"
+        ],
+        "proof_id": "FP002-P-AC005"
+      },
+      "proof_status": "Scoped proof guidance only. Use the linked ticket and implementation evidence to verify actual results.",
+      "ticket": "WELL-197",
+      "ticket_context": "Integrated historical implementation context. Apply this reference prospectively without reopening the original work."
+    }
+  ],
+  "ticket": "WELL-197",
+  "reference_class": "bounded_admission_guidance"
+}

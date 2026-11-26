@@ -1,0 +1,379 @@
+{
+  "schema_version": 1,
+  "scope": "E2a",
+  "authority_snapshot": "a9a7b1092365d904c2ec933d321dc720bbb55606",
+  "records": [
+    {
+      "projection_id": "FP002-AC-004#E2a",
+      "source_id": "FP002-AC-004",
+      "title": "Separate accepted obligations",
+      "source": {
+        "archive": "INPUTS/FP-002_PLANNING_PACKAGE_v0.10.1.zip",
+        "archive_sha256": "d29bae8de7d93de67c30511c99e4500f63dfbdde07674801778b72f8e7d12046",
+        "member": "TRACEABILITY_INDEX.json",
+        "pointer": "/acceptance_cases/FP002-AC-004",
+        "source_record_sha256": "b56b793f83a742bf66411bdfb47ec6cb9bed3991a22ce53599a13f72c02439db",
+        "source_record_hash_encoding": "UTF-8 json.dumps(record, ensure_ascii=False, indent=2), insertion order, trailing LF",
+        "member_sha256": "fa8510845f96e637cb28ca0e108764e184342d0faaf0bdd6c3928da3e2c6d79e",
+        "archive_location_kind": "External Master archive provenance. Resolve the scoped record within the repository.",
+        "master_version": "0.12.0",
+        "source_member_heading": "07_ACCEPTANCE_AND_PROOF.md#fp002-ac-004"
+      },
+      "authority_refs": [
+        {
+          "path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+          "section": "Corrections and disclosure; Proof and exit",
+          "blob": "c61f6e20d1a0422f048a7d1424367ddb117f5f42"
+        },
+        {
+          "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
+          "section": "E2a",
+          "blob": "ca33cf309f08942617f83ed906a2766720be1ca1"
+        },
+        {
+          "path": "docs/governance/product/00_PLATFORM_v1.21.0.md",
+          "section": "§21R.2",
+          "blob": "1d9c35093a2cc36e97a2011d9afdc268e3188878"
+        },
+        {
+          "path": "docs/governance/product/01_DECISIONS_v1.21.0.md",
+          "section": "DEC-300 and DEC-314",
+          "blob": "416d616ade29fddeb6dc9dd4126bd6ef0beb791e"
+        },
+        {
+          "path": "docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md",
+          "section": "§§6.10–6.11 and applicable Identity, Privacy and Temperament ownership",
+          "blob": "ab21976d659759b3e383b3e880d2f297494f2c82"
+        },
+        {
+          "path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md",
+          "section": "Tests, review and proof (applicable HIGH guidance)",
+          "blob": "4ab9d517895e6752e7d4f8d29fc9128852bfe507"
+        },
+        {
+          "path": "docs/delivery/proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+          "section": "Required commercial dossiers",
+          "blob": "bfafd5c5fffc6c1255367a39de918044a78d0e1b"
+        },
+        {
+          "path": "docs/governance/architecture/03_ARCHITECTURE_v1.1.1.md",
+          "section": "§§7–8",
+          "blob": "8a9e44d14d803009cfbb7b8d31294df750569cbf"
+        }
+      ],
+      "outcome": "Two independently intended and accepted purchases remain distinct even when amount, payer, product and timing match.",
+      "actor_journey": "Authorised payer and scoped recipient at the Commerce and Entitlements boundary.",
+      "lifecycle": "Acceptance gives each independently intended obligation an immutable identity.",
+      "invariant": "Use accepted obligation identities to distinguish purchases. Similar amounts or timing establish neither a duplicate nor excess.",
+      "acceptance_adversarial_and_proof": "In E2a-04, use two eligible, independently accepted sources. Confirm distinct immutable identities and verify that matching payer, product, amount and timing create no inferred duplicate or excess.",
+      "exclusions": "Changed-recipient and same-key admission races and full S1 rollback proof are outside this reference.",
+      "source_navigation_only": {
+        "outcome_ids": [
+          "FP002-O-COM-07",
+          "FP002-O-COM-08",
+          "FP002-O-COR-06"
+        ],
+        "journey_ids": [
+          "FP002-J-011"
+        ],
+        "lifecycle_ids": [
+          "FP002-L-004"
+        ],
+        "invariant_ids": [
+          "FP002-I-L004-A",
+          "FP002-I-L004-B",
+          "FP002-I-L004-C",
+          "FP002-I-X003",
+          "FP002-I-X008"
+        ],
+        "scenario_ids": [
+          "FP002-S-004"
+        ],
+        "proof_id": "FP002-P-AC004"
+      },
+      "proof_status": "Scoped proof guidance only. Use the linked ticket and implementation evidence to verify actual results.",
+      "ticket": "WELL-192",
+      "ticket_context": "Integrated historical implementation context. Apply this reference prospectively without reopening the original work."
+    },
+    {
+      "projection_id": "FP002-AC-015#E2a",
+      "source_id": "FP002-AC-015",
+      "title": "Verified genuine excess",
+      "source": {
+        "archive": "INPUTS/FP-002_PLANNING_PACKAGE_v0.10.1.zip",
+        "archive_sha256": "d29bae8de7d93de67c30511c99e4500f63dfbdde07674801778b72f8e7d12046",
+        "member": "TRACEABILITY_INDEX.json",
+        "pointer": "/acceptance_cases/FP002-AC-015",
+        "source_record_sha256": "7b260b899881ce9ab89c6440e4cab31e53d2743f92b803b0198f3c31e3ee0d8a",
+        "source_record_hash_encoding": "UTF-8 json.dumps(record, ensure_ascii=False, indent=2), insertion order, trailing LF",
+        "member_sha256": "fa8510845f96e637cb28ca0e108764e184342d0faaf0bdd6c3928da3e2c6d79e",
+        "archive_location_kind": "External Master archive provenance. Resolve the scoped record within the repository.",
+        "master_version": "0.12.0",
+        "source_member_heading": "07_ACCEPTANCE_AND_PROOF.md#fp002-ac-015"
+      },
+      "authority_refs": [
+        {
+          "path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+          "section": "Corrections and disclosure; Proof and exit",
+          "blob": "c61f6e20d1a0422f048a7d1424367ddb117f5f42"
+        },
+        {
+          "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
+          "section": "E2a",
+          "blob": "ca33cf309f08942617f83ed906a2766720be1ca1"
+        },
+        {
+          "path": "docs/governance/product/00_PLATFORM_v1.21.0.md",
+          "section": "§21R.2",
+          "blob": "1d9c35093a2cc36e97a2011d9afdc268e3188878"
+        },
+        {
+          "path": "docs/governance/product/01_DECISIONS_v1.21.0.md",
+          "section": "DEC-300 and DEC-314",
+          "blob": "416d616ade29fddeb6dc9dd4126bd6ef0beb791e"
+        },
+        {
+          "path": "docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md",
+          "section": "§§6.10–6.11 and applicable Identity, Privacy and Temperament ownership",
+          "blob": "ab21976d659759b3e383b3e880d2f297494f2c82"
+        },
+        {
+          "path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md",
+          "section": "Tests, review and proof (applicable HIGH guidance)",
+          "blob": "4ab9d517895e6752e7d4f8d29fc9128852bfe507"
+        },
+        {
+          "path": "docs/delivery/proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+          "section": "Required commercial dossiers",
+          "blob": "bfafd5c5fffc6c1255367a39de918044a78d0e1b"
+        },
+        {
+          "path": "docs/governance/architecture/03_ARCHITECTURE_v1.1.1.md",
+          "section": "§§7–8",
+          "blob": "8a9e44d14d803009cfbb7b8d31294df750569cbf"
+        }
+      ],
+      "outcome": "Replay of collection evidence leaves the collection count unchanged. Two distinct qualified synthetic collections for one accepted obligation create one exact excess claim for the authoritative payer. Preserve valid original rights.",
+      "actor_journey": "Authorised payer and scoped recipient at the Commerce and Entitlements boundary.",
+      "lifecycle": "Commit qualified collection evidence. Keep the correction owed and unresolved until verified satisfaction.",
+      "invariant": "Independent purchases keep their own identities. Genuine excess creates no additional right.",
+      "acceptance_adversarial_and_proof": "Use E2a-02/03/07/10/11/14 for independent SQL commit and race evidence, duplicate and reordered receipts, exact claimant and amount, current owner effects and recovery after a fresh restart. Confirm that acknowledging a receipt leaves the claim owed.",
+      "exclusions": "No third-collection dispatch proof, actual provider operation, live refund or proof of entire original case.",
+      "source_navigation_only": {
+        "outcome_ids": [
+          "FP002-O-COR-04",
+          "FP002-O-COR-05",
+          "FP002-O-COR-11",
+          "FP002-O-COR-17"
+        ],
+        "journey_ids": [
+          "FP002-J-022"
+        ],
+        "lifecycle_ids": [
+          "FP002-L-015"
+        ],
+        "invariant_ids": [
+          "FP002-I-L015-A",
+          "FP002-I-L015-B",
+          "FP002-I-L015-C",
+          "FP002-I-X008"
+        ],
+        "scenario_ids": [
+          "FP002-S-015"
+        ],
+        "proof_id": "FP002-P-AC015"
+      },
+      "proof_status": "Scoped proof guidance only. Use the linked ticket and implementation evidence to verify actual results.",
+      "ticket": "WELL-192",
+      "ticket_context": "Integrated historical implementation context. Apply this reference prospectively without reopening the original work."
+    },
+    {
+      "projection_id": "FP002-AC-016#E2a",
+      "source_id": "FP002-AC-016",
+      "title": "Immutable accepted component attribution",
+      "source": {
+        "archive": "INPUTS/FP-002_PLANNING_PACKAGE_v0.10.1.zip",
+        "archive_sha256": "d29bae8de7d93de67c30511c99e4500f63dfbdde07674801778b72f8e7d12046",
+        "member": "TRACEABILITY_INDEX.json",
+        "pointer": "/acceptance_cases/FP002-AC-016",
+        "source_record_sha256": "4827b7b1cbde408fa19ad66e18cff9607376fd7bad3f2dda10aa12434604c02f",
+        "source_record_hash_encoding": "UTF-8 json.dumps(record, ensure_ascii=False, indent=2), insertion order, trailing LF",
+        "member_sha256": "fa8510845f96e637cb28ca0e108764e184342d0faaf0bdd6c3928da3e2c6d79e",
+        "archive_location_kind": "External Master archive provenance. Resolve the scoped record within the repository.",
+        "master_version": "0.12.0",
+        "source_member_heading": "07_ACCEPTANCE_AND_PROOF.md#fp002-ac-016"
+      },
+      "authority_refs": [
+        {
+          "path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+          "section": "Corrections and disclosure; Proof and exit",
+          "blob": "c61f6e20d1a0422f048a7d1424367ddb117f5f42"
+        },
+        {
+          "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
+          "section": "E2a",
+          "blob": "ca33cf309f08942617f83ed906a2766720be1ca1"
+        },
+        {
+          "path": "docs/governance/product/00_PLATFORM_v1.21.0.md",
+          "section": "§§21R.1–2",
+          "blob": "1d9c35093a2cc36e97a2011d9afdc268e3188878"
+        },
+        {
+          "path": "docs/governance/product/01_DECISIONS_v1.21.0.md",
+          "section": "DEC-299, DEC-300, DEC-314 and DEC-328",
+          "blob": "416d616ade29fddeb6dc9dd4126bd6ef0beb791e"
+        },
+        {
+          "path": "docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md",
+          "section": "§§6.10–6.11 and applicable Identity, Privacy and Temperament ownership",
+          "blob": "ab21976d659759b3e383b3e880d2f297494f2c82"
+        },
+        {
+          "path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md",
+          "section": "Tests, review and proof (applicable HIGH guidance)",
+          "blob": "4ab9d517895e6752e7d4f8d29fc9128852bfe507"
+        },
+        {
+          "path": "docs/delivery/proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+          "section": "Required commercial dossiers",
+          "blob": "bfafd5c5fffc6c1255367a39de918044a78d0e1b"
+        },
+        {
+          "path": "docs/governance/architecture/03_ARCHITECTURE_v1.1.1.md",
+          "section": "§§7–8",
+          "blob": "8a9e44d14d803009cfbb7b8d31294df750569cbf"
+        }
+      ],
+      "outcome": "Identify the affected component from the original accepted allocation. Keep unattributable fragments unresolved.",
+      "actor_journey": "Authorised payer and scoped recipient at the Commerce and Entitlements boundary.",
+      "lifecycle": "Use the immutable allocation to attribute the correction or keep it unresolved.",
+      "invariant": "Only the exact correction amount and right from the affected component apply. Preserve valid sibling components and independent rights.",
+      "acceptance_adversarial_and_proof": "Use E2a-05/06/07 to verify the original snapshot sum, reprice the offer and reject mismatched fragments. Check that the owning Domain applies the qualified consequence to the exact component and preserves valid sibling and independent rights.",
+      "exclusions": "No final bundle configuration, real provider result, discretionary remedy policy or full S1 catalogue implementation.",
+      "source_navigation_only": {
+        "outcome_ids": [
+          "FP002-O-COM-05",
+          "FP002-O-COR-07",
+          "FP002-O-COR-08",
+          "FP002-O-COR-13",
+          "FP002-O-ENT-06"
+        ],
+        "journey_ids": [
+          "FP002-J-023"
+        ],
+        "lifecycle_ids": [
+          "FP002-L-016"
+        ],
+        "invariant_ids": [
+          "FP002-I-L016-A",
+          "FP002-I-L016-B",
+          "FP002-I-L016-C",
+          "FP002-I-X005",
+          "FP002-I-X008"
+        ],
+        "scenario_ids": [
+          "FP002-S-016"
+        ],
+        "proof_id": "FP002-P-AC016"
+      },
+      "proof_status": "Scoped proof guidance only. Use the linked ticket and implementation evidence to verify actual results.",
+      "ticket": "WELL-192",
+      "ticket_context": "Integrated historical implementation context. Apply this reference prospectively without reopening the original work."
+    },
+    {
+      "projection_id": "FP002-AC-030#E2a",
+      "source_id": "FP002-AC-030",
+      "title": "Deletion non-resurrection",
+      "source": {
+        "archive": "INPUTS/FP-002_PLANNING_PACKAGE_v0.10.1.zip",
+        "archive_sha256": "d29bae8de7d93de67c30511c99e4500f63dfbdde07674801778b72f8e7d12046",
+        "member": "TRACEABILITY_INDEX.json",
+        "pointer": "/acceptance_cases/FP002-AC-030",
+        "source_record_sha256": "9efc641ac4f76143e3a2e2c392e7522a3dcd7d0635c093daef2a206d9e17be71",
+        "source_record_hash_encoding": "UTF-8 json.dumps(record, ensure_ascii=False, indent=2), insertion order, trailing LF",
+        "member_sha256": "fa8510845f96e637cb28ca0e108764e184342d0faaf0bdd6c3928da3e2c6d79e",
+        "archive_location_kind": "External Master archive provenance. Resolve the scoped record within the repository.",
+        "master_version": "0.12.0",
+        "source_member_heading": "07_ACCEPTANCE_AND_PROOF.md#fp002-ac-030"
+      },
+      "authority_refs": [
+        {
+          "path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+          "section": "Corrections and disclosure; Proof and exit",
+          "blob": "c61f6e20d1a0422f048a7d1424367ddb117f5f42"
+        },
+        {
+          "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
+          "section": "E2a",
+          "blob": "ca33cf309f08942617f83ed906a2766720be1ca1"
+        },
+        {
+          "path": "docs/governance/product/00_PLATFORM_v1.21.0.md",
+          "section": "§§21I.3, 21I.6, 21I.12 and 21R.2",
+          "blob": "1d9c35093a2cc36e97a2011d9afdc268e3188878"
+        },
+        {
+          "path": "docs/governance/product/01_DECISIONS_v1.21.0.md",
+          "section": "DEC-300, DEC-301 and DEC-314",
+          "blob": "416d616ade29fddeb6dc9dd4126bd6ef0beb791e"
+        },
+        {
+          "path": "docs/governance/domain/04_DOMAIN_MAP_v1.2.0.md",
+          "section": "§§6.10–6.11 and applicable Identity, Privacy and Temperament ownership",
+          "blob": "ab21976d659759b3e383b3e880d2f297494f2c82"
+        },
+        {
+          "path": "docs/governance/supporting/ENGINEERING_STANDARDS_v1.1.0.md",
+          "section": "Tests, review and proof (applicable HIGH guidance)",
+          "blob": "4ab9d517895e6752e7d4f8d29fc9128852bfe507"
+        },
+        {
+          "path": "docs/delivery/proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+          "section": "Required commercial dossiers",
+          "blob": "bfafd5c5fffc6c1255367a39de918044a78d0e1b"
+        },
+        {
+          "path": "docs/governance/architecture/03_ARCHITECTURE_v1.1.1.md",
+          "section": "§§7–8",
+          "blob": "8a9e44d14d803009cfbb7b8d31294df750569cbf"
+        }
+      ],
+      "outcome": "Use current, effective owner-approved synthetic suppression evidence. A qualified late grant or correction preserves suppression of ordinary access and deleted data. Retain only the minimum commercial evidence required by law.",
+      "actor_journey": "Authorised payer and scoped recipient at the Commerce and Entitlements boundary.",
+      "lifecycle": "Effective suppression blocks an ordinary grant or restoration. Reconcile late financial evidence while preserving suppression.",
+      "invariant": "Preserve ordinary access suppression. Deletion alone creates neither refund nor forfeiture.",
+      "acceptance_adversarial_and_proof": "Use E2a-09/11 to verify that the owning Domain preserves suppression when qualified late evidence arrives and after a fresh restart.",
+      "exclusions": "Actual deletion, export, processor completion, restore, retention duration and deletion-triggered refund policy are outside this reference. Payer-only deletion preserves independent recipient rights.",
+      "source_navigation_only": {
+        "outcome_ids": [
+          "FP002-O-PRV-04",
+          "FP002-O-REC-08",
+          "FP002-O-COR-15"
+        ],
+        "journey_ids": [
+          "FP002-J-037"
+        ],
+        "lifecycle_ids": [
+          "FP002-L-030"
+        ],
+        "invariant_ids": [
+          "FP002-I-L030-A",
+          "FP002-I-L030-B",
+          "FP002-I-L030-C",
+          "FP002-I-X005",
+          "FP002-I-X009"
+        ],
+        "scenario_ids": [
+          "FP002-S-030"
+        ],
+        "proof_id": "FP002-P-AC030"
+      },
+      "proof_status": "Scoped proof guidance only. Use the linked ticket and implementation evidence to verify actual results.",
+      "ticket": "WELL-192",
+      "ticket_context": "Integrated historical implementation context. Apply this reference prospectively without reopening the original work."
+    }
+  ],
+  "ticket": "WELL-192",
+  "reference_class": "historical_synthetic_reuse"
+}
