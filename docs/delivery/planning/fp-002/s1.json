@@ -153,7 +153,7 @@
           "blob": "8a9e44d14d803009cfbb7b8d31294df750569cbf"
         }
       ],
-      "outcome": "Accept only approved synthetic offer versions with unambiguous terms and complete, deterministic allocation in currency minor units. Component amounts must sum to the accepted total. Preserve the immutable accepted snapshot. Under DEC-328, development amounts, savings and component splits are synthetic fixtures. Before real sale, authorised Commerce operators must approve the launch configuration and disclose the applicable terms before purchase.",
+      "outcome": "In the synthetic scope, accept only approved offer versions with unambiguous terms and complete, deterministic allocation in currency minor units. Component amounts must sum to the accepted total. Preserve the immutable accepted snapshot. Under DEC-328, development amounts, savings and component splits are synthetic fixtures. Real sales require approved launch configuration from authorised Commerce operators and disclosure of the applicable allocation before checkout.",
       "actor_journey": "Authorised payer and scoped recipient at the Commerce and Entitlements boundary.",
       "lifecycle": "Accept the current guarded offer version and preserve its immutable snapshot.",
       "invariant": "The allocation sums exactly in minor units. Historical obligations and refunds use the original snapshot.",

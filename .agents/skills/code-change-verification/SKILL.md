@@ -32,7 +32,7 @@ Do not automatically rerun already-valid focused proof or broad gates merely bec
 
 ## Independent implementation and proof assessment
 
-When a ticket explicitly cites reviewed scoped planning IDs, resolve only the applicable records and necessary direct governing sources. Verify their scope, exclusions, authority currency and acceptance-to-test mapping against the current routers, live Plane and the complete exact-head diff. Use related IDs for navigation only. Report missing, stale or conflicting references and resolve the affected scope under the existing authority and STOP rules. Use the existing proof matrix and tests. Apply this guidance prospectively.
+When a ticket explicitly cites reviewed scoped planning IDs, resolve only the applicable records and necessary direct governing sources. Check scope, exclusions and authority against the current routers and live Plane. Verify the acceptance-to-test mapping in the existing proof matrix against the actual code, tests and complete exact-head diff. Use related IDs for navigation only. Report missing, stale or conflicting references and resolve the affected scope under the existing authority and STOP rules. Apply this guidance prospectively.
 
 Inspect the complete implementation diff and affected consumers against current authority, rather than accepting the implementation plan as proof. Evaluate material JIT fitness decisions, justified introductions/replacements, pinned framework return types and DSL compatibility, single Domain ownership and supported owning Ash interfaces. Check module cohesion and avoid forwarding abstractions without a distinct responsibility.
 

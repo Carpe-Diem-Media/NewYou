@@ -15,6 +15,12 @@ The E2a records are classified as `historical_synthetic_reuse` and refer to [WEL
 
 [DEC-328](../../governance/product/01_DECISIONS_v1.21.0.md#dec-328--founder-pricing-decision-mvp-launch-amounts-are-fixtures-and-launch-values-are-commerce-configuration) and [FP-002 Phase 7C v0.3.0](../feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md) govern pricing where older execution-plan or reconciliation wording differs. Development prices, savings and component splits are synthetic fixtures. Authorised Commerce operators approve launch configuration before real sale. Deterministic versioned allocations, pre-sale disclosure and immutable accepted snapshots still apply.
 
+## Shared authority at the recorded snapshot
+
+- [Roadmap v1.2.5, FP-002](../../governance/roadmap/05_ROADMAP_v1.2.5.md#fp-002--purchase-to-verified-payment-and-entitlement) defines the purchase-to-entitlement outcome and the payment and snapshot invariants. Git blob `1ddc64495c80735ae4e98d6922857f9f22ee1575`.
+- [North Star v1.4.0, §11 Paid core offer](../../governance/product/PROJECT_NORTH_STAR_AND_MVP_v1.4.0.md#paid-core-offer) reflects the DEC-328 fixture and launch boundary. Git blob `d4e9657e40111cea29586aa70c4b81e72964decd`.
+- [Delivery Governance Standard v1.6.0, §3](../../governance/supporting/DELIVERY_GOVERNANCE_STANDARD_v1.6.0.md#3-ready-is-the-execution-boundary) governs Ready intake. Git blob `dd18d3ffa14b5454fbe05c54092ddd0f0c9a6311`.
+
 ## Provenance
 
 The publication inputs are these members of the external Master v0.13.0 archive, SHA-256 `acfd3f582aa24bca5f3f72e284c5f0ede1be116b358958c7c9700777b57c8e92`.
