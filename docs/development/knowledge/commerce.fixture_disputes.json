@@ -6,7 +6,7 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "74f44d34de59e8a9858b8c3d0ae53397714ccf3d",
+    "git_sha": "1642b7db8eb2ca29f2220ca2c7a3ef63467b225b",
     "semantics": "Committed implementation and tests for the provider-disabled E2c foundation."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -967,7 +967,7 @@
       "id": "privacy",
       "path": "test/support/privacy/fixture_dispute_purpose.ex",
       "symbol": "def require_current_locked",
-      "sha256": "30d6b6b5818fd57e68b2b7320d7582b05fb0aceb255ec9b6a7678143691531d9"
+      "sha256": "119a5aed97fe37595cac12668a70269f65bfeb079ce090ef184bac27ee424703"
     },
     {
       "id": "audit",
