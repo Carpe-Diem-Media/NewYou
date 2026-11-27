@@ -6,7 +6,7 @@
     "WELL-197"
   ],
   "implementation_revision": {
-    "git_sha": "1cae4e4be575ee2eee95d6099e9eb73943cdb662",
+    "git_sha": "142dd95bfbf6100f4b0676a4bb239fa30438a54a",
     "semantics": "WELL-197 S1 with Master Gate corrections for terminal Assessment reconciliation and integrated Identity owner reviews."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -1051,7 +1051,7 @@
       "id": "corrections",
       "path": "test/support/commerce/synthetic_corrections.ex",
       "symbol": "defp component_amount",
-      "sha256": "522bb626cee23de9686facb6033e05902daa58163ab15cba8824352884639204"
+      "sha256": "7631b49aac091fadd4379e794cc42a900251bdfa98e9509048c83d5781eb8b08"
     },
     {
       "id": "migration",
@@ -1111,7 +1111,7 @@
       "id": "correction_outcome",
       "path": "test/support/commerce/synthetic_corrections.ex",
       "symbol": "def assessment_end_for_locked_source",
-      "sha256": "522bb626cee23de9686facb6033e05902daa58163ab15cba8824352884639204"
+      "sha256": "7631b49aac091fadd4379e794cc42a900251bdfa98e9509048c83d5781eb8b08"
     },
     {
       "id": "identity_owner_test",
