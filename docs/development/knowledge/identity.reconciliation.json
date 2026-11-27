@@ -8,7 +8,7 @@
     "WELL-189"
   ],
   "implementation_revision": {
-    "git_sha": "0054c8c07674abdcaeb19fc7c6c5cb303057235c",
+    "git_sha": "1cae4e4be575ee2eee95d6099e9eb73943cdb662",
     "semantics": "Preserves the existing P8-14 owner actions and adds private DEV/TEST browser access, guarded case status, case-bound control evidence and apply confirmation. The Master Gate proof correction exercises the controller's existing control-token guards with real scoped fixtures. WELL-189 binds the empty-scope Commerce and Entitlements reviews. Earlier approvals need fresh review before apply. WELL-210 refreshes the shared browser proof source reference after the Recovery packet path moved to v0.3.0. The mapped behavior is unchanged. WELL-210 reconciles source evidence from integrated main b7e0e1fb6f600d6ad9fddf5b41633b1e19a46c14 and draft 63e4224811e3e0ac3de83b51f3c97c6db0b7858c. WELL-197 makes Commerce review either party and requires empty Entitlements credit and Temperament delivery scopes. An unapplied approval from the prior owner set requires fresh review. MG-02 proves prior-owner approval denial, fresh empty-scope review and post-approval history guards through Identity's apply interface."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -785,13 +785,13 @@
       "id": "commerce_review",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def review_identity_reconciliation",
-      "sha256": "690be2969c486032fd73212e1372cfea4a292560773833b7aacc08b8361f4939"
+      "sha256": "63d65f02601c4b2e783063eea3d6ea06e2be104b121e2b6e809ca0359aaff2d9"
     },
     {
       "id": "entitlements_review",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def review_identity_reconciliation",
-      "sha256": "43a545d2d2b31e3018df211943d6e0b1d7cc84b231bbe3e2d6189e564a84fcda"
+      "sha256": "dc7212e6cf03e4a830a51fb89e62e041e0649b3b5a5050dc3dbc70f8fc440642"
     }
   ]
 }

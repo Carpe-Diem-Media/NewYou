@@ -1,0 +1,892 @@
+{
+  "schema_version": 1,
+  "capability_id": "commerce.fixture_refunds",
+  "purpose": "Provider-disabled refund obligations, one committed dispatch winner and same-reference reconciliation for source-qualified TEST fixtures.",
+  "implementing_tickets": [
+    "WELL-221"
+  ],
+  "implementation_revision": {
+    "git_sha": "1cae4e4be575ee2eee95d6099e9eb73943cdb662",
+    "semantics": "Hosted fixture refund dispatch, evidence qualification, exact payer make-whole and source-specific Entitlements convergence."
+  },
+  "authoritative_domain": "NewYou.Commerce",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Entitlements",
+      "interface": "apply_fixture_refund/1 and grant_paid_plan/1",
+      "ownership": "Ends only the exact unused component under the source lock. The original grant checks committed endings before materialization.",
+      "source_ids": [
+        "entitlements",
+        "convergence"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "interface": "authorize_canonical_session/1",
+      "ownership": "Resolves the current canonical payer for initial admission, reservation and dispatch.",
+      "source_ids": [
+        "requests"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "interface": "SyntheticSuppression.locked_status/1",
+      "ownership": "Provides current TEST suppression authority under lock at the Entitlements mutation boundary.",
+      "source_ids": [
+        "convergence"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.FixtureRefund",
+      "actions": [
+        "establish",
+        "reserve",
+        "claim",
+        "defer_read",
+        "respect_retry_after",
+        "record_progress",
+        "satisfy",
+        "acknowledge",
+        "read_due",
+        "deliver"
+      ],
+      "caller_boundary": "Write and worker actions compile only in TEST. The Commerce owner binds the exact purchase, payer, collection, amount and allocation.",
+      "source_ids": [
+        "refund",
+        "requests"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.FixtureRefundReceipt",
+      "actions": [
+        "receive",
+        "classify",
+        "process"
+      ],
+      "caller_boundary": "TEST-only. The signed webhook or pinned read produces a minimal receipt before qualification. Receipt identity is separate from the refund effect.",
+      "source_ids": [
+        "receipt",
+        "evidence"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.VerifiedPayment",
+      "actions": [
+        "apply",
+        "record_excess"
+      ],
+      "caller_boundary": "The primary payment remains unique per purchase. The private TEST-only excess action requires a distinct qualified hosted collection identity.",
+      "source_ids": [
+        "pay",
+        "excess"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Commerce",
+      "function": "authorize_fixture_refund",
+      "arity": 2,
+      "visibility": "internal",
+      "arguments": [
+        "Canonical payer session",
+        "Signed exact hosted allocation authorization"
+      ],
+      "returns": [
+        "Refund obligation or refund_unavailable."
+      ],
+      "side_effects": [
+        "Commits or replays a stable reference and fingerprint against the retained paid quote."
+      ],
+      "caller_constraints": [
+        "TEST only. The signed proof scope is specific to hosted refund obligations."
+      ],
+      "source_ids": [
+        "requests",
+        "allocation"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce",
+      "function": "dispatch_fixture_refund",
+      "arity": 2,
+      "visibility": "internal",
+      "arguments": [
+        "Canonical payer session",
+        "Refund UUID"
+      ],
+      "returns": [
+        "Original unresolved or recovered refund intent, or refund_unavailable."
+      ],
+      "side_effects": [
+        "Commits one claim and reads it from an independent PostgreSQL connection before one pinned POST."
+      ],
+      "caller_constraints": [
+        "TEST only. An existing claim can only replay. A POST response cannot settle money."
+      ],
+      "source_ids": [
+        "claim",
+        "refund",
+        "transport"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce",
+      "function": "apply_fixture_refund_receipt",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Persisted receipt UUID"
+      ],
+      "returns": [
+        "Success after classification or refund_unavailable."
+      ],
+      "side_effects": [
+        "Qualifies exact progress and atomically binds processed evidence to the repayment and component consequence."
+      ],
+      "caller_constraints": [
+        "TEST only. Requires a stored normalized observation from authenticated ingress or a same-reference pinned read."
+      ],
+      "source_ids": [
+        "commerce",
+        "qualification",
+        "receipt"
+      ]
+    },
+    {
+      "module": "NewYou.Entitlements",
+      "function": "apply_fixture_refund",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Committed refund UUID"
+      ],
+      "returns": [
+        "Success or grant_unavailable."
+      ],
+      "side_effects": [
+        "Ends the original payment's exact held component or leaves it absent."
+      ],
+      "caller_constraints": [
+        "TEST only. Caller supplies no right, component, recipient or amount. Excess establishes no right effect."
+      ],
+      "source_ids": [
+        "entitlements",
+        "convergence"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261127103346_well221_fixture_refund.exs",
+      "tables": [
+        "commerce_fixture_refunds"
+      ],
+      "constraints": [
+        "fixture_refund_immutable_request",
+        "commerce_fixture_refunds_allocation_index",
+        "commerce_fixture_refunds_reference_index"
+      ],
+      "source_ids": [
+        "migration_1",
+        "roundtrip"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261127103554_well221_refund_claim.exs",
+      "tables": [
+        "commerce_fixture_refunds"
+      ],
+      "constraints": [
+        "fixture_refund_dispatch_fence"
+      ],
+      "source_ids": [
+        "migration_2",
+        "roundtrip"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261127103837_well221_refund_evidence.exs",
+      "tables": [
+        "commerce_fixture_refund_receipts"
+      ],
+      "constraints": [
+        "fixture_refund_receipt_shape",
+        "commerce_fixture_refunds_processed_receipt_id_fkey"
+      ],
+      "source_ids": [
+        "migration_3",
+        "roundtrip"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261127104110_well221_refund_recovery.exs",
+      "tables": [
+        "commerce_fixture_refunds"
+      ],
+      "constraints": [
+        "fixture_refund_read_due"
+      ],
+      "source_ids": [
+        "migration_4",
+        "roundtrip"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261127104245_well221_refund_consequence.exs",
+      "tables": [
+        "commerce_fixture_refunds"
+      ],
+      "constraints": [
+        "fixture_refund_open_consequence"
+      ],
+      "source_ids": [
+        "migration_5",
+        "roundtrip"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261127104442_well221_excess_collection.exs",
+      "tables": [
+        "commerce_verified_payments"
+      ],
+      "constraints": [
+        "verified_payment_collection_kind",
+        "commerce_verified_payments_purchase_index"
+      ],
+      "source_ids": [
+        "migration_6",
+        "roundtrip"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "Resolve the original hosted collection and immutable accepted quote. Bind the authorized payer and exact ZAR allocation, or automatically establish the exact owed excess after separate hosted qualification.",
+      "source_ids": [
+        "requests",
+        "excess",
+        "allocation"
+      ]
+    },
+    {
+      "summary": "Reserve the original obligation. The committed claim creates the first due time. Only the winning claimant emits one bounded TLS POST to the original pin.",
+      "source_ids": [
+        "refund",
+        "claim",
+        "transport"
+      ]
+    },
+    {
+      "summary": "Persist authenticated receipt evidence before acknowledgement. Independently scheduled reads reserve a bounded round before HTTP and use the original reference only.",
+      "source_ids": [
+        "receipt",
+        "evidence",
+        "owner_read"
+      ]
+    },
+    {
+      "summary": "Qualification and repayment satisfaction commit with the open component consequence. Entitlements resolves the exact source under Privacy and Commerce acknowledges its separate commit.",
+      "source_ids": [
+        "qualification",
+        "refund",
+        "entitlements",
+        "convergence"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "owed",
+      "reserved",
+      "unresolved",
+      "pending",
+      "processing",
+      "needs_attention",
+      "failed",
+      "insufficient_balance",
+      "processed"
+    ],
+    "transitions": [
+      {
+        "from_state": "owed",
+        "to_state": "reserved",
+        "guards": [
+          "Current canonical payer with current fixture Privacy scope."
+        ],
+        "side_effects": [
+          "Reserve the existing exact obligation."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "refund",
+          "requests"
+        ]
+      },
+      {
+        "from_state": "reserved",
+        "to_state": "unresolved",
+        "guards": [
+          "Original pin, top-level owning transaction and one committed winning claim."
+        ],
+        "side_effects": [
+          "Consume the only dispatch epoch and persist the first same-reference read time before any HTTP."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "claim",
+          "refund"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "pending",
+        "guards": [
+          "Authenticated observation matches reference, provider identity, original transaction, ZAR and exact amount. Subsequent progress can only advance."
+        ],
+        "side_effects": [
+          "Record reported status while the exact money remains owed."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "qualification",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "processing",
+        "guards": [
+          "Authenticated observation matches reference, provider identity, original transaction, ZAR and exact amount. Subsequent progress can only advance."
+        ],
+        "side_effects": [
+          "Record reported status while the exact money remains owed."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "qualification",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "needs_attention",
+        "guards": [
+          "Authenticated observation matches reference, provider identity, original transaction, ZAR and exact amount. Subsequent progress can only advance."
+        ],
+        "side_effects": [
+          "Record reported status while the exact money remains owed."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "qualification",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "failed",
+        "guards": [
+          "Authenticated observation matches reference, provider identity, original transaction, ZAR and exact amount. Subsequent progress can only advance."
+        ],
+        "side_effects": [
+          "Record reported status while the exact money remains owed."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "qualification",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "insufficient_balance",
+        "guards": [
+          "Authenticated observation matches reference, provider identity, original transaction, ZAR and exact amount. Subsequent progress can only advance."
+        ],
+        "side_effects": [
+          "Record reported status while the exact money remains owed."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "qualification",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "processed",
+        "guards": [
+          "Qualified exact processed evidence with a consistent provider refund ID."
+        ],
+        "side_effects": [
+          "Commit the processed receipt link, repayment satisfaction and any component consequence in one transaction. Close scheduled reads."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "qualification",
+          "refund",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "pending",
+        "to_state": "processed",
+        "guards": [
+          "Qualified exact processed evidence with a consistent provider refund ID."
+        ],
+        "side_effects": [
+          "Commit the processed receipt link, repayment satisfaction and any component consequence in one transaction. Close scheduled reads."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "qualification",
+          "refund",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "processing",
+        "to_state": "processed",
+        "guards": [
+          "Qualified exact processed evidence with a consistent provider refund ID."
+        ],
+        "side_effects": [
+          "Commit the processed receipt link, repayment satisfaction and any component consequence in one transaction. Close scheduled reads."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "qualification",
+          "refund",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "needs_attention",
+        "to_state": "processed",
+        "guards": [
+          "Qualified exact processed evidence with a consistent provider refund ID."
+        ],
+        "side_effects": [
+          "Commit the processed receipt link, repayment satisfaction and any component consequence in one transaction. Close scheduled reads."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "qualification",
+          "refund",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "failed",
+        "to_state": "processed",
+        "guards": [
+          "Qualified exact processed evidence with a consistent provider refund ID."
+        ],
+        "side_effects": [
+          "Commit the processed receipt link, repayment satisfaction and any component consequence in one transaction. Close scheduled reads."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "qualification",
+          "refund",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "insufficient_balance",
+        "to_state": "processed",
+        "guards": [
+          "Qualified exact processed evidence with a consistent provider refund ID."
+        ],
+        "side_effects": [
+          "Commit the processed receipt link, repayment satisfaction and any component consequence in one transaction. Close scheduled reads."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "qualification",
+          "refund",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "processed",
+        "to_state": "processed",
+        "guards": [
+          "A committed component effect exists and the Entitlements transaction converges under current Privacy."
+        ],
+        "side_effects": [
+          "Acknowledge the consequence separately. Later evidence cannot replace the processed receipt."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "convergence",
+          "refund",
+          "qualification"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "The wire uses TEST-only TLS on 127.0.0.1, the retained listener certificate, fixed fixture authorization, no redirects and no automatic retries.",
+      "source_ids": [
+        "transport",
+        "test"
+      ]
+    },
+    {
+      "summary": "Signatures authenticate raw bytes before JSON interpretation. Receipts retain normalized identifiers, bounded outcomes and a digest. They avoid raw bodies and signature headers.",
+      "source_ids": [
+        "ingress",
+        "receipt"
+      ]
+    },
+    {
+      "summary": "Current canonical payer and immutable quote select the monetary claimant. Production has no refund mutation DSL actions, transport, ingress or fixture workers. Retained hosted payments cannot authorize a production Plan grant.",
+      "source_ids": [
+        "requests",
+        "refund",
+        "commerce",
+        "transport"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "Independent SQL transactions serialize admission and processed effects on the accepted purchase, then the refund row. The payment/allocation identity and the original collection limit bound owed and reserved money.",
+      "source_ids": [
+        "requests",
+        "refund",
+        "test"
+      ]
+    },
+    {
+      "summary": "The original Plan grant and component ending take the same purchase lock. Either the grant is withheld or its exact existing right is ended.",
+      "source_ids": [
+        "convergence",
+        "test"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Exact authorization replays the same fingerprint, reference and payment. Changed input fails closed. A claim never expires into permission to POST again.",
+      "source_ids": [
+        "requests",
+        "claim",
+        "test"
+      ]
+    },
+    {
+      "summary": "Receipts deduplicate by source, requested reference and digest. Processed financial effect belongs to one refund row and cannot be reapplied with another receipt.",
+      "source_ids": [
+        "receipt",
+        "qualification"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Before commit, process loss leaves the intent reserved. After commit, a lost response or a pre-send crash leaves the same reference fenced for up to six later reads, with bounded backoff and Retry-After.",
+      "source_ids": [
+        "claim",
+        "owner_read",
+        "evidence",
+        "test"
+      ]
+    },
+    {
+      "summary": "Missing work is rediscovered from due rows. Needs-attention, failed, insufficient balance and exhausted reads leave owed money intact. A fresh BEAM can complete known-reference reads and replay unacknowledged consequences.",
+      "source_ids": [
+        "owner_read",
+        "refund",
+        "fresh"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "cases": [
+        "Independent SQL admission and dispatch contenders with commit visibility",
+        "Rollback, pre-send loss, transport ambiguity and TLS pin reuse",
+        "Signed receipt qualification, failure, replay, cleanup and fresh BEAM recovery",
+        "Exact source correction and excess preservation"
+      ],
+      "proves": "F-01 through F-07 fixture behavior and scoped F-08 teardown.",
+      "limits": "Hosted Checkout remains standalone Plan. Fixture fields and reply envelope are local protocol assumptions.",
+      "source_ids": [
+        "test",
+        "fresh"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "cases": [
+        "Frozen bundle allocation, repricing and exact component convergence"
+      ],
+      "proves": "F-04 and F-06 bundle attribution through separate E2a synthetic fixtures.",
+      "limits": "The original E2a signed observations retain synthetic source authority.",
+      "source_ids": [
+        "bundle",
+        "allocation",
+        "convergence"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "cases": [
+        "Refund migration up/down/up and refusal with a retained negative receipt"
+      ],
+      "proves": "F-08 isolated schema, local foreign keys, partial identity and rollback refusal.",
+      "limits": "Uses a transaction-owned schema in the allocated TEST database.",
+      "source_ids": [
+        "roundtrip",
+        "migration_3",
+        "migration_6"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "A later provider implementation must qualify actual provider fields, credentials and protocol stages under WELL-194. Keep owning source locks, evidence identities and the durable claim before I/O.",
+      "source_ids": [
+        "refund",
+        "receipt",
+        "qualification"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "EXTEND Store lib/store/payments/refund.ex and refund_attempt.ex at 949821ac589addb6e595f6333370ed65cf8d5ef7. Retain distinct immutable request and evidence identities with PostgreSQL constraints. Use a NewYou-specific owed and ambiguity lifecycle.",
+      "source_ids": [
+        "refund",
+        "receipt",
+        "test"
+      ]
+    },
+    {
+      "summary": "COMPOSE Store lib/store/payments/refunds.ex and lib/store/orders/refund_adjustment.ex at that revision. Adapt replay, source lock and bounded reservations. Preserve additive satisfaction in the original obligation. Use Ash transactions and existing Commerce authority.",
+      "source_ids": [
+        "requests",
+        "qualification",
+        "test"
+      ]
+    },
+    {
+      "summary": "EXTEND Store lib/store/orders/payment_application.ex and lib/store/entitlements/source_convergence.ex at that revision. Preserve one benefit for the original source and exact component convergence. Reuse NewYou's recipient Privacy lock and Entitlements actions.",
+      "source_ids": [
+        "excess",
+        "pay",
+        "convergence"
+      ]
+    },
+    {
+      "summary": "EXTEND Store phase 12 refund migration, governance refund semantics tests and digital revocation tests at that revision. Keep durable uniqueness, refusal over retained evidence, actual SQL contention and exact-source effect proof.",
+      "source_ids": [
+        "roundtrip",
+        "test",
+        "bundle"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "An ambiguous result cannot authorize another POST, a replacement reference or a right change. Jobs never assign money or beneficiary authority.",
+      "source_ids": [
+        "refund",
+        "claim",
+        "evidence"
+      ]
+    },
+    {
+      "summary": "Ordinary charge success keeps its existing deduplication and conflict behavior. The separate charge.excess event is a TEST fixture convention. Hosted evidence cannot be presented as an E2a synthetic collection or correction.",
+      "source_ids": [
+        "excess",
+        "ingress",
+        "pay"
+      ]
+    },
+    {
+      "summary": "Do not infer component attribution from current prices or amount coincidence. Keep future disputes in E2c and use the same Commerce source fence for overlap.",
+      "source_ids": [
+        "allocation",
+        "requests"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "All execution evidence is TEST-local. Provider-stage EV-010/011/024\u2013029/048/051/053 and actual-stack activation remain with the existing gated tickets.",
+    "Hosted Assessment and bundle checkout remain outside this slice. Bundle attribution uses the existing qualified synthetic fixtures."
+  ],
+  "follow_up_tickets": [
+    "WELL-194",
+    "WELL-191",
+    "WELL-176"
+  ],
+  "sources": [
+    {
+      "id": "commerce",
+      "path": "lib/new_you/commerce.ex",
+      "symbol": "def dispatch_fixture_refund",
+      "sha256": "63d65f02601c4b2e783063eea3d6ea06e2be104b121e2b6e809ca0359aaff2d9"
+    },
+    {
+      "id": "refund",
+      "path": "lib/new_you/commerce/fixture_refund.ex",
+      "symbol": "defmodule NewYou.Commerce.FixtureRefund",
+      "sha256": "3538a4ab4f5273d8bc905836b675a1af5e3d79ab35dbd2ab67aa3407440ec044"
+    },
+    {
+      "id": "receipt",
+      "path": "lib/new_you/commerce/fixture_refund_receipt.ex",
+      "symbol": "identity :evidence",
+      "sha256": "8d351864a9557d0dbeda7f6928d56eb2663fe23f9e8a2981ff8d0a3155a57e02"
+    },
+    {
+      "id": "requests",
+      "path": "test/support/commerce/fixture_refunds.ex",
+      "symbol": "def authorize(credentials, proof)",
+      "sha256": "4bca219af90e3f6a5539b0d592c325da61aa36ce5926135b6481ba42b5a33234"
+    },
+    {
+      "id": "claim",
+      "path": "test/support/commerce/fixture_refunds.ex",
+      "symbol": "defp committed_claim?",
+      "sha256": "4bca219af90e3f6a5539b0d592c325da61aa36ce5926135b6481ba42b5a33234"
+    },
+    {
+      "id": "owner_read",
+      "path": "test/support/commerce/fixture_refunds.ex",
+      "symbol": "def read_due",
+      "sha256": "4bca219af90e3f6a5539b0d592c325da61aa36ce5926135b6481ba42b5a33234"
+    },
+    {
+      "id": "qualification",
+      "path": "test/support/commerce/fixture_refunds.ex",
+      "symbol": "defp qualify_progress",
+      "sha256": "4bca219af90e3f6a5539b0d592c325da61aa36ce5926135b6481ba42b5a33234"
+    },
+    {
+      "id": "excess",
+      "path": "lib/new_you/commerce.ex",
+      "symbol": "defp apply_excess_fixture_payment",
+      "sha256": "63d65f02601c4b2e783063eea3d6ea06e2be104b121e2b6e809ca0359aaff2d9"
+    },
+    {
+      "id": "allocation",
+      "path": "lib/new_you/commerce/offer_admission.ex",
+      "symbol": "def accepted_component_minor",
+      "sha256": "813cab2f6c8018ca45e49786e7ce5230e17de82cc98d8da44b0f2d669f33de09"
+    },
+    {
+      "id": "evidence",
+      "path": "test/support/commerce/fixture_refund_evidence.ex",
+      "symbol": "def receive_webhook",
+      "sha256": "adbb1c4dca68077abb6a650193d1d41d18d00cd71b38a73c34d8219148a6316d"
+    },
+    {
+      "id": "transport",
+      "path": "lib/new_you/commerce/paystack_checkout.ex",
+      "symbol": "def build_refund(",
+      "sha256": "c7ee7d55fb93b5d83cc2a996bfbbca657fd5a641e6c29972c6f56d0b23c3d7a4"
+    },
+    {
+      "id": "ingress",
+      "path": "lib/new_you/commerce/hosted_payment_evidence.ex",
+      "symbol": "def ingest(raw",
+      "sha256": "7ba56b126f01bd3a9035c4649ae143b657ceebf38c77d872c77c830f4264fa83"
+    },
+    {
+      "id": "entitlements",
+      "path": "lib/new_you/entitlements.ex",
+      "symbol": "def apply_fixture_refund",
+      "sha256": "dc7212e6cf03e4a830a51fb89e62e041e0649b3b5a5050dc3dbc70f8fc440642"
+    },
+    {
+      "id": "convergence",
+      "path": "test/support/entitlements/synthetic_rights.ex",
+      "symbol": "defp apply_hosted_effect",
+      "sha256": "b977bf1ee34e5d983a07043e4f57cf5d959694c745569c876513925c7a51171c"
+    },
+    {
+      "id": "pay",
+      "path": "lib/new_you/commerce/verified_payment.ex",
+      "symbol": "identity :purchase",
+      "sha256": "b1d87cd35610653c98e4c3181965045b6cb15385bfca8cf7fddbfe44d75204ad"
+    },
+    {
+      "id": "cleanup",
+      "path": "test/support/proof/p8_05.ex",
+      "symbol": "defp cleanup_fixture_refunds",
+      "sha256": "1fa9fb1c48bb374d7783049864e4d61a61b0c1910cd6f0af857abef0a815c00a"
+    },
+    {
+      "id": "test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "defmodule NewYou.Commerce.HostedRefundTest",
+      "sha256": "1eb1de44e55ae224caba64d1b726da2a457382379ce8daf832d7ca8a4dddafa0"
+    },
+    {
+      "id": "fresh",
+      "path": "test/proof/well221_refund_restart.exs",
+      "symbol": "WELL221_COMPLETED",
+      "sha256": "8b7d63cc7dfe0586cd92e37ad64564379c6161f4021fbbec67230b7764cb89da"
+    },
+    {
+      "id": "bundle",
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "symbol": "only the frozen authorized component ends",
+      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+    },
+    {
+      "id": "roundtrip",
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "symbol": "refund migrations roundtrip",
+      "sha256": "4db95bd1f9d0350041f0ada4918641893d1e51d160f060b4ffc3c54adff19214"
+    },
+    {
+      "id": "migration_1",
+      "path": "priv/repo/migrations/20261127103346_well221_fixture_refund.exs",
+      "symbol": "def up do",
+      "sha256": "f4fd4b881816801b5ae4f9e160cf03d7b1342dca2290163584d1b42393bc53d1"
+    },
+    {
+      "id": "migration_2",
+      "path": "priv/repo/migrations/20261127103554_well221_refund_claim.exs",
+      "symbol": "def up do",
+      "sha256": "47ebdfce5233da11ae94a1504f767799c7322176a52a4deadd9ccee4017f3137"
+    },
+    {
+      "id": "migration_3",
+      "path": "priv/repo/migrations/20261127103837_well221_refund_evidence.exs",
+      "symbol": "def up do",
+      "sha256": "befb78c537f8cd7624d45d4a1ee1dc5a4be05005781ea2e3fe39af16c56d8b2f"
+    },
+    {
+      "id": "migration_4",
+      "path": "priv/repo/migrations/20261127104110_well221_refund_recovery.exs",
+      "symbol": "def up do",
+      "sha256": "7eeea271fa8dc9d93a15b999be99cb3512b080a4a60e21e677c7500b59781259"
+    },
+    {
+      "id": "migration_5",
+      "path": "priv/repo/migrations/20261127104245_well221_refund_consequence.exs",
+      "symbol": "def up do",
+      "sha256": "bd44791395d6339e09f9dbf45448dc08fed533bfa1bbbed6fc76c4bb9a22ea70"
+    },
+    {
+      "id": "migration_6",
+      "path": "priv/repo/migrations/20261127104442_well221_excess_collection.exs",
+      "symbol": "def up do",
+      "sha256": "074032af157ac2ecd6da9bb131097fb07dd639001674fda73b0118133178c410"
+    }
+  ]
+}
