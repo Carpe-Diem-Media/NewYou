@@ -189,6 +189,153 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
     end)
   end
 
+  test "signed pending evidence qualifies the original reference and immutable money", %{key: key} do
+    P805.with_fixture(fn ->
+      with_checkout(fn accepted, recipient, reference, _observed ->
+        matching = %{data(reference) | "status" => "pending"}
+        unknown = foreign_reference(reference)
+
+        for {payload, state, reason} <- [
+              {matching, :unresolved, :pending},
+              {%{matching | "reference" => unknown}, :quarantined, :source_mismatch},
+              {%{matching | "amount" => 39_900}, :quarantined, :source_mismatch},
+              {%{matching | "currency" => "USD"}, :quarantined, :source_mismatch}
+            ] do
+          prior_ids = MapSet.new(evidence(payload["reference"]), & &1.id)
+          send_webhook(key, payload, "charge.pending")
+          process_receipts(payload["reference"])
+
+          assert [%{state: ^state, classification: ^reason}] =
+                   Enum.reject(evidence(payload["reference"]), &MapSet.member?(prior_ids, &1.id))
+        end
+
+        assert_no_payment_effects(accepted, recipient)
+      end)
+    end)
+  end
+
+  test "Verify qualifies structured pending evidence and preserves transport-only outcomes" do
+    P805.with_fixture(fn ->
+      replies = :counters.new(1, [:atomics])
+
+      with_checkout(
+        fn conn, reference ->
+          pending = %{data(reference) | "status" => "pending"}
+          :counters.add(replies, 1, 1)
+
+          case :counters.get(replies, 1) do
+            1 ->
+              verify_reply(conn, pending)
+
+            2 ->
+              verify_reply(conn, %{pending | "reference" => foreign_reference(reference)})
+
+            3 ->
+              verify_reply(conn, %{pending | "amount" => 39_900})
+
+            4 ->
+              verify_reply(conn, %{pending | "currency" => "USD"})
+
+            5 ->
+              Plug.Conn.send_resp(conn, 404, "")
+
+            6 ->
+              Plug.Conn.send_resp(conn, 429, "")
+
+            7 ->
+              Process.sleep(750)
+              verify_reply(conn, pending)
+          end
+        end,
+        fn accepted, recipient, reference, observed ->
+          for {state, reason} <- [
+                {:unresolved, :pending},
+                {:quarantined, :source_mismatch},
+                {:quarantined, :source_mismatch},
+                {:quarantined, :source_mismatch},
+                {:unresolved, :not_found},
+                {:unresolved, :rate_limited},
+                {:unresolved, :timeout}
+              ] do
+            prior_ids = MapSet.new(evidence(reference), & &1.id)
+            assert :ok == HostedPaymentEvidence.verify_due(accepted.attempt_id)
+            assert_verify(observed, reference)
+
+            assert [%{state: ^state, classification: ^reason, requested_reference: ^reference}] =
+                     Enum.reject(evidence(reference), &MapSet.member?(prior_ids, &1.id))
+
+            assert_no_payment_effects(accepted, recipient)
+            make_due(accepted)
+          end
+        end
+      )
+    end)
+  end
+
+  test "Verify sends only after a durable reservation outside caller transactions" do
+    P805.with_fixture(fn ->
+      observer = self()
+
+      with_checkout(
+        fn conn, reference ->
+          read =
+            independent(fn ->
+              HostedDispatch
+              |> Ash.Query.filter(reference == ^reference)
+              |> Ash.read_one!(authorize?: false)
+            end)
+
+          send(observer, {:reservation_at_get, Task.await(read)})
+          Plug.Conn.send_resp(conn, 404, "")
+        end,
+        fn accepted, recipient, reference, observed ->
+          initial = dispatch(accepted)
+
+          sandboxed =
+            Task.async(fn ->
+              assert :ok == Sandbox.checkout(Repo)
+              refute Ash.DataLayer.in_transaction?(HostedDispatch)
+              result = HostedPaymentEvidence.verify_due(accepted.attempt_id)
+              reservation = dispatch(accepted)
+              assert :ok == Sandbox.checkin(Repo)
+              {result, reservation}
+            end)
+
+          {sandboxed_result, rolled_back} = Task.await(sandboxed)
+          refute_receive {^observed, _, _, _, _}, 0
+          assert sandboxed_result == {:error, :unavailable}
+          assert rolled_back.verify_round == initial.verify_round + 1
+          assert DateTime.after?(rolled_back.verify_after, initial.verify_after)
+          assert dispatch(accepted).verify_after == initial.verify_after
+          assert dispatch(accepted).verify_round == initial.verify_round
+
+          assert {:error, :rollback} ==
+                   Repo.transaction(fn ->
+                     assert Ash.DataLayer.in_transaction?(HostedDispatch)
+
+                     assert {:error, :unavailable} ==
+                              HostedPaymentEvidence.verify_due(accepted.attempt_id)
+
+                     Repo.rollback(:rollback)
+                   end)
+
+          refute_receive {^observed, _, _, _, _}, 0
+          assert [] == evidence(reference)
+          assert_no_payment_effects(accepted, recipient)
+
+          assert :ok == HostedPaymentEvidence.verify_due(accepted.attempt_id)
+          assert_verify(observed, reference)
+          assert_receive {:reservation_at_get, {:ok, _, reserved}}
+          assert reserved.reference == reference
+          assert reserved.verify_round == initial.verify_round + 1
+          assert reserved.verify_after == dispatch(accepted).verify_after
+          assert DateTime.after?(reserved.verify_after, DateTime.utc_now())
+          refute_receive {^observed, _, _, _, _}, 0
+        end
+      )
+    end)
+  end
+
   test "known reference scheduling survives missing and exhausted work and honors backoff" do
     P805.with_fixture(fn ->
       replies = :counters.new(1, [:atomics])
@@ -381,12 +528,31 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
             end)
 
           assert_receive {:ready_to_apply, receipt_pid}
-          worker = independent(fn -> HostedPaymentEvidence.verify_due(accepted.attempt_id) end)
+
+          [worker, competing_worker] =
+            for _ <- 1..2 do
+              independent(fn ->
+                send(observer, {:ready_to_verify, self()})
+
+                receive do
+                  :verify -> HostedPaymentEvidence.verify_due(accepted.attempt_id)
+                after
+                  2_000 -> :no_signal
+                end
+              end)
+            end
+
+          assert_receive {:ready_to_verify, first_verify}
+          assert_receive {:ready_to_verify, second_verify}
+          send(first_verify, :verify)
+          send(second_verify, :verify)
           assert_receive {:verify_waiting, listener}
           assert_verify(observed, reference)
           send(receipt_pid, :apply)
           send(listener, :release)
           assert {:ok, verify_backend, :ok} = Task.await(worker)
+          assert {:ok, competing_backend, :ok} = Task.await(competing_worker)
+          assert verify_backend != competing_backend
           assert {:ok, receipt_backend, :ok} = Task.await(receipt_worker)
           assert verify_backend != receipt_backend
 
@@ -559,6 +725,17 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
     VerifiedPayment
     |> Ash.Query.filter(purchase_id == ^accepted.purchase_id)
     |> Ash.read!(authorize?: false)
+  end
+
+  defp assert_no_payment_effects(accepted, recipient) do
+    assert [] == payments(accepted)
+
+    assert [] ==
+             PaymentConsequence
+             |> Ash.Query.filter(purchase_id == ^accepted.purchase_id)
+             |> Ash.read!(authorize?: false)
+
+    assert {:ok, []} == Entitlements.plan_rights(recipient.credentials)
   end
 
   defp dispatch(accepted), do: Ash.get!(HostedDispatch, accepted.attempt_id, authorize?: false)

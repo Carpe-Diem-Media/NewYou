@@ -207,13 +207,11 @@ defmodule NewYou.Commerce do
       end
     end
 
-    defp qualify_fixture_receipt(%{outcome: :succeeded} = receipt) do
+    defp qualify_fixture_receipt(%{outcome: outcome} = receipt)
+         when outcome in [:succeeded, :pending] do
       with {:ok, attempt} <- find_fixture_attempt(receipt),
            {:ok, purchase} <- lock_fixture_purchase(attempt, receipt) do
-        with :ok <- OfferAdmission.current_parties_privacy(purchase),
-             {:ok, prior} <- fixture_payment_history(purchase, receipt) do
-          apply_fixture_payment(prior, purchase, attempt, receipt)
-        end
+        classify_bound_fixture_receipt(receipt, purchase, attempt)
       else
         {:error, :mismatch} -> {:ok, :quarantined, :source_mismatch}
         error -> error
@@ -221,10 +219,20 @@ defmodule NewYou.Commerce do
     end
 
     defp qualify_fixture_receipt(%{outcome: reason})
-         when reason in [:pending, :not_found, :timeout, :rate_limited, :unavailable],
+         when reason in [:not_found, :timeout, :rate_limited, :unavailable],
          do: {:ok, :unresolved, reason}
 
     defp qualify_fixture_receipt(%{outcome: reason}), do: {:ok, :quarantined, reason}
+
+    defp classify_bound_fixture_receipt(%{outcome: :pending}, _purchase, _attempt),
+      do: {:ok, :unresolved, :pending}
+
+    defp classify_bound_fixture_receipt(receipt, purchase, attempt) do
+      with :ok <- OfferAdmission.current_parties_privacy(purchase),
+           {:ok, prior} <- fixture_payment_history(purchase, receipt) do
+        apply_fixture_payment(prior, purchase, attempt, receipt)
+      end
+    end
 
     defp find_fixture_attempt(%{
            source: :verify,

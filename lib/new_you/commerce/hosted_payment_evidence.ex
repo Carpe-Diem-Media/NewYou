@@ -78,7 +78,16 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
     # SQL Sandbox can return a row still inside its implicit outer transaction.
     # Require independent visibility before acknowledging even a duplicate.
     defp committed_receipt?(id) do
-      observer = Task.async(fn -> visible_receipt?(id) end)
+      independently_visible?(fn ->
+        match?(
+          {:ok, %HostedPaymentReceipt{}},
+          Ash.get(HostedPaymentReceipt, id, authorize?: false, error?: false, timeout: 1_000)
+        )
+      end)
+    end
+
+    defp independently_visible?(read) do
+      observer = Task.async(fn -> observe_commit(read) end)
 
       case Task.yield(observer, 2_000) do
         {:ok, visible?} ->
@@ -90,14 +99,9 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
       end
     end
 
-    defp visible_receipt?(id) do
+    defp observe_commit(read) do
       Sandbox.unboxed_run(Repo, fn ->
-        Repo.without_query_telemetry(fn ->
-          match?(
-            {:ok, %HostedPaymentReceipt{}},
-            Ash.get(HostedPaymentReceipt, id, authorize?: false, error?: false, timeout: 1_000)
-          )
-        end)
+        Repo.without_query_telemetry(read)
       end)
     rescue
       _ -> false
@@ -110,12 +114,30 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
       with false <- Ash.DataLayer.in_transaction?(HostedDispatch),
            {:ok, attempt} <- Ash.transact(HostedDispatch, fn -> reserve_verify(id) end) do
         case attempt do
-          %HostedDispatch{} -> verify(attempt)
+          %HostedDispatch{} -> verify_committed_reservation(attempt)
           :not_due -> :ok
         end
       else
         _ -> {:error, :unavailable}
       end
+    end
+
+    # An Ash transaction can release a savepoint in the implicit Sandbox transaction.
+    # Confirm the exact reservation from a separate connection before sending HTTP.
+    defp verify_committed_reservation(
+           %HostedDispatch{attempt_id: id, verify_after: due, verify_round: round} = attempt
+         ) do
+      visible? =
+        independently_visible?(fn ->
+          match?(
+            {:ok, %HostedDispatch{verify_after: ^due, verify_round: ^round}},
+            Ash.get(HostedDispatch, id, authorize?: false, error?: false, timeout: 1_000)
+          )
+        end)
+
+      if visible? and DateTime.after?(due, DateTime.utc_now()),
+        do: verify(attempt),
+        else: {:error, :unavailable}
     end
 
     defp reserve_verify(id) do
@@ -127,7 +149,7 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
            )
            |> Ash.Query.lock(:for_update)
            |> Ash.read_one(authorize?: false) do
-        {:ok, %HostedDispatch{} = attempt} -> defer_verify(attempt, now)
+        {:ok, %HostedDispatch{} = attempt} -> defer_verify(attempt, DateTime.utc_now())
         {:ok, nil} -> :not_due
         error -> error
       end
