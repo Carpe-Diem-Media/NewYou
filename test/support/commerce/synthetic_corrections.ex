@@ -230,7 +230,13 @@ defmodule NewYou.Commerce.SyntheticCorrections do
     end
   end
 
-  defp p1_scope(nil, immutable, _source), do: {:ok, {:legacy, immutable}}
+  defp p1_scope(nil, immutable, _source) do
+    case NewYou.Commerce.FixtureRefunds.plan_ended?(immutable) do
+      {:ok, true} -> {:ok, {:hosted_ended, immutable}}
+      {:ok, false} -> {:ok, {:legacy, immutable}}
+      error -> error
+    end
+  end
 
   defp p1_scope(%{collection_id: collection_id}, _immutable, source) do
     with {:ok, scope} <- paid_scope(source, collection_id), do: {:ok, {:qualified, scope}}
@@ -400,9 +406,8 @@ defmodule NewYou.Commerce.SyntheticCorrections do
 
   defp component_amount(%Purchase{quote_id: id} = purchase, component, %{quote_id: id})
        when not is_nil(id) do
-    with {:ok, %{components: components}} <- OfferAdmission.accepted_terms(purchase),
-         %{amount_minor: amount} <- Map.get(components, component) do
-      amount
+    with {:ok, terms} <- OfferAdmission.accepted_terms(purchase) do
+      OfferAdmission.accepted_component_minor(terms, component)
     end
   end
 
@@ -511,7 +516,9 @@ defmodule NewYou.Commerce.SyntheticCorrections do
 
   defp applied_payment(%Purchase{id: id}, _) do
     with {:ok, %VerifiedPayment{id: payment_id}} <-
-           Ash.read_one(Ash.Query.filter(VerifiedPayment, purchase_id == ^id), authorize?: false) do
+           VerifiedPayment
+           |> Ash.Query.filter(purchase_id == ^id and collection_kind == :primary)
+           |> Ash.read_one(authorize?: false) do
       {:ok, payment_id}
     end
   end

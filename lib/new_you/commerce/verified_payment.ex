@@ -15,6 +15,8 @@ defmodule NewYou.Commerce.VerifiedPayment do
       reference :fixture_receipt, on_delete: :restrict
     end
 
+    identity_wheres_to_sql purchase: "collection_kind = 'primary'"
+
     check_constraints do
       check_constraint [:fixture_receipt_id, :fixture_transaction_id],
                        "verified_payment_fixture_source",
@@ -22,6 +24,13 @@ defmodule NewYou.Commerce.VerifiedPayment do
                        (fixture_receipt_id IS NULL AND fixture_transaction_id IS NULL) OR
                        (fixture_receipt_id IS NOT NULL AND fixture_transaction_id IS NOT NULL AND
                          fixture_transaction_id ~ '^[1-9][0-9]{0,19}$')
+                       """
+
+      check_constraint [:collection_kind, :fixture_receipt_id],
+                       "verified_payment_collection_kind",
+                       check: """
+                       collection_kind = 'primary' OR
+                         (collection_kind = 'excess' AND fixture_receipt_id IS NOT NULL)
                        """
     end
   end
@@ -36,6 +45,15 @@ defmodule NewYou.Commerce.VerifiedPayment do
       public? false
       accept [:purchase_id, :fixture_receipt_id, :fixture_transaction_id]
     end
+
+    if Mix.env() == :test do
+      create :record_excess do
+        public? false
+        accept [:purchase_id, :fixture_receipt_id, :fixture_transaction_id]
+        validate present([:fixture_receipt_id, :fixture_transaction_id])
+        change set_attribute(:collection_kind, :excess)
+      end
+    end
   end
 
   policies do
@@ -48,6 +66,7 @@ defmodule NewYou.Commerce.VerifiedPayment do
     uuid_v7_primary_key :id
     create_timestamp :verified_at
     attribute :fixture_transaction_id, :string, sensitive?: true
+    attribute :collection_kind, :atom, default: :primary, allow_nil?: false
   end
 
   relationships do
@@ -62,7 +81,7 @@ defmodule NewYou.Commerce.VerifiedPayment do
   end
 
   identities do
-    identity :purchase, [:purchase_id]
+    identity :purchase, [:purchase_id], where: expr(collection_kind == :primary)
     identity :fixture_transaction, [:fixture_transaction_id]
   end
 end

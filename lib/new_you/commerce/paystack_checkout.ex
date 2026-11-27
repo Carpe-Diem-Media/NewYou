@@ -33,6 +33,24 @@ defmodule NewYou.Commerce.PaystackCheckout do
       loopback_request(:get, listener, "/transaction/verify/" <> reference, [])
     end
 
+    def build_refund(refund, %{port: port, certificate: certificate} = listener)
+        when port in 1..65_535 and is_binary(certificate) do
+      payload = %{
+        transaction: refund.transaction_id,
+        reference: refund.reference,
+        amount: refund.amount_minor,
+        currency: refund.currency
+      }
+
+      loopback_request(:post, listener, "/refund", json: payload)
+    end
+
+    @doc false
+    def build_refund_read(reference, %{port: port, certificate: certificate} = listener)
+        when port in 1..65_535 and is_binary(certificate) do
+      loopback_request(:get, listener, "/refund/" <> reference, [])
+    end
+
     defp loopback_request(method, listener, path, options) do
       # A bare request bypasses Req global defaults. HTTP/1 also excludes
       # Finch's transparent retry on a draining HTTP/2 pool.

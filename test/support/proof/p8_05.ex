@@ -14,7 +14,7 @@ defmodule NewYou.Proof.P805 do
   @privacy "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
   @tables ~w(accounts tokens registration_operations resend_operations message_intents communications_protected_envelopes communications_envelope_nonces evidence_obligations oban_jobs identity_pmr_reservations identity_grants privacy_purpose_authorities privacy_purpose_events)
   @fault_tables @tables ++
-                  ~w(commerce_hosted_payment_receipts commerce_payment_consequences commerce_synthetic_collection_receipts entitlements_plan_rights commerce_assessment_admissions)
+                  ~w(commerce_hosted_payment_receipts commerce_fixture_refund_receipts commerce_payment_consequences commerce_synthetic_collection_receipts entitlements_plan_rights commerce_assessment_admissions)
   @environment ~w(fp001_development_entry identity_registration_binding_keys identity_token_signing_secret identity_mfa_keyring communications_keyring p8_05_browser_development_fixtures p8_07_browser_development_fixtures p8_09_browser_development_fixtures p8_08_browser_development_fixtures p8_12_browser_development_fixtures p8_15_browser_development_fixtures identity_pmr_generator)a
 
   def run(case_id), do: with_fixture(fn -> execute(case_id) end)
@@ -1722,6 +1722,8 @@ defmodule NewYou.Proof.P805 do
         :ok
       end)
 
+    cleanup_fixture_refunds(operations, webhook_receipt_digests)
+
     if operations != [] do
       Repo.query!(
         """
@@ -1851,6 +1853,35 @@ defmodule NewYou.Proof.P805 do
     )
 
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
+  end
+
+  defp cleanup_fixture_refunds([], []), do: :ok
+
+  defp cleanup_fixture_refunds(operations, webhook_receipt_digests) do
+    Repo.query!(
+      """
+      WITH removed_refunds AS (
+        DELETE FROM commerce_fixture_refunds
+        WHERE purchase_id IN (
+          SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])
+        )
+        RETURNING id, reference
+      ),
+      removed_receipts AS (
+        DELETE FROM commerce_fixture_refund_receipts
+        WHERE reference IN (SELECT reference FROM removed_refunds) OR
+              requested_reference IN (SELECT reference FROM removed_refunds) OR
+              (source = 'webhook' AND digest = ANY($2::bytea[]))
+        RETURNING id
+      )
+      DELETE FROM oban_jobs
+      WHERE queue = 'commerce_fixture_refund' AND (
+        args->'primary_key'->>'id' IN (SELECT id::text FROM removed_receipts) OR
+        args->'primary_key'->>'id' IN (SELECT id::text FROM removed_refunds)
+      )
+      """,
+      [operations, webhook_receipt_digests]
+    )
   end
 
   defp cleanup_hosted_fixture_evidence([], []), do: :ok

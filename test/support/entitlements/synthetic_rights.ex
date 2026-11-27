@@ -4,7 +4,7 @@ defmodule NewYou.Entitlements.SyntheticRights do
   paid source and component. Source and Privacy locks remain held until the
   Entitlements commit.
   """
-  alias NewYou.Commerce.SyntheticCorrections
+  alias NewYou.Commerce.{FixtureRefunds, SyntheticCorrections}
   alias NewYou.Entitlements.PlanRight
   alias NewYou.Privacy.SyntheticSuppression
   require Ash.Query
@@ -37,6 +37,23 @@ defmodule NewYou.Entitlements.SyntheticRights do
       :ok
     else
       _ -> {:error, :grant_unavailable}
+    end
+  end
+
+  @doc false
+  @spec apply_hosted_refund(Ecto.UUID.t()) :: :ok | {:error, :grant_unavailable}
+  def apply_hosted_refund(id) do
+    with false <- Ash.DataLayer.in_transaction?(PlanRight),
+         {:ok, :ok} <- Ash.transact(PlanRight, fn -> apply_hosted_effect(id) end) do
+      :ok
+    else
+      _ -> {:error, :grant_unavailable}
+    end
+  end
+
+  defp apply_hosted_effect(id) do
+    with {:ok, scope, component} <- FixtureRefunds.locked_component_effect(id) do
+      apply_effect(scope, %{kind: :component_end, component: component})
     end
   end
 
@@ -93,6 +110,12 @@ defmodule NewYou.Entitlements.SyntheticRights do
     end
   end
 
+  defp apply_p1({:hosted_ended, scope}) do
+    scope = Map.put(scope, :ended_components, MapSet.new([:plan]))
+
+    with :ok <- apply_effect(scope, %{kind: :component_end, component: :plan}), do: :withheld
+  end
+
   defp apply_p1({:legacy, scope}) do
     case SyntheticSuppression.locked_status(scope.recipient_id) do
       {:ok, :allowed} ->
@@ -147,7 +170,8 @@ defmodule NewYou.Entitlements.SyntheticRights do
     query =
       Ash.Query.filter(
         PlanRight,
-        purchase_id == ^scope.purchase_id and component == ^component
+        purchase_id == ^scope.purchase_id and payment_id == ^scope.payment_id and
+          recipient_id == ^scope.recipient_id and component == ^component
       )
 
     case Ash.read_one(query, authorize?: false) do

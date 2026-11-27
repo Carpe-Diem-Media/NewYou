@@ -20,6 +20,8 @@ defmodule NewYou.Commerce do
     resource NewYou.Commerce.PurchaseQuote
     resource NewYou.Commerce.AssessmentAdmission
     resource VerifiedPayment
+    resource NewYou.Commerce.FixtureRefund
+    resource NewYou.Commerce.FixtureRefundReceipt
     resource PaymentConsequence
     resource NewYou.Commerce.SyntheticCollection
     resource NewYou.Commerce.SyntheticCollectionReceipt
@@ -27,6 +29,71 @@ defmodule NewYou.Commerce do
     resource NewYou.Commerce.SyntheticOrder
     resource NewYou.Commerce.SyntheticCorrection
     resource NewYou.Commerce.SyntheticCorrectionReceipt
+  end
+
+  @doc """
+  Establish or replay a TEST-only refund obligation for the signed, exact
+  hosted payment allocation. The current canonical payer must match the
+  immutable purchase. This operation cannot dispatch a refund.
+  """
+  @spec authorize_fixture_refund(map(), term()) ::
+          {:ok, NewYou.Commerce.FixtureRefund.t()} | {:error, :refund_unavailable}
+  if Mix.env() == :test do
+    def authorize_fixture_refund(credentials, proof),
+      do: NewYou.Commerce.FixtureRefunds.authorize(credentials, proof)
+  else
+    def authorize_fixture_refund(_, _), do: {:error, :refund_unavailable}
+  end
+
+  @doc """
+  Reserve a previously authorized TEST refund as its current canonical payer.
+  Replays return the same intent. Reservation performs no provider request.
+  """
+  @spec reserve_fixture_refund(map(), Ecto.UUID.t()) ::
+          {:ok, NewYou.Commerce.FixtureRefund.t()} | {:error, :refund_unavailable}
+  if Mix.env() == :test do
+    def reserve_fixture_refund(credentials, id),
+      do: NewYou.Commerce.FixtureRefunds.reserve(credentials, id)
+  else
+    def reserve_fixture_refund(_, _), do: {:error, :refund_unavailable}
+  end
+
+  @doc """
+  Consume a TEST refund's only dispatch claim. Only the committed winner can
+  POST to the checkout fixture's pinned listener. The result remains unresolved
+  until qualified evidence arrives, including when the response is lost.
+  """
+  @spec dispatch_fixture_refund(map(), Ecto.UUID.t()) ::
+          {:ok, NewYou.Commerce.FixtureRefund.t()} | {:error, :refund_unavailable}
+  if Mix.env() == :test do
+    def dispatch_fixture_refund(credentials, id),
+      do: NewYou.Commerce.FixtureRefunds.dispatch(credentials, id)
+  else
+    def dispatch_fixture_refund(_, _), do: {:error, :refund_unavailable}
+  end
+
+  @doc """
+  Qualify a persisted, authenticated TEST refund receipt. Only exact bound
+  evidence can advance the original claim. Replay cannot repeat its effect.
+  """
+  @spec apply_fixture_refund_receipt(Ecto.UUID.t()) :: :ok | {:error, :refund_unavailable}
+  if Mix.env() == :test do
+    def apply_fixture_refund_receipt(id),
+      do: NewYou.Commerce.FixtureRefunds.apply_receipt(id)
+  else
+    def apply_fixture_refund_receipt(_), do: {:error, :refund_unavailable}
+  end
+
+  @doc """
+  Deliver the committed TEST refund consequence to Entitlements and acknowledge
+  it after their transaction. The same source can be safely applied after a
+  lost acknowledgement.
+  """
+  @spec deliver_fixture_refund(Ecto.UUID.t()) :: :ok | {:error, :refund_unavailable}
+  if Mix.env() == :test do
+    def deliver_fixture_refund(id), do: NewYou.Commerce.FixtureRefunds.deliver(id)
+  else
+    def deliver_fixture_refund(_), do: {:error, :refund_unavailable}
   end
 
   @doc """
@@ -138,6 +205,7 @@ defmodule NewYou.Commerce do
   if Mix.env() == :test do
     alias NewYou.Commerce.{
       AssessmentAdmissions,
+      FixtureRefunds,
       HostedDispatch,
       HostedPaymentReceipt,
       OfferAdmission,
@@ -208,7 +276,7 @@ defmodule NewYou.Commerce do
     end
 
     defp qualify_fixture_receipt(%{outcome: outcome} = receipt)
-         when outcome in [:succeeded, :pending] do
+         when outcome in [:succeeded, :pending, :excess] do
       with {:ok, attempt} <- find_fixture_attempt(receipt),
            {:ok, purchase} <- lock_fixture_purchase(attempt, receipt) do
         classify_bound_fixture_receipt(receipt, purchase, attempt)
@@ -226,6 +294,20 @@ defmodule NewYou.Commerce do
 
     defp classify_bound_fixture_receipt(%{outcome: :pending}, _purchase, _attempt),
       do: {:ok, :unresolved, :pending}
+
+    defp classify_bound_fixture_receipt(
+           %{outcome: :excess, source: :webhook} = receipt,
+           purchase,
+           _
+         ) do
+      with :ok <- OfferAdmission.current_parties_privacy(purchase),
+           {:ok, prior} <- fixture_payment_history(purchase, receipt) do
+        apply_excess_fixture_payment(prior, purchase, receipt)
+      end
+    end
+
+    defp classify_bound_fixture_receipt(%{outcome: :excess}, _, _),
+      do: {:ok, :quarantined, :source_mismatch}
 
     defp classify_bound_fixture_receipt(receipt, purchase, attempt) do
       with :ok <- OfferAdmission.current_parties_privacy(purchase),
@@ -283,7 +365,8 @@ defmodule NewYou.Commerce do
     defp fixture_payment_history(purchase, receipt) do
       VerifiedPayment
       |> Ash.Query.filter(
-        purchase_id == ^purchase.id or fixture_transaction_id == ^receipt.transaction_id
+        (purchase_id == ^purchase.id and collection_kind == :primary) or
+          fixture_transaction_id == ^receipt.transaction_id
       )
       |> Ash.read(authorize?: false)
     end
@@ -298,7 +381,13 @@ defmodule NewYou.Commerce do
     end
 
     defp apply_fixture_payment(
-           [%VerifiedPayment{purchase_id: purchase_id, fixture_transaction_id: transaction_id}],
+           [
+             %VerifiedPayment{
+               purchase_id: purchase_id,
+               collection_kind: :primary,
+               fixture_transaction_id: transaction_id
+             }
+           ],
            %{id: purchase_id},
            _attempt,
            %{transaction_id: transaction_id}
@@ -306,6 +395,40 @@ defmodule NewYou.Commerce do
          do: {:ok, :qualified, :replayed}
 
     defp apply_fixture_payment(_, _, _, _), do: {:ok, :quarantined, :payment_conflict}
+
+    defp apply_excess_fixture_payment(prior, purchase, receipt) do
+      original =
+        Enum.find(
+          prior,
+          &(&1.collection_kind == :primary and
+              &1.purchase_id == purchase.id and not is_nil(&1.fixture_receipt_id))
+        )
+
+      same_transaction = Enum.find(prior, &(&1.fixture_transaction_id == receipt.transaction_id))
+
+      case {original, same_transaction} do
+        {%VerifiedPayment{}, nil} ->
+          attrs = %{
+            purchase_id: purchase.id,
+            fixture_receipt_id: receipt.id,
+            fixture_transaction_id: receipt.transaction_id
+          }
+
+          with {:ok, collection} <-
+                 Ash.create(VerifiedPayment, attrs, action: :record_excess, authorize?: false),
+               %NewYou.Commerce.FixtureRefund{} <-
+                 FixtureRefunds.establish_excess_locked(purchase, collection) do
+            {:ok, :qualified, :excess_recorded}
+          end
+
+        {%VerifiedPayment{}, %VerifiedPayment{purchase_id: id, collection_kind: :excess}}
+        when id == purchase.id ->
+          {:ok, :qualified, :replayed}
+
+        _ ->
+          {:ok, :quarantined, :payment_conflict}
+      end
+    end
 
     defp apply_qualified(
            %{
@@ -327,7 +450,7 @@ defmodule NewYou.Commerce do
            {:ok, delivery} <- payment_scope(purchase, fields),
            {:ok, prior} <-
              VerifiedPayment
-             |> Ash.Query.filter(purchase_id == ^purchase_id)
+             |> Ash.Query.filter(purchase_id == ^purchase_id and collection_kind == :primary)
              |> Ash.read_one(authorize?: false),
            :ok <- record_collection(fields, purchase, prior) do
         commit_payment(prior, purchase, delivery, %{})
@@ -401,7 +524,7 @@ defmodule NewYou.Commerce do
   def paid_plan_source(consequence_id) do
     with {:ok, %PaymentConsequence{delivery_kind: :plan} = consequence} <-
            Ash.get(PaymentConsequence, consequence_id, authorize?: false),
-         {:ok, %VerifiedPayment{purchase_id: purchase_id} = payment} <-
+         {:ok, %VerifiedPayment{purchase_id: purchase_id, collection_kind: :primary} = payment} <-
            Ash.get(VerifiedPayment, consequence.payment_id, authorize?: false),
          true <- eligible_plan_payment?(payment),
          true <- purchase_id == consequence.purchase_id,
