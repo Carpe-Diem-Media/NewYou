@@ -6,7 +6,7 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "33092608a96b1405ec1f8ef0febe9830f822c143",
+    "git_sha": "7d64bdc26311b267ae6803009a92fe9df4596f56",
     "semantics": "Provider-disabled refund dispatch, recoverable capped reads, source-qualified excess, durable provider ID conflict classification and privacy-safe Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -879,13 +879,13 @@
       "id": "cleanup",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defp cleanup_fixture_refunds",
-      "sha256": "c3383a07207372a84e45bfe0fdeeee949a7c6b91433db5e84abbb88c79c13175"
+      "sha256": "95587a9944199b98fe8d5be5a3ce49b81b15b56f69ac668a51bee934df2dce62"
     },
     {
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedRefundTest",
-      "sha256": "8be81d3095b796ee836063c750d7a2bea3eb330dfaa3522852222f2ce06bdc0d"
+      "sha256": "f059dc532bd41ca11fa2aea425f84f1debe3dbf961e33b547af34e427b3f3d36"
     },
     {
       "id": "fresh",

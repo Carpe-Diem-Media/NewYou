@@ -6,8 +6,8 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "1642b7db8eb2ca29f2220ca2c7a3ef63467b225b",
-    "semantics": "Committed implementation and tests for the provider-disabled E2c foundation."
+    "git_sha": "7d64bdc26311b267ae6803009a92fe9df4596f56",
+    "semantics": "Provider-disabled E2c foundation with the three Master Gate corrections."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -67,6 +67,7 @@
         "bind",
         "qualify",
         "record_conflict",
+        "confirm_terminal",
         "reserve_read",
         "acknowledge",
         "read_due",
@@ -267,11 +268,13 @@
       ]
     },
     {
-      "summary": "The evidence projection checks exact scope proofs, canonical session, current Privacy purpose and both parties' deletion authority. Audit persists only the actor, purpose, case and fixed field-set assertion.",
+      "summary": "The projection binds exact signed scope claims and checks current session, persisted Privacy purpose and deletion authority. Audit records the exact operation, actor, dispute, purpose and field set. An independent connection must see that committed assertion before the projection returns. Explicit caller transactions are denied.",
       "source_ids": [
         "projection",
         "privacy",
-        "audit"
+        "audit",
+        "fence",
+        "projection_test"
       ]
     }
   ],
@@ -597,7 +600,8 @@
           "Contradictory qualified terminal evidence."
         ],
         "side_effects": [
-          "Preserve terminal history, flag the conflict and suspend attributable access."
+          "Preserve terminal history, flag the conflict and suspend attributable access.",
+          "Opening the conflict invalidates an earlier read reservation."
         ],
         "terminal": true,
         "source_ids": [
@@ -612,7 +616,8 @@
           "Contradictory qualified terminal evidence."
         ],
         "side_effects": [
-          "Preserve the lost payment and its ended right. Flag the conflict."
+          "Preserve the lost payment and its ended right. Flag the conflict.",
+          "Opening the conflict invalidates an earlier read reservation."
         ],
         "terminal": true,
         "source_ids": [
@@ -695,6 +700,42 @@
           "privacy",
           "projection"
         ]
+      },
+      {
+        "from_state": "restored",
+        "to_state": "restored",
+        "guards": [
+          "A current, source-qualified pinned fixture read confirms the retained outcome at a revision newer than the retained decision and any pending or classified opposing terminal evidence."
+        ],
+        "side_effects": [
+          "Clear the conflict and advance the consequence version atomically. Historic receipts remain additive.",
+          "Re-evaluate restoration and the refund fence for the existing paid right."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "dispute",
+          "lifecycle",
+          "restart",
+          "test"
+        ]
+      },
+      {
+        "from_state": "lost",
+        "to_state": "lost",
+        "guards": [
+          "A current, source-qualified pinned fixture read confirms the retained outcome at a revision newer than the retained decision and any pending or classified opposing terminal evidence."
+        ],
+        "side_effects": [
+          "Clear the conflict and advance the consequence version atomically. Historic receipts remain additive.",
+          "Retain final loss, the refund fence and the ended right."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "dispute",
+          "lifecycle",
+          "restart",
+          "test"
+        ]
       }
     ]
   },
@@ -713,6 +754,15 @@
         "ingress",
         "fence",
         "test"
+      ]
+    },
+    {
+      "summary": "Privacy suppresses restricted SQL telemetry around authority reads, grant and withdrawal writes and events, proof issuance, and failure reconciliation. The same bounded observer that checks receipt visibility also checks exact Audit visibility with protected SQL telemetry.",
+      "source_ids": [
+        "privacy",
+        "privacy_telemetry",
+        "audit",
+        "fence"
       ]
     }
   ],
@@ -735,6 +785,13 @@
         "dispute",
         "receipt",
         "restart"
+      ]
+    },
+    {
+      "summary": "A later exact pinned confirmation covers older opposing revisions. An older disagreement with no newer pinned confirmation can still open a conflict.",
+      "source_ids": [
+        "lifecycle",
+        "test"
       ]
     }
   ],
@@ -768,7 +825,8 @@
         "Independent PostgreSQL contention in both directions",
         "Partial and excess scope",
         "Pinned TLS request counts and capped fresh-BEAM recovery",
-        "SQL telemetry canaries and scoped job cleanup"
+        "SQL telemetry canaries and scoped job cleanup",
+        "Terminal conflicts hold the refund fence until a newer exact pinned confirmation across a fresh BEAM, including final-loss non-resurrection and additive receipt history"
       ],
       "proves": "F-01 through F-05 and F-07 fixture execution.",
       "limits": "Hosted proof is standalone Plan only. No live provider behavior.",
@@ -783,7 +841,8 @@
         "Minimal allowlist and Audit binding",
         "Missing, foreign or changed scope",
         "Old proof replay after terminal withdrawal",
-        "Deletion suppression"
+        "Deletion suppression",
+        "Explicit and implicit Sandbox rollback, rejected Audit persistence, independent exact committed assertion, and idempotent replay"
       ],
       "proves": "F-06 owner-backed local disclosure.",
       "limits": "Signed roles are TEST proof claims.",
@@ -815,6 +874,20 @@
       "limits": "Migration proof runs in a transaction-owned schema.",
       "source_ids": [
         "roundtrip"
+      ]
+    },
+    {
+      "path": "test/new_you/privacy/fixture_dispute_purpose_telemetry_test.exs",
+      "cases": [
+        "Emitted SQL telemetry positive controls in string and binary UUID representations",
+        "Grant and withdrawal success, failed event persistence and rollback, proof issuance, and independent concurrent grant reconciliation"
+      ],
+      "proves": "MG-223-02 direct Privacy authority calls protect subject, dispute and operation identifiers.",
+      "limits": "Purpose fixtures use the shared DevCore TEST allocation and operation-scoped teardown.",
+      "source_ids": [
+        "privacy",
+        "privacy_telemetry",
+        "cleanup"
       ]
     }
   ],
@@ -889,7 +962,8 @@
   "proof_limitations": [
     "Actual Paystack account configuration, dispute status and deadline vocabulary, Finance operations and release certification remain out of scope.",
     "The local fixture records unresolved overlapping corrections and does not decide cancellation, netting or external adjudication.",
-    "Ash Signals and Temporal Resources were considered. The existing versioned Commerce consequence and immutable receipts provide scoped durable recovery and historical evidence without process-local authority or new dependencies."
+    "Ash Signals and Temporal Resources were considered. The existing versioned Commerce consequence and immutable receipts provide scoped durable recovery and historical evidence without process-local authority or new dependencies.",
+    "Finance and Audit are signed TEST fixture claims. Persisted revocation proof applies to the Privacy purpose and canonical session; the fixture has no independent role-revocation state. Revisions order fixture observations only."
   ],
   "follow_up_tickets": [
     "WELL-195",
@@ -913,7 +987,7 @@
       "id": "dispute",
       "path": "lib/new_you/commerce/fixture_dispute.ex",
       "symbol": "identity :provider_dispute",
-      "sha256": "16dc4863fbdc9d6d71b4d67a4ff8f1cd77dee7b4addbf1100765c00f53117701"
+      "sha256": "720ef4b477b00ad93e693fb7195982ff72b3dc4fc86dde2a8b7abaa684a11c2c"
     },
     {
       "id": "receipt",
@@ -925,7 +999,7 @@
       "id": "lifecycle",
       "path": "test/support/commerce/fixture_disputes.ex",
       "symbol": "def locked_effect",
-      "sha256": "8fd17aa78066d5491a21db008a3ac6e249f868fb4d3f343bb67e271794db8233"
+      "sha256": "4f6d826bcd59ff553663f8f4e32768cdead057f02f08ef911b708ffd31d9f128"
     },
     {
       "id": "fence",
@@ -967,31 +1041,31 @@
       "id": "privacy",
       "path": "test/support/privacy/fixture_dispute_purpose.ex",
       "symbol": "def require_current_locked",
-      "sha256": "119a5aed97fe37595cac12668a70269f65bfeb079ce090ef184bac27ee424703"
+      "sha256": "9b7f032b44090c8865e1eeb7339a52e1dffd4f5984b33aa1f9e6a770479cb384"
     },
     {
       "id": "audit",
       "path": "test/support/audit/fixture_dispute_disclosure_evidence.ex",
       "symbol": "def record_in_transaction",
-      "sha256": "1802dc0f0c4ed52fea41d9a7103e8c635b1cdd7cc58a29831e3b8b3c7e1a7029"
+      "sha256": "6accd3434a9f073cc8282a6cf13b2a860de4be2ccf70e6ede3e03627f1e8a5d4"
     },
     {
       "id": "projection",
       "path": "test/support/commerce/fixture_dispute_projection.ex",
       "symbol": "def read",
-      "sha256": "4fff3662f822c3a90d1f8230d94b9c767e27997146cc4c2e974b598fe6b83d1d"
+      "sha256": "2d3458f9f6caf94a6478e6ed3e6df2a92e8071766a66617eddfdee0aeeae9931"
     },
     {
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"refund and dispute serialize",
-      "sha256": "8be81d3095b796ee836063c750d7a2bea3eb330dfaa3522852222f2ce06bdc0d"
+      "sha256": "f059dc532bd41ca11fa2aea425f84f1debe3dbf961e33b547af34e427b3f3d36"
     },
     {
       "id": "restart",
       "path": "test/proof/well223_dispute_restart.exs",
       "symbol": "WELL223_COMPLETED",
-      "sha256": "5f89c019f08a5faba7d82619cc3fe85d0dce5c3db0df024adc2496c5a41a32fc"
+      "sha256": "446deb67f5ad8ee9d1b886c2b49a11dce5aca4715a41ec1b22dd228336e409ee"
     },
     {
       "id": "assessment",
@@ -1003,7 +1077,7 @@
       "id": "projection_test",
       "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
       "symbol": "defmodule NewYou.Commerce.FixtureDisputeProjectionTest",
-      "sha256": "e8ac3c37cdabdc472b5c1e118d4bc62c04060c92032cf3fa8aabafdea1770758"
+      "sha256": "b94697516c1adc9e1d66c85dc562faee798f6a92867279f4fccdf64a4ccab743"
     },
     {
       "id": "roundtrip",
@@ -1027,13 +1101,19 @@
       "id": "cleanup",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defp cleanup_fixture_disputes",
-      "sha256": "c3383a07207372a84e45bfe0fdeeee949a7c6b91433db5e84abbb88c79c13175"
+      "sha256": "95587a9944199b98fe8d5be5a3ce49b81b15b56f69ac668a51bee934df2dce62"
     },
     {
       "id": "discovery",
       "path": "mix.exs",
       "symbol": "well223_dispute_restart",
       "sha256": "40051095f2b1c027e35d600934c59b0ed7394774b57bcb8b1a600acd8365821c"
+    },
+    {
+      "id": "privacy_telemetry",
+      "path": "test/new_you/privacy/fixture_dispute_purpose_telemetry_test.exs",
+      "symbol": "test \"purpose authority SQL omits",
+      "sha256": "bade0ea5e97cd2f2ce7e4f7af97380ddec2b76ddc935610fb8cd4afdabfcdb75"
     }
   ]
 }
