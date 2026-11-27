@@ -296,6 +296,41 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
     end)
   end
 
+  test "Verify leaves the original reference unresolved when another receiver reuses its port" do
+    P805.with_fixture(fn ->
+      {accepted, recipient, reference, port} =
+        with_checkout(fn accepted, recipient, reference, _observed ->
+          {accepted, recipient, reference, dispatch(accepted).fixture_port}
+        end)
+
+      schedule_verify()
+      assert [%{classification: :unavailable}] = evidence(reference)
+      assert [] == payments(accepted)
+      assert %{verify_round: 1} = dispatch(accepted)
+
+      replacements = [
+        &HostedCheckoutReceiver.with_receiver/3,
+        &HostedCheckoutReceiver.with_bound_receiver/3
+      ]
+
+      for {start_receiver, round} <- Enum.with_index(replacements, 2) do
+        make_due(accepted)
+
+        start_receiver.(
+          fn conn, _ -> verify_reply(conn, data(reference)) end,
+          fn _listener, observed ->
+            schedule_verify()
+            refute_receive {^observed, _, _, _, _}, 0
+            assert [] == payments(accepted)
+            assert {:ok, []} == Entitlements.plan_rights(recipient.credentials)
+            assert %{verify_round: ^round, verify_after: %DateTime{}} = dispatch(accepted)
+          end,
+          port: port
+        )
+      end
+    end)
+  end
+
   test "independent connections race duplicate receipts and Verify without multiplying effects",
        %{key: key} do
     P805.with_fixture(fn ->
@@ -423,7 +458,7 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
     assert {:ok, %{reference: reference}} =
              HostedCheckout.prepare(payer.credentials, accepted, @scope)
 
-    HostedCheckoutReceiver.with_receiver(
+    HostedCheckoutReceiver.with_bound_receiver(
       fn
         %{method: "POST"} = conn, payload ->
           HostedCheckoutReceiver.success(conn, payload)
@@ -431,9 +466,9 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
         %{method: "GET", path_info: ["transaction", "verify", ^reference]} = conn, _ ->
           verify.(conn, reference)
       end,
-      fn port, observed ->
+      fn listener, observed ->
         assert {:ok, %{status: :retained}} =
-                 HostedCheckout.initialize(payer.credentials, accepted, @scope, port)
+                 HostedCheckout.initialize(payer.credentials, accepted, @scope, listener)
 
         assert_receive {^observed, "POST", "/transaction/initialize", _,
                         %{"reference" => ^reference}}

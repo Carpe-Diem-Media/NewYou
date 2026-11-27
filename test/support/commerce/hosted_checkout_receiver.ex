@@ -3,15 +3,45 @@ defmodule NewYou.Commerce.HostedCheckoutReceiver do
 
   import Plug.Conn
 
-  def with_receiver(reply, fun) do
+  def with_bound_receiver(reply, fun, options \\ []) do
+    san = {:Extension, {2, 5, 29, 17}, false, [{:iPAddress, [127, 0, 0, 1]}]}
+
+    %{cert: certificate, key: key} =
+      :public_key.pkix_test_root_cert(~c"NewYou local fixture",
+        key: {:namedCurve, {1, 2, 840, 10_045, 3, 1, 7}},
+        digest: :sha256,
+        extensions: [san]
+      )
+
+    der_key = {elem(key, 0), :public_key.der_encode(elem(key, 0), key)}
+
+    options =
+      Keyword.merge(options,
+        scheme: :https,
+        thousand_island_options: [transport_options: [cert: certificate, key: der_key]]
+      )
+
+    with_receiver(
+      reply,
+      fn port, tag -> fun.(%{port: port, certificate: certificate}, tag) end,
+      options
+    )
+  end
+
+  def with_receiver(reply, fun, options \\ []) do
     tag = make_ref()
 
     {:ok, server} =
       Bandit.start_link(
-        plug: {__MODULE__, {self(), tag, reply}},
-        ip: {127, 0, 0, 1},
-        port: 0,
-        startup_log: false
+        Keyword.merge(
+          [
+            plug: {__MODULE__, {self(), tag, reply}},
+            ip: {127, 0, 0, 1},
+            port: 0,
+            startup_log: false
+          ],
+          options
+        )
       )
 
     try do

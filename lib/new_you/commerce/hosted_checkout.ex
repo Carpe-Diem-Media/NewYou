@@ -21,9 +21,15 @@ defmodule NewYou.Commerce.HostedCheckout do
           channel: :card
         }
   @type result :: {:ok, t()} | {:error, :checkout_unavailable | :provider_disabled}
+  @type listener :: %{port: :inet.port_number(), certificate: binary()}
 
   @spec prepare(map(), NewYou.Commerce.OfferAdmission.snapshot(), scope()) :: result()
-  @spec initialize(map(), NewYou.Commerce.OfferAdmission.snapshot(), scope(), pos_integer()) ::
+  @spec initialize(
+          map(),
+          NewYou.Commerce.OfferAdmission.snapshot(),
+          scope(),
+          pos_integer() | listener()
+        ) ::
           result()
   @spec recover(map(), NewYou.Commerce.OfferAdmission.snapshot(), scope()) :: result()
 
@@ -73,17 +79,19 @@ defmodule NewYou.Commerce.HostedCheckout do
     Admit one dispatch for the prepared snapshot and local fixture listener.
     Requires a current payer and a top-level transaction boundary. Once claimed,
     further submissions return the stored outcome without another request.
+    A port with a pinned listener certificate schedules Verify. The original
+    integer port form supports the existing initialize-only fixture.
     """
-    def initialize(credentials, snapshot, scope, port)
-        when scope == @scope and is_integer(port) and port in 1..65_535 do
+    def initialize(credentials, snapshot, scope, listener) when scope == @scope do
       # Ash.transact can join the caller's transaction. In that case this
       # function could otherwise get an acknowledgement before a real COMMIT.
-      with false <- Ash.DataLayer.in_transaction?(Purchase),
+      with {:ok, fields} <- listener_schedule(listener),
+           false <- Ash.DataLayer.in_transaction?(Purchase),
            {:ok, {:dispatch, attempt}} <-
-             with_source(credentials, snapshot, fn attempt, _ -> claim(attempt, port) end),
+             with_source(credentials, snapshot, fn attempt, _ -> claim(attempt, fields) end),
            true <- committed_claim?(attempt) do
         checkpoint(:claim_committed)
-        send_once(attempt, snapshot.terms, port)
+        send_once(attempt, snapshot.terms, listener)
         recover(credentials, snapshot, scope)
       else
         {:ok, %__MODULE__{}} = replay -> replay
@@ -92,6 +100,19 @@ defmodule NewYou.Commerce.HostedCheckout do
     end
 
     def initialize(_, _, _, _), do: {:error, :checkout_unavailable}
+
+    defp listener_schedule(%{port: port, certificate: certificate})
+         when port in 1..65_535 and is_binary(certificate) and byte_size(certificate) in 1..8192 do
+      {:ok,
+       %{
+         fixture_port: port,
+         fixture_certificate: certificate,
+         verify_after: DateTime.utc_now()
+       }}
+    end
+
+    defp listener_schedule(port) when port in 1..65_535, do: {:ok, %{}}
+    defp listener_schedule(_), do: {:error, :invalid_listener}
 
     @doc """
     Recover the original reference and any retained fixture capability as the
@@ -147,15 +168,11 @@ defmodule NewYou.Commerce.HostedCheckout do
 
     # The purchase lock is shared with existing synthetic payment application.
     # The guarded write consumes this attempt's only dispatch epoch.
-    defp claim(%HostedDispatch{claim_id: nil} = attempt, port) do
+    defp claim(%HostedDispatch{claim_id: nil} = attempt, fields) do
       with {:ok, claimed} <-
              Ash.update(
                attempt,
-               %{
-                 claim_id: Ash.UUID.generate(),
-                 fixture_port: port,
-                 verify_after: DateTime.utc_now()
-               },
+               Map.put(fields, :claim_id, Ash.UUID.generate()),
                action: :claim,
                authorize?: false
              ) do

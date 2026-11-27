@@ -122,7 +122,9 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
       now = DateTime.utc_now()
 
       case HostedDispatch
-           |> Ash.Query.filter(attempt_id == ^id and verify_after <= ^now)
+           |> Ash.Query.filter(
+             attempt_id == ^id and not is_nil(fixture_certificate) and verify_after <= ^now
+           )
            |> Ash.Query.lock(:for_update)
            |> Ash.read_one(authorize?: false) do
         {:ok, %HostedDispatch{} = attempt} -> defer_verify(attempt, now)
@@ -181,7 +183,10 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
     defp observe(attempt) do
       response =
         attempt.reference
-        |> PaystackCheckout.build_verify(attempt.fixture_port)
+        |> PaystackCheckout.build_verify(%{
+          port: attempt.fixture_port,
+          certificate: attempt.fixture_certificate
+        })
         |> Req.Request.run_request()
         |> elem(1)
 

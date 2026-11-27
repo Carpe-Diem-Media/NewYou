@@ -24,11 +24,19 @@ defmodule NewYou.Commerce.HostedDispatch do
     end
 
     check_constraints do
-      check_constraint [:fixture_port, :claim_id, :verify_round, :verify_after],
+      check_constraint [
+                         :fixture_port,
+                         :fixture_certificate,
+                         :claim_id,
+                         :verify_round,
+                         :verify_after
+                       ],
                        "hosted_dispatch_verify_schedule",
                        check: """
                        verify_round BETWEEN 0 AND 6 AND
                        (fixture_port IS NULL OR (fixture_port BETWEEN 1 AND 65535 AND claim_id IS NOT NULL)) AND
+                       (fixture_certificate IS NULL OR
+                         (fixture_port IS NOT NULL AND octet_length(fixture_certificate) BETWEEN 1 AND 8192)) AND
                        (verify_after IS NULL OR fixture_port IS NOT NULL)
                        """
 
@@ -56,7 +64,7 @@ defmodule NewYou.Commerce.HostedDispatch do
       triggers do
         trigger :verify_fixture_reference do
           action :verify_fixture_reference
-          where expr(not is_nil(verify_after) and verify_after <= now())
+          where expr(not is_nil(fixture_certificate) and verify_after <= now())
           scheduler_cron "* * * * *"
           queue :commerce_fixture
           log_errors? false
@@ -95,7 +103,7 @@ defmodule NewYou.Commerce.HostedDispatch do
 
     update :claim do
       public? false
-      accept [:fixture_port, :verify_after]
+      accept [:fixture_port, :fixture_certificate, :verify_after]
 
       argument :claim_id, :uuid, allow_nil?: false
       change filter(expr(is_nil(claim_id)))
@@ -153,6 +161,7 @@ defmodule NewYou.Commerce.HostedDispatch do
     attribute :channel, :atom, allow_nil?: false, constraints: [one_of: [:card]]
     attribute :claim_id, :uuid
     attribute :fixture_port, :integer, constraints: [min: 1, max: 65_535]
+    attribute :fixture_certificate, :binary, sensitive?: true
     attribute :verify_after, AshPostgres.TimestamptzUsec
 
     attribute :verify_round, :integer,
