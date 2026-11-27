@@ -217,7 +217,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
           assert :ok = NewYou.Commerce.FixtureRefunds.read_due(refund.id)
           assert %{state: :unresolved, verify_round: 1} = read_refund(refund.id)
           refute_receive {^tag, _, _, _, _}, 40
-        end, port: listener.port)
+        end,
+        port: listener.port
+      )
     end)
   end
 
@@ -393,6 +395,25 @@ defmodule NewYou.Commerce.HostedRefundTest do
         assert {:ok, _} = Commerce.dispatch_fixture_refund(payer.credentials, owed.id)
 
         assert Code.ensure_loaded?(NewYou.Commerce.Workers.ReadFixtureRefund)
+        read_job_args = %{"primary_key" => %{"id" => owed.id}}
+        refute_enqueued(worker: NewYou.Commerce.Workers.ReadFixtureRefund, args: read_job_args)
+        make_refund_due(owed.id)
+
+        P805.with_rejected_insert("commerce_fixture_refund_receipts", fn reached? ->
+          assert %{discard: 1, queues_not_drained: []} =
+                   AshOban.Test.schedule_and_run_triggers(
+                     {NewYou.Commerce.FixtureRefund, :read_due}
+                   )
+
+          assert reached?.()
+          assert_receive {^tag, "GET", "/refund/" <> ^reference, _, _}
+        end)
+
+        assert [] == refund_receipts(reference)
+
+        assert %{state: :unresolved, verify_round: 1, verify_after: %DateTime{}} =
+                 read_refund(owed.id)
+
         make_refund_due(owed.id)
         run_recovery(owed.id)
 
@@ -418,6 +439,73 @@ defmodule NewYou.Commerce.HostedRefundTest do
         assert {:ok, :withheld} = Commerce.deliver_plan_payment_consequence(grant)
         assert {:ok, []} = Entitlements.plan_rights(recipient.credentials)
         refute_received {^tag, "POST", "/refund", _, _}
+      end)
+    end)
+  end
+
+  test "independent webhook and pinned-read workers converge on one processed effect" do
+    P805.with_fixture(fn ->
+      parent = self()
+
+      replies = fn
+        %{method: "GET", path_info: ["refund", reference]} = conn, _ ->
+          send(parent, {:read_waiting, self()})
+
+          receive do
+            :reply ->
+              data = refund_data(%{reference: reference}) |> Map.put(:status, "processed")
+              HostedCheckoutReceiver.json(conn, 200, %{status: true, data: data})
+          after
+            500 -> Plug.Conn.send_resp(conn, 500, "")
+          end
+
+        conn, data ->
+          default_refund_reply(conn, data)
+      end
+
+      with_paid_plan(replies, fn accepted, payment, payer, recipient, _, tag ->
+        fields = refund_fields(accepted, payment, payer, recipient)
+        assert {:ok, owed} = request(payer.credentials, proof(fields))
+        assert {:ok, _} = Commerce.reserve_fixture_refund(payer.credentials, owed.id)
+        assert {:ok, _} = Commerce.dispatch_fixture_refund(payer.credentials, owed.id)
+        assert_receive {^tag, "POST", "/refund", _, _}
+        assert_receive {:refund_at_post, _}
+
+        receipt =
+          with_signing_key(fn key ->
+            assert 202 == send_evidence(key, refund_data(owed), "processed")
+            assert [receipt] = refund_receipts(owed.reference)
+            receipt
+          end)
+
+        make_refund_due(owed.id)
+
+        read =
+          Task.async(fn ->
+            run_contender(parent, fn -> NewYou.Commerce.FixtureRefunds.read_due(owed.id) end)
+          end)
+
+        webhook =
+          Task.async(fn ->
+            run_contender(parent, fn -> Commerce.apply_fixture_refund_receipt(receipt.id) end)
+          end)
+
+        read_pid = read.pid
+        webhook_pid = webhook.pid
+        assert_receive {:contender, ^read_pid, read_backend}
+        assert_receive {:contender, ^webhook_pid, webhook_backend}
+        assert read_backend != webhook_backend
+        send(read_pid, :go)
+        assert_receive {:read_waiting, listener}
+        send(webhook_pid, :go)
+        send(listener, :reply)
+        assert [:ok, :ok] = Task.await_many([read, webhook])
+
+        assert %{state: :processed, processed_receipt_id: applied} = read_refund(owed.id)
+        rows = refund_receipts(owed.reference)
+        assert Enum.frequencies_by(rows, & &1.state) == %{applied: 1, stale: 1}
+        assert Enum.map(rows, & &1.source) == [:webhook, :read]
+        assert Enum.find(rows, &(&1.id == applied)).state == :applied
       end)
     end)
   end
