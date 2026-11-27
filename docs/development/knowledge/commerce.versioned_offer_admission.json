@@ -6,7 +6,7 @@
     "WELL-197"
   ],
   "implementation_revision": {
-    "git_sha": "142dd95bfbf6100f4b0676a4bb239fa30438a54a",
+    "git_sha": "b31979a3ab212012923453acc28303bd529d7d63",
     "semantics": "WELL-197 S1 with Master Gate corrections for terminal Assessment reconciliation and integrated Identity owner reviews."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -985,7 +985,7 @@
       "id": "payment",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def apply_payment_observation",
-      "sha256": "63d65f02601c4b2e783063eea3d6ea06e2be104b121e2b6e809ca0359aaff2d9"
+      "sha256": "02d6b8474e529f9faeb6fa6a06cca4995d4269747b6a58e5b239c5242be826fd"
     },
     {
       "id": "consequence",

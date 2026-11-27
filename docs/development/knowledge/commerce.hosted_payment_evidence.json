@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "1cae4e4be575ee2eee95d6099e9eb73943cdb662",
+    "git_sha": "b31979a3ab212012923453acc28303bd529d7d63",
     "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -157,7 +157,7 @@
         "Success when terminal classification commits or replays, or a bounded error."
       ],
       "side_effects": [
-        "Locks and classifies evidence. Ordinary charge success can establish one primary payment and consequence. The separate TEST excess event records a distinct collection and a payer refund obligation under the same source lock."
+        "Locks and classifies evidence. Ordinary charge success can establish one primary payment and consequence. A qualified excess observation stays scheduled while awaiting its primary. Once the primary qualifies it can establish one distinct collection and payer obligation."
       ],
       "caller_constraints": [
         "TEST only. The owner rechecks the exact scope, purchase binding, money, original reference and current party privacy."
@@ -583,7 +583,7 @@
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def apply_hosted_payment_evidence(id)",
-      "sha256": "63d65f02601c4b2e783063eea3d6ea06e2be104b121e2b6e809ca0359aaff2d9"
+      "sha256": "02d6b8474e529f9faeb6fa6a06cca4995d4269747b6a58e5b239c5242be826fd"
     },
     {
       "id": "checkout",

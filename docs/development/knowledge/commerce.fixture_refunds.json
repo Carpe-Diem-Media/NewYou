@@ -6,8 +6,8 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "15bea26e637d3ff8b70a32be259374c491d0265b",
-    "semantics": "Hosted fixture refund dispatch, evidence qualification, exact payer make-whole and source-specific Entitlements convergence."
+    "git_sha": "b31979a3ab212012923453acc28303bd529d7d63",
+    "semantics": "Provider-disabled refund dispatch, recoverable capped reads, source-qualified excess, durable provider ID conflict classification and privacy-safe Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -267,11 +267,12 @@
   ],
   "request_flow": [
     {
-      "summary": "Resolve the original hosted collection and immutable accepted quote. Bind the authorized payer and exact ZAR allocation, or automatically establish the exact owed excess after separate hosted qualification.",
+      "summary": "Resolve the original hosted collection and immutable accepted quote. Bind the authorized payer and exact ZAR allocation. A distinct authenticated excess can stay pending as awaiting_primary and the existing receipt worker rechecks it after primary qualification. It can establish only the excess obligation.",
       "source_ids": [
         "requests",
+        "allocation",
         "excess",
-        "allocation"
+        "test"
       ]
     },
     {
@@ -283,7 +284,7 @@
       ]
     },
     {
-      "summary": "Persist authenticated receipt evidence before acknowledgement. Independently scheduled reads reserve a bounded round before HTTP and use the original reference only.",
+      "summary": "Persist authenticated receipt evidence before acknowledgement. Independent workers reserve the next durable due time before HTTP and use the immutable refund reference. Backoff stops growing at 900 seconds.",
       "source_ids": [
         "receipt",
         "evidence",
@@ -555,6 +556,15 @@
         "commerce",
         "transport"
       ]
+    },
+    {
+      "summary": "Suppress query metadata for scoped hosted Entitlements correction, refund receipt persistence and Retry-After updates. Generated AshPostgres bang queries honor the same scope. Bounded checkpoint events remain available.",
+      "source_ids": [
+        "convergence",
+        "evidence",
+        "repo_telemetry",
+        "test"
+      ]
     }
   ],
   "concurrency": [
@@ -570,6 +580,15 @@
       "summary": "The original Plan grant and component ending take the same purchase lock. Either the grant is withheld or its exact existing right is ended.",
       "source_ids": [
         "convergence",
+        "test"
+      ]
+    },
+    {
+      "summary": "The hosted primary exposes only the exact accepted Plan allocation. An excess payment exposes only the exact excess allocation on that distinct collection. Under the purchase lock, the payment/allocation identity and admitted sum bound all obligations, including failed and potentially sent refunds.",
+      "source_ids": [
+        "allocation",
+        "requests",
+        "refund",
         "test"
       ]
     }
@@ -589,11 +608,20 @@
         "receipt",
         "qualification"
       ]
+    },
+    {
+      "summary": "A provider refund ID can bind to one claim globally. A confirmed cross-claim conflict quarantines the receipt. The existing unique index resolves a race between two first bindings. A fresh owning transaction rechecks the loser after rollback.",
+      "source_ids": [
+        "receipt",
+        "qualification",
+        "refund",
+        "test"
+      ]
     }
   ],
   "failure_recovery": [
     {
-      "summary": "Before commit, process loss leaves the intent reserved. After commit, a lost response or a pre-send crash leaves the same reference fenced for up to six later reads, with bounded backoff and Retry-After.",
+      "summary": "Before commit, process loss leaves the intent reserved. After a committed claim, same-reference reads continue when due. The round counter saturates at six. Backoff grows from 30 to 900 seconds. Retry-After can extend the committed due time up to 900 seconds.",
       "source_ids": [
         "claim",
         "owner_read",
@@ -602,11 +630,20 @@
       ]
     },
     {
-      "summary": "Missing work is rediscovered from due rows. Needs-attention, failed, insufficient balance and exhausted reads leave owed money intact. A fresh BEAM can complete known-reference reads and replay unacknowledged consequences.",
+      "summary": "A pending refund retains its next due time across process loss, discarded jobs and failed evidence inserts. A legacy unresolved round-six row with a missing due time is eligible for one fresh reservation. Only qualified processing closes read work.",
       "source_ids": [
         "owner_read",
         "refund",
-        "fresh"
+        "fresh",
+        "test"
+      ]
+    },
+    {
+      "summary": "The existing receipt scheduler revisits signed excess observations awaiting primary qualification. Scope mismatches and transaction identity conflicts remain quarantined. Needs-attention and failed refund outcomes preserve the exact owed amount.",
+      "source_ids": [
+        "excess",
+        "qualification",
+        "test"
       ]
     }
   ],
@@ -619,7 +656,12 @@
         "Signed receipt qualification, failure, replay, cleanup and fresh BEAM recovery",
         "Exact source correction and excess preservation",
         "Competing authenticated webhook and pinned read on independent PostgreSQL connections",
-        "Fresh scheduler rediscovery after a discarded read job"
+        "Fresh scheduler rediscovery after a discarded read job",
+        "Crash after sixth reservation, failed evidence persistence at the cap and later fresh BEAM completion on the same reference",
+        "Conflicting provider refund ID after prior binding and both independent transactions reaching the first-binding checkpoint",
+        "Excess before primary, concurrent qualification and replay through the durable receipt worker",
+        "Actual SQL telemetry canaries for direct and scheduled correction, 429 updates and receipt insert failure",
+        "Competing unsupported allocations cannot increase the exact Plan obligation"
       ],
       "proves": "F-01 through F-07 fixture behavior and scoped F-08 teardown.",
       "limits": "Hosted Checkout remains standalone Plan. Fixture fields and reply envelope are local protocol assumptions.",
@@ -739,13 +781,13 @@
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def dispatch_fixture_refund",
-      "sha256": "63d65f02601c4b2e783063eea3d6ea06e2be104b121e2b6e809ca0359aaff2d9"
+      "sha256": "02d6b8474e529f9faeb6fa6a06cca4995d4269747b6a58e5b239c5242be826fd"
     },
     {
       "id": "refund",
       "path": "lib/new_you/commerce/fixture_refund.ex",
       "symbol": "defmodule NewYou.Commerce.FixtureRefund",
-      "sha256": "3538a4ab4f5273d8bc905836b675a1af5e3d79ab35dbd2ab67aa3407440ec044"
+      "sha256": "52aef03865d9b915ddad1d049a7116c7e12fcdbf452d18889ae6e5eeaa392226"
     },
     {
       "id": "receipt",
@@ -757,31 +799,31 @@
       "id": "requests",
       "path": "test/support/commerce/fixture_refunds.ex",
       "symbol": "def authorize(credentials, proof)",
-      "sha256": "4bca219af90e3f6a5539b0d592c325da61aa36ce5926135b6481ba42b5a33234"
+      "sha256": "0fe1fb5e8e1a7123b71af6cb29e030caf818780cad4a475abfa9a0bd583a37ef"
     },
     {
       "id": "claim",
       "path": "test/support/commerce/fixture_refunds.ex",
       "symbol": "defp committed_claim?",
-      "sha256": "4bca219af90e3f6a5539b0d592c325da61aa36ce5926135b6481ba42b5a33234"
+      "sha256": "0fe1fb5e8e1a7123b71af6cb29e030caf818780cad4a475abfa9a0bd583a37ef"
     },
     {
       "id": "owner_read",
       "path": "test/support/commerce/fixture_refunds.ex",
       "symbol": "def read_due",
-      "sha256": "4bca219af90e3f6a5539b0d592c325da61aa36ce5926135b6481ba42b5a33234"
+      "sha256": "0fe1fb5e8e1a7123b71af6cb29e030caf818780cad4a475abfa9a0bd583a37ef"
     },
     {
       "id": "qualification",
       "path": "test/support/commerce/fixture_refunds.ex",
       "symbol": "defp qualify_progress",
-      "sha256": "4bca219af90e3f6a5539b0d592c325da61aa36ce5926135b6481ba42b5a33234"
+      "sha256": "0fe1fb5e8e1a7123b71af6cb29e030caf818780cad4a475abfa9a0bd583a37ef"
     },
     {
       "id": "excess",
       "path": "lib/new_you/commerce.ex",
       "symbol": "defp apply_excess_fixture_payment",
-      "sha256": "63d65f02601c4b2e783063eea3d6ea06e2be104b121e2b6e809ca0359aaff2d9"
+      "sha256": "02d6b8474e529f9faeb6fa6a06cca4995d4269747b6a58e5b239c5242be826fd"
     },
     {
       "id": "allocation",
@@ -793,7 +835,7 @@
       "id": "evidence",
       "path": "test/support/commerce/fixture_refund_evidence.ex",
       "symbol": "def receive_webhook",
-      "sha256": "adbb1c4dca68077abb6a650193d1d41d18d00cd71b38a73c34d8219148a6316d"
+      "sha256": "015fe5f99436bdb7ad593cdf225ab900dacab85d77fb00a1758dbf1d78bfe116"
     },
     {
       "id": "transport",
@@ -817,7 +859,7 @@
       "id": "convergence",
       "path": "test/support/entitlements/synthetic_rights.ex",
       "symbol": "defp apply_hosted_effect",
-      "sha256": "b977bf1ee34e5d983a07043e4f57cf5d959694c745569c876513925c7a51171c"
+      "sha256": "9d58fec831e30181d1bbe4ef680ba3003bf666fe1fb4f84844e33ca43e4af0ab"
     },
     {
       "id": "pay",
@@ -835,7 +877,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedRefundTest",
-      "sha256": "0aa9281ccd54c67b36525cc3350c30c1189d5382e5ac26f5af9103d9d408ab93"
+      "sha256": "fdf46348993f19475209dc6adc5dc329092fec40df4a76f15363051b6df30e3e"
     },
     {
       "id": "fresh",
@@ -890,6 +932,12 @@
       "path": "priv/repo/migrations/20261127104442_well221_excess_collection.exs",
       "symbol": "def up do",
       "sha256": "074032af157ac2ecd6da9bb131097fb07dd639001674fda73b0118133178c410"
+    },
+    {
+      "id": "repo_telemetry",
+      "path": "lib/new_you/repo.ex",
+      "symbol": "@before_compile RestrictedQueryTelemetry",
+      "sha256": "a272dabe29520818fd9fa6aa8036b6b2643d0082c9493e4c9e604323e1047c8b"
     }
   ]
 }
