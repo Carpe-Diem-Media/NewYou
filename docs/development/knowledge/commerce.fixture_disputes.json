@@ -6,8 +6,8 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "ccb9596b4cc80f7dfcdaafb8287854cc80ea0e81",
-    "semantics": "Provider-disabled E2c foundation including the Master Gate Privacy, Audit and terminal evidence ordering corrections."
+    "git_sha": "7e79f6f44eb6e5d61b4dc05dcae7d4d9ba619976",
+    "semantics": "Provider-disabled E2c foundation including Master Gate corrections for Privacy, Audit, terminal evidence ordering and pinned-read retry."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -343,7 +343,7 @@
         "to_state": "restored",
         "guards": [
           "Same exact case and a higher qualified fixture revision.",
-          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must have a fixture revision strictly newer than all other exact-source terminal evidence."
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
         ],
         "side_effects": [
           "Advance the durable effect version and reconcile the exact source."
@@ -359,7 +359,7 @@
         "to_state": "lost",
         "guards": [
           "Same exact case and a higher qualified fixture revision.",
-          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must have a fixture revision strictly newer than all other exact-source terminal evidence."
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
         ],
         "side_effects": [
           "Advance the durable effect version and reconcile the exact source."
@@ -420,7 +420,7 @@
         "to_state": "restored",
         "guards": [
           "Same exact case and a higher qualified fixture revision.",
-          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must have a fixture revision strictly newer than all other exact-source terminal evidence."
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
         ],
         "side_effects": [
           "Advance the durable effect version and reconcile the exact source."
@@ -436,7 +436,7 @@
         "to_state": "lost",
         "guards": [
           "Same exact case and a higher qualified fixture revision.",
-          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must have a fixture revision strictly newer than all other exact-source terminal evidence."
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
         ],
         "side_effects": [
           "Advance the durable effect version and reconcile the exact source."
@@ -497,7 +497,7 @@
         "to_state": "restored",
         "guards": [
           "Same exact case and a higher qualified fixture revision.",
-          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must have a fixture revision strictly newer than all other exact-source terminal evidence."
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
         ],
         "side_effects": [
           "Advance the durable effect version and reconcile the exact source."
@@ -513,7 +513,7 @@
         "to_state": "lost",
         "guards": [
           "Same exact case and a higher qualified fixture revision.",
-          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must have a fixture revision strictly newer than all other exact-source terminal evidence."
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
         ],
         "side_effects": [
           "Advance the durable effect version and reconcile the exact source."
@@ -574,7 +574,7 @@
         "to_state": "restored",
         "guards": [
           "Same exact case and a higher qualified fixture revision.",
-          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must have a fixture revision strictly newer than all other exact-source terminal evidence."
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
         ],
         "side_effects": [
           "Advance the durable effect version and reconcile the exact source."
@@ -590,7 +590,7 @@
         "to_state": "lost",
         "guards": [
           "Same exact case and a higher qualified fixture revision.",
-          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must have a fixture revision strictly newer than all other exact-source terminal evidence."
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
         ],
         "side_effects": [
           "Advance the durable effect version and reconcile the exact source."
@@ -833,7 +833,7 @@
       ]
     },
     {
-      "summary": "A stale read token prevents its receipt from applying an outcome. Its committed exact-source terminal revision still limits confirmation. A current pinned read can resolve an unsettled conflict once it is newer than all competing terminal evidence.",
+      "summary": "A stale read token prevents its receipt from applying an outcome. Its committed exact-source terminal revision still limits confirmation. A current pinned read can resolve an unsettled conflict when its revision is at least as high as same-outcome evidence and strictly newer than every opposing terminal revision. Repeating the same terminal outcome under a current reservation can apply after a superseded attempt.",
       "source_ids": [
         "lifecycle",
         "test",
@@ -853,7 +853,8 @@
         "SQL telemetry canaries and scoped job cleanup",
         "Terminal conflicts hold the refund fence until a newer exact pinned confirmation across a fresh BEAM, including final-loss non-resurrection and additive receipt history",
         "Superseded pinned read committed at revision 10 blocks revision 4 and 10 restoration, then revision 11 restores the same right in a fresh BEAM",
-        "Both worker orders with precommitted opposite terminal evidence suspend the same right and fence refund for bound and initially unbound cases, then a strictly newer pinned loss ends the right"
+        "Both worker orders with precommitted opposite terminal evidence suspend the same right and fence refund for bound and initially unbound cases, then a strictly newer pinned loss ends the right",
+        "Both terminal outcomes reconcile an identical revision 4 result under a current reservation after a stale attempt, and a lower same-outcome retry stays fenced. Equal-revision opposition still blocks reconciliation."
       ],
       "proves": "F-01 through F-05 and F-07 fixture execution.",
       "limits": "Hosted proof is standalone Plan only. No live provider behavior.",
@@ -1026,7 +1027,7 @@
       "id": "lifecycle",
       "path": "test/support/commerce/fixture_disputes.ex",
       "symbol": "def locked_effect",
-      "sha256": "2e343f813d042e43dc24c63ad8e7cb79e5749524c779d4405e710963c2173aa9"
+      "sha256": "cbfa322bc8959fb446e14562f86c0dbeeffc83480c19f849456b69186651afd0"
     },
     {
       "id": "fence",
@@ -1086,7 +1087,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"refund and dispute serialize",
-      "sha256": "40de9e5b9a9b669ae80515cabd3da0bd865ff2e48d69b65129eb97acbddc0a11"
+      "sha256": "280600aef04a4621dc4b43e2be4b9e2c1bdd9fdca72485d1a4c43e215596d820"
     },
     {
       "id": "restart",
