@@ -214,6 +214,18 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
               verify_reply(conn, data(reference))
 
             6 ->
+              verify_reply(conn, %{data(reference) | "amount" => 39_900})
+
+            7 ->
+              verify_reply(conn, %{data(reference) | "currency" => "USD"})
+
+            8 ->
+              verify_reply(conn, %{data(reference) | "environment" => "production"})
+
+            9 ->
+              verify_reply(conn, %{data(reference) | "status" => "future_status"})
+
+            10 ->
               verify_reply(conn, data(reference))
           end
         end,
@@ -249,13 +261,21 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
                 {2, :not_found, 60},
                 {3, :rate_limited, 150},
                 {4, :source_mismatch, 240},
-                {5, :timeout, 480}
+                {5, :timeout, 480},
+                {6, :source_mismatch, 900},
+                {7, :source_mismatch, 900},
+                {8, :scope_mismatch, 900},
+                {9, :unknown, 900}
               ] do
+            prior_ids = MapSet.new(evidence(reference), & &1.id)
             now = DateTime.utc_now()
             schedule_verify()
             assert_verify(observed, reference)
             assert :counters.get(replies, 1) == attempt_number
-            assert Enum.any?(evidence(reference), &(&1.classification == classification))
+
+            assert [%{classification: ^classification}] =
+                     Enum.reject(evidence(reference), &MapSet.member?(prior_ids, &1.id))
+
             assert DateTime.diff(dispatch(accepted).verify_after, now, :second) >= min_delay - 1
             assert [] == payments(accepted)
             assert {:ok, []} == Entitlements.plan_rights(recipient.credentials)
@@ -292,18 +312,44 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
           end
         end,
         fn accepted, recipient, reference, observed ->
-          worker = independent(fn -> HostedPaymentEvidence.verify_due(accepted.attempt_id) end)
-          assert_receive {:verify_waiting, listener}
-          assert_verify(observed, reference)
-
           [one, two] =
-            for _ <- 1..2, do: independent(fn -> send_webhook(key, data(reference)) end)
+            for _ <- 1..2 do
+              independent(fn ->
+                send(observer, {:ready_to_ingest, self()})
 
+                receive do
+                  :ingest -> send_webhook(key, data(reference))
+                after
+                  2_000 -> :no_signal
+                end
+              end)
+            end
+
+          assert_receive {:ready_to_ingest, first}
+          assert_receive {:ready_to_ingest, second}
+          send(first, :ingest)
+          send(second, :ingest)
           assert {:ok, first_backend, :ok} = Task.await(one)
           assert {:ok, second_backend, :ok} = Task.await(two)
           assert first_backend != second_backend
           assert [%{id: id}] = evidence(reference)
-          receipt_worker = independent(fn -> Commerce.apply_hosted_payment_evidence(id) end)
+
+          receipt_worker =
+            independent(fn ->
+              send(observer, {:ready_to_apply, self()})
+
+              receive do
+                :apply -> Commerce.apply_hosted_payment_evidence(id)
+              after
+                2_000 -> :no_signal
+              end
+            end)
+
+          assert_receive {:ready_to_apply, receipt_pid}
+          worker = independent(fn -> HostedPaymentEvidence.verify_due(accepted.attempt_id) end)
+          assert_receive {:verify_waiting, listener}
+          assert_verify(observed, reference)
+          send(receipt_pid, :apply)
           send(listener, :release)
           assert {:ok, verify_backend, :ok} = Task.await(worker)
           assert {:ok, receipt_backend, :ok} = Task.await(receipt_worker)

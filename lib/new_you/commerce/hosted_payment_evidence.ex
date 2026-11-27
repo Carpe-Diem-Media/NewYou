@@ -10,6 +10,7 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
     require Ash.Query
 
     @body_limit 8_192
+    @max_amount_minor 9_223_372_036_854_775_807
 
     @spec ingest(binary(), [binary()]) ::
             :ok | {:error, :unauthenticated | :unsupported | :unavailable}
@@ -233,7 +234,7 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
            } = data
          )
          when map_size(data) == 8 and is_binary(reference) and byte_size(reference) == 32 and
-                is_integer(amount) and amount in 1..2_147_483_647 and is_binary(currency) and
+                is_integer(amount) and amount in 1..@max_amount_minor and is_binary(currency) and
                 byte_size(currency) == 3 do
       with true <- reference =~ ~r/\A[0-9a-f]{32}\z/,
            true <- currency =~ ~r/\A[A-Z]{3}\z/,
