@@ -123,10 +123,15 @@ defmodule NewYou.Commerce.FixtureRefundEvidence do
   defp respect_hold(%{verify_after: nil}, _), do: :ok
 
   defp respect_hold(refund, seconds) do
-    case Ash.update(refund, %{retry_at: DateTime.add(DateTime.utc_now(), seconds)},
-           action: :respect_retry_after,
-           authorize?: false
-         ) do
+    result =
+      Repo.without_query_telemetry(fn ->
+        Ash.update(refund, %{retry_at: DateTime.add(DateTime.utc_now(), seconds)},
+          action: :respect_retry_after,
+          authorize?: false
+        )
+      end)
+
+    case result do
       {:ok, _} -> :ok
       {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Changes.StaleRecord{}]}} -> :ok
       _ -> {:error, :refund_unavailable}

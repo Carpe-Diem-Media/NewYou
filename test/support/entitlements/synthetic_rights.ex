@@ -44,11 +44,17 @@ defmodule NewYou.Entitlements.SyntheticRights do
   @spec apply_hosted_refund(Ecto.UUID.t()) :: :ok | {:error, :grant_unavailable}
   def apply_hosted_refund(id) do
     with false <- Ash.DataLayer.in_transaction?(PlanRight),
-         {:ok, :ok} <- Ash.transact(PlanRight, fn -> apply_hosted_effect(id) end) do
+         {:ok, :ok} <- transact_hosted_effect(id) do
       :ok
     else
       _ -> {:error, :grant_unavailable}
     end
+  end
+
+  defp transact_hosted_effect(id) do
+    NewYou.Repo.without_query_telemetry(fn ->
+      Ash.transact(PlanRight, fn -> apply_hosted_effect(id) end)
+    end)
   end
 
   defp apply_hosted_effect(id) do

@@ -58,7 +58,12 @@ defmodule NewYou.Commerce.FixtureRefund do
       triggers do
         trigger :read_due do
           action :read_due
-          where expr(verify_after <= now() and verify_round < 6)
+
+          where expr(
+                  state != :processed and
+                    (verify_after <= now() or (is_nil(verify_after) and verify_round == 6))
+                )
+
           scheduler_cron "* * * * *"
           queue :commerce_fixture_refund
           log_errors? false
@@ -143,7 +148,10 @@ defmodule NewYou.Commerce.FixtureRefund do
       update :defer_read do
         public? false
         accept [:verify_after, :verify_round]
-        change filter(expr(not is_nil(verify_after)))
+
+        change filter(
+                 expr(state != :processed and (not is_nil(verify_after) or verify_round == 6))
+               )
       end
 
       update :respect_retry_after do

@@ -19,6 +19,7 @@ defmodule NewYou.Commerce.FixtureRefunds do
   require Ash.Query
 
   @unavailable {:error, :refund_unavailable}
+  @provider_refund_index "commerce_fixture_refunds_provider_refund_index"
   @progress %{
     unresolved: 0,
     pending: 1,
@@ -158,9 +159,35 @@ defmodule NewYou.Commerce.FixtureRefunds do
   def apply_receipt(id) do
     case transact(fn -> classify_receipt(id) end) do
       {:ok, :ok} -> :ok
+      {:error, error} -> recover_provider_conflict(id, error)
+    end
+  end
+
+  # A concurrent first binding can win after the lookup. The unique index
+  # arbitrates, then a fresh transaction confirms and classifies the conflict.
+  defp recover_provider_conflict(id, error) do
+    with true <- provider_identity_collision?(error),
+         {:ok, :ok} <- transact(fn -> classify_receipt(id) end) do
+      :ok
+    else
       _ -> @unavailable
     end
   end
+
+  defp provider_identity_collision?(%Ash.Error.Changes.InvalidAttribute{private_vars: vars}) do
+    vars[:constraint] == @provider_refund_index and vars[:constraint_type] == :unique
+  end
+
+  defp provider_identity_collision?(%Ecto.ConstraintError{
+         type: :unique,
+         constraint: @provider_refund_index
+       }),
+       do: true
+
+  defp provider_identity_collision?(%{errors: errors}) when is_list(errors),
+    do: Enum.any?(errors, &provider_identity_collision?/1)
+
+  defp provider_identity_collision?(_), do: false
 
   defp classify_receipt(id) do
     query = FixtureRefundReceipt |> Ash.Query.filter(id == ^id) |> Ash.Query.lock(:for_update)
@@ -221,9 +248,30 @@ defmodule NewYou.Commerce.FixtureRefunds do
         {:ok, :stale}
 
       true ->
-        record_progress(refund, receipt)
+        advance_progress(refund, receipt)
     end
   end
+
+  defp advance_progress(%{provider_refund_id: nil} = refund, receipt) do
+    binding =
+      FixtureRefund
+      |> Ash.Query.filter(provider_refund_id == ^receipt.provider_refund_id)
+      |> Ash.exists(authorize?: false)
+
+    case binding do
+      {:ok, true} ->
+        {:ok, :quarantined}
+
+      {:ok, false} ->
+        checkpoint(:provider_identity_available)
+        record_progress(refund, receipt)
+
+      error ->
+        error
+    end
+  end
+
+  defp advance_progress(refund, receipt), do: record_progress(refund, receipt)
 
   defp record_progress(refund, %{outcome: :processed} = receipt) do
     with %FixtureRefund{} <-
@@ -265,8 +313,7 @@ defmodule NewYou.Commerce.FixtureRefunds do
          {:ok, listener} <- pinned_listener(purchase) do
       now = DateTime.utc_now()
 
-      if refund.verify_after && refund.verify_round < 6 &&
-           DateTime.compare(refund.verify_after, now) != :gt do
+      if read_due?(refund, now) do
         reserve_read(refund, listener, now)
       else
         :not_due
@@ -274,9 +321,15 @@ defmodule NewYou.Commerce.FixtureRefunds do
     end
   end
 
+  defp read_due?(%{state: :processed}, _now), do: false
+  # An unresolved row from the previous final-round rule may have no due time.
+  defp read_due?(%{verify_after: nil, verify_round: round}, _now), do: round == 6
+  defp read_due?(%{verify_after: due}, now), do: DateTime.compare(due, now) != :gt
+
   defp reserve_read(refund, listener, now) do
-    round = refund.verify_round + 1
-    next = if round < 6, do: DateTime.add(now, 30 * Integer.pow(2, round - 1))
+    round = min(refund.verify_round + 1, 6)
+    delay = min(30 * Integer.pow(2, round - 1), 900)
+    next = DateTime.add(now, delay)
 
     with %FixtureRefund{} = reserved <-
            mutate(refund, :defer_read, %{verify_round: round, verify_after: next}) do
@@ -296,9 +349,12 @@ defmodule NewYou.Commerce.FixtureRefunds do
         )
       end)
 
-    if visible? and (is_nil(due) or DateTime.after?(due, DateTime.utc_now())),
-      do: FixtureRefundEvidence.read(refund, listener),
-      else: @unavailable
+    if visible? and DateTime.after?(due, DateTime.utc_now()) do
+      checkpoint(:read_reserved)
+      FixtureRefundEvidence.read(refund, listener)
+    else
+      @unavailable
+    end
   end
 
   @spec deliver(Ecto.UUID.t()) :: :ok | {:error, :refund_unavailable}

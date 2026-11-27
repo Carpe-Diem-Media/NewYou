@@ -407,6 +407,10 @@ defmodule NewYou.Commerce do
       same_transaction = Enum.find(prior, &(&1.fixture_transaction_id == receipt.transaction_id))
 
       case {original, same_transaction} do
+        {nil, nil} when prior == [] ->
+          # The existing receipt worker will revisit this source prerequisite.
+          {:ok, :pending, :awaiting_primary}
+
         {%VerifiedPayment{}, nil} ->
           attrs = %{
             purchase_id: purchase.id,
