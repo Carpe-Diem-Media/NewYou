@@ -24,8 +24,8 @@ defmodule NewYou.Privacy.FixtureDisputePurpose do
     case Ash.transact([FixtureDisputePurposeAuthority, FixtureDisputePurposeEvent], fn ->
            grant_locked(subject_id, operation_id, dispute_id)
          end) do
+      {:ok, :withdrawn} -> {:error, :withdrawn}
       {:ok, result} -> result
-      {:error, :withdrawn} -> {:error, :withdrawn}
       {:error, _} -> resolve_grant_failure(subject_id, operation_id, dispute_id)
       _ -> {:error, :privacy_authority_unavailable}
     end
@@ -86,7 +86,7 @@ defmodule NewYou.Privacy.FixtureDisputePurpose do
            read_authority(subject_id, operation_id, dispute_id, lock?: true) do
       :ok
     else
-      {:error, :privacy_authority_unavailable} = error -> error
+      {:error, _} -> {:error, :privacy_authority_unavailable}
       _ -> {:error, :privacy_authority_denied}
     end
   rescue
@@ -113,7 +113,7 @@ defmodule NewYou.Privacy.FixtureDisputePurpose do
         {:ok, :already_allowed}
 
       {:ok, %{state: :withdrawn}} ->
-        {:error, :withdrawn}
+        :withdrawn
 
       _ ->
         {:error, :privacy_authority_unavailable}
