@@ -587,6 +587,194 @@ defmodule NewYou.Commerce.HostedRefundTest do
     end
   end
 
+  test "a stale read token does not erase a committed opposing revision" do
+    reply_data = start_supervised!({Agent, fn -> nil end})
+    reply = fn conn, _ -> dispute_read_response(conn, Agent.get(reply_data, & &1)) end
+
+    P805.with_fixture(fn ->
+      with_paid_plan(reply, fn accepted, payment, _, recipient, _, tag ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+        with_signing_key(fn key ->
+          data = dispute_data(payment)
+
+          assert 202 ==
+                   send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
+
+          dispute = apply_dispute_receipts(payment)
+          assert 202 == send_event(key, "fixture.dispute", %{data | revision: 3, outcome: "lost"})
+          assert %{conflict?: true} = apply_dispute_receipts(payment)
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+          set_due_dispute_reply(dispute.id, reply_data, %{data | revision: 10, outcome: "lost"})
+
+          with_paused_dispute_read(dispute.id, fn ->
+            # A later lease supersedes the committed read before its worker classifies it.
+            set_due_dispute_reply(dispute.id, reply_data, :miss)
+            assert :ok = FixtureDisputes.read_due(dispute.id)
+          end)
+
+          assert Enum.any?(dispute_receipts(payment), fn receipt ->
+                   receipt.source == :read and receipt.revision == 10 and receipt.state == :stale
+                 end)
+
+          for revision <- [4, 10] do
+            set_due_dispute_reply(dispute.id, reply_data, %{
+              data
+              | revision: revision,
+                outcome: "restored"
+            })
+
+            assert :ok = FixtureDisputes.read_due(dispute.id)
+            assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+            assert %{state: :suspended} =
+                     Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+            assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
+          end
+
+          set_due_dispute_reply(dispute.id, reply_data, %{
+            data
+            | revision: 11,
+              outcome: "restored"
+          })
+
+          {executable, arguments} =
+            FreshMix.command(["run", "--no-compile", "test/proof/well223_dispute_restart.exs"])
+
+          assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} =
+                   P815Port.run(executable, arguments, Jason.encode!(%{id: dispute.id}), 60_000)
+
+          assert %{state: :restored, revision: 11, conflict?: false} =
+                   Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+          assert [%{id: ^right_id, state: :held_unconsumed}] = plan_rights(recipient)
+          assert {:ok, true} = dispute_refund_clear(accepted.purchase_id, payment.id)
+          refute_received {^tag, "POST", "/refund", _, _}
+        end)
+      end)
+    end)
+  end
+
+  test "committed contradictory terminal receipts keep the right suspended in both worker orders" do
+    reply_data = start_supervised!({Agent, fn -> nil end})
+    reply = fn conn, _ -> dispute_read_response(conn, Agent.get(reply_data, & &1)) end
+
+    for initial <- [:under_review, :unbound], first <- [:lost, :restored] do
+      P805.with_fixture(fn ->
+        with_paid_plan(reply, fn accepted, payment, _, recipient, _, _ ->
+          assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+          assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+          with_signing_key(fn key ->
+            data = dispute_data(payment)
+
+            if initial == :under_review do
+              assert 202 == send_event(key, "fixture.dispute", %{data | outcome: "under_review"})
+              dispute = apply_dispute_receipts(payment)
+              assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+            end
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "lost"})
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 3, outcome: "restored"})
+
+            pending = Enum.filter(dispute_receipts(payment), &(&1.state == :pending))
+
+            assert {[first_receipt], [second_receipt]} =
+                     Enum.split_with(pending, &(&1.outcome == first))
+
+            for receipt <- [first_receipt, second_receipt] do
+              assert :ok = Commerce.apply_fixture_dispute_receipt(receipt.id)
+              state = if initial == :unbound, do: :unresolved, else: initial
+
+              assert {:ok, %{id: id, state: ^state, conflict?: true}} =
+                       FixtureDisputes.read_identity(data.id)
+
+              assert :ok = Commerce.deliver_fixture_dispute(id)
+              assert [] = plan_rights(recipient)
+
+              assert %{state: :suspended} =
+                       Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+              assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
+            end
+
+            assert {:ok, %{id: id}} = FixtureDisputes.read_identity(data.id)
+
+            # Equal-revision evidence cannot adjudicate the worker conflict.
+            set_due_dispute_reply(id, reply_data, %{data | revision: 3, outcome: "lost"})
+            assert :ok = FixtureDisputes.read_due(id)
+            assert {:ok, %{conflict?: true}} = FixtureDisputes.read_identity(data.id)
+
+            set_due_dispute_reply(id, reply_data, %{data | revision: 4, outcome: "lost"})
+            assert :ok = FixtureDisputes.read_due(id)
+            assert :ok = Commerce.deliver_fixture_dispute(id)
+
+            assert {:ok, %{state: :lost, conflict?: false}} =
+                     FixtureDisputes.read_identity(data.id)
+
+            assert %{state: :ended} =
+                     Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+            assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
+          end)
+        end)
+      end)
+    end
+  end
+
+  defp with_paused_dispute_read(id, while_paused) do
+    parent = self()
+    handler = {__MODULE__, make_ref()}
+
+    :ok =
+      :telemetry.attach(
+        handler,
+        [:new_you, :commerce, :fixture_dispute, :checkpoint],
+        fn _, _, metadata, _ ->
+          if metadata.stage == :evidence_committed and self() != parent do
+            send(parent, {:dispute_read_committed, self()})
+
+            receive do
+              :classify_dispute_read -> :ok
+            after
+              5_000 -> raise "Timed out waiting to classify the dispute read"
+            end
+          end
+        end,
+        nil
+      )
+
+    reader =
+      Task.async(fn -> Sandbox.unboxed_run(Repo, fn -> FixtureDisputes.read_due(id) end) end)
+
+    try do
+      assert_receive {:dispute_read_committed, pid}, 3_000
+      assert pid == reader.pid
+      while_paused.()
+      send(pid, :classify_dispute_read)
+      assert :ok = Task.await(reader)
+    after
+      :telemetry.detach(handler)
+      Task.shutdown(reader, :brutal_kill)
+    end
+  end
+
+  defp dispute_refund_clear(purchase_id, payment_id) do
+    source = NewYou.Commerce.FixtureCorrectionSource
+
+    source.transact(fn ->
+      assert {:ok, %NewYou.Commerce.Purchase{}} = source.lock_purchase(purchase_id)
+      assert {:ok, clear?} = FixtureDisputes.refund_clear?(payment_id)
+      clear?
+    end)
+  end
+
   defp set_due_dispute_reply(id, reply_data, observation) do
     make_dispute_due(id, 6)
     Agent.update(reply_data, fn _ -> observation end)

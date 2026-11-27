@@ -86,6 +86,7 @@ defmodule NewYou.Commerce.FixtureDispute do
           :allocation,
           :state,
           :revision,
+          :conflict?,
           :verify_after
         ]
 

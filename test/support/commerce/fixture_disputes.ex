@@ -70,6 +70,7 @@ defmodule NewYou.Commerce.FixtureDisputes do
 
   defp bind(receipt, purchase, payment) do
     with {:ok, allocation} <- allocation(purchase, payment, receipt.amount_minor),
+         {:ok, conflict?} <- initial_terminal_conflict?(receipt),
          {:ok, dispute} <-
            Ash.create(
              FixtureDispute,
@@ -79,17 +80,25 @@ defmodule NewYou.Commerce.FixtureDisputes do
                purchase_id: purchase.id,
                amount_minor: receipt.amount_minor,
                allocation: allocation,
-               state: receipt.outcome,
+               state: if(conflict?, do: :unresolved, else: receipt.outcome),
                revision: receipt.revision,
+               conflict?: conflict?,
                verify_after: DateTime.utc_now()
              },
              action: :bind,
              authorize?: false
            ) do
       # Another purchase can race for a previously absent provider identity.
-      if matches?(dispute, receipt), do: {:ok, :applied}, else: {:ok, :quarantined}
+      if matches?(dispute, receipt),
+        do: {:ok, if(conflict?, do: :conflict, else: :applied)},
+        else: {:ok, :quarantined}
     end
   end
+
+  defp initial_terminal_conflict?(%{outcome: outcome} = receipt) when outcome in @terminal,
+    do: receipt |> opposing_terminal() |> Ash.exists(authorize?: false)
+
+  defp initial_terminal_conflict?(_receipt), do: {:ok, false}
 
   defp allocation(%{amount_minor: amount}, %{collection_kind: :excess}, amount),
     do: {:ok, :excess}
@@ -117,13 +126,16 @@ defmodule NewYou.Commerce.FixtureDisputes do
     end
   end
 
-  defp advance_qualified(%{state: state, conflict?: true, revision: revision} = dispute, %{
-         source: :read,
-         outcome: state,
-         revision: incoming
-       })
+  defp advance_qualified(
+         %{state: state, conflict?: true, revision: revision} = dispute,
+         %{
+           source: :read,
+           outcome: state,
+           revision: incoming
+         } = receipt
+       )
        when state in @terminal and incoming > revision,
-       do: confirm_terminal(dispute, incoming)
+       do: confirm_terminal(dispute, receipt)
 
   defp advance_qualified(%{state: state} = dispute, %{outcome: outcome, revision: revision})
        when state in @terminal and outcome in @terminal and state != outcome,
@@ -142,12 +154,41 @@ defmodule NewYou.Commerce.FixtureDisputes do
   defp advance_qualified(%{revision: revision} = dispute, %{revision: revision}),
     do: conflict(dispute)
 
-  defp advance_qualified(dispute, receipt) do
+  defp advance_qualified(dispute, %{outcome: outcome} = receipt) when outcome in @terminal,
+    do: qualify_terminal(dispute, receipt)
+
+  defp advance_qualified(dispute, receipt),
+    do: qualify_outcome(dispute, receipt, dispute.conflict?)
+
+  defp qualify_terminal(%{conflict?: true}, %{source: :webhook}), do: {:ok, :conflict}
+
+  defp qualify_terminal(%{conflict?: true} = dispute, receipt) do
+    competing =
+      receipt
+      |> terminal_evidence()
+      |> Ash.Query.filter(id != ^receipt.id and revision >= ^receipt.revision)
+
+    case Ash.exists(competing, authorize?: false) do
+      {:ok, false} -> qualify_outcome(dispute, receipt, false)
+      {:ok, true} -> {:ok, :stale}
+      {:error, _} = error -> error
+    end
+  end
+
+  defp qualify_terminal(dispute, receipt) do
+    case initial_terminal_conflict?(receipt) do
+      {:ok, false} -> qualify_outcome(dispute, receipt, false)
+      {:ok, true} -> conflict(dispute)
+      {:error, _} = error -> error
+    end
+  end
+
+  defp qualify_outcome(dispute, receipt, conflict?) do
     with {:ok, _} <-
            update(dispute, :qualify, %{
              state: receipt.outcome,
              revision: receipt.revision,
-             conflict?: false,
+             conflict?: conflict?,
              effect_version: dispute.effect_version + 1
            }),
          do: {:ok, :applied}
@@ -156,19 +197,16 @@ defmodule NewYou.Commerce.FixtureDisputes do
   # The current pinned read can confirm the retained terminal decision only
   # when it is newer than every opposing terminal observation for this case.
   # An opposing read still needs adjudication and never reopens an ended right.
-  defp confirm_terminal(dispute, revision) do
-    opposing_evidence =
-      dispute
-      |> case_receipts()
-      |> Ash.Query.filter(
-        state in [:pending, :conflict] and
-          outcome in ^@terminal and outcome != ^dispute.state and revision >= ^revision
-      )
+  defp confirm_terminal(dispute, receipt) do
+    opposing =
+      receipt
+      |> opposing_terminal()
+      |> Ash.Query.filter(revision >= ^receipt.revision)
 
-    with {:ok, false} <- Ash.exists(opposing_evidence, authorize?: false),
+    with {:ok, false} <- Ash.exists(opposing, authorize?: false),
          {:ok, _} <-
            update(dispute, :confirm_terminal, %{
-             revision: revision,
+             revision: receipt.revision,
              effect_version: dispute.effect_version + 1
            }) do
       {:ok, :applied}
@@ -176,6 +214,20 @@ defmodule NewYou.Commerce.FixtureDisputes do
       {:ok, true} -> {:ok, :stale}
       {:error, _} = error -> error
     end
+  end
+
+  # A superseded lease prevents direct application. Its committed, exact-source
+  # terminal observation still counts when another receipt seeks qualification.
+  defp opposing_terminal(receipt) do
+    receipt
+    |> terminal_evidence()
+    |> Ash.Query.filter(outcome != ^receipt.outcome)
+  end
+
+  defp terminal_evidence(scope) do
+    scope
+    |> case_receipts()
+    |> Ash.Query.filter(outcome in ^@terminal and state != :quarantined)
   end
 
   defp terminal_disagreement(dispute, revision) when revision < dispute.revision do
