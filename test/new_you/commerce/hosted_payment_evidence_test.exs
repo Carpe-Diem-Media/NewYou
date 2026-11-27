@@ -19,7 +19,7 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
     VerifiedPayment
   }
 
-  alias NewYou.Commerce.Workers.VerifyFixtureReference
+  alias NewYou.Commerce.Workers.{ProcessFixtureReceipt, VerifyFixtureReference}
   alias NewYou.Proof.{FreshMix, P805, P815Port}
 
   import NewYou.Commerce.OfferFixtures
@@ -193,11 +193,9 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
     P805.with_fixture(fn ->
       with_checkout(fn accepted, recipient, reference, _observed ->
         matching = %{data(reference) | "status" => "pending"}
-        unknown = foreign_reference(reference)
 
         for {payload, state, reason} <- [
               {matching, :unresolved, :pending},
-              {%{matching | "reference" => unknown}, :quarantined, :source_mismatch},
               {%{matching | "amount" => 39_900}, :quarantined, :source_mismatch},
               {%{matching | "currency" => "USD"}, :quarantined, :source_mismatch}
             ] do
@@ -212,6 +210,53 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
         assert_no_payment_effects(accepted, recipient)
       end)
     end)
+  end
+
+  test "teardown removes only the registered unknown pending receipt and its work", %{key: key} do
+    unknown = Base.encode16(:crypto.strong_rand_bytes(16), case: :lower)
+    pending = %{data(unknown) | "status" => "pending"}
+    raw = envelope(pending, "charge.pending")
+    digest = :crypto.hash(:sha256, raw)
+    sentinel_raw = envelope(%{pending | "id" => @transaction - 1}, "charge.pending")
+    sentinel_digest = :crypto.hash(:sha256, sentinel_raw)
+
+    on_exit(fn ->
+      P805.with_fixture(fn -> P805.track_webhook_receipt_digest(sentinel_digest) end)
+    end)
+
+    {%{id: sentinel}, sentinel_job} =
+      Sandbox.unboxed_run(Repo, fn -> receive_pending_with_job(key, sentinel_raw) end)
+
+    for _ <- 1..2 do
+      {owned, owned_job} =
+        P805.with_fixture(fn ->
+          with_checkout(fn accepted, recipient, reference, _observed ->
+            assert reference != unknown
+            :ok = P805.track_webhook_receipt_digest(digest)
+
+            {%{reference: ^unknown, requested_reference: nil, id: id}, job} =
+              receive_pending_with_job(key, raw)
+
+            assert :ok == Commerce.apply_hosted_payment_evidence(id)
+
+            assert %{state: :quarantined, classification: :source_mismatch} =
+                     Ash.get!(HostedPaymentReceipt, id, authorize?: false)
+
+            assert_no_payment_effects(accepted, recipient)
+            {id, job}
+          end)
+        end)
+
+      Sandbox.unboxed_run(Repo, fn ->
+        assert Enum.map(evidence(unknown), & &1.id) == [sentinel]
+        assert %{state: :pending} = Ash.get!(HostedPaymentReceipt, sentinel, authorize?: false)
+        refute Repo.get(Oban.Job, owned_job)
+        assert %Oban.Job{} = Repo.get(Oban.Job, sentinel_job)
+
+        assert {:ok, nil} ==
+                 Ash.get(HostedPaymentReceipt, owned, authorize?: false, error?: false)
+      end)
+    end
   end
 
   test "Verify qualifies structured pending evidence and preserves transport-only outcomes" do
@@ -719,6 +764,23 @@ defmodule NewYou.Commerce.HostedPaymentEvidenceTest do
     HostedPaymentReceipt
     |> Ash.Query.filter(reference == ^reference or requested_reference == ^reference)
     |> Ash.read!(authorize?: false)
+  end
+
+  defp receive_pending_with_job(key, raw) do
+    assert post(raw, signature(key, raw)).status == 202
+    digest = :crypto.hash(:sha256, raw)
+
+    assert %{id: id, state: :pending} =
+             receipt =
+             HostedPaymentReceipt
+             |> Ash.Query.filter(source == :webhook and digest == ^digest)
+             |> Ash.read_one!(authorize?: false)
+
+    job =
+      ProcessFixtureReceipt.new(%{"primary_key" => %{"id" => id}})
+      |> Oban.insert!()
+
+    {receipt, job.id}
   end
 
   defp payments(accepted) do

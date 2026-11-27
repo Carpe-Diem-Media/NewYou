@@ -28,6 +28,7 @@ defmodule NewYou.Proof.P805Fixture do
         cleanup_hook: cleanup_hook,
         operations: [],
         emails: [],
+        webhook_receipt_digests: [],
         foreign_operations: [],
         foreign_emails: [],
         foreign_projections: [],
@@ -48,6 +49,9 @@ defmodule NewYou.Proof.P805Fixture do
 
   def track(reference, :email, email),
     do: update(reference, &%{&1 | emails: Enum.uniq([email | &1.emails])})
+
+  def track(reference, :webhook_receipt_digest, <<_::256>> = digest),
+    do: update(reference, &%{&1 | webhook_receipt_digests: [digest | &1.webhook_receipt_digests]})
 
   def track(reference, :foreign_operation, operation),
     do:

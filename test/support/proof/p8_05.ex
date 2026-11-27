@@ -310,6 +310,14 @@ defmodule NewYou.Proof.P805 do
 
   def track_operation(operation), do: track(%{operation_id: operation})
 
+  @doc false
+  @spec track_webhook_receipt_digest(binary()) :: :ok
+  def track_webhook_receipt_digest(<<_::256>> = digest) do
+    guardian = Process.get({__MODULE__, :guardian})
+    true = is_pid(guardian)
+    register_fixture_value(guardian, :webhook_receipt_digest, digest)
+  end
+
   defp track(request) do
     guardian = Process.get({__MODULE__, :guardian})
 
@@ -428,7 +436,8 @@ defmodule NewYou.Proof.P805 do
       fixture.operations ++ fixture.foreign_operations,
       fixture.emails ++ fixture.foreign_emails,
       projection_key,
-      fixture.cleanup_hook
+      fixture.cleanup_hook,
+      fixture.webhook_receipt_digests
     )
 
     Enum.each(fixture.foreign_projections, fn key ->
@@ -1525,12 +1534,20 @@ defmodule NewYou.Proof.P805 do
   defp cleanup(projection_key) do
     operations = Process.get({__MODULE__, :operations}, [])
     emails = Process.get({__MODULE__, :emails}, [])
-    cleanup(operations, emails, projection_key, Process.get({__MODULE__, :fixture_cleanup_hook}))
+
+    cleanup(
+      operations,
+      emails,
+      projection_key,
+      Process.get({__MODULE__, :fixture_cleanup_hook}),
+      []
+    )
+
     Process.delete({__MODULE__, :operations})
     Process.delete({__MODULE__, :emails})
   end
 
-  defp cleanup(operations, emails, projection_key, cleanup_hook) do
+  defp cleanup(operations, emails, projection_key, cleanup_hook, webhook_receipt_digests) do
     if is_function(cleanup_hook, 0), do: cleanup_hook.()
     :ok = cleanup_test_oban_queue(projection_key)
     :ok = cleanup_test_analytics_projection(projection_key)
@@ -1794,43 +1811,11 @@ defmodule NewYou.Proof.P805 do
         "DELETE FROM commerce_assessment_admissions WHERE purchase_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
         [operations]
       )
+    end
 
-      Repo.query!(
-        """
-        WITH dispatches AS (
-          SELECT d.reference, d.attempt_id
-          FROM commerce_hosted_dispatches d
-          JOIN commerce_plan_purchases p ON p.attempt_id = d.attempt_id
-          WHERE p.operation_id = ANY($1::uuid[])
-        )
-        DELETE FROM oban_jobs
-        WHERE queue = 'commerce_fixture' AND (
-          args->'primary_key'->>'attempt_id' IN (SELECT attempt_id::text FROM dispatches) OR
-          args->'primary_key'->>'id' IN (
-            SELECT r.id::text FROM commerce_hosted_payment_receipts r
-            WHERE r.reference IN (SELECT reference FROM dispatches) OR
-                  r.requested_reference IN (SELECT reference FROM dispatches)
-          )
-        )
-        """,
-        [operations]
-      )
+    cleanup_hosted_fixture_evidence(operations, webhook_receipt_digests)
 
-      Repo.query!(
-        """
-        WITH dispatches AS (
-          SELECT d.reference
-          FROM commerce_hosted_dispatches d
-          JOIN commerce_plan_purchases p ON p.attempt_id = d.attempt_id
-          WHERE p.operation_id = ANY($1::uuid[])
-        )
-        DELETE FROM commerce_hosted_payment_receipts
-        WHERE reference IN (SELECT reference FROM dispatches) OR
-              requested_reference IN (SELECT reference FROM dispatches)
-        """,
-        [operations]
-      )
-
+    if operations != [] do
       Repo.query!(
         """
         DELETE FROM commerce_hosted_dispatches
@@ -1866,6 +1851,34 @@ defmodule NewYou.Proof.P805 do
     )
 
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
+  end
+
+  defp cleanup_hosted_fixture_evidence([], []), do: :ok
+
+  defp cleanup_hosted_fixture_evidence(operations, webhook_receipt_digests) do
+    Repo.query!(
+      """
+      WITH dispatches AS (
+        SELECT d.reference, d.attempt_id
+        FROM commerce_hosted_dispatches d
+        JOIN commerce_plan_purchases p ON p.attempt_id = d.attempt_id
+        WHERE p.operation_id = ANY($1::uuid[])
+      ),
+      removed_receipts AS (
+        DELETE FROM commerce_hosted_payment_receipts
+        WHERE reference IN (SELECT reference FROM dispatches) OR
+              requested_reference IN (SELECT reference FROM dispatches) OR
+              (source = 'webhook' AND digest = ANY($2::bytea[]))
+        RETURNING id
+      )
+      DELETE FROM oban_jobs
+      WHERE queue = 'commerce_fixture' AND (
+        args->'primary_key'->>'attempt_id' IN (SELECT attempt_id::text FROM dispatches) OR
+        args->'primary_key'->>'id' IN (SELECT id::text FROM removed_receipts)
+      )
+      """,
+      [operations, webhook_receipt_digests]
+    )
   end
 
   defp cleanup_test_oban_queue("p817_test_" <> suffix) when suffix != "" do
