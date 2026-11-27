@@ -6,7 +6,7 @@
     "WELL-218"
   ],
   "implementation_revision": {
-    "git_sha": "33092608a96b1405ec1f8ef0febe9830f822c143",
+    "git_sha": "74f44d34de59e8a9858b8c3d0ae53397714ccf3d",
     "semantics": "E1a-F dispatch foundation with WELL-219 known-reference scheduling on the existing claim."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -561,7 +561,7 @@
       "id": "test_discovery",
       "path": "mix.exs",
       "symbol": "test_ignore_filters",
-      "sha256": "6e43b1ec3dbc08532ea2806548b254742fd782cfc3e4c55da9575e88f3b9d4db"
+      "sha256": "40051095f2b1c027e35d600934c59b0ed7394774b57bcb8b1a600acd8365821c"
     }
   ]
 }

@@ -6,7 +6,7 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "33092608a96b1405ec1f8ef0febe9830f822c143",
+    "git_sha": "74f44d34de59e8a9858b8c3d0ae53397714ccf3d",
     "semantics": "Committed implementation and tests for the provider-disabled E2c foundation."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -745,7 +745,8 @@
         "receipt",
         "dispute",
         "restart",
-        "test"
+        "test",
+        "discovery"
       ]
     },
     {
@@ -1027,6 +1028,12 @@
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defp cleanup_fixture_disputes",
       "sha256": "c3383a07207372a84e45bfe0fdeeee949a7c6b91433db5e84abbb88c79c13175"
+    },
+    {
+      "id": "discovery",
+      "path": "mix.exs",
+      "symbol": "well223_dispute_restart",
+      "sha256": "40051095f2b1c027e35d600934c59b0ed7394774b57bcb8b1a600acd8365821c"
     }
   ]
 }
