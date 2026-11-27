@@ -69,6 +69,14 @@ defmodule NewYou.Commerce.Paystack.TestCardsTest do
     end
   end
 
+  test "expiry advances to the new month and year at UTC year rollover" do
+    december = TestCards.all(~D[2026-12-31])
+    january = TestCards.all(~D[2027-01-01])
+
+    assert Enum.uniq(for card <- Map.values(december), do: card.expiry) == [~D[2027-12-01]]
+    assert Enum.uniq(for card <- Map.values(january), do: card.expiry) == [~D[2028-01-01]]
+  end
+
   test "fetch! raises for an unknown fixture ID" do
     assert_raise KeyError, fn -> TestCards.fetch!(:unknown_fixture) end
   end

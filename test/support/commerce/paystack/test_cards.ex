@@ -91,17 +91,21 @@ defmodule NewYou.Commerce.Paystack.TestCards do
   Returns the fixture for `id` with a fresh expiry. Raises `KeyError` for unknown IDs.
   """
   @spec fetch!(atom()) :: card()
-  def fetch!(id), do: @cards |> Map.fetch!(id) |> Map.put(:expiry, expiry())
+  def fetch!(id) do
+    card = Map.fetch!(@cards, id)
+    Map.put(card, :expiry, expiry(Date.utc_today()))
+  end
 
   @doc "Returns the fixtures keyed by scenario ID, with one expiry date for the catalogue."
   @spec all() :: %{atom() => card()}
-  def all do
-    expiry = expiry()
+  def all, do: all(Date.utc_today())
+
+  @doc false
+  @spec all(Date.t()) :: %{atom() => card()}
+  def all(today) do
+    expiry = expiry(today)
     Map.new(@cards, fn {id, card} -> {id, Map.put(card, :expiry, expiry)} end)
   end
 
-  defp expiry do
-    today = Date.utc_today()
-    Date.new!(today.year + 1, today.month, 1)
-  end
+  defp expiry(today), do: Date.new!(today.year + 1, today.month, 1)
 end
