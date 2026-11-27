@@ -1795,6 +1795,16 @@ defmodule NewYou.Proof.P805 do
         [operations]
       )
 
+      Repo.query!(
+        """
+        DELETE FROM commerce_hosted_dispatches
+        WHERE attempt_id IN (
+          SELECT attempt_id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])
+        )
+        """,
+        [operations]
+      )
+
       Repo.query!("DELETE FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])", [
         operations
       ])

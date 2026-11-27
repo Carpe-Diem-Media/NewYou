@@ -1,0 +1,566 @@
+{
+  "schema_version": 1,
+  "capability_id": "commerce.hosted_checkout_dispatch",
+  "purpose": "Give an exact accepted standalone Plan one durable Hosted Redirect dispatch claim for local TEST proof.",
+  "implementing_tickets": [
+    "WELL-218"
+  ],
+  "implementation_revision": {
+    "git_sha": "f0a57e9873b718fec88ce70d1a785e912023aadf",
+    "semantics": "E1a-F provider-disabled Commerce dispatch foundation."
+  },
+  "authoritative_domain": "NewYou.Commerce",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Identity",
+      "interface": "authorize_canonical_session/1",
+      "ownership": "Current verified canonical account and active session. Commerce checks the accepted payer relationship.",
+      "source_ids": [
+        "identity",
+        "checkout"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "interface": "SyntheticSuppression.locked_status/1",
+      "ownership": "TEST suppression status for both accepted parties. Commerce reuses the S1 Privacy locks.",
+      "source_ids": [
+        "quote",
+        "checkout"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.HostedDispatch",
+      "actions": [
+        "read",
+        "bind",
+        "claim",
+        "retain"
+      ],
+      "caller_boundary": "Private actions and deny-all policies. The owning interface checks current payer, exact source and fixed fixture scope.",
+      "source_ids": [
+        "dispatch",
+        "checkout"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.Purchase",
+      "actions": [
+        "accept",
+        "read"
+      ],
+      "caller_boundary": "S1 owns acceptance. HostedCheckout locks and reads the original Purchase without writing accepted values.",
+      "source_ids": [
+        "purchase",
+        "quote",
+        "checkout"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Commerce.HostedCheckout",
+      "function": "prepare",
+      "arity": 3,
+      "visibility": "internal",
+      "arguments": [
+        "Canonical payer session",
+        "Exact immutable S1 snapshot",
+        "Paystack/local_fixture/TEST/card scope"
+      ],
+      "returns": [
+        "Original reference or scoped denial."
+      ],
+      "side_effects": [
+        "Bind one random reference and a digest of the accepted snapshot."
+      ],
+      "caller_constraints": [
+        "TEST only. Requires the current payer, allowed Privacy scopes and an unpaid standalone Plan."
+      ],
+      "source_ids": [
+        "checkout",
+        "binding_test"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.HostedCheckout",
+      "function": "initialize",
+      "arity": 4,
+      "visibility": "internal",
+      "arguments": [
+        "Canonical payer session",
+        "Exact immutable S1 snapshot",
+        "Paystack/local_fixture/TEST/card scope",
+        "Isolated loopback listener port"
+      ],
+      "returns": [
+        "Retained or ambiguous outcome, or scoped denial."
+      ],
+      "side_effects": [
+        "Commit the sole claim, prove it is visible independently and perform at most one loopback POST. Retain a matching fixture capability."
+      ],
+      "caller_constraints": [
+        "TEST only. Requires the original prepared binding and an outermost commit boundary."
+      ],
+      "source_ids": [
+        "checkout",
+        "adapter",
+        "recovery_test"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.HostedCheckout",
+      "function": "recover",
+      "arity": 3,
+      "visibility": "internal",
+      "arguments": [
+        "Canonical payer session",
+        "Exact immutable S1 snapshot",
+        "Paystack/local_fixture/TEST/card scope"
+      ],
+      "returns": [
+        "Original reference and its prepared, retained or ambiguous status, or scoped denial."
+      ],
+      "side_effects": [
+        "Read the current dispatch outcome and apply existing Identity session checks without HTTP."
+      ],
+      "caller_constraints": [
+        "TEST only. Requires the current payer and unchanged source."
+      ],
+      "source_ids": [
+        "checkout",
+        "binding_test"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261126204523_well218_hosted_dispatch.exs",
+      "tables": [
+        "commerce_hosted_dispatches"
+      ],
+      "constraints": [
+        "commerce_hosted_dispatches_attempt_id_fkey",
+        "commerce_hosted_dispatches_scoped_reference_index",
+        "commerce_hosted_dispatches_fixture_scope",
+        "commerce_hosted_dispatches_binding",
+        "commerce_hosted_dispatches_claim"
+      ],
+      "source_ids": [
+        "schema",
+        "dispatch",
+        "migration_test"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "Lock the Purchase, revalidate actor and Privacy authority, rebuild S1's accepted snapshot and reject a paid or changed source.",
+      "source_ids": [
+        "checkout",
+        "quote",
+        "payment"
+      ]
+    },
+    {
+      "summary": "Bind the reference to the existing Purchase.attempt_id. Commit the claim in a separate transaction and read the exact epoch and reference through an unboxed PostgreSQL connection before sending.",
+      "source_ids": [
+        "checkout",
+        "dispatch",
+        "recovery_test"
+      ]
+    },
+    {
+      "summary": "Only the claim winner enters the fixed Req path. Retain the matching code under the same claim and check payer authority again before returning the capability.",
+      "source_ids": [
+        "checkout",
+        "adapter",
+        "recovery_test"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "unbound",
+      "prepared",
+      "ambiguous",
+      "retained"
+    ],
+    "transitions": [
+      {
+        "from_state": "unbound",
+        "to_state": "prepared",
+        "guards": [
+          "Exact S1 standalone Plan",
+          "Current accepted payer",
+          "Fixed local scope",
+          "No applied payment"
+        ],
+        "side_effects": [
+          "Persist a stable reference and accepted snapshot digest."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "checkout",
+          "dispatch"
+        ]
+      },
+      {
+        "from_state": "prepared",
+        "to_state": "ambiguous",
+        "guards": [
+          "Unchanged source",
+          "Current payer",
+          "Purchase lock",
+          "Unclaimed epoch"
+        ],
+        "side_effects": [
+          "Commit the only claim ID. Failed or uncertain acknowledgements leave the claim intact."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "checkout",
+          "dispatch"
+        ]
+      },
+      {
+        "from_state": "ambiguous",
+        "to_state": "retained",
+        "guards": [
+          "Exact claim",
+          "Reference match",
+          "Canonical non-routable fixture URL and code"
+        ],
+        "side_effects": [
+          "Retain the fixture code once. The current payer can recover the original URL."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "checkout",
+          "adapter",
+          "dispatch"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "The recipient may observe the S1 purchase and still lack initiation and capability recovery authority. Current canonical payer and Privacy checks apply at both boundaries.",
+      "source_ids": [
+        "identity",
+        "quote",
+        "checkout",
+        "binding_test"
+      ]
+    },
+    {
+      "summary": "The wire code compiles only in TEST. It accepts no host, credential, proxy, plugin or middleware override. The numeric loopback origin, fixture credential and synthetic contact are fixed.",
+      "source_ids": [
+        "adapter",
+        "checkout",
+        "disabled_test",
+        "transport_test"
+      ]
+    },
+    {
+      "summary": "Publish only response classifications and timings. Mark reference and code sensitive and hide both from ordinary outcome inspection.",
+      "source_ids": [
+        "checkout",
+        "dispatch",
+        "transport_test"
+      ]
+    },
+    {
+      "summary": "A bound local attempt cannot accept synthetic P1/S1 payment evidence. A separate unbound S1 fixture still accepts qualified synthetic observations. No local dispatch releases the Assessment interlock or creates rights.",
+      "source_ids": [
+        "payment",
+        "binding_test"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "The Purchase lock serializes dispatch admission and the existing synthetic application path. Private claim and retention updates filter on the unconsumed or matching epoch respectively.",
+      "source_ids": [
+        "checkout",
+        "dispatch",
+        "payment"
+      ]
+    },
+    {
+      "summary": "The action rejects explicit outer transactions and reads the exact claim from a different unboxed connection. This also excludes an implicit SQL Sandbox savepoint. The receiver counts actual POSTs independently.",
+      "source_ids": [
+        "checkout",
+        "recovery_test",
+        "receiver"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Exact replay recovers the original reference. A committed claim remains consumed after a lost response, timeout, error envelope or application restart.",
+      "source_ids": [
+        "checkout",
+        "dispatch",
+        "recovery_test"
+      ]
+    },
+    {
+      "summary": "Req uses HTTP/1, disables retries and redirects, bounds pool/connect/receive and best-effort exchange times, and caps the response body at 16 KiB.",
+      "source_ids": [
+        "adapter",
+        "transport_test"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Pre-commit rollback preserves the original prepared reference for its first dispatch. After commitment the claim is ambiguous until applicable evidence is retained, even when the receiver saw no request.",
+      "source_ids": [
+        "checkout",
+        "recovery_test",
+        "restart"
+      ]
+    },
+    {
+      "summary": "An exact fixture capability commits before presentation. A fresh BEAM reloads the original result after a lost response or interrupted presentation without another send.",
+      "source_ids": [
+        "checkout",
+        "recovery_test",
+        "restart"
+      ]
+    },
+    {
+      "summary": "The additive schema leaves P1, S1 and E2a rows intact. Rollback holds an exclusive table lock and refuses to erase a retained binding.",
+      "source_ids": [
+        "schema",
+        "migration_test"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/commerce/hosted_checkout_test.exs",
+      "cases": [
+        "F-01/F-02 exact snapshot, actor and authority denials",
+        "F-08/F-09 evidence isolation and compatibility"
+      ],
+      "proves": "Exact accepted money, wrong source and scope denial, revoked and suppressed actor denial, quote-less and closed exclusions, zero local payments and rights, and preserved admission interlock.",
+      "limits": "Signed synthetic P1, S1 and E2a inputs remain TEST fixtures.",
+      "source_ids": [
+        "binding_test",
+        "receiver"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/hosted_checkout_recovery_test.exs",
+      "cases": [
+        "F-03 separate PostgreSQL connections and committed request count",
+        "F-04/F-05 rollback, lost response, restart and fail-closed replay",
+        "F-02 authority loss before presentation"
+      ],
+      "proves": "Actual lock wait, no wire request before visibility, one receiver request across a race, exact original reference across four cuts, and no disclosure after revocation.",
+      "limits": "Independent loopback receiver only.",
+      "source_ids": [
+        "recovery_test",
+        "receiver",
+        "restart",
+        "test_discovery"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/hosted_checkout_transport_test.exs",
+      "cases": [
+        "F-06/F-07 exact response, non-retry, no redirects, redaction"
+      ],
+      "proves": "Fixed endpoint and settings despite poison defaults, separate attempt and wire counts, bounded response size and timeout, and sanitized diagnostics.",
+      "limits": "Local wire evidence earns no provider-stage certification.",
+      "source_ids": [
+        "transport_test",
+        "receiver"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "cases": [
+        "F-10 additive migration and protected rollback"
+      ],
+      "proves": "Up/down/up with legacy rows, local foreign key, scoped unique index and scope, binding and capability shape checks.",
+      "limits": "Real DDL in a rollback-isolated schema.",
+      "source_ids": [
+        "migration_test",
+        "schema"
+      ]
+    },
+    {
+      "path": "test/proof/well218_provider_disabled.exs",
+      "cases": [
+        "F-07 compile exclusion and runtime configuration denial"
+      ],
+      "proves": "The non-TEST BEAM has no wire builder or Ash/Req imports in the owner boundary. Public calls remain disabled.",
+      "limits": "Uses compiled modules without starting the application. The existing runner contract checks that both standalone WELL-218 proof scripts stay out of ExUnit discovery.",
+      "source_ids": [
+        "disabled_test",
+        "checkout",
+        "test_discovery"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "WELL-190 owns any future external activation. Reverify the actual stack and qualify exact provider evidence before changing the fixture isolation or replacement rules.",
+      "source_ids": [
+        "plan",
+        "checkout"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "EXTEND the PR #312 matrix with the reviewed draft Store PR #234 head cdb56c61137bd27d4c13bcb66941611792b2b5f5. Adapt checkout_payload and request in lib/store/payments/providers/paystack.ex, the checkout envelope from lib/store/payments/providers/paystack/response.ex, non-idempotent request settings from lib/store/support/http/req_client.ex, and exact-payload and reference-mismatch cases from test/store/payments/providers/paystack_checkout_test.exs. NewYou uses the locked Req 0.7.5 stack and an actual Bandit loopback receiver.",
+      "source_ids": [
+        "plan",
+        "adapter",
+        "binding_test",
+        "transport_test"
+      ]
+    },
+    {
+      "summary": "COMPOSE Store main 949821ac589addb6e595f6333370ed65cf8d5ef7, lib/store/subscriptions/renewal_collection_attempts.ex, claim_dispatch_locked, ensure_exact_dispatch_epoch and claim_collection_dispatch. Use Commerce-owned filtered Ash actions, the existing Purchase lock and one immutable claim epoch.",
+      "source_ids": [
+        "plan",
+        "purchase",
+        "dispatch",
+        "recovery_test"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Exclude missing-reference replay, overlapping sends, stale setup cancellation and imported Store business Domains. The fixture cannot authorize replacement, cancellation, payment or entitlement.",
+      "source_ids": [
+        "plan",
+        "dispatch",
+        "checkout",
+        "payment"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "HIGH proof covers binding, actor authority, request and durable-effect counts, recovery, redaction and migration. Provider reconciliation, browser rendering, financial settlement, entitlement application and release remain separate.",
+    "Only a validated code for a reserved non-routable fixture origin is retained. Real provider capabilities, credentials, HTTPS policy and empirical verdicts belong to WELL-190.",
+    "Standalone Plan has no new unpaid terminality rule. Existing paid or corrected sources remain ineligible. All Assessment and bundle dispatch stays disabled."
+  ],
+  "follow_up_tickets": [
+    "WELL-190",
+    "WELL-176"
+  ],
+  "sources": [
+    {
+      "id": "checkout",
+      "path": "lib/new_you/commerce/hosted_checkout.ex",
+      "symbol": "defmodule NewYou.Commerce.HostedCheckout",
+      "sha256": "ad0809150cccce75f0210cbee9876a26931f13a79f178d3bd58c96ffda7bccce"
+    },
+    {
+      "id": "dispatch",
+      "path": "lib/new_you/commerce/hosted_dispatch.ex",
+      "symbol": "update :claim",
+      "sha256": "c08c7a6c8c86504587472364792350a63c3efb27e0a43f635858ba206f8bc3f6"
+    },
+    {
+      "id": "adapter",
+      "path": "lib/new_you/commerce/paystack_checkout.ex",
+      "symbol": "defmodule NewYou.Commerce.PaystackCheckout",
+      "sha256": "41baf65341c03a870bc9d2f25de3d495034bff487f0ee8be599e3b52c92739d3"
+    },
+    {
+      "id": "purchase",
+      "path": "lib/new_you/commerce/purchase.ex",
+      "symbol": "identity :attempt",
+      "sha256": "a8f90eeffbc7d682a6680e18ee56f5a77fc3d67c80c9e7c64f99deb05159393e"
+    },
+    {
+      "id": "quote",
+      "path": "lib/new_you/commerce/offer_admission.ex",
+      "symbol": "def bound_snapshot",
+      "sha256": "87b5287bdebc927066ffc052e9737dfc1c413d6633ea28f14c831810e451a269"
+    },
+    {
+      "id": "payment",
+      "path": "lib/new_you/commerce.ex",
+      "symbol": "def apply_payment_observation",
+      "sha256": "28c07e820976d68a890b1b07195572b2aa2c67287bd58cca28f1af9cf4e96dc4"
+    },
+    {
+      "id": "identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def authorize_canonical_session",
+      "sha256": "ead01b1ce5b7a22f0b4d0bcb7346677e464317afccf9953faa7be729506edb80"
+    },
+    {
+      "id": "schema",
+      "path": "priv/repo/migrations/20261126204523_well218_hosted_dispatch.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.Well218HostedDispatch",
+      "sha256": "44f63cbb7bd2bb5025b2539f1331e7c4f49d73c8cb55ca7624165dbc7d125429"
+    },
+    {
+      "id": "binding_test",
+      "path": "test/new_you/commerce/hosted_checkout_test.exs",
+      "symbol": "defmodule NewYou.Commerce.HostedCheckoutTest",
+      "sha256": "bb92cec13b0950db3b99ec1e032f587c5d598dc2237622117b10f9e14d2c27f9"
+    },
+    {
+      "id": "recovery_test",
+      "path": "test/new_you/commerce/hosted_checkout_recovery_test.exs",
+      "symbol": "defmodule NewYou.Commerce.HostedCheckoutRecoveryTest",
+      "sha256": "ad0919ae0cb807f0ab4116b5e93325717fdfdde1dc2720d676362c4e0cac2957"
+    },
+    {
+      "id": "transport_test",
+      "path": "test/new_you/commerce/hosted_checkout_transport_test.exs",
+      "symbol": "defmodule NewYou.Commerce.HostedCheckoutTransportTest",
+      "sha256": "245594886636f6fa6bd0eee38bca262ac43bab86950c4d9d76ca6824cbb7da99"
+    },
+    {
+      "id": "migration_test",
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "symbol": "hosted dispatch migration preserves adjacent-version rows",
+      "sha256": "5f55c0c94c8dc0ecb204bfc000a82afa691c2f45b1148198d15dfbfbac79962c"
+    },
+    {
+      "id": "disabled_test",
+      "path": "test/proof/well218_provider_disabled.exs",
+      "symbol": "non-TEST dispatch exclusion passed",
+      "sha256": "1ced30a24b59d88a9baba2e6456b6a62ce32379dacee9767ce00dcf4a888b3ae"
+    },
+    {
+      "id": "receiver",
+      "path": "test/support/commerce/hosted_checkout_receiver.ex",
+      "symbol": "def with_receiver",
+      "sha256": "0adc5e295d0b4c2d5a82011449671f70fbffe916a80658876b961b120c1fec66"
+    },
+    {
+      "id": "restart",
+      "path": "test/proof/well218_hosted_checkout_restart.exs",
+      "symbol": "E1AF_COMPLETED",
+      "sha256": "50e55e09f22908f81e00cc4a9a880a63b9ac4e27f0286d72d65d6fb9e8517575"
+    },
+    {
+      "id": "plan",
+      "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
+      "symbol": "mandatory reuse-first matrix for FP-002",
+      "sha256": "3292c3a21f7d0ce134445b54a539a28491c85b823c0026c7b073737d30aea6f7"
+    },
+    {
+      "id": "test_discovery",
+      "path": "mix.exs",
+      "symbol": "test_ignore_filters",
+      "sha256": "20f292f608c706957611cdfb75dc430996a8b5573b0408988f365fe451558024"
+    }
+  ]
+}

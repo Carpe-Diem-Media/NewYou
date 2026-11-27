@@ -6,13 +6,7 @@ defmodule NewYou.Commerce do
   """
   use Ash.Domain, otp_app: :new_you
 
-  alias NewYou.Commerce.{
-    AssessmentAdmissions,
-    OfferAdmission,
-    PaymentConsequence,
-    Purchase,
-    VerifiedPayment
-  }
+  alias NewYou.Commerce.{PaymentConsequence, Purchase, VerifiedPayment}
 
   alias NewYou.Entitlements
 
@@ -20,6 +14,7 @@ defmodule NewYou.Commerce do
 
   resources do
     resource Purchase
+    resource NewYou.Commerce.HostedDispatch
     resource NewYou.Commerce.OfferVersion
     resource NewYou.Commerce.PurchaseQuote
     resource NewYou.Commerce.AssessmentAdmission
@@ -133,12 +128,19 @@ defmodule NewYou.Commerce do
   Apply qualified payment evidence to an exact accepted attempt. Commerce
   commits payment and its consequence together. Explicit collection proofs bind
   their receipt to the accepted observation in the same transaction. Exact
-  replay returns the committed result. The verifier is compiled only in TEST.
+  replay returns the committed result. An attempt bound to the local Hosted
+  Checkout fixture cannot accept synthetic payment evidence. The verifier is
+  compiled only in TEST.
   """
   @spec apply_payment_observation(term()) ::
           {:ok, VerifiedPayment.t()} | {:error, :payment_unavailable}
   if Mix.env() == :test do
-    alias NewYou.Commerce.SyntheticCollectionLedger
+    alias NewYou.Commerce.{
+      AssessmentAdmissions,
+      HostedDispatch,
+      OfferAdmission,
+      SyntheticCollectionLedger
+    }
 
     def apply_payment_observation(observation) do
       with {:ok, %{status: :succeeded, integration: :synthetic, environment: :test} = fields} <-
@@ -168,6 +170,8 @@ defmodule NewYou.Commerce do
              |> Ash.Query.filter(id == ^purchase_id)
              |> Ash.Query.lock(:for_update)
              |> Ash.read_one(authorize?: false),
+           {:ok, nil} <-
+             Ash.get(HostedDispatch, attempt_id, authorize?: false, error?: false),
            {:ok, delivery} <- payment_scope(purchase, fields),
            {:ok, prior} <-
              VerifiedPayment

@@ -6,7 +6,7 @@
     "WELL-197"
   ],
   "implementation_revision": {
-    "git_sha": "b159247491f34387b07b015331ed923552b0b830",
+    "git_sha": "f0a57e9873b718fec88ce70d1a785e912023aadf",
     "semantics": "WELL-197 S1 with Master Gate corrections for terminal Assessment reconciliation and integrated Identity owner reviews."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -703,6 +703,13 @@
         "credit_fixture",
         "recovery_test"
       ]
+    },
+    {
+      "summary": "WELL-218 uses the accepted standalone Plan snapshot. A local dispatch binding prevents S1 synthetic payment evidence on that purchase and leaves the Assessment interlock intact.",
+      "source_ids": [
+        "admission",
+        "payment"
+      ]
     }
   ],
   "concurrency": [
@@ -948,7 +955,7 @@
       "id": "admission",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "defmodule NewYou.Commerce.OfferAdmission",
-      "sha256": "e9290c20f3e8aa3c0d0f879341ab246127975a28b541435524ba626b3c22f566"
+      "sha256": "87b5287bdebc927066ffc052e9737dfc1c413d6633ea28f14c831810e451a269"
     },
     {
       "id": "quote",
@@ -978,7 +985,7 @@
       "id": "payment",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def apply_payment_observation",
-      "sha256": "1488a15b2284f195cdcf74e81ad9cc63149e13c1e2c245565c88488daf95a218"
+      "sha256": "28c07e820976d68a890b1b07195572b2aa2c67287bd58cca28f1af9cf4e96dc4"
     },
     {
       "id": "consequence",
@@ -1086,7 +1093,7 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "versioned migrations roundtrip legacy P1 and E2a",
-      "sha256": "0d8b3453a1e8e4e845c2c0cdf88ed270c93a2e6f6bc7ec3fcd0880684248e37b"
+      "sha256": "5f55c0c94c8dc0ecb204bfc000a82afa691c2f45b1148198d15dfbfbac79962c"
     },
     {
       "id": "restart",
