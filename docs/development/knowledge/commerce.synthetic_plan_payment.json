@@ -7,7 +7,7 @@
     "WELL-192"
   ],
   "implementation_revision": {
-    "git_sha": "bac5e0ab048bf790d1e1e64dead374d56ab44a60",
+    "git_sha": "f57905cd43c6f1269e6893cf7e024cf1af7ce9fd",
     "semantics": "WELL-192 E2a with immutable receipt binding, fail-closed grants, terminal convergence under suppression, and rejected and unresolved correction evidence. WELL-197 preserves P1 and E2a while evolving the Purchase constraints and isolating S1 payment consequences from P1 delivery. The migration entries for WELL-189 describe the original schema. WELL-197 MG-01 reuses E2a's acknowledged Assessment end as the original S1 claim's terminal evidence. Existing P1 and E2a effect identities remain valid."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -1074,7 +1074,7 @@
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "defmodule NewYou.Commerce",
-      "sha256": "28c07e820976d68a890b1b07195572b2aa2c67287bd58cca28f1af9cf4e96dc4"
+      "sha256": "a298101c66bd952bf4d47a24cdcaf88c3a67279fdea0cd7d7789c32dfe119fdc"
     },
     {
       "id": "purchase",
@@ -1086,7 +1086,7 @@
       "id": "payment",
       "path": "lib/new_you/commerce/verified_payment.ex",
       "symbol": "create :apply",
-      "sha256": "040d2262c1250f372e3d69cebc9adb7e5428375b336814591fc4a8eb85edd157"
+      "sha256": "afb3ec26b50ec65b07df59b2890e1e4beccbd45390e0dfe9fe88893b3af62f5e"
     },
     {
       "id": "consequence",
@@ -1182,7 +1182,7 @@
       "id": "migration_roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "P1 migrations apply",
-      "sha256": "5f55c0c94c8dc0ecb204bfc000a82afa691c2f45b1148198d15dfbfbac79962c"
+      "sha256": "221e568e690b02a2bf05d1313068db3ead73fec437ca01a573d4defdd4f5e41a"
     },
     {
       "id": "adjudication",

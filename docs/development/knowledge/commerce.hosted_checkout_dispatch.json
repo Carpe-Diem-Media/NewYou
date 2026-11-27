@@ -6,8 +6,8 @@
     "WELL-218"
   ],
   "implementation_revision": {
-    "git_sha": "f0a57e9873b718fec88ce70d1a785e912023aadf",
-    "semantics": "E1a-F provider-disabled Commerce dispatch foundation."
+    "git_sha": "f57905cd43c6f1269e6893cf7e024cf1af7ce9fd",
+    "semantics": "E1a-F dispatch foundation with WELL-219 known-reference scheduling on the existing claim."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -219,7 +219,8 @@
           "Unclaimed epoch"
         ],
         "side_effects": [
-          "Commit the only claim ID. Failed or uncertain acknowledgements leave the claim intact."
+          "Commit the only claim ID. Failed or uncertain acknowledgements leave the claim intact.",
+          "WELL-219 binds the local Verify listener and persists the first due time with the claim."
         ],
         "terminal": false,
         "source_ids": [
@@ -441,7 +442,7 @@
   ],
   "prohibited_shortcuts": [
     {
-      "summary": "Exclude missing-reference replay, overlapping sends, stale setup cancellation and imported Store business Domains. The fixture cannot authorize replacement, cancellation, payment or entitlement.",
+      "summary": "Exclude missing-reference replay, overlapping sends, stale setup cancellation and imported Store business Domains. Initialize evidence alone cannot authorize replacement, cancellation, payment or entitlement.",
       "source_ids": [
         "plan",
         "dispatch",
@@ -464,19 +465,19 @@
       "id": "checkout",
       "path": "lib/new_you/commerce/hosted_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.HostedCheckout",
-      "sha256": "ad0809150cccce75f0210cbee9876a26931f13a79f178d3bd58c96ffda7bccce"
+      "sha256": "61a691f4cdae24f5c05ceea6a3205cc3b6389ab51e3cccf1ffdce570fd2d2b5b"
     },
     {
       "id": "dispatch",
       "path": "lib/new_you/commerce/hosted_dispatch.ex",
       "symbol": "update :claim",
-      "sha256": "c08c7a6c8c86504587472364792350a63c3efb27e0a43f635858ba206f8bc3f6"
+      "sha256": "8a3b4b6eda73d4540e2ae42f3db7fe89576aef5e7483767031a90ce44adcb238"
     },
     {
       "id": "adapter",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.PaystackCheckout",
-      "sha256": "41baf65341c03a870bc9d2f25de3d495034bff487f0ee8be599e3b52c92739d3"
+      "sha256": "6fdeea7dbb606a2feb179a938335f084eda1801f069ceba09e87174ba07e400e"
     },
     {
       "id": "purchase",
@@ -494,7 +495,7 @@
       "id": "payment",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def apply_payment_observation",
-      "sha256": "28c07e820976d68a890b1b07195572b2aa2c67287bd58cca28f1af9cf4e96dc4"
+      "sha256": "a298101c66bd952bf4d47a24cdcaf88c3a67279fdea0cd7d7789c32dfe119fdc"
     },
     {
       "id": "identity",
@@ -530,19 +531,19 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "hosted dispatch migration preserves adjacent-version rows",
-      "sha256": "5f55c0c94c8dc0ecb204bfc000a82afa691c2f45b1148198d15dfbfbac79962c"
+      "sha256": "221e568e690b02a2bf05d1313068db3ead73fec437ca01a573d4defdd4f5e41a"
     },
     {
       "id": "disabled_test",
       "path": "test/proof/well218_provider_disabled.exs",
       "symbol": "non-TEST dispatch exclusion passed",
-      "sha256": "1ced30a24b59d88a9baba2e6456b6a62ce32379dacee9767ce00dcf4a888b3ae"
+      "sha256": "fd85e7bef5216083844ff96af58f1f0b4f00bd3fe6b8abe84808a24690ba2dca"
     },
     {
       "id": "receiver",
       "path": "test/support/commerce/hosted_checkout_receiver.ex",
       "symbol": "def with_receiver",
-      "sha256": "0adc5e295d0b4c2d5a82011449671f70fbffe916a80658876b961b120c1fec66"
+      "sha256": "78c0596a4802d370dc04783ee7692b172028bfead760d3bb8e70d337729f8dc1"
     },
     {
       "id": "restart",
@@ -560,7 +561,7 @@
       "id": "test_discovery",
       "path": "mix.exs",
       "symbol": "test_ignore_filters",
-      "sha256": "20f292f608c706957611cdfb75dc430996a8b5573b0408988f365fe451558024"
+      "sha256": "d9b2a0dfd52fb5dbde407c72d0f83c22936855d4acc325a6c90f6b52ea855ee5"
     }
   ]
 }

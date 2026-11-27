@@ -1,0 +1,693 @@
+{
+  "schema_version": 1,
+  "capability_id": "commerce.hosted_payment_evidence",
+  "purpose": "Persist authenticated TEST fixture evidence and recover a previously claimed HostedDispatch by its original reference. When Commerce qualifies a payment, Entitlements can grant one held Plan right.",
+  "implementing_tickets": [
+    "WELL-219"
+  ],
+  "implementation_revision": {
+    "git_sha": "f57905cd43c6f1269e6893cf7e024cf1af7ce9fd",
+    "semantics": "Provider-disabled payment evidence and known-reference recovery for the existing standalone Plan."
+  },
+  "authoritative_domain": "NewYou.Commerce",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Entitlements",
+      "interface": "grant_paid_plan/1",
+      "ownership": "Owns the right derived from the committed Commerce payment consequence. Applies or replays one held Plan right under the current Privacy and correction rules.",
+      "source_ids": [
+        "entitlements",
+        "commerce",
+        "restart"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "interface": "SyntheticSuppression.locked_status/1",
+      "ownership": "Owns current TEST privacy suppression for each accepted party. Commerce rechecks both parties before payment application.",
+      "source_ids": [
+        "accepted_source",
+        "commerce"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.HostedPaymentReceipt",
+      "actions": [
+        "read",
+        "receive_evidence",
+        "classify",
+        "process_fixture_receipt"
+      ],
+      "caller_boundary": "Private, source-qualified evidence writes. Only the dedicated AshOban interaction may authorize the read and worker action.",
+      "source_ids": [
+        "receipt",
+        "evidence",
+        "receipt_action"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.HostedDispatch",
+      "actions": [
+        "read",
+        "claim",
+        "defer_verify",
+        "respect_retry_after",
+        "close_verify",
+        "verify_fixture_reference"
+      ],
+      "caller_boundary": "Private actions. The existing claim binds the isolated port and first due time. Only the dedicated AshOban interaction may authorize the read and worker action.",
+      "source_ids": [
+        "dispatch",
+        "checkout",
+        "verify_action"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.VerifiedPayment",
+      "actions": [
+        "read",
+        "apply"
+      ],
+      "caller_boundary": "Private and directly authorized by Commerce after qualification. A hosted fixture payment carries its originating evidence and its lossless transaction identity.",
+      "source_ids": [
+        "payment",
+        "commerce"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.PaymentConsequence",
+      "actions": [
+        "establish",
+        "deliver",
+        "acknowledge"
+      ],
+      "caller_boundary": "Commerce writes an obligation with payment in one transaction. Entitlements grants from the committed source; Commerce acknowledges the owning result separately.",
+      "source_ids": [
+        "consequence",
+        "commerce",
+        "entitlements"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Commerce.HostedPaymentEvidence",
+      "function": "ingest",
+      "arity": 2,
+      "visibility": "internal",
+      "arguments": [
+        "Unparsed bounded fixture bytes",
+        "Exactly one local fixture signature"
+      ],
+      "returns": [
+        "Success after independent commit visibility, or a bounded rejection code."
+      ],
+      "side_effects": [
+        "Stores digest and minimal normalized fields for the exact authenticated evidence."
+      ],
+      "caller_constraints": [
+        "TEST-only Phoenix endpoint accepts POST from a loopback peer. A server-side TEST key must be configured."
+      ],
+      "source_ids": [
+        "endpoint",
+        "ingress",
+        "evidence",
+        "test"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.HostedPaymentEvidence",
+      "function": "verify_due",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Original HostedDispatch attempt ID"
+      ],
+      "returns": [
+        "Success on a non-due attempt or classified observation, or retryable worker error."
+      ],
+      "side_effects": [
+        "Commits the next due time before a bounded loopback GET. Persists and processes the observation."
+      ],
+      "caller_constraints": [
+        "TEST only. The persisted claim selects the original reference and port."
+      ],
+      "source_ids": [
+        "dispatch",
+        "evidence",
+        "transport",
+        "verify_action"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce",
+      "function": "apply_hosted_payment_evidence",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Durably persisted Commerce receipt ID"
+      ],
+      "returns": [
+        "Success when terminal classification commits or replays, or a bounded error."
+      ],
+      "side_effects": [
+        "Locks and classifies evidence and may atomically establish one payment and its consequence."
+      ],
+      "caller_constraints": [
+        "TEST only. The owner rechecks the exact scope, purchase binding, money, original reference and current party privacy."
+      ],
+      "source_ids": [
+        "commerce",
+        "receipt",
+        "accepted_source"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261127054309_well219_hosted_payment_evidence.exs",
+      "tables": [
+        "commerce_hosted_payment_receipts",
+        "commerce_hosted_dispatches",
+        "commerce_verified_payments"
+      ],
+      "constraints": [
+        "hosted_payment_receipt_scope",
+        "hosted_payment_receipt_shape",
+        "commerce_hosted_payment_receipts_source_evidence_index",
+        "hosted_dispatch_verify_schedule",
+        "commerce_verified_payments_fixture_receipt_id_fkey",
+        "verified_payment_fixture_source",
+        "commerce_verified_payments_fixture_transaction_index"
+      ],
+      "source_ids": [
+        "migration",
+        "migration_test",
+        "receipt",
+        "dispatch",
+        "payment"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "Read the accepted quote and dispatch through the existing HostedCheckout entry. Its one claim establishes the original reference recovery schedule before sending Initialize.",
+      "source_ids": [
+        "checkout",
+        "dispatch"
+      ]
+    },
+    {
+      "summary": "The raw-body endpoint verifies the fixture signature and acknowledges only a durable receipt. Independently, the known-reference scheduler reads due claimed dispatches and issues a bounded loopback Verify. Pending evidence remains independently schedulable after either path commits.",
+      "source_ids": [
+        "ingress",
+        "evidence",
+        "dispatch",
+        "receipt"
+      ]
+    },
+    {
+      "summary": "Commerce locks and qualifies the evidence, commits payment with its consequence, and closes Verify. The existing delivery job calls Entitlements using that consequence.",
+      "source_ids": [
+        "commerce",
+        "payment",
+        "consequence",
+        "entitlements"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "receipt_absent",
+      "receipt_pending",
+      "receipt_qualified",
+      "receipt_unresolved",
+      "receipt_quarantined",
+      "verify_unscheduled",
+      "verify_open",
+      "verify_closed"
+    ],
+    "transitions": [
+      {
+        "from_state": "receipt_absent",
+        "to_state": "receipt_pending",
+        "guards": [
+          "Authentic supported webhook or server-owned Verify response"
+        ],
+        "side_effects": [
+          "Insert a scoped immutable receipt and evidence identity."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "evidence",
+          "receipt"
+        ]
+      },
+      {
+        "from_state": "receipt_pending",
+        "to_state": "receipt_qualified",
+        "guards": [
+          "Claimed standalone Plan, original scope and reference, exact amount and currency, lossless transaction ID, current party privacy"
+        ],
+        "side_effects": [
+          "Commit or replay the single payment and its consequence."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "commerce",
+          "payment"
+        ]
+      },
+      {
+        "from_state": "receipt_pending",
+        "to_state": "receipt_unresolved",
+        "guards": [
+          "Incomplete or temporary provider outcome"
+        ],
+        "side_effects": [
+          "Record the bounded reason. The known reference remains open."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "commerce",
+          "dispatch"
+        ]
+      },
+      {
+        "from_state": "receipt_pending",
+        "to_state": "receipt_quarantined",
+        "guards": [
+          "Unknown vocabulary, evidence mismatch or conflicting payment identity"
+        ],
+        "side_effects": [
+          "Store a bounded explanation with zero payment effects."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "commerce"
+        ]
+      },
+      {
+        "from_state": "verify_unscheduled",
+        "to_state": "verify_open",
+        "guards": [
+          "Existing dispatch claim commits"
+        ],
+        "side_effects": [
+          "Bind the same loopback port and first due time to the original reference."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "checkout",
+          "dispatch"
+        ]
+      },
+      {
+        "from_state": "verify_open",
+        "to_state": "verify_open",
+        "guards": [
+          "Due time matches a claimable dispatch"
+        ],
+        "side_effects": [
+          "Reserve the next attempt before HTTP. Backoff grows from 30 seconds to a 900-second cap. Integer Retry-After may extend the next attempt within that cap."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "evidence",
+          "dispatch"
+        ]
+      },
+      {
+        "from_state": "verify_open",
+        "to_state": "verify_closed",
+        "guards": [
+          "A qualified fixture payment commits"
+        ],
+        "side_effects": [
+          "Clear the next due time in the same transaction as payment, consequence and receipt classification."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "commerce",
+          "dispatch"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Ingress, Verify transport and scheduler consumers compile into TEST only. Shared receipt and payment resources keep private actions. The non-TEST paid source also denies fixture payment provenance.",
+      "source_ids": [
+        "ingress",
+        "disabled",
+        "commerce",
+        "receipt"
+      ]
+    },
+    {
+      "summary": "Only digest and bounded normalized payment fields persist. Raw bodies, credentials, headers, contact data and health data are neither retained in evidence nor sent through the fixture classifiers. SQL query telemetry is suppressed in evidence handling.",
+      "source_ids": [
+        "receipt",
+        "evidence",
+        "commerce"
+      ]
+    },
+    {
+      "summary": "The fixture only uses fixed IPv4 loopback URLs with short deadlines, no redirect following and no automatic request retry.",
+      "source_ids": [
+        "transport",
+        "test"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "A receipt row lock serializes classification. A purchase lock serializes application with existing dispatch and payment operations. PostgreSQL uniquely indexes the payment purchase and fixture transaction across purchases.",
+      "source_ids": [
+        "commerce",
+        "payment",
+        "test"
+      ]
+    },
+    {
+      "summary": "Verify briefly locks the original dispatch and advances its next due time before performing the HTTP read outside that reservation transaction. Queue uniqueness is advisory.",
+      "source_ids": [
+        "dispatch",
+        "evidence",
+        "test"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Receipt identity combines fixed provider/integration/environment, source, requested reference when present and digest of the observed bytes. A changed observation may create a distinct receipt. Receipt replay remains independent of the purchase and transaction identities used for payment.",
+      "source_ids": [
+        "receipt",
+        "payment",
+        "commerce",
+        "test"
+      ]
+    },
+    {
+      "summary": "Expired or exhausted jobs leave stored obligations eligible for the next scheduler run. The payment transaction clears verification work only after qualification. Existing consequence replay returns the same held right.",
+      "source_ids": [
+        "dispatch",
+        "receipt",
+        "consequence",
+        "test",
+        "restart"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "A receipt write failure returns retryable HTTP 503. A lost reply after commit permits a fresh signature check and idempotent 202. Background receipt discovery needs no enqueue from that HTTP request.",
+      "source_ids": [
+        "ingress",
+        "evidence",
+        "test"
+      ]
+    },
+    {
+      "summary": "Job absence, failed evidence insertion, timeout, throttling and a missing provider record leave the known dispatch recoverable. Fresh BEAMs resume through the original reference and replay the entitlement after the grant transaction.",
+      "source_ids": [
+        "dispatch",
+        "test",
+        "restart"
+      ]
+    },
+    {
+      "summary": "The migration preserves unqualified historical rows. Rollback refuses to erase retained receipts or a recovery schedule, including the provenance that distinguishes fixture payments.",
+      "source_ids": [
+        "migration",
+        "migration_test"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/commerce/hosted_payment_evidence_test.exs",
+      "cases": [
+        "F-01/F-03/F-06 signed and synthetic isolation, duplicate and reordered evidence",
+        "F-02 raw body and an actual Bandit-to-Phoenix request",
+        "F-04/F-05 counted loopback Verify, rate limit, timeout, mismatch, missing and exhausted job",
+        "F-06 two fresh BEAMs, independent connections, single held right"
+      ],
+      "proves": "Exact authenticated receipt before acknowledgement and one source-qualified payment, consequence and right for a non-R399 Plan. Invalid and nonfinal evidence produces zero effects.",
+      "limits": "Synthetic fixture data and an isolated loopback listener. The test simulates arrival of future due times after asserting real persisted backoff, and explicitly invokes the production scheduler code via AshOban testing helpers.",
+      "source_ids": [
+        "test",
+        "restart",
+        "bandit"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "cases": [
+        "F-07 adjacent-version compatibility, receipt uniqueness and rollback refusal"
+      ],
+      "proves": "Isolated PostgreSQL schema proof for migration up/down/up, local foreign keys, deduplication and provenance preservation.",
+      "limits": "Does not reset shared data or run a provider stage.",
+      "source_ids": [
+        "migration_test",
+        "migration"
+      ]
+    },
+    {
+      "path": "test/proof/well218_provider_disabled.exs",
+      "cases": [
+        "F-01/F-02/F-07 non-TEST build disallows fixture operations"
+      ],
+      "proves": "The TEST ingress, workers and Verify builder are absent from non-TEST bytecode and the owner APIs deny fixture execution.",
+      "limits": "Build and bytecode assertion. No production release or provider call.",
+      "source_ids": [
+        "disabled",
+        "commerce"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Future actual provider ingress and Verify require their own qualified scope and staged evidence under WELL-191. Preserve the dispatch identity, owning payment interface and durable recovery mechanism.",
+      "source_ids": [
+        "commerce",
+        "dispatch",
+        "plan"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "EXTEND Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/webhook_receipt.ex and priv/repo/migrations/20260222162948_phase_05_uniqueness.exs. Carry over the digest and database identity pattern. Retain the minimal fixture normalization instead of raw bodies or headers.",
+      "source_ids": [
+        "receipt",
+        "migration",
+        "test"
+      ]
+    },
+    {
+      "summary": "EXTEND Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/provider_event.ex. Use the no-op scoped upsert and a digest because the fixture envelope carries no provider event ID. Separate that receipt identity from the purchase and transaction constraints.",
+      "source_ids": [
+        "receipt",
+        "payment",
+        "test"
+      ]
+    },
+    {
+      "summary": "EXTEND Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/observation_evidence.ex and lib/store/payments/payment_attempt.ex. Keep source, observation evidence and transaction identity independent. Use NewYou HostedDispatch, with no second attempt resource.",
+      "source_ids": [
+        "evidence",
+        "receipt",
+        "dispatch",
+        "test"
+      ]
+    },
+    {
+      "summary": "EXTEND Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/observation_reconciliation.ex and lib/store/payments/provider_task.ex. Adapt known-reference reads and bounded failure classes. Use the existing WELL-218 Req deadlines and sanitized telemetry, without Store task supervision or per-order metadata.",
+      "source_ids": [
+        "evidence",
+        "transport",
+        "test"
+      ]
+    },
+    {
+      "summary": "COMPOSE Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store_web/controllers/webhook_controller.ex and lib/store/workers/process_webhook_receipt_worker.ex with NewYou AshOban source rediscovery. Keep authentication before persistence and schedule from committed rows. Store HTTP and worker replay tests informed the acknowledgement and replay cuts.",
+      "source_ids": [
+        "ingress",
+        "receipt",
+        "evidence",
+        "test"
+      ]
+    },
+    {
+      "summary": "REUSE NewYou S1 accepted snapshots, WELL-218 HostedDispatch, P1 payment/consequence/Entitlements and the Audit pattern of rescheduling open obligations independently of an individual job.",
+      "source_ids": [
+        "accepted_source",
+        "checkout",
+        "commerce",
+        "consequence",
+        "audit_pattern"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Exclude actual Paystack calls, provider-stage promotion, imported Store Orders/Subscriptions or role bypasses, raw Repo business writes, receipt/enqueue as sole durability, replacement dispatches and generic synthetic settlement of hosted attempts. Store Paystack webhook and observation remain unimplemented at the inspected SHA.",
+      "source_ids": [
+        "plan",
+        "commerce",
+        "transport",
+        "test"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "HIGH financial, entitlement, security, privacy and recovery proof is scoped to TEST. Production deployment, provider signature certification, refunds, disputes, corrections of hosted payments, bulk reconciliation, browser rendering and participant copy are outside WELL-219.",
+    "The evidence records keep normalized fields and digests for the fixture lifetime. Raw bytestream capture or production retention policies require separate authority."
+  ],
+  "follow_up_tickets": [
+    "WELL-191",
+    "WELL-190",
+    "WELL-176"
+  ],
+  "sources": [
+    {
+      "id": "commerce",
+      "path": "lib/new_you/commerce.ex",
+      "symbol": "def apply_hosted_payment_evidence(id)",
+      "sha256": "a298101c66bd952bf4d47a24cdcaf88c3a67279fdea0cd7d7789c32dfe119fdc"
+    },
+    {
+      "id": "checkout",
+      "path": "lib/new_you/commerce/hosted_checkout.ex",
+      "symbol": "defp claim(",
+      "sha256": "61a691f4cdae24f5c05ceea6a3205cc3b6389ab51e3cccf1ffdce570fd2d2b5b"
+    },
+    {
+      "id": "dispatch",
+      "path": "lib/new_you/commerce/hosted_dispatch.ex",
+      "symbol": "trigger :verify_fixture_reference",
+      "sha256": "8a3b4b6eda73d4540e2ae42f3db7fe89576aef5e7483767031a90ce44adcb238"
+    },
+    {
+      "id": "evidence",
+      "path": "lib/new_you/commerce/hosted_payment_evidence.ex",
+      "symbol": "def verify_due(id)",
+      "sha256": "51cb3ff602e45a2ac9328990e80ae7597e152019b347b95e204f549b12c1b3be"
+    },
+    {
+      "id": "receipt",
+      "path": "lib/new_you/commerce/hosted_payment_receipt.ex",
+      "symbol": "identity :source_evidence",
+      "sha256": "0e60bce05e575d58bc46e4670ca1ab59cde86d5efbbcbadd6f6eb78638846480"
+    },
+    {
+      "id": "receipt_action",
+      "path": "lib/new_you/commerce/process_fixture_receipt.ex",
+      "symbol": "def run(input",
+      "sha256": "af1d76b720b2467d3f705f37afa599bf1e909a739897133cb544fe2dac2d9e48"
+    },
+    {
+      "id": "verify_action",
+      "path": "lib/new_you/commerce/verify_fixture_reference.ex",
+      "symbol": "def run(input",
+      "sha256": "91a2fe378e185873c79dfe62241b5d77830de6badf3abfc6aebc051e47c5a5d0"
+    },
+    {
+      "id": "payment",
+      "path": "lib/new_you/commerce/verified_payment.ex",
+      "symbol": "identity :fixture_transaction",
+      "sha256": "afb3ec26b50ec65b07df59b2890e1e4beccbd45390e0dfe9fe88893b3af62f5e"
+    },
+    {
+      "id": "consequence",
+      "path": "lib/new_you/commerce/payment_consequence.ex",
+      "symbol": "trigger :deliver_plan_payment",
+      "sha256": "44a101fb38ae82e93279cfcfe0df4295050000703dc0cdc942c79afa84d5eff8"
+    },
+    {
+      "id": "entitlements",
+      "path": "lib/new_you/entitlements.ex",
+      "symbol": "def grant_paid_plan(consequence_id)",
+      "sha256": "43a545d2d2b31e3018df211943d6e0b1d7cc84b231bbe3e2d6189e564a84fcda"
+    },
+    {
+      "id": "accepted_source",
+      "path": "lib/new_you/commerce/offer_admission.ex",
+      "symbol": "def bound_snapshot(purchase)",
+      "sha256": "87b5287bdebc927066ffc052e9737dfc1c413d6633ea28f14c831810e451a269"
+    },
+    {
+      "id": "transport",
+      "path": "lib/new_you/commerce/paystack_checkout.ex",
+      "symbol": "def build_verify(reference",
+      "sha256": "6fdeea7dbb606a2feb179a938335f084eda1801f069ceba09e87174ba07e400e"
+    },
+    {
+      "id": "endpoint",
+      "path": "lib/new_you_web/endpoint.ex",
+      "symbol": "plug NewYouWeb.FixtureWebhook",
+      "sha256": "6037bb32fd7a639ff66a2bbab293a989abd3b5445c9f9731994fb9ca22657085"
+    },
+    {
+      "id": "ingress",
+      "path": "lib/new_you_web/fixture_webhook.ex",
+      "symbol": "defp read_fixture_body(conn)",
+      "sha256": "2b060eba8f186ab863edb6584f28516ce3c33db0deb6a2f6a886e7ac2873f923"
+    },
+    {
+      "id": "migration",
+      "path": "priv/repo/migrations/20261127054309_well219_hosted_payment_evidence.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.Well219HostedPaymentEvidence",
+      "sha256": "e61376093ab26992f20cab2199326401110f8d36747a17bf61569d36e5c013e3"
+    },
+    {
+      "id": "test",
+      "path": "test/new_you/commerce/hosted_payment_evidence_test.exs",
+      "symbol": "defmodule NewYou.Commerce.HostedPaymentEvidenceTest",
+      "sha256": "2d9e80c518564ca547060b79a7b6b25162c695581880c67bf7f4b4de49b2603d"
+    },
+    {
+      "id": "bandit",
+      "path": "test/support/commerce/hosted_checkout_receiver.ex",
+      "symbol": "def with_receiver(reply, fun)",
+      "sha256": "78c0596a4802d370dc04783ee7692b172028bfead760d3bb8e70d337729f8dc1"
+    },
+    {
+      "id": "restart",
+      "path": "test/proof/well219_payment_restart.exs",
+      "symbol": "E1BF_COMPLETED",
+      "sha256": "633409dafaa0b9de35629da563e788311c667a8c279f1c30f2bcddfe503658f3"
+    },
+    {
+      "id": "disabled",
+      "path": "test/proof/well218_provider_disabled.exs",
+      "symbol": "E1b-F non-TEST fixture ingress",
+      "sha256": "fd85e7bef5216083844ff96af58f1f0b4f00bd3fe6b8abe84808a24690ba2dca"
+    },
+    {
+      "id": "migration_test",
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "symbol": "payment evidence migration preserves legacy rows",
+      "sha256": "221e568e690b02a2bf05d1313068db3ead73fec437ca01a573d4defdd4f5e41a"
+    },
+    {
+      "id": "audit_pattern",
+      "path": "lib/new_you/audit/evidence_obligation.ex",
+      "symbol": "scheduler rediscovers open rows",
+      "sha256": "a80826d8477de70da00a8fa9e8d456ff31ac6103a9bc28959e842a5d9daeb2e2"
+    },
+    {
+      "id": "plan",
+      "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
+      "symbol": "E1b. Prove signed ingress and scheduled recovery by known reference",
+      "sha256": "3292c3a21f7d0ce134445b54a539a28491c85b823c0026c7b073737d30aea6f7"
+    }
+  ]
+}
