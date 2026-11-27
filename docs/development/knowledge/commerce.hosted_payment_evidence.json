@@ -6,8 +6,8 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "017d8ff783c74e6bb359bfa8e406ef583cdba0df",
-    "semantics": "Provider-disabled payment evidence and known-reference recovery for the existing standalone Plan."
+    "git_sha": "00c0b857ca600fcd65963d3c81af4eb5a21d621f",
+    "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -59,7 +59,7 @@
         "close_verify",
         "verify_fixture_reference"
       ],
-      "caller_boundary": "Private actions. The existing claim binds the isolated port and first due time. Only the dedicated AshOban interaction may authorize the read and worker action.",
+      "caller_boundary": "Private actions. A scheduled claim binds the loopback port, exact DER certificate and first due time. Only the dedicated AshOban interaction may authorize the read and worker action.",
       "source_ids": [
         "dispatch",
         "checkout",
@@ -133,10 +133,10 @@
         "Success on a non-due attempt or classified observation, or retryable worker error."
       ],
       "side_effects": [
-        "Commits the next due time before a bounded loopback GET. Persists and processes the observation."
+        "Commits the next due time before a bounded loopback GET on a TLS connection authenticated to the original listener. Persists and processes the observation."
       ],
       "caller_constraints": [
-        "TEST only. The persisted claim selects the original reference and port."
+        "TEST only. The persisted claim selects the original reference, port and certificate. A claim without a certificate cannot run Verify."
       ],
       "source_ids": [
         "dispatch",
@@ -192,6 +192,20 @@
         "receipt",
         "dispatch",
         "payment"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261127065856_well219_bind_fixture_listener.exs",
+      "tables": [
+        "commerce_hosted_dispatches"
+      ],
+      "constraints": [
+        "hosted_dispatch_verify_schedule"
+      ],
+      "source_ids": [
+        "listener_migration",
+        "dispatch",
+        "migration_test"
       ]
     }
   ],
@@ -300,7 +314,7 @@
           "Existing dispatch claim commits"
         ],
         "side_effects": [
-          "Bind the same loopback port and first due time to the original reference."
+          "Bind the loopback port, exact DER certificate and first due time to the original reference."
         ],
         "terminal": false,
         "source_ids": [
@@ -315,7 +329,7 @@
           "Due time matches a claimable dispatch"
         ],
         "side_effects": [
-          "Reserve the next attempt before HTTP. Backoff grows from 30 seconds to a 900-second cap. Integer Retry-After may extend the next attempt within that cap."
+          "Reserve the next attempt before HTTP. Backoff grows from 30 seconds to a 900-second cap. The fixture accepts one integer Retry-After value, clamps it to 60–900 seconds and only extends the current due time. Other forms use a 60-second fallback. Actual provider rate limiting is outside this fixture policy."
         ],
         "terminal": false,
         "source_ids": [
@@ -359,7 +373,7 @@
       ]
     },
     {
-      "summary": "The fixture only uses fixed IPv4 loopback URLs with short deadlines, no redirect following and no automatic request retry.",
+      "summary": "The fixture only uses fixed IPv4 loopback URLs with short deadlines, no redirect following and no automatic request retry. Scheduled Verify authenticates the exact listener certificate before sending an HTTP reference or fixture header. A closed or reused port leaves Verify open.",
       "source_ids": [
         "transport",
         "test"
@@ -437,7 +451,8 @@
         "F-01/F-03/F-06 signed and synthetic isolation, duplicate and reordered evidence",
         "F-02 raw body and an actual Bandit-to-Phoenix request",
         "F-04/F-05 counted loopback Verify, rate limit, timeout, mismatch, missing and exhausted job",
-        "F-06 two fresh BEAMs, independent connections, single held right"
+        "F-06 two fresh BEAMs, independent connections, single held right",
+        "F-05/F-07 stopped and replaced loopback listener with no payment HTTP delivery to an unrelated service"
       ],
       "proves": "Exact authenticated receipt before acknowledgement and one source-qualified payment, consequence and right for a non-R399 Plan. Invalid and nonfinal evidence produces zero effects.",
       "limits": "Synthetic fixture data and an isolated loopback listener. The test simulates arrival of future due times after asserting real persisted backoff, and explicitly invokes the production scheduler code via AshOban testing helpers.",
@@ -450,7 +465,8 @@
     {
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "cases": [
-        "F-07 adjacent-version compatibility, receipt uniqueness and rollback refusal"
+        "F-07 adjacent-version compatibility, receipt uniqueness and rollback refusal",
+        "F-05/F-07 legacy port retained and listener trust rollback refused with pending Verify"
       ],
       "proves": "Isolated PostgreSQL schema proof for migration up/down/up, local foreign keys, deduplication and provenance preservation.",
       "limits": "Does not reset shared data or run a provider stage.",
@@ -549,7 +565,8 @@
   ],
   "proof_limitations": [
     "HIGH financial, entitlement, security, privacy and recovery proof is scoped to TEST. Production deployment, provider signature certification, refunds, disputes, corrections of hosted payments, bulk reconciliation, browser rendering and participant copy are outside WELL-219.",
-    "The evidence records keep normalized fields and digests for the fixture lifetime. Raw bytestream capture or production retention policies require separate authority."
+    "The evidence records keep normalized fields and digests for the fixture lifetime. Raw bytestream capture or production retention policies require separate authority.",
+    "A legacy claim without an authenticated listener pin remains visible and cannot send a Verify request. Qualified signed evidence can still settle it. A failed TLS handshake can reach a reused loopback socket before HTTP begins."
   ],
   "follow_up_tickets": [
     "WELL-191",
@@ -567,19 +584,19 @@
       "id": "checkout",
       "path": "lib/new_you/commerce/hosted_checkout.ex",
       "symbol": "defp claim(",
-      "sha256": "61a691f4cdae24f5c05ceea6a3205cc3b6389ab51e3cccf1ffdce570fd2d2b5b"
+      "sha256": "cc11dbe5e000e0cb80abb8abf0bec0ff9f46434782bc829a46e60707caf85179"
     },
     {
       "id": "dispatch",
       "path": "lib/new_you/commerce/hosted_dispatch.ex",
       "symbol": "trigger :verify_fixture_reference",
-      "sha256": "8a3b4b6eda73d4540e2ae42f3db7fe89576aef5e7483767031a90ce44adcb238"
+      "sha256": "d58e186ab3c5e9e89a61b82243a90f3526476163d360d1ab1366d2044be6f937"
     },
     {
       "id": "evidence",
       "path": "lib/new_you/commerce/hosted_payment_evidence.ex",
       "symbol": "def verify_due(id)",
-      "sha256": "1fda20f69fc2fd205ef95768a2688b6b028156ad5a5ddfcc5fe559950f9299e1"
+      "sha256": "b5bb1794abfefb97731f7728f273d9b9d8a4d183b5f91c68033317fb8030120f"
     },
     {
       "id": "receipt",
@@ -627,7 +644,7 @@
       "id": "transport",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "def build_verify(reference",
-      "sha256": "6fdeea7dbb606a2feb179a938335f084eda1801f069ceba09e87174ba07e400e"
+      "sha256": "70e432f4ef32c641be61514846d45c62f7d32fd219f30205ecbcbfce18e4c2dc"
     },
     {
       "id": "endpoint",
@@ -651,13 +668,13 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_payment_evidence_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedPaymentEvidenceTest",
-      "sha256": "d31710c0e97921f0873892aba45daf63fded3209c7710acb4561d6e4e561e201"
+      "sha256": "5fbc57921c1640e57e999476c66ad1a4f4301cf2b6ccd5abef85ed6d76219308"
     },
     {
       "id": "bandit",
       "path": "test/support/commerce/hosted_checkout_receiver.ex",
-      "symbol": "def with_receiver(reply, fun)",
-      "sha256": "78c0596a4802d370dc04783ee7692b172028bfead760d3bb8e70d337729f8dc1"
+      "symbol": "def with_bound_receiver",
+      "sha256": "67ade54b2431ad1c761131a688198e6b4e8717ed68e250ed8ccfb76d092ee93b"
     },
     {
       "id": "restart",
@@ -675,7 +692,7 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "payment evidence migration preserves legacy rows",
-      "sha256": "221e568e690b02a2bf05d1313068db3ead73fec437ca01a573d4defdd4f5e41a"
+      "sha256": "e9fda5c3f33d0921d1d15de47ad9b7cf774b6ac89f1cc87dcadd8b1c2e5c52ef"
     },
     {
       "id": "audit_pattern",
@@ -688,6 +705,12 @@
       "path": "docs/delivery/execution/fp-002/FP-002_IMPLEMENTATION_AND_TICKET_PLAN_CANDIDATE_v0.2.0.md",
       "symbol": "E1b. Prove signed ingress and scheduled recovery by known reference",
       "sha256": "3292c3a21f7d0ce134445b54a539a28491c85b823c0026c7b073737d30aea6f7"
+    },
+    {
+      "id": "listener_migration",
+      "path": "priv/repo/migrations/20261127065856_well219_bind_fixture_listener.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.Well219BindFixtureListener",
+      "sha256": "5f75589e1726a6454ffa3b3bf5732b9adb4b87a52445a6e43dd423c696478378"
     }
   ]
 }

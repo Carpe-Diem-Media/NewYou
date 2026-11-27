@@ -6,7 +6,7 @@
     "WELL-218"
   ],
   "implementation_revision": {
-    "git_sha": "f57905cd43c6f1269e6893cf7e024cf1af7ce9fd",
+    "git_sha": "00c0b857ca600fcd65963d3c81af4eb5a21d621f",
     "semantics": "E1a-F dispatch foundation with WELL-219 known-reference scheduling on the existing claim."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -95,7 +95,7 @@
         "Canonical payer session",
         "Exact immutable S1 snapshot",
         "Paystack/local_fixture/TEST/card scope",
-        "Isolated loopback listener port"
+        "Isolated loopback listener port, with an exact DER certificate for Verify-enabled claims"
       ],
       "returns": [
         "Retained or ambiguous outcome, or scoped denial."
@@ -259,7 +259,7 @@
       ]
     },
     {
-      "summary": "The wire code compiles only in TEST. It accepts no host, credential, proxy, plugin or middleware override. The numeric loopback origin, fixture credential and synthetic contact are fixed.",
+      "summary": "The wire code compiles only in TEST. It accepts no host, credential, proxy, plugin or middleware override. The numeric loopback host, fixture credential and synthetic contact are fixed. Verify-enabled claims require TLS authenticated to the exact listener certificate.",
       "source_ids": [
         "adapter",
         "checkout",
@@ -465,19 +465,19 @@
       "id": "checkout",
       "path": "lib/new_you/commerce/hosted_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.HostedCheckout",
-      "sha256": "61a691f4cdae24f5c05ceea6a3205cc3b6389ab51e3cccf1ffdce570fd2d2b5b"
+      "sha256": "cc11dbe5e000e0cb80abb8abf0bec0ff9f46434782bc829a46e60707caf85179"
     },
     {
       "id": "dispatch",
       "path": "lib/new_you/commerce/hosted_dispatch.ex",
       "symbol": "update :claim",
-      "sha256": "8a3b4b6eda73d4540e2ae42f3db7fe89576aef5e7483767031a90ce44adcb238"
+      "sha256": "d58e186ab3c5e9e89a61b82243a90f3526476163d360d1ab1366d2044be6f937"
     },
     {
       "id": "adapter",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.PaystackCheckout",
-      "sha256": "6fdeea7dbb606a2feb179a938335f084eda1801f069ceba09e87174ba07e400e"
+      "sha256": "70e432f4ef32c641be61514846d45c62f7d32fd219f30205ecbcbfce18e4c2dc"
     },
     {
       "id": "purchase",
@@ -531,7 +531,7 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "hosted dispatch migration preserves adjacent-version rows",
-      "sha256": "221e568e690b02a2bf05d1313068db3ead73fec437ca01a573d4defdd4f5e41a"
+      "sha256": "e9fda5c3f33d0921d1d15de47ad9b7cf774b6ac89f1cc87dcadd8b1c2e5c52ef"
     },
     {
       "id": "disabled_test",
@@ -543,7 +543,7 @@
       "id": "receiver",
       "path": "test/support/commerce/hosted_checkout_receiver.ex",
       "symbol": "def with_receiver",
-      "sha256": "78c0596a4802d370dc04783ee7692b172028bfead760d3bb8e70d337729f8dc1"
+      "sha256": "67ade54b2431ad1c761131a688198e6b4e8717ed68e250ed8ccfb76d092ee93b"
     },
     {
       "id": "restart",
