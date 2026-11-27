@@ -4,13 +4,18 @@ defmodule NewYou.Commerce.FixtureDisputeProjection do
   alias NewYou.Audit.FixtureDisputeDisclosureEvidence
   alias NewYou.Audit.FixtureDisputeDisclosure
   alias NewYou.Commerce.{FixtureDispute, FixtureDisputes, OfferAdmission, Purchase}
-  alias NewYou.Identity
+  alias NewYou.{Identity, Repo}
   alias NewYou.Privacy.{FixtureDisputePurpose, SyntheticSuppression}
   alias NewYou.Proof.PlanPaymentObservation
 
   @unavailable {:error, :evidence_unavailable}
 
-  @doc "Read one source-bound commercial projection and persist only its minimized Audit record."
+  @doc """
+  Return the source-bound projection after independent visibility of the exact
+  Audit assertion. Explicit caller transactions are denied. Finance and Audit
+  proofs carry scoped TEST claims. Privacy purpose and canonical sessions
+  supply the independently revocable owner state.
+  """
   @spec read(map(), Ecto.UUID.t(), term(), term(), term()) ::
           {:ok, map()} | {:error, :evidence_unavailable}
   def read(credentials, dispute_id, finance_grant, privacy_purpose, audit_grant) do
@@ -29,8 +34,15 @@ defmodule NewYou.Commerce.FixtureDisputeProjection do
          {:ok, operation_id} <- Ecto.UUID.cast(operation_id),
          {:ok, actor_id} <- Ecto.UUID.cast(actor_id),
          {:ok, dispute_id} <- Ecto.UUID.cast(dispute_id),
+         false <- Repo.in_transaction?(),
          {:ok, projection} <-
-           read_transaction(credentials, dispute_id, actor_id, subject_id, operation_id) do
+           read_transaction(credentials, dispute_id, actor_id, subject_id, operation_id),
+         true <-
+           FixtureDisputeDisclosureEvidence.independently_committed?(
+             operation_id,
+             actor_id,
+             dispute_id
+           ) do
       projection
     else
       _ -> @unavailable
@@ -42,7 +54,7 @@ defmodule NewYou.Commerce.FixtureDisputeProjection do
   end
 
   defp read_transaction(credentials, dispute_id, actor_id, subject_id, operation_id) do
-    NewYou.Repo.without_query_telemetry(fn ->
+    Repo.without_query_telemetry(fn ->
       Ash.transact(
         [
           FixtureDispute,

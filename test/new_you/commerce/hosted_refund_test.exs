@@ -449,6 +449,149 @@ defmodule NewYou.Commerce.HostedRefundTest do
     end
   end
 
+  test "a later pinned read can confirm either retained terminal outcome across a restart" do
+    reply_data = start_supervised!({Agent, fn -> nil end})
+
+    reply = fn conn, _ ->
+      HostedCheckoutReceiver.json(conn, 200, %{data: Agent.get(reply_data, & &1)})
+    end
+
+    for {terminal, contrary, right_state} <- [
+          {:restored, :lost, :held_unconsumed},
+          {:lost, :restored, :ended}
+        ] do
+      P805.with_fixture(fn ->
+        with_paid_plan(reply, fn accepted, payment, payer, recipient, _, tag ->
+          assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+          assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+          assert {:ok, refund} =
+                   request(
+                     payer.credentials,
+                     proof(refund_fields(accepted, payment, payer, recipient))
+                   )
+
+          assert {:ok, %{state: :reserved}} =
+                   Commerce.reserve_fixture_refund(payer.credentials, refund.id)
+
+          with_signing_key(fn key ->
+            data = dispute_data(payment)
+            retained = Atom.to_string(terminal)
+            opposite = Atom.to_string(contrary)
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 2, outcome: retained})
+
+            dispute = apply_dispute_receipts(payment)
+            assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 1, outcome: opposite})
+
+            assert %{state: ^terminal, conflict?: true} = apply_dispute_receipts(payment)
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 4, outcome: opposite})
+
+            assert %{state: ^terminal, conflict?: true, effect_version: conflict_version} =
+                     apply_dispute_receipts(payment)
+
+            assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+            assert [] = plan_rights(recipient)
+            interim = if terminal == :restored, do: :suspended, else: :ended
+
+            assert %{state: ^interim} =
+                     Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+            assert {:error, :refund_unavailable} =
+                     Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+            refute_received {^tag, "POST", "/refund", _, _}
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 6, outcome: retained})
+
+            assert %{conflict?: true} = apply_dispute_receipts(payment)
+
+            for observation <- [
+                  %{data | revision: 4, outcome: retained},
+                  %{data | revision: 7, outcome: opposite},
+                  %{data | revision: 6, outcome: retained},
+                  %{data | revision: 8, outcome: retained, reference: String.duplicate("0", 32)}
+                ] do
+              set_due_dispute_reply(dispute.id, reply_data, observation)
+              assert :ok = FixtureDisputes.read_due(dispute.id)
+              assert_receive {^tag, "GET", "/__test/dispute/99", _, _}
+
+              assert %{state: ^terminal, conflict?: true, effect_version: ^conflict_version} =
+                       Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+            end
+
+            set_due_dispute_reply(dispute.id, reply_data, %{data | revision: 8, outcome: retained})
+
+            {executable, arguments} =
+              FreshMix.command(["run", "--no-compile", "test/proof/well223_dispute_restart.exs"])
+
+            diagnostic =
+              P815Port.run(
+                executable,
+                arguments,
+                Jason.encode!(%{id: dispute.id, terminal: retained}),
+                60_000
+              )
+
+            assert_receive {^tag, "GET", "/__test/dispute/99", _, _}
+
+            assert %{
+                     state: ^terminal,
+                     conflict?: false,
+                     revision: 8,
+                     effect_version: effect,
+                     acknowledged_version: effect
+                   } = Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+            assert effect == conflict_version + 1
+            assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} = diagnostic
+
+            assert %{state: ^right_state} =
+                     Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 3, outcome: opposite})
+
+            assert %{state: ^terminal, conflict?: false, effect_version: ^effect} =
+                     apply_dispute_receipts(payment)
+
+            assert Enum.frequencies_by(dispute_receipts(payment), & &1.state) ==
+                     %{applied: 2, conflict: 3, stale: 4}
+
+            assert %{claim_id: nil, state: :reserved, amount_minor: @amount} =
+                     read_refund(refund.id)
+
+            assert {:ok, clear?} =
+                     NewYou.Commerce.FixtureCorrectionSource.transact(fn ->
+                       {:ok, %NewYou.Commerce.Purchase{}} =
+                         NewYou.Commerce.FixtureCorrectionSource.lock_purchase(
+                           accepted.purchase_id
+                         )
+
+                       {:ok, clear?} = FixtureDisputes.refund_clear?(payment.id)
+                       clear?
+                     end)
+
+            assert clear? == (terminal == :restored)
+            refute_received {^tag, "POST", "/refund", _, _}
+          end)
+        end)
+      end)
+    end
+  end
+
+  defp set_due_dispute_reply(id, reply_data, observation) do
+    make_dispute_due(id, 6)
+    Agent.update(reply_data, fn _ -> observation end)
+  end
+
   test "known reads count one request across contenders and retain a retry after miss and throttle" do
     P805.with_fixture(fn ->
       response = start_supervised!({Agent, fn -> :miss end})

@@ -10,10 +10,12 @@ defmodule NewYou.Privacy.FixtureDisputePurpose do
 
   @doc "Grant the exact TEST disclosure purpose once for a recipient, operation and dispute."
   def grant(subject_id, operation_id, dispute_id) do
-    with {:ok, subject_id} <- uuid(subject_id),
-         {:ok, operation_id} <- uuid(operation_id),
-         {:ok, dispute_id} <- uuid(dispute_id),
-         do: grant_transaction(subject_id, operation_id, dispute_id)
+    NewYou.Repo.without_query_telemetry(fn ->
+      with {:ok, subject_id} <- uuid(subject_id),
+           {:ok, operation_id} <- uuid(operation_id),
+           {:ok, dispute_id} <- uuid(dispute_id),
+           do: grant_transaction(subject_id, operation_id, dispute_id)
+    end)
   rescue
     _ -> {:error, :privacy_authority_unavailable}
   catch
@@ -33,43 +35,54 @@ defmodule NewYou.Privacy.FixtureDisputePurpose do
 
   @doc "Withdraw the exact TEST disclosure purpose. Withdrawal is terminal."
   def withdraw(subject_id, operation_id, dispute_id) do
-    with {:ok, subject_id} <- uuid(subject_id),
-         {:ok, operation_id} <- uuid(operation_id),
-         {:ok, dispute_id} <- uuid(dispute_id),
-         {:ok, result} <-
-           Ash.transact([FixtureDisputePurposeAuthority, FixtureDisputePurposeEvent], fn ->
-             withdraw_locked(subject_id, operation_id, dispute_id)
-           end) do
-      result
-    else
-      _ -> {:error, :privacy_authority_unavailable}
-    end
+    NewYou.Repo.without_query_telemetry(fn ->
+      withdraw_with_telemetry(subject_id, operation_id, dispute_id)
+    end)
   rescue
     _ -> {:error, :privacy_authority_unavailable}
   catch
     _, _ -> {:error, :privacy_authority_unavailable}
   end
 
-  @doc "Issue a signed proof only while the exact persisted owner purpose is currently allowed."
-  def issue_proof(subject_id, operation_id, dispute_id) do
+  defp withdraw_with_telemetry(subject_id, operation_id, dispute_id) do
     with {:ok, subject_id} <- uuid(subject_id),
          {:ok, operation_id} <- uuid(operation_id),
          {:ok, dispute_id} <- uuid(dispute_id),
-         {:ok, :allowed} <- current(subject_id, operation_id, dispute_id) do
-      {:ok,
-       PlanPaymentObservation.produce(%{
-         scope: :fixture_dispute_privacy_purpose,
-         purpose: @purpose,
-         source_id: dispute_id,
-         operation_id: operation_id,
-         state: :allowed,
-         subject_id: subject_id
-       })}
+         {:ok, result} <- withdraw_transaction(subject_id, operation_id, dispute_id) do
+      result
     else
-      {:ok, :withdrawn} -> {:error, :privacy_authority_denied}
-      {:ok, :missing} -> {:error, :privacy_authority_denied}
       _ -> {:error, :privacy_authority_unavailable}
     end
+  end
+
+  defp withdraw_transaction(subject_id, operation_id, dispute_id) do
+    Ash.transact([FixtureDisputePurposeAuthority, FixtureDisputePurposeEvent], fn ->
+      withdraw_locked(subject_id, operation_id, dispute_id)
+    end)
+  end
+
+  @doc "Issue a signed proof only while the exact persisted owner purpose is currently allowed."
+  def issue_proof(subject_id, operation_id, dispute_id) do
+    NewYou.Repo.without_query_telemetry(fn ->
+      with {:ok, subject_id} <- uuid(subject_id),
+           {:ok, operation_id} <- uuid(operation_id),
+           {:ok, dispute_id} <- uuid(dispute_id),
+           {:ok, :allowed} <- current(subject_id, operation_id, dispute_id) do
+        {:ok,
+         PlanPaymentObservation.produce(%{
+           scope: :fixture_dispute_privacy_purpose,
+           purpose: @purpose,
+           source_id: dispute_id,
+           operation_id: operation_id,
+           state: :allowed,
+           subject_id: subject_id
+         })}
+      else
+        {:ok, :withdrawn} -> {:error, :privacy_authority_denied}
+        {:ok, :missing} -> {:error, :privacy_authority_denied}
+        _ -> {:error, :privacy_authority_unavailable}
+      end
+    end)
   rescue
     _ -> {:error, :privacy_authority_unavailable}
   catch
@@ -78,17 +91,19 @@ defmodule NewYou.Privacy.FixtureDisputePurpose do
 
   @doc false
   def require_current_locked(subject_id, operation_id, dispute_id) do
-    with true <- Ash.DataLayer.in_transaction?(FixtureDisputePurposeAuthority),
-         {:ok, subject_id} <- uuid(subject_id),
-         {:ok, operation_id} <- uuid(operation_id),
-         {:ok, dispute_id} <- uuid(dispute_id),
-         {:ok, %{state: :allowed}} <-
-           read_authority(subject_id, operation_id, dispute_id, lock?: true) do
-      :ok
-    else
-      {:error, _} -> {:error, :privacy_authority_unavailable}
-      _ -> {:error, :privacy_authority_denied}
-    end
+    NewYou.Repo.without_query_telemetry(fn ->
+      with true <- Ash.DataLayer.in_transaction?(FixtureDisputePurposeAuthority),
+           {:ok, subject_id} <- uuid(subject_id),
+           {:ok, operation_id} <- uuid(operation_id),
+           {:ok, dispute_id} <- uuid(dispute_id),
+           {:ok, %{state: :allowed}} <-
+             read_authority(subject_id, operation_id, dispute_id, lock?: true) do
+        :ok
+      else
+        {:error, _} -> {:error, :privacy_authority_unavailable}
+        _ -> {:error, :privacy_authority_denied}
+      end
+    end)
   rescue
     _ -> {:error, :privacy_authority_unavailable}
   catch
@@ -204,7 +219,9 @@ defmodule NewYou.Privacy.FixtureDisputePurpose do
       )
 
     query =
-      if Keyword.get(opts, :lock?, false), do: Ash.Query.lock(query, :for_update), else: query
+      if Keyword.get(opts, :lock?, false),
+        do: Ash.Query.lock(query, :for_update),
+        else: query
 
     Ash.read_one(query, authorize?: false)
   end

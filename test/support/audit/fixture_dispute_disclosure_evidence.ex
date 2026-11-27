@@ -2,6 +2,7 @@ defmodule NewYou.Audit.FixtureDisputeDisclosureEvidence do
   @moduledoc false
 
   alias NewYou.Audit.FixtureDisputeDisclosure
+  alias NewYou.Commerce.FixtureCorrectionSource
   require Ash.Query
 
   @field_set "commercial_dispute_v1"
@@ -24,6 +25,28 @@ defmodule NewYou.Audit.FixtureDisputeDisclosureEvidence do
     _ -> @unavailable
   catch
     _, _ -> @unavailable
+  end
+
+  @doc false
+  @spec independently_committed?(Ecto.UUID.t(), Ecto.UUID.t(), Ecto.UUID.t()) :: boolean()
+  def independently_committed?(operation_id, actor_id, dispute_id) do
+    with {:ok, operation_id} <- uuid(operation_id),
+         {:ok, actor_id} <- uuid(actor_id),
+         {:ok, dispute_id} <- uuid(dispute_id) do
+      FixtureCorrectionSource.independently_visible?(fn ->
+        assertion =
+          Ash.Query.filter(
+            FixtureDisputeDisclosure,
+            operation_id == ^operation_id and actor_id == ^actor_id and
+              dispute_id == ^dispute_id and purpose == :fixture_dispute_evidence_read and
+              field_set == ^@field_set
+          )
+
+        match?({:ok, true}, Ash.exists(assertion, authorize?: false, timeout: 1_000))
+      end)
+    else
+      _ -> false
+    end
   end
 
   defp record_exact(operation_id, actor_id, dispute_id) do

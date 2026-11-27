@@ -106,6 +106,14 @@ defmodule NewYou.Commerce.FixtureDispute do
         public? false
         accept [:effect_version]
         change set_attribute(:conflict?, true)
+        change set_attribute(:read_token, nil)
+      end
+
+      update :confirm_terminal do
+        public? false
+        accept [:revision, :effect_version]
+        change filter(expr(conflict? and state in [:lost, :restored]))
+        change set_attribute(:conflict?, false)
       end
 
       update :acknowledge do

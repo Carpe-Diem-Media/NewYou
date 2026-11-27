@@ -63,6 +63,12 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
                    proofs.audit
                  )
 
+        assert FixtureDisputeDisclosureEvidence.independently_committed?(
+                 operation_id,
+                 payer.account_id,
+                 dispute.id
+               )
+
         assert Map.keys(projection) |> Enum.sort() ==
                  [:allocation, :amount_minor, :currency, :dispute_id, :payment_id, :purchase_id]
 
@@ -106,6 +112,114 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
                  )
 
         assert length(disclosure_rows(operation_id)) == 1
+      end)
+    end)
+  end
+
+  test "read fails closed inside an explicitly enclosing transaction" do
+    P805.with_fixture(fn ->
+      with_dispute(fn payer, recipient, dispute ->
+        operation_id = operation()
+
+        assert {:ok, :allowed} =
+                 FixtureDisputePurpose.grant(recipient.account_id, operation_id, dispute.id)
+
+        assert {:ok, privacy_purpose} =
+                 FixtureDisputePurpose.issue_proof(recipient.account_id, operation_id, dispute.id)
+
+        proofs = proofs(payer.account_id, dispute.id, operation_id, privacy_purpose)
+
+        assert {:error, :enclosing_rollback} =
+                 NewYou.Repo.transaction(fn ->
+                   assert {:error, :evidence_unavailable} =
+                            FixtureDisputeProjection.read(
+                              payer.credentials,
+                              dispute.id,
+                              proofs.finance,
+                              proofs.privacy,
+                              proofs.audit
+                            )
+
+                   assert disclosure_rows(operation_id) == []
+                   NewYou.Repo.rollback(:enclosing_rollback)
+                 end)
+
+        assert disclosure_rows(operation_id) == []
+      end)
+    end)
+  end
+
+  test "read fails closed inside an implicit Sandbox transaction" do
+    P805.with_fixture(fn ->
+      with_dispute(fn payer, recipient, dispute ->
+        operation_id = operation()
+
+        assert {:ok, :allowed} =
+                 FixtureDisputePurpose.grant(recipient.account_id, operation_id, dispute.id)
+
+        assert {:ok, privacy_purpose} =
+                 FixtureDisputePurpose.issue_proof(recipient.account_id, operation_id, dispute.id)
+
+        proofs = proofs(payer.account_id, dispute.id, operation_id, privacy_purpose)
+
+        task =
+          Task.async(fn ->
+            :ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo)
+
+            try do
+              assert {:error, :evidence_unavailable} =
+                       FixtureDisputeProjection.read(
+                         payer.credentials,
+                         dispute.id,
+                         proofs.finance,
+                         proofs.privacy,
+                         proofs.audit
+                       )
+
+              refute FixtureDisputeDisclosureEvidence.independently_committed?(
+                       operation_id,
+                       payer.account_id,
+                       dispute.id
+                     )
+
+              :ok
+            after
+              Ecto.Adapters.SQL.Sandbox.checkin(NewYou.Repo)
+            end
+          end)
+
+        assert :ok = Task.await(task, 5_000)
+        assert disclosure_rows(operation_id) == []
+      end)
+    end)
+  end
+
+  test "read fails closed when the Audit insert is rejected" do
+    P805.with_fixture(fn ->
+      with_dispute(fn payer, recipient, dispute ->
+        operation_id = operation()
+
+        assert {:ok, :allowed} =
+                 FixtureDisputePurpose.grant(recipient.account_id, operation_id, dispute.id)
+
+        assert {:ok, privacy_purpose} =
+                 FixtureDisputePurpose.issue_proof(recipient.account_id, operation_id, dispute.id)
+
+        proofs = proofs(payer.account_id, dispute.id, operation_id, privacy_purpose)
+
+        P805.with_rejected_insert("audit_fixture_dispute_disclosures", fn reached ->
+          assert {:error, :evidence_unavailable} =
+                   FixtureDisputeProjection.read(
+                     payer.credentials,
+                     dispute.id,
+                     proofs.finance,
+                     proofs.privacy,
+                     proofs.audit
+                   )
+
+          assert reached.()
+          assert disclosure_rows(operation_id) == []
+        end)
       end)
     end)
   end
@@ -340,6 +454,8 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
   end
 
   defp proofs(actor_id, dispute_id, operation_id, privacy_purpose) do
+    # These signed Finance and Audit fields are TEST fixtures. They do not
+    # represent production roles or independently revocable role scopes.
     %{
       finance:
         PlanPaymentObservation.produce(%{
