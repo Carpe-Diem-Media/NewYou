@@ -79,7 +79,8 @@ defmodule NewYou.Commerce.HostedCheckout do
       # Ash.transact can join the caller's transaction. In that case this
       # function could otherwise get an acknowledgement before a real COMMIT.
       with false <- Ash.DataLayer.in_transaction?(Purchase),
-           {:ok, {:dispatch, attempt}} <- with_source(credentials, snapshot, &claim/2),
+           {:ok, {:dispatch, attempt}} <-
+             with_source(credentials, snapshot, fn attempt, _ -> claim(attempt, port) end),
            true <- committed_claim?(attempt) do
         checkpoint(:claim_committed)
         send_once(attempt, snapshot.terms, port)
@@ -134,7 +135,7 @@ defmodule NewYou.Commerce.HostedCheckout do
              |> Ash.Query.filter(purchase_id == ^id)
              |> Ash.exists(authorize?: false),
            {:ok, attempt} <- Ash.get(HostedDispatch, attempt_id, authorize?: false, error?: false),
-           digest <- :crypto.hash(:sha256, :erlang.term_to_binary(accepted, [:deterministic])),
+           digest <- HostedDispatch.source_digest(accepted),
            true <- is_nil(attempt) or attempt.source_digest == digest do
         operation.(attempt, digest)
       else
@@ -146,9 +147,15 @@ defmodule NewYou.Commerce.HostedCheckout do
 
     # The purchase lock is shared with existing synthetic payment application.
     # The guarded write consumes this attempt's only dispatch epoch.
-    defp claim(%HostedDispatch{claim_id: nil} = attempt, _) do
+    defp claim(%HostedDispatch{claim_id: nil} = attempt, port) do
       with {:ok, claimed} <-
-             Ash.update(attempt, %{claim_id: Ash.UUID.generate()},
+             Ash.update(
+               attempt,
+               %{
+                 claim_id: Ash.UUID.generate(),
+                 fixture_port: port,
+                 verify_after: DateTime.utc_now()
+               },
                action: :claim,
                authorize?: false
              ) do

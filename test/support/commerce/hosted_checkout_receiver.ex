@@ -26,7 +26,7 @@ defmodule NewYou.Commerce.HostedCheckoutReceiver do
 
   def call(conn, {observer, tag, reply}) do
     {:ok, body, conn} = read_body(conn)
-    payload = Jason.decode!(body)
+    payload = if body == "", do: %{}, else: Jason.decode!(body)
 
     send(
       observer,

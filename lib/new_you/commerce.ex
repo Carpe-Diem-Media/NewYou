@@ -15,6 +15,7 @@ defmodule NewYou.Commerce do
   resources do
     resource Purchase
     resource NewYou.Commerce.HostedDispatch
+    resource NewYou.Commerce.HostedPaymentReceipt
     resource NewYou.Commerce.OfferVersion
     resource NewYou.Commerce.PurchaseQuote
     resource NewYou.Commerce.AssessmentAdmission
@@ -138,6 +139,7 @@ defmodule NewYou.Commerce do
     alias NewYou.Commerce.{
       AssessmentAdmissions,
       HostedDispatch,
+      HostedPaymentReceipt,
       OfferAdmission,
       SyntheticCollectionLedger
     }
@@ -154,6 +156,148 @@ defmodule NewYou.Commerce do
         _ -> {:error, :payment_unavailable}
       end
     end
+
+    @doc """
+    Process persisted TEST fixture evidence through the Commerce owner. The id
+    identifies an authenticated receipt or a server Verify observation. Exact
+    replay is safe. Qualification, payment, and its consequence commit together.
+    """
+    @spec apply_hosted_payment_evidence(Ecto.UUID.t()) :: :ok | {:error, :unavailable}
+    def apply_hosted_payment_evidence(id) do
+      result =
+        NewYou.Repo.without_query_telemetry(fn ->
+          Ash.transact(Purchase, fn -> process_fixture_evidence(id) end)
+        end)
+
+      case result do
+        {:ok, classification} ->
+          :telemetry.execute(
+            [:new_you, :commerce, :fixture_payment, :classification],
+            %{count: 1},
+            %{outcome: classification}
+          )
+
+          :ok
+
+        _ ->
+          {:error, :unavailable}
+      end
+    end
+
+    defp process_fixture_evidence(id) do
+      case HostedPaymentReceipt
+           |> Ash.Query.filter(id == ^id)
+           |> Ash.Query.lock(:for_update)
+           |> Ash.read_one(authorize?: false) do
+        {:ok, %HostedPaymentReceipt{state: :pending} = receipt} ->
+          with {:ok, state, reason} <- qualify_fixture_receipt(receipt),
+               {:ok, _} <-
+                 Ash.update(receipt, %{state: state, classification: reason},
+                   action: :classify,
+                   authorize?: false
+                 ) do
+            state
+          end
+
+        {:ok, %HostedPaymentReceipt{state: state}} ->
+          state
+
+        _ ->
+          {:error, :unavailable}
+      end
+    end
+
+    defp qualify_fixture_receipt(%{outcome: :succeeded} = receipt) do
+      with {:ok, attempt} <- find_fixture_attempt(receipt),
+           {:ok, purchase} <- lock_fixture_purchase(attempt, receipt) do
+        with :ok <- OfferAdmission.current_parties_privacy(purchase),
+             {:ok, prior} <- fixture_payment_history(purchase, receipt) do
+          apply_fixture_payment(prior, purchase, attempt, receipt)
+        end
+      else
+        {:error, :mismatch} -> {:ok, :quarantined, :source_mismatch}
+        error -> error
+      end
+    end
+
+    defp qualify_fixture_receipt(%{outcome: reason})
+         when reason in [:pending, :not_found, :timeout, :rate_limited, :unavailable],
+         do: {:ok, :unresolved, reason}
+
+    defp qualify_fixture_receipt(%{outcome: reason}), do: {:ok, :quarantined, reason}
+
+    defp find_fixture_attempt(%{
+           source: :verify,
+           requested_reference: requested,
+           reference: reference
+         })
+         when requested != reference,
+         do: {:error, :mismatch}
+
+    defp find_fixture_attempt(receipt) do
+      case HostedDispatch
+           |> Ash.Query.filter(
+             reference == ^receipt.reference and provider == ^receipt.provider and
+               integration == ^receipt.integration and environment == ^receipt.environment and
+               channel == :card and not is_nil(claim_id)
+           )
+           |> Ash.read_one(authorize?: false) do
+        {:ok, %HostedDispatch{} = attempt} -> {:ok, attempt}
+        {:ok, nil} -> {:error, :mismatch}
+        error -> error
+      end
+    end
+
+    defp lock_fixture_purchase(attempt, receipt) do
+      case Purchase
+           |> Ash.Query.filter(attempt_id == ^attempt.attempt_id)
+           |> Ash.Query.lock(:for_update)
+           |> Ash.read_one(authorize?: false) do
+        {:ok, %Purchase{} = purchase} ->
+          with true <-
+                 purchase.amount_minor == receipt.amount_minor and
+                   purchase.currency == receipt.currency,
+               %{terms: %{product: :plan}} = snapshot <- OfferAdmission.bound_snapshot(purchase),
+               true <- HostedDispatch.source_digest(snapshot) == attempt.source_digest do
+            {:ok, purchase}
+          else
+            _ -> {:error, :mismatch}
+          end
+
+        {:ok, nil} ->
+          {:error, :mismatch}
+
+        error ->
+          error
+      end
+    end
+
+    defp fixture_payment_history(purchase, receipt) do
+      VerifiedPayment
+      |> Ash.Query.filter(
+        purchase_id == ^purchase.id or fixture_transaction_id == ^receipt.transaction_id
+      )
+      |> Ash.read(authorize?: false)
+    end
+
+    defp apply_fixture_payment([], purchase, attempt, receipt) do
+      source = %{fixture_receipt_id: receipt.id, fixture_transaction_id: receipt.transaction_id}
+
+      with %VerifiedPayment{} <- commit_payment(nil, purchase, :plan, source),
+           {:ok, _} <- Ash.update(attempt, %{}, action: :close_verify, authorize?: false) do
+        {:ok, :qualified, :applied}
+      end
+    end
+
+    defp apply_fixture_payment(
+           [%VerifiedPayment{purchase_id: purchase_id, fixture_transaction_id: transaction_id}],
+           %{id: purchase_id},
+           _attempt,
+           %{transaction_id: transaction_id}
+         ),
+         do: {:ok, :qualified, :replayed}
+
+    defp apply_fixture_payment(_, _, _, _), do: {:ok, :quarantined, :payment_conflict}
 
     defp apply_qualified(
            %{
@@ -178,7 +322,7 @@ defmodule NewYou.Commerce do
              |> Ash.Query.filter(purchase_id == ^purchase_id)
              |> Ash.read_one(authorize?: false),
            :ok <- record_collection(fields, purchase, prior) do
-        commit_payment(prior, purchase, delivery)
+        commit_payment(prior, purchase, delivery, %{})
       else
         _ -> {:error, :payment_unavailable}
       end
@@ -215,11 +359,11 @@ defmodule NewYou.Commerce do
 
     defp record_collection(_fields, _purchase, _prior), do: :ok
 
-    defp commit_payment(%VerifiedPayment{} = prior, _purchase, _delivery), do: prior
+    defp commit_payment(%VerifiedPayment{} = prior, _purchase, _delivery, _source), do: prior
 
-    defp commit_payment(nil, %Purchase{id: purchase_id} = purchase, delivery) do
+    defp commit_payment(nil, %Purchase{id: purchase_id} = purchase, delivery, source) do
       with {:ok, payment} <-
-             Ash.create(VerifiedPayment, %{purchase_id: purchase_id},
+             Ash.create(VerifiedPayment, Map.put(source, :purchase_id, purchase_id),
                action: :apply,
                authorize?: false
              ),
@@ -236,6 +380,9 @@ defmodule NewYou.Commerce do
     end
   else
     def apply_payment_observation(_observation), do: {:error, :payment_unavailable}
+    @doc "Fixture evidence processing is disabled outside TEST."
+    @spec apply_hosted_payment_evidence(Ecto.UUID.t()) :: {:error, :unavailable}
+    def apply_hosted_payment_evidence(_id), do: {:error, :unavailable}
   end
 
   @doc """
@@ -246,8 +393,9 @@ defmodule NewYou.Commerce do
   def paid_plan_source(consequence_id) do
     with {:ok, %PaymentConsequence{delivery_kind: :plan} = consequence} <-
            Ash.get(PaymentConsequence, consequence_id, authorize?: false),
-         {:ok, %VerifiedPayment{purchase_id: purchase_id}} <-
+         {:ok, %VerifiedPayment{purchase_id: purchase_id} = payment} <-
            Ash.get(VerifiedPayment, consequence.payment_id, authorize?: false),
+         true <- eligible_plan_payment?(payment),
          true <- purchase_id == consequence.purchase_id,
          {:ok, %Purchase{recipient_id: recipient_id}} <-
            Ash.get(Purchase, purchase_id, authorize?: false) do
@@ -256,6 +404,12 @@ defmodule NewYou.Commerce do
     else
       _ -> {:error, :source_unavailable}
     end
+  end
+
+  if Mix.env() == :test do
+    defp eligible_plan_payment?(_payment), do: true
+  else
+    defp eligible_plan_payment?(payment), do: is_nil(payment.fixture_receipt_id)
   end
 
   @doc """

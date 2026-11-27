@@ -26,22 +26,31 @@ defmodule NewYou.Commerce.PaystackCheckout do
         channels: ["card"]
       }
 
+      loopback_request(:post, port, "/transaction/initialize", json: payload)
+    end
+
+    def build_verify(reference, port) when is_binary(reference) and port in 1..65_535 do
+      loopback_request(:get, port, "/transaction/verify/" <> reference, [])
+    end
+
+    defp loopback_request(method, port, path, options) do
       # A bare request bypasses Req global defaults. HTTP/1 also excludes
       # Finch's transparent retry on a draining HTTP/2 pool.
       Req.Request.new(
-        method: :post,
-        url: "http://127.0.0.1:#{port}/transaction/initialize",
+        method: method,
+        url: "http://127.0.0.1:#{port}" <> path,
         headers: [{"authorization", "Bearer " <> @fixture_key}],
-        options: [
-          json: payload,
-          retry: false,
-          redirect: false,
-          raw: true,
-          connect_options: [timeout: 500, protocols: [:http1]],
-          pool_timeout: 500,
-          receive_timeout: 500,
-          request_timeout: 1000
-        ]
+        options:
+          options ++
+            [
+              retry: false,
+              redirect: false,
+              raw: true,
+              connect_options: [timeout: 500, protocols: [:http1]],
+              pool_timeout: 500,
+              receive_timeout: 500,
+              request_timeout: 1000
+            ]
       )
       |> Req.Steps.attach()
       |> Map.replace!(:into, &collect_body/2)

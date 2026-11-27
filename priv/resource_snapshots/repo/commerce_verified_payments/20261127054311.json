@@ -1,0 +1,162 @@
+{
+  "attributes": [
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"uuid_generate_v7()\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": true,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "verified_at",
+      "type": "utc_datetime_usec"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "fixture_transaction_id",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "commerce_verified_payments_fixture_receipt_id_fkey",
+        "on_delete": "restrict",
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "commerce_hosted_payment_receipts"
+      },
+      "scale": null,
+      "size": null,
+      "source": "fixture_receipt_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "commerce_verified_payments_purchase_id_fkey",
+        "on_delete": null,
+        "on_update": null,
+        "primary_key?": true,
+        "schema": "public",
+        "table": "commerce_plan_purchases"
+      },
+      "scale": null,
+      "size": null,
+      "source": "purchase_id",
+      "type": "uuid"
+    }
+  ],
+  "base_filter": null,
+  "check_constraints": [
+    {
+      "attribute": [
+        "fixture_receipt_id",
+        "fixture_transaction_id"
+      ],
+      "base_filter": null,
+      "check": "(fixture_receipt_id IS NULL AND fixture_transaction_id IS NULL) OR\n(fixture_receipt_id IS NOT NULL AND fixture_transaction_id IS NOT NULL AND\n  fixture_transaction_id ~ '^[1-9][0-9]{0,19}$')\n",
+      "name": "verified_payment_fixture_source"
+    }
+  ],
+  "create_table_options": null,
+  "custom_indexes": [],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "65CE31B9668E7E494A5ECDB6CB0DEAC5E7C057D63819E5A37638913221A2DD6D",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "commerce_verified_payments_purchase_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "purchase_id"
+        }
+      ],
+      "name": "purchase",
+      "nils_distinct?": true,
+      "where": null
+    },
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "commerce_verified_payments_fixture_transaction_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "fixture_transaction_id"
+        }
+      ],
+      "name": "fixture_transaction",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
+  "multitenancy": {
+    "attribute": null,
+    "global": null,
+    "strategy": null
+  },
+  "repo": "Elixir.NewYou.Repo",
+  "schema": null,
+  "table": "commerce_verified_payments",
+  "temporal": null
+}
