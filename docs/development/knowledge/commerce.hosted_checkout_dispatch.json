@@ -6,7 +6,7 @@
     "WELL-218"
   ],
   "implementation_revision": {
-    "git_sha": "b31979a3ab212012923453acc28303bd529d7d63",
+    "git_sha": "33092608a96b1405ec1f8ef0febe9830f822c143",
     "semantics": "E1a-F dispatch foundation with WELL-219 known-reference scheduling on the existing claim."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -477,7 +477,7 @@
       "id": "adapter",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.PaystackCheckout",
-      "sha256": "c7ee7d55fb93b5d83cc2a996bfbbca657fd5a641e6c29972c6f56d0b23c3d7a4"
+      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
     },
     {
       "id": "purchase",
@@ -495,13 +495,13 @@
       "id": "payment",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def apply_payment_observation",
-      "sha256": "02d6b8474e529f9faeb6fa6a06cca4995d4269747b6a58e5b239c5242be826fd"
+      "sha256": "25a69d39290bf645780e736f8128723d230e3f2cf04177b888aabddde01da86b"
     },
     {
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def authorize_canonical_session",
-      "sha256": "ead01b1ce5b7a22f0b4d0bcb7346677e464317afccf9953faa7be729506edb80"
+      "sha256": "4d90a4de0a81b61dbacb48236d781f2854ea42981a21ebe50d2a760a372f5263"
     },
     {
       "id": "schema",
@@ -531,7 +531,7 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "hosted dispatch migration preserves adjacent-version rows",
-      "sha256": "4db95bd1f9d0350041f0ada4918641893d1e51d160f060b4ffc3c54adff19214"
+      "sha256": "fa7ae3bba84a68d4b7a524c6d8a6f7f77d7cae19379f94702067c5416a5ed171"
     },
     {
       "id": "disabled_test",

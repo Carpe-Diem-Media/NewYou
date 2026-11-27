@@ -1,0 +1,1032 @@
+{
+  "schema_version": 1,
+  "capability_id": "commerce.fixture_disputes",
+  "purpose": "Qualify source-bound TEST dispute evidence, maintain competing correction truth, and converge the original paid right. Recover work with known-case pinned reads and project minimized local evidence.",
+  "implementing_tickets": [
+    "WELL-223"
+  ],
+  "implementation_revision": {
+    "git_sha": "33092608a96b1405ec1f8ef0febe9830f822c143",
+    "semantics": "Committed implementation and tests for the provider-disabled E2c foundation."
+  },
+  "authoritative_domain": "NewYou.Commerce",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Entitlements",
+      "interface": "apply_fixture_dispute/1; grant_paid_plan/1",
+      "ownership": "Applies the current source-specific effect and owns right identity and lifecycle.",
+      "source_ids": [
+        "rights",
+        "convergence"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "interface": "locked_fixture_recipient/1",
+      "ownership": "Checks the current canonical recipient and account posture under lock.",
+      "source_ids": [
+        "identity"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "interface": "FixtureDisputePurpose.require_current_locked/3; SyntheticSuppression.locked_status/1",
+      "ownership": "Owns purpose authorization and deletion suppression for the exact fixture subject.",
+      "source_ids": [
+        "privacy"
+      ]
+    },
+    {
+      "domain": "NewYou.Audit",
+      "interface": "FixtureDisputeDisclosureEvidence.record_in_transaction/3",
+      "ownership": "Owns the minimized disclosure assertion and its replay binding.",
+      "source_ids": [
+        "audit"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.FixtureDisputeReceipt",
+      "actions": [
+        "receive",
+        "classify",
+        "process"
+      ],
+      "caller_boundary": "Authenticated ingress or independently pinned read persists normalized source-bound evidence. TEST worker classifies once.",
+      "source_ids": [
+        "receipt",
+        "ingress"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.FixtureDispute",
+      "actions": [
+        "bind",
+        "qualify",
+        "record_conflict",
+        "reserve_read",
+        "acknowledge",
+        "read_due",
+        "deliver"
+      ],
+      "caller_boundary": "TEST-only owning work revalidates the accepted purchase lock before mutation.",
+      "source_ids": [
+        "dispute",
+        "lifecycle"
+      ]
+    },
+    {
+      "domain": "NewYou.Entitlements",
+      "resource": "NewYou.Entitlements.PlanRight",
+      "actions": [
+        "grant",
+        "suspend_component",
+        "restore_component",
+        "end_component"
+      ],
+      "caller_boundary": "Entitlements validates current Commerce, Identity and Privacy before restoration. Only the original grant may create a right.",
+      "source_ids": [
+        "rights",
+        "convergence"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "resource": "NewYou.Privacy.FixtureDisputePurposeAuthority",
+      "actions": [
+        "grant_fixture_only",
+        "withdraw_fixture_only"
+      ],
+      "caller_boundary": "Fixture-only exact-purpose state. Withdrawal is terminal.",
+      "source_ids": [
+        "privacy"
+      ]
+    },
+    {
+      "domain": "NewYou.Audit",
+      "resource": "NewYou.Audit.FixtureDisputeDisclosure",
+      "actions": [
+        "record_disclosure"
+      ],
+      "caller_boundary": "Records a fixed field-set assertion through the Audit owner inside a transaction.",
+      "source_ids": [
+        "audit"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Commerce",
+      "function": "apply_fixture_dispute_receipt",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Receipt UUID"
+      ],
+      "returns": [
+        "ok or dispute_unavailable."
+      ],
+      "side_effects": [
+        "Commits lifecycle state and the current consequence version with the receipt classification."
+      ],
+      "caller_constraints": [
+        "TEST only."
+      ],
+      "source_ids": [
+        "commerce",
+        "lifecycle"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce",
+      "function": "deliver_fixture_dispute",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Case UUID"
+      ],
+      "returns": [
+        "ok or dispute_unavailable."
+      ],
+      "side_effects": [
+        "Resolves the current effect through Entitlements and acknowledges only the version that owner applied."
+      ],
+      "caller_constraints": [
+        "TEST only. Call after the Commerce commit."
+      ],
+      "source_ids": [
+        "commerce",
+        "convergence"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.FixtureDisputes",
+      "function": "read_due",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Case UUID"
+      ],
+      "returns": [
+        "ok or bounded error."
+      ],
+      "side_effects": [
+        "Reserves a durable known-case read and verifies the exact committed reservation before GET."
+      ],
+      "caller_constraints": [
+        "Call outside a transaction. Use the original checkout listener pin."
+      ],
+      "source_ids": [
+        "lifecycle",
+        "transport"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.FixtureDisputes",
+      "function": "correction_overlap",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Case UUID"
+      ],
+      "returns": [
+        "none, refund_owed, unresolved or dispute_unavailable."
+      ],
+      "side_effects": [
+        "Reads current same-collection correction classification under the purchase lock."
+      ],
+      "caller_constraints": [
+        "TEST only. A financial overlap cannot authorize another POST."
+      ],
+      "source_ids": [
+        "lifecycle",
+        "refund"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261127135002_well223_fixture_disputes.exs",
+      "tables": [
+        "commerce_fixture_disputes",
+        "commerce_fixture_dispute_receipts",
+        "audit_fixture_dispute_disclosures",
+        "entitlements_plan_rights"
+      ],
+      "constraints": [
+        "fixture_dispute_source_shape",
+        "fixture_dispute_receipt_shape",
+        "commerce_fixture_disputes_provider_dispute_index",
+        "commerce_fixture_dispute_receipts_evidence_index",
+        "entitlements_plan_rights_state"
+      ],
+      "source_ids": [
+        "migration",
+        "roundtrip"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261127140243_well223_dispute_privacy.exs",
+      "tables": [
+        "privacy_fixture_dispute_purposes",
+        "privacy_fixture_dispute_purpose_events"
+      ],
+      "constraints": [
+        "fixture_dispute_purpose_owner_uidx",
+        "fixture_dispute_purpose_event_uidx"
+      ],
+      "source_ids": [
+        "privacy_migration",
+        "roundtrip"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "The exact-raw HMAC webhook path validates the fixture vocabulary and resolves the original qualified payment transaction and reference. An independent connection must see the bounded receipt before acknowledgement.",
+      "source_ids": [
+        "ingress",
+        "receipt"
+      ]
+    },
+    {
+      "summary": "The receipt worker locks the accepted purchase, binds the provider dispute identity, classifies revision or conflict and increments the durable effect version in the same transaction.",
+      "source_ids": [
+        "lifecycle",
+        "dispute"
+      ]
+    },
+    {
+      "summary": "The owning Entitlements transaction re-reads the current source effect. Applied versions are acknowledged separately, so a cut between transactions leaves recoverable work.",
+      "source_ids": [
+        "convergence",
+        "lifecycle"
+      ]
+    },
+    {
+      "summary": "The evidence projection checks exact scope proofs, canonical session, current Privacy purpose and both parties' deletion authority. Audit persists only the actor, purpose, case and fixed field-set assertion.",
+      "source_ids": [
+        "projection",
+        "privacy",
+        "audit"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "contested",
+      "awaiting_feedback",
+      "under_review",
+      "unresolved",
+      "restored",
+      "lost",
+      "held_unconsumed",
+      "suspended",
+      "ended",
+      "allowed",
+      "withdrawn"
+    ],
+    "transitions": [
+      {
+        "from_state": "contested",
+        "to_state": "awaiting_feedback",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "contested",
+        "to_state": "under_review",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "contested",
+        "to_state": "unresolved",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "contested",
+        "to_state": "restored",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "contested",
+        "to_state": "lost",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "awaiting_feedback",
+        "to_state": "contested",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "awaiting_feedback",
+        "to_state": "under_review",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "awaiting_feedback",
+        "to_state": "unresolved",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "awaiting_feedback",
+        "to_state": "restored",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "awaiting_feedback",
+        "to_state": "lost",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "under_review",
+        "to_state": "contested",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "under_review",
+        "to_state": "awaiting_feedback",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "under_review",
+        "to_state": "unresolved",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "under_review",
+        "to_state": "restored",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "under_review",
+        "to_state": "lost",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "contested",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "awaiting_feedback",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "under_review",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "restored",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "lost",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "restored",
+        "to_state": "restored",
+        "guards": [
+          "Contradictory qualified terminal evidence."
+        ],
+        "side_effects": [
+          "Preserve terminal history, flag the conflict and suspend attributable access."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "convergence"
+        ]
+      },
+      {
+        "from_state": "lost",
+        "to_state": "lost",
+        "guards": [
+          "Contradictory qualified terminal evidence."
+        ],
+        "side_effects": [
+          "Preserve the lost payment and its ended right. Flag the conflict."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "convergence"
+        ]
+      },
+      {
+        "from_state": "held_unconsumed",
+        "to_state": "suspended",
+        "guards": [
+          "Original source has a qualified attributable active case or a conflicting restoration."
+        ],
+        "side_effects": [
+          "Preserve right identity and grant timestamp. Block use and treat suspended Assessment credit as outstanding."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "rights",
+          "convergence",
+          "assessment"
+        ]
+      },
+      {
+        "from_state": "suspended",
+        "to_state": "held_unconsumed",
+        "guards": [
+          "Same paid source has restored payment, no overriding refund or loss, current canonical recipient and current Privacy authority."
+        ],
+        "side_effects": [
+          "Restore the same right."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "convergence"
+        ]
+      },
+      {
+        "from_state": "held_unconsumed",
+        "to_state": "ended",
+        "guards": [
+          "Current attributable final loss or verified refund."
+        ],
+        "side_effects": [
+          "End only the original affected right."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "convergence"
+        ]
+      },
+      {
+        "from_state": "suspended",
+        "to_state": "ended",
+        "guards": [
+          "Current attributable final loss or verified refund."
+        ],
+        "side_effects": [
+          "End the suspended right."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "convergence"
+        ]
+      },
+      {
+        "from_state": "allowed",
+        "to_state": "withdrawn",
+        "guards": [
+          "Withdrawal for the current exact purpose."
+        ],
+        "side_effects": [
+          "Append the versioned Privacy event and deny previously signed allowed proof."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "privacy",
+          "projection"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Dispute wire, handlers, workers and state-changing Ash actions compile only in TEST. Network reads are GET to the original certificate-pinned loopback endpoint, without redirects or automatic retries.",
+      "source_ids": [
+        "dispute",
+        "receipt",
+        "transport"
+      ]
+    },
+    {
+      "summary": "The stored receipt contains only a digest, bounded normalized outcome data and a local bound payment identity. SQL query telemetry is suppressed on protected paths including the independent visibility observer.",
+      "source_ids": [
+        "ingress",
+        "fence",
+        "test"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "The purchase lock is shared by dispute ingress, qualification, refund dispatch claim and entitlement convergence. A pending bound receipt or current blocking dispute fences a new POST. An existing claim remains durable and cannot be repeated.",
+      "source_ids": [
+        "fence",
+        "lifecycle",
+        "refund",
+        "test"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "Dispute identity and immutable receipt identity are separate. Replays of earlier revisions or obsolete read tokens cannot advance the owning case. The durable scheduled retry remains capped and due after the final round.",
+      "source_ids": [
+        "lifecycle",
+        "dispute",
+        "receipt",
+        "restart"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "Receipt processing, due known-case reads and pending consequences remain queryable by TEST workers after process loss or missing/discarded jobs. A separate process verifies fresh-BEAM recovery.",
+      "source_ids": [
+        "receipt",
+        "dispute",
+        "restart",
+        "test"
+      ]
+    },
+    {
+      "summary": "Down migrations refuse to discard retained dispute, Privacy or Audit evidence or suspended rights. Cleanup selects only the tracked operation, exact payment or webhook digest and their jobs.",
+      "source_ids": [
+        "migration",
+        "privacy_migration",
+        "cleanup",
+        "roundtrip"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "cases": [
+        "HMAC verification and durable receipt failure",
+        "Reordered lifecycle, conflict and exact right restoration",
+        "Independent PostgreSQL contention in both directions",
+        "Partial and excess scope",
+        "Pinned TLS request counts and capped fresh-BEAM recovery",
+        "SQL telemetry canaries and scoped job cleanup"
+      ],
+      "proves": "F-01 through F-05 and F-07 fixture execution.",
+      "limits": "Hosted proof is standalone Plan only. No live provider behavior.",
+      "source_ids": [
+        "test",
+        "restart"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
+      "cases": [
+        "Minimal allowlist and Audit binding",
+        "Missing, foreign or changed scope",
+        "Old proof replay after terminal withdrawal",
+        "Deletion suppression"
+      ],
+      "proves": "F-06 owner-backed local disclosure.",
+      "limits": "Signed roles are TEST proof claims.",
+      "source_ids": [
+        "projection_test",
+        "privacy",
+        "audit"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "cases": [
+        "Suspended Assessment credit prevents a competing admission",
+        "Accepted component attribution and unallocated evidence through E2a"
+      ],
+      "proves": "F-02/F-03 synthetic-only component and admission interlocks.",
+      "limits": "Uses accepted E2a fixture allocations independently of hosted checkout.",
+      "source_ids": [
+        "assessment"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "cases": [
+        "Isolated schema forward/down/forward",
+        "Refuse rollback over retained Audit and Privacy evidence"
+      ],
+      "proves": "F-07 migration compatibility and preservation.",
+      "limits": "Migration proof runs in a transaction-owned schema.",
+      "source_ids": [
+        "roundtrip"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Retain the same Commerce purchase lock and source-specific right transition when adding a governed correction producer. Keep any provider vocabulary and provider operation authorization in the separately qualified WELL-195 scope.",
+      "source_ids": [
+        "fence",
+        "lifecycle"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "EXTEND Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/provider_event.ex and webhook_receipt.ex. Keep immutable first-write receipt deduplication and receipt-first handling. Exclude raw-body retention, admin reads and provider events as financial authority.",
+      "source_ids": [
+        "receipt",
+        "ingress",
+        "test"
+      ]
+    },
+    {
+      "summary": "EXTEND Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/observation_evidence.ex, types/provider_observation.ex, priv/repo/migrations/20261010120000_jc_287_provider_observation_evidence.exs and test/store/payments/provider_observation_test.exs. Keep observed evidence separate from business qualification, bound identities and rollback refusal. Exclude PaymentAttempt storage and Stripe/provider-specific outcome mappings.",
+      "source_ids": [
+        "lifecycle",
+        "migration",
+        "roundtrip"
+      ]
+    },
+    {
+      "summary": "COMPOSE Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/refunds.ex with WELL-221. Preserve immutable request and exact cumulative refund allocation checks under a shared lock. Exclude ordinary Repo business writes, order-state semantics, cancellation and netting.",
+      "source_ids": [
+        "fence",
+        "refund",
+        "test"
+      ]
+    },
+    {
+      "summary": "COMPOSE Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/entitlements/source_convergence.ex and test/store/entitlements/source_convergence_test.exs. Retain replay and exact source isolation. Exclude subscription-grant rules and shipment effects.",
+      "source_ids": [
+        "convergence",
+        "assessment",
+        "test"
+      ]
+    },
+    {
+      "summary": "REUSE explicit unsupported-provider guards from Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/providers/paystack.ex. Exclude Store's stub adapter. INTRODUCE the NewYou dispute state and pinned known-case fixture GET through WELL-219's transport.",
+      "source_ids": [
+        "transport",
+        "dispute",
+        "test"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Do not infer component identity from a partial amount, classify financial settlement from access state, retry a claimed POST or create a right during correction delivery.",
+      "source_ids": [
+        "lifecycle",
+        "refund",
+        "convergence"
+      ]
+    },
+    {
+      "summary": "Do not disclose raw participant information, send evidence outside NewYou, activate Paystack or discover unknown disputes.",
+      "source_ids": [
+        "projection",
+        "transport"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "Actual Paystack account configuration, dispute status and deadline vocabulary, Finance operations and release certification remain out of scope.",
+    "The local fixture records unresolved overlapping corrections and does not decide cancellation, netting or external adjudication.",
+    "Ash Signals and Temporal Resources were considered. The existing versioned Commerce consequence and immutable receipts provide scoped durable recovery and historical evidence without process-local authority or new dependencies."
+  ],
+  "follow_up_tickets": [
+    "WELL-195",
+    "WELL-194",
+    "WELL-176"
+  ],
+  "sources": [
+    {
+      "id": "commerce",
+      "path": "lib/new_you/commerce.ex",
+      "symbol": "def apply_fixture_dispute_receipt",
+      "sha256": "25a69d39290bf645780e736f8128723d230e3f2cf04177b888aabddde01da86b"
+    },
+    {
+      "id": "ingress",
+      "path": "test/support/commerce/fixture_dispute_evidence.ex",
+      "symbol": "def receive_webhook",
+      "sha256": "ddcbe2a6bc6e98083d92e80cceb60ebd13d22260ddb683c4c6d3b6bb8fc5def5"
+    },
+    {
+      "id": "dispute",
+      "path": "lib/new_you/commerce/fixture_dispute.ex",
+      "symbol": "identity :provider_dispute",
+      "sha256": "16dc4863fbdc9d6d71b4d67a4ff8f1cd77dee7b4addbf1100765c00f53117701"
+    },
+    {
+      "id": "receipt",
+      "path": "lib/new_you/commerce/fixture_dispute_receipt.ex",
+      "symbol": "identity :evidence",
+      "sha256": "2e4e9d374b7e1bd9dd7a244ab02b5caae7ae7a90341de40938f7cce62c31e204"
+    },
+    {
+      "id": "lifecycle",
+      "path": "test/support/commerce/fixture_disputes.ex",
+      "symbol": "def locked_effect",
+      "sha256": "8fd17aa78066d5491a21db008a3ac6e249f868fb4d3f343bb67e271794db8233"
+    },
+    {
+      "id": "fence",
+      "path": "test/support/commerce/fixture_correction_source.ex",
+      "symbol": "def lock_purchase",
+      "sha256": "996acbe595e14aa3c76b20d11b5d775301e17773c3e9972300bbe877e9509d6d"
+    },
+    {
+      "id": "refund",
+      "path": "test/support/commerce/fixture_refunds.ex",
+      "symbol": "defp claim",
+      "sha256": "693eb34ac1fe83ede7d5cf248aac3bf197a4743b60497949a55032145bdf6104"
+    },
+    {
+      "id": "transport",
+      "path": "lib/new_you/commerce/paystack_checkout.ex",
+      "symbol": "def build_dispute_read",
+      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
+    },
+    {
+      "id": "rights",
+      "path": "lib/new_you/entitlements/plan_right.ex",
+      "symbol": "update :restore_component",
+      "sha256": "ca13a00752a214b56cbd784ff494165386f62b492ff3341b94b6298b87f684a2"
+    },
+    {
+      "id": "convergence",
+      "path": "test/support/entitlements/synthetic_rights.ex",
+      "symbol": "def apply_dispute",
+      "sha256": "9ebbaa8c023b0ca26925e143c782fa6ddb88f32fb90ecb98e5991fe728894b71"
+    },
+    {
+      "id": "identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def locked_fixture_recipient",
+      "sha256": "4d90a4de0a81b61dbacb48236d781f2854ea42981a21ebe50d2a760a372f5263"
+    },
+    {
+      "id": "privacy",
+      "path": "test/support/privacy/fixture_dispute_purpose.ex",
+      "symbol": "def require_current_locked",
+      "sha256": "30d6b6b5818fd57e68b2b7320d7582b05fb0aceb255ec9b6a7678143691531d9"
+    },
+    {
+      "id": "audit",
+      "path": "test/support/audit/fixture_dispute_disclosure_evidence.ex",
+      "symbol": "def record_in_transaction",
+      "sha256": "1802dc0f0c4ed52fea41d9a7103e8c635b1cdd7cc58a29831e3b8b3c7e1a7029"
+    },
+    {
+      "id": "projection",
+      "path": "test/support/commerce/fixture_dispute_projection.ex",
+      "symbol": "def read",
+      "sha256": "4fff3662f822c3a90d1f8230d94b9c767e27997146cc4c2e974b598fe6b83d1d"
+    },
+    {
+      "id": "test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"refund and dispute serialize",
+      "sha256": "8be81d3095b796ee836063c750d7a2bea3eb330dfaa3522852222f2ce06bdc0d"
+    },
+    {
+      "id": "restart",
+      "path": "test/proof/well223_dispute_restart.exs",
+      "symbol": "WELL223_COMPLETED",
+      "sha256": "5f89c019f08a5faba7d82619cc3fe85d0dce5c3db0df024adc2496c5a41a32fc"
+    },
+    {
+      "id": "assessment",
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "symbol": "test \"a suspended Assessment right",
+      "sha256": "22e69bd3c8992474b845b6138c3a69390689210470467aab15967b3a13356013"
+    },
+    {
+      "id": "projection_test",
+      "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
+      "symbol": "defmodule NewYou.Commerce.FixtureDisputeProjectionTest",
+      "sha256": "e8ac3c37cdabdc472b5c1e118d4bc62c04060c92032cf3fa8aabafdea1770758"
+    },
+    {
+      "id": "roundtrip",
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "symbol": "test \"dispute migration roundtrips",
+      "sha256": "fa7ae3bba84a68d4b7a524c6d8a6f7f77d7cae19379f94702067c5416a5ed171"
+    },
+    {
+      "id": "migration",
+      "path": "priv/repo/migrations/20261127135002_well223_fixture_disputes.exs",
+      "symbol": "Cannot remove retained fixture dispute evidence",
+      "sha256": "f59df4fee79e1945cf052794cff5ab4565243fdf397c583d19222a3c7142e74f"
+    },
+    {
+      "id": "privacy_migration",
+      "path": "priv/repo/migrations/20261127140243_well223_dispute_privacy.exs",
+      "symbol": "Cannot remove retained fixture dispute Privacy authority",
+      "sha256": "aabd57a42eb3465815f532e70fc0ed766f66a27270b2e9a67d73a5ff76e09e42"
+    },
+    {
+      "id": "cleanup",
+      "path": "test/support/proof/p8_05.ex",
+      "symbol": "defp cleanup_fixture_disputes",
+      "sha256": "c3383a07207372a84e45bfe0fdeeee949a7c6b91433db5e84abbb88c79c13175"
+    }
+  ]
+}

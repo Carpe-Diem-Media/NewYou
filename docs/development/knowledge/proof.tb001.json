@@ -15,7 +15,7 @@
     "WELL-86"
   ],
   "implementation_revision": {
-    "git_sha": "1cae4e4be575ee2eee95d6099e9eb73943cdb662",
+    "git_sha": "33092608a96b1405ec1f8ef0febe9830f822c143",
     "semantics": "WELL-131 reuses the certified fixed TB-001 proof unchanged in scope. The shared Chromium driver adds an ordinary entry mode and exact-text locale assertions; isolated production exclusion additionally checks the normal entry/content runtime flags. This record grants no new certification or release authority. WELL-134 adds a separately tested ordinary sign-in browser mode without changing the fixed TB-001 inventory. The stale-session browser check now verifies the approved confirmed-logout page rather than an empty 204 response. Isolated production exclusion additionally checks SignInCopy and both sign-in fixture flags. Shared browser failure diagnostics expose only existing allowlisted codes. No TB-001 certification or release is granted by this refresh. WELL-112 reconciles the stronger current-main scanner scenario and adds the self-hosted-font CSP assertion in its existing shared helper. Scenario owner-state checks and the fixed TB-001 inventory remain unchanged. Source/hash refresh is not a fresh TB-001 certification. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. The ordinary_reset Chromium mode is separate from the fixed TB-001 inventory and grants no certification. Shared P805 TEST guardian now also restores the ordinary-entry flag after normal completion or owner death; mapped business behavior is unchanged. WELL-153 coordinates registered TEST restart workers with P805 cleanup; no business lifecycle or Domain authority changed. WELL-153 now owns fixture admission before any global snapshot through safe scoped cleanup, restoration and release. VM-local quarantine retains exact synthetic targets across guardian failure; explicit reconciliation verifies registered workers and recorded OS process groups before retrying cleanup. No production Domain semantics changed. WELL-153 correlates each sequential TEST external-launch reservation. Proven pre-open validation or missing/non-executable launcher failure settles only its matching reservation; post-open uncertainty retains admission and reports unconfirmed cleanup. Production business behavior is unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. The WELL-156 correction refreshes its shared source locators. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-86 scopes interrupted Session issuance rollback to creation-owned full-row Token/Session fingerprints and retains failed assertion labels with boolean matches before raising. Permanent independent-owner and unexpected-owned-consequence tests preserve all existing guards and foreign rows. Backend absence is observed separately; no wait or retry is added. This repairs a demonstrated false-inclusion mechanism, without claiming attribution of historical intermittent failures or canonical success. The reconciled candidate keeps the WELL-148 active/quarantined lease and WELL-146 observer. The independent worker shares the lease environment but has a separate checkout and observation scope. Fallback cleanup retains only that worker\u2019s explicit synthetic operations, emails and projection key. P809 proof remains separately attributed to WELL-86. WELL-189 refreshes shared source references. The mapped behavior is unchanged. WELL-210 refreshes the shared browser proof source reference after the Recovery packet path moved to v0.3.0. The mapped behavior is unchanged. WELL-210 reconciles source evidence from integrated main b7e0e1fb6f600d6ad9fddf5b41633b1e19a46c14 and draft 63e4224811e3e0ac3de83b51f3c97c6db0b7858c. WELL-197 extends shared TEST cleanup or restart markers for bounded Commerce proof."
   },
   "authoritative_domain": "Engineering proof code; business truth remains with each existing owning Domain.",
@@ -577,7 +577,7 @@
       "id": "fixture",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defmodule NewYou.Proof.P805",
-      "sha256": "1fa9fb1c48bb374d7783049864e4d61a61b0c1910cd6f0af857abef0a815c00a"
+      "sha256": "c3383a07207372a84e45bfe0fdeeee949a7c6b91433db5e84abbb88c79c13175"
     },
     {
       "id": "delivery_scenarios",
@@ -631,7 +631,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "defmodule NewYou.Identity",
-      "sha256": "ead01b1ce5b7a22f0b4d0bcb7346677e464317afccf9953faa7be729506edb80"
+      "sha256": "4d90a4de0a81b61dbacb48236d781f2854ea42981a21ebe50d2a760a372f5263"
     },
     {
       "id": "account",
@@ -655,13 +655,13 @@
       "id": "audit",
       "path": "lib/new_you/audit.ex",
       "symbol": "defmodule NewYou.Audit",
-      "sha256": "4c526021acbd6c1eddbe723815c2a35a7a6f0beec6ca06c2892f829386d2f0e7"
+      "sha256": "de3d4d0329b604588ef5a1a9fdd3f5f50b0c59eb8a1ca3526832707883f6f32a"
     },
     {
       "id": "privacy",
       "path": "lib/new_you/privacy.ex",
       "symbol": "defmodule NewYou.Privacy",
-      "sha256": "a2eef0b5adeab6a00fb72d016d1c24c6daea350b6963d171391e0bdd89ff1f74"
+      "sha256": "f68a8fdf1db7b3137243f1a9e9a8d486e6933c7a318834901f5278b8160669f4"
     },
     {
       "id": "delivery_migration",

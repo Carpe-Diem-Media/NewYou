@@ -12,7 +12,7 @@
     "WELL-143"
   ],
   "implementation_revision": {
-    "git_sha": "63e4224811e3e0ac3de83b51f3c97c6db0b7858c",
+    "git_sha": "33092608a96b1405ec1f8ef0febe9830f822c143",
     "semantics": "WELL-156 extends the existing Account-owned lifecycle to the ordinary bounded EN/AF Phase-9 journey. The guarded browser boundary checks approved Content, current Session authority and explicit POST intent. The Account persists the exact applicability context. The Phase-8 path and held delivery remain available under their existing restrictions. The account hold transaction terminalizes any active Phase-9 operation and revokes its proof before commit. The authenticated apply path retains current Session, assurance, Privacy and Content guards. WELL-146 scopes the held-email proof to DeliveryAttempt inserts issued by the synchronous TEST fixture. Returned UUIDs locate durable rows before teardown, including attempts under a foreign parent. A successful insert without an attributable UUID fails the observation. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-168 refreshes shared source references after a Recovery-only delivery fix. WELL-189 refreshes shared source references. The mapped behavior is unchanged. WELL-210 refreshes shared source references after semantic review: the magic-login checker predecessor chain also accepts v1.21.0 Product Law and Decisions digests, and the primary-email-change content test tampers the current v1.21.0 Product Law. The v1.16 through v1.19 rejection cases are unchanged. The mapped behavior is unchanged. WELL-210 reconciles source evidence from integrated main b7e0e1fb6f600d6ad9fddf5b41633b1e19a46c14 and draft 63e4224811e3e0ac3de83b51f3c97c6db0b7858c."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -1558,7 +1558,7 @@
       "id": "identity_api",
       "path": "lib/new_you/identity.ex",
       "symbol": "def request_primary_email_change",
-      "sha256": "ead01b1ce5b7a22f0b4d0bcb7346677e464317afccf9953faa7be729506edb80"
+      "sha256": "4d90a4de0a81b61dbacb48236d781f2854ea42981a21ebe50d2a760a372f5263"
     },
     {
       "id": "account",
@@ -1690,7 +1690,7 @@
       "id": "privacy",
       "path": "lib/new_you/privacy.ex",
       "symbol": "require_current_p817_proof_purpose_locked",
-      "sha256": "a2eef0b5adeab6a00fb72d016d1c24c6daea350b6963d171391e0bdd89ff1f74"
+      "sha256": "f68a8fdf1db7b3137243f1a9e9a8d486e6933c7a318834901f5278b8160669f4"
     },
     {
       "id": "privacy_proof_test",
