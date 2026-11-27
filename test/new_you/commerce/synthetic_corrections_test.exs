@@ -238,6 +238,48 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
     end)
   end
 
+  test "repricing cannot move a frozen Assessment refund to the Plan or an unrelated bundle" do
+    P805.with_fixture(fn ->
+      payer = verified_session()
+      recipient = verified_session()
+      source = accept_fixture(payer, recipient)
+      independent = accept_fixture(payer, recipient)
+      assert :ok = SyntheticSuppression.register(recipient.credentials)
+      assert {:ok, %{id: payment}} = SyntheticCorrections.observe_collection(collection(source))
+      assert {:ok, _} = SyntheticCorrections.observe_collection(collection(independent))
+      assert {:ok, _} = SyntheticRights.converge(source.id)
+      assert {:ok, _} = SyntheticRights.converge(independent.id)
+
+      assert {:ok, _} =
+               SyntheticCorrections.accept(
+                 payer.credentials,
+                 recipient.credentials,
+                 reprice(admission(payer, recipient), 1_600, 3_500)
+               )
+
+      assert {:ok, %{kind: :unresolved}} =
+               SyntheticCorrections.observe_correction(
+                 correction(source, payment, %{component: :assessment, amount_minor: 3_500})
+               )
+
+      assert {:ok, []} = SyntheticCorrections.open_consequences(source.id)
+
+      assert {:ok, %{id: effect, kind: :component_end}} =
+               SyntheticCorrections.observe_correction(
+                 correction(source, payment, %{component: :assessment, amount_minor: 1_600})
+               )
+
+      assert {:ok, _} = SyntheticCorrections.deliver(effect)
+      assert {:ok, _} = SyntheticRights.converge(source.id)
+      assert right_states(source) == [["assessment", "ended"], ["plan", "held_unconsumed"]]
+
+      assert right_states(independent) == [
+               ["assessment", "held_unconsumed"],
+               ["plan", "held_unconsumed"]
+             ]
+    end)
+  end
+
   test "late payment and correction retain only commercial evidence after suppression" do
     P805.with_fixture(fn ->
       payer = verified_session()

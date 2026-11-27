@@ -44,6 +44,74 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
     NewYou.Repo.Migrations.Well218HostedDispatch
   }
 
+  @refund_base [
+    {20_261_127_054_309,
+     "priv/repo/migrations/20261127054309_well219_hosted_payment_evidence.exs",
+     NewYou.Repo.Migrations.Well219HostedPaymentEvidence},
+    {20_261_127_065_856, "priv/repo/migrations/20261127065856_well219_bind_fixture_listener.exs",
+     NewYou.Repo.Migrations.Well219BindFixtureListener}
+  ]
+
+  @refund_evidence {
+    20_261_127_103_837,
+    "priv/repo/migrations/20261127103837_well221_refund_evidence.exs",
+    NewYou.Repo.Migrations.Well221RefundEvidence
+  }
+
+  @refund_migrations [
+    {20_261_127_103_346, "priv/repo/migrations/20261127103346_well221_fixture_refund.exs",
+     NewYou.Repo.Migrations.Well221FixtureRefund},
+    {20_261_127_103_554, "priv/repo/migrations/20261127103554_well221_refund_claim.exs",
+     NewYou.Repo.Migrations.Well221RefundClaim},
+    @refund_evidence,
+    {20_261_127_104_110, "priv/repo/migrations/20261127104110_well221_refund_recovery.exs",
+     NewYou.Repo.Migrations.Well221RefundRecovery},
+    {20_261_127_104_245, "priv/repo/migrations/20261127104245_well221_refund_consequence.exs",
+     NewYou.Repo.Migrations.Well221RefundConsequence},
+    {20_261_127_104_442, "priv/repo/migrations/20261127104442_well221_excess_collection.exs",
+     NewYou.Repo.Migrations.Well221ExcessCollection}
+  ]
+
+  test "refund migrations roundtrip and refuse rollback over retained negative evidence" do
+    base = @migrations ++ @correction_migrations ++ @offer_migrations ++ [@dispatch_migration]
+
+    roundtrip(base ++ @refund_base ++ @refund_migrations, 20, fn schema ->
+      {foreign_keys, local} = foreign_key_targets(schema)
+      assert foreign_keys == local
+
+      assert [[true, predicate]] =
+               Repo.query!(
+                 """
+                 SELECT indisunique, pg_get_expr(indpred, indrelid) FROM pg_index
+                 WHERE indexrelid = to_regclass($1)
+                 """,
+                 [schema <> ".commerce_verified_payments_purchase_index"]
+               ).rows
+
+      assert predicate =~ "collection_kind"
+      assert predicate =~ "'primary'"
+      Repo.query!("SAVEPOINT well221_receipt")
+
+      Repo.query!("""
+      INSERT INTO #{schema}.commerce_fixture_refund_receipts (source, digest, outcome)
+      VALUES ('webhook', decode(repeat('cd', 32), 'hex'), 'unqualified')
+      """)
+
+      Repo.query!("SAVEPOINT well221_refuse_rollback")
+
+      assert_raise Postgrex.Error, ~r/Cannot remove retained fixture refund evidence/, fn ->
+        run_migration(@refund_evidence, :down, schema)
+      end
+
+      Repo.query!("ROLLBACK TO SAVEPOINT well221_refuse_rollback")
+
+      assert [[1]] =
+               Repo.query!("SELECT count(*) FROM #{schema}.commerce_fixture_refund_receipts").rows
+
+      Repo.query!("ROLLBACK TO SAVEPOINT well221_receipt")
+    end)
+  end
+
   test "P1 migrations apply, roll back and reapply in a transaction-owned schema" do
     roundtrip(@migrations, 4, fn schema -> assert foreign_key_targets(schema) == {3, 3} end)
   end

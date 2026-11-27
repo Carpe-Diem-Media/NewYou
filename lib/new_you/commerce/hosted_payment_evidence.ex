@@ -38,8 +38,13 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
     defp persist_webhook(raw) do
       case Jason.decode(raw) do
         {:ok, %{"event" => event, "data" => data} = envelope}
-        when event in ["charge.success", "charge.pending"] and map_size(envelope) == 2 ->
+        when event in ["charge.success", "charge.pending", "charge.excess"] and
+               map_size(envelope) == 2 ->
           record_webhook(raw, data, event)
+
+        {:ok, %{"event" => "refund." <> _ = event, "data" => data} = envelope}
+        when map_size(envelope) == 2 ->
+          NewYou.Commerce.FixtureRefundEvidence.receive_webhook(raw, event, data)
 
         _ ->
           {:error, :unsupported}
@@ -73,6 +78,10 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
 
     defp event_outcome("charge.success", :pending), do: :invalid_event
     defp event_outcome("charge.pending", :succeeded), do: :invalid_event
+    # A separately authenticated local fixture event for verified excess.
+    # Ordinary charge-success conflicts keep the original WELL-219 treatment.
+    defp event_outcome("charge.excess", :succeeded), do: :excess
+    defp event_outcome("charge.excess", :pending), do: :invalid_event
     defp event_outcome(_, outcome), do: outcome
 
     # SQL Sandbox can return a row still inside its implicit outer transaction.
@@ -280,10 +289,12 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
 
     defp normalize(_), do: %{outcome: :unknown}
 
-    defp lossless_id(id) when is_integer(id) and id in 1..18_446_744_073_709_551_615,
+    @doc false
+    @spec lossless_id(term()) :: {:ok, String.t()} | :error
+    def lossless_id(id) when is_integer(id) and id in 1..18_446_744_073_709_551_615,
       do: {:ok, Integer.to_string(id)}
 
-    defp lossless_id(id) when is_binary(id) and byte_size(id) in 1..20 do
+    def lossless_id(id) when is_binary(id) and byte_size(id) in 1..20 do
       case Integer.parse(id) do
         {value, ""} ->
           case lossless_id(value) do
@@ -296,7 +307,7 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
       end
     end
 
-    defp lossless_id(_), do: :error
+    def lossless_id(_), do: :error
 
     defp outcome("paystack", "local_fixture", "test", status) do
       case status do

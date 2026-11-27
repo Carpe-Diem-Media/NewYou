@@ -2,8 +2,27 @@ defmodule NewYou.Repo do
   use AshPostgres.Repo,
     otp_app: :new_you
 
+  defmodule RestrictedQueryTelemetry do
+    @moduledoc false
+
+    # The pinned AshPostgres upsert uses Ecto's generated query!/3, which
+    # bypasses Repo defaults. Wrap the generator's function after it exists.
+    defmacro __before_compile__(_env) do
+      quote do
+        defoverridable query!: 3
+
+        def query!(sql, params, opts) do
+          super(sql, params, Keyword.merge(opts, default_options(:query)))
+        end
+      end
+    end
+  end
+
+  @before_compile RestrictedQueryTelemetry
+
   @doc """
-  Disables SQL telemetry and logging for synchronous queries that use Repo defaults.
+  Disables SQL telemetry and logging for synchronous queries that use Repo defaults
+  and AshPostgres upserts that call the generated bang query.
 
   Use when query metadata would carry restricted values. The previous setting
   is restored on return or failure. This does not propagate to spawned processes.

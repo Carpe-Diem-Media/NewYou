@@ -7,7 +7,7 @@
     "WELL-192"
   ],
   "implementation_revision": {
-    "git_sha": "0054c8c07674abdcaeb19fc7c6c5cb303057235c",
+    "git_sha": "b31979a3ab212012923453acc28303bd529d7d63",
     "semantics": "WELL-192 E2a with immutable receipt binding, fail-closed grants, terminal convergence under suppression, and rejected and unresolved correction evidence. WELL-197 preserves P1 and E2a while evolving the Purchase constraints and isolating S1 payment consequences from P1 delivery. The migration entries for WELL-189 describe the original schema. WELL-197 MG-01 reuses E2a's acknowledged Assessment end as the original S1 claim's terminal evidence. Existing P1 and E2a effect identities remain valid."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -1062,7 +1062,8 @@
     "The scheduler test restricts its read to a fixture-scoped temporary view and invokes the persisted job via Oban.Testing; it does not prove live queue polling.",
     "E2a manual recovery discovers persisted open consequences without relying on jobs. It does not certify a production scheduler for corrections or provider dispatch.",
     "EV-012, EV-024 and EV-042 coverage is synthetic only. WELL-194 and later work retain the real provider refund, dispute and actual-stack obligations.",
-    "Receipt binding applies to newly qualified synthetic observations. Earlier disposable fixtures did not retain the receipt payload for reconstruction. The review correction introduces no historical backfill or provider-data handling."
+    "Receipt binding applies to newly qualified synthetic observations. Earlier disposable fixtures did not retain the receipt payload for reconstruction. The review correction introduces no historical backfill or provider-data handling.",
+    "WELL-221 keeps hosted and signed synthetic correction authority separate. The purchase payment identity is now unique for the primary collection. Excess hosted collections never create a paid benefit."
   ],
   "follow_up_tickets": [
     "WELL-190",
@@ -1074,7 +1075,7 @@
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "defmodule NewYou.Commerce",
-      "sha256": "690be2969c486032fd73212e1372cfea4a292560773833b7aacc08b8361f4939"
+      "sha256": "02d6b8474e529f9faeb6fa6a06cca4995d4269747b6a58e5b239c5242be826fd"
     },
     {
       "id": "purchase",
@@ -1086,7 +1087,7 @@
       "id": "payment",
       "path": "lib/new_you/commerce/verified_payment.ex",
       "symbol": "create :apply",
-      "sha256": "afb3ec26b50ec65b07df59b2890e1e4beccbd45390e0dfe9fe88893b3af62f5e"
+      "sha256": "b1d87cd35610653c98e4c3181965045b6cb15385bfca8cf7fddbfe44d75204ad"
     },
     {
       "id": "consequence",
@@ -1098,7 +1099,7 @@
       "id": "entitlements",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def grant_paid_plan",
-      "sha256": "43a545d2d2b31e3018df211943d6e0b1d7cc84b231bbe3e2d6189e564a84fcda"
+      "sha256": "dc7212e6cf03e4a830a51fb89e62e041e0649b3b5a5050dc3dbc70f8fc440642"
     },
     {
       "id": "right",
@@ -1182,13 +1183,13 @@
       "id": "migration_roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "P1 migrations apply",
-      "sha256": "e9fda5c3f33d0921d1d15de47ad9b7cf774b6ac89f1cc87dcadd8b1c2e5c52ef"
+      "sha256": "4db95bd1f9d0350041f0ada4918641893d1e51d160f060b4ffc3c54adff19214"
     },
     {
       "id": "adjudication",
       "path": "test/support/commerce/synthetic_corrections.ex",
       "symbol": "def observe_correction",
-      "sha256": "81f573b84d5ac5f8103ba61af9cc8840f8ede8bb0bac50d3702ce331d444ba37"
+      "sha256": "7631b49aac091fadd4379e794cc42a900251bdfa98e9509048c83d5781eb8b08"
     },
     {
       "id": "ledger",
@@ -1242,7 +1243,7 @@
       "id": "right_convergence",
       "path": "test/support/entitlements/synthetic_rights.ex",
       "symbol": "def apply_correction",
-      "sha256": "fcc29e36baf0734301ed97ebdb4240076e8669efbca210c2f6d8540140144121"
+      "sha256": "9d58fec831e30181d1bbe4ef680ba3003bf666fe1fb4f84844e33ca43e4af0ab"
     },
     {
       "id": "synthetic_audit",
@@ -1254,7 +1255,7 @@
       "id": "correction_cases",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "equivalent correction receipts wait for the winning Commerce transaction",
-      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+      "sha256": "f2c84e10ee0039e122599975bb6c38c1b7372b60f8e83ced7e8bd7a5f9caac60"
     },
     {
       "id": "correction_restart",
@@ -1308,19 +1309,19 @@
       "id": "suppressed_correction_case",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "a suppressed component is ended before acknowledgement",
-      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+      "sha256": "f2c84e10ee0039e122599975bb6c38c1b7372b60f8e83ced7e8bd7a5f9caac60"
     },
     {
       "id": "unresolved_receipt_cases",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "qualified but unattributable correction receipts remain unresolved",
-      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+      "sha256": "f2c84e10ee0039e122599975bb6c38c1b7372b60f8e83ced7e8bd7a5f9caac60"
     },
     {
       "id": "unbound_receipt_cases",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "forged and unbound correction receipts persist neither a disposition nor a binding",
-      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+      "sha256": "f2c84e10ee0039e122599975bb6c38c1b7372b60f8e83ced7e8bd7a5f9caac60"
     }
   ]
 }

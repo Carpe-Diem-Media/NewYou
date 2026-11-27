@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "0b1ecdfd5997e3a70aa6bc47995d8e9e9c2d5fe9",
+    "git_sha": "b31979a3ab212012923453acc28303bd529d7d63",
     "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -157,7 +157,7 @@
         "Success when terminal classification commits or replays, or a bounded error."
       ],
       "side_effects": [
-        "Locks and classifies evidence and may atomically establish one payment and its consequence."
+        "Locks and classifies evidence. Ordinary charge success can establish one primary payment and consequence. A qualified excess observation stays scheduled while awaiting its primary. Once the primary qualifies it can establish one distinct collection and payer obligation."
       ],
       "caller_constraints": [
         "TEST only. The owner rechecks the exact scope, purchase binding, money, original reference and current party privacy."
@@ -569,7 +569,7 @@
     }
   ],
   "proof_limitations": [
-    "HIGH financial, entitlement, security, privacy and recovery proof is scoped to TEST. Production deployment, provider signature certification, refunds, disputes, corrections of hosted payments, bulk reconciliation, browser rendering and participant copy are outside WELL-219.",
+    "WELL-219 proof covers the standalone TEST payment foundation. WELL-221's separate Commerce refund obligation and qualification are described in commerce.fixture_refunds.json. Provider and release gates still apply.",
     "The evidence records keep normalized fields and digests for the fixture lifetime. Tests that commit webhook receipts outside a purchase register the exact digest before ingress, so scoped P805 teardown can remove those receipts and their work. Raw bytestream capture or production retention policies require separate authority.",
     "A legacy claim without an authenticated listener pin remains visible and cannot send a Verify request. Qualified signed evidence can still settle it. A failed TLS handshake can reach a reused loopback socket before HTTP begins."
   ],
@@ -583,7 +583,7 @@
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def apply_hosted_payment_evidence(id)",
-      "sha256": "690be2969c486032fd73212e1372cfea4a292560773833b7aacc08b8361f4939"
+      "sha256": "02d6b8474e529f9faeb6fa6a06cca4995d4269747b6a58e5b239c5242be826fd"
     },
     {
       "id": "checkout",
@@ -601,7 +601,7 @@
       "id": "evidence",
       "path": "lib/new_you/commerce/hosted_payment_evidence.ex",
       "symbol": "def verify_due(id)",
-      "sha256": "3756d7618f04432c6dafc17e5668adcc38b10efbe6ed2b38ff8edb61c98d7b55"
+      "sha256": "7ba56b126f01bd3a9035c4649ae143b657ceebf38c77d872c77c830f4264fa83"
     },
     {
       "id": "receipt",
@@ -625,7 +625,7 @@
       "id": "payment",
       "path": "lib/new_you/commerce/verified_payment.ex",
       "symbol": "identity :fixture_transaction",
-      "sha256": "afb3ec26b50ec65b07df59b2890e1e4beccbd45390e0dfe9fe88893b3af62f5e"
+      "sha256": "b1d87cd35610653c98e4c3181965045b6cb15385bfca8cf7fddbfe44d75204ad"
     },
     {
       "id": "consequence",
@@ -637,19 +637,19 @@
       "id": "entitlements",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def grant_paid_plan(consequence_id)",
-      "sha256": "43a545d2d2b31e3018df211943d6e0b1d7cc84b231bbe3e2d6189e564a84fcda"
+      "sha256": "dc7212e6cf03e4a830a51fb89e62e041e0649b3b5a5050dc3dbc70f8fc440642"
     },
     {
       "id": "accepted_source",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "def bound_snapshot(purchase)",
-      "sha256": "87b5287bdebc927066ffc052e9737dfc1c413d6633ea28f14c831810e451a269"
+      "sha256": "813cab2f6c8018ca45e49786e7ce5230e17de82cc98d8da44b0f2d669f33de09"
     },
     {
       "id": "transport",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "def build_verify(reference",
-      "sha256": "70e432f4ef32c641be61514846d45c62f7d32fd219f30205ecbcbfce18e4c2dc"
+      "sha256": "c7ee7d55fb93b5d83cc2a996bfbbca657fd5a641e6c29972c6f56d0b23c3d7a4"
     },
     {
       "id": "endpoint",
@@ -679,7 +679,7 @@
       "id": "fixture_cleanup",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defp cleanup_hosted_fixture_evidence(",
-      "sha256": "d0075b4d7fc256b7235a9c94bf1246b1b699d440a7e9154ba879f30f5d604493"
+      "sha256": "1fa9fb1c48bb374d7783049864e4d61a61b0c1910cd6f0af857abef0a815c00a"
     },
     {
       "id": "fixture_ownership",
@@ -709,7 +709,7 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "payment evidence migration preserves legacy rows",
-      "sha256": "e9fda5c3f33d0921d1d15de47ad9b7cf774b6ac89f1cc87dcadd8b1c2e5c52ef"
+      "sha256": "4db95bd1f9d0350041f0ada4918641893d1e51d160f060b4ffc3c54adff19214"
     },
     {
       "id": "audit_pattern",

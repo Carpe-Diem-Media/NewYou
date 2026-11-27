@@ -146,6 +146,18 @@ defmodule NewYou.Commerce.OfferAdmission do
 
   def accepted_terms(_), do: {:error, :purchase_unavailable}
 
+  @doc false
+  @spec accepted_component_minor(terms(), atom()) :: pos_integer() | nil
+  def accepted_component_minor(%{components: components}, component)
+      when component in [:plan, :assessment] do
+    case Map.get(components, component) do
+      %{amount_minor: amount} -> amount
+      nil -> nil
+    end
+  end
+
+  def accepted_component_minor(_, _), do: nil
+
   if Mix.env() == :test do
     defp authorize_parties(authority),
       do: NewYou.Identity.SyntheticPurchaseParties.authorize(authority)

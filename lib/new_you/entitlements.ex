@@ -63,6 +63,18 @@ defmodule NewYou.Entitlements do
       else: grant_current_plan(consequence_id)
   end
 
+  @doc """
+  Apply the exact component ending authorized by a committed TEST refund.
+  Entitlements resolves the source through Commerce under current Privacy
+  authority. Replays cannot create a right or end a different component.
+  """
+  @spec apply_fixture_refund(Ecto.UUID.t()) :: :ok | {:error, :grant_unavailable}
+  if Mix.env() == :test do
+    def apply_fixture_refund(id), do: NewYou.Entitlements.SyntheticRights.apply_hosted_refund(id)
+  else
+    def apply_fixture_refund(_), do: {:error, :grant_unavailable}
+  end
+
   if Mix.env() == :test do
     defp grant_current_plan(consequence_id),
       do: NewYou.Entitlements.SyntheticRights.grant_p1(consequence_id)
