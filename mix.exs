@@ -14,7 +14,7 @@ defmodule NewYou.MixProject do
         end
       ],
       test_ignore_filters: [
-        ~r"^test/proof/(self_test|run|tb001_broken|tb001_inventory_broken|postgresql_probe|p8_09_restart|p8_09_magic_restart|p8_10_restart|p8_11_restart|p8_12_restart|p8_13_restart|p8_14_restart|p8_15_restart|p8_16_restart|p8_17_privacy_restart|well189_plan_payment_production|well189_plan_payment_restart|well189_scheduler_restart|well192_correction_restart|well197_admission_restart|well218_hosted_checkout_restart|well218_provider_disabled|fixtures/provider_fixtures)\.exs$"
+        ~r"^test/proof/(self_test|run|tb001_broken|tb001_inventory_broken|postgresql_probe|p8_09_restart|p8_09_magic_restart|p8_10_restart|p8_11_restart|p8_12_restart|p8_13_restart|p8_14_restart|p8_15_restart|p8_16_restart|p8_17_privacy_restart|well189_plan_payment_production|well189_plan_payment_restart|well189_scheduler_restart|well192_correction_restart|well197_admission_restart|well218_hosted_checkout_restart|well218_provider_disabled|well219_payment_restart|fixtures/provider_fixtures)\.exs$"
       ],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),

@@ -13,9 +13,8 @@ defmodule NewYou.Commerce.PaystackCheckout do
     def fixture_url(code), do: @fixture_origin <> code
 
     @doc false
-    def build(%{amount_minor: amount, currency: "ZAR"}, reference, port)
-        when is_integer(amount) and amount > 0 and is_binary(reference) and
-               is_integer(port) and port in 1..65_535 do
+    def build(%{amount_minor: amount, currency: "ZAR"}, reference, listener)
+        when is_integer(amount) and amount > 0 and is_binary(reference) do
       # Adapt the Store Initialize envelope and restricted, non-retrying POST.
       # The local fixture has no callback, participant contact data or metadata.
       payload = %{
@@ -26,26 +25,62 @@ defmodule NewYou.Commerce.PaystackCheckout do
         channels: ["card"]
       }
 
+      loopback_request(:post, listener, "/transaction/initialize", json: payload)
+    end
+
+    def build_verify(reference, %{port: port, certificate: certificate} = listener)
+        when is_binary(reference) and port in 1..65_535 and is_binary(certificate) do
+      loopback_request(:get, listener, "/transaction/verify/" <> reference, [])
+    end
+
+    defp loopback_request(method, listener, path, options) do
       # A bare request bypasses Req global defaults. HTTP/1 also excludes
       # Finch's transparent retry on a draining HTTP/2 pool.
+      {origin, connect_options} = loopback_connection(listener)
+
       Req.Request.new(
-        method: :post,
-        url: "http://127.0.0.1:#{port}/transaction/initialize",
+        method: method,
+        url: origin <> path,
         headers: [{"authorization", "Bearer " <> @fixture_key}],
-        options: [
-          json: payload,
-          retry: false,
-          redirect: false,
-          raw: true,
-          connect_options: [timeout: 500, protocols: [:http1]],
-          pool_timeout: 500,
-          receive_timeout: 500,
-          request_timeout: 1000
-        ]
+        options:
+          options ++
+            [
+              retry: false,
+              redirect: false,
+              raw: true,
+              connect_options: [timeout: 500, protocols: [:http1]] ++ connect_options,
+              pool_timeout: 500,
+              receive_timeout: 500,
+              request_timeout: 1000
+            ]
       )
       |> Req.Steps.attach()
       |> Map.replace!(:into, &collect_body/2)
     end
+
+    defp loopback_connection(port) when port in 1..65_535,
+      do: {"http://127.0.0.1:#{port}", []}
+
+    defp loopback_connection(%{port: port, certificate: certificate}) do
+      # Authenticate the pinned peer on the same connection before sending HTTP.
+      # A closed or reassigned port must never receive a payment reference.
+      tls_options = [
+        verify: :verify_peer,
+        cacerts: [certificate],
+        verify_fun: {&verify_listener/4, certificate},
+        reuse_sessions: false,
+        session_tickets: :disabled
+      ]
+
+      {"https://127.0.0.1:#{port}", [transport_opts: tls_options]}
+    end
+
+    defp verify_listener(_, pin, {:bad_cert, :selfsigned_peer}, pin), do: {:valid, pin}
+    defp verify_listener(_, _, {:bad_cert, _} = reason, _), do: {:fail, reason}
+    defp verify_listener(_, _, {:extension, _}, pin), do: {:unknown, pin}
+    defp verify_listener(_, _, :valid, pin), do: {:valid, pin}
+    defp verify_listener(_, pin, :valid_peer, pin), do: {:valid, pin}
+    defp verify_listener(_, _, :valid_peer, _), do: {:fail, :unexpected_fixture_certificate}
 
     defp collect_body({:data, chunk}, {request, response}) do
       if byte_size(response.body) + byte_size(chunk) <= @response_limit do

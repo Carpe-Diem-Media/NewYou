@@ -5,7 +5,11 @@ defmodule NewYou.Commerce.HostedDispatch do
     otp_app: :new_you,
     domain: NewYou.Commerce,
     data_layer: AshPostgres.DataLayer,
+    extensions: [AshOban],
     authorizers: [Ash.Policy.Authorizer]
+
+  def source_digest(snapshot),
+    do: :crypto.hash(:sha256, :erlang.term_to_binary(snapshot, [:deterministic]))
 
   postgres do
     table "commerce_hosted_dispatches"
@@ -15,7 +19,27 @@ defmodule NewYou.Commerce.HostedDispatch do
       reference :purchase, on_delete: :restrict
     end
 
+    custom_indexes do
+      index [:verify_after], where: "verify_after IS NOT NULL", name: "hosted_dispatch_verify_due"
+    end
+
     check_constraints do
+      check_constraint [
+                         :fixture_port,
+                         :fixture_certificate,
+                         :claim_id,
+                         :verify_round,
+                         :verify_after
+                       ],
+                       "hosted_dispatch_verify_schedule",
+                       check: """
+                       verify_round BETWEEN 0 AND 6 AND
+                       (fixture_port IS NULL OR (fixture_port BETWEEN 1 AND 65535 AND claim_id IS NOT NULL)) AND
+                       (fixture_certificate IS NULL OR
+                         (fixture_port IS NOT NULL AND octet_length(fixture_certificate) BETWEEN 1 AND 8192)) AND
+                       (verify_after IS NULL OR fixture_port IS NOT NULL)
+                       """
+
       check_constraint [:provider, :integration, :environment, :channel],
                        "commerce_hosted_dispatches_fixture_scope",
                        check: """
@@ -35,10 +59,32 @@ defmodule NewYou.Commerce.HostedDispatch do
     end
   end
 
+  if Mix.env() == :test do
+    oban do
+      triggers do
+        trigger :verify_fixture_reference do
+          action :verify_fixture_reference
+          where expr(not is_nil(fixture_certificate) and verify_after <= now())
+          scheduler_cron "* * * * *"
+          queue :commerce_fixture
+          log_errors? false
+          log_final_error? false
+          worker_module_name NewYou.Commerce.Workers.VerifyFixtureReference
+          scheduler_module_name NewYou.Commerce.Schedulers.VerifyFixtureReference
+        end
+      end
+    end
+  end
+
   actions do
     read :read do
       primary? true
       public? false
+
+      pagination do
+        keyset? true
+        required? false
+      end
     end
 
     create :bind do
@@ -57,11 +103,37 @@ defmodule NewYou.Commerce.HostedDispatch do
 
     update :claim do
       public? false
-      accept []
+      accept [:fixture_port, :fixture_certificate, :verify_after]
 
       argument :claim_id, :uuid, allow_nil?: false
       change filter(expr(is_nil(claim_id)))
       change set_attribute(:claim_id, arg(:claim_id))
+    end
+
+    update :defer_verify do
+      public? false
+      accept [:verify_after, :verify_round]
+      change filter(expr(not is_nil(verify_after)))
+    end
+
+    update :respect_retry_after do
+      public? false
+      accept []
+      argument :retry_after, AshPostgres.TimestamptzUsec, allow_nil?: false
+      change filter(expr(verify_after < ^arg(:retry_after)))
+      change set_attribute(:verify_after, arg(:retry_after))
+    end
+
+    update :close_verify do
+      public? false
+      accept []
+      change set_attribute(:verify_after, nil)
+    end
+
+    action :verify_fixture_reference do
+      public? false
+      argument :primary_key, :map, allow_nil?: false
+      run NewYou.Commerce.VerifyFixtureReference
     end
 
     update :retain do
@@ -75,8 +147,8 @@ defmodule NewYou.Commerce.HostedDispatch do
   end
 
   policies do
-    policy always() do
-      forbid_if always()
+    policy action([:read, :verify_fixture_reference]) do
+      authorize_if AshOban.Checks.AshObanInteraction
     end
   end
 
@@ -88,6 +160,14 @@ defmodule NewYou.Commerce.HostedDispatch do
     attribute :environment, :atom, allow_nil?: false, constraints: [one_of: [:test]]
     attribute :channel, :atom, allow_nil?: false, constraints: [one_of: [:card]]
     attribute :claim_id, :uuid
+    attribute :fixture_port, :integer, constraints: [min: 1, max: 65_535]
+    attribute :fixture_certificate, :binary, sensitive?: true
+    attribute :verify_after, AshPostgres.TimestamptzUsec
+
+    attribute :verify_round, :integer,
+      default: 0,
+      allow_nil?: false,
+      constraints: [min: 0, max: 6]
 
     attribute :fixture_code, :string,
       sensitive?: true,

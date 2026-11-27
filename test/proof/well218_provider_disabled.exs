@@ -22,3 +22,13 @@ Application.put_env(:new_you, :paystack, enabled: true, integration: :local_fixt
 {:error, :provider_disabled} = HostedCheckout.recover(credentials, %{}, scope)
 
 IO.puts("E1a-F non-TEST dispatch exclusion passed")
+
+false = Code.ensure_loaded?(NewYouWeb.FixtureWebhook)
+false = Code.ensure_loaded?(NewYou.Commerce.Workers.VerifyFixtureReference)
+false = Code.ensure_loaded?(NewYou.Commerce.Workers.ProcessFixtureReceipt)
+false = function_exported?(PaystackCheckout, :build_verify, 2)
+
+{:error, :provider_disabled} = NewYou.Commerce.HostedPaymentEvidence.verify_due("fixture-only")
+{:error, :unavailable} = NewYou.Commerce.apply_hosted_payment_evidence("fixture-only")
+
+IO.puts("E1b-F non-TEST fixture ingress, Verify and settlement exclusion passed")

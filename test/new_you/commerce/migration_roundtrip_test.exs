@@ -199,6 +199,108 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
     end
   end
 
+  test "payment evidence migration preserves legacy rows and refuses to erase fixture provenance" do
+    evidence_migration =
+      {20_261_127_054_309,
+       "priv/repo/migrations/20261127054309_well219_hosted_payment_evidence.exs",
+       NewYou.Repo.Migrations.Well219HostedPaymentEvidence}
+
+    listener_migration =
+      {20_261_127_065_856,
+       "priv/repo/migrations/20261127065856_well219_bind_fixture_listener.exs",
+       NewYou.Repo.Migrations.Well219BindFixtureListener}
+
+    base = @migrations ++ @correction_migrations ++ @offer_migrations ++ [@dispatch_migration]
+    load_migrations(base ++ [evidence_migration, listener_migration])
+    :ok = Sandbox.checkout(Repo, sandbox: false)
+    schema = "well219_" <> String.replace(Ecto.UUID.generate(), "-", "")
+
+    try do
+      assert {:error, :probe_complete} =
+               Repo.transaction(fn ->
+                 Repo.query!("CREATE SCHEMA #{schema}")
+                 Enum.each(base, &run_migration(&1, :up, schema))
+                 seed_legacy(schema)
+                 old_rows = legacy_rows(schema, true)
+
+                 run_migration(evidence_migration, :up, schema)
+                 assert table_count(schema) == 18
+                 {foreign_keys, local} = foreign_key_targets(schema)
+                 assert foreign_keys == local
+
+                 assert [[nil]] =
+                          Repo.query!(
+                            "SELECT fixture_receipt_id FROM #{schema}.commerce_verified_payments"
+                          ).rows
+
+                 run_migration(evidence_migration, :down, schema)
+                 assert legacy_rows(schema, true) == old_rows
+                 run_migration(evidence_migration, :up, schema)
+
+                 assert_listener_migration(listener_migration, schema)
+
+                 receipt_sql = """
+                 INSERT INTO #{schema}.commerce_hosted_payment_receipts (source, digest, outcome)
+                 VALUES ('webhook', decode(repeat('ab', 32), 'hex'), 'succeeded')
+                 """
+
+                 Repo.query!(receipt_sql)
+                 Repo.query!("SAVEPOINT unique_receipt")
+
+                 assert {:error, %Postgrex.Error{postgres: %{code: :unique_violation}}} =
+                          Repo.query(receipt_sql)
+
+                 Repo.query!("ROLLBACK TO SAVEPOINT unique_receipt")
+                 Repo.query!("SAVEPOINT refuse_provenance_rollback")
+
+                 assert_raise Postgrex.Error,
+                              ~r/Cannot discard retained fixture payment evidence/,
+                              fn ->
+                                run_migration(evidence_migration, :down, schema)
+                              end
+
+                 Repo.query!("ROLLBACK TO SAVEPOINT refuse_provenance_rollback")
+
+                 assert [[1]] =
+                          Repo.query!(
+                            "SELECT count(*) FROM #{schema}.commerce_hosted_payment_receipts"
+                          ).rows
+
+                 Repo.rollback(:probe_complete)
+               end)
+    after
+      Sandbox.checkin(Repo)
+    end
+  end
+
+  defp assert_listener_migration(migration, schema) do
+    table = "#{schema}.commerce_hosted_dispatches"
+    run_migration(migration, :up, schema)
+    run_migration(migration, :down, schema)
+
+    Repo.query!("""
+    INSERT INTO #{table}
+      (attempt_id, reference, source_digest, provider, integration, environment, channel,
+       claim_id, fixture_port, verify_after)
+    SELECT attempt_id, repeat('b', 32), decode(repeat('22', 32), 'hex'),
+      'paystack', 'local_fixture', 'test', 'card', gen_random_uuid(), 12_345, now()
+    FROM #{schema}.commerce_plan_purchases
+    """)
+
+    run_migration(migration, :up, schema)
+
+    assert [[12_345, nil]] =
+             Repo.query!("SELECT fixture_port, fixture_certificate FROM #{table}").rows
+
+    Repo.query!("SAVEPOINT retain_listener_trust")
+
+    assert_raise Postgrex.Error, ~r/Cannot remove fixture listener trust/, fn ->
+      run_migration(migration, :down, schema)
+    end
+
+    Repo.query!("ROLLBACK TO SAVEPOINT retain_listener_trust")
+  end
+
   defp assert_dispatch_constraints(table) do
     for {sql, name} <- [
           {"UPDATE #{table} SET attempt_id = gen_random_uuid()",
