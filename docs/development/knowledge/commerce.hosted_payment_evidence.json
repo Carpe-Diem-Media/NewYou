@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "f57905cd43c6f1269e6893cf7e024cf1af7ce9fd",
+    "git_sha": "017d8ff783c74e6bb359bfa8e406ef583cdba0df",
     "semantics": "Provider-disabled payment evidence and known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -579,7 +579,7 @@
       "id": "evidence",
       "path": "lib/new_you/commerce/hosted_payment_evidence.ex",
       "symbol": "def verify_due(id)",
-      "sha256": "51cb3ff602e45a2ac9328990e80ae7597e152019b347b95e204f549b12c1b3be"
+      "sha256": "1fda20f69fc2fd205ef95768a2688b6b028156ad5a5ddfcc5fe559950f9299e1"
     },
     {
       "id": "receipt",
@@ -651,7 +651,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_payment_evidence_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedPaymentEvidenceTest",
-      "sha256": "2d9e80c518564ca547060b79a7b6b25162c695581880c67bf7f4b4de49b2603d"
+      "sha256": "d31710c0e97921f0873892aba45daf63fded3209c7710acb4561d6e4e561e201"
     },
     {
       "id": "bandit",
