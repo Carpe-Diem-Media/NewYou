@@ -218,7 +218,7 @@ defmodule NewYou.Commerce.SyntheticCorrections do
   Receipts from the original P1 case have no explicit collection identity.
   """
   @spec locked_p1_grant_scope(String.t()) ::
-          {:ok, {:legacy | :qualified, map()}} | {:error, term()}
+          {:ok, {:legacy | :qualified | :hosted_ended, map()}} | {:error, term()}
   def locked_p1_grant_scope(consequence_id) do
     with true <- Ash.DataLayer.in_transaction?(SyntheticCorrection),
          {:ok, %{purchase_id: id} = immutable} <- NewYou.Commerce.paid_plan_source(consequence_id),
