@@ -2,6 +2,8 @@ defmodule NewYou.Commerce.FixtureRefunds do
   @moduledoc false
 
   alias NewYou.Commerce.{
+    FixtureCorrectionSource,
+    FixtureDisputes,
     FixtureRefund,
     FixtureRefundEvidence,
     FixtureRefundReceipt,
@@ -12,9 +14,11 @@ defmodule NewYou.Commerce.FixtureRefunds do
     VerifiedPayment
   }
 
-  alias NewYou.{Entitlements, Identity, Repo}
+  alias NewYou.{Entitlements, Identity}
   alias NewYou.Proof.PlanPaymentObservation
-  alias Ecto.Adapters.SQL.Sandbox
+
+  import FixtureCorrectionSource,
+    only: [independently_visible?: 1, lock_purchase: 1, pinned_listener: 1, transact: 1]
 
   require Ash.Query
 
@@ -106,7 +110,8 @@ defmodule NewYou.Commerce.FixtureRefunds do
   end
 
   defp claim(%{state: :reserved} = refund, purchase) do
-    with {:ok, listener} <- pinned_listener(purchase),
+    with {:ok, true} <- FixtureDisputes.refund_clear?(refund.payment_id),
+         {:ok, listener} <- pinned_listener(purchase),
          %FixtureRefund{} = claimed <-
            mutate(refund, :claim, %{
              claim_id: Ash.UUID.generate(),
@@ -137,22 +142,6 @@ defmodule NewYou.Commerce.FixtureRefunds do
         Ash.get(FixtureRefund, id, authorize?: false, error?: false, timeout: 1_000)
       )
     end)
-  end
-
-  # Sandbox can acknowledge a savepoint while the enclosing transaction can
-  # still roll back. An unboxed connection must see the exact winning claim.
-  @doc false
-  def independently_visible?(read) do
-    observer = Task.async(fn -> independently_read(read) end)
-
-    case Task.yield(observer, 2_000) do
-      {:ok, result} ->
-        result
-
-      nil ->
-        Task.shutdown(observer, :brutal_kill)
-        false
-    end
   end
 
   @spec apply_receipt(Ecto.UUID.t()) :: :ok | {:error, :refund_unavailable}
@@ -292,12 +281,6 @@ defmodule NewYou.Commerce.FixtureRefunds do
          do: {:ok, :applied}
   end
 
-  defp independently_read(read) do
-    Sandbox.unboxed_run(Repo, fn -> Repo.without_query_telemetry(read) end)
-  rescue
-    _ -> false
-  end
-
   @spec read_due(Ecto.UUID.t()) :: :ok | {:error, :refund_unavailable}
   def read_due(id) do
     with false <- Ash.DataLayer.in_transaction?(FixtureRefund),
@@ -327,12 +310,12 @@ defmodule NewYou.Commerce.FixtureRefunds do
   defp read_due?(%{verify_after: due}, now), do: DateTime.compare(due, now) != :gt
 
   defp reserve_read(refund, listener, now) do
-    round = min(refund.verify_round + 1, 6)
-    delay = min(30 * Integer.pow(2, round - 1), 900)
-    next = DateTime.add(now, delay)
-
     with %FixtureRefund{} = reserved <-
-           mutate(refund, :defer_read, %{verify_round: round, verify_after: next}) do
+           mutate(
+             refund,
+             :defer_read,
+             FixtureCorrectionSource.next_read(refund.verify_round, now)
+           ) do
       {reserved, listener}
     end
   end
@@ -410,17 +393,6 @@ defmodule NewYou.Commerce.FixtureRefunds do
       {:ok, %{state: :processed, allocation: component} = refund, _}
       when component in [:plan, :assessment] ->
         refund
-
-      _ ->
-        @unavailable
-    end
-  end
-
-  defp pinned_listener(%{attempt_id: attempt_id}) do
-    case Ash.get(HostedDispatch, attempt_id, authorize?: false) do
-      {:ok, %{fixture_certificate: certificate, fixture_port: port}}
-      when is_binary(certificate) and byte_size(certificate) in 1..8_192 and port in 1..65_535 ->
-        {:ok, %{port: port, certificate: certificate}}
 
       _ ->
         @unavailable
@@ -564,13 +536,4 @@ defmodule NewYou.Commerce.FixtureRefunds do
 
     Ash.create(FixtureRefund, attrs, action: :establish, authorize?: false)
   end
-
-  defp lock_purchase(id) do
-    Purchase
-    |> Ash.Query.filter(id == ^id)
-    |> Ash.Query.lock(:for_update)
-    |> Ash.read_one(authorize?: false)
-  end
-
-  defp transact(fun), do: Repo.without_query_telemetry(fn -> Ash.transact(Purchase, fun) end)
 end

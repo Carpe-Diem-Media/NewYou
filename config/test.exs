@@ -11,7 +11,8 @@ config :new_you, Oban,
     communications: 10,
     commerce: 10,
     commerce_fixture: 2,
-    commerce_fixture_refund: 2
+    commerce_fixture_refund: 2,
+    commerce_fixture_dispute: 2
   ]
 
 config :new_you, :platform_name, "Test Platform"

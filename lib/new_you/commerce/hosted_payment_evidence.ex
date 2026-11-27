@@ -46,6 +46,10 @@ defmodule NewYou.Commerce.HostedPaymentEvidence do
         when map_size(envelope) == 2 ->
           NewYou.Commerce.FixtureRefundEvidence.receive_webhook(raw, event, data)
 
+        {:ok, %{"event" => "fixture.dispute", "data" => data} = envelope}
+        when map_size(envelope) == 2 ->
+          NewYou.Commerce.FixtureDisputeEvidence.receive_webhook(raw, data)
+
         _ ->
           {:error, :unsupported}
       end

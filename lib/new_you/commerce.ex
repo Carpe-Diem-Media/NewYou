@@ -22,6 +22,8 @@ defmodule NewYou.Commerce do
     resource VerifiedPayment
     resource NewYou.Commerce.FixtureRefund
     resource NewYou.Commerce.FixtureRefundReceipt
+    resource NewYou.Commerce.FixtureDispute
+    resource NewYou.Commerce.FixtureDisputeReceipt
     resource PaymentConsequence
     resource NewYou.Commerce.SyntheticCollection
     resource NewYou.Commerce.SyntheticCollectionReceipt
@@ -29,6 +31,28 @@ defmodule NewYou.Commerce do
     resource NewYou.Commerce.SyntheticOrder
     resource NewYou.Commerce.SyntheticCorrection
     resource NewYou.Commerce.SyntheticCorrectionReceipt
+  end
+
+  @doc """
+  Qualify a committed TEST dispute receipt against the accepted collection.
+  Repeated processing preserves the receipt and its single classification.
+  """
+  @spec apply_fixture_dispute_receipt(Ecto.UUID.t()) :: :ok | {:error, :dispute_unavailable}
+  if Mix.env() == :test do
+    def apply_fixture_dispute_receipt(id), do: NewYou.Commerce.FixtureDisputes.apply_receipt(id)
+  else
+    def apply_fixture_dispute_receipt(_), do: {:error, :dispute_unavailable}
+  end
+
+  @doc """
+  Retry the current qualified TEST dispute consequence for an exact case.
+  Commerce acknowledges only the version committed by Entitlements.
+  """
+  @spec deliver_fixture_dispute(Ecto.UUID.t()) :: :ok | {:error, :dispute_unavailable}
+  if Mix.env() == :test do
+    def deliver_fixture_dispute(id), do: NewYou.Commerce.FixtureDisputes.deliver(id)
+  else
+    def deliver_fixture_dispute(_), do: {:error, :dispute_unavailable}
   end
 
   @doc """

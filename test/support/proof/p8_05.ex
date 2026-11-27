@@ -14,7 +14,7 @@ defmodule NewYou.Proof.P805 do
   @privacy "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
   @tables ~w(accounts tokens registration_operations resend_operations message_intents communications_protected_envelopes communications_envelope_nonces evidence_obligations oban_jobs identity_pmr_reservations identity_grants privacy_purpose_authorities privacy_purpose_events)
   @fault_tables @tables ++
-                  ~w(commerce_hosted_payment_receipts commerce_fixture_refund_receipts commerce_payment_consequences commerce_synthetic_collection_receipts entitlements_plan_rights commerce_assessment_admissions)
+                  ~w(commerce_hosted_payment_receipts commerce_fixture_refund_receipts commerce_fixture_dispute_receipts commerce_payment_consequences commerce_synthetic_collection_receipts entitlements_plan_rights commerce_assessment_admissions)
   @environment ~w(fp001_development_entry identity_registration_binding_keys identity_token_signing_secret identity_mfa_keyring communications_keyring p8_05_browser_development_fixtures p8_07_browser_development_fixtures p8_09_browser_development_fixtures p8_08_browser_development_fixtures p8_12_browser_development_fixtures p8_15_browser_development_fixtures identity_pmr_generator)a
 
   def run(case_id), do: with_fixture(fn -> execute(case_id) end)
@@ -1723,6 +1723,7 @@ defmodule NewYou.Proof.P805 do
       end)
 
     cleanup_fixture_refunds(operations, webhook_receipt_digests)
+    cleanup_fixture_disputes(operations, webhook_receipt_digests)
 
     if operations != [] do
       Repo.query!(
@@ -1878,6 +1879,45 @@ defmodule NewYou.Proof.P805 do
       WHERE queue = 'commerce_fixture_refund' AND (
         args->'primary_key'->>'id' IN (SELECT id::text FROM removed_receipts) OR
         args->'primary_key'->>'id' IN (SELECT id::text FROM removed_refunds)
+      )
+      """,
+      [operations, webhook_receipt_digests]
+    )
+  end
+
+  defp cleanup_fixture_disputes([], []), do: :ok
+
+  defp cleanup_fixture_disputes(operations, webhook_receipt_digests) do
+    for table <- ~w(privacy_fixture_dispute_purpose_events privacy_fixture_dispute_purposes) do
+      Repo.query!("DELETE FROM #{table} WHERE source_operation_id = ANY($1::uuid[])", [operations])
+    end
+
+    Repo.query!(
+      """
+      WITH owned_payments AS (
+        SELECT v.id FROM commerce_verified_payments v
+        JOIN commerce_plan_purchases p ON p.id = v.purchase_id
+        WHERE p.operation_id = ANY($1::uuid[])
+      ),
+      removed_disclosures AS (
+        DELETE FROM audit_fixture_dispute_disclosures
+        WHERE operation_id = ANY($1::uuid[])
+      ),
+      removed_disputes AS (
+        DELETE FROM commerce_fixture_disputes
+        WHERE payment_id IN (SELECT id FROM owned_payments)
+        RETURNING id
+      ),
+      removed_receipts AS (
+        DELETE FROM commerce_fixture_dispute_receipts
+        WHERE payment_id IN (SELECT id FROM owned_payments) OR
+              (source = 'webhook' AND digest = ANY($2::bytea[]))
+        RETURNING id
+      )
+      DELETE FROM oban_jobs
+      WHERE queue = 'commerce_fixture_dispute' AND (
+        args->'primary_key'->>'id' IN (SELECT id::text FROM removed_receipts) OR
+        args->'primary_key'->>'id' IN (SELECT id::text FROM removed_disputes)
       )
       """,
       [operations, webhook_receipt_digests]

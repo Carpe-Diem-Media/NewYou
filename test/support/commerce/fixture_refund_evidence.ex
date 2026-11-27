@@ -2,8 +2,8 @@ defmodule NewYou.Commerce.FixtureRefundEvidence do
   @moduledoc false
 
   alias NewYou.Commerce.{
+    FixtureCorrectionSource,
     FixtureRefundReceipt,
-    FixtureRefunds,
     HostedPaymentEvidence,
     PaystackCheckout
   }
@@ -41,7 +41,7 @@ defmodule NewYou.Commerce.FixtureRefundEvidence do
   end
 
   defp committed_receipt?(id) do
-    FixtureRefunds.independently_visible?(fn ->
+    FixtureCorrectionSource.independently_visible?(fn ->
       match?(
         {:ok, %FixtureRefundReceipt{}},
         Ash.get(FixtureRefundReceipt, id, authorize?: false, timeout: 1_000)
@@ -103,16 +103,7 @@ defmodule NewYou.Commerce.FixtureRefundEvidence do
     do: unresolved(:timeout)
 
   defp decode_read(%Req.Response{status: 429} = response) do
-    wait =
-      with [header] when byte_size(header) <= 10 <-
-             Req.Response.get_header(response, "retry-after"),
-           {seconds, ""} <- Integer.parse(header) do
-        max(60, min(seconds, 900))
-      else
-        _ -> 60
-      end
-
-    {"rate_limited", %{outcome: :rate_limited}, wait}
+    {"rate_limited", %{outcome: :rate_limited}, FixtureCorrectionSource.retry_delay(response)}
   end
 
   defp decode_read(_), do: unresolved(:unavailable)

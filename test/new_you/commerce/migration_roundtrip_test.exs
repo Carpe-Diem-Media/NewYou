@@ -72,6 +72,78 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
      NewYou.Repo.Migrations.Well221ExcessCollection}
   ]
 
+  @dispute_migration {
+    20_261_127_135_002,
+    "priv/repo/migrations/20261127135002_well223_fixture_disputes.exs",
+    NewYou.Repo.Migrations.Well223FixtureDisputes
+  }
+
+  @dispute_privacy_migration {
+    20_261_127_140_243,
+    "priv/repo/migrations/20261127140243_well223_dispute_privacy.exs",
+    NewYou.Repo.Migrations.Well223DisputePrivacy
+  }
+
+  test "dispute migration roundtrips and refuses to erase retained disclosure evidence" do
+    base =
+      @migrations ++
+        @correction_migrations ++
+        @offer_migrations ++
+        [@dispatch_migration] ++ @refund_base ++ @refund_migrations
+
+    roundtrip(base ++ [@dispute_migration, @dispute_privacy_migration], 25, fn schema ->
+      {foreign_keys, local} = foreign_key_targets(schema)
+      assert foreign_keys == local
+      Repo.query!("SAVEPOINT well223_evidence")
+
+      Repo.query!("""
+      INSERT INTO #{schema}.audit_fixture_dispute_disclosures
+        (operation_id, actor_id, dispute_id, purpose, field_set)
+      VALUES (gen_random_uuid(), gen_random_uuid(), gen_random_uuid(),
+        'fixture_dispute_evidence_read', 'commercial_dispute_v1')
+      """)
+
+      Repo.query!("SAVEPOINT well223_refuse_rollback")
+
+      assert_raise Postgrex.Error, ~r/Cannot remove retained fixture dispute evidence/, fn ->
+        run_migration(@dispute_migration, :down, schema)
+      end
+
+      Repo.query!("ROLLBACK TO SAVEPOINT well223_refuse_rollback")
+
+      assert [[1]] =
+               Repo.query!("SELECT count(*) FROM #{schema}.audit_fixture_dispute_disclosures").rows
+
+      Repo.query!("ROLLBACK TO SAVEPOINT well223_evidence")
+
+      Repo.query!("SAVEPOINT well223_privacy_evidence")
+
+      Repo.query!("""
+      INSERT INTO #{schema}.privacy_fixture_dispute_purposes
+        (subject_id, dispute_id, source_operation_id, purpose, state, origin, version)
+      VALUES (gen_random_uuid(), gen_random_uuid(), gen_random_uuid(),
+        'commercial_dispute_evidence', 'withdrawn', 'fp002_dispute_test_fixture', 2)
+      """)
+
+      Repo.query!("SAVEPOINT well223_privacy_refuse_rollback")
+
+      assert_raise Postgrex.Error,
+                   ~r/Cannot remove retained fixture dispute Privacy authority/,
+                   fn ->
+                     run_migration(@dispute_privacy_migration, :down, schema)
+                   end
+
+      Repo.query!("ROLLBACK TO SAVEPOINT well223_privacy_refuse_rollback")
+
+      assert [[1]] =
+               Repo.query!(
+                 "SELECT count(*) FROM #{schema}.privacy_fixture_dispute_purposes WHERE state = 'withdrawn'"
+               ).rows
+
+      Repo.query!("ROLLBACK TO SAVEPOINT well223_privacy_evidence")
+    end)
+  end
+
   test "refund migrations roundtrip and refuse rollback over retained negative evidence" do
     base = @migrations ++ @correction_migrations ++ @offer_migrations ++ [@dispatch_migration]
 

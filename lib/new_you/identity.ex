@@ -291,6 +291,44 @@ defmodule NewYou.Identity do
     do: NewYou.Identity.PasswordSession.authorize_canonical(credentials)
 
   @doc """
+  Check the current canonical status and access posture of an already bound
+  recipient during TEST dispute restoration. The transaction holds a shared
+  Account lock through the caller's commit.
+  """
+  @spec locked_fixture_recipient(Ecto.UUID.t()) ::
+          {:ok, :allowed | :blocked} | {:error, :recipient_unavailable}
+  if Mix.env() == :test do
+    def locked_fixture_recipient(id) do
+      with true <- Ash.DataLayer.in_transaction?(Account),
+           {:ok, account} <-
+             Account
+             |> Ash.Query.filter(id == ^id)
+             |> Ash.Query.lock("FOR SHARE")
+             |> Ash.read_one(authorize?: false) do
+        case account do
+          %Account{
+            canonical_account_id: nil,
+            pmr_status: :active,
+            account_status: :open,
+            email_verified?: true,
+            credential_status: :active,
+            security_posture: :normal,
+            pmr: pmr
+          } ->
+            {:ok, if(PMR.valid?(pmr), do: :allowed, else: :blocked)}
+
+          _ ->
+            {:ok, :blocked}
+        end
+      else
+        _ -> {:error, :recipient_unavailable}
+      end
+    end
+  else
+    def locked_fixture_recipient(_), do: {:error, :recipient_unavailable}
+  end
+
+  @doc """
   Return the presenting Session holder's current canonical Platform Member Reference.
   The Session ID and bearer must resolve to the same active verified Account. This
   reuses the normal Session activity refresh and returns one generic error on

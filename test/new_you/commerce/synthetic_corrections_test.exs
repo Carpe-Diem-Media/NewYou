@@ -11,6 +11,30 @@ defmodule NewYou.Commerce.SyntheticCorrectionsTest do
   alias NewYou.Proof.{P805, PlanPaymentObservation}
   require Ash.Query
 
+  test "a suspended Assessment right still prevents a competing admission" do
+    P805.with_fixture(fn ->
+      fixture = paid_correction_sources()
+      recipient_id = fixture.recipient.id
+      :ok = NewYou.Commerce.OfferFixtures.establish_clear_eligibility(%{account_id: recipient_id})
+
+      assert [%{state: :held_unconsumed} = credit] =
+               Enum.filter(fixture.rights, &(&1.component == :assessment))
+
+      assert {:ok, %{state: :suspended}} =
+               Ash.update(credit, %{}, action: :suspend_component, authorize?: false)
+
+      assert {:ok, {:denied, :unused_credit}} =
+               Ash.transact(PlanRight, fn ->
+                 assert {:ok, :allowed} =
+                          SyntheticSuppression.locked_status(recipient_id)
+
+                 NewYou.Commerce.AssessmentAdmissions.eligible?(recipient_id)
+               end)
+
+      assert Ash.get!(PlanRight, credit.id, authorize?: false).state == :suspended
+    end)
+  end
+
   test "the authorized payer keeps the exact excess claim on one intended purchase" do
     P805.with_fixture(fn ->
       payer = verified_session()
