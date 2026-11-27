@@ -23,11 +23,8 @@ defmodule NewYou.Privacy do
     resource PurposeAuthority
     resource PurposeEvent
     resource NewYou.Privacy.SyntheticDeletionScope
-
-    if Mix.env() == :test do
-      resource NewYou.Privacy.FixtureDisputePurposeAuthority
-      resource NewYou.Privacy.FixtureDisputePurposeEvent
-    end
+    resource NewYou.Privacy.FixtureDisputePurposeAuthority
+    resource NewYou.Privacy.FixtureDisputePurposeEvent
   end
 
   @doc false
