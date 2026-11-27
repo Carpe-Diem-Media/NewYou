@@ -7,7 +7,7 @@
     "WELL-192"
   ],
   "implementation_revision": {
-    "git_sha": "1cae4e4be575ee2eee95d6099e9eb73943cdb662",
+    "git_sha": "15bea26e637d3ff8b70a32be259374c491d0265b",
     "semantics": "WELL-192 E2a with immutable receipt binding, fail-closed grants, terminal convergence under suppression, and rejected and unresolved correction evidence. WELL-197 preserves P1 and E2a while evolving the Purchase constraints and isolating S1 payment consequences from P1 delivery. The migration entries for WELL-189 describe the original schema. WELL-197 MG-01 reuses E2a's acknowledged Assessment end as the original S1 claim's terminal evidence. Existing P1 and E2a effect identities remain valid."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -1255,7 +1255,7 @@
       "id": "correction_cases",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "equivalent correction receipts wait for the winning Commerce transaction",
-      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+      "sha256": "f2c84e10ee0039e122599975bb6c38c1b7372b60f8e83ced7e8bd7a5f9caac60"
     },
     {
       "id": "correction_restart",
@@ -1309,19 +1309,19 @@
       "id": "suppressed_correction_case",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "a suppressed component is ended before acknowledgement",
-      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+      "sha256": "f2c84e10ee0039e122599975bb6c38c1b7372b60f8e83ced7e8bd7a5f9caac60"
     },
     {
       "id": "unresolved_receipt_cases",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "qualified but unattributable correction receipts remain unresolved",
-      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+      "sha256": "f2c84e10ee0039e122599975bb6c38c1b7372b60f8e83ced7e8bd7a5f9caac60"
     },
     {
       "id": "unbound_receipt_cases",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "forged and unbound correction receipts persist neither a disposition nor a binding",
-      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+      "sha256": "f2c84e10ee0039e122599975bb6c38c1b7372b60f8e83ced7e8bd7a5f9caac60"
     }
   ]
 }

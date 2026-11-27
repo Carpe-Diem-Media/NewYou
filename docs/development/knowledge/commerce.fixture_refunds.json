@@ -6,7 +6,7 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "1cae4e4be575ee2eee95d6099e9eb73943cdb662",
+    "git_sha": "15bea26e637d3ff8b70a32be259374c491d0265b",
     "semantics": "Hosted fixture refund dispatch, evidence qualification, exact payer make-whole and source-specific Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -617,7 +617,9 @@
         "Independent SQL admission and dispatch contenders with commit visibility",
         "Rollback, pre-send loss, transport ambiguity and TLS pin reuse",
         "Signed receipt qualification, failure, replay, cleanup and fresh BEAM recovery",
-        "Exact source correction and excess preservation"
+        "Exact source correction and excess preservation",
+        "Competing authenticated webhook and pinned read on independent PostgreSQL connections",
+        "Fresh scheduler rediscovery after a discarded read job"
       ],
       "proves": "F-01 through F-07 fixture behavior and scoped F-08 teardown.",
       "limits": "Hosted Checkout remains standalone Plan. Fixture fields and reply envelope are local protocol assumptions.",
@@ -629,7 +631,8 @@
     {
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "cases": [
-        "Frozen bundle allocation, repricing and exact component convergence"
+        "Plan and Assessment attribution under separate accepted allocations after repricing",
+        "Preservation of the sibling component and a distinct bundle"
       ],
       "proves": "F-04 and F-06 bundle attribution through separate E2a synthetic fixtures.",
       "limits": "The original E2a signed observations retain synthetic source authority.",
@@ -832,7 +835,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedRefundTest",
-      "sha256": "1eb1de44e55ae224caba64d1b726da2a457382379ce8daf832d7ca8a4dddafa0"
+      "sha256": "0aa9281ccd54c67b36525cc3350c30c1189d5382e5ac26f5af9103d9d408ab93"
     },
     {
       "id": "fresh",
@@ -844,7 +847,7 @@
       "id": "bundle",
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "only the frozen authorized component ends",
-      "sha256": "a03973009f32f9c1165cd54321087826d37438656706b7bfcca34359628c1b49"
+      "sha256": "f2c84e10ee0039e122599975bb6c38c1b7372b60f8e83ced7e8bd7a5f9caac60"
     },
     {
       "id": "roundtrip",
