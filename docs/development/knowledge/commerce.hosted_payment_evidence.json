@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "00c0b857ca600fcd65963d3c81af4eb5a21d621f",
+    "git_sha": "0054c8c07674abdcaeb19fc7c6c5cb303057235c",
     "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -133,10 +133,10 @@
         "Success on a non-due attempt or classified observation, or retryable worker error."
       ],
       "side_effects": [
-        "Commits the next due time before a bounded loopback GET on a TLS connection authenticated to the original listener. Persists and processes the observation."
+        "Commits the next due time and independently confirms the exact due time and round before a bounded loopback GET on a TLS connection authenticated to the original listener. Persists and processes the observation."
       ],
       "caller_constraints": [
-        "TEST only. The persisted claim selects the original reference, port and certificate. A claim without a certificate cannot run Verify."
+        "TEST only. The persisted claim selects the original reference, port and certificate. Verify requires a certificate and a committed reservation outside any enclosing transaction."
       ],
       "source_ids": [
         "dispatch",
@@ -282,7 +282,7 @@
         "from_state": "receipt_pending",
         "to_state": "receipt_unresolved",
         "guards": [
-          "Incomplete or temporary provider outcome"
+          "Structured pending evidence matches the claimed attempt, immutable Plan amount and currency, and original reference. Transport-only not-found, timeout, throttling and unavailable outcomes have no provider observation to qualify."
         ],
         "side_effects": [
           "Record the bounded reason. The known reference remains open."
@@ -329,7 +329,7 @@
           "Due time matches a claimable dispatch"
         ],
         "side_effects": [
-          "Reserve the next attempt before HTTP. Backoff grows from 30 seconds to a 900-second cap. The fixture accepts one integer Retry-After value, clamps it to 60–900 seconds and only extends the current due time. Other forms use a 60-second fallback. Actual provider rate limiting is outside this fixture policy."
+          "Reserve the next attempt and check its visibility independently before HTTP. Backoff grows from 30 seconds to a 900-second cap. The fixture accepts one integer Retry-After value, clamps it to 60\u2013900 seconds and only extends the current due time. Other forms use a 60-second fallback. Actual provider rate limiting is outside this fixture policy."
         ],
         "terminal": false,
         "source_ids": [
@@ -390,7 +390,7 @@
       ]
     },
     {
-      "summary": "Verify briefly locks the original dispatch and advances its next due time before performing the HTTP read outside that reservation transaction. Queue uniqueness is advisory.",
+      "summary": "Verify locks the original due dispatch and advances its next due time. It rejects explicit enclosing transactions. An independent read must see the reserved due time and round before HTTP, so an implicit Sandbox savepoint or rolled-back reservation cannot send. Queue uniqueness is advisory.",
       "source_ids": [
         "dispatch",
         "evidence",
@@ -452,7 +452,9 @@
         "F-02 raw body and an actual Bandit-to-Phoenix request",
         "F-04/F-05 counted loopback Verify, rate limit, timeout, mismatch, missing and exhausted job",
         "F-06 two fresh BEAMs, independent connections, single held right",
-        "F-05/F-07 stopped and replaced loopback listener with no payment HTTP delivery to an unrelated service"
+        "F-05/F-07 stopped and replaced loopback listener with no payment HTTP delivery to an unrelated service",
+        "MG-219-01 / F-05 and F-07: implicit Sandbox rollback and explicit transaction send zero GETs; Bandit reads the committed reservation independently; two workers race for one due GET",
+        "MG-219-02 / F-03 and F-04: pending evidence binds the known reference and accepted money on both ingress paths; transport-only outcomes remain unresolved"
       ],
       "proves": "Exact authenticated receipt before acknowledgement and one source-qualified payment, consequence and right for a non-R399 Plan. Invalid and nonfinal evidence produces zero effects.",
       "limits": "Synthetic fixture data and an isolated loopback listener. The test simulates arrival of future due times after asserting real persisted backoff, and explicitly invokes the production scheduler code via AshOban testing helpers.",
@@ -578,7 +580,7 @@
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def apply_hosted_payment_evidence(id)",
-      "sha256": "a298101c66bd952bf4d47a24cdcaf88c3a67279fdea0cd7d7789c32dfe119fdc"
+      "sha256": "690be2969c486032fd73212e1372cfea4a292560773833b7aacc08b8361f4939"
     },
     {
       "id": "checkout",
@@ -596,7 +598,7 @@
       "id": "evidence",
       "path": "lib/new_you/commerce/hosted_payment_evidence.ex",
       "symbol": "def verify_due(id)",
-      "sha256": "b5bb1794abfefb97731f7728f273d9b9d8a4d183b5f91c68033317fb8030120f"
+      "sha256": "3756d7618f04432c6dafc17e5668adcc38b10efbe6ed2b38ff8edb61c98d7b55"
     },
     {
       "id": "receipt",
@@ -668,7 +670,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_payment_evidence_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedPaymentEvidenceTest",
-      "sha256": "5fbc57921c1640e57e999476c66ad1a4f4301cf2b6ccd5abef85ed6d76219308"
+      "sha256": "5a257767a806a8226fc691269a723719df1ad4e83fb9c62aec369a1523e88ce8"
     },
     {
       "id": "bandit",
