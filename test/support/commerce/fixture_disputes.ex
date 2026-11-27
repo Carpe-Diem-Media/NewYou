@@ -166,7 +166,10 @@ defmodule NewYou.Commerce.FixtureDisputes do
     competing =
       receipt
       |> terminal_evidence()
-      |> Ash.Query.filter(id != ^receipt.id and revision >= ^receipt.revision)
+      |> Ash.Query.filter(
+        revision > ^receipt.revision or
+          (revision == ^receipt.revision and outcome != ^receipt.outcome)
+      )
 
     case Ash.exists(competing, authorize?: false) do
       {:ok, false} -> qualify_outcome(dispute, receipt, false)

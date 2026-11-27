@@ -728,6 +728,110 @@ defmodule NewYou.Commerce.HostedRefundTest do
     end
   end
 
+  test "a current copy of a terminal loss reconciles after the first read loses its lease" do
+    assert_identical_terminal_retry(:lost, :restored, :ended, false)
+  end
+
+  test "a current copy of a terminal restoration reconciles after the first read loses its lease" do
+    assert_identical_terminal_retry(:restored, :lost, :held_unconsumed, true)
+  end
+
+  defp assert_identical_terminal_retry(outcome, opposite, right_state, refund_clear?) do
+    reply_data = start_supervised!({Agent, fn -> nil end})
+    reply = fn conn, _ -> dispute_read_response(conn, Agent.get(reply_data, & &1)) end
+    expected = {outcome, opposite, right_state, refund_clear?}
+
+    P805.with_fixture(fn ->
+      with_paid_plan(reply, fn accepted, payment, _, _, _, tag ->
+        with_signing_key(
+          &exercise_terminal_retry(&1, accepted, payment, tag, reply_data, expected)
+        )
+      end)
+    end)
+  end
+
+  defp exercise_terminal_retry(
+         key,
+         accepted,
+         payment,
+         tag,
+         reply_data,
+         {outcome, opposite, right_state, refund_clear?}
+       ) do
+    assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+    assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+    data = dispute_data(payment)
+    terminal = Atom.to_string(outcome)
+    opposing = Atom.to_string(opposite)
+    assert 202 == send_event(key, "fixture.dispute", %{data | outcome: "under_review"})
+    dispute = apply_dispute_receipts(payment)
+
+    assert 202 ==
+             send_event(key, "fixture.dispute", %{data | revision: 2, outcome: opposing})
+
+    assert 202 ==
+             send_event(key, "fixture.dispute", %{data | revision: 3, outcome: terminal})
+
+    assert %{state: :under_review, conflict?: true} = apply_dispute_receipts(payment)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    authoritative = %{data | revision: 4, outcome: terminal}
+    set_due_dispute_reply(dispute.id, reply_data, authoritative)
+
+    with_paused_dispute_read(dispute.id, fn ->
+      set_due_dispute_reply(dispute.id, reply_data, :miss)
+      assert :ok = FixtureDisputes.read_due(dispute.id)
+    end)
+
+    assert [%{revision: 4, outcome: ^outcome, state: :stale}] =
+             Enum.filter(dispute_receipts(payment), &(&1.source == :read))
+
+    # A lower current read still loses to the recorded higher revision.
+    set_due_dispute_reply(dispute.id, reply_data, %{authoritative | revision: 3})
+    assert :ok = FixtureDisputes.read_due(dispute.id)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    assert %{state: :under_review, conflict?: true} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert %{state: :suspended} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
+
+    set_due_dispute_reply(dispute.id, reply_data, authoritative)
+    assert :ok = FixtureDisputes.read_due(dispute.id)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    assert %{
+             state: ^outcome,
+             revision: 4,
+             conflict?: false,
+             effect_version: version,
+             acknowledged_version: version
+           } = Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert %{state: ^right_state} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    copies =
+      Enum.filter(dispute_receipts(payment), &(&1.source == :read and &1.revision == 4))
+
+    assert [%{state: :applied} = applied, %{state: :stale} = stale] =
+             Enum.sort_by(copies, & &1.state)
+
+    assert applied.digest == stale.digest
+    refute applied.read_token == stale.read_token
+    assert :ok = Commerce.apply_fixture_dispute_receipt(applied.id)
+
+    assert %{effect_version: ^version} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert {:ok, ^refund_clear?} = dispute_refund_clear(accepted.purchase_id, payment.id)
+    refute_received {^tag, "POST", "/refund", _, _}
+  end
+
   defp with_paused_dispute_read(id, while_paused) do
     parent = self()
     handler = {__MODULE__, make_ref()}
