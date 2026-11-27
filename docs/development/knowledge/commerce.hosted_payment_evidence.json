@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "0054c8c07674abdcaeb19fc7c6c5cb303057235c",
+    "git_sha": "0b1ecdfd5997e3a70aa6bc47995d8e9e9c2d5fe9",
     "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -454,14 +454,17 @@
         "F-06 two fresh BEAMs, independent connections, single held right",
         "F-05/F-07 stopped and replaced loopback listener with no payment HTTP delivery to an unrelated service",
         "MG-219-01 / F-05 and F-07: implicit Sandbox rollback and explicit transaction send zero GETs; Bandit reads the committed reservation independently; two workers race for one due GET",
-        "MG-219-02 / F-03 and F-04: pending evidence binds the known reference and accepted money on both ingress paths; transport-only outcomes remain unresolved"
+        "MG-219-02 / F-03 and F-04: pending evidence binds the known reference and accepted money on both ingress paths; transport-only outcomes remain unresolved",
+        "MG-219-03 / F-07: a signed unknown-reference receipt is quarantined; repeated P805 teardown removes its registered digest and receipt job while preserving a same-reference sentinel with a different digest and its job"
       ],
       "proves": "Exact authenticated receipt before acknowledgement and one source-qualified payment, consequence and right for a non-R399 Plan. Invalid and nonfinal evidence produces zero effects.",
       "limits": "Synthetic fixture data and an isolated loopback listener. The test simulates arrival of future due times after asserting real persisted backoff, and explicitly invokes the production scheduler code via AshOban testing helpers.",
       "source_ids": [
         "test",
         "restart",
-        "bandit"
+        "bandit",
+        "fixture_cleanup",
+        "fixture_ownership"
       ]
     },
     {
@@ -567,7 +570,7 @@
   ],
   "proof_limitations": [
     "HIGH financial, entitlement, security, privacy and recovery proof is scoped to TEST. Production deployment, provider signature certification, refunds, disputes, corrections of hosted payments, bulk reconciliation, browser rendering and participant copy are outside WELL-219.",
-    "The evidence records keep normalized fields and digests for the fixture lifetime. Raw bytestream capture or production retention policies require separate authority.",
+    "The evidence records keep normalized fields and digests for the fixture lifetime. Tests that commit webhook receipts outside a purchase register the exact digest before ingress, so scoped P805 teardown can remove those receipts and their work. Raw bytestream capture or production retention policies require separate authority.",
     "A legacy claim without an authenticated listener pin remains visible and cannot send a Verify request. Qualified signed evidence can still settle it. A failed TLS handshake can reach a reused loopback socket before HTTP begins."
   ],
   "follow_up_tickets": [
@@ -670,7 +673,19 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_payment_evidence_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedPaymentEvidenceTest",
-      "sha256": "5a257767a806a8226fc691269a723719df1ad4e83fb9c62aec369a1523e88ce8"
+      "sha256": "f6ec59c035b189a8b9ce58c245227632944e152c1e504b4da09deb783960f0f9"
+    },
+    {
+      "id": "fixture_cleanup",
+      "path": "test/support/proof/p8_05.ex",
+      "symbol": "defp cleanup_hosted_fixture_evidence(",
+      "sha256": "d0075b4d7fc256b7235a9c94bf1246b1b699d440a7e9154ba879f30f5d604493"
+    },
+    {
+      "id": "fixture_ownership",
+      "path": "test/support/proof/p8_05_fixture.ex",
+      "symbol": "def track(reference, :webhook_receipt_digest",
+      "sha256": "46001f4a9c912a671e4757d201d7c4ecf8c098a7b8e764a77aa14a215de880c1"
     },
     {
       "id": "bandit",
