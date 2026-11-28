@@ -74,10 +74,18 @@ false = Code.ensure_loaded?(NewYou.Commerce.Schedulers.DeliverFixtureDispute)
 false = Code.ensure_loaded?(NewYou.Commerce.Schedulers.ReadFixtureDispute)
 false = Code.ensure_loaded?(NewYou.Commerce.Schedulers.ProcessFixtureDisputeReceipt)
 
-# The test-only hosted dispute request builder is absent, so this proof cannot
-# reach a provider or require credentials.
+# No fixture request builder can reach a provider from the DEV build.
 true = Code.ensure_loaded?(NewYou.Commerce.PaystackCheckout)
-false = function_exported?(NewYou.Commerce.PaystackCheckout, :build_dispute_read, 2)
+
+for {builder, arity} <- [
+      build: 3,
+      build_verify: 2,
+      build_refund: 2,
+      build_refund_read: 2,
+      build_dispute_read: 2
+    ] do
+  false = function_exported?(NewYou.Commerce.PaystackCheckout, builder, arity)
+end
 
 # Public Domain wrappers keep fixture-only paths fail closed outside TEST.
 {:error, :dispute_unavailable} = NewYou.Commerce.apply_fixture_dispute_receipt("fixture-only")
