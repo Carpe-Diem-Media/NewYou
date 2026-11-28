@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "85d97e3e9e1c0e6dd73226e45243bc8b33e7a161",
+    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
     "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -637,7 +637,7 @@
       "id": "entitlements",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def grant_paid_plan(consequence_id)",
-      "sha256": "57d23703aebeb05b20f4e1f39a4f94453a5056981ab5ebbd5144c8f633a18c84"
+      "sha256": "fd7b8f396f7e810ac5f1a285f74a08f4015e6c21617d014933ba2cc56fc36e76"
     },
     {
       "id": "accepted_source",

@@ -7,7 +7,7 @@
     "WELL-192"
   ],
   "implementation_revision": {
-    "git_sha": "85d97e3e9e1c0e6dd73226e45243bc8b33e7a161",
+    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
     "semantics": "WELL-192 E2a with immutable receipt binding, fail-closed grants, terminal convergence under suppression, and rejected and unresolved correction evidence. WELL-197 preserves P1 and E2a while evolving the Purchase constraints and isolating S1 payment consequences from P1 delivery. The migration entries for WELL-189 describe the original schema. WELL-197 MG-01 reuses E2a's acknowledged Assessment end as the original S1 claim's terminal evidence. Existing P1 and E2a effect identities remain valid."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -791,12 +791,14 @@
       ]
     },
     {
-      "summary": "A missing or unavailable Privacy row leaves the original P1 grant open. A terminal suppression row withholds later grants, hides already materialized rights, and cannot be reset by registration.",
+      "summary": "An Identity block or missing TEST Privacy authority leaves the original P1 grant open. Plan creation holds a shared lock on the current eligible recipient Account through commit. Terminal TEST Privacy suppression withholds otherwise eligible grants, hides materialized rights and cannot be reset by registration.",
       "source_ids": [
         "entitlements",
         "right_convergence",
         "suppression",
-        "cases"
+        "cases",
+        "plan_recipient",
+        "original_hold_test"
       ]
     },
     {
@@ -1099,7 +1101,7 @@
       "id": "entitlements",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def grant_paid_plan",
-      "sha256": "57d23703aebeb05b20f4e1f39a4f94453a5056981ab5ebbd5144c8f633a18c84"
+      "sha256": "fd7b8f396f7e810ac5f1a285f74a08f4015e6c21617d014933ba2cc56fc36e76"
     },
     {
       "id": "right",
@@ -1111,7 +1113,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def authorize_canonical_session",
-      "sha256": "861c4389cc17434185ae94aa65c401c536796500a949f3d491b6136b645e2b88"
+      "sha256": "50a71d13d85167bbcd71cbe42e8fe089edcd0f5c83146cfad05b216fc0258c20"
     },
     {
       "id": "review",
@@ -1243,7 +1245,7 @@
       "id": "right_convergence",
       "path": "test/support/entitlements/synthetic_rights.ex",
       "symbol": "def apply_correction",
-      "sha256": "c63b91bccd053e30a0a938647d2ff99340b37cf8fe94a2ae95cc46f39411b0a8"
+      "sha256": "477964028de3a5ea34455d9d8b34215e79dd1fac2c3a3ffa21bf02e49926796a"
     },
     {
       "id": "synthetic_audit",
@@ -1322,6 +1324,18 @@
       "path": "test/new_you/commerce/synthetic_corrections_test.exs",
       "symbol": "forged and unbound correction receipts persist neither a disposition nor a binding",
       "sha256": "22e69bd3c8992474b845b6138c3a69390689210470467aab15967b3a13356013"
+    },
+    {
+      "id": "plan_recipient",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def locked_plan_recipient",
+      "sha256": "50a71d13d85167bbcd71cbe42e8fe089edcd0f5c83146cfad05b216fc0258c20"
+    },
+    {
+      "id": "original_hold_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"an original Plan grant without a dispute",
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
     }
   ]
 }

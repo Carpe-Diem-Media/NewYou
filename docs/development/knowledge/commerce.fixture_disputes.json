@@ -6,7 +6,7 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "85d97e3e9e1c0e6dd73226e45243bc8b33e7a161",
+    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
     "semantics": "Provider-disabled dispute intake, receipt and case recovery, source-specific correction, and local disclosure under independent revocable Finance and Audit grants."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -22,13 +22,14 @@
     },
     {
       "domain": "NewYou.Identity",
-      "interface": "locked_fixture_recipient/1; issue_fixture_dispute_grant/2; revoke_fixture_dispute_grant/2; require_fixture_dispute_grants/1",
+      "interface": "locked_plan_recipient/1; locked_fixture_recipient/1; issue_fixture_dispute_grant/2; revoke_fixture_dispute_grant/2; require_fixture_dispute_grants/1",
       "ownership": "Owns canonical Account and session posture and durable dispute disclosure grants. Finance approval is reserved for the Commerce approver scope, and Audit approval is reserved for the Audit & Evidence approver scope.",
       "source_ids": [
         "identity",
         "disclosure_identity",
         "disclosure_grants",
-        "grant_resource"
+        "grant_resource",
+        "plan_recipient"
       ]
     },
     {
@@ -92,10 +93,11 @@
         "restore_component",
         "end_component"
       ],
-      "caller_boundary": "Entitlements validates current Commerce, Identity and Privacy before restoration. Only the original grant may create a right.",
+      "caller_boundary": "Entitlements revalidates the locked Identity recipient before any original Plan creation and before restoring a disputed Plan right. Current Commerce and TEST Privacy authority still govern the effect.",
       "source_ids": [
         "rights",
-        "convergence"
+        "convergence",
+        "plan_recipient"
       ]
     },
     {
@@ -966,13 +968,15 @@
       ]
     },
     {
-      "summary": "After qualified restoration, the original outstanding payment grant and dispute delivery both check the current locked Identity recipient before a Plan right can become held. A temporary security hold leaves the grant pending. After release, either delivery order converges to one right for the original paid source.",
+      "summary": "Every original Plan creation checks the current canonical Identity recipient and holds the Account lock through commit. An Identity security hold keeps the original consequence open. After release, qualified delivery creates one original right and replay returns that right. Dispute restoration checks the same eligibility before restoring an existing right.",
       "source_ids": [
         "lifecycle",
         "late_grant",
         "convergence",
         "identity",
-        "test"
+        "test",
+        "plan_recipient",
+        "original_hold_test"
       ]
     },
     {
@@ -1062,14 +1066,16 @@
         "The original outstanding grant and dispute delivery both reject a held recipient in either order. The grant remains open and no right exists until release. Replaying the original grant after release returns the same right.",
         "Run-specific 20-digit provider identities and payment-scoped assertions preserve large numeric-ID and deliberate collision coverage in the shared TEST allocation.",
         "An independent PostgreSQL observer sees the exact pending webhook before starting the fresh BEAM. The receipt scheduler recovers after missing or exhausted work and skips the classified receipt on replay. Competing workers leave one case, consequence version and original Plan right. Scoped teardown preserves an unrelated scheduled job.",
-        "A second payment can commit an authenticated receipt before the first payment binds the provider dispute identity. Processing the second receipt after the first bind quarantines it and preserves the independent right."
+        "A second payment can commit an authenticated receipt before the first payment binds the provider dispute identity. Processing the second receipt after the first bind quarantines it and preserves the independent right.",
+        "With no dispute, receipt or refund for the payment, a recipient security hold blocks the original Plan grant and leaves its consequence open. Release permits exactly one original Plan right and replay returns the same ID."
       ],
       "proves": "F-01 through F-05 and F-07 fixture execution.",
       "limits": "Hosted proof is standalone Plan only. No live provider behavior.",
       "source_ids": [
         "test",
         "restart",
-        "fixture_ids"
+        "fixture_ids",
+        "original_hold_test"
       ]
     },
     {
@@ -1296,13 +1302,13 @@
       "id": "convergence",
       "path": "test/support/entitlements/synthetic_rights.ex",
       "symbol": "def apply_dispute",
-      "sha256": "c63b91bccd053e30a0a938647d2ff99340b37cf8fe94a2ae95cc46f39411b0a8"
+      "sha256": "477964028de3a5ea34455d9d8b34215e79dd1fac2c3a3ffa21bf02e49926796a"
     },
     {
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def locked_fixture_recipient",
-      "sha256": "861c4389cc17434185ae94aa65c401c536796500a949f3d491b6136b645e2b88"
+      "sha256": "50a71d13d85167bbcd71cbe42e8fe089edcd0f5c83146cfad05b216fc0258c20"
     },
     {
       "id": "privacy",
@@ -1326,7 +1332,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"refund and dispute serialize",
-      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
     },
     {
       "id": "restart",
@@ -1428,37 +1434,37 @@
       "id": "receipt_restart_test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"fresh scheduler processes a committed webhook receipt",
-      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
     },
     {
       "id": "receipt_replay_test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"two workers running the scheduled receipt job",
-      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
     },
     {
       "id": "receipt_stale_test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"a stale read token does not erase a committed opposing revision",
-      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
     },
     {
       "id": "receipt_conflict_test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"committed contradictory terminal receipts keep the right suspended",
-      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
     },
     {
       "id": "receipt_quarantine_test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"the same payer can have distinct equal-value purchases",
-      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
     },
     {
       "id": "disclosure_identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def issue_fixture_dispute_grant",
-      "sha256": "861c4389cc17434185ae94aa65c401c536796500a949f3d491b6136b645e2b88"
+      "sha256": "50a71d13d85167bbcd71cbe42e8fe089edcd0f5c83146cfad05b216fc0258c20"
     },
     {
       "id": "disclosure_grants",
@@ -1483,6 +1489,18 @@
       "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
       "symbol": "test \"Finance and Audit grants can each be revoked",
       "sha256": "b58f21034076072fa7567ae86156a648b6a635956c9225625eee237dbc9009a9"
+    },
+    {
+      "id": "plan_recipient",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def locked_plan_recipient",
+      "sha256": "50a71d13d85167bbcd71cbe42e8fe089edcd0f5c83146cfad05b216fc0258c20"
+    },
+    {
+      "id": "original_hold_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"an original Plan grant without a dispute",
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
     }
   ]
 }

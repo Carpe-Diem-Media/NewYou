@@ -6,7 +6,7 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "85d97e3e9e1c0e6dd73226e45243bc8b33e7a161",
+    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
     "semantics": "Provider-disabled refund dispatch, recoverable capped reads, source-qualified excess, durable provider ID conflict classification and privacy-safe Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -863,13 +863,13 @@
       "id": "entitlements",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def apply_fixture_refund",
-      "sha256": "57d23703aebeb05b20f4e1f39a4f94453a5056981ab5ebbd5144c8f633a18c84"
+      "sha256": "fd7b8f396f7e810ac5f1a285f74a08f4015e6c21617d014933ba2cc56fc36e76"
     },
     {
       "id": "convergence",
       "path": "test/support/entitlements/synthetic_rights.ex",
       "symbol": "defp apply_hosted_effect",
-      "sha256": "c63b91bccd053e30a0a938647d2ff99340b37cf8fe94a2ae95cc46f39411b0a8"
+      "sha256": "477964028de3a5ea34455d9d8b34215e79dd1fac2c3a3ffa21bf02e49926796a"
     },
     {
       "id": "pay",
@@ -887,7 +887,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedRefundTest",
-      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
     },
     {
       "id": "fresh",
