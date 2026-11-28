@@ -119,6 +119,13 @@ defmodule NewYou.Commerce.FixtureDispute do
         change set_attribute(:conflict?, false)
       end
 
+      update :refund_claimed do
+        public? false
+        accept []
+        change filter(expr(allocation == :plan and state == :restored and not conflict?))
+        change atomic_update(:effect_version, expr(effect_version + 1))
+      end
+
       update :acknowledge do
         public? false
         accept [:acknowledged_version]

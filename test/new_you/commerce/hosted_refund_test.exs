@@ -980,7 +980,12 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
     assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
     assert [] = plan_rights(recipient)
-    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+    expected = if first == :restoration, do: 2, else: 1
+
+    assert %{success: ^expected, failure: 0, discard: 0, queues_not_drained: []} =
+             AshOban.Test.schedule_and_run_triggers({FixtureDispute, :deliver})
+
+    assert %{state: :suspended} = stored_plan_right(right_id)
 
     for status <- ["pending", "failed"] do
       assert 202 == send_evidence(key, refund_data(refund), status)
@@ -988,7 +993,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
       assert %{claim_id: ^claim, state: state} = read_refund(refund.id)
       assert Atom.to_string(state) == status
       assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
-      assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+      assert %{success: 1, failure: 0, discard: 0, queues_not_drained: []} =
+               AshOban.Test.schedule_and_run_triggers({FixtureDispute, :deliver})
 
       assert %{state: :suspended} =
                Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
@@ -997,7 +1004,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
     assert 202 == send_evidence(key, refund_data(refund), "processed")
     process_evidence(refund.reference)
     assert {:ok, :none} = FixtureDisputes.correction_overlap(dispute.id)
-    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    assert %{success: 2, failure: 0, discard: 0, queues_not_drained: []} =
+             AshOban.Test.schedule_and_run_triggers({NewYou.Commerce.FixtureRefund, :deliver})
 
     assert %{state: :ended} =
              Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
@@ -1022,7 +1031,191 @@ defmodule NewYou.Commerce.HostedRefundTest do
     claimed
   end
 
+  test "a refund claim rediscovers a fully acknowledged restoration in a fresh BEAM" do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn accepted, payment, payer, recipient, _, tag ->
+        with_signing_key(
+          &exercise_claim_after_restoration(&1, {accepted, payment, payer, recipient, tag})
+        )
+      end)
+    end)
+  end
+
+  defp exercise_claim_after_restoration(key, {accepted, payment, payer, recipient, tag}) do
+    unrelated = grant_unrelated_plan(payer, recipient)
+
+    {dispute, refund, right_id} =
+      prepare_restoration_and_refund(key, accepted, payment, payer, recipient)
+
+    assert %{success: 2, failure: 0, discard: 0, queues_not_drained: []} =
+             AshOban.Test.schedule_and_run_triggers({FixtureDispute, :deliver})
+
+    assert %{effect_version: restored_version, acknowledged_version: restored_version} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert %{state: :held_unconsumed} = stored_plan_right(right_id)
+
+    cut_dispatch(payer.credentials, refund.id, :claim_written)
+    assert %{state: :reserved, claim_id: nil} = read_refund(refund.id)
+
+    assert %{effect_version: ^restored_version, acknowledged_version: ^restored_version} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    refute_received {^tag, "POST", "/refund", _, _}
+
+    assert {:ok, %{state: :unresolved, claim_id: claim}} =
+             Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+    assert_receive {^tag, "POST", "/refund", _, _}
+    assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+    assert [%{id: ^unrelated}] = plan_rights(recipient)
+    assert %{state: :held_unconsumed} = stored_plan_right(right_id)
+    refute_dispute_delivery_enqueued(dispute.id)
+
+    assert {:ok, %{state: :unresolved, claim_id: ^claim}} =
+             Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+    recover_refund_suspension(dispute.id, right_id, restored_version)
+    assert %{state: :held_unconsumed} = stored_plan_right(unrelated)
+
+    assert 202 == send_evidence(key, refund_data(refund), "processed")
+    process_evidence(refund.reference)
+
+    assert %{success: 2, failure: 0, discard: 0, queues_not_drained: []} =
+             AshOban.Test.schedule_and_run_triggers({NewYou.Commerce.FixtureRefund, :deliver})
+
+    assert %{state: :ended} = stored_plan_right(right_id)
+    assert [%{id: ^unrelated}] = plan_rights(recipient)
+    assert {:ok, :none} = FixtureDisputes.correction_overlap(dispute.id)
+
+    assert {:ok, %{state: :processed, claim_id: ^claim, reference: reference}} =
+             Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+    assert reference == refund.reference
+    assert [%{id: refund_id}] = purchase_refunds(accepted)
+    assert refund_id == refund.id
+    refute_received {^tag, "POST", "/refund", _, _}
+  end
+
+  test "a claim between restoration commit and acknowledgement leaves a discoverable effect" do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn accepted, payment, payer, recipient, _, tag ->
+        with_signing_key(
+          &exercise_claim_before_restoration_ack(&1, {accepted, payment, payer, recipient, tag})
+        )
+      end)
+    end)
+  end
+
+  defp exercise_claim_before_restoration_ack(key, {accepted, payment, payer, recipient, tag}) do
+    {dispute, refund, right_id} =
+      prepare_restoration_and_refund(key, accepted, payment, payer, recipient)
+
+    restored_version = dispute.effect_version
+    previous_ack = dispute.acknowledged_version
+
+    queued =
+      NewYou.Commerce.Workers.DeliverFixtureDispute.new(%{"primary_key" => %{"id" => dispute.id}})
+      |> Oban.insert!()
+
+    with_paused_dispute(
+      :entitlements_committed,
+      fn -> Commerce.deliver_fixture_dispute(dispute.id) end,
+      fn ->
+        assert %{state: :held_unconsumed} = stored_plan_right(right_id)
+
+        assert %{effect_version: ^restored_version, acknowledged_version: ^previous_ack} =
+                 Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+        assert {:ok, %{state: :unresolved}} =
+                 Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+      end
+    )
+
+    assert_receive {^tag, "POST", "/refund", _, _}
+    assert [] = plan_rights(recipient)
+    assert %{state: :held_unconsumed} = stored_plan_right(right_id)
+    assert :ok = Oban.delete_job(queued)
+    refute_dispute_delivery_enqueued(dispute.id)
+
+    assert %{acknowledged_version: ^previous_ack} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    recover_refund_suspension(dispute.id, right_id, restored_version)
+    refute_received {^tag, "POST", "/refund", _, _}
+  end
+
+  defp prepare_restoration_and_refund(key, accepted, payment, payer, recipient) do
+    assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+    assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+    assert {:ok, refund} =
+             request(payer.credentials, proof(refund_fields(accepted, payment, payer, recipient)))
+
+    assert {:ok, %{state: :reserved}} =
+             Commerce.reserve_fixture_refund(payer.credentials, refund.id)
+
+    data = dispute_data(payment)
+    assert 202 == send_event(key, "fixture.dispute", data)
+    dispute = apply_dispute_receipts(payment)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+    assert %{state: :suspended} = stored_plan_right(right_id)
+
+    assert 202 == send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
+
+    assert %{state: :restored, conflict?: false} = restored = apply_dispute_receipts(payment)
+    {restored, refund, right_id}
+  end
+
+  defp grant_unrelated_plan(payer, recipient) do
+    with_paid_plan(payer, recipient, "18446744073709551613", &default_refund_reply/2, fn
+      accepted, _, _, _, _, _ ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+        right_id
+    end)
+  end
+
+  defp recover_refund_suspension(id, right_id, restored_version) do
+    before = Ash.get!(FixtureDispute, id, authorize?: false)
+
+    {executable, arguments} =
+      FreshMix.command(["run", "--no-compile", "test/proof/well223_dispute_restart.exs"])
+
+    diagnostic =
+      P815Port.run(executable, arguments, Jason.encode!(%{id: id, phase: "effect"}), 60_000)
+
+    assert %{state: :suspended} = stored_plan_right(right_id)
+    assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} = diagnostic
+
+    version = restored_version + 1
+    assert before.effect_version == version
+    assert before.acknowledged_version <= restored_version
+
+    assert %{
+             state: :restored,
+             revision: 2,
+             conflict?: false,
+             effect_version: ^version,
+             acknowledged_version: ^version
+           } = Ash.get!(FixtureDispute, id, authorize?: false)
+  end
+
+  defp stored_plan_right(id),
+    do: Ash.get!(NewYou.Entitlements.PlanRight, id, authorize?: false)
+
+  defp refute_dispute_delivery_enqueued(id) do
+    refute_enqueued(
+      worker: NewYou.Commerce.Workers.DeliverFixtureDispute,
+      args: %{"primary_key" => %{"id" => id}}
+    )
+  end
+
   defp with_paused_dispute_read(id, while_paused) do
+    with_paused_dispute(:evidence_committed, fn -> FixtureDisputes.read_due(id) end, while_paused)
+  end
+
+  defp with_paused_dispute(stage, operation, while_paused) do
     parent = self()
     handler = {__MODULE__, make_ref()}
 
@@ -1031,13 +1224,13 @@ defmodule NewYou.Commerce.HostedRefundTest do
         handler,
         [:new_you, :commerce, :fixture_dispute, :checkpoint],
         fn _, _, metadata, _ ->
-          if metadata.stage == :evidence_committed and self() != parent do
-            send(parent, {:dispute_read_committed, self()})
+          if metadata.stage == stage and self() != parent do
+            send(parent, {:dispute_checkpoint_reached, self()})
 
             receive do
-              :classify_dispute_read -> :ok
+              :resume_dispute -> :ok
             after
-              5_000 -> raise "Timed out waiting to classify the dispute read"
+              5_000 -> raise "Timed out waiting to resume dispute work"
             end
           end
         end,
@@ -1045,13 +1238,13 @@ defmodule NewYou.Commerce.HostedRefundTest do
       )
 
     reader =
-      Task.async(fn -> Sandbox.unboxed_run(Repo, fn -> FixtureDisputes.read_due(id) end) end)
+      Task.async(fn -> Sandbox.unboxed_run(Repo, operation) end)
 
     try do
-      assert_receive {:dispute_read_committed, pid}, 3_000
+      assert_receive {:dispute_checkpoint_reached, pid}, 3_000
       assert pid == reader.pid
       while_paused.()
-      send(pid, :classify_dispute_read)
+      send(pid, :resume_dispute)
       assert :ok = Task.await(reader)
     after
       :telemetry.detach(handler)

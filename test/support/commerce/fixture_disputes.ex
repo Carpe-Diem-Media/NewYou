@@ -301,6 +301,26 @@ defmodule NewYou.Commerce.FixtureDisputes do
   end
 
   @doc """
+  Advance the restored Plan consequence in the transaction that first claims
+  a refund for its exact purchase and payment. Call under the Purchase lock.
+  The version makes suspension discoverable even when restoration was fully
+  acknowledged or its acknowledgement is still in flight.
+  """
+  @spec refresh_for_refund_claim(Ecto.UUID.t(), Ecto.UUID.t()) ::
+          :ok | {:error, :dispute_unavailable}
+  def refresh_for_refund_claim(purchase_id, payment_id) do
+    with true <- Ash.DataLayer.in_transaction?(Purchase),
+         %Ash.BulkResult{status: :success} <-
+           FixtureDispute
+           |> Ash.Query.filter(purchase_id == ^purchase_id and payment_id == ^payment_id)
+           |> Ash.bulk_update(:refund_claimed, %{}, authorize?: false, strategy: [:atomic]) do
+      :ok
+    else
+      _ -> @unavailable
+    end
+  end
+
+  @doc """
   Classify the current competing correction for the same collection. Recorded
   refund obligations and loss evidence retain their own amounts and identities.
   An existing POST claim stays fenced and requires reconciliation even after

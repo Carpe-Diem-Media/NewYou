@@ -116,7 +116,8 @@ defmodule NewYou.Commerce.FixtureRefunds do
            mutate(refund, :claim, %{
              claim_id: Ash.UUID.generate(),
              verify_after: DateTime.add(DateTime.utc_now(), 30)
-           }) do
+           }),
+         :ok <- FixtureDisputes.refresh_for_refund_claim(purchase.id, refund.payment_id) do
       checkpoint(:claim_written)
       {:claimed, claimed, listener}
     else
