@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
   "capability_id": "commerce.hosted_checkout_dispatch",
-  "purpose": "Give an exact accepted standalone Plan one durable Hosted Redirect dispatch claim for local TEST proof.",
+  "purpose": "Bind an accepted standalone Plan in local DEV or TEST to one durable Paystack TEST Hosted Redirect Initialize.",
   "implementing_tickets": [
-    "WELL-218"
+    "WELL-218",
+    "WELL-190"
   ],
   "implementation_revision": {
-    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
-    "semantics": "E1a-F dispatch foundation with WELL-219 known-reference scheduling on the existing claim."
+    "git_sha": "70ab560c8041024d7055712c33c65f621edec407",
+    "semantics": "WELL-190 allows local DEV execution for an exact operator-approved Plan and current self-payer, preserves TEST fixture isolation and proves runtime activation, request redaction and no retry locally."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -23,10 +24,11 @@
     {
       "domain": "NewYou.Privacy",
       "interface": "SyntheticSuppression.locked_status/1",
-      "ownership": "TEST suppression status for both accepted parties. Commerce reuses the S1 Privacy locks.",
+      "ownership": "Locked synthetic subject suppression for TEST. The DEV-only explicit local Plan scope requires the configured payer to authenticate and hold an existing unsuppressed subject row.",
       "source_ids": [
         "quote",
-        "checkout"
+        "checkout",
+        "development_privacy"
       ]
     }
   ],
@@ -38,9 +40,10 @@
         "read",
         "bind",
         "claim",
-        "retain"
+        "retain",
+        "retain_provider_capability"
       ],
-      "caller_boundary": "Private actions and deny-all policies. The owning interface checks current payer, exact source and fixed fixture scope.",
+      "caller_boundary": "Private Ash actions. Commerce checks current payer, exact source and persisted integration scope.",
       "source_ids": [
         "dispatch",
         "checkout"
@@ -70,7 +73,7 @@
       "arguments": [
         "Canonical payer session",
         "Exact immutable S1 snapshot",
-        "Paystack/local_fixture/TEST/card scope"
+        "Paystack/local_fixture or Paystack/voelgoedwinkel, test/card"
       ],
       "returns": [
         "Original reference or scoped denial."
@@ -79,7 +82,7 @@
         "Bind one random reference and a digest of the accepted snapshot."
       ],
       "caller_constraints": [
-        "TEST only. Requires the current payer, allowed Privacy scopes and an unpaid standalone Plan."
+        "Local DEV or TEST. The fixture scope is TEST-only. Requires the current payer, allowed Privacy scopes and an unpaid standalone Plan."
       ],
       "source_ids": [
         "checkout",
@@ -120,7 +123,7 @@
       "arguments": [
         "Canonical payer session",
         "Exact immutable S1 snapshot",
-        "Paystack/local_fixture/TEST/card scope"
+        "Paystack/local_fixture or Paystack/voelgoedwinkel, test/card"
       ],
       "returns": [
         "Original reference and its prepared, retained or ambiguous status, or scoped denial."
@@ -129,10 +132,36 @@
         "Read the current dispatch outcome and apply existing Identity session checks without HTTP."
       ],
       "caller_constraints": [
-        "TEST only. Requires the current payer and unchanged source."
+        "Local DEV or TEST. The fixture scope is TEST-only. Requires the current payer and unchanged source."
       ],
       "source_ids": [
         "checkout",
+        "binding_test"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.HostedCheckout",
+      "function": "initialize",
+      "arity": 3,
+      "visibility": "internal",
+      "arguments": [
+        "Canonical payer session",
+        "Exact immutable S1 snapshot",
+        "Paystack/voelgoedwinkel/test/card scope"
+      ],
+      "returns": [
+        "Retained checkout URL, the original ambiguous attempt, or scoped denial."
+      ],
+      "side_effects": [
+        "Commit and independently observe one durable claim before the HTTP/1 POST. Encrypt a matching capability against the attempt binding before presentation."
+      ],
+      "caller_constraints": [
+        "Local DEV or TEST with explicit runtime approval. Requires an approved exact attempt, restricted TEST key, designated checkout inbox, private capability key and outermost dispatch boundary."
+      ],
+      "source_ids": [
+        "checkout",
+        "adapter",
+        "test_integration",
         "binding_test"
       ]
     }
@@ -152,6 +181,21 @@
       ],
       "source_ids": [
         "schema",
+        "dispatch",
+        "migration_test"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261128133346_well190_paystack_test_initialize.exs",
+      "tables": [
+        "commerce_hosted_dispatches"
+      ],
+      "constraints": [
+        "commerce_hosted_dispatches_test_scope",
+        "commerce_hosted_dispatches_integration_isolation"
+      ],
+      "source_ids": [
+        "provider_schema",
         "dispatch",
         "migration_test"
       ]
@@ -175,7 +219,7 @@
       ]
     },
     {
-      "summary": "Only the claim winner enters the fixed Req path. Retain the matching code under the same claim and check payer authority again before returning the capability.",
+      "summary": "Only the claim winner enters the fixed Req path. Store the fixture code or encrypted TEST capability under the same claim and check payer authority before presentation.",
       "source_ids": [
         "checkout",
         "adapter",
@@ -197,7 +241,7 @@
         "guards": [
           "Exact S1 standalone Plan",
           "Current accepted payer",
-          "Fixed local scope",
+          "Exact integration and environment. A provider attempt requires runtime approval bound to this attempt ID.",
           "No applied payment"
         ],
         "side_effects": [
@@ -234,10 +278,10 @@
         "guards": [
           "Exact claim",
           "Reference match",
-          "Canonical non-routable fixture URL and code"
+          "Canonical capability URL and matching code for the exact integration"
         ],
         "side_effects": [
-          "Retain the fixture code once. The current payer can recover the original URL."
+          "Retain a fixture code or an authenticated encrypted provider capability once. The current payer can recover the original URL."
         ],
         "terminal": false,
         "source_ids": [
@@ -259,24 +303,28 @@
       ]
     },
     {
-      "summary": "The wire code compiles only in TEST. It accepts no host, credential, proxy, plugin or middleware override. The numeric loopback host, fixture credential and synthetic contact are fixed. Verify-enabled claims require TLS authenticated to the exact listener certificate.",
+      "summary": "Actual Paystack TEST Initialize compiles in DEV and TEST. Synthetic fixtures remain TEST-only. Production cannot activate either mode. The real integration has a fixed HTTPS origin. Its local seam pins the exact loopback certificate. Fixture credentials, origins, retention and Verify schedules cannot cross into provider scope.",
       "source_ids": [
         "adapter",
         "checkout",
         "disabled_test",
-        "transport_test"
+        "transport_test",
+        "test_integration",
+        "provider_schema"
       ]
     },
     {
-      "summary": "Publish only response classifications and timings. Mark reference and code sensitive and hide both from ordinary outcome inspection.",
+      "summary": "Emit only response classifications and timings. Reject provider dispatch when Finch handlers could capture raw metadata. Keep runtime settings, in-memory request credentials and payload, reference and capability out of inspected values. Disable SQL query telemetry while touching restricted data.",
       "source_ids": [
         "checkout",
         "dispatch",
-        "transport_test"
+        "transport_test",
+        "test_integration",
+        "binding_test"
       ]
     },
     {
-      "summary": "A bound local attempt cannot accept synthetic P1/S1 payment evidence. A separate unbound S1 fixture still accepts qualified synthetic observations. No local dispatch releases the Assessment interlock or creates rights.",
+      "summary": "A bound hosted attempt cannot accept synthetic P1/S1 evidence. Separate unbound fixtures retain qualified synthetic behavior. Initialize does not verify payment or grant a right.",
       "source_ids": [
         "payment",
         "binding_test"
@@ -328,18 +376,21 @@
       ]
     },
     {
-      "summary": "An exact fixture capability commits before presentation. A fresh BEAM reloads the original result after a lost response or interrupted presentation without another send.",
+      "summary": "A fresh BEAM recovers the committed capability without another send. An unreadable or missing capability leaves the original claim ambiguous.",
       "source_ids": [
         "checkout",
         "recovery_test",
-        "restart"
+        "restart",
+        "binding_test",
+        "test_integration"
       ]
     },
     {
       "summary": "The additive schema leaves P1, S1 and E2a rows intact. Rollback holds an exclusive table lock and refuses to erase a retained binding.",
       "source_ids": [
         "schema",
-        "migration_test"
+        "migration_test",
+        "provider_schema"
       ]
     }
   ],
@@ -348,13 +399,17 @@
       "path": "test/new_you/commerce/hosted_checkout_test.exs",
       "cases": [
         "F-01/F-02 exact snapshot, actor and authority denials",
-        "F-08/F-09 evidence isolation and compatibility"
+        "F-08/F-09 evidence isolation and compatibility",
+        "E1a exact TEST wire payload, encrypted retention, fresh BEAM, unsafe telemetry denial, concurrent lost-response fence",
+        "MG-02 runtime provider branch requires exact source and actor, rejects raw observer, and never retries a 503 or follows a redirect from pinned TLS receiver"
       ],
       "proves": "Exact accepted money, wrong source and scope denial, revoked and suppressed actor denial, quote-less and closed exclusions, zero local payments and rights, and preserved admission interlock.",
       "limits": "Signed synthetic P1, S1 and E2a inputs remain TEST fixtures.",
       "source_ids": [
         "binding_test",
-        "receiver"
+        "receiver",
+        "test_integration",
+        "restart"
       ]
     },
     {
@@ -388,35 +443,64 @@
     {
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "cases": [
-        "F-10 additive migration and protected rollback"
+        "F-10 additive migration and protected rollback",
+        "E1a scope isolation and rollback refusal"
       ],
       "proves": "Up/down/up with legacy rows, local foreign key, scoped unique index and scope, binding and capability shape checks.",
       "limits": "Real DDL in a rollback-isolated schema.",
       "source_ids": [
         "migration_test",
-        "schema"
+        "schema",
+        "provider_schema"
       ]
     },
     {
       "path": "test/proof/well218_provider_disabled.exs",
       "cases": [
-        "F-07 compile exclusion and runtime configuration denial"
+        "MG-01 DEV activation with regular database pool and no fixture transport or scheduler",
+        "MG-02 production compile exclusion"
       ],
-      "proves": "The non-TEST BEAM has no wire builder or Ash/Req imports in the owner boundary. Public calls remain disabled.",
+      "proves": "The DEV build accepts only runtime provider settings, references no Sandbox API, and excludes fixture ingress and execution. Production remains disabled even with valid fake runtime activation.",
       "limits": "Uses compiled modules without starting the application. The existing runner contract checks that both standalone WELL-218 proof scripts stay out of ExUnit discovery.",
       "source_ids": [
         "disabled_test",
         "checkout",
         "test_discovery"
       ]
+    },
+    {
+      "path": "test/new_you/commerce/paystack_test_integration_test.exs",
+      "cases": [
+        "MG-02 exact runtime activation and inspected setting redaction",
+        "MG-02 explicit provider and fixture configuration collision"
+      ],
+      "proves": "The same environment inputs used by DEV and TEST reject disabled, missing, mismatched and invalid values and produce redacted settings.",
+      "limits": "Fake credential and capability values only.",
+      "source_ids": [
+        "test_integration",
+        "runtime_test"
+      ]
     }
   ],
   "safe_extensions": [
     {
-      "summary": "WELL-190 owns any future external activation. Reverify the actual stack and qualify exact provider evidence before changing the fixture isolation or replacement rules.",
+      "summary": "Actual provider operation requires exact WELL-176 owner approval and applicable stage evidence. Bind runtime NEW_YOU_PAYSTACK_TEST_ENABLED, NEW_YOU_PAYSTACK_TEST_APPROVED_ATTEMPT_ID, NEW_YOU_PAYSTACK_TEST_RESTRICTED_KEY, NEW_YOU_PAYSTACK_TEST_EMAIL and NEW_YOU_PAYSTACK_TEST_CAPABILITY_KEY (base64, 32 decoded bytes). Supply secret values privately and preserve the capability key for recovery.",
       "source_ids": [
         "plan",
-        "checkout"
+        "checkout",
+        "test_integration"
+      ]
+    },
+    {
+      "summary": "Private DEV invocation uses mise exec -- devcore-project run dev -- iex -S mix (set NEW_YOU_PORT for linked worktrees). Set NEW_YOU_PAYSTACK_DEV_PLAN_APPROVAL in the private process environment as JSON binding one canonical payer_id, operation_id, offer_id, approval_id, disclosure_en_id and disclosure_af_id. With a canonical DEV session held privately, call Privacy.register_development_checkout_subject(credentials), OfferCatalogue.prepare_development_plan(credentials), then OfferAdmission.quote(%{credentials: credentials}, %{product: :plan, language: :en}). After the payer accepts the displayed R399 terms, pass the exact operation_id, quote_id and disclosure_fingerprint to OfferAdmission.accept/2 with the same credentials. Use the returned attempt_id for the separately approved runtime activation. Use HostedCheckout.prepare/3 and then initialize/3 with that exact immutable snapshot and %{provider: :paystack, integration: :voelgoedwinkel, environment: :test, channel: :card}. Access the returned capability only in private local custody. The code emits no provider request during Privacy registration, offer preparation, quote, acceptance or reference preparation.",
+      "source_ids": [
+        "local_config",
+        "development_source",
+        "development_offer",
+        "development_privacy",
+        "quote",
+        "checkout",
+        "test_integration"
       ]
     }
   ],
@@ -438,6 +522,15 @@
         "dispatch",
         "recovery_test"
       ]
+    },
+    {
+      "summary": "EXTEND Commerce's existing Ash resource and sole claim with integration guards and SQL scope constraints. Reuse Plug.Crypto authenticated encryption as in MFA, with associated data for exactly this attempt, reference and claim. AshCloak was considered. The explicit owner boundary supplies per-attempt authenticated data without another vault or dependency. Signals, Temporal Resources and async dispatch do not fit the synchronous one-owner operation.",
+      "source_ids": [
+        "dispatch",
+        "checkout",
+        "test_integration",
+        "provider_schema"
+      ]
     }
   ],
   "prohibited_shortcuts": [
@@ -453,11 +546,10 @@
   ],
   "proof_limitations": [
     "HIGH proof covers binding, actor authority, request and durable-effect counts, recovery, redaction and migration. Provider reconciliation, browser rendering, financial settlement, entitlement application and release remain separate.",
-    "Only a validated code for a reserved non-routable fixture origin is retained. Real provider capabilities, credentials, HTTPS policy and empirical verdicts belong to WELL-190.",
+    "NewYou exercises actual-stack HTTPS against an independently counted local receiver. Master Gate correction tests stayed closed to external egress. The prior R399 operation remains an earlier exact-source receipt. E1a-07 operational qualification and E1a-09 stage obligations remain open for WELL-176 and later integration proof, subject to explicit scope disposition; no empirical PASS follows.",
     "Standalone Plan has no new unpaid terminality rule. Existing paid or corrected sources remain ineligible. All Assessment and bundle dispatch stays disabled."
   ],
   "follow_up_tickets": [
-    "WELL-190",
     "WELL-176"
   ],
   "sources": [
@@ -465,19 +557,19 @@
       "id": "checkout",
       "path": "lib/new_you/commerce/hosted_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.HostedCheckout",
-      "sha256": "cc11dbe5e000e0cb80abb8abf0bec0ff9f46434782bc829a46e60707caf85179"
+      "sha256": "482ce98989e4d19fb4b8a479383f0aac67824bf9a50562f980a3b0abc8a574f1"
     },
     {
       "id": "dispatch",
       "path": "lib/new_you/commerce/hosted_dispatch.ex",
       "symbol": "update :claim",
-      "sha256": "d58e186ab3c5e9e89a61b82243a90f3526476163d360d1ab1366d2044be6f937"
+      "sha256": "df268b28330355c5603adb8ff99f1f81a56ca8bcd53365a80513f6a347215b5d"
     },
     {
       "id": "adapter",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.PaystackCheckout",
-      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
+      "sha256": "67e52ec5123c0b758f7bd7fdd0b371ed7a2db92735d908f10448ba949aa9b55c"
     },
     {
       "id": "purchase",
@@ -489,7 +581,7 @@
       "id": "quote",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "def bound_snapshot",
-      "sha256": "813cab2f6c8018ca45e49786e7ce5230e17de82cc98d8da44b0f2d669f33de09"
+      "sha256": "7587b19b15d06b899404afbc903774462b0f369f313c6b65c23304cff5d06fed"
     },
     {
       "id": "payment",
@@ -513,7 +605,7 @@
       "id": "binding_test",
       "path": "test/new_you/commerce/hosted_checkout_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedCheckoutTest",
-      "sha256": "bb92cec13b0950db3b99ec1e032f587c5d598dc2237622117b10f9e14d2c27f9"
+      "sha256": "47b5ecf527fdf62c8fd21b4d83f0f8506708ae442f6fdae2aabd70d46fd1ce6f"
     },
     {
       "id": "recovery_test",
@@ -531,13 +623,13 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "hosted dispatch migration preserves adjacent-version rows",
-      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
+      "sha256": "e5894ffb6a38afcb1979aa602958f0afe627f7259cb40c1a885c6bbf0533a935"
     },
     {
       "id": "disabled_test",
       "path": "test/proof/well218_provider_disabled.exs",
-      "symbol": "non-TEST dispatch exclusion passed",
-      "sha256": "fd85e7bef5216083844ff96af58f1f0b4f00bd3fe6b8abe84808a24690ba2dca"
+      "symbol": "WELL-190 checkout build boundary passed",
+      "sha256": "cc48e9484159b632f263b76bd4ffc9fb1eef7913321f908a91075b723017f18d"
     },
     {
       "id": "receiver",
@@ -549,7 +641,7 @@
       "id": "restart",
       "path": "test/proof/well218_hosted_checkout_restart.exs",
       "symbol": "E1AF_COMPLETED",
-      "sha256": "50e55e09f22908f81e00cc4a9a880a63b9ac4e27f0286d72d65d6fb9e8517575"
+      "sha256": "2116f081a28b318724339bbfcb84efff700ca7a7c4414da85bca2a75c24a5c0f"
     },
     {
       "id": "plan",
@@ -562,6 +654,48 @@
       "path": "mix.exs",
       "symbol": "test_ignore_filters",
       "sha256": "cb6c35a15a509049b6a5156b0c949cae31e3ce735adcb4f986dea0d657020e50"
+    },
+    {
+      "id": "test_integration",
+      "path": "lib/new_you/commerce/paystack_test_integration.ex",
+      "symbol": "defmodule NewYou.Commerce.PaystackTestIntegration",
+      "sha256": "258c7e9e105bc6a556d96d1d5802a82d5ceed91ee1b9b617d874c3963c93f16a"
+    },
+    {
+      "id": "provider_schema",
+      "path": "priv/repo/migrations/20261128133346_well190_paystack_test_initialize.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.Well190PaystackTestInitialize",
+      "sha256": "4fbf49ac18f70fb3aec2293b442260380d9518897e3f4a6522eea791e73bda0b"
+    },
+    {
+      "id": "local_config",
+      "path": "lib/new_you/local_config.ex",
+      "symbol": "def paystack_development_plan",
+      "sha256": "5ce805492f1df65cad2fd16d662410980cb0d04d849f2ae67860bdd0564482cd"
+    },
+    {
+      "id": "development_source",
+      "path": "lib/new_you/commerce/paystack_development_source.ex",
+      "symbol": "def authorize",
+      "sha256": "749e7b3858d8471743fc0ebb57a43bc9b411f134ddacaf31fe4de87d357cd313"
+    },
+    {
+      "id": "development_offer",
+      "path": "lib/new_you/commerce/offer_catalogue.ex",
+      "symbol": "def prepare_development_plan",
+      "sha256": "ae3a8cb423efb7db8b48523fbf415947b6afffbc677b9c2cb4b001e2a1435f1d"
+    },
+    {
+      "id": "development_privacy",
+      "path": "lib/new_you/privacy.ex",
+      "symbol": "def register_development_checkout_subject",
+      "sha256": "98dd997a89126995f2ec66e9d86ab935fd8af9d0ed211f1bd6fb2218a1d6ba8e"
+    },
+    {
+      "id": "runtime_test",
+      "path": "test/new_you/commerce/paystack_test_integration_test.exs",
+      "symbol": "test \"the real runtime path validates exact activation",
+      "sha256": "ae94fd12a051a4cbd00e4aee90f1738ea0b9c9a8711209a460cd8d3952207e9e"
     }
   ]
 }

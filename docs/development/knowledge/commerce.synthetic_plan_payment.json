@@ -7,7 +7,7 @@
     "WELL-192"
   ],
   "implementation_revision": {
-    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
+    "git_sha": "c580eb714933289c2acc4adf26dd9c3246576688",
     "semantics": "WELL-192 E2a with immutable receipt binding, fail-closed grants, terminal convergence under suppression, and rejected and unresolved correction evidence. WELL-197 preserves P1 and E2a while evolving the Purchase constraints and isolating S1 payment consequences from P1 delivery. The migration entries for WELL-189 describe the original schema. WELL-197 MG-01 reuses E2a's acknowledged Assessment end as the original S1 claim's terminal evidence. Existing P1 and E2a effect identities remain valid."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -1185,7 +1185,7 @@
       "id": "migration_roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "P1 migrations apply",
-      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
+      "sha256": "e5894ffb6a38afcb1979aa602958f0afe627f7259cb40c1a885c6bbf0533a935"
     },
     {
       "id": "adjudication",

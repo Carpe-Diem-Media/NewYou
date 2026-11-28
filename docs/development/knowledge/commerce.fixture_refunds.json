@@ -6,7 +6,7 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
+    "git_sha": "70ab560c8041024d7055712c33c65f621edec407",
     "semantics": "Provider-disabled refund dispatch, recoverable capped reads, source-qualified excess, durable provider ID conflict classification and privacy-safe Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -778,7 +778,7 @@
     }
   ],
   "proof_limitations": [
-    "All execution evidence is TEST-local. Provider-stage EV-010/011/024\u2013029/048/051/053 and actual-stack activation remain with the existing gated tickets.",
+    "All execution evidence is TEST-local. Provider-stage EV-010/011/024–029/048/051/053 and actual-stack activation remain with the existing gated tickets.",
     "Hosted Assessment and bundle checkout remain outside this slice. Bundle attribution uses the existing qualified synthetic fixtures."
   ],
   "follow_up_tickets": [
@@ -839,7 +839,7 @@
       "id": "allocation",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "def accepted_component_minor",
-      "sha256": "813cab2f6c8018ca45e49786e7ce5230e17de82cc98d8da44b0f2d669f33de09"
+      "sha256": "7587b19b15d06b899404afbc903774462b0f369f313c6b65c23304cff5d06fed"
     },
     {
       "id": "evidence",
@@ -851,7 +851,7 @@
       "id": "transport",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "def build_refund(",
-      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
+      "sha256": "67e52ec5123c0b758f7bd7fdd0b371ed7a2db92735d908f10448ba949aa9b55c"
     },
     {
       "id": "ingress",
@@ -905,7 +905,7 @@
       "id": "roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "refund migrations roundtrip",
-      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
+      "sha256": "e5894ffb6a38afcb1979aa602958f0afe627f7259cb40c1a885c6bbf0533a935"
     },
     {
       "id": "migration_1",

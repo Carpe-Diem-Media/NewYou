@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
+    "git_sha": "70ab560c8041024d7055712c33c65f621edec407",
     "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -329,7 +329,7 @@
           "Due time matches a claimable dispatch"
         ],
         "side_effects": [
-          "Reserve the next attempt and check its visibility independently before HTTP. Backoff grows from 30 seconds to a 900-second cap. The fixture accepts one integer Retry-After value, clamps it to 60\u2013900 seconds and only extends the current due time. Other forms use a 60-second fallback. Actual provider rate limiting is outside this fixture policy."
+          "Reserve the next attempt and check its visibility independently before HTTP. Backoff grows from 30 seconds to a 900-second cap. The fixture accepts one integer Retry-After value, clamps it to 60–900 seconds and only extends the current due time. Other forms use a 60-second fallback. Actual provider rate limiting is outside this fixture policy."
         ],
         "terminal": false,
         "source_ids": [
@@ -589,13 +589,13 @@
       "id": "checkout",
       "path": "lib/new_you/commerce/hosted_checkout.ex",
       "symbol": "defp claim(",
-      "sha256": "cc11dbe5e000e0cb80abb8abf0bec0ff9f46434782bc829a46e60707caf85179"
+      "sha256": "482ce98989e4d19fb4b8a479383f0aac67824bf9a50562f980a3b0abc8a574f1"
     },
     {
       "id": "dispatch",
       "path": "lib/new_you/commerce/hosted_dispatch.ex",
       "symbol": "trigger :verify_fixture_reference",
-      "sha256": "d58e186ab3c5e9e89a61b82243a90f3526476163d360d1ab1366d2044be6f937"
+      "sha256": "df268b28330355c5603adb8ff99f1f81a56ca8bcd53365a80513f6a347215b5d"
     },
     {
       "id": "evidence",
@@ -643,13 +643,13 @@
       "id": "accepted_source",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "def bound_snapshot(purchase)",
-      "sha256": "813cab2f6c8018ca45e49786e7ce5230e17de82cc98d8da44b0f2d669f33de09"
+      "sha256": "7587b19b15d06b899404afbc903774462b0f369f313c6b65c23304cff5d06fed"
     },
     {
       "id": "transport",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "def build_verify(reference",
-      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
+      "sha256": "67e52ec5123c0b758f7bd7fdd0b371ed7a2db92735d908f10448ba949aa9b55c"
     },
     {
       "id": "endpoint",
@@ -702,14 +702,14 @@
     {
       "id": "disabled",
       "path": "test/proof/well218_provider_disabled.exs",
-      "symbol": "E1b-F non-TEST fixture ingress",
-      "sha256": "fd85e7bef5216083844ff96af58f1f0b4f00bd3fe6b8abe84808a24690ba2dca"
+      "symbol": "WELL-219 fixture ingress, Verify and settlement exclusion passed",
+      "sha256": "cc48e9484159b632f263b76bd4ffc9fb1eef7913321f908a91075b723017f18d"
     },
     {
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "payment evidence migration preserves legacy rows",
-      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
+      "sha256": "e5894ffb6a38afcb1979aa602958f0afe627f7259cb40c1a885c6bbf0533a935"
     },
     {
       "id": "audit_pattern",

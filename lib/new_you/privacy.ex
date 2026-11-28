@@ -30,6 +30,62 @@ defmodule NewYou.Privacy do
   @doc false
   def proof_purpose, do: @proof_purpose
 
+  if Mix.env() == :dev do
+    alias NewYou.Privacy.SyntheticDeletionScope
+
+    @doc "Record the authenticated payer's local synthetic Privacy scope for one DEV checkout."
+    def register_development_checkout_subject(credentials) do
+      result =
+        NewYou.Repo.without_query_telemetry(fn ->
+          Ash.transact(SyntheticDeletionScope, fn -> register_development_subject(credentials) end)
+        end)
+
+      case result do
+        {:ok, :ok} -> :ok
+        _ -> {:error, :privacy_authority_unavailable}
+      end
+    end
+
+    defp register_development_subject(credentials) do
+      with {:ok, %{"payer_id" => id}} <- NewYou.LocalConfig.paystack_development_plan(),
+           {:ok, %{account_id: ^id}} <- NewYou.Identity.authorize_canonical_session(credentials) do
+        register_development_subject(id, locked_development_subject(id))
+      end
+    end
+
+    @doc false
+    def require_development_checkout_subject_locked(id) do
+      with true <- Ash.DataLayer.in_transaction?(SyntheticDeletionScope),
+           {:ok, %{"payer_id" => ^id}} <- NewYou.LocalConfig.paystack_development_plan(),
+           {:ok, %{suppressed?: false}} <- locked_development_subject(id) do
+        :ok
+      else
+        _ -> {:error, :purchase_unavailable}
+      end
+    end
+
+    defp register_development_subject(_, {:ok, %{suppressed?: false}}), do: :ok
+
+    defp register_development_subject(id, {:ok, nil}) do
+      case Ash.create(SyntheticDeletionScope, %{subject_id: id},
+             action: :register,
+             authorize?: false
+           ) do
+        {:ok, _} -> :ok
+        error -> error
+      end
+    end
+
+    defp register_development_subject(_, _), do: {:error, :privacy_authority_unavailable}
+
+    defp locked_development_subject(id) do
+      SyntheticDeletionScope
+      |> Ash.Query.filter(subject_id == ^id)
+      |> Ash.Query.lock(:for_update)
+      |> Ash.read_one(authorize?: false)
+    end
+  end
+
   @spec grant_p817_proof_purpose(binary(), binary()) ::
           {:ok, :allowed | :already_allowed}
           | {:error, :withdrawn | :privacy_authority_unavailable}

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "capability_id": "commerce.versioned_offer_admission",
-  "purpose": "Offer and accept an exact versioned Assessment, Plan or bundle in TEST. Preserve component allocations and prevent a competing ordinary Assessment sale while credit or the accepted obligation blocks admission.",
+  "purpose": "Offer and accept an exact versioned Assessment, Plan or bundle in TEST. Preserve component allocations and prevent a competing ordinary Assessment sale while credit or the accepted obligation blocks admission. Local DEV also supports one explicitly configured R399 self-purchase for Paystack TEST.",
   "implementing_tickets": [
     "WELL-197"
   ],
   "implementation_revision": {
-    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
-    "semantics": "WELL-197 S1 with Master Gate corrections for terminal Assessment reconciliation and integrated Identity owner reviews."
+    "git_sha": "70ab560c8041024d7055712c33c65f621edec407",
+    "semantics": "WELL-197 S1 with Master Gate corrections for terminal Assessment reconciliation and integrated Identity owner reviews. WELL-190 adds explicit local DEV approval for one synthetic self-payer and exact versioned Plan. It leaves Assessment, bundle, fixture-only authorities and production activation excluded from DEV."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -888,6 +888,13 @@
         "payment",
         "assessment"
       ]
+    },
+    {
+      "summary": "The local DEV R399 Plan uses the canonical payer session, scoped operator-approved offer and disclosures, and an active local Privacy subject. A matching DEV source cannot replace a different currently approved Plan. The provider boundary is described in commerce.hosted_checkout_dispatch.json.",
+      "source_ids": [
+        "catalogue",
+        "admission"
+      ]
     }
   ],
   "reuse": [
@@ -943,7 +950,7 @@
       "id": "catalogue",
       "path": "lib/new_you/commerce/offer_catalogue.ex",
       "symbol": "defmodule NewYou.Commerce.OfferCatalogue",
-      "sha256": "625bf7f5cfdf8d33e744755ccdc0381996e35b441dfa93124678ef259486cc95"
+      "sha256": "ae3a8cb423efb7db8b48523fbf415947b6afffbc677b9c2cb4b001e2a1435f1d"
     },
     {
       "id": "offer",
@@ -955,7 +962,7 @@
       "id": "admission",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "defmodule NewYou.Commerce.OfferAdmission",
-      "sha256": "813cab2f6c8018ca45e49786e7ce5230e17de82cc98d8da44b0f2d669f33de09"
+      "sha256": "7587b19b15d06b899404afbc903774462b0f369f313c6b65c23304cff5d06fed"
     },
     {
       "id": "quote",
@@ -1093,7 +1100,7 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "versioned migrations roundtrip legacy P1 and E2a",
-      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
+      "sha256": "e5894ffb6a38afcb1979aa602958f0afe627f7259cb40c1a885c6bbf0533a935"
     },
     {
       "id": "restart",

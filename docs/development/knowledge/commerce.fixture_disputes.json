@@ -6,7 +6,7 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
+    "git_sha": "b719dae31e6462d6293a17a47b82b83a710ae8d4",
     "semantics": "Provider-disabled dispute intake, receipt and case recovery, source-specific correction, and local disclosure under independent revocable Finance and Audit grants."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -1290,7 +1290,7 @@
       "id": "transport",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "def build_dispute_read",
-      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
+      "sha256": "67e52ec5123c0b758f7bd7fdd0b371ed7a2db92735d908f10448ba949aa9b55c"
     },
     {
       "id": "rights",
@@ -1356,7 +1356,7 @@
       "id": "roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "test \"dispute migration roundtrips",
-      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
+      "sha256": "e5894ffb6a38afcb1979aa602958f0afe627f7259cb40c1a885c6bbf0533a935"
     },
     {
       "id": "migration",

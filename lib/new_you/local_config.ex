@@ -56,4 +56,22 @@ defmodule NewYou.LocalConfig do
               "NEW_YOU_PORT must be 4220 in the primary checkout or explicitly 4221..4239 in a worktree"
     end
   end
+
+  if Mix.env() == :dev do
+    @doc false
+    def paystack_development_plan do
+      fields = ~w(approval_id disclosure_af_id disclosure_en_id offer_id operation_id payer_id)
+
+      with json when is_binary(json) and byte_size(json) <= 2_048 <-
+             System.get_env("NEW_YOU_PAYSTACK_DEV_PLAN_APPROVAL"),
+           {:ok, source} when is_map(source) <- Jason.decode(json),
+           true <- Enum.sort(Map.keys(source)) == fields,
+           true <- Enum.all?(source, fn {_, id} -> match?({:ok, ^id}, Ecto.UUID.cast(id)) end),
+           true <- source["disclosure_en_id"] != source["disclosure_af_id"] do
+        {:ok, source}
+      else
+        _ -> {:error, :purchase_unavailable}
+      end
+    end
+  end
 end

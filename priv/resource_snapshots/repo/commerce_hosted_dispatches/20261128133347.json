@@ -1,0 +1,312 @@
+{
+  "attributes": [
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "reference",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "source_digest",
+      "type": "binary"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "provider",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "integration",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "environment",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "channel",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "claim_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "fixture_port",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "fixture_certificate",
+      "type": "binary"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "verify_after",
+      "type": "timestamptz(6)"
+    },
+    {
+      "allow_nil?": false,
+      "default": "0",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "verify_round",
+      "type": "bigint"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "fixture_code",
+      "type": "text"
+    },
+    {
+      "allow_nil?": true,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "provider_capability",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": true,
+      "references": {
+        "deferrable": false,
+        "destination_attribute": "attempt_id",
+        "destination_attribute_default": null,
+        "destination_attribute_generated": null,
+        "index?": false,
+        "index_where": null,
+        "match_tenant?": false,
+        "match_type": null,
+        "match_with": null,
+        "multitenancy": {
+          "attribute": null,
+          "global": null,
+          "strategy": null
+        },
+        "name": "commerce_hosted_dispatches_attempt_id_fkey",
+        "on_delete": "restrict",
+        "on_update": null,
+        "primary_key?": false,
+        "schema": "public",
+        "table": "commerce_plan_purchases"
+      },
+      "scale": null,
+      "size": null,
+      "source": "attempt_id",
+      "type": "uuid"
+    }
+  ],
+  "base_filter": null,
+  "check_constraints": [
+    {
+      "attribute": [
+        "fixture_port",
+        "fixture_certificate",
+        "claim_id",
+        "verify_round",
+        "verify_after"
+      ],
+      "base_filter": null,
+      "check": "verify_round BETWEEN 0 AND 6 AND\n(fixture_port IS NULL OR (fixture_port BETWEEN 1 AND 65535 AND claim_id IS NOT NULL)) AND\n(fixture_certificate IS NULL OR\n  (fixture_port IS NOT NULL AND octet_length(fixture_certificate) BETWEEN 1 AND 8192)) AND\n(verify_after IS NULL OR fixture_port IS NOT NULL)\n",
+      "name": "hosted_dispatch_verify_schedule"
+    },
+    {
+      "attribute": [
+        "provider",
+        "integration",
+        "environment",
+        "channel"
+      ],
+      "base_filter": null,
+      "check": "provider = 'paystack' AND integration IN ('local_fixture', 'voelgoedwinkel') AND\nenvironment = 'test' AND channel = 'card'\n",
+      "name": "commerce_hosted_dispatches_test_scope"
+    },
+    {
+      "attribute": [
+        "integration",
+        "provider_capability"
+      ],
+      "base_filter": null,
+      "check": "(integration = 'local_fixture' AND provider_capability IS NULL) OR\n(integration = 'voelgoedwinkel' AND fixture_code IS NULL AND fixture_port IS NULL AND\n  fixture_certificate IS NULL AND verify_after IS NULL AND verify_round = 0 AND\n  (provider_capability IS NULL OR\n    (claim_id IS NOT NULL AND length(provider_capability) <= 504 AND provider_capability ~ '^XCP[.][A-Za-z0-9_-]+$')))\n",
+      "name": "commerce_hosted_dispatches_integration_isolation"
+    },
+    {
+      "attribute": [
+        "reference",
+        "source_digest"
+      ],
+      "base_filter": null,
+      "check": "reference ~ '^[0-9a-f]{32}$' AND octet_length(source_digest) = 32",
+      "name": "commerce_hosted_dispatches_binding"
+    },
+    {
+      "attribute": [
+        "claim_id",
+        "fixture_code"
+      ],
+      "base_filter": null,
+      "check": "fixture_code IS NULL OR\n  (claim_id IS NOT NULL AND fixture_code ~ '^[a-zA-Z0-9_-]{1,128}$')\n",
+      "name": "commerce_hosted_dispatches_claim"
+    }
+  ],
+  "create_table_options": null,
+  "custom_indexes": [
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "verify_after"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "verify_after"
+        }
+      ],
+      "include": null,
+      "include_base_filter?": true,
+      "message": null,
+      "name": "hosted_dispatch_verify_due",
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": "verify_after IS NOT NULL"
+    }
+  ],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "44F5A6C7ABF84051834CC612A8630D32910B8F5D0834A2360B917492A11F3CDB",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "commerce_hosted_dispatches_scoped_reference_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "provider"
+        },
+        {
+          "type": "atom",
+          "value": "integration"
+        },
+        {
+          "type": "atom",
+          "value": "environment"
+        },
+        {
+          "type": "atom",
+          "value": "reference"
+        }
+      ],
+      "name": "scoped_reference",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
+  "multitenancy": {
+    "attribute": null,
+    "global": null,
+    "strategy": null
+  },
+  "repo": "Elixir.NewYou.Repo",
+  "schema": null,
+  "table": "commerce_hosted_dispatches",
+  "temporal": null
+}
