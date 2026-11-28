@@ -6,7 +6,7 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "a76ee2208a9621a3b5df91dface295533c6df27b",
+    "git_sha": "c51dce9ccacb574049396fc58e142f8534985d05",
     "semantics": "Provider-disabled refund dispatch, recoverable capped reads, source-qualified excess, durable provider ID conflict classification and privacy-safe Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -670,7 +670,8 @@
         "Excess before primary, concurrent qualification and replay through the durable receipt worker",
         "Actual SQL telemetry canaries for direct and scheduled correction, 429 updates and receipt insert failure",
         "Competing unsupported allocations cannot increase the exact Plan obligation",
-        "A same-collection unresolved refund POST fences Plan restoration in both independent Purchase lock orders until the refund owner's qualified processing"
+        "A same-collection unresolved refund POST fences Plan restoration in both independent Purchase lock orders until the refund owner's qualified processing",
+        "A same-payment first claim advances the restored Plan dispute consequence in the same transaction. A pre-commit cut rolls back both, and fresh BEAM delivery recovers after missing queue work without another POST."
       ],
       "proves": "F-01 through F-07 fixture behavior and scoped F-08 teardown.",
       "limits": "Hosted Checkout remains standalone Plan. Fixture fields and reply envelope are local protocol assumptions.",
@@ -808,25 +809,25 @@
       "id": "requests",
       "path": "test/support/commerce/fixture_refunds.ex",
       "symbol": "def authorize(credentials, proof)",
-      "sha256": "580d71fc53d0c9c25d45343565675b7060206782207b4900b3d4727d483f5edd"
+      "sha256": "375c7dde6b6d6c3f200184d87aa9c2e8fceba9ab13debcffb4a6473b8c80a953"
     },
     {
       "id": "claim",
       "path": "test/support/commerce/fixture_refunds.ex",
       "symbol": "defp committed_claim?",
-      "sha256": "580d71fc53d0c9c25d45343565675b7060206782207b4900b3d4727d483f5edd"
+      "sha256": "375c7dde6b6d6c3f200184d87aa9c2e8fceba9ab13debcffb4a6473b8c80a953"
     },
     {
       "id": "owner_read",
       "path": "test/support/commerce/fixture_refunds.ex",
       "symbol": "def read_due",
-      "sha256": "580d71fc53d0c9c25d45343565675b7060206782207b4900b3d4727d483f5edd"
+      "sha256": "375c7dde6b6d6c3f200184d87aa9c2e8fceba9ab13debcffb4a6473b8c80a953"
     },
     {
       "id": "qualification",
       "path": "test/support/commerce/fixture_refunds.ex",
       "symbol": "defp qualify_progress",
-      "sha256": "580d71fc53d0c9c25d45343565675b7060206782207b4900b3d4727d483f5edd"
+      "sha256": "375c7dde6b6d6c3f200184d87aa9c2e8fceba9ab13debcffb4a6473b8c80a953"
     },
     {
       "id": "excess",
@@ -886,7 +887,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedRefundTest",
-      "sha256": "b09479a7d5ed846bcc0532787539543fe8518ac1cf1e6f0ada812d4c48feeaae"
+      "sha256": "be89c3de34d3acec9a9bde1271481d8bbbbcb7d6108fabf6f246e0189bf7aa45"
     },
     {
       "id": "fresh",

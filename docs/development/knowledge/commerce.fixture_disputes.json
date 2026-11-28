@@ -6,8 +6,8 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "a76ee2208a9621a3b5df91dface295533c6df27b",
-    "semantics": "Provider-disabled E2c foundation with hardened terminal revision ordering, unresolved refund overlap and non-TEST read exclusion."
+    "git_sha": "c51dce9ccacb574049396fc58e142f8534985d05",
+    "semantics": "Provider-disabled dispute foundation with durable suspension discovery when a same-payment refund is first claimed after restoration."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -69,6 +69,7 @@
         "record_conflict",
         "confirm_terminal",
         "reserve_read",
+        "refund_claimed",
         "acknowledge",
         "read_due",
         "deliver"
@@ -258,6 +259,15 @@
       "source_ids": [
         "lifecycle",
         "dispute"
+      ]
+    },
+    {
+      "summary": "A first refund claim advances conflict-free restored Plan consequences for the exact purchase and payment under the same Purchase transaction. The claim and consequence versions commit together. Dispatch replay cannot advance them again.",
+      "source_ids": [
+        "refund",
+        "lifecycle",
+        "dispute",
+        "test"
       ]
     },
     {
@@ -795,7 +805,7 @@
       ]
     },
     {
-      "summary": "Refund claim and dispute delivery use the same Purchase lock. The refund owner's payment-scoped status keeps a restored dispute financially unresolved after an ambiguous, pending or failed claimed POST. Entitlements suspends the affected Plan right and ends it after qualified processed refund evidence. A delivery that commits first can restore access while clear, and the committed claim then fences reads before the next effect delivery.",
+      "summary": "Refund claim and dispute delivery use the same Purchase lock. The refund owner's payment-scoped status keeps a restored dispute financially unresolved after an ambiguous, pending or failed claimed POST. Entitlements suspends the affected Plan right and ends it after qualified processed refund evidence. A delivery that commits first can restore access while clear, and the committed claim then fences reads immediately and advances the durable effect version for scheduler discovery.",
       "source_ids": [
         "lifecycle",
         "refund",
@@ -858,6 +868,17 @@
         "lifecycle",
         "restart"
       ]
+    },
+    {
+      "summary": "The dispute delivery scheduler finds the newer unacknowledged version even after queue loss. An acknowledgement for a previous restoration cannot acknowledge this version. The refund owner continues same-reference reads until qualified processing and owns the terminal refund effect.",
+      "source_ids": [
+        "dispute",
+        "lifecycle",
+        "refund",
+        "convergence",
+        "restart",
+        "test"
+      ]
     }
   ],
   "tests": [
@@ -875,7 +896,9 @@
         "Both worker orders with precommitted opposite terminal evidence suspend the same right and fence refund for bound and initially unbound cases, then a strictly newer pinned loss ends the right",
         "Both terminal outcomes reconcile an identical revision 4 result under a current reservation after a stale attempt, and a lower same-outcome retry stays fenced. Equal-revision opposition still blocks reconciliation.",
         "Retained restoration and loss at revision 2 with opposition at 4 and stale matching evidence at 6 both reject revision 5, then reconcile an identical current revision 6 exactly once",
-        "An ambiguous refund POST followed by restored dispute stays unresolved, including pending and failed evidence. Independent PostgreSQL claim and restoration delivery contention runs in both Purchase lock orders, followed by qualified refund processing"
+        "An ambiguous refund POST followed by restored dispute stays unresolved, including pending and failed evidence. Independent PostgreSQL claim and restoration delivery contention runs in both Purchase lock orders, followed by qualified refund processing",
+        "A fully acknowledged restoration receives a same-payment ambiguous claim. A pre-commit cut rolls back both writes. The fresh BEAM scheduler rediscovers suspension with no queued job and leaves an independent same-recipient right unchanged.",
+        "A refund claim between Entitlements commit and Commerce acknowledgement invalidates the older version. After removal of the queued work, a fresh BEAM delivers exactly once and a second scheduler pass creates no worker. Both Purchase lock orders and qualified processed refund ending use the actual scheduler."
       ],
       "proves": "F-01 through F-05 and F-07 fixture execution.",
       "limits": "Hosted proof is standalone Plan only. No live provider behavior.",
@@ -1050,7 +1073,7 @@
       "id": "dispute",
       "path": "lib/new_you/commerce/fixture_dispute.ex",
       "symbol": "identity :provider_dispute",
-      "sha256": "eb970a12723cbd9cfbcd715f75d4520fd12f5c0d46867efaec658a22bd520c94"
+      "sha256": "dcbb24c59e5e4c5a609f52c3fdaee014bbcb7a1e311dd98491fea5e63186ca9a"
     },
     {
       "id": "receipt",
@@ -1062,7 +1085,7 @@
       "id": "lifecycle",
       "path": "test/support/commerce/fixture_disputes.ex",
       "symbol": "def locked_effect",
-      "sha256": "ede0db9a2652c74c95aab0fb62d3018d590903a1afc655d36c2b0ad55611911e"
+      "sha256": "09c49162d8526f25fff6f2de7917ead2d4b68b15c93423175c901476dff8341e"
     },
     {
       "id": "fence",
@@ -1074,7 +1097,7 @@
       "id": "refund",
       "path": "test/support/commerce/fixture_refunds.ex",
       "symbol": "defp claim",
-      "sha256": "580d71fc53d0c9c25d45343565675b7060206782207b4900b3d4727d483f5edd"
+      "sha256": "375c7dde6b6d6c3f200184d87aa9c2e8fceba9ab13debcffb4a6473b8c80a953"
     },
     {
       "id": "transport",
@@ -1122,13 +1145,13 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"refund and dispute serialize",
-      "sha256": "b09479a7d5ed846bcc0532787539543fe8518ac1cf1e6f0ada812d4c48feeaae"
+      "sha256": "be89c3de34d3acec9a9bde1271481d8bbbbcb7d6108fabf6f246e0189bf7aa45"
     },
     {
       "id": "restart",
       "path": "test/proof/well223_dispute_restart.exs",
       "symbol": "WELL223_COMPLETED",
-      "sha256": "446deb67f5ad8ee9d1b886c2b49a11dce5aca4715a41ec1b22dd228336e409ee"
+      "sha256": "91e94944c1443416fa508d0965ea4473c304b45084dc2db1a1e6abe5033e48bd"
     },
     {
       "id": "assessment",
