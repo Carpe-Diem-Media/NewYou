@@ -1,0 +1,6 @@
+{
+  "skillOverrides": {
+    "test-driven-development": "off",
+    "finishing-a-development-branch": "off"
+  }
+}
