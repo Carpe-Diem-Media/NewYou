@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "c944d41a6a09a81b33edcfe54525539a1a1dd1ff",
+    "git_sha": "85d97e3e9e1c0e6dd73226e45243bc8b33e7a161",
     "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -709,7 +709,7 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "payment evidence migration preserves legacy rows",
-      "sha256": "fa7ae3bba84a68d4b7a524c6d8a6f7f77d7cae19379f94702067c5416a5ed171"
+      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
     },
     {
       "id": "audit_pattern",

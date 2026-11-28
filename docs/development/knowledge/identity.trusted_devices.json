@@ -6,7 +6,7 @@
     "WELL-178"
   ],
   "implementation_revision": {
-    "git_sha": "33092608a96b1405ec1f8ef0febe9830f822c143",
+    "git_sha": "85d97e3e9e1c0e6dd73226e45243bc8b33e7a161",
     "semantics": "WELL-178 extends the existing private DeviceAssurance Resource and Session management page with participant-owned device trust. Master Gate corrections bound the trusted set and use eligible copy. A scoped Audit insert fault proves grant rollback and cookie suppression. WELL-189 refreshes shared source references. The mapped behavior is unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
@@ -379,7 +379,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "manage_trusted_devices",
-      "sha256": "4d90a4de0a81b61dbacb48236d781f2854ea42981a21ebe50d2a760a372f5263"
+      "sha256": "861c4389cc17434185ae94aa65c401c536796500a949f3d491b6136b645e2b88"
     },
     {
       "id": "session",

@@ -6,7 +6,7 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "e7e46b712ecebd37c5d6039fc13891ed9ca1e32f",
+    "git_sha": "85d97e3e9e1c0e6dd73226e45243bc8b33e7a161",
     "semantics": "Provider-disabled refund dispatch, recoverable capped reads, source-qualified excess, durable provider ID conflict classification and privacy-safe Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -905,7 +905,7 @@
       "id": "roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "refund migrations roundtrip",
-      "sha256": "fa7ae3bba84a68d4b7a524c6d8a6f7f77d7cae19379f94702067c5416a5ed171"
+      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
     },
     {
       "id": "migration_1",

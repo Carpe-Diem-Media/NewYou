@@ -6,8 +6,8 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "e7e46b712ecebd37c5d6039fc13891ed9ca1e32f",
-    "semantics": "Provider-disabled dispute foundation with durable suspension discovery when a same-payment refund is first claimed after restoration."
+    "git_sha": "85d97e3e9e1c0e6dd73226e45243bc8b33e7a161",
+    "semantics": "Provider-disabled dispute intake, receipt and case recovery, source-specific correction, and local disclosure under independent revocable Finance and Audit grants."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -22,10 +22,13 @@
     },
     {
       "domain": "NewYou.Identity",
-      "interface": "locked_fixture_recipient/1",
-      "ownership": "Checks the current canonical recipient and account posture under lock.",
+      "interface": "locked_fixture_recipient/1; issue_fixture_dispute_grant/2; revoke_fixture_dispute_grant/2; require_fixture_dispute_grants/1",
+      "ownership": "Owns canonical Account and session posture and durable dispute disclosure grants. Finance approval is reserved for the Commerce approver scope, and Audit approval is reserved for the Audit & Evidence approver scope.",
       "source_ids": [
-        "identity"
+        "identity",
+        "disclosure_identity",
+        "disclosure_grants",
+        "grant_resource"
       ]
     },
     {
@@ -116,6 +119,21 @@
       "caller_boundary": "Records a fixed field-set assertion through the Audit owner inside a transaction.",
       "source_ids": [
         "audit"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.IdentityGrant",
+      "actions": [
+        "provision_fixture_dispute_approver",
+        "approve_fixture_dispute_disclosure",
+        "revoke"
+      ],
+      "caller_boundary": "TEST-only approver fixtures seed distinct scoped roles. Identity verifies the current Domain approval grant and rejects self-approval before it issues the exact reader grant. Revocation uses the existing Identity lifecycle and Audit E2 evidence.",
+      "source_ids": [
+        "grant_resource",
+        "disclosure_grants",
+        "disclosure_identity"
       ]
     }
   ],
@@ -244,6 +262,23 @@
         "privacy_migration",
         "roundtrip"
       ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261128091553_well223_dispute_disclosure_grants.exs",
+      "tables": [
+        "identity_grants"
+      ],
+      "constraints": [
+        "identity_grants_role",
+        "identity_grants_scope",
+        "identity_grants_approval_grant_id_fkey",
+        "identity_grants_one_active_assignment_index",
+        "identity_grants_one_active_disclosure_index"
+      ],
+      "source_ids": [
+        "grant_migration",
+        "roundtrip"
+      ]
     }
   ],
   "request_flow": [
@@ -278,13 +313,15 @@
       ]
     },
     {
-      "summary": "The projection binds exact signed scope claims and checks current session, persisted Privacy purpose and deletion authority. Audit records the exact operation, actor, dispute, purpose and field set. An independent connection must see that committed assertion before the projection returns. Explicit caller transactions are denied.",
+      "summary": "The projection requires current Finance and Audit IdentityGrant rows for the canonical actor, recipient, dispute and operation. It checks the signed and persisted Privacy purpose and deletion authority. Audit records the exact operation, actor, dispute, purpose and field set. An independent connection must see that committed assertion before the projection returns. Explicit caller transactions are denied.",
       "source_ids": [
         "projection",
         "privacy",
         "audit",
         "fence",
-        "projection_test"
+        "projection_test",
+        "disclosure_identity",
+        "disclosure_grants"
       ]
     }
   ],
@@ -305,7 +342,9 @@
       "receipt.applied",
       "receipt.stale",
       "receipt.conflict",
-      "receipt.quarantined"
+      "receipt.quarantined",
+      "disclosure_grant.active",
+      "disclosure_grant.revoked"
     ],
     "transitions": [
       {
@@ -824,6 +863,22 @@
           "restart",
           "test"
         ]
+      },
+      {
+        "from_state": "disclosure_grant.active",
+        "to_state": "disclosure_grant.revoked",
+        "guards": [
+          "The current canonical approver has the matching Commerce or Audit & Evidence approval role for the target recipient and differs from the reader."
+        ],
+        "side_effects": [
+          "Identity revokes the exact grant and records one Audit E2 obligation. The canonical session and Privacy purpose can remain current. The other disclosure role remains independently valid."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "grant_resource",
+          "disclosure_grants",
+          "revocation_test"
+        ]
       }
     ]
   },
@@ -853,6 +908,14 @@
         "audit",
         "fence"
       ]
+    },
+    {
+      "summary": "Finance and Audit reader capabilities use distinct role and scope pairs and confer no Support permission. Identity checks exact IDs, role, actor, recipient, dispute, operation, active period and unrevoked state in the projection transaction. TEST-only scope provisioning rejects self-approval and records the exact active approver grant used for issuance.",
+      "source_ids": [
+        "disclosure_grants",
+        "grant_resource",
+        "revocation_test"
+      ]
     }
   ],
   "concurrency": [
@@ -881,6 +944,14 @@
         "refund",
         "convergence",
         "test"
+      ]
+    },
+    {
+      "summary": "Grant administration locks involved Accounts in identifier order. The projection retains the canonical reader Account lock before checking the two current grant rows. A competing grant revocation uses the same Account boundary and revokes the targeted disclosure grant under its independently authenticated Domain authority and clears elevated assurance through the existing Identity lifecycle.",
+      "source_ids": [
+        "disclosure_grants",
+        "grant_resource",
+        "projection"
       ]
     }
   ],
@@ -1005,17 +1076,23 @@
       "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
       "cases": [
         "Minimal allowlist and Audit binding",
-        "Missing and foreign claims checked separately for Finance, Privacy and Audit. Extra Finance fields are rejected.",
+        "Missing, swapped and foreign grants, foreign actor or operation, and extra disclosure fields are rejected.",
         "Old proof replay after terminal withdrawal",
         "Deletion suppression",
-        "Explicit and implicit Sandbox rollback, rejected Audit persistence, independent exact committed assertion, and idempotent replay"
+        "Explicit and implicit Sandbox rollback, rejected Audit persistence, independent exact committed assertion, and idempotent replay",
+        "Signed Finance and Audit claims alone are denied even with a current canonical session and Privacy purpose.",
+        "Independent revocation and expiry of each scoped reader grant deny a current session and Privacy purpose without a disclosure assertion. Replay emits one revocation obligation and a current replacement grant restores authorized projection without reviving the revoked identifier.",
+        "Cross-Domain, Support, unprivileged and self-approval attempts fail. Both correctly scoped Domain approvals create usable grants for the same reader."
       ],
-      "proves": "F-06 local disclosure, current Privacy purpose and session denial, and the independent Audit commit boundary.",
-      "limits": "Finance and Audit claims are signed and operation scoped. F-06 remains unresolved for independent revocation. The existing IdentityGrant fixture supports Support scopes only. The governing Finance and Audit scopes and independent approvers need an owner decision.",
+      "proves": "F-06 minimized local disclosure under independent Finance, Audit, Privacy and canonical session authority, with an independent exact Audit commit boundary.",
+      "limits": "Synthetic approval roles and grant administration are restricted to TEST. Production provisioning and privileged authentication require their governed release gates.",
       "source_ids": [
         "projection_test",
         "privacy",
-        "audit"
+        "audit",
+        "grant_resource",
+        "disclosure_grants",
+        "revocation_test"
       ]
     },
     {
@@ -1034,12 +1111,14 @@
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "cases": [
         "Isolated schema forward/down/forward",
-        "Refuse rollback over retained Audit and Privacy evidence"
+        "Refuse rollback over retained Audit and Privacy evidence",
+        "Identity grant migration keeps legacy Support grants through forward/down/forward and refuses rollback over retained dispute approval evidence."
       ],
       "proves": "F-07 migration compatibility and preservation.",
       "limits": "Migration proof runs in a transaction-owned schema.",
       "source_ids": [
-        "roundtrip"
+        "roundtrip",
+        "grant_migration"
       ]
     },
     {
@@ -1060,7 +1139,8 @@
       "path": "test/proof/well223_provider_disabled.exs",
       "cases": [
         "Non-TEST primary read actions are absent even when Ash supplies a real AshOban job context.",
-        "Fixture ingress, trigger declarations, worker and scheduler modules, all five fixture request builders and TEST-only PlanRight actions are absent. Public Domain wrappers fail closed and normal Privacy and Audit reader policies deny rows."
+        "Fixture ingress, trigger declarations, worker and scheduler modules, all five fixture request builders and TEST-only PlanRight actions are absent. Public Domain wrappers fail closed and normal Privacy and Audit reader policies deny rows.",
+        "Disclosure grant provisioning and approval actions are absent in DEV, and Identity issue, revoke and require wrappers fail closed."
       ],
       "proves": "F-07 DEV compile and read denial for all five Commerce, Audit and Privacy dispute resources, with and without authorization.",
       "limits": "Runs in DEV without starting Repo or the endpoint. Application CI executes it in the existing static job after compiling DEV and loading static project policies.",
@@ -1072,7 +1152,9 @@
         "purpose_resource",
         "purpose_event",
         "discovery",
-        "application_ci"
+        "application_ci",
+        "disclosure_identity",
+        "grant_resource"
       ]
     }
   ],
@@ -1148,7 +1230,7 @@
     "Actual Paystack account configuration, dispute status and deadline vocabulary, Finance operations and release certification remain out of scope.",
     "The local fixture records unresolved overlapping corrections and does not decide cancellation, netting or external adjudication.",
     "Ash Signals and Temporal Resources were considered. The existing versioned Commerce consequence and immutable receipts provide scoped durable recovery and historical evidence without process-local authority or new dependencies.",
-    "Finance and Audit are signed TEST fixture claims. Persisted revocation proof applies to the Privacy purpose and canonical session. Product Law section 15.1A requires a designated approver for Domain-sensitive scopes, and DEC-320 permits isolated proof fixtures. F-06 remains unresolved pending an owner decision on revocable Finance and Audit scope and approver authority. Revisions order fixture observations only."
+    "Product Law section 15.1A and DEC-320 allow synthetic Domain approval roles to prove reader grant issuance and independent revocation in TEST. Finance and Audit scopes confer no production capability. Fixture revisions order local observations only."
   ],
   "follow_up_tickets": [
     "WELL-195",
@@ -1220,7 +1302,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def locked_fixture_recipient",
-      "sha256": "4d90a4de0a81b61dbacb48236d781f2854ea42981a21ebe50d2a760a372f5263"
+      "sha256": "861c4389cc17434185ae94aa65c401c536796500a949f3d491b6136b645e2b88"
     },
     {
       "id": "privacy",
@@ -1238,7 +1320,7 @@
       "id": "projection",
       "path": "test/support/commerce/fixture_dispute_projection.ex",
       "symbol": "def read",
-      "sha256": "2d3458f9f6caf94a6478e6ed3e6df2a92e8071766a66617eddfdee0aeeae9931"
+      "sha256": "8442473f6826652047b2bcc3e0fade73682943b55036fa5474b38326c5f145c5"
     },
     {
       "id": "test",
@@ -1262,13 +1344,13 @@
       "id": "projection_test",
       "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
       "symbol": "defmodule NewYou.Commerce.FixtureDisputeProjectionTest",
-      "sha256": "2719ff2cf2dc0fe1b9f3df8e7c545222cec2a2fff5c02ac43640de443a6cb8ab"
+      "sha256": "b58f21034076072fa7567ae86156a648b6a635956c9225625eee237dbc9009a9"
     },
     {
       "id": "roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "test \"dispute migration roundtrips",
-      "sha256": "fa7ae3bba84a68d4b7a524c6d8a6f7f77d7cae19379f94702067c5416a5ed171"
+      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
     },
     {
       "id": "migration",
@@ -1304,7 +1386,7 @@
       "id": "non_test",
       "path": "test/proof/well223_provider_disabled.exs",
       "symbol": "AshOban.build_context",
-      "sha256": "926171131268919fc90d64ab096cac552afe6eeefee0475238462c34271547e4"
+      "sha256": "454e79737a562b17c4180326699896e80530804edd55175920a6470160b05685"
     },
     {
       "id": "late_grant",
@@ -1371,6 +1453,36 @@
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"the same payer can have distinct equal-value purchases",
       "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
+    },
+    {
+      "id": "disclosure_identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def issue_fixture_dispute_grant",
+      "sha256": "861c4389cc17434185ae94aa65c401c536796500a949f3d491b6136b645e2b88"
+    },
+    {
+      "id": "disclosure_grants",
+      "path": "test/support/identity/fixture_dispute_grants.ex",
+      "symbol": "defp authorize_approver",
+      "sha256": "c609cd76012ed7b2533582232a0b98e04dcec39ec0ed60605600ab8000d2da80"
+    },
+    {
+      "id": "grant_resource",
+      "path": "lib/new_you/identity/identity_grant.ex",
+      "symbol": "create :approve_fixture_dispute_disclosure",
+      "sha256": "af45f5c2992ee96a70a68bce3abeae9812c5a00d89a5cf3b05fab3a98bdbde69"
+    },
+    {
+      "id": "grant_migration",
+      "path": "priv/repo/migrations/20261128091553_well223_dispute_disclosure_grants.exs",
+      "symbol": "Cannot remove retained dispute disclosure grant",
+      "sha256": "9a06d598b6aa6b2193ebcfaa7e0f32feae8fa00ed5a2cf6618da7d591652f284"
+    },
+    {
+      "id": "revocation_test",
+      "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
+      "symbol": "test \"Finance and Audit grants can each be revoked",
+      "sha256": "b58f21034076072fa7567ae86156a648b6a635956c9225625eee237dbc9009a9"
     }
   ]
 }
