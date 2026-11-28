@@ -6,8 +6,8 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "7e79f6f44eb6e5d61b4dc05dcae7d4d9ba619976",
-    "semantics": "Provider-disabled E2c foundation including Master Gate corrections for Privacy, Audit, terminal evidence ordering and pinned-read retry."
+    "git_sha": "a76ee2208a9621a3b5df91dface295533c6df27b",
+    "semantics": "Provider-disabled E2c foundation with hardened terminal revision ordering, unresolved refund overlap and non-TEST read exclusion."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -713,7 +713,7 @@
         "from_state": "restored",
         "to_state": "restored",
         "guards": [
-          "A current, source-qualified pinned fixture read confirms the retained outcome at a revision newer than the retained decision and all committed opposing terminal evidence, including stale-lease observations."
+          "A current, source-qualified pinned fixture read confirms the retained outcome at a revision newer than the retained decision and all committed opposing terminal evidence, and at least as high as all committed matching terminal evidence, including stale-lease observations."
         ],
         "side_effects": [
           "Clear the conflict and advance the consequence version atomically. Historic receipts remain additive.",
@@ -731,7 +731,7 @@
         "from_state": "lost",
         "to_state": "lost",
         "guards": [
-          "A current, source-qualified pinned fixture read confirms the retained outcome at a revision newer than the retained decision and all committed opposing terminal evidence, including stale-lease observations."
+          "A current, source-qualified pinned fixture read confirms the retained outcome at a revision newer than the retained decision and all committed opposing terminal evidence, and at least as high as all committed matching terminal evidence, including stale-lease observations."
         ],
         "side_effects": [
           "Clear the conflict and advance the consequence version atomically. Historic receipts remain additive.",
@@ -749,11 +749,12 @@
   },
   "security_invariants": [
     {
-      "summary": "Dispute wire, handlers, workers and state-changing Ash actions compile only in TEST. Network reads are GET to the original certificate-pinned loopback endpoint, without redirects or automatic retries.",
+      "summary": "Dispute wire, handlers, workers, Ash actions and AshOban read authorization compile only in TEST. Network reads are GET to the original certificate-pinned loopback endpoint, without redirects or automatic retries.",
       "source_ids": [
         "dispute",
         "receipt",
-        "transport"
+        "transport",
+        "non_test"
       ]
     },
     {
@@ -790,6 +791,15 @@
         "lifecycle",
         "dispute",
         "ingress",
+        "test"
+      ]
+    },
+    {
+      "summary": "Refund claim and dispute delivery use the same Purchase lock. The refund owner's payment-scoped status keeps a restored dispute financially unresolved after an ambiguous, pending or failed claimed POST. Entitlements suspends the affected Plan right and ends it after qualified processed refund evidence. A delivery that commits first can restore access while clear, and the committed claim then fences reads before the next effect delivery.",
+      "source_ids": [
+        "lifecycle",
+        "refund",
+        "convergence",
         "test"
       ]
     }
@@ -839,6 +849,15 @@
         "test",
         "restart"
       ]
+    },
+    {
+      "summary": "AshOban 0.10.2 remains pinned. These triggers use generic actions. The owning code revalidates pending receipt, due read and effect state under the Purchase lock. The 0.10.3 update and destroy worker recheck change is distinct from those guards. Fresh BEAM proof executes the current pinned scheduler and workers.",
+      "source_ids": [
+        "dispute",
+        "receipt",
+        "lifecycle",
+        "restart"
+      ]
     }
   ],
   "tests": [
@@ -854,7 +873,9 @@
         "Terminal conflicts hold the refund fence until a newer exact pinned confirmation across a fresh BEAM, including final-loss non-resurrection and additive receipt history",
         "Superseded pinned read committed at revision 10 blocks revision 4 and 10 restoration, then revision 11 restores the same right in a fresh BEAM",
         "Both worker orders with precommitted opposite terminal evidence suspend the same right and fence refund for bound and initially unbound cases, then a strictly newer pinned loss ends the right",
-        "Both terminal outcomes reconcile an identical revision 4 result under a current reservation after a stale attempt, and a lower same-outcome retry stays fenced. Equal-revision opposition still blocks reconciliation."
+        "Both terminal outcomes reconcile an identical revision 4 result under a current reservation after a stale attempt, and a lower same-outcome retry stays fenced. Equal-revision opposition still blocks reconciliation.",
+        "Retained restoration and loss at revision 2 with opposition at 4 and stale matching evidence at 6 both reject revision 5, then reconcile an identical current revision 6 exactly once",
+        "An ambiguous refund POST followed by restored dispute stays unresolved, including pending and failed evidence. Independent PostgreSQL claim and restoration delivery contention runs in both Purchase lock orders, followed by qualified refund processing"
       ],
       "proves": "F-01 through F-05 and F-07 fixture execution.",
       "limits": "Hosted proof is standalone Plan only. No live provider behavior.",
@@ -916,6 +937,20 @@
         "privacy",
         "privacy_telemetry",
         "cleanup"
+      ]
+    },
+    {
+      "path": "test/proof/well223_provider_disabled.exs",
+      "cases": [
+        "Non-TEST primary read actions are absent even when Ash supplies a real AshOban job context"
+      ],
+      "proves": "F-07 DEV compile and read denial for both fixture resources, with and without authorization.",
+      "limits": "Runs without starting the app in the approved local DEV environment.",
+      "source_ids": [
+        "non_test",
+        "dispute",
+        "receipt",
+        "discovery"
       ]
     }
   ],
@@ -1015,19 +1050,19 @@
       "id": "dispute",
       "path": "lib/new_you/commerce/fixture_dispute.ex",
       "symbol": "identity :provider_dispute",
-      "sha256": "877903f63618050da91ff15a398263b22a4fb4d3633837521435dde72a876090"
+      "sha256": "eb970a12723cbd9cfbcd715f75d4520fd12f5c0d46867efaec658a22bd520c94"
     },
     {
       "id": "receipt",
       "path": "lib/new_you/commerce/fixture_dispute_receipt.ex",
       "symbol": "identity :evidence",
-      "sha256": "2e4e9d374b7e1bd9dd7a244ab02b5caae7ae7a90341de40938f7cce62c31e204"
+      "sha256": "c8b792efb6751c10ba69a445c599a6c3ba0c6cebf3383b748ca5a2f97f0983ac"
     },
     {
       "id": "lifecycle",
       "path": "test/support/commerce/fixture_disputes.ex",
       "symbol": "def locked_effect",
-      "sha256": "cbfa322bc8959fb446e14562f86c0dbeeffc83480c19f849456b69186651afd0"
+      "sha256": "ede0db9a2652c74c95aab0fb62d3018d590903a1afc655d36c2b0ad55611911e"
     },
     {
       "id": "fence",
@@ -1039,7 +1074,7 @@
       "id": "refund",
       "path": "test/support/commerce/fixture_refunds.ex",
       "symbol": "defp claim",
-      "sha256": "693eb34ac1fe83ede7d5cf248aac3bf197a4743b60497949a55032145bdf6104"
+      "sha256": "580d71fc53d0c9c25d45343565675b7060206782207b4900b3d4727d483f5edd"
     },
     {
       "id": "transport",
@@ -1087,7 +1122,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"refund and dispute serialize",
-      "sha256": "280600aef04a4621dc4b43e2be4b9e2c1bdd9fdca72485d1a4c43e215596d820"
+      "sha256": "b09479a7d5ed846bcc0532787539543fe8518ac1cf1e6f0ada812d4c48feeaae"
     },
     {
       "id": "restart",
@@ -1135,13 +1170,19 @@
       "id": "discovery",
       "path": "mix.exs",
       "symbol": "well223_dispute_restart",
-      "sha256": "40051095f2b1c027e35d600934c59b0ed7394774b57bcb8b1a600acd8365821c"
+      "sha256": "cb6c35a15a509049b6a5156b0c949cae31e3ce735adcb4f986dea0d657020e50"
     },
     {
       "id": "privacy_telemetry",
       "path": "test/new_you/privacy/fixture_dispute_purpose_telemetry_test.exs",
       "symbol": "test \"purpose authority SQL omits",
       "sha256": "bade0ea5e97cd2f2ce7e4f7af97380ddec2b76ddc935610fb8cd4afdabfcdb75"
+    },
+    {
+      "id": "non_test",
+      "path": "test/proof/well223_provider_disabled.exs",
+      "symbol": "AshOban.build_context",
+      "sha256": "8b6b3dd907ffc702a23f0238944349833d4c6608e24dff40dc0d45bec3f1259c"
     }
   ]
 }
