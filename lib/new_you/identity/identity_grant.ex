@@ -10,14 +10,35 @@ defmodule NewYou.Identity.IdentityGrant do
   postgres do
     table "identity_grants"
     repo NewYou.Repo
-    identity_wheres_to_sql one_active_assignment: "state = 'active'"
+
+    identity_wheres_to_sql one_active_assignment: "state = 'active' AND dispute_id IS NULL",
+                           one_active_disclosure: "state = 'active' AND dispute_id IS NOT NULL"
 
     check_constraints do
-      check_constraint :role, "identity_grants_role", check: "role = 'support'"
+      check_constraint :role, "identity_grants_role",
+        check: """
+        role IN ('support', 'finance', 'audit_reader', 'finance_disclosure_approver', 'audit_access_approver')
+        """
 
       check_constraint :scope, "identity_grants_scope",
-        check:
-          "scope IN ('security_hold_restriction', 'security_hold_review', 'security_hold_release', 'identity_reconciliation', 'identity_recovery', 'identity_lookup')"
+        check: """
+        (
+          dispute_id IS NULL AND source_operation_id IS NULL AND approval_grant_id IS NULL
+          AND (
+            (role = 'support' AND scope IN ('security_hold_restriction', 'security_hold_review', 'security_hold_release', 'identity_reconciliation', 'identity_recovery', 'identity_lookup'))
+            OR (role, scope) IN (
+              ('finance_disclosure_approver', 'approve_finance_dispute_disclosure'),
+              ('audit_access_approver', 'approve_audit_dispute_evidence')
+            )
+          )
+        ) OR (
+          dispute_id IS NOT NULL AND source_operation_id IS NOT NULL AND approval_grant_id IS NOT NULL
+          AND (role, scope) IN (
+            ('finance', 'finance_dispute_disclosure'),
+            ('audit_reader', 'audit_dispute_evidence')
+          )
+        )
+        """
 
       check_constraint :state, "identity_grants_state", check: "state IN ('active', 'revoked')"
 
@@ -54,6 +75,49 @@ defmodule NewYou.Identity.IdentityGrant do
           :starts_at,
           :expires_at
         ]
+
+        validate attribute_equals(:role, :support)
+      end
+    end
+
+    if Mix.env() == :test do
+      create :provision_fixture_dispute_approver do
+        description "Seed a recipient-scoped Domain approval role using isolated TEST authority."
+        public? false
+
+        accept [
+          :subject_account_id,
+          :role,
+          :scope,
+          :target_account_id,
+          :approver_account_id,
+          :reason_code,
+          :starts_at,
+          :expires_at
+        ]
+
+        validate one_of(:role, [:finance_disclosure_approver, :audit_access_approver])
+      end
+
+      create :approve_fixture_dispute_disclosure do
+        description "Record the approved exact disclosure scope and the active Domain approver grant used for approval."
+        public? false
+
+        accept [
+          :subject_account_id,
+          :role,
+          :scope,
+          :target_account_id,
+          :approver_account_id,
+          :approval_grant_id,
+          :dispute_id,
+          :source_operation_id,
+          :reason_code,
+          :starts_at,
+          :expires_at
+        ]
+
+        validate one_of(:role, [:finance, :audit_reader])
       end
     end
 
@@ -92,7 +156,15 @@ defmodule NewYou.Identity.IdentityGrant do
 
     attribute :role, :atom do
       allow_nil? false
-      constraints one_of: [:support]
+
+      constraints one_of: [
+                    :support,
+                    :finance,
+                    :audit_reader,
+                    :finance_disclosure_approver,
+                    :audit_access_approver
+                  ]
+
       public? false
     end
 
@@ -105,7 +177,11 @@ defmodule NewYou.Identity.IdentityGrant do
                     :security_hold_release,
                     :identity_reconciliation,
                     :identity_recovery,
-                    :identity_lookup
+                    :identity_lookup,
+                    :finance_dispute_disclosure,
+                    :audit_dispute_evidence,
+                    :approve_finance_dispute_disclosure,
+                    :approve_audit_dispute_evidence
                   ]
 
       public? false
@@ -127,6 +203,8 @@ defmodule NewYou.Identity.IdentityGrant do
     attribute :starts_at, :utc_datetime_usec, allow_nil?: false, public?: false
     attribute :expires_at, :utc_datetime_usec, allow_nil?: false, public?: false
     attribute :revoked_at, :utc_datetime_usec, public?: false
+    attribute :dispute_id, :uuid, public?: false
+    attribute :source_operation_id, :uuid, public?: false
     attribute :version, :integer, allow_nil?: false, default: 1, public?: false
   end
 
@@ -151,12 +229,22 @@ defmodule NewYou.Identity.IdentityGrant do
       attribute_writable? true
       public? false
     end
+
+    belongs_to :approval_grant, NewYou.Identity.IdentityGrant do
+      allow_nil? true
+      attribute_writable? true
+      public? false
+    end
   end
 
   identities do
     identity :one_active_assignment,
              [:subject_account_id, :role, :scope, :target_account_id],
-             where: expr(state == :active)
+             where: expr(state == :active and is_nil(dispute_id))
+
+    identity :one_active_disclosure,
+             [:subject_account_id, :role, :scope, :dispute_id, :source_operation_id],
+             where: expr(state == :active and not is_nil(dispute_id))
   end
 
   # Product §15.1A fixes role/scope authority. These bounded Support scopes are

@@ -328,6 +328,36 @@ defmodule NewYou.Identity do
     def locked_fixture_recipient(_), do: {:error, :recipient_unavailable}
   end
 
+  @doc "Record an independently approved Finance or Audit dispute-disclosure grant in TEST."
+  @spec issue_fixture_dispute_grant(session_credentials(), map()) ::
+          {:ok, IdentityGrant.t()} | {:error, :disclosure_grant_unavailable}
+  if Mix.env() == :test do
+    def issue_fixture_dispute_grant(credentials, scope),
+      do: NewYou.Identity.FixtureDisputeGrants.issue(credentials, scope)
+
+    @doc "Revoke a TEST dispute-disclosure grant under its current Domain approval scope."
+    @spec revoke_fixture_dispute_grant(session_credentials(), Ecto.UUID.t()) ::
+            {:ok, IdentityGrant.t()} | {:error, :disclosure_grant_unavailable}
+    def revoke_fixture_dispute_grant(credentials, grant_id),
+      do: NewYou.Identity.FixtureDisputeGrants.revoke(credentials, grant_id)
+
+    @doc false
+    @spec require_fixture_dispute_grants(map()) :: :ok | {:error, :disclosure_grant_unavailable}
+    def require_fixture_dispute_grants(scope),
+      do: NewYou.Identity.FixtureDisputeGrants.require_current(scope)
+  else
+    def issue_fixture_dispute_grant(_, _), do: {:error, :disclosure_grant_unavailable}
+
+    @doc "Revoke a TEST dispute-disclosure grant under its current Domain approval scope."
+    @spec revoke_fixture_dispute_grant(session_credentials(), Ecto.UUID.t()) ::
+            {:ok, IdentityGrant.t()} | {:error, :disclosure_grant_unavailable}
+    def revoke_fixture_dispute_grant(_, _), do: {:error, :disclosure_grant_unavailable}
+
+    @doc false
+    @spec require_fixture_dispute_grants(map()) :: :ok | {:error, :disclosure_grant_unavailable}
+    def require_fixture_dispute_grants(_), do: {:error, :disclosure_grant_unavailable}
+  end
+
   @doc """
   Return the presenting Session holder's current canonical Platform Member Reference.
   The Session ID and bearer must resolve to the same active verified Account. This

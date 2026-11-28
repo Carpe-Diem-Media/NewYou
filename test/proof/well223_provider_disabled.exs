@@ -3,6 +3,7 @@ alias Ash.Error.Invalid.NoPrimaryAction
 alias NewYou.Audit.{EvidenceRecord, FixtureDisputeDisclosure}
 alias NewYou.Commerce.{FixtureDispute, FixtureDisputeReceipt}
 alias NewYou.Entitlements.PlanRight
+alias NewYou.Identity.IdentityGrant
 
 alias NewYou.Privacy.{
   FixtureDisputePurposeAuthority,
@@ -73,6 +74,11 @@ false = Code.ensure_loaded?(NewYou.Commerce.Workers.ProcessFixtureDisputeReceipt
 false = Code.ensure_loaded?(NewYou.Commerce.Schedulers.DeliverFixtureDispute)
 false = Code.ensure_loaded?(NewYou.Commerce.Schedulers.ReadFixtureDispute)
 false = Code.ensure_loaded?(NewYou.Commerce.Schedulers.ProcessFixtureDisputeReceipt)
+false = Code.ensure_loaded?(NewYou.Identity.FixtureDisputeGrants)
+
+for action <- [:provision_fixture_dispute_approver, :approve_fixture_dispute_disclosure] do
+  nil = Ash.Resource.Info.action(IdentityGrant, action)
+end
 
 # No fixture request builder can reach a provider from the DEV build.
 true = Code.ensure_loaded?(NewYou.Commerce.PaystackCheckout)
@@ -92,6 +98,12 @@ end
 {:error, :dispute_unavailable} = NewYou.Commerce.deliver_fixture_dispute("fixture-only")
 {:error, :grant_unavailable} = NewYou.Entitlements.apply_fixture_dispute("fixture-only")
 {:error, :recipient_unavailable} = NewYou.Identity.locked_fixture_recipient("fixture-only")
+{:error, :disclosure_grant_unavailable} = NewYou.Identity.issue_fixture_dispute_grant(%{}, %{})
+
+{:error, :disclosure_grant_unavailable} =
+  NewYou.Identity.revoke_fixture_dispute_grant(%{}, "fixture-only")
+
+{:error, :disclosure_grant_unavailable} = NewYou.Identity.require_fixture_dispute_grants(%{})
 
 # Privacy and Audit evidence readers retain their ordinary Ash denial in DEV.
 for resource <- [PurposeAuthority, EvidenceRecord] do
