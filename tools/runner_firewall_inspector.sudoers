@@ -1,0 +1,3 @@
+# Candidate only. Install after independent review and explicit owner approval.
+# No arguments, shell, firewall frontend or other command is granted.
+jcschoeman96 ALL=(root) NOPASSWD: /usr/local/libexec/newyou-ci-firewall-inspect ""

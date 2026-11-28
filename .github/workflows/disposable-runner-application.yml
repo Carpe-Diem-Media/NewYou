@@ -1,0 +1,90 @@
+name: Disposable application trial
+
+# Opt-in evidence only. Required PR checks and nightly audits remain hosted.
+on:
+  push:
+    branches: [well-93-application-run]
+    paths: [.github/workflows/disposable-runner-application.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: well-93-disposable-application
+  cancel-in-progress: false
+
+env:
+  MIX_ENV: test
+  ImageOS: ubuntu24
+  ERL_FLAGS: '+S 2:2'
+
+jobs:
+  application-trial:
+    if: github.repository == 'JCSchoeman96/NewYou' && github.actor == 'JCSchoeman96'
+    runs-on: [newyou-well93-application]
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 127.0.0.1:55433:5432
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -p 5432 -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Verify disposable guest and rootless Docker
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(systemd-detect-virt)" = kvm
+          test "$(id -un)" = runner
+          ! id -nG | grep -Eq 'sudo|docker|libvirt'
+          test ! -S /var/run/docker.sock
+          test ! -e "$HOME/.config/gh"
+          test ! -e "$HOME/.config/dev-core"
+          docker info --format '{{json .SecurityOptions}}' | python3 -c 'import json,sys; assert "name=rootless" in json.load(sys.stdin)'
+          docker version
+          hostname
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+      - name: Verify pinned runtime
+        run: |
+          elixir --version
+          elixir -e 'true = System.version() == "1.20.5"; true = to_string(:erlang.system_info(:otp_release)) == "29"; true = String.trim(File.read!(Path.join([:code.root_dir(), "releases", "29", "OTP_VERSION"]))) == "29.1.2"'
+      - name: Fetch locked dependencies without shared caches
+        run: |
+          mix deps.get --check-locked
+          mix deps.unlock --check-unused
+      - name: Provision isolated restricted TEST database
+        shell: bash
+        run: |
+          set -euo pipefail
+          password="$(openssl rand -hex 24)"
+          echo "::add-mask::${password}"
+          echo "TEST_DATABASE_PASSWORD=${password}" >> "$GITHUB_ENV"
+          psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 55433 -U postgres -d postgres <<SQL
+          CREATE ROLE new_you_test LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD '${password}';
+          CREATE DATABASE new_you_test OWNER new_you_test;
+          SELECT version();
+          SELECT rolname, rolsuper, rolcreatedb, rolcreaterole, rolreplication, rolbypassrls FROM pg_roles WHERE rolname = 'new_you_test';
+          SQL
+      - name: Run canonical fast and deep gates
+        env:
+          TEST_DATABASE_HOST: '127.0.0.1'
+          TEST_DATABASE_PORT: '55433'
+          TEST_DATABASE_USERNAME: new_you_test
+          TEST_DATABASE_NAME: new_you_test
+        run: |
+          export DESIGN_SYSTEM_BASE_SHA="$(git merge-base HEAD origin/main)"
+          mix check
+          mix check.deep
