@@ -6,7 +6,7 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "c944d41a6a09a81b33edcfe54525539a1a1dd1ff",
+    "git_sha": "40993f6b89212373c5a86f37d0f4b8cf9e64408c",
     "semantics": "Provider-disabled dispute foundation with durable suspension discovery when a same-payment refund is first claimed after restoration."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -300,9 +300,79 @@
       "suspended",
       "ended",
       "allowed",
-      "withdrawn"
+      "withdrawn",
+      "receipt.pending",
+      "receipt.applied",
+      "receipt.stale",
+      "receipt.conflict",
+      "receipt.quarantined"
     ],
     "transitions": [
+      {
+        "from_state": "receipt.pending",
+        "to_state": "receipt.applied",
+        "guards": [
+          "Under the Purchase lock, a qualified webhook can bind an unbound case without opposing terminal evidence, or exact current evidence can advance or confirm an existing case."
+        ],
+        "side_effects": [
+          "Commerce may bind the case, advance its revision and effect version, or confirm its retained outcome in the same transaction as receipt classification. Entitlements applies the resulting effect separately."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "receipt",
+          "receipt_restart_test",
+          "receipt_replay_test"
+        ]
+      },
+      {
+        "from_state": "receipt.pending",
+        "to_state": "receipt.stale",
+        "guards": [
+          "The read reservation is superseded, or the receipt cannot advance or confirm the current case under the revision and terminal evidence rules."
+        ],
+        "side_effects": [
+          "Commerce classifies the receipt without changing the case or advancing the consequence. Committed exact-source terminal evidence can still constrain a later reconciliation."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "receipt",
+          "receipt_stale_test"
+        ]
+      },
+      {
+        "from_state": "receipt.pending",
+        "to_state": "receipt.conflict",
+        "guards": [
+          "Opposing source-bound evidence prevents qualification, including incompatible outcomes at one revision or contradictory terminal evidence."
+        ],
+        "side_effects": [
+          "Commerce may bind an unbound case as unresolved or flag the existing case and advance its effect version once. Receipt classification is complete while the dispute can remain unresolved and eligible for a later qualified read."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "receipt",
+          "receipt_conflict_test"
+        ]
+      },
+      {
+        "from_state": "receipt.pending",
+        "to_state": "receipt.quarantined",
+        "guards": [
+          "The provider dispute identity belongs to a different payment or amount, or a read observation has no existing case to qualify against."
+        ],
+        "side_effects": [
+          "Commerce classifies the receipt without qualifying a new effect or changing another payment's case. A competing bind can return the existing case without replacing it."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "receipt",
+          "receipt_quarantine_test"
+        ]
+      },
       {
         "from_state": "contested",
         "to_state": "awaiting_feedback",
@@ -816,6 +886,15 @@
   ],
   "idempotency_retry": [
     {
+      "summary": "The receipt worker processes only pending rows. Any committed classification is terminal for that receipt. On replay Commerce rereads under the Purchase lock and leaves the case, effect version and receipt unchanged. The receipt scheduler skips classified rows. A failed classification transaction leaves the receipt pending for rediscovery.",
+      "source_ids": [
+        "lifecycle",
+        "receipt",
+        "receipt_restart_test",
+        "receipt_replay_test"
+      ]
+    },
+    {
       "summary": "After qualified restoration, the original outstanding payment grant and dispute delivery both check the current locked Identity recipient before a Plan right can become held. A temporary security hold leaves the grant pending. After release, either delivery order converges to one right for the original paid source.",
       "source_ids": [
         "lifecycle",
@@ -911,7 +990,8 @@
         "A refund claim between Entitlements commit and Commerce acknowledgement invalidates the older version. After removal of the queued work, a fresh BEAM delivers exactly once and a second scheduler pass creates no worker. Both Purchase lock orders and qualified processed refund ending use the actual scheduler.",
         "The original outstanding grant and dispute delivery both reject a held recipient in either order. The grant remains open and no right exists until release. Replaying the original grant after release returns the same right.",
         "Run-specific 20-digit provider identities and payment-scoped assertions preserve large numeric-ID and deliberate collision coverage in the shared TEST allocation.",
-        "A fresh BEAM runs the receipt scheduler with a committed pending webhook receipt and either no job or an exhausted job after an injected bind failure. An exact replacement job finishes, and two independent executions of a scheduled receipt worker bind one dispute consequence without replay advancing it."
+        "An independent PostgreSQL observer sees the exact pending webhook before starting the fresh BEAM. The receipt scheduler recovers after missing or exhausted work and skips the classified receipt on replay. Competing workers leave one case, consequence version and original Plan right. Scoped teardown preserves an unrelated scheduled job.",
+        "A second payment can commit an authenticated receipt before the first payment binds the provider dispute identity. Processing the second receipt after the first bind quarantines it and preserves the independent right."
       ],
       "proves": "F-01 through F-05 and F-07 fixture execution.",
       "limits": "Hosted proof is standalone Plan only. No live provider behavior.",
@@ -931,7 +1011,7 @@
         "Explicit and implicit Sandbox rollback, rejected Audit persistence, independent exact committed assertion, and idempotent replay"
       ],
       "proves": "F-06 local disclosure, current Privacy purpose and session denial, and the independent Audit commit boundary.",
-      "limits": "Finance and Audit claims are signed and operation scoped. Separate persisted revocation of either role is unverified because no existing fixture owns that state.",
+      "limits": "Finance and Audit claims are signed and operation scoped. F-06 remains unresolved for independent revocation. The existing IdentityGrant fixture supports Support scopes only. The governing Finance and Audit scopes and independent approvers need an owner decision.",
       "source_ids": [
         "projection_test",
         "privacy",
@@ -1068,7 +1148,7 @@
     "Actual Paystack account configuration, dispute status and deadline vocabulary, Finance operations and release certification remain out of scope.",
     "The local fixture records unresolved overlapping corrections and does not decide cancellation, netting or external adjudication.",
     "Ash Signals and Temporal Resources were considered. The existing versioned Commerce consequence and immutable receipts provide scoped durable recovery and historical evidence without process-local authority or new dependencies.",
-    "Finance and Audit are signed TEST fixture claims. Persisted revocation proof applies to the Privacy purpose and canonical session; the fixture has no independent role-revocation state. Revisions order fixture observations only."
+    "Finance and Audit are signed TEST fixture claims. Persisted revocation proof applies to the Privacy purpose and canonical session. Product Law section 15.1A requires a designated approver for Domain-sensitive scopes, and DEC-320 permits isolated proof fixtures. F-06 remains unresolved pending an owner decision on revocable Finance and Audit scope and approver authority. Revisions order fixture observations only."
   ],
   "follow_up_tickets": [
     "WELL-195",
@@ -1164,13 +1244,13 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"refund and dispute serialize",
-      "sha256": "f838ee31e5fa7e41494b9738393ddb8aaf446e1357190c6b2d280b13e17ca94c"
+      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
     },
     {
       "id": "restart",
       "path": "test/proof/well223_dispute_restart.exs",
       "symbol": "WELL223_COMPLETED",
-      "sha256": "d60152f6b96cea575bedb70e6d9379cdd692198eae011030fbd786f4f0fa07cf"
+      "sha256": "973eb0e974b7a924af5645895d28cc822bd9c9efcf09a02b7049633d86ac210c"
     },
     {
       "id": "assessment",
@@ -1261,6 +1341,36 @@
       "path": ".github/workflows/application-ci.yml",
       "symbol": "Prove TEST dispute fixtures are absent in DEV",
       "sha256": "b730c71131849108496223b9ed7a6d2ade7ecc3e8a24b5ff300e2d343379e83a"
+    },
+    {
+      "id": "receipt_restart_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"fresh scheduler processes a committed webhook receipt",
+      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
+    },
+    {
+      "id": "receipt_replay_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"two workers running the scheduled receipt job",
+      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
+    },
+    {
+      "id": "receipt_stale_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"a stale read token does not erase a committed opposing revision",
+      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
+    },
+    {
+      "id": "receipt_conflict_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"committed contradictory terminal receipts keep the right suspended",
+      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
+    },
+    {
+      "id": "receipt_quarantine_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"the same payer can have distinct equal-value purchases",
+      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
     }
   ]
 }
