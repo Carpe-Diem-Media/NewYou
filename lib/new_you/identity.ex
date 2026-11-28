@@ -292,38 +292,43 @@ defmodule NewYou.Identity do
 
   @doc """
   Check the current canonical status and access posture of an already bound
-  recipient during TEST dispute restoration. The transaction holds a shared
-  Account lock through the caller's commit.
+  Plan recipient. The transaction holds a shared Account lock through the
+  caller's commit.
   """
+  @spec locked_plan_recipient(Ecto.UUID.t()) ::
+          {:ok, :allowed | :blocked} | {:error, :recipient_unavailable}
+  def locked_plan_recipient(id) do
+    with true <- Ash.DataLayer.in_transaction?(Account),
+         {:ok, account} <-
+           Account
+           |> Ash.Query.filter(id == ^id)
+           |> Ash.Query.lock("FOR SHARE")
+           |> Ash.read_one(authorize?: false) do
+      case account do
+        %Account{
+          canonical_account_id: nil,
+          pmr_status: :active,
+          account_status: :open,
+          email_verified?: true,
+          credential_status: :active,
+          security_posture: :normal,
+          pmr: pmr
+        } ->
+          {:ok, if(PMR.valid?(pmr), do: :allowed, else: :blocked)}
+
+        _ ->
+          {:ok, :blocked}
+      end
+    else
+      _ -> {:error, :recipient_unavailable}
+    end
+  end
+
+  @doc "Check the locked Plan recipient for TEST fixture grant and dispute work."
   @spec locked_fixture_recipient(Ecto.UUID.t()) ::
           {:ok, :allowed | :blocked} | {:error, :recipient_unavailable}
   if Mix.env() == :test do
-    def locked_fixture_recipient(id) do
-      with true <- Ash.DataLayer.in_transaction?(Account),
-           {:ok, account} <-
-             Account
-             |> Ash.Query.filter(id == ^id)
-             |> Ash.Query.lock("FOR SHARE")
-             |> Ash.read_one(authorize?: false) do
-        case account do
-          %Account{
-            canonical_account_id: nil,
-            pmr_status: :active,
-            account_status: :open,
-            email_verified?: true,
-            credential_status: :active,
-            security_posture: :normal,
-            pmr: pmr
-          } ->
-            {:ok, if(PMR.valid?(pmr), do: :allowed, else: :blocked)}
-
-          _ ->
-            {:ok, :blocked}
-        end
-      else
-        _ -> {:error, :recipient_unavailable}
-      end
-    end
+    def locked_fixture_recipient(id), do: locked_plan_recipient(id)
   else
     def locked_fixture_recipient(_), do: {:error, :recipient_unavailable}
   end

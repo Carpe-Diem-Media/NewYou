@@ -85,7 +85,7 @@ defmodule NewYou.Entitlements.SyntheticRights do
   end
 
   defp apply_dispute_effect(scope, :restore) do
-    with :ok <- allow_restoration(scope),
+    with :ok <- allow_plan_recipient(scope),
          {:ok, :allowed} <- SyntheticSuppression.locked_status(scope.recipient_id) do
       change_right(scope, :plan, [:suspended], :restore_component)
     else
@@ -94,7 +94,7 @@ defmodule NewYou.Entitlements.SyntheticRights do
     end
   end
 
-  defp allow_restoration(scope) do
+  defp allow_plan_recipient(scope) do
     Repo.without_query_telemetry(fn ->
       case Identity.locked_fixture_recipient(scope.recipient_id) do
         {:ok, :allowed} -> :ok
@@ -151,7 +151,7 @@ defmodule NewYou.Entitlements.SyntheticRights do
 
   defp apply_committed_effect(_scope, %{kind: :excess_satisfied}), do: :ok
 
-  @doc "Apply the original P1 grant under current Commerce and Privacy authority, including Identity when restoring."
+  @doc "Apply the original P1 grant under the current Commerce, Identity and Privacy authority."
   @spec grant_p1(String.t()) :: {:ok, PlanRight.t() | :withheld} | {:error, :grant_unavailable}
   def grant_p1(consequence_id) do
     case Ash.transact(PlanRight, fn -> apply_current_p1(consequence_id) end) do
@@ -184,31 +184,31 @@ defmodule NewYou.Entitlements.SyntheticRights do
     end
   end
 
-  defp apply_p1({:hosted_restored, scope}) do
-    with :ok <- allow_restoration(scope), do: apply_p1({:legacy, scope})
-  end
-
-  defp apply_p1({:legacy, scope}) do
-    case SyntheticSuppression.locked_status(scope.recipient_id) do
-      {:ok, :allowed} ->
-        with {:ok, right} <- Ash.create(PlanRight, scope, action: :grant, authorize?: false) do
-          right
-        end
-
-      {:ok, :suppressed} ->
-        :withheld
-
-      _ ->
-        {:error, :grant_unavailable}
+  defp apply_p1({kind, scope}) when kind in [:legacy, :hosted_restored] do
+    with :ok <- allow_plan_recipient(scope),
+         {:ok, :allowed} <- SyntheticSuppression.locked_status(scope.recipient_id),
+         {:ok, right} <- Ash.create(PlanRight, scope, action: :grant, authorize?: false) do
+      right
+    else
+      {:ok, :suppressed} -> :withheld
+      _ -> {:error, :grant_unavailable}
     end
   end
 
   defp converge_locked(scope) do
-    case SyntheticSuppression.locked_status(scope.recipient_id) do
-      {:ok, :allowed} -> converge_components(scope)
+    with :ok <- allow_eligible_plan_component(scope),
+         {:ok, :allowed} <- SyntheticSuppression.locked_status(scope.recipient_id) do
+      converge_components(scope)
+    else
       {:ok, :suppressed} -> []
       _ -> {:error, :grant_unavailable}
     end
+  end
+
+  defp allow_eligible_plan_component(scope) do
+    if :plan in scope.components and not MapSet.member?(scope.ended_components, :plan),
+      do: allow_plan_recipient(scope),
+      else: :ok
   end
 
   defp converge_components(scope) do

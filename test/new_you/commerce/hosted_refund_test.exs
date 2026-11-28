@@ -19,6 +19,41 @@ defmodule NewYou.Commerce.HostedRefundTest do
   @scope %{provider: :paystack, integration: :local_fixture, environment: :test, channel: :card}
   @amount 47_500
 
+  test "an original Plan grant without a dispute waits for the recipient's security hold to clear" do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn accepted, payment, _payer, recipient, _, _ ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert is_nil(dispute_for_payment(payment))
+        assert [] == dispute_receipts(payment)
+        assert [] == purchase_refunds(accepted)
+
+        held = place_recipient_hold(recipient.account_id)
+
+        assert {:error, :delivery_unavailable} = Commerce.deliver_plan_payment_consequence(grant)
+        assert {:ok, [^grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        refute payment_plan_right?(payment)
+
+        release_recipient_hold(held)
+
+        assert {:ok, %{id: right_id, state: :held_unconsumed, payment_id: payment_id}} =
+                 Commerce.deliver_plan_payment_consequence(grant)
+
+        assert payment_id == payment.id
+        assert {:ok, []} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+
+        assert {:ok, %{id: ^right_id, state: :held_unconsumed}} =
+                 Commerce.deliver_plan_payment_consequence(grant)
+
+        assert [%{id: ^right_id, recipient_id: recipient_id, state: :held_unconsumed}] =
+                 Entitlements.PlanRight
+                 |> Ash.Query.filter(payment_id == ^payment.id and component == :plan)
+                 |> Ash.read!(authorize?: false)
+
+        assert recipient_id == recipient.account_id
+      end)
+    end)
+  end
+
   test "late grants and dispute delivery both wait for the recipient's security hold to clear" do
     for order <- [:grant_first, :dispute_first] do
       P805.with_fixture(fn ->
@@ -31,13 +66,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
             dispute = apply_dispute_receipts(payment)
             assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
 
-            account = Ash.get!(NewYou.Identity.Account, recipient.account_id, authorize?: false)
-
-            held =
-              Ash.update!(account, %{expected_hold_version: account.hold_version},
-                action: :place_security_hold,
-                authorize?: false
-              )
+            held = place_recipient_hold(recipient.account_id)
 
             assert 202 ==
                      send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
@@ -62,16 +91,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
             refute payment_plan_right?(payment)
             assert {:error, :rights_unavailable} = Entitlements.plan_rights(recipient.credentials)
 
-            Ash.update!(
-              held,
-              %{
-                expected_hold_version: held.hold_version,
-                hold_version: held.hold_version + 1,
-                security_version: held.security_version + 1
-              },
-              action: :release_security_hold,
-              authorize?: false
-            )
+            release_recipient_hold(held)
 
             right =
               case order do
@@ -102,6 +122,28 @@ defmodule NewYou.Commerce.HostedRefundTest do
     Entitlements.PlanRight
     |> Ash.Query.filter(payment_id == ^payment.id and component == :plan)
     |> Ash.exists?(authorize?: false)
+  end
+
+  defp place_recipient_hold(recipient_id) do
+    account = Ash.get!(NewYou.Identity.Account, recipient_id, authorize?: false)
+
+    Ash.update!(account, %{expected_hold_version: account.hold_version},
+      action: :place_security_hold,
+      authorize?: false
+    )
+  end
+
+  defp release_recipient_hold(held) do
+    Ash.update!(
+      held,
+      %{
+        expected_hold_version: held.hold_version,
+        hold_version: held.hold_version + 1,
+        security_version: held.security_version + 1
+      },
+      action: :release_security_hold,
+      authorize?: false
+    )
   end
 
   test "qualified disputes fence refund dispatch and converge the original right" do

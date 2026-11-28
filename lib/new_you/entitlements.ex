@@ -64,9 +64,10 @@ defmodule NewYou.Entitlements do
   @doc """
   Apply or replay one Plan right for the given Commerce consequence. The
   executor cannot supply the recipient, component or paid purchase. Those
-  fields come from the committed source. A committed TEST correction or
-  suppression may withhold the grant. Missing or unavailable TEST Privacy
-  authority leaves the grant open for retry. Call outside any existing transaction.
+  fields come from the committed source. An Identity block, or missing TEST
+  Privacy authority, leaves delivery open for retry. A committed TEST
+  correction or suppression may withhold the grant. Call outside any existing
+  transaction.
   """
   @spec grant_paid_plan(String.t()) ::
           {:ok, PlanRight.t() | :withheld} | {:error, :grant_unavailable}
@@ -114,11 +115,24 @@ defmodule NewYou.Entitlements do
     end
   else
     defp grant_current_plan(consequence_id) do
+      result =
+        NewYou.Repo.without_query_telemetry(fn ->
+          Ash.transact(PlanRight, fn -> apply_current_plan(consequence_id) end)
+        end)
+
+      case result do
+        {:ok, %PlanRight{} = right} -> {:ok, right}
+        _ -> {:error, :grant_unavailable}
+      end
+    end
+
+    defp apply_current_plan(consequence_id) do
       with {:ok, %{recipient_id: recipient_id, payment_id: payment_id} = source} <-
              NewYou.Commerce.paid_plan_source(consequence_id),
+           {:ok, :allowed} <- Identity.locked_plan_recipient(recipient_id),
            {:ok, %PlanRight{recipient_id: ^recipient_id, payment_id: ^payment_id} = right} <-
              Ash.create(PlanRight, source, action: :grant, authorize?: false) do
-        {:ok, right}
+        right
       else
         _ -> {:error, :grant_unavailable}
       end
