@@ -6,7 +6,7 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "40993f6b89212373c5a86f37d0f4b8cf9e64408c",
+    "git_sha": "3b1bda626d966efe956062d2a899cfa7f9092d8f",
     "semantics": "Provider-disabled dispute foundation with durable suspension discovery when a same-payment refund is first claimed after restoration."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -1304,7 +1304,7 @@
       "id": "non_test",
       "path": "test/proof/well223_provider_disabled.exs",
       "symbol": "AshOban.build_context",
-      "sha256": "512f79631c81c6a3e5c13589f907a31a3f56c5133d56f26583390c38ce642a01"
+      "sha256": "926171131268919fc90d64ab096cac552afe6eeefee0475238462c34271547e4"
     },
     {
       "id": "late_grant",
