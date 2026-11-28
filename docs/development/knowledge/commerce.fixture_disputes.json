@@ -6,7 +6,7 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "c51dce9ccacb574049396fc58e142f8534985d05",
+    "git_sha": "a94161d64fa9c5adfeb9eb1ae1a13f29172e384d",
     "semantics": "Provider-disabled dispute foundation with durable suspension discovery when a same-payment refund is first claimed after restoration."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -816,6 +816,16 @@
   ],
   "idempotency_retry": [
     {
+      "summary": "After qualified restoration, the original outstanding payment grant and dispute delivery both check the current locked Identity recipient before a Plan right can become held. A temporary security hold leaves the grant pending. After release, either delivery order converges to one right for the original paid source.",
+      "source_ids": [
+        "lifecycle",
+        "late_grant",
+        "convergence",
+        "identity",
+        "test"
+      ]
+    },
+    {
       "summary": "Dispute identity and immutable receipt identity are separate. Replays of earlier revisions or obsolete read tokens cannot advance the owning case. The durable scheduled retry remains capped and due after the final round.",
       "source_ids": [
         "lifecycle",
@@ -898,26 +908,29 @@
         "Retained restoration and loss at revision 2 with opposition at 4 and stale matching evidence at 6 both reject revision 5, then reconcile an identical current revision 6 exactly once",
         "An ambiguous refund POST followed by restored dispute stays unresolved, including pending and failed evidence. Independent PostgreSQL claim and restoration delivery contention runs in both Purchase lock orders, followed by qualified refund processing",
         "A fully acknowledged restoration receives a same-payment ambiguous claim. A pre-commit cut rolls back both writes. The fresh BEAM scheduler rediscovers suspension with no queued job and leaves an independent same-recipient right unchanged.",
-        "A refund claim between Entitlements commit and Commerce acknowledgement invalidates the older version. After removal of the queued work, a fresh BEAM delivers exactly once and a second scheduler pass creates no worker. Both Purchase lock orders and qualified processed refund ending use the actual scheduler."
+        "A refund claim between Entitlements commit and Commerce acknowledgement invalidates the older version. After removal of the queued work, a fresh BEAM delivers exactly once and a second scheduler pass creates no worker. Both Purchase lock orders and qualified processed refund ending use the actual scheduler.",
+        "The original outstanding grant and dispute delivery both reject a held recipient in either order. The grant remains open and no right exists until release. Replaying the original grant after release returns the same right.",
+        "Run-specific 20-digit provider identities and payment-scoped assertions preserve large numeric-ID and deliberate collision coverage in the shared TEST allocation."
       ],
       "proves": "F-01 through F-05 and F-07 fixture execution.",
       "limits": "Hosted proof is standalone Plan only. No live provider behavior.",
       "source_ids": [
         "test",
-        "restart"
+        "restart",
+        "fixture_ids"
       ]
     },
     {
       "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
       "cases": [
         "Minimal allowlist and Audit binding",
-        "Missing, foreign or changed scope",
+        "Missing and foreign claims checked separately for Finance, Privacy and Audit. Extra Finance fields are rejected.",
         "Old proof replay after terminal withdrawal",
         "Deletion suppression",
         "Explicit and implicit Sandbox rollback, rejected Audit persistence, independent exact committed assertion, and idempotent replay"
       ],
-      "proves": "F-06 owner-backed local disclosure.",
-      "limits": "Signed roles are TEST proof claims.",
+      "proves": "F-06 local disclosure, current Privacy purpose and session denial, and the independent Audit commit boundary.",
+      "limits": "Finance and Audit claims are signed and operation scoped. Separate persisted revocation of either role is unverified because no existing fixture owns that state.",
       "source_ids": [
         "projection_test",
         "privacy",
@@ -967,12 +980,15 @@
       "cases": [
         "Non-TEST primary read actions are absent even when Ash supplies a real AshOban job context"
       ],
-      "proves": "F-07 DEV compile and read denial for both fixture resources, with and without authorization.",
+      "proves": "F-07 DEV compile and read denial for all five Commerce, Audit and Privacy dispute resources, with and without authorization.",
       "limits": "Runs without starting the app in the approved local DEV environment.",
       "source_ids": [
         "non_test",
         "dispute",
         "receipt",
+        "audit_resource",
+        "purpose_resource",
+        "purpose_event",
         "discovery"
       ]
     }
@@ -1085,7 +1101,7 @@
       "id": "lifecycle",
       "path": "test/support/commerce/fixture_disputes.ex",
       "symbol": "def locked_effect",
-      "sha256": "09c49162d8526f25fff6f2de7917ead2d4b68b15c93423175c901476dff8341e"
+      "sha256": "4e92c5ab82fa8a821de5e7e21b2fb643ee42b436e2e1ccef4279c9e7d7399573"
     },
     {
       "id": "fence",
@@ -1115,7 +1131,7 @@
       "id": "convergence",
       "path": "test/support/entitlements/synthetic_rights.ex",
       "symbol": "def apply_dispute",
-      "sha256": "9ebbaa8c023b0ca26925e143c782fa6ddb88f32fb90ecb98e5991fe728894b71"
+      "sha256": "c63b91bccd053e30a0a938647d2ff99340b37cf8fe94a2ae95cc46f39411b0a8"
     },
     {
       "id": "identity",
@@ -1145,7 +1161,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"refund and dispute serialize",
-      "sha256": "be89c3de34d3acec9a9bde1271481d8bbbbcb7d6108fabf6f246e0189bf7aa45"
+      "sha256": "32e6c869bebbc7568b7c59bdbe66c427fba171d9bd22a7d19495d3a37685aa63"
     },
     {
       "id": "restart",
@@ -1163,7 +1179,7 @@
       "id": "projection_test",
       "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
       "symbol": "defmodule NewYou.Commerce.FixtureDisputeProjectionTest",
-      "sha256": "b94697516c1adc9e1d66c85dc562faee798f6a92867279f4fccdf64a4ccab743"
+      "sha256": "2719ff2cf2dc0fe1b9f3df8e7c545222cec2a2fff5c02ac43640de443a6cb8ab"
     },
     {
       "id": "roundtrip",
@@ -1205,7 +1221,37 @@
       "id": "non_test",
       "path": "test/proof/well223_provider_disabled.exs",
       "symbol": "AshOban.build_context",
-      "sha256": "8b6b3dd907ffc702a23f0238944349833d4c6608e24dff40dc0d45bec3f1259c"
+      "sha256": "b63a0d7ab3d1f04580ee5365148ae805aa473498808d877dc05c934abecd6431"
+    },
+    {
+      "id": "late_grant",
+      "path": "test/support/commerce/synthetic_corrections.ex",
+      "symbol": "def locked_p1_grant_scope",
+      "sha256": "e3e3a55f691394c45eb38bab6f424f78effb892f7a95ee4235658642ea07073b"
+    },
+    {
+      "id": "audit_resource",
+      "path": "lib/new_you/audit/fixture_dispute_disclosure.ex",
+      "symbol": "read :read",
+      "sha256": "47ecae57bbaa3d996dba49275abc8997e11359cc58750216c5850bfeac167a59"
+    },
+    {
+      "id": "purpose_resource",
+      "path": "lib/new_you/privacy/fixture_dispute_purpose_authority.ex",
+      "symbol": "read :read",
+      "sha256": "ca89890a0b56bd7a563f7f95ac4d1d2940f6bb8e2bf538e6c9e27dd664c49081"
+    },
+    {
+      "id": "purpose_event",
+      "path": "lib/new_you/privacy/fixture_dispute_purpose_event.ex",
+      "symbol": "read :read",
+      "sha256": "1452be77f1fde89d894fa9b348b1d983ac07e84542496ebdbb45b816f79f7a65"
+    },
+    {
+      "id": "fixture_ids",
+      "path": "test/support/commerce/offer_fixtures.ex",
+      "symbol": "def large_provider_id",
+      "sha256": "4f7a40ba671febecbb37b88306e79a792ccfa3126c5e4fd19216900d10f54dd1"
     }
   ]
 }
