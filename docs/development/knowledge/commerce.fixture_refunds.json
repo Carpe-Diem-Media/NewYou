@@ -6,7 +6,7 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "7657e008c2ca3e7083581f1ef39519d3aa32474e",
+    "git_sha": "374e77d344336a3c0308c83d6adc5eae5209c676",
     "semantics": "Provider-disabled refund dispatch, recoverable capped reads, source-qualified excess, durable provider ID conflict classification and privacy-safe Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -778,7 +778,7 @@
     }
   ],
   "proof_limitations": [
-    "All execution evidence is TEST-local. Provider-stage EV-010/011/024\u2013029/048/051/053 and actual-stack activation remain with the existing gated tickets.",
+    "All execution evidence is TEST-local. Provider-stage EV-010/011/024–029/048/051/053 and actual-stack activation remain with the existing gated tickets.",
     "Hosted Assessment and bundle checkout remain outside this slice. Bundle attribution uses the existing qualified synthetic fixtures."
   ],
   "follow_up_tickets": [
@@ -839,7 +839,7 @@
       "id": "allocation",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "def accepted_component_minor",
-      "sha256": "201c9e06923162cafdf6195777fc916a15c197ac3379d0144a3987b01e0ac45b"
+      "sha256": "87a9713e7d1d0e3d09844b74f843a17ae2c356d0dd48392ac841a554692bb74f"
     },
     {
       "id": "evidence",

@@ -7,7 +7,7 @@
     "WELL-190"
   ],
   "implementation_revision": {
-    "git_sha": "7657e008c2ca3e7083581f1ef39519d3aa32474e",
+    "git_sha": "374e77d344336a3c0308c83d6adc5eae5209c676",
     "semantics": "WELL-190 allows local DEV execution for an exact operator-approved Plan and current self-payer, preserves TEST fixture isolation and proves runtime activation, request redaction and no retry locally."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -581,7 +581,7 @@
       "id": "quote",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "def bound_snapshot",
-      "sha256": "201c9e06923162cafdf6195777fc916a15c197ac3379d0144a3987b01e0ac45b"
+      "sha256": "87a9713e7d1d0e3d09844b74f843a17ae2c356d0dd48392ac841a554692bb74f"
     },
     {
       "id": "payment",

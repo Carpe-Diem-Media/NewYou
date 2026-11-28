@@ -6,7 +6,7 @@
     "WELL-197"
   ],
   "implementation_revision": {
-    "git_sha": "7657e008c2ca3e7083581f1ef39519d3aa32474e",
+    "git_sha": "374e77d344336a3c0308c83d6adc5eae5209c676",
     "semantics": "WELL-197 S1 with Master Gate corrections for terminal Assessment reconciliation and integrated Identity owner reviews. WELL-190 adds explicit local DEV approval for one synthetic self-payer and exact versioned Plan. It leaves Assessment, bundle, fixture-only authorities and production activation excluded from DEV."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -962,7 +962,7 @@
       "id": "admission",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "defmodule NewYou.Commerce.OfferAdmission",
-      "sha256": "201c9e06923162cafdf6195777fc916a15c197ac3379d0144a3987b01e0ac45b"
+      "sha256": "87a9713e7d1d0e3d09844b74f843a17ae2c356d0dd48392ac841a554692bb74f"
     },
     {
       "id": "quote",
