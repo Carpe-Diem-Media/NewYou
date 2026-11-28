@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
   "capability_id": "commerce.hosted_checkout_dispatch",
-  "purpose": "Give an exact accepted standalone Plan one durable Hosted Redirect dispatch claim for local TEST proof.",
+  "purpose": "Bind a standalone Plan to one durable Paystack Hosted Redirect Initialize in the TEST profile.",
   "implementing_tickets": [
-    "WELL-218"
+    "WELL-218",
+    "WELL-190"
   ],
   "implementation_revision": {
-    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
-    "semantics": "E1a-F dispatch foundation with WELL-219 known-reference scheduling on the existing claim."
+    "git_sha": "b03a8458ddfe4ec0564bd2f2e7648d1225350164",
+    "semantics": "E1a activates the scoped TEST Initialize transport and preserves the separate E1a-F fixture and WELL-219 fixture Verify paths."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -38,9 +39,10 @@
         "read",
         "bind",
         "claim",
-        "retain"
+        "retain",
+        "retain_provider_capability"
       ],
-      "caller_boundary": "Private actions and deny-all policies. The owning interface checks current payer, exact source and fixed fixture scope.",
+      "caller_boundary": "Private Ash actions. Commerce checks current payer, exact source and persisted integration scope.",
       "source_ids": [
         "dispatch",
         "checkout"
@@ -70,7 +72,7 @@
       "arguments": [
         "Canonical payer session",
         "Exact immutable S1 snapshot",
-        "Paystack/local_fixture/TEST/card scope"
+        "Paystack/local_fixture or Paystack/voelgoedwinkel, test/card"
       ],
       "returns": [
         "Original reference or scoped denial."
@@ -120,7 +122,7 @@
       "arguments": [
         "Canonical payer session",
         "Exact immutable S1 snapshot",
-        "Paystack/local_fixture/TEST/card scope"
+        "Paystack/local_fixture or Paystack/voelgoedwinkel, test/card"
       ],
       "returns": [
         "Original reference and its prepared, retained or ambiguous status, or scoped denial."
@@ -133,6 +135,32 @@
       ],
       "source_ids": [
         "checkout",
+        "binding_test"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.HostedCheckout",
+      "function": "initialize",
+      "arity": 3,
+      "visibility": "internal",
+      "arguments": [
+        "Canonical payer session",
+        "Exact immutable S1 snapshot",
+        "Paystack/voelgoedwinkel/test/card scope"
+      ],
+      "returns": [
+        "Retained checkout URL, the original ambiguous attempt, or scoped denial."
+      ],
+      "side_effects": [
+        "Commit and independently observe one durable claim before the HTTP/1 POST. Encrypt a matching capability against the attempt binding before presentation."
+      ],
+      "caller_constraints": [
+        "TEST compile and runtime only. Requires an approved exact attempt, restricted TEST key, designated checkout inbox, private capability key and outermost dispatch boundary."
+      ],
+      "source_ids": [
+        "checkout",
+        "adapter",
+        "test_integration",
         "binding_test"
       ]
     }
@@ -152,6 +180,21 @@
       ],
       "source_ids": [
         "schema",
+        "dispatch",
+        "migration_test"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261128133346_well190_paystack_test_initialize.exs",
+      "tables": [
+        "commerce_hosted_dispatches"
+      ],
+      "constraints": [
+        "commerce_hosted_dispatches_test_scope",
+        "commerce_hosted_dispatches_integration_isolation"
+      ],
+      "source_ids": [
+        "provider_schema",
         "dispatch",
         "migration_test"
       ]
@@ -175,7 +218,7 @@
       ]
     },
     {
-      "summary": "Only the claim winner enters the fixed Req path. Retain the matching code under the same claim and check payer authority again before returning the capability.",
+      "summary": "Only the claim winner enters the fixed Req path. Store the fixture code or encrypted TEST capability under the same claim and check payer authority before presentation.",
       "source_ids": [
         "checkout",
         "adapter",
@@ -197,7 +240,7 @@
         "guards": [
           "Exact S1 standalone Plan",
           "Current accepted payer",
-          "Fixed local scope",
+          "Exact integration and environment. A provider attempt requires runtime approval bound to this attempt ID.",
           "No applied payment"
         ],
         "side_effects": [
@@ -234,10 +277,10 @@
         "guards": [
           "Exact claim",
           "Reference match",
-          "Canonical non-routable fixture URL and code"
+          "Canonical capability URL and matching code for the exact integration"
         ],
         "side_effects": [
-          "Retain the fixture code once. The current payer can recover the original URL."
+          "Retain a fixture code or an authenticated encrypted provider capability once. The current payer can recover the original URL."
         ],
         "terminal": false,
         "source_ids": [
@@ -259,24 +302,28 @@
       ]
     },
     {
-      "summary": "The wire code compiles only in TEST. It accepts no host, credential, proxy, plugin or middleware override. The numeric loopback host, fixture credential and synthetic contact are fixed. Verify-enabled claims require TLS authenticated to the exact listener certificate.",
+      "summary": "Wire code compiles only in TEST. The real integration has a fixed HTTPS origin. Its local seam pins the exact loopback certificate. Fixture credentials, origins, retention and Verify schedules cannot cross into provider scope.",
       "source_ids": [
         "adapter",
         "checkout",
         "disabled_test",
-        "transport_test"
+        "transport_test",
+        "test_integration",
+        "provider_schema"
       ]
     },
     {
-      "summary": "Publish only response classifications and timings. Mark reference and code sensitive and hide both from ordinary outcome inspection.",
+      "summary": "Emit only response classifications and timings. Reject provider dispatch when Finch handlers could capture raw metadata. Mark the reference and capability sensitive and hide them from inspection.",
       "source_ids": [
         "checkout",
         "dispatch",
-        "transport_test"
+        "transport_test",
+        "test_integration",
+        "binding_test"
       ]
     },
     {
-      "summary": "A bound local attempt cannot accept synthetic P1/S1 payment evidence. A separate unbound S1 fixture still accepts qualified synthetic observations. No local dispatch releases the Assessment interlock or creates rights.",
+      "summary": "A bound hosted attempt cannot accept synthetic P1/S1 evidence. Separate unbound fixtures retain qualified synthetic behavior. Initialize does not verify payment or grant a right.",
       "source_ids": [
         "payment",
         "binding_test"
@@ -328,18 +375,21 @@
       ]
     },
     {
-      "summary": "An exact fixture capability commits before presentation. A fresh BEAM reloads the original result after a lost response or interrupted presentation without another send.",
+      "summary": "A fresh BEAM recovers the committed capability without another send. An unreadable or missing capability leaves the original claim ambiguous.",
       "source_ids": [
         "checkout",
         "recovery_test",
-        "restart"
+        "restart",
+        "binding_test",
+        "test_integration"
       ]
     },
     {
       "summary": "The additive schema leaves P1, S1 and E2a rows intact. Rollback holds an exclusive table lock and refuses to erase a retained binding.",
       "source_ids": [
         "schema",
-        "migration_test"
+        "migration_test",
+        "provider_schema"
       ]
     }
   ],
@@ -348,13 +398,16 @@
       "path": "test/new_you/commerce/hosted_checkout_test.exs",
       "cases": [
         "F-01/F-02 exact snapshot, actor and authority denials",
-        "F-08/F-09 evidence isolation and compatibility"
+        "F-08/F-09 evidence isolation and compatibility",
+        "E1a exact TEST wire payload, encrypted retention, fresh BEAM, unsafe telemetry denial, concurrent lost-response fence"
       ],
       "proves": "Exact accepted money, wrong source and scope denial, revoked and suppressed actor denial, quote-less and closed exclusions, zero local payments and rights, and preserved admission interlock.",
       "limits": "Signed synthetic P1, S1 and E2a inputs remain TEST fixtures.",
       "source_ids": [
         "binding_test",
-        "receiver"
+        "receiver",
+        "test_integration",
+        "restart"
       ]
     },
     {
@@ -388,13 +441,15 @@
     {
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "cases": [
-        "F-10 additive migration and protected rollback"
+        "F-10 additive migration and protected rollback",
+        "E1a scope isolation and rollback refusal"
       ],
       "proves": "Up/down/up with legacy rows, local foreign key, scoped unique index and scope, binding and capability shape checks.",
       "limits": "Real DDL in a rollback-isolated schema.",
       "source_ids": [
         "migration_test",
-        "schema"
+        "schema",
+        "provider_schema"
       ]
     },
     {
@@ -413,10 +468,11 @@
   ],
   "safe_extensions": [
     {
-      "summary": "WELL-190 owns any future external activation. Reverify the actual stack and qualify exact provider evidence before changing the fixture isolation or replacement rules.",
+      "summary": "Actual provider operation requires exact WELL-176 owner approval and applicable stage evidence. Bind runtime NEW_YOU_PAYSTACK_TEST_ENABLED, NEW_YOU_PAYSTACK_TEST_APPROVED_ATTEMPT_ID, NEW_YOU_PAYSTACK_TEST_RESTRICTED_KEY, NEW_YOU_PAYSTACK_TEST_EMAIL and NEW_YOU_PAYSTACK_TEST_CAPABILITY_KEY (base64, 32 decoded bytes). Supply secret values privately and preserve the capability key for recovery.",
       "source_ids": [
         "plan",
-        "checkout"
+        "checkout",
+        "test_integration"
       ]
     }
   ],
@@ -438,6 +494,15 @@
         "dispatch",
         "recovery_test"
       ]
+    },
+    {
+      "summary": "EXTEND Commerce's existing Ash resource and sole claim with integration guards and SQL scope constraints. Reuse Plug.Crypto authenticated encryption as in MFA, with associated data for exactly this attempt, reference and claim. AshCloak was considered. The explicit owner boundary supplies per-attempt authenticated data without another vault or dependency. Signals, Temporal Resources and async dispatch do not fit the synchronous one-owner operation.",
+      "source_ids": [
+        "dispatch",
+        "checkout",
+        "test_integration",
+        "provider_schema"
+      ]
     }
   ],
   "prohibited_shortcuts": [
@@ -453,11 +518,10 @@
   ],
   "proof_limitations": [
     "HIGH proof covers binding, actor authority, request and durable-effect counts, recovery, redaction and migration. Provider reconciliation, browser rendering, financial settlement, entitlement application and release remain separate.",
-    "Only a validated code for a reserved non-routable fixture origin is retained. Real provider capabilities, credentials, HTTPS policy and empirical verdicts belong to WELL-190.",
+    "NewYou exercises actual-stack HTTPS against an independently counted local receiver. No external provider operation or empirical PASS follows from this PR.",
     "Standalone Plan has no new unpaid terminality rule. Existing paid or corrected sources remain ineligible. All Assessment and bundle dispatch stays disabled."
   ],
   "follow_up_tickets": [
-    "WELL-190",
     "WELL-176"
   ],
   "sources": [
@@ -465,19 +529,19 @@
       "id": "checkout",
       "path": "lib/new_you/commerce/hosted_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.HostedCheckout",
-      "sha256": "cc11dbe5e000e0cb80abb8abf0bec0ff9f46434782bc829a46e60707caf85179"
+      "sha256": "402c0621698abdb52726d3178b08629c90360e52953456b5b817b4752bbafdf8"
     },
     {
       "id": "dispatch",
       "path": "lib/new_you/commerce/hosted_dispatch.ex",
       "symbol": "update :claim",
-      "sha256": "d58e186ab3c5e9e89a61b82243a90f3526476163d360d1ab1366d2044be6f937"
+      "sha256": "13136ae74f0ee2b6624f76aa3dd713a5a06d94c24e93070ce94b120e67967e3b"
     },
     {
       "id": "adapter",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.PaystackCheckout",
-      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
+      "sha256": "57365f06c3fccf41c7175e2624cf765226bb995d46c5f23571f3d4760000c5d4"
     },
     {
       "id": "purchase",
@@ -513,7 +577,7 @@
       "id": "binding_test",
       "path": "test/new_you/commerce/hosted_checkout_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedCheckoutTest",
-      "sha256": "bb92cec13b0950db3b99ec1e032f587c5d598dc2237622117b10f9e14d2c27f9"
+      "sha256": "1f451bf16aac4045225a634db45a71466f5e1ad664e5adc88baf2a3a885e27b2"
     },
     {
       "id": "recovery_test",
@@ -531,7 +595,7 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "hosted dispatch migration preserves adjacent-version rows",
-      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
+      "sha256": "e5894ffb6a38afcb1979aa602958f0afe627f7259cb40c1a885c6bbf0533a935"
     },
     {
       "id": "disabled_test",
@@ -549,7 +613,7 @@
       "id": "restart",
       "path": "test/proof/well218_hosted_checkout_restart.exs",
       "symbol": "E1AF_COMPLETED",
-      "sha256": "50e55e09f22908f81e00cc4a9a880a63b9ac4e27f0286d72d65d6fb9e8517575"
+      "sha256": "2116f081a28b318724339bbfcb84efff700ca7a7c4414da85bca2a75c24a5c0f"
     },
     {
       "id": "plan",
@@ -562,6 +626,18 @@
       "path": "mix.exs",
       "symbol": "test_ignore_filters",
       "sha256": "cb6c35a15a509049b6a5156b0c949cae31e3ce735adcb4f986dea0d657020e50"
+    },
+    {
+      "id": "test_integration",
+      "path": "lib/new_you/commerce/paystack_test_integration.ex",
+      "symbol": "defmodule NewYou.Commerce.PaystackTestIntegration",
+      "sha256": "b82fdc2fde728d1d61e67bae013f701d86bc7d50f6e068a46e3a141811890e2c"
+    },
+    {
+      "id": "provider_schema",
+      "path": "priv/repo/migrations/20261128133346_well190_paystack_test_initialize.exs",
+      "symbol": "defmodule NewYou.Repo.Migrations.Well190PaystackTestInitialize",
+      "sha256": "4fbf49ac18f70fb3aec2293b442260380d9518897e3f4a6522eea791e73bda0b"
     }
   ]
 }
