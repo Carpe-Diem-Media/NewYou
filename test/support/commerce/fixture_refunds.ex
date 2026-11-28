@@ -384,6 +384,34 @@ defmodule NewYou.Commerce.FixtureRefunds do
     end
   end
 
+  @doc """
+  Read the refund owner's correction state for an exact collection. An
+  unresolved POST claim remains fenced until qualified processed evidence.
+  Callers changing a correction or right must hold the Purchase lock.
+  """
+  @spec payment_correction(Ecto.UUID.t()) ::
+          {:ok, %{status: :none | :owed | :unresolved | :processed, plan_ended?: boolean()}}
+          | {:error, term()}
+  def payment_correction(payment_id) do
+    with {:ok, refunds} <-
+           FixtureRefund
+           |> Ash.Query.filter(payment_id == ^payment_id)
+           |> Ash.Query.select([:state, :claim_id, :allocation])
+           |> Ash.read(authorize?: false) do
+      {processed, open} = Enum.split_with(refunds, &(&1.state == :processed))
+
+      status =
+        cond do
+          Enum.any?(open, &(not is_nil(&1.claim_id))) -> :unresolved
+          processed != [] -> :processed
+          open != [] -> :owed
+          true -> :none
+        end
+
+      {:ok, %{status: status, plan_ended?: Enum.any?(processed, &(&1.allocation == :plan))}}
+    end
+  end
+
   defp acknowledge(id) do
     case lock_refund_source(id) do
       {:ok, %{state: :processed, allocation: component, acknowledged_at: nil} = refund, _}

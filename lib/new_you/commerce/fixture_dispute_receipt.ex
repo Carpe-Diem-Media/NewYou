@@ -51,10 +51,12 @@ defmodule NewYou.Commerce.FixtureDisputeReceipt do
   end
 
   actions do
-    read :read do
-      primary? true
-      public? false
-      pagination keyset?: true, required?: false
+    if Mix.env() == :test do
+      read :read do
+        primary? true
+        public? false
+        pagination keyset?: true, required?: false
+      end
     end
 
     if Mix.env() == :test do
@@ -94,11 +96,11 @@ defmodule NewYou.Commerce.FixtureDisputeReceipt do
   end
 
   policies do
-    policy action_type(:read) do
-      authorize_if AshOban.Checks.AshObanInteraction
-    end
-
     if Mix.env() == :test do
+      policy action_type(:read) do
+        authorize_if AshOban.Checks.AshObanInteraction
+      end
+
       policy action(:process) do
         authorize_if AshOban.Checks.AshObanInteraction
       end

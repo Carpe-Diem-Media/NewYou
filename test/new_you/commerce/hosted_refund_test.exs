@@ -202,14 +202,14 @@ defmodule NewYou.Commerce.HostedRefundTest do
   end
 
   test "payment restoration rechecks a verified refund, deletion and current access posture" do
-    for block <- [:refund, :deletion, :security_hold] do
+    for block <- [:refund, :ambiguous_refund, :deletion, :security_hold] do
       P805.with_fixture(fn ->
         with_paid_plan(fn accepted, payment, payer, recipient, _, _ ->
           assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
           assert {:ok, %{id: id}} = Commerce.deliver_plan_payment_consequence(grant)
 
           refund =
-            if block == :refund do
+            if block in [:refund, :ambiguous_refund] do
               assert {:ok, owed} =
                        request(
                          payer.credentials,
@@ -235,6 +235,10 @@ defmodule NewYou.Commerce.HostedRefundTest do
                 assert 202 == send_evidence(key, refund_data(refund), "processed")
                 process_evidence(refund.reference)
 
+              :ambiguous_refund ->
+                assert %{state: :unresolved, claim_id: claim} = read_refund(refund.id)
+                assert is_binary(claim)
+
               :deletion ->
                 assert :ok =
                          SyntheticSuppression.suppress(
@@ -256,6 +260,10 @@ defmodule NewYou.Commerce.HostedRefundTest do
                      send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
 
             assert %{state: :restored, effect_version: version} = apply_dispute_receipts(payment)
+
+            if block == :ambiguous_refund do
+              assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+            end
 
             if block == :security_hold do
               assert {:error, :dispute_unavailable} = Commerce.deliver_fixture_dispute(dispute.id)
@@ -830,6 +838,188 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
     assert {:ok, ^refund_clear?} = dispute_refund_clear(accepted.purchase_id, payment.id)
     refute_received {^tag, "POST", "/refund", _, _}
+  end
+
+  test "retained restoration cannot reconcile below a committed same-outcome revision" do
+    assert_retained_revision_floor(:restored, :lost, :suspended, :held_unconsumed)
+  end
+
+  test "retained loss cannot reconcile below a committed same-outcome revision" do
+    assert_retained_revision_floor(:lost, :restored, :ended, :ended)
+  end
+
+  defp assert_retained_revision_floor(outcome, opposite, interim_right, final_right) do
+    response = start_supervised!({Agent, fn -> nil end})
+    reply = fn conn, _ -> dispute_read_response(conn, Agent.get(response, & &1)) end
+    expected = {outcome, opposite, interim_right, final_right}
+
+    P805.with_fixture(fn ->
+      with_paid_plan(reply, fn accepted, payment, _, _, _, tag ->
+        with_signing_key(
+          &exercise_retained_revision_floor(&1, response, accepted, payment, tag, expected)
+        )
+      end)
+    end)
+  end
+
+  defp exercise_retained_revision_floor(
+         key,
+         response,
+         accepted,
+         payment,
+         tag,
+         {outcome, opposite, interim_right, final_right}
+       ) do
+    assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+    assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+    terminal = Atom.to_string(outcome)
+    other = Atom.to_string(opposite)
+    data = dispute_data(payment)
+
+    assert 202 == send_event(key, "fixture.dispute", %{data | revision: 2, outcome: terminal})
+    dispute = apply_dispute_receipts(payment)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+    assert 202 == send_event(key, "fixture.dispute", %{data | revision: 4, outcome: other})
+    assert %{state: ^outcome, revision: 2, conflict?: true} = apply_dispute_receipts(payment)
+
+    latest = %{data | revision: 6, outcome: terminal}
+    set_due_dispute_reply(dispute.id, response, latest)
+
+    with_paused_dispute_read(dispute.id, fn ->
+      set_due_dispute_reply(dispute.id, response, :miss)
+      assert :ok = FixtureDisputes.read_due(dispute.id)
+    end)
+
+    assert Enum.any?(dispute_receipts(payment), fn receipt ->
+             receipt.source == :read and receipt.revision == 6 and receipt.outcome == outcome and
+               receipt.state == :stale
+           end)
+
+    set_due_dispute_reply(dispute.id, response, %{latest | revision: 5})
+    assert :ok = FixtureDisputes.read_due(dispute.id)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    assert %{state: ^outcome, revision: 2, conflict?: true, effect_version: conflict_version} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert %{state: ^interim_right} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
+
+    set_due_dispute_reply(dispute.id, response, latest)
+    assert :ok = FixtureDisputes.read_due(dispute.id)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    assert %{
+             state: ^outcome,
+             revision: 6,
+             conflict?: false,
+             effect_version: version,
+             acknowledged_version: version
+           } = Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert version == conflict_version + 1
+
+    assert %{state: ^final_right} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    assert Enum.frequencies_by(dispute_receipts(payment), & &1.state) ==
+             %{applied: 2, conflict: 1, stale: 2}
+
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+    assert %{effect_version: ^version} = Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+    refute_received {^tag, "POST", "/refund", _, _}
+  end
+
+  test "claimed refunds and restoration serialize in both Purchase lock orders" do
+    for first <- [:refund, :restoration] do
+      P805.with_fixture(fn ->
+        with_paid_plan(fn accepted, payment, payer, recipient, _, tag ->
+          with_signing_key(
+            &exercise_restoration_overlap(&1, {accepted, payment, payer, recipient, tag}, first)
+          )
+        end)
+      end)
+    end
+  end
+
+  defp exercise_restoration_overlap(key, {accepted, payment, payer, recipient, tag}, first) do
+    assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+    assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+    assert {:ok, refund} =
+             request(payer.credentials, proof(refund_fields(accepted, payment, payer, recipient)))
+
+    assert {:ok, %{state: :reserved}} =
+             Commerce.reserve_fixture_refund(payer.credentials, refund.id)
+
+    data = dispute_data(payment)
+    assert 202 == send_event(key, "fixture.dispute", data)
+    dispute = apply_dispute_receipts(payment)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+    assert [] = plan_rights(recipient)
+
+    assert 202 == send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
+    assert %{state: :restored} = apply_dispute_receipts(payment)
+
+    dispatch = fn -> Commerce.dispatch_fixture_refund(payer.credentials, refund.id) end
+    restore = fn -> Commerce.deliver_fixture_dispute(dispute.id) end
+
+    assert %{state: :unresolved, claim_id: claim} =
+             race_restoration_and_claim(first, dispatch, restore)
+
+    assert_receive {^tag, "POST", "/refund", _, _}
+    assert is_binary(claim)
+
+    # A delivery that held the lock before the claim saw a clear source.
+    right_state = if first == :restoration, do: :held_unconsumed, else: :suspended
+
+    assert %{state: ^right_state} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+    assert [] = plan_rights(recipient)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    for status <- ["pending", "failed"] do
+      assert 202 == send_evidence(key, refund_data(refund), status)
+      process_evidence(refund.reference)
+      assert %{claim_id: ^claim, state: state} = read_refund(refund.id)
+      assert Atom.to_string(state) == status
+      assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+      assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+      assert %{state: :suspended} =
+               Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+    end
+
+    assert 202 == send_evidence(key, refund_data(refund), "processed")
+    process_evidence(refund.reference)
+    assert {:ok, :none} = FixtureDisputes.correction_overlap(dispute.id)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    assert %{state: :ended} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    assert {:ok, %{claim_id: ^claim, state: :processed}} =
+             Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+    refute_received {^tag, "POST", "/refund", _, _}
+  end
+
+  defp race_restoration_and_claim(:refund, dispatch, restore) do
+    assert {{:ok, claimed}, :ok} =
+             race_corrections(:fixture_refund, :claim_written, dispatch, restore)
+
+    claimed
+  end
+
+  defp race_restoration_and_claim(:restoration, dispatch, restore) do
+    assert {:ok, {:ok, claimed}} =
+             race_corrections(:fixture_dispute, :effect_checked, restore, dispatch)
+
+    claimed
   end
 
   defp with_paused_dispute_read(id, while_paused) do

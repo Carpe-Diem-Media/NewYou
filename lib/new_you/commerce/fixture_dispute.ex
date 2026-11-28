@@ -68,10 +68,12 @@ defmodule NewYou.Commerce.FixtureDispute do
   end
 
   actions do
-    read :read do
-      primary? true
-      public? false
-      pagination keyset?: true, required?: false
+    if Mix.env() == :test do
+      read :read do
+        primary? true
+        public? false
+        pagination keyset?: true, required?: false
+      end
     end
 
     if Mix.env() == :test do
@@ -142,11 +144,11 @@ defmodule NewYou.Commerce.FixtureDispute do
   end
 
   policies do
-    policy action_type(:read) do
-      authorize_if AshOban.Checks.AshObanInteraction
-    end
-
     if Mix.env() == :test do
+      policy action_type(:read) do
+        authorize_if AshOban.Checks.AshObanInteraction
+      end
+
       policy action([:deliver, :read_due]) do
         authorize_if AshOban.Checks.AshObanInteraction
       end

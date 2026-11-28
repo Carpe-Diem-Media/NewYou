@@ -10,7 +10,6 @@ defmodule NewYou.Commerce.FixtureDisputes do
     FixtureDispute,
     FixtureDisputeEvidence,
     FixtureDisputeReceipt,
-    FixtureRefund,
     FixtureRefunds,
     OfferAdmission,
     Purchase,
@@ -96,7 +95,11 @@ defmodule NewYou.Commerce.FixtureDisputes do
   end
 
   defp initial_terminal_conflict?(%{outcome: outcome} = receipt) when outcome in @terminal,
-    do: receipt |> opposing_terminal() |> Ash.exists(authorize?: false)
+    do:
+      receipt
+      |> terminal_evidence()
+      |> Ash.Query.filter(outcome != ^receipt.outcome)
+      |> Ash.exists(authorize?: false)
 
   defp initial_terminal_conflict?(_receipt), do: {:ok, false}
 
@@ -163,15 +166,7 @@ defmodule NewYou.Commerce.FixtureDisputes do
   defp qualify_terminal(%{conflict?: true}, %{source: :webhook}), do: {:ok, :conflict}
 
   defp qualify_terminal(%{conflict?: true} = dispute, receipt) do
-    competing =
-      receipt
-      |> terminal_evidence()
-      |> Ash.Query.filter(
-        revision > ^receipt.revision or
-          (revision == ^receipt.revision and outcome != ^receipt.outcome)
-      )
-
-    case Ash.exists(competing, authorize?: false) do
+    case competing_terminal?(receipt) do
       {:ok, false} -> qualify_outcome(dispute, receipt, false)
       {:ok, true} -> {:ok, :stale}
       {:error, _} = error -> error
@@ -197,16 +192,10 @@ defmodule NewYou.Commerce.FixtureDisputes do
          do: {:ok, :applied}
   end
 
-  # The current pinned read can confirm the retained terminal decision only
-  # when it is newer than every opposing terminal observation for this case.
-  # An opposing read still needs adjudication and never reopens an ended right.
+  # A current pinned read may confirm the retained outcome at the highest
+  # committed revision, provided no opposing evidence shares that revision.
   defp confirm_terminal(dispute, receipt) do
-    opposing =
-      receipt
-      |> opposing_terminal()
-      |> Ash.Query.filter(revision >= ^receipt.revision)
-
-    with {:ok, false} <- Ash.exists(opposing, authorize?: false),
+    with {:ok, false} <- competing_terminal?(receipt),
          {:ok, _} <-
            update(dispute, :confirm_terminal, %{
              revision: receipt.revision,
@@ -221,10 +210,14 @@ defmodule NewYou.Commerce.FixtureDisputes do
 
   # A superseded lease prevents direct application. Its committed, exact-source
   # terminal observation still counts when another receipt seeks qualification.
-  defp opposing_terminal(receipt) do
+  defp competing_terminal?(receipt) do
     receipt
     |> terminal_evidence()
-    |> Ash.Query.filter(outcome != ^receipt.outcome)
+    |> Ash.Query.filter(
+      revision > ^receipt.revision or
+        (revision == ^receipt.revision and outcome != ^receipt.outcome)
+    )
+    |> Ash.exists(authorize?: false)
   end
 
   defp terminal_evidence(scope) do
@@ -324,18 +317,14 @@ defmodule NewYou.Commerce.FixtureDisputes do
 
   defp classify_overlap(id) do
     with {:ok, %{payment_id: payment_id}, _} <- locked_case(id),
-         {:ok, true} <- blocking_case?(payment_id),
-         {:ok, refunds} <-
-           FixtureRefund
-           |> Ash.Query.filter(payment_id == ^payment_id)
-           |> Ash.read(authorize?: false) do
+         {:ok, blocking?} <- blocking_case?(payment_id),
+         {:ok, %{status: status}} <- FixtureRefunds.payment_correction(payment_id) do
       cond do
-        Enum.any?(refunds, &(not is_nil(&1.claim_id))) -> :unresolved
-        refunds != [] -> :refund_owed
+        status == :unresolved or (blocking? and status == :processed) -> :unresolved
+        blocking? and status == :owed -> :refund_owed
         true -> :none
       end
     else
-      {:ok, false} -> :none
       _ -> @unavailable
     end
   end
@@ -345,21 +334,33 @@ defmodule NewYou.Commerce.FixtureDisputes do
           {:ok, :available | :suspend | :end} | {:error, term()}
   def right_effect(payment_id, :plan) do
     Repo.without_query_telemetry(fn ->
-      query =
-        Ash.Query.filter(FixtureDispute, payment_id == ^payment_id and allocation == :plan)
-
-      with {:ok, false} <-
-             query |> Ash.Query.filter(state == :lost) |> Ash.exists(authorize?: false),
-           {:ok, blocked?} <-
-             query
-             |> Ash.Query.filter(state != :restored or conflict?)
-             |> Ash.exists(authorize?: false) do
-        {:ok, if(blocked?, do: :suspend, else: :available)}
-      else
-        {:ok, true} -> {:ok, :end}
-        {:error, _} = error -> error
+      with {:ok, disputes} <-
+             FixtureDispute
+             |> Ash.Query.filter(payment_id == ^payment_id and allocation == :plan)
+             |> Ash.Query.select([:state, :conflict?])
+             |> Ash.read(authorize?: false) do
+        right_effect_from_cases(disputes, payment_id)
       end
     end)
+  end
+
+  defp right_effect_from_cases([], _payment_id), do: {:ok, :available}
+
+  defp right_effect_from_cases(disputes, payment_id) do
+    cond do
+      Enum.any?(disputes, &(&1.state == :lost)) -> {:ok, :end}
+      Enum.any?(disputes, &(&1.state != :restored or &1.conflict?)) -> {:ok, :suspend}
+      true -> restored_right_effect(payment_id)
+    end
+  end
+
+  defp restored_right_effect(payment_id) do
+    case FixtureRefunds.payment_correction(payment_id) do
+      {:ok, %{plan_ended?: true}} -> {:ok, :end}
+      {:ok, %{status: :unresolved}} -> {:ok, :suspend}
+      {:ok, _} -> {:ok, :available}
+      {:error, _} = error -> error
+    end
   end
 
   @doc false
@@ -371,6 +372,7 @@ defmodule NewYou.Commerce.FixtureDisputes do
            recipient_id: purchase.recipient_id
          },
          {:ok, effect} <- effect_for_case(dispute, scope) do
+      checkpoint(:effect_checked)
       {:ok, scope, effect, dispute.effect_version}
     end
   end
