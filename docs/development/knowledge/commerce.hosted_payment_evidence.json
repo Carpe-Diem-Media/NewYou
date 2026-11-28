@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
+    "git_sha": "c580eb714933289c2acc4adf26dd9c3246576688",
     "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -329,7 +329,7 @@
           "Due time matches a claimable dispatch"
         ],
         "side_effects": [
-          "Reserve the next attempt and check its visibility independently before HTTP. Backoff grows from 30 seconds to a 900-second cap. The fixture accepts one integer Retry-After value, clamps it to 60\u2013900 seconds and only extends the current due time. Other forms use a 60-second fallback. Actual provider rate limiting is outside this fixture policy."
+          "Reserve the next attempt and check its visibility independently before HTTP. Backoff grows from 30 seconds to a 900-second cap. The fixture accepts one integer Retry-After value, clamps it to 60–900 seconds and only extends the current due time. Other forms use a 60-second fallback. Actual provider rate limiting is outside this fixture policy."
         ],
         "terminal": false,
         "source_ids": [
@@ -589,13 +589,13 @@
       "id": "checkout",
       "path": "lib/new_you/commerce/hosted_checkout.ex",
       "symbol": "defp claim(",
-      "sha256": "cc11dbe5e000e0cb80abb8abf0bec0ff9f46434782bc829a46e60707caf85179"
+      "sha256": "402c0621698abdb52726d3178b08629c90360e52953456b5b817b4752bbafdf8"
     },
     {
       "id": "dispatch",
       "path": "lib/new_you/commerce/hosted_dispatch.ex",
       "symbol": "trigger :verify_fixture_reference",
-      "sha256": "d58e186ab3c5e9e89a61b82243a90f3526476163d360d1ab1366d2044be6f937"
+      "sha256": "13136ae74f0ee2b6624f76aa3dd713a5a06d94c24e93070ce94b120e67967e3b"
     },
     {
       "id": "evidence",
@@ -649,7 +649,7 @@
       "id": "transport",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "def build_verify(reference",
-      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
+      "sha256": "57365f06c3fccf41c7175e2624cf765226bb995d46c5f23571f3d4760000c5d4"
     },
     {
       "id": "endpoint",
@@ -709,7 +709,7 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "payment evidence migration preserves legacy rows",
-      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
+      "sha256": "e5894ffb6a38afcb1979aa602958f0afe627f7259cb40c1a885c6bbf0533a935"
     },
     {
       "id": "audit_pattern",

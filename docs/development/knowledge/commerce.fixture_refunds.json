@@ -6,7 +6,7 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
+    "git_sha": "c580eb714933289c2acc4adf26dd9c3246576688",
     "semantics": "Provider-disabled refund dispatch, recoverable capped reads, source-qualified excess, durable provider ID conflict classification and privacy-safe Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -778,7 +778,7 @@
     }
   ],
   "proof_limitations": [
-    "All execution evidence is TEST-local. Provider-stage EV-010/011/024\u2013029/048/051/053 and actual-stack activation remain with the existing gated tickets.",
+    "All execution evidence is TEST-local. Provider-stage EV-010/011/024–029/048/051/053 and actual-stack activation remain with the existing gated tickets.",
     "Hosted Assessment and bundle checkout remain outside this slice. Bundle attribution uses the existing qualified synthetic fixtures."
   ],
   "follow_up_tickets": [
@@ -851,7 +851,7 @@
       "id": "transport",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "def build_refund(",
-      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
+      "sha256": "57365f06c3fccf41c7175e2624cf765226bb995d46c5f23571f3d4760000c5d4"
     },
     {
       "id": "ingress",
@@ -905,7 +905,7 @@
       "id": "roundtrip",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "refund migrations roundtrip",
-      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
+      "sha256": "e5894ffb6a38afcb1979aa602958f0afe627f7259cb40c1a885c6bbf0533a935"
     },
     {
       "id": "migration_1",
