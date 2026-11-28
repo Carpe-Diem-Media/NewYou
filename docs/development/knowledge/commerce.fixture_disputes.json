@@ -6,7 +6,7 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "3b1bda626d966efe956062d2a899cfa7f9092d8f",
+    "git_sha": "e7e46b712ecebd37c5d6039fc13891ed9ca1e32f",
     "semantics": "Provider-disabled dispute foundation with durable suspension discovery when a same-payment refund is first claimed after restoration."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -1060,7 +1060,7 @@
       "path": "test/proof/well223_provider_disabled.exs",
       "cases": [
         "Non-TEST primary read actions are absent even when Ash supplies a real AshOban job context.",
-        "Fixture ingress, trigger declarations, worker and scheduler modules, dispute request builder and TEST-only PlanRight actions are absent. Public Domain wrappers fail closed and normal Privacy and Audit reader policies deny rows."
+        "Fixture ingress, trigger declarations, worker and scheduler modules, all five fixture request builders and TEST-only PlanRight actions are absent. Public Domain wrappers fail closed and normal Privacy and Audit reader policies deny rows."
       ],
       "proves": "F-07 DEV compile and read denial for all five Commerce, Audit and Privacy dispute resources, with and without authorization.",
       "limits": "Runs in DEV without starting Repo or the endpoint. Application CI executes it in the existing static job after compiling DEV and loading static project policies.",
@@ -1244,7 +1244,7 @@
       "id": "test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"refund and dispute serialize",
-      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
+      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
     },
     {
       "id": "restart",
@@ -1346,31 +1346,31 @@
       "id": "receipt_restart_test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"fresh scheduler processes a committed webhook receipt",
-      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
+      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
     },
     {
       "id": "receipt_replay_test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"two workers running the scheduled receipt job",
-      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
+      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
     },
     {
       "id": "receipt_stale_test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"a stale read token does not erase a committed opposing revision",
-      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
+      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
     },
     {
       "id": "receipt_conflict_test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"committed contradictory terminal receipts keep the right suspended",
-      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
+      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
     },
     {
       "id": "receipt_quarantine_test",
       "path": "test/new_you/commerce/hosted_refund_test.exs",
       "symbol": "test \"the same payer can have distinct equal-value purchases",
-      "sha256": "df3176a76785528f3a6c3aeb4a8a56afed77ab4ffb4483bc61a65f4e6cc3b731"
+      "sha256": "3a99c25898ca6793cef3fba2292d904744af4754861c0721d35dd5abc88fa2e6"
     }
   ]
 }
