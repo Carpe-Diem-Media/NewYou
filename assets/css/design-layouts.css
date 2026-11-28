@@ -38,6 +38,46 @@
 .ds-layout-container { background-color: var(--canvas); }
 .ds-stack { display: flex; flex-direction: column; min-inline-size: 0; gap: var(--content-gap); }
 .ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--control-gap); min-inline-size: 0; }
+
+.ds-design-section {
+  @apply font-design-sans text-design-body-xs leading-design-body-xs;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.ds-design-section-title {
+  @apply text-design-heading-md leading-design-heading-md tracking-design-heading-md font-design-bold;
+}
+.ds-split-hero .ds-design-section-title {
+  @apply text-design-display-md leading-design-display-md tracking-design-display-md;
+}
+.ds-section-body { max-inline-size: var(--measure); }
+.ds-split-hero,
+.ds-action-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--grid-gap);
+}
+/* The media slot is noninteractive. Copy comes first in the DOM and when stacked. */
+.ds-split-hero { flex-direction: row-reverse; }
+.ds-action-section { justify-content: space-between; }
+.ds-split-hero > .ds-section-copy,
+.ds-split-hero > .ds-section-media,
+.ds-action-section > .ds-section-copy {
+  flex: 1 1 var(--design-layout-min);
+  min-inline-size: 0;
+}
+.ds-section-media :where(img, video) {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+}
+.ds-section-actions > * {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.ds-section-items > li { display: grid; min-inline-size: 0; }
+
 .ds-layout-nested { @apply py-design-base bg-design-surface; min-inline-size: 0; overflow-wrap: anywhere; }
 .ds-layout-nested > p { @apply px-design-sm; }
 .ds-layout-breakout {

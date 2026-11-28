@@ -19,6 +19,7 @@ defmodule NewYouWeb.DesignSystemLive do
   import NewYouWeb.DesignSystemContracts
   import NewYouWeb.Components.Design.Icon
   import NewYouWeb.DesignSystemLayouts
+  import NewYouWeb.DesignSystemSections, only: [section_layouts: 1]
   import NewYouWeb.DesignSystemComponents
   import NewYouWeb.DesignSystemTypography
 

@@ -3,6 +3,24 @@ defmodule NewYouWeb.DesignSystemLiveTest do
 
   import Phoenix.LiveViewTest
 
+  test "the guide shows three section patterns with native actions and a semantic card list", %{
+    conn: conn
+  } do
+    {:ok, view, _html} = live(conn, "/dev/design-system")
+
+    assert has_element?(view, "nav a[href='#section-layouts']")
+    assert has_element?(view, "#layout-hero[aria-labelledby='layout-hero-heading'] h3")
+    assert has_element?(view, "#layout-hero figure img[alt]")
+    assert has_element?(view, "#layout-hero a[href='#layout-features']")
+
+    assert has_element?(
+             view,
+             "#layout-features ul[role=list] > li > article[data-variant=flat] h4"
+           )
+
+    assert has_element?(view, "#layout-action button[type=submit]")
+  end
+
   test "the guide renders all requested foundations and semantic examples", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/dev/design-system")
 
