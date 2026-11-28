@@ -6,7 +6,7 @@
     "WELL-223"
   ],
   "implementation_revision": {
-    "git_sha": "c580eb714933289c2acc4adf26dd9c3246576688",
+    "git_sha": "b719dae31e6462d6293a17a47b82b83a710ae8d4",
     "semantics": "Provider-disabled dispute intake, receipt and case recovery, source-specific correction, and local disclosure under independent revocable Finance and Audit grants."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -1290,7 +1290,7 @@
       "id": "transport",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "def build_dispute_read",
-      "sha256": "57365f06c3fccf41c7175e2624cf765226bb995d46c5f23571f3d4760000c5d4"
+      "sha256": "67e52ec5123c0b758f7bd7fdd0b371ed7a2db92735d908f10448ba949aa9b55c"
     },
     {
       "id": "rights",

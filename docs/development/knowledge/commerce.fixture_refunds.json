@@ -6,7 +6,7 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "c580eb714933289c2acc4adf26dd9c3246576688",
+    "git_sha": "b719dae31e6462d6293a17a47b82b83a710ae8d4",
     "semantics": "Provider-disabled refund dispatch, recoverable capped reads, source-qualified excess, durable provider ID conflict classification and privacy-safe Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -778,7 +778,7 @@
     }
   ],
   "proof_limitations": [
-    "All execution evidence is TEST-local. Provider-stage EV-010/011/024–029/048/051/053 and actual-stack activation remain with the existing gated tickets.",
+    "All execution evidence is TEST-local. Provider-stage EV-010/011/024\u2013029/048/051/053 and actual-stack activation remain with the existing gated tickets.",
     "Hosted Assessment and bundle checkout remain outside this slice. Bundle attribution uses the existing qualified synthetic fixtures."
   ],
   "follow_up_tickets": [
@@ -839,7 +839,7 @@
       "id": "allocation",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "def accepted_component_minor",
-      "sha256": "813cab2f6c8018ca45e49786e7ce5230e17de82cc98d8da44b0f2d669f33de09"
+      "sha256": "7ea259a555f95cea629d20b9036a136fe224d13471c7bcca5f3475e50b5941e5"
     },
     {
       "id": "evidence",
@@ -851,7 +851,7 @@
       "id": "transport",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "def build_refund(",
-      "sha256": "57365f06c3fccf41c7175e2624cf765226bb995d46c5f23571f3d4760000c5d4"
+      "sha256": "67e52ec5123c0b758f7bd7fdd0b371ed7a2db92735d908f10448ba949aa9b55c"
     },
     {
       "id": "ingress",

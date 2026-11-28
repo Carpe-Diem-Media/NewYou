@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "capability_id": "commerce.hosted_checkout_dispatch",
-  "purpose": "Bind a standalone Plan to one durable Paystack Hosted Redirect Initialize in the TEST profile.",
+  "purpose": "Bind an accepted standalone Plan in local DEV or TEST to one durable Paystack TEST Hosted Redirect Initialize.",
   "implementing_tickets": [
     "WELL-218",
     "WELL-190"
   ],
   "implementation_revision": {
-    "git_sha": "b03a8458ddfe4ec0564bd2f2e7648d1225350164",
-    "semantics": "E1a activates the scoped TEST Initialize transport and preserves the separate E1a-F fixture and WELL-219 fixture Verify paths."
+    "git_sha": "b719dae31e6462d6293a17a47b82b83a710ae8d4",
+    "semantics": "WELL-190 allows local DEV execution for an exact operator-approved Plan and current self-payer, preserves TEST fixture isolation and proves runtime activation, request redaction and no retry locally."
   },
   "authoritative_domain": "NewYou.Commerce",
   "collaborating_domains": [
@@ -24,10 +24,11 @@
     {
       "domain": "NewYou.Privacy",
       "interface": "SyntheticSuppression.locked_status/1",
-      "ownership": "TEST suppression status for both accepted parties. Commerce reuses the S1 Privacy locks.",
+      "ownership": "Locked synthetic subject suppression for TEST. The DEV-only explicit local Plan scope requires the configured payer to authenticate and hold an existing unsuppressed subject row.",
       "source_ids": [
         "quote",
-        "checkout"
+        "checkout",
+        "development_privacy"
       ]
     }
   ],
@@ -81,7 +82,7 @@
         "Bind one random reference and a digest of the accepted snapshot."
       ],
       "caller_constraints": [
-        "TEST only. Requires the current payer, allowed Privacy scopes and an unpaid standalone Plan."
+        "Local DEV or TEST. The fixture scope is TEST-only. Requires the current payer, allowed Privacy scopes and an unpaid standalone Plan."
       ],
       "source_ids": [
         "checkout",
@@ -131,7 +132,7 @@
         "Read the current dispatch outcome and apply existing Identity session checks without HTTP."
       ],
       "caller_constraints": [
-        "TEST only. Requires the current payer and unchanged source."
+        "Local DEV or TEST. The fixture scope is TEST-only. Requires the current payer and unchanged source."
       ],
       "source_ids": [
         "checkout",
@@ -155,7 +156,7 @@
         "Commit and independently observe one durable claim before the HTTP/1 POST. Encrypt a matching capability against the attempt binding before presentation."
       ],
       "caller_constraints": [
-        "TEST compile and runtime only. Requires an approved exact attempt, restricted TEST key, designated checkout inbox, private capability key and outermost dispatch boundary."
+        "Local DEV or TEST with explicit runtime approval. Requires an approved exact attempt, restricted TEST key, designated checkout inbox, private capability key and outermost dispatch boundary."
       ],
       "source_ids": [
         "checkout",
@@ -302,7 +303,7 @@
       ]
     },
     {
-      "summary": "Wire code compiles only in TEST. The real integration has a fixed HTTPS origin. Its local seam pins the exact loopback certificate. Fixture credentials, origins, retention and Verify schedules cannot cross into provider scope.",
+      "summary": "Actual Paystack TEST Initialize compiles in DEV and TEST. Synthetic fixtures remain TEST-only. Production cannot activate either mode. The real integration has a fixed HTTPS origin. Its local seam pins the exact loopback certificate. Fixture credentials, origins, retention and Verify schedules cannot cross into provider scope.",
       "source_ids": [
         "adapter",
         "checkout",
@@ -313,7 +314,7 @@
       ]
     },
     {
-      "summary": "Emit only response classifications and timings. Reject provider dispatch when Finch handlers could capture raw metadata. Mark the reference and capability sensitive and hide them from inspection.",
+      "summary": "Emit only response classifications and timings. Reject provider dispatch when Finch handlers could capture raw metadata. Keep runtime settings, in-memory request credentials and payload, reference and capability out of inspected values. Disable SQL query telemetry while touching restricted data.",
       "source_ids": [
         "checkout",
         "dispatch",
@@ -399,7 +400,8 @@
       "cases": [
         "F-01/F-02 exact snapshot, actor and authority denials",
         "F-08/F-09 evidence isolation and compatibility",
-        "E1a exact TEST wire payload, encrypted retention, fresh BEAM, unsafe telemetry denial, concurrent lost-response fence"
+        "E1a exact TEST wire payload, encrypted retention, fresh BEAM, unsafe telemetry denial, concurrent lost-response fence",
+        "MG-02 runtime provider branch requires exact source and actor, rejects raw observer, and never retries a 503 or follows a redirect from pinned TLS receiver"
       ],
       "proves": "Exact accepted money, wrong source and scope denial, revoked and suppressed actor denial, quote-less and closed exclusions, zero local payments and rights, and preserved admission interlock.",
       "limits": "Signed synthetic P1, S1 and E2a inputs remain TEST fixtures.",
@@ -455,14 +457,28 @@
     {
       "path": "test/proof/well218_provider_disabled.exs",
       "cases": [
-        "F-07 compile exclusion and runtime configuration denial"
+        "MG-01 DEV activation with regular database pool and no fixture transport or scheduler",
+        "MG-02 production compile exclusion"
       ],
-      "proves": "The non-TEST BEAM has no wire builder or Ash/Req imports in the owner boundary. Public calls remain disabled.",
+      "proves": "The DEV build accepts only runtime provider settings, references no Sandbox API, and excludes fixture ingress and execution. Production remains disabled even with valid fake runtime activation.",
       "limits": "Uses compiled modules without starting the application. The existing runner contract checks that both standalone WELL-218 proof scripts stay out of ExUnit discovery.",
       "source_ids": [
         "disabled_test",
         "checkout",
         "test_discovery"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/paystack_test_integration_test.exs",
+      "cases": [
+        "MG-02 exact runtime activation and inspected setting redaction",
+        "MG-02 explicit provider and fixture configuration collision"
+      ],
+      "proves": "The same environment inputs used by DEV and TEST reject disabled, missing, mismatched and invalid values and produce redacted settings.",
+      "limits": "Fake credential and capability values only.",
+      "source_ids": [
+        "test_integration",
+        "runtime_test"
       ]
     }
   ],
@@ -471,6 +487,18 @@
       "summary": "Actual provider operation requires exact WELL-176 owner approval and applicable stage evidence. Bind runtime NEW_YOU_PAYSTACK_TEST_ENABLED, NEW_YOU_PAYSTACK_TEST_APPROVED_ATTEMPT_ID, NEW_YOU_PAYSTACK_TEST_RESTRICTED_KEY, NEW_YOU_PAYSTACK_TEST_EMAIL and NEW_YOU_PAYSTACK_TEST_CAPABILITY_KEY (base64, 32 decoded bytes). Supply secret values privately and preserve the capability key for recovery.",
       "source_ids": [
         "plan",
+        "checkout",
+        "test_integration"
+      ]
+    },
+    {
+      "summary": "Private DEV invocation uses mise exec -- devcore-project run dev -- iex -S mix (set NEW_YOU_PORT for linked worktrees). Set NEW_YOU_PAYSTACK_DEV_PLAN_APPROVAL in the private process environment as JSON binding one canonical payer_id, operation_id, offer_id, approval_id, disclosure_en_id and disclosure_af_id. With a canonical DEV session held privately, call Privacy.register_development_checkout_subject(credentials), OfferCatalogue.prepare_development_plan(credentials), then OfferAdmission.quote(%{credentials: credentials}, %{product: :plan, language: :en}). After the payer accepts the displayed R399 terms, pass the exact operation_id, quote_id and disclosure_fingerprint to OfferAdmission.accept/2 with the same credentials. Use the returned attempt_id for the separately approved runtime activation. Use HostedCheckout.prepare/3 and then initialize/3 with that exact immutable snapshot and %{provider: :paystack, integration: :voelgoedwinkel, environment: :test, channel: :card}. Access the returned capability only in private local custody. The code emits no provider request during Privacy registration, offer preparation, quote, acceptance or reference preparation.",
+      "source_ids": [
+        "local_config",
+        "development_source",
+        "development_offer",
+        "development_privacy",
+        "quote",
         "checkout",
         "test_integration"
       ]
@@ -518,7 +546,7 @@
   ],
   "proof_limitations": [
     "HIGH proof covers binding, actor authority, request and durable-effect counts, recovery, redaction and migration. Provider reconciliation, browser rendering, financial settlement, entitlement application and release remain separate.",
-    "NewYou exercises actual-stack HTTPS against an independently counted local receiver. No external provider operation or empirical PASS follows from this PR.",
+    "NewYou exercises actual-stack HTTPS against an independently counted local receiver. Master Gate correction tests stayed closed to external egress. The prior R399 operation remains an earlier exact-source receipt. E1a-07 operational qualification and E1a-09 stage obligations remain open for WELL-176 and later integration proof, subject to explicit scope disposition; no empirical PASS follows.",
     "Standalone Plan has no new unpaid terminality rule. Existing paid or corrected sources remain ineligible. All Assessment and bundle dispatch stays disabled."
   ],
   "follow_up_tickets": [
@@ -529,19 +557,19 @@
       "id": "checkout",
       "path": "lib/new_you/commerce/hosted_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.HostedCheckout",
-      "sha256": "402c0621698abdb52726d3178b08629c90360e52953456b5b817b4752bbafdf8"
+      "sha256": "482ce98989e4d19fb4b8a479383f0aac67824bf9a50562f980a3b0abc8a574f1"
     },
     {
       "id": "dispatch",
       "path": "lib/new_you/commerce/hosted_dispatch.ex",
       "symbol": "update :claim",
-      "sha256": "13136ae74f0ee2b6624f76aa3dd713a5a06d94c24e93070ce94b120e67967e3b"
+      "sha256": "df268b28330355c5603adb8ff99f1f81a56ca8bcd53365a80513f6a347215b5d"
     },
     {
       "id": "adapter",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "defmodule NewYou.Commerce.PaystackCheckout",
-      "sha256": "57365f06c3fccf41c7175e2624cf765226bb995d46c5f23571f3d4760000c5d4"
+      "sha256": "67e52ec5123c0b758f7bd7fdd0b371ed7a2db92735d908f10448ba949aa9b55c"
     },
     {
       "id": "purchase",
@@ -553,7 +581,7 @@
       "id": "quote",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "def bound_snapshot",
-      "sha256": "813cab2f6c8018ca45e49786e7ce5230e17de82cc98d8da44b0f2d669f33de09"
+      "sha256": "7ea259a555f95cea629d20b9036a136fe224d13471c7bcca5f3475e50b5941e5"
     },
     {
       "id": "payment",
@@ -577,7 +605,7 @@
       "id": "binding_test",
       "path": "test/new_you/commerce/hosted_checkout_test.exs",
       "symbol": "defmodule NewYou.Commerce.HostedCheckoutTest",
-      "sha256": "1f451bf16aac4045225a634db45a71466f5e1ad664e5adc88baf2a3a885e27b2"
+      "sha256": "47b5ecf527fdf62c8fd21b4d83f0f8506708ae442f6fdae2aabd70d46fd1ce6f"
     },
     {
       "id": "recovery_test",
@@ -600,8 +628,8 @@
     {
       "id": "disabled_test",
       "path": "test/proof/well218_provider_disabled.exs",
-      "symbol": "non-TEST dispatch exclusion passed",
-      "sha256": "fd85e7bef5216083844ff96af58f1f0b4f00bd3fe6b8abe84808a24690ba2dca"
+      "symbol": "WELL-190 checkout build boundary passed",
+      "sha256": "e339d5971b74cfbafe209d3989020de692a50553c1cfb7bb2a4068df2915576b"
     },
     {
       "id": "receiver",
@@ -631,13 +659,43 @@
       "id": "test_integration",
       "path": "lib/new_you/commerce/paystack_test_integration.ex",
       "symbol": "defmodule NewYou.Commerce.PaystackTestIntegration",
-      "sha256": "b82fdc2fde728d1d61e67bae013f701d86bc7d50f6e068a46e3a141811890e2c"
+      "sha256": "258c7e9e105bc6a556d96d1d5802a82d5ceed91ee1b9b617d874c3963c93f16a"
     },
     {
       "id": "provider_schema",
       "path": "priv/repo/migrations/20261128133346_well190_paystack_test_initialize.exs",
       "symbol": "defmodule NewYou.Repo.Migrations.Well190PaystackTestInitialize",
       "sha256": "4fbf49ac18f70fb3aec2293b442260380d9518897e3f4a6522eea791e73bda0b"
+    },
+    {
+      "id": "local_config",
+      "path": "lib/new_you/local_config.ex",
+      "symbol": "def paystack_development_plan",
+      "sha256": "5ce805492f1df65cad2fd16d662410980cb0d04d849f2ae67860bdd0564482cd"
+    },
+    {
+      "id": "development_source",
+      "path": "lib/new_you/commerce/paystack_development_source.ex",
+      "symbol": "def authorize",
+      "sha256": "749e7b3858d8471743fc0ebb57a43bc9b411f134ddacaf31fe4de87d357cd313"
+    },
+    {
+      "id": "development_offer",
+      "path": "lib/new_you/commerce/offer_catalogue.ex",
+      "symbol": "def prepare_development_plan",
+      "sha256": "ae3a8cb423efb7db8b48523fbf415947b6afffbc677b9c2cb4b001e2a1435f1d"
+    },
+    {
+      "id": "development_privacy",
+      "path": "lib/new_you/privacy.ex",
+      "symbol": "def register_development_checkout_subject",
+      "sha256": "98dd997a89126995f2ec66e9d86ab935fd8af9d0ed211f1bd6fb2218a1d6ba8e"
+    },
+    {
+      "id": "runtime_test",
+      "path": "test/new_you/commerce/paystack_test_integration_test.exs",
+      "symbol": "test \"the real runtime path validates exact activation",
+      "sha256": "ae94fd12a051a4cbd00e4aee90f1738ea0b9c9a8711209a460cd8d3952207e9e"
     }
   ]
 }
