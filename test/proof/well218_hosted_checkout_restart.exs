@@ -14,6 +14,23 @@ try do
 
   scope = %{provider: :paystack, integration: :local_fixture, environment: :test, channel: :card}
 
+  scope =
+    case input["integration"] do
+      "voelgoedwinkel" ->
+        Application.put_env(:new_you, :paystack_test_checkout, %{
+          attempt_id: input["attempt_id"],
+          restricted_key: "rk_test_local_e1a",
+          email: "checkout@example.com",
+          capability_key: Base.decode64!(input["capability_key"]),
+          listener: %{port: input["port"], certificate: Base.decode64!(input["certificate"])}
+        })
+
+        %{scope | integration: :voelgoedwinkel}
+
+      nil ->
+        scope
+    end
+
   credentials = %{
     session_id: input["credentials"]["session_id"],
     token: input["credentials"]["token"]
@@ -29,7 +46,13 @@ try do
       recovered.authorization_url == input["url"]
 
   if recovered.status != :prepared do
-    {:ok, ^recovered} = HostedCheckout.initialize(credentials, accepted, scope, input["port"])
+    replay =
+      case scope.integration do
+        :local_fixture -> HostedCheckout.initialize(credentials, accepted, scope, input["port"])
+        :voelgoedwinkel -> HostedCheckout.initialize(credentials, accepted, scope)
+      end
+
+    {:ok, ^recovered} = replay
   end
 
   IO.puts("E1AF_COMPLETED")

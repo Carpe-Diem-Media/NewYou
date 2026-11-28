@@ -1,8 +1,8 @@
 defmodule NewYou.Commerce.HostedCheckout do
   @moduledoc """
-  Commerce's provider-disabled checkout boundary. It binds an accepted
-  standalone Plan and commits one dispatch claim before TEST-only loopback
-  Initialize. A committed claim never expires into permission to send again.
+  Commerce's TEST checkout boundary. It binds an accepted standalone Plan
+  and commits one dispatch claim before Paystack Hosted Redirect Initialize.
+  A committed claim never expires into permission to send again.
   """
 
   @derive {Inspect, only: [:status]}
@@ -16,7 +16,7 @@ defmodule NewYou.Commerce.HostedCheckout do
         }
   @type scope :: %{
           provider: :paystack,
-          integration: :local_fixture,
+          integration: :local_fixture | :voelgoedwinkel,
           environment: :test,
           channel: :card
         }
@@ -24,6 +24,7 @@ defmodule NewYou.Commerce.HostedCheckout do
   @type listener :: %{port: :inet.port_number(), certificate: binary()}
 
   @spec prepare(map(), NewYou.Commerce.OfferAdmission.snapshot(), scope()) :: result()
+  @spec initialize(map(), NewYou.Commerce.OfferAdmission.snapshot(), scope()) :: result()
   @spec initialize(
           map(),
           NewYou.Commerce.OfferAdmission.snapshot(),
@@ -40,6 +41,7 @@ defmodule NewYou.Commerce.HostedCheckout do
       HostedDispatch,
       OfferAdmission,
       PaystackCheckout,
+      PaystackTestIntegration,
       Purchase,
       VerifiedPayment
     }
@@ -49,31 +51,55 @@ defmodule NewYou.Commerce.HostedCheckout do
     require Ash.Query
 
     @scope %{provider: :paystack, integration: :local_fixture, environment: :test, channel: :card}
+    @provider_scope %{@scope | integration: :voelgoedwinkel}
 
     @doc """
     Persist the reference for this exact accepted snapshot as its current payer.
     Replay recovers the same binding. This operation performs no HTTP.
     """
-    def prepare(credentials, snapshot, scope) when scope == @scope do
-      with_source(credentials, snapshot, fn
-        nil, digest ->
-          attrs =
-            Map.merge(@scope, %{
-              attempt_id: snapshot.attempt_id,
-              reference: Base.encode16(:crypto.strong_rand_bytes(16), case: :lower),
-              source_digest: digest
-            })
+    def prepare(credentials, snapshot, scope) when scope in [@scope, @provider_scope] do
+      with {:ok, settings} <- checkout_settings(scope, snapshot) do
+        with_source(credentials, snapshot, scope, fn
+          nil, digest ->
+            bind(snapshot.attempt_id, digest, scope, settings)
 
-          with {:ok, attempt} <-
-                 Ash.create(HostedDispatch, attrs, action: :bind, authorize?: false),
-               do: outcome(attempt)
-
-        attempt, _ ->
-          outcome(attempt)
-      end)
+          attempt, _ ->
+            outcome(attempt, settings)
+        end)
+      end
     end
 
     def prepare(_, _, _), do: {:error, :checkout_unavailable}
+
+    defp bind(attempt_id, digest, scope, settings) do
+      attrs =
+        Map.merge(scope, %{
+          attempt_id: attempt_id,
+          reference: Base.encode16(:crypto.strong_rand_bytes(16), case: :lower),
+          source_digest: digest
+        })
+
+      with {:ok, attempt} <- Ash.create(HostedDispatch, attrs, action: :bind, authorize?: false),
+           do: outcome(attempt, settings)
+    end
+
+    @doc """
+    Initialize the configured South African TEST integration for the current payer's exact
+    prepared purchase. The approved attempt is bound at runtime. Replay recovers the
+    existing result without sending another request.
+    """
+    def initialize(credentials, snapshot, scope) when scope == @provider_scope do
+      with {:ok, settings} <- checkout_settings(scope, snapshot),
+           true <- PaystackTestIntegration.transport_observers_safe?() do
+        dispatch(credentials, snapshot, scope, %{}, settings, fn attempt ->
+          send_to_provider(attempt, snapshot.terms, settings)
+        end)
+      else
+        _ -> {:error, :checkout_unavailable}
+      end
+    end
+
+    def initialize(_, _, _), do: {:error, :checkout_unavailable}
 
     @doc """
     Admit one dispatch for the prepared snapshot and local fixture listener.
@@ -83,23 +109,36 @@ defmodule NewYou.Commerce.HostedCheckout do
     integer port form supports the existing initialize-only fixture.
     """
     def initialize(credentials, snapshot, scope, listener) when scope == @scope do
+      case listener_schedule(listener) do
+        {:ok, fields} ->
+          dispatch(credentials, snapshot, scope, fields, nil, fn attempt ->
+            send_fixture(attempt, snapshot.terms, listener)
+          end)
+
+        _ ->
+          {:error, :checkout_unavailable}
+      end
+    end
+
+    def initialize(_, _, _, _), do: {:error, :checkout_unavailable}
+
+    defp dispatch(credentials, snapshot, scope, fields, settings, send_once) do
       # Ash.transact can join the caller's transaction. In that case this
       # function could otherwise get an acknowledgement before a real COMMIT.
-      with {:ok, fields} <- listener_schedule(listener),
-           false <- Ash.DataLayer.in_transaction?(Purchase),
+      with false <- Ash.DataLayer.in_transaction?(Purchase),
            {:ok, {:dispatch, attempt}} <-
-             with_source(credentials, snapshot, fn attempt, _ -> claim(attempt, fields) end),
+             with_source(credentials, snapshot, scope, fn attempt, _ ->
+               claim(attempt, fields, settings)
+             end),
            true <- committed_claim?(attempt) do
         checkpoint(:claim_committed)
-        send_once(attempt, snapshot.terms, listener)
+        send_once.(attempt)
         recover(credentials, snapshot, scope)
       else
         {:ok, %__MODULE__{}} = replay -> replay
         _ -> {:error, :checkout_unavailable}
       end
     end
-
-    def initialize(_, _, _, _), do: {:error, :checkout_unavailable}
 
     defp listener_schedule(%{port: port, certificate: certificate})
          when port in 1..65_535 and is_binary(certificate) and byte_size(certificate) in 1..8192 do
@@ -118,20 +157,29 @@ defmodule NewYou.Commerce.HostedCheckout do
     Recover the original reference and any retained fixture capability as the
     currently authorized payer. An inconclusive claim stays ambiguous.
     """
-    def recover(credentials, snapshot, scope) when scope == @scope do
-      with_source(credentials, snapshot, fn
-        nil, _ -> {:error, :checkout_unavailable}
-        attempt, _ -> outcome(attempt)
-      end)
+    def recover(credentials, snapshot, scope) when scope in [@scope, @provider_scope] do
+      with {:ok, settings} <- checkout_settings(scope, snapshot) do
+        with_source(credentials, snapshot, scope, fn
+          nil, _ -> {:error, :checkout_unavailable}
+          attempt, _ -> outcome(attempt, settings)
+        end)
+      end
     end
 
     def recover(_, _, _), do: {:error, :checkout_unavailable}
 
-    defp with_source(credentials, %{purchase_id: id} = snapshot, operation) do
+    defp checkout_settings(@scope, _), do: {:ok, nil}
+
+    defp checkout_settings(@provider_scope, %{attempt_id: id}),
+      do: PaystackTestIntegration.settings(id)
+
+    defp checkout_settings(_, _), do: {:error, :checkout_unavailable}
+
+    defp with_source(credentials, %{purchase_id: id} = snapshot, scope, operation) do
       with {:ok, ^id} <- Ecto.UUID.cast(id),
            {:ok, result} <-
              Ash.transact(Purchase, fn ->
-               locked_source(credentials, id, snapshot, operation)
+               locked_source(credentials, id, snapshot, scope, operation)
              end) do
         {:ok, result}
       else
@@ -139,9 +187,9 @@ defmodule NewYou.Commerce.HostedCheckout do
       end
     end
 
-    defp with_source(_, _, _), do: {:error, :checkout_unavailable}
+    defp with_source(_, _, _, _), do: {:error, :checkout_unavailable}
 
-    defp locked_source(credentials, id, snapshot, operation) do
+    defp locked_source(credentials, id, snapshot, scope, operation) do
       with {:ok, %Purchase{payer_id: payer_id, attempt_id: attempt_id} = purchase} <-
              Purchase
              |> Ash.Query.filter(id == ^id)
@@ -157,18 +205,20 @@ defmodule NewYou.Commerce.HostedCheckout do
              |> Ash.exists(authorize?: false),
            {:ok, attempt} <- Ash.get(HostedDispatch, attempt_id, authorize?: false, error?: false),
            digest <- HostedDispatch.source_digest(accepted),
-           true <- is_nil(attempt) or attempt.source_digest == digest do
+           true <-
+             is_nil(attempt) or
+               (attempt.source_digest == digest and Map.take(attempt, Map.keys(scope)) == scope) do
         operation.(attempt, digest)
       else
         _ -> {:error, :checkout_unavailable}
       end
     end
 
-    defp claim(nil, _), do: {:error, :checkout_unavailable}
+    defp claim(nil, _, _), do: {:error, :checkout_unavailable}
 
     # The purchase lock is shared with existing synthetic payment application.
     # The guarded write consumes this attempt's only dispatch epoch.
-    defp claim(%HostedDispatch{claim_id: nil} = attempt, fields) do
+    defp claim(%HostedDispatch{claim_id: nil} = attempt, fields, _) do
       with {:ok, claimed} <-
              Ash.update(
                attempt,
@@ -181,7 +231,7 @@ defmodule NewYou.Commerce.HostedCheckout do
       end
     end
 
-    defp claim(attempt, _), do: outcome(attempt)
+    defp claim(attempt, _, settings), do: outcome(attempt, settings)
 
     # SQL Sandbox can wrap an explicit transaction in a savepoint without
     # marking the caller in_transaction?. A separate unboxed read of the exact
@@ -214,7 +264,7 @@ defmodule NewYou.Commerce.HostedCheckout do
       _ -> false
     end
 
-    defp send_once(attempt, terms, port) do
+    defp send_fixture(attempt, terms, port) do
       with {:ok, code} <- initialize_fixture(terms, attempt.reference, port),
            {:ok, _} <-
              Ash.update(
@@ -227,13 +277,33 @@ defmodule NewYou.Commerce.HostedCheckout do
       end
     end
 
+    defp send_to_provider(attempt, terms, settings) do
+      with true <- PaystackTestIntegration.transport_observers_safe?(),
+           request <- PaystackCheckout.build_provider(terms, attempt.reference, settings),
+           {:ok, url} <- initialize_request(request, attempt.reference, attempt.integration),
+           encrypted <- PaystackTestIntegration.seal(attempt, url, settings.capability_key),
+           {:ok, _} <-
+             Ash.update(
+               attempt,
+               %{expected_claim_id: attempt.claim_id, provider_capability: encrypted},
+               action: :retain_provider_capability,
+               authorize?: false
+             ) do
+        checkpoint(:capability_committed)
+      end
+    end
+
     defp initialize_fixture(terms, reference, port) do
       request = PaystackCheckout.build(terms, reference, port)
+      initialize_request(request, reference, :local_fixture)
+    end
+
+    defp initialize_request(request, reference, integration) do
       started_at = System.monotonic_time()
       checkpoint(:initialize_attempted)
 
       {result, http_status, classification} =
-        request |> request_once() |> PaystackCheckout.decode(reference)
+        request |> request_once() |> PaystackCheckout.decode(reference, integration)
 
       :telemetry.execute(
         [:new_you, :commerce, :hosted_checkout, :http],
@@ -251,12 +321,23 @@ defmodule NewYou.Commerce.HostedCheckout do
       _ -> :request_unavailable
     end
 
-    defp outcome(attempt) do
+    defp outcome(attempt, settings) do
       {status, url} =
         case attempt do
-          %{claim_id: nil} -> {:prepared, nil}
-          %{fixture_code: nil} -> {:ambiguous, nil}
-          %{fixture_code: code} -> {:retained, PaystackCheckout.fixture_url(code)}
+          %{claim_id: nil} ->
+            {:prepared, nil}
+
+          %{integration: :local_fixture, fixture_code: code} when is_binary(code) ->
+            {:retained, PaystackCheckout.fixture_url(code)}
+
+          %{integration: :voelgoedwinkel} ->
+            case PaystackTestIntegration.unseal(attempt, settings.capability_key) do
+              {:ok, url} -> {:retained, url}
+              :error -> {:ambiguous, nil}
+            end
+
+          _ ->
+            {:ambiguous, nil}
         end
 
       %__MODULE__{
@@ -275,6 +356,8 @@ defmodule NewYou.Commerce.HostedCheckout do
   else
     @doc "Disabled outside TEST. Acquires no attempt or reference."
     def prepare(_, _, _), do: {:error, :provider_disabled}
+    @doc "Disabled outside TEST. Performs no HTTP."
+    def initialize(_, _, _), do: {:error, :provider_disabled}
     @doc "Disabled outside TEST. Performs no HTTP."
     def initialize(_, _, _, _), do: {:error, :provider_disabled}
     @doc "Disabled outside TEST. Returns no fixture capability."

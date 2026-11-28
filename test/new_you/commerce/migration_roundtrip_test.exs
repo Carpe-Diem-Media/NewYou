@@ -90,6 +90,73 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
     NewYou.Repo.Migrations.Well223DisputeDisclosureGrants
   }
 
+  @provider_dispatch_migration {
+    20_261_128_133_346,
+    "priv/repo/migrations/20261128133346_well190_paystack_test_initialize.exs",
+    NewYou.Repo.Migrations.Well190PaystackTestInitialize
+  }
+
+  test "TEST provider migration preserves fixture state and refuses to discard a real provider claim" do
+    base = @migrations ++ @correction_migrations ++ @offer_migrations ++ [@dispatch_migration]
+    load_migrations(base ++ @refund_base ++ [@provider_dispatch_migration])
+    schema = "well190_" <> String.replace(Ecto.UUID.generate(), "-", "")
+    table = "#{schema}.commerce_hosted_dispatches"
+
+    Sandbox.unboxed_run(Repo, fn ->
+      assert {:error, :probe_complete} =
+               Repo.transaction(fn ->
+                 Repo.query!("CREATE SCHEMA #{schema}")
+                 Enum.each(base, &run_migration(&1, :up, schema))
+                 seed_legacy(schema)
+                 Enum.each(@refund_base, &run_migration(&1, :up, schema))
+
+                 Repo.query!("""
+                 INSERT INTO #{table}
+                   (attempt_id, reference, source_digest, provider, integration, environment, channel, claim_id, fixture_code)
+                 SELECT attempt_id, repeat('c', 32), decode(repeat('ff', 32), 'hex'),
+                   'paystack', 'local_fixture', 'test', 'card', gen_random_uuid(), 'fixture-code'
+                 FROM #{schema}.commerce_plan_purchases
+                 """)
+
+                 run_migration(@provider_dispatch_migration, :up, schema)
+
+                 assert [["fixture-code", nil]] =
+                          Repo.query!("SELECT fixture_code, provider_capability FROM #{table}").rows
+
+                 run_migration(@provider_dispatch_migration, :down, schema)
+                 run_migration(@provider_dispatch_migration, :up, schema)
+                 Repo.query!("SAVEPOINT reject_cross_scope")
+
+                 assert {:error,
+                         %Postgrex.Error{
+                           postgres: %{
+                             constraint: "commerce_hosted_dispatches_integration_isolation"
+                           }
+                         }} =
+                          Repo.query("UPDATE #{table} SET integration = 'voelgoedwinkel'")
+
+                 Repo.query!("ROLLBACK TO SAVEPOINT reject_cross_scope")
+
+                 Repo.query!(
+                   "UPDATE #{table} SET integration = 'voelgoedwinkel', fixture_code = NULL"
+                 )
+
+                 Repo.query!("SAVEPOINT retain_provider_dispatch")
+
+                 assert_raise Postgrex.Error,
+                              ~r/Cannot remove retained Paystack TEST dispatch evidence/,
+                              fn -> run_migration(@provider_dispatch_migration, :down, schema) end
+
+                 Repo.query!("ROLLBACK TO SAVEPOINT retain_provider_dispatch")
+
+                 assert [["voelgoedwinkel"]] =
+                          Repo.query!("SELECT integration FROM #{table}").rows
+
+                 Repo.rollback(:probe_complete)
+               end)
+    end)
+  end
+
   test "disclosure grant migration preserves Support and refuses rollback over approval evidence" do
     load_migrations([@dispute_grant_migration])
     schema = "well223_grants_" <> String.replace(Ecto.UUID.generate(), "-", "")

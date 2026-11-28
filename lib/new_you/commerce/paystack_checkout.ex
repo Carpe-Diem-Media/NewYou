@@ -1,8 +1,8 @@
 defmodule NewYou.Commerce.PaystackCheckout do
   @moduledoc false
 
-  # The only wire implementation is compiled into TEST. A fixture port never
-  # selects a host, a credential, a proxy, a Req plugin or a request adapter.
+  # Compile only into TEST. The provider integration has a fixed origin.
+  # The test seam connects only to a separately pinned loopback listener.
   if Mix.env() == :test do
     @fixture_origin "https://checkout.paystack.invalid/"
     @fixture_key "rk_test_fixture_well218"
@@ -26,6 +26,28 @@ defmodule NewYou.Commerce.PaystackCheckout do
       }
 
       loopback_request(:post, listener, "/transaction/initialize", json: payload)
+    end
+
+    def build_provider(%{amount_minor: amount, currency: "ZAR"}, reference, settings)
+        when is_integer(amount) and amount > 0 and is_binary(reference) do
+      payload = %{
+        amount: amount,
+        currency: "ZAR",
+        reference: reference,
+        email: settings.email,
+        channels: ["card"]
+      }
+
+      {origin, connect_options} = provider_connection(settings.listener)
+
+      request(
+        :post,
+        origin <> "/transaction/initialize",
+        settings.restricted_key,
+        [json: payload],
+        connect_options,
+        6_000
+      )
     end
 
     def build_verify(reference, %{port: port, certificate: certificate} = listener)
@@ -61,26 +83,35 @@ defmodule NewYou.Commerce.PaystackCheckout do
       # A bare request bypasses Req global defaults. HTTP/1 also excludes
       # Finch's transparent retry on a draining HTTP/2 pool.
       {origin, connect_options} = loopback_connection(listener)
+      request(method, origin <> path, @fixture_key, options, connect_options, 500)
+    end
 
+    defp request(method, url, key, options, connect_options, timeout) do
       Req.Request.new(
         method: method,
-        url: origin <> path,
-        headers: [{"authorization", "Bearer " <> @fixture_key}],
+        url: url,
+        headers: [{"authorization", "Bearer " <> key}],
         options:
           options ++
             [
               retry: false,
               redirect: false,
               raw: true,
-              connect_options: [timeout: 500, protocols: [:http1]] ++ connect_options,
-              pool_timeout: 500,
-              receive_timeout: 500,
-              request_timeout: 1000
+              connect_options: [timeout: timeout, protocols: [:http1]] ++ connect_options,
+              pool_timeout: timeout,
+              receive_timeout: timeout,
+              request_timeout: 2 * timeout
             ]
       )
       |> Req.Steps.attach()
       |> Map.replace!(:into, &collect_body/2)
     end
+
+    defp provider_connection(:paystack),
+      do: {"https://api.paystack.co", [transport_opts: [verify: :verify_peer]]}
+
+    defp provider_connection(%{port: _, certificate: _} = listener),
+      do: loopback_connection(listener)
 
     defp loopback_connection(port) when port in 1..65_535,
       do: {"http://127.0.0.1:#{port}", []}
@@ -115,11 +146,13 @@ defmodule NewYou.Commerce.PaystackCheckout do
     end
 
     # Adapt Store's typed envelope and match the exact request reference.
-    # Only the canonical, non-routable fixture capability is ever retained.
-    def decode(%Req.Response{status: status, body: body}, reference) when is_binary(body) do
+    def decode(response, reference), do: decode(response, reference, :local_fixture)
+
+    def decode(%Req.Response{status: status, body: body}, reference, integration)
+        when is_binary(body) do
       case Jason.decode(body) do
         {:ok, %{"status" => true, "data" => data}} when status in [200, 201] ->
-          decode_checkout(data, reference, status)
+          decode_checkout(data, reference, status, integration)
 
         {:ok, %{"status" => false, "code" => code}} when code in @known_codes ->
           {:unresolved, status, code}
@@ -129,25 +162,33 @@ defmodule NewYou.Commerce.PaystackCheckout do
       end
     end
 
-    def decode(%Req.Response{status: status, body: :oversized}, _),
+    def decode(%Req.Response{status: status, body: :oversized}, _, _),
       do: {:unresolved, status, :oversized_response}
 
-    def decode(%{reason: reason}, _) when reason in [:timeout, :request_timeout],
+    def decode(%{reason: reason}, _, _) when reason in [:timeout, :request_timeout],
       do: {:unresolved, nil, :timeout}
 
-    def decode(_, _), do: {:unresolved, nil, :transport_error}
+    def decode(_, _, _), do: {:unresolved, nil, :transport_error}
 
-    defp decode_checkout(data, reference, status) do
+    defp decode_checkout(data, reference, status, integration) do
       case data do
         %{"reference" => ^reference, "access_code" => code, "authorization_url" => url}
         when is_binary(code) ->
-          if code =~ ~r/\A[A-Za-z0-9_-]{1,128}\z/ and url == fixture_url(code),
-            do: {{:ok, code}, status, :initialized},
+          if code =~ ~r/\A[A-Za-z0-9_-]{1,128}\z/ and valid_capability?(integration, url, code),
+            do: {{:ok, capability_value(integration, url, code)}, status, :initialized},
             else: {:unresolved, status, :invalid_capability}
 
         _ ->
           {:unresolved, status, :invalid_binding}
       end
     end
+
+    defp valid_capability?(:local_fixture, url, code), do: url == fixture_url(code)
+
+    defp valid_capability?(:voelgoedwinkel, url, code),
+      do: url == "https://checkout.paystack.com/" <> code
+
+    defp capability_value(:local_fixture, _, code), do: code
+    defp capability_value(:voelgoedwinkel, url, _), do: url
   end
 end

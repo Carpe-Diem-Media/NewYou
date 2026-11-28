@@ -41,10 +41,20 @@ defmodule NewYou.Commerce.HostedDispatch do
                        """
 
       check_constraint [:provider, :integration, :environment, :channel],
-                       "commerce_hosted_dispatches_fixture_scope",
+                       "commerce_hosted_dispatches_test_scope",
                        check: """
-                       provider = 'paystack' AND integration = 'local_fixture' AND
+                       provider = 'paystack' AND integration IN ('local_fixture', 'voelgoedwinkel') AND
                        environment = 'test' AND channel = 'card'
+                       """
+
+      check_constraint [:integration, :provider_capability],
+                       "commerce_hosted_dispatches_integration_isolation",
+                       check: """
+                       (integration = 'local_fixture' AND provider_capability IS NULL) OR
+                       (integration = 'voelgoedwinkel' AND fixture_code IS NULL AND fixture_port IS NULL AND
+                         fixture_certificate IS NULL AND verify_after IS NULL AND verify_round = 0 AND
+                         (provider_capability IS NULL OR
+                           (claim_id IS NOT NULL AND length(provider_capability) <= 504 AND provider_capability ~ '^XCP[.][A-Za-z0-9_-]+$')))
                        """
 
       check_constraint [:reference, :source_digest],
@@ -144,6 +154,22 @@ defmodule NewYou.Commerce.HostedDispatch do
       change filter(expr(claim_id == ^arg(:expected_claim_id) and is_nil(fixture_code)))
       validate present(:fixture_code)
     end
+
+    update :retain_provider_capability do
+      public? false
+      accept [:provider_capability]
+
+      argument :expected_claim_id, :uuid, allow_nil?: false
+
+      change filter(
+               expr(
+                 integration == :voelgoedwinkel and claim_id == ^arg(:expected_claim_id) and
+                   is_nil(provider_capability)
+               )
+             )
+
+      validate present(:provider_capability)
+    end
   end
 
   policies do
@@ -156,7 +182,11 @@ defmodule NewYou.Commerce.HostedDispatch do
     attribute :reference, :string, allow_nil?: false, sensitive?: true
     attribute :source_digest, :binary, allow_nil?: false, sensitive?: true
     attribute :provider, :atom, allow_nil?: false, constraints: [one_of: [:paystack]]
-    attribute :integration, :atom, allow_nil?: false, constraints: [one_of: [:local_fixture]]
+
+    attribute :integration, :atom,
+      allow_nil?: false,
+      constraints: [one_of: [:local_fixture, :voelgoedwinkel]]
+
     attribute :environment, :atom, allow_nil?: false, constraints: [one_of: [:test]]
     attribute :channel, :atom, allow_nil?: false, constraints: [one_of: [:card]]
     attribute :claim_id, :uuid
@@ -172,6 +202,10 @@ defmodule NewYou.Commerce.HostedDispatch do
     attribute :fixture_code, :string,
       sensitive?: true,
       constraints: [trim?: false, max_length: 128]
+
+    attribute :provider_capability, :string,
+      sensitive?: true,
+      constraints: [trim?: false, max_length: 504]
   end
 
   relationships do

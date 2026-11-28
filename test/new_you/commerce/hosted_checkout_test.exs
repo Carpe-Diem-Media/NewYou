@@ -1,7 +1,7 @@
 defmodule NewYou.Commerce.HostedCheckoutTest do
   use ExUnit.Case, async: false
 
-  alias NewYou.{Commerce, Identity}
+  alias NewYou.{Commerce, Identity, Repo}
 
   alias NewYou.Commerce.{
     AssessmentAdmission,
@@ -16,9 +16,11 @@ defmodule NewYou.Commerce.HostedCheckoutTest do
   }
 
   alias NewYou.Commerce.HostedCheckoutReceiver, as: Receiver
+  alias Ecto.Adapters.SQL.Sandbox
   alias NewYou.Entitlements.{PlanRight, SyntheticRights}
   alias NewYou.Privacy.SyntheticSuppression
   alias NewYou.Proof.P805
+  alias NewYou.Proof.{FreshMix, P815Port}
 
   require Ash.Query
 
@@ -26,6 +28,215 @@ defmodule NewYou.Commerce.HostedCheckoutTest do
 
   @scope %{provider: :paystack, integration: :local_fixture, environment: :test, channel: :card}
   @fixture_url "https://checkout.paystack.invalid/fixture-checkout-canary"
+  @provider_scope %{@scope | integration: :voelgoedwinkel}
+  @provider_url "https://checkout.paystack.com/provider-checkout-canary"
+
+  test "the scoped TEST integration initializes once and recovers an encrypted capability" do
+    P805.with_fixture(fn ->
+      {payer, _recipient, accepted} =
+        accept(:plan, %{amount_minor: 39_900, plan_list_minor: 39_900})
+
+      response = fn conn, payload ->
+        Plug.Conn.send_resp(
+          conn,
+          200,
+          Jason.encode!(%{
+            status: true,
+            data: %{
+              reference: payload["reference"],
+              access_code: "provider-checkout-canary",
+              authorization_url: @provider_url
+            }
+          })
+        )
+      end
+
+      Receiver.with_bound_receiver(response, fn listener, observed ->
+        Application.put_env(:new_you, :paystack_test_checkout, %{
+          attempt_id: accepted.attempt_id,
+          restricted_key: "rk_test_local_e1a",
+          email: "checkout@example.com",
+          capability_key: :crypto.strong_rand_bytes(32),
+          listener: listener
+        })
+
+        try do
+          assert {:ok, %{status: :prepared, reference: reference}} =
+                   HostedCheckout.prepare(payer.credentials, accepted, @provider_scope)
+
+          assert {:error, :checkout_unavailable} =
+                   HostedCheckout.prepare(payer.credentials, accepted, @scope)
+
+          result = HostedCheckout.initialize(payer.credentials, accepted, @provider_scope)
+
+          assert_receive {^observed, "POST", "/transaction/initialize",
+                          ["Bearer rk_test_local_e1a"], payload}
+
+          assert {:ok,
+                  %{status: :retained, reference: ^reference, authorization_url: @provider_url}} =
+                   result
+
+          assert payload == %{
+                   "amount" => 39_900,
+                   "currency" => "ZAR",
+                   "channels" => ["card"],
+                   "email" => "checkout@example.com",
+                   "reference" => reference
+                 }
+
+          assert %{fixture_code: nil, verify_after: nil, provider_capability: ciphertext} =
+                   attempt!(accepted)
+
+          assert is_binary(ciphertext)
+          refute ciphertext =~ "provider-checkout-canary"
+
+          assert {:ok, %{status: :retained, authorization_url: @provider_url}} =
+                   HostedCheckout.recover(payer.credentials, accepted, @provider_scope)
+
+          fresh_provider_recovery!(payer.credentials, accepted, reference, listener)
+
+          settings = Application.fetch_env!(:new_you, :paystack_test_checkout)
+
+          Application.put_env(:new_you, :paystack_test_checkout, %{
+            settings
+            | capability_key: <<0::256>>
+          })
+
+          assert {:ok, %{status: :ambiguous, reference: ^reference, authorization_url: nil}} =
+                   HostedCheckout.initialize(payer.credentials, accepted, @provider_scope)
+
+          refute_receive {^observed, _, _, _, _}
+          assert_no_financial_effects(accepted.purchase_id)
+        after
+          Application.delete_env(:new_you, :paystack_test_checkout)
+        end
+      end)
+    end)
+  end
+
+  test "a raw HTTP event handler blocks dispatch before the durable claim is consumed" do
+    P805.with_fixture(fn ->
+      {payer, _, accepted} = accept(:plan, %{})
+
+      Receiver.with_bound_receiver(&Receiver.success/2, fn listener, observed ->
+        with_provider_settings(accepted, listener, fn ->
+          assert {:ok, %{status: :prepared}} =
+                   HostedCheckout.prepare(payer.credentials, accepted, @provider_scope)
+
+          handler = make_ref()
+
+          :ok =
+            :telemetry.attach(
+              handler,
+              [:finch, :send, :start],
+              fn _, _, _, _ ->
+                send(self(), :unexpected_raw_request)
+              end,
+              nil
+            )
+
+          try do
+            assert {:error, :checkout_unavailable} =
+                     HostedCheckout.initialize(payer.credentials, accepted, @provider_scope)
+
+            assert %{claim_id: nil, provider_capability: nil} = attempt!(accepted)
+            refute_receive {^observed, _, _, _, _}
+            refute_receive :unexpected_raw_request
+          after
+            :telemetry.detach(handler)
+          end
+        end)
+      end)
+    end)
+  end
+
+  test "a lost provider response across racing processes keeps the first reference fenced" do
+    P805.with_fixture(fn ->
+      {payer, _, accepted} = accept(:plan, %{})
+      drop = fn _conn, _payload -> Process.exit(self(), :kill) end
+
+      Receiver.with_bound_receiver(drop, fn listener, observed ->
+        with_provider_settings(accepted, listener, fn ->
+          assert {:ok, %{status: :prepared, reference: reference}} =
+                   HostedCheckout.prepare(payer.credentials, accepted, @provider_scope)
+
+          results =
+            1..2
+            |> Task.async_stream(fn _ ->
+              Sandbox.unboxed_run(Repo, fn ->
+                HostedCheckout.initialize(payer.credentials, accepted, @provider_scope)
+              end)
+            end)
+            |> Enum.to_list()
+
+          assert [
+                   {:ok, {:ok, %{status: :ambiguous, reference: ^reference}}},
+                   {:ok, {:ok, %{status: :ambiguous, reference: ^reference}}}
+                 ] = results
+
+          assert_receive {^observed, "POST", "/transaction/initialize", _,
+                          %{"reference" => ^reference}}
+
+          assert %{claim_id: claim, provider_capability: nil, verify_after: nil} =
+                   attempt!(accepted)
+
+          assert is_binary(claim)
+
+          assert {:ok, %{status: :ambiguous, reference: ^reference}} =
+                   HostedCheckout.recover(payer.credentials, accepted, @provider_scope)
+
+          assert {:ok, %{status: :ambiguous, reference: ^reference}} =
+                   HostedCheckout.initialize(payer.credentials, accepted, @provider_scope)
+
+          assert %{claim_id: ^claim} = attempt!(accepted)
+          refute_receive {^observed, _, _, _, _}
+          assert_no_financial_effects(accepted.purchase_id)
+        end)
+      end)
+    end)
+  end
+
+  defp with_provider_settings(accepted, listener, run) do
+    Application.put_env(:new_you, :paystack_test_checkout, %{
+      attempt_id: accepted.attempt_id,
+      restricted_key: "rk_test_local_e1a",
+      email: "checkout@example.com",
+      capability_key: :crypto.strong_rand_bytes(32),
+      listener: listener
+    })
+
+    try do
+      run.()
+    after
+      Application.delete_env(:new_you, :paystack_test_checkout)
+    end
+  end
+
+  defp fresh_provider_recovery!(credentials, accepted, reference, listener) do
+    {program, args} =
+      FreshMix.command(["run", "--no-compile", "test/proof/well218_hosted_checkout_restart.exs"])
+
+    settings = Application.fetch_env!(:new_you, :paystack_test_checkout)
+
+    body =
+      Jason.encode!(%{
+        credentials: credentials,
+        signing_key:
+          Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret)),
+        purchase_id: accepted.purchase_id,
+        attempt_id: accepted.attempt_id,
+        reference: reference,
+        status: :retained,
+        url: @provider_url,
+        integration: :voelgoedwinkel,
+        capability_key: Base.encode64(settings.capability_key),
+        certificate: Base.encode64(listener.certificate),
+        port: listener.port
+      })
+
+    assert %{status: :ok, cleanup: :confirmed, marker: :e1af_completed} =
+             P815Port.run(program, args, body, 60_000)
+  end
 
   test "initializes hosted checkout once using the durable reference and accepted money" do
     P805.with_fixture(fn ->
