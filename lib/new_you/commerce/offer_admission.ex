@@ -279,8 +279,7 @@ defmodule NewYou.Commerce.OfferAdmission do
   end
 
   defp offer_quote(nil, parties, product, language) do
-    with {:ok, offer} <- OfferCatalogue.current(product, "FOR SHARE"),
-         true <- approved_development_offer?(offer),
+    with {:ok, offer} <- checkout_offer(OfferCatalogue.current(product, "FOR SHARE")),
          attrs = disclosure_attributes(parties, offer, language),
          {:ok, quoted} <-
            Ash.create(PurchaseQuote, attrs, action: :offer, authorize?: false) do
@@ -290,7 +289,6 @@ defmodule NewYou.Commerce.OfferAdmission do
         true -> {:refused, :acceptance_conflict}
       end
     else
-      false -> {:refused, :offer_unavailable}
       {:error, :offer_unavailable} -> {:refused, :offer_unavailable}
       {:error, _} = error -> error
     end
@@ -304,8 +302,8 @@ defmodule NewYou.Commerce.OfferAdmission do
        )
        when quote.payer_id == payer and quote.recipient_id == recipient do
     with ^language <- quote.language,
-         {:ok, %OfferVersion{product: ^product} = offer} <- fetch_offer(quote, nil),
-         true <- approved_development_offer?(offer),
+         {:ok, %OfferVersion{product: ^product} = offer} <-
+           checkout_offer(fetch_offer(quote, nil)),
          true <- exact_disclosure?(quote, offer) do
       disclosed(quote, offer)
     else
@@ -316,6 +314,12 @@ defmodule NewYou.Commerce.OfferAdmission do
   defp offer_quote(%PurchaseQuote{}, _, _, _), do: {:error, :purchase_unavailable}
 
   if Mix.env() == :dev do
+    defp checkout_offer({:ok, offer} = result) do
+      if approved_development_offer?(offer), do: result, else: {:error, :offer_unavailable}
+    end
+
+    defp checkout_offer(error), do: error
+
     defp approved_development_offer?(%OfferVersion{
            id: id,
            product: :plan,
@@ -339,7 +343,7 @@ defmodule NewYou.Commerce.OfferAdmission do
 
     defp approved_development_offer?(_), do: false
   else
-    defp approved_development_offer?(_), do: true
+    defp checkout_offer(result), do: result
   end
 
   defp accept_quote(%{state: :accepted} = quote, offer) do
