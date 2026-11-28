@@ -47,6 +47,23 @@ case Mix.env() do
     true = function_exported?(PaystackCheckout, :build_provider, 3)
     {:error, :checkout_unavailable} = HostedCheckout.prepare(%{}, %{}, scope)
 
+    approval_key = "NEW_YOU_PAYSTACK_DEV_PLAN_APPROVAL"
+    System.delete_env(approval_key)
+    {:error, :purchase_unavailable} = NewYou.LocalConfig.paystack_development_plan()
+
+    approval = %{
+      "payer_id" => attempt,
+      "operation_id" => Ecto.UUID.generate(),
+      "offer_id" => Ecto.UUID.generate(),
+      "approval_id" => Ecto.UUID.generate(),
+      "disclosure_en_id" => Ecto.UUID.generate(),
+      "disclosure_af_id" => Ecto.UUID.generate()
+    }
+
+    System.put_env(approval_key, Jason.encode!(approval))
+    {:ok, ^approval} = NewYou.LocalConfig.paystack_development_plan()
+    {:error, :purchase_unavailable} = NewYou.Commerce.PaystackDevelopmentSource.authorize(%{})
+
   :prod ->
     System.put_env("NEW_YOU_PAYSTACK_TEST_ENABLED", "true")
     false = function_exported?(PaystackTestIntegration, :settings, 1)
@@ -60,6 +77,8 @@ IO.puts("WELL-190 checkout build boundary passed for #{Mix.env()}")
 
 # The E1b-F fixture remains unavailable in both non-TEST builds.
 false = Code.ensure_loaded?(NewYouWeb.FixtureWebhook)
+false = Code.ensure_loaded?(NewYou.Identity.SyntheticPurchaseParties)
+false = Code.ensure_loaded?(NewYou.Proof.PlanPaymentObservation)
 false = Code.ensure_loaded?(NewYou.Commerce.Workers.VerifyFixtureReference)
 false = Code.ensure_loaded?(NewYou.Commerce.Workers.ProcessFixtureReceipt)
 {:error, :provider_disabled} = NewYou.Commerce.HostedPaymentEvidence.verify_due("fixture-only")

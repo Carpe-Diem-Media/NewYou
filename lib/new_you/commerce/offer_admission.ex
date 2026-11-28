@@ -263,11 +263,19 @@ defmodule NewYou.Commerce.OfferAdmission do
   end
 
   defp transaction(operation) do
-    case NewYou.Repo.without_query_telemetry(fn -> Ash.transact(Purchase, operation) end) do
+    case transact(operation) do
       {:ok, {:refused, reason}} -> {:error, reason}
       {:ok, result} when is_map(result) -> {:ok, result}
       _ -> {:error, :purchase_unavailable}
     end
+  end
+
+  if Mix.env() == :dev do
+    defp transact(operation) do
+      NewYou.Repo.without_query_telemetry(fn -> Ash.transact(Purchase, operation) end)
+    end
+  else
+    defp transact(operation), do: Ash.transact(Purchase, operation)
   end
 
   defp offer_quote(nil, parties, product, language) do
