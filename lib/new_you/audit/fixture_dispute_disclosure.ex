@@ -21,12 +21,12 @@ defmodule NewYou.Audit.FixtureDisputeDisclosure do
   end
 
   actions do
-    read :read do
-      primary? true
-      public? false
-    end
-
     if Mix.env() == :test do
+      read :read do
+        primary? true
+        public? false
+      end
+
       create :record_disclosure do
         public? false
         accept [:operation_id, :actor_id, :dispute_id, :purpose, :field_set]

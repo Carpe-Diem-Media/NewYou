@@ -27,12 +27,12 @@ defmodule NewYou.Privacy.FixtureDisputePurposeEvent do
   end
 
   actions do
-    read :read do
-      primary? true
-      public? false
-    end
-
     if Mix.env() == :test do
+      read :read do
+        primary? true
+        public? false
+      end
+
       create :record_fixture_transition do
         public? false
 

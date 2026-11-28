@@ -102,7 +102,7 @@ defmodule NewYou.Entitlements do
     defp visible_plan_rights(rights) do
       Enum.reduce_while(rights, [], fn right, visible ->
         case NewYou.Commerce.FixtureDisputes.right_effect(right.payment_id, :plan) do
-          {:ok, :available} -> {:cont, [right | visible]}
+          {:ok, effect} when effect in [:available, :restore] -> {:cont, [right | visible]}
           {:ok, _} -> {:cont, visible}
           {:error, _} = error -> {:halt, error}
         end

@@ -351,7 +351,7 @@ defmodule NewYou.Commerce.FixtureDisputes do
 
   @doc false
   @spec right_effect(Ecto.UUID.t(), :plan) ::
-          {:ok, :available | :suspend | :end} | {:error, term()}
+          {:ok, :available | :restore | :suspend | :end} | {:error, term()}
   def right_effect(payment_id, :plan) do
     Repo.without_query_telemetry(fn ->
       with {:ok, disputes} <-
@@ -378,7 +378,7 @@ defmodule NewYou.Commerce.FixtureDisputes do
     case FixtureRefunds.payment_correction(payment_id) do
       {:ok, %{plan_ended?: true}} -> {:ok, :end}
       {:ok, %{status: :unresolved}} -> {:ok, :suspend}
-      {:ok, _} -> {:ok, :available}
+      {:ok, _} -> {:ok, :restore}
       {:error, _} = error -> error
     end
   end

@@ -218,7 +218,8 @@ defmodule NewYou.Commerce.SyntheticCorrections do
   Receipts from the original P1 case have no explicit collection identity.
   """
   @spec locked_p1_grant_scope(String.t()) ::
-          {:ok, {:legacy | :qualified | :hosted_ended | :hosted_suspended, map()}}
+          {:ok,
+           {:legacy | :qualified | :hosted_ended | :hosted_suspended | :hosted_restored, map()}}
           | {:error, term()}
   def locked_p1_grant_scope(consequence_id) do
     with true <- Ash.DataLayer.in_transaction?(SyntheticCorrection),
@@ -238,6 +239,7 @@ defmodule NewYou.Commerce.SyntheticCorrections do
       case effect do
         :end -> {:ok, {:hosted_ended, immutable}}
         :suspend -> {:ok, {:hosted_suspended, immutable}}
+        :restore -> {:ok, {:hosted_restored, immutable}}
         :available -> {:ok, {:legacy, immutable}}
       end
     else

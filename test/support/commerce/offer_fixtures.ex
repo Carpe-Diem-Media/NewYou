@@ -11,6 +11,12 @@ defmodule NewYou.Commerce.OfferFixtures do
   def proof(fields), do: PlanPaymentObservation.produce(fields)
   def uuid, do: Ecto.UUID.generate()
 
+  # Keep provider IDs above the signed 64-bit range while isolating fixture runs.
+  def large_provider_id(seed \\ uuid()) do
+    <<offset::60, _::bitstring>> = :crypto.hash(:sha256, seed)
+    Integer.to_string(17_000_000_000_000_000_000 + offset)
+  end
+
   def draft_offer(product, overrides \\ %{}) do
     id = operation()
 

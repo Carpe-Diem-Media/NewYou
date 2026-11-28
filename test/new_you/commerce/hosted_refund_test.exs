@@ -18,7 +18,91 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   @scope %{provider: :paystack, integration: :local_fixture, environment: :test, channel: :card}
   @amount 47_500
-  @transaction "18446744073709551614"
+
+  test "late grants and dispute delivery both wait for the recipient's security hold to clear" do
+    for order <- [:grant_first, :dispute_first] do
+      P805.with_fixture(fn ->
+        with_paid_plan(fn accepted, payment, _payer, recipient, _, _ ->
+          assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+
+          with_signing_key(fn key ->
+            data = dispute_data(payment)
+            assert 202 == send_event(key, "fixture.dispute", data)
+            dispute = apply_dispute_receipts(payment)
+            assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+            account = Ash.get!(NewYou.Identity.Account, recipient.account_id, authorize?: false)
+
+            held =
+              Ash.update!(account, %{expected_hold_version: account.hold_version},
+                action: :place_security_hold,
+                authorize?: false
+              )
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
+
+            assert %{state: :restored} = apply_dispute_receipts(payment)
+
+            deliver_grant = fn -> Commerce.deliver_plan_payment_consequence(grant) end
+            deliver_dispute = fn -> Commerce.deliver_fixture_dispute(dispute.id) end
+
+            results =
+              case order do
+                :grant_first ->
+                  {deliver_grant.(), deliver_dispute.()}
+
+                :dispute_first ->
+                  dispute_result = deliver_dispute.()
+                  {deliver_grant.(), dispute_result}
+              end
+
+            assert {{:error, :delivery_unavailable}, {:error, :dispute_unavailable}} = results
+            assert {:ok, [^grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+            refute payment_plan_right?(payment)
+            assert {:error, :rights_unavailable} = Entitlements.plan_rights(recipient.credentials)
+
+            Ash.update!(
+              held,
+              %{
+                expected_hold_version: held.hold_version,
+                hold_version: held.hold_version + 1,
+                security_version: held.security_version + 1
+              },
+              action: :release_security_hold,
+              authorize?: false
+            )
+
+            right =
+              case order do
+                :grant_first ->
+                  assert {:ok, right} = deliver_grant.()
+                  assert :ok = deliver_dispute.()
+                  right
+
+                :dispute_first ->
+                  assert :ok = deliver_dispute.()
+                  refute payment_plan_right?(payment)
+                  assert {:ok, right} = deliver_grant.()
+                  right
+              end
+
+            assert %{id: right_id, state: :held_unconsumed, payment_id: payment_id} = right
+            assert payment_id == payment.id
+            assert {:ok, []} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+            assert {:ok, %{id: ^right_id, state: :held_unconsumed}} = deliver_grant.()
+            assert :ok = deliver_dispute.()
+          end)
+        end)
+      end)
+    end
+  end
+
+  defp payment_plan_right?(payment) do
+    Entitlements.PlanRight
+    |> Ash.Query.filter(payment_id == ^payment.id and component == :plan)
+    |> Ash.exists?(authorize?: false)
+  end
 
   test "qualified disputes fence refund dispatch and converge the original right" do
     P805.with_fixture(fn ->
@@ -62,7 +146,10 @@ defmodule NewYou.Commerce.HostedRefundTest do
           assert 202 == send_event(key, "fixture.dispute", data)
           assert 202 == send_event(key, "fixture.dispute", data)
           assert [_one] = dispute_receipts(payment)
-          assert [] = Ash.read!(FixtureDispute, authorize?: false)
+
+          refute FixtureDispute
+                 |> Ash.Query.filter(payment_id == ^payment.id)
+                 |> Ash.exists?(authorize?: false)
 
           assert {:error, :refund_unavailable} =
                    Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
@@ -289,7 +376,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
     P805.with_fixture(fn ->
       with_paid_plan(fn _accepted, payment, _payer, _, _, _ ->
         with_signing_key(fn key ->
-          data = %{dispute_data(payment) | id: "18446744073709549711"}
+          data = dispute_data(payment)
           needles = [data.reference, data.transaction, data.id, payment.id]
 
           P805.with_rejected_insert("commerce_fixture_dispute_receipts", fn reached? ->
@@ -354,6 +441,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
         with_signing_key(fn key ->
           data = dispute_data(payment)
+          read_path = "/__test/dispute/#{data.id}"
           assert 202 == send_event(key, "fixture.dispute", data)
           assert [receipt] = dispute_receipts(payment)
 
@@ -371,7 +459,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
           end)
 
           assert %{verify_round: 6} = Ash.get!(FixtureDispute, dispute.id, authorize?: false)
-          refute_received {^tag, "GET", "/__test/dispute/99", _, _}
+          refute_received {^tag, "GET", ^read_path, _, _}
 
           make_dispute_due(dispute.id, 6)
           Agent.update(reply_data, fn _ -> %{data | revision: 2, outcome: "restored"} end)
@@ -381,7 +469,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
                      AshOban.Test.schedule_and_run_triggers({FixtureDispute, :read_due})
 
             assert reached?.()
-            assert_receive {^tag, "GET", "/__test/dispute/99", _, _}
+            assert_receive {^tag, "GET", ^read_path, _, _}
           end)
 
           assert [^receipt] = Enum.map(dispute_receipts(payment), &%{&1 | state: :pending})
@@ -398,9 +486,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
           payload = Jason.encode!(%{id: dispute.id})
           diagnostic = P815Port.run(executable, arguments, payload, 60_000)
-          assert_receive {^tag, "GET", "/__test/dispute/99", _, _}
+          assert_receive {^tag, "GET", ^read_path, _, _}
           assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} = diagnostic
-          refute_received {^tag, "GET", "/__test/dispute/99", _, _}
+          refute_received {^tag, "GET", ^read_path, _, _}
           assert [%{id: ^right_id}] = plan_rights(recipient)
         end)
       end)
@@ -484,6 +572,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
           with_signing_key(fn key ->
             data = dispute_data(payment)
+            read_path = "/__test/dispute/#{data.id}"
             retained = Atom.to_string(terminal)
             opposite = Atom.to_string(contrary)
 
@@ -529,7 +618,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
                 ] do
               set_due_dispute_reply(dispute.id, reply_data, observation)
               assert :ok = FixtureDisputes.read_due(dispute.id)
-              assert_receive {^tag, "GET", "/__test/dispute/99", _, _}
+              assert_receive {^tag, "GET", ^read_path, _, _}
 
               assert %{state: ^terminal, conflict?: true, effect_version: ^conflict_version} =
                        Ash.get!(FixtureDispute, dispute.id, authorize?: false)
@@ -548,7 +637,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
                 60_000
               )
 
-            assert_receive {^tag, "GET", "/__test/dispute/99", _, _}
+            assert_receive {^tag, "GET", ^read_path, _, _}
 
             assert %{
                      state: ^terminal,
@@ -1168,7 +1257,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
   end
 
   defp grant_unrelated_plan(payer, recipient) do
-    with_paid_plan(payer, recipient, "18446744073709551613", &default_refund_reply/2, fn
+    with_paid_plan(payer, recipient, large_provider_id(), &default_refund_reply/2, fn
       accepted, _, _, _, _, _ ->
         assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
         assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
@@ -1275,14 +1364,15 @@ defmodule NewYou.Commerce.HostedRefundTest do
       with_paid_plan(reply, fn _, payment, _, _, _, tag ->
         with_signing_key(fn key ->
           data = dispute_data(payment)
+          read_path = "/__test/dispute/#{data.id}"
           assert 202 == send_event(key, "fixture.dispute", data)
           dispute = apply_dispute_receipts(payment)
 
           assert [:ok, :ok] =
                    compete_on_connections(fn -> FixtureDisputes.read_due(dispute.id) end)
 
-          assert_receive {^tag, "GET", "/__test/dispute/99", _, _}
-          refute_received {^tag, "GET", "/__test/dispute/99", _, _}
+          assert_receive {^tag, "GET", ^read_path, _, _}
+          refute_received {^tag, "GET", ^read_path, _, _}
 
           assert %{verify_round: 1, state: :contested} =
                    Ash.get!(FixtureDispute, dispute.id, authorize?: false)
@@ -1293,7 +1383,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
             Agent.update(response, fn _ -> kind end)
             make_dispute_due(dispute.id, round)
             assert :ok = FixtureDisputes.read_due(dispute.id)
-            assert_receive {^tag, "GET", "/__test/dispute/99", _, _}
+            assert_receive {^tag, "GET", ^read_path, _, _}
 
             assert %{verify_after: due, state: :contested} =
                      Ash.get!(FixtureDispute, dispute.id, authorize?: false)
@@ -1303,7 +1393,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
           assert [_webhook] = dispute_receipts(payment)
           assert :ok = FixtureDisputes.read_due(dispute.id)
-          refute_received {^tag, "GET", "/__test/dispute/99", _, _}
+          refute_received {^tag, "GET", ^read_path, _, _}
         end)
       end)
     end)
@@ -1329,7 +1419,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
           assert %{state: :contested, verify_round: 1} =
                    Ash.get!(FixtureDispute, case_id, authorize?: false)
 
-          refute_receive {^tag, "GET", "/__test/dispute/99", _, _}, 30
+          refute_receive {^tag, "GET", "/__test/dispute/" <> _, _, _}, 30
         end,
         port: pin.port
       )
@@ -1457,7 +1547,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
     %{
       reference: reference,
       transaction: payment.fixture_transaction_id,
-      id: "99",
+      id: large_provider_id(payment.id),
       amount: @amount,
       currency: "ZAR",
       scope: "newyou_dispute_fixture",
@@ -1501,7 +1591,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
               %{payment_id: uuid()},
               %{quote_id: nil},
               %{recipient_id: payer.account_id},
-              %{transaction_id: "18446744073709551613"},
+              %{transaction_id: large_provider_id()},
               %{amount_minor: @amount - 1},
               %{currency: "USD"},
               %{allocation: :assessment}
@@ -1517,7 +1607,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
         assert owed.state == :owed
         assert owed.payment_id == payment.id
         assert owed.payer_id == payer.account_id
-        assert owed.transaction_id == @transaction
+        assert owed.transaction_id == payment.fixture_transaction_id
         assert owed.amount_minor == @amount
 
         assert {:ok, replay} = request(payer.credentials, proof(fields))
@@ -1589,12 +1679,13 @@ defmodule NewYou.Commerce.HostedRefundTest do
         assert_receive {^tag, "POST", "/refund", _,
                         %{
                           "reference" => reference,
-                          "transaction" => @transaction,
+                          "transaction" => transaction,
                           "amount" => @amount,
                           "currency" => "ZAR"
                         }}
 
         assert reference == owed.reference
+        assert transaction == owed.transaction_id
         assert_received {:refund_at_post, %{state: :unresolved, claim_id: claim_id}}
         assert is_binary(claim_id)
         refute_receive {^tag, "POST", "/refund", _, _}, 30
@@ -1613,7 +1704,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
         first_fields = refund_fields(first, original, payer, recipient)
         assert {:ok, first_owed} = request(payer.credentials, proof(first_fields))
 
-        with_paid_plan(payer, recipient, "18446744073709551612", &default_refund_reply/2, fn
+        with_paid_plan(payer, recipient, large_provider_id(), &default_refund_reply/2, fn
           second, distinct, ^payer, ^recipient, _, _ ->
             second_fields = refund_fields(second, distinct, payer, recipient)
 
@@ -1638,11 +1729,14 @@ defmodule NewYou.Commerce.HostedRefundTest do
                      Commerce.deliver_plan_payment_consequence(second_grant)
 
             with_signing_key(fn key ->
-              assert 202 == send_event(key, "fixture.dispute", dispute_data(original))
+              data = dispute_data(original)
+              assert 202 == send_event(key, "fixture.dispute", data)
               dispute = apply_dispute_receipts(original)
               assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
 
-              assert 400 == send_event(key, "fixture.dispute", dispute_data(distinct))
+              assert 400 ==
+                       send_event(key, "fixture.dispute", %{dispute_data(distinct) | id: data.id})
+
               assert [] = dispute_receipts(distinct)
               assert [%{id: ^second_right}] = plan_rights(recipient)
 
@@ -1678,8 +1772,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
     P805.with_fixture(fn ->
       with_two_claims(fn first, second, recipient ->
         with_signing_key(fn key ->
-          original = processed_receipt(key, first)
-          conflict = processed_receipt(key, second)
+          provider_id = large_provider_id()
+          original = processed_receipt(key, first, provider_id)
+          conflict = processed_receipt(key, second, provider_id)
           assert :ok = Commerce.apply_fixture_refund_receipt(original.id)
           assert :ok = Commerce.apply_fixture_refund_receipt(conflict.id)
           assert :ok = Commerce.apply_fixture_refund_receipt(conflict.id)
@@ -1693,7 +1788,8 @@ defmodule NewYou.Commerce.HostedRefundTest do
     P805.with_fixture(fn ->
       with_two_claims(fn first, second, recipient ->
         with_signing_key(fn key ->
-          receipts = [processed_receipt(key, first), processed_receipt(key, second)]
+          provider_id = large_provider_id()
+          receipts = Enum.map([first, second], &processed_receipt(key, &1, provider_id))
 
           assert [:ok, :ok] = race_provider_bindings(receipts)
 
@@ -1793,12 +1889,12 @@ defmodule NewYou.Commerce.HostedRefundTest do
     with_paid_plan(fn accepted, payment, payer, recipient, _, first_tag ->
       first = dispatch_claim(accepted, payment, payer, recipient, first_tag)
 
-      with_paid_plan(payer, recipient, "18446744073709551612", &default_refund_reply/2, fn other,
-                                                                                           collection,
-                                                                                           _,
-                                                                                           _,
-                                                                                           _,
-                                                                                           second_tag ->
+      with_paid_plan(payer, recipient, large_provider_id(), &default_refund_reply/2, fn other,
+                                                                                        collection,
+                                                                                        _,
+                                                                                        _,
+                                                                                        _,
+                                                                                        second_tag ->
         second = dispatch_claim(other, collection, payer, recipient, second_tag)
         fun.(first, second, recipient)
       end)
@@ -1816,14 +1912,8 @@ defmodule NewYou.Commerce.HostedRefundTest do
     claimed
   end
 
-  defp processed_receipt(key, refund) do
-    assert 202 ==
-             send_evidence(
-               key,
-               %{refund_data(refund) | transaction: refund.transaction_id},
-               "processed"
-             )
-
+  defp processed_receipt(key, refund, provider_id) do
+    assert 202 == send_evidence(key, %{refund_data(refund) | id: provider_id}, "processed")
     assert [receipt] = refund_receipts(refund.reference)
     receipt
   end
@@ -2034,7 +2124,8 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   test "fresh owning work reads only the original reference after a committed POST loses its response" do
     P805.with_fixture(fn ->
-      provider_id = "18446744073709551615"
+      provider_id = large_provider_id()
+      transaction = large_provider_id()
 
       refund_reply = fn
         %{method: "POST"} = conn, _ ->
@@ -2046,7 +2137,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
             status: true,
             data: %{
               reference: reference,
-              transaction: @transaction,
+              transaction: transaction,
               id: provider_id,
               amount: @amount,
               currency: "ZAR",
@@ -2058,7 +2149,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
           })
       end
 
-      with_paid_plan(refund_reply, fn accepted, payment, payer, recipient, _, tag ->
+      with_paid_plan(transaction, refund_reply, fn accepted, payment, payer, recipient, _, tag ->
         fields = refund_fields(accepted, payment, payer, recipient)
         assert {:ok, owed} = request(payer.credentials, proof(fields))
         assert {:ok, _} = Commerce.reserve_fixture_refund(payer.credentials, owed.id)
@@ -2077,7 +2168,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
         refute_enqueued(worker: NewYou.Commerce.Workers.ReadFixtureRefund, args: read_job_args)
         make_refund_due(owed.id, %{verify_round: 5})
 
-        cut_refund_work(:read_reserved, fn -> NewYou.Commerce.FixtureRefunds.read_due(owed.id) end)
+        cut_refund_work(:read_reserved, fn ->
+          NewYou.Commerce.FixtureRefunds.read_due(owed.id)
+        end)
 
         assert %{verify_round: 6, verify_after: %DateTime{}, claim_id: ^claim_id} =
                  read_refund(owed.id)
@@ -2116,7 +2209,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
                  read_refund(owed.id)
 
         with_signing_key(fn key ->
-          assert 202 == send_evidence(key, refund_data(owed), "processed")
+          assert 202 == send_evidence(key, %{refund_data(owed) | id: provider_id}, "processed")
           process_evidence(reference)
           assert %{processed_receipt_id: ^applied} = read_refund(owed.id)
 
@@ -2135,6 +2228,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
   test "independent webhook and pinned-read workers converge on one processed effect" do
     P805.with_fixture(fn ->
       parent = self()
+      transaction = large_provider_id()
 
       replies = fn
         %{method: "GET", path_info: ["refund", reference]} = conn, _ ->
@@ -2142,7 +2236,10 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
           receive do
             :reply ->
-              data = refund_data(%{reference: reference}) |> Map.put(:status, "processed")
+              data =
+                refund_data(%{reference: reference, transaction_id: transaction})
+                |> Map.put(:status, "processed")
+
               HostedCheckoutReceiver.json(conn, 200, %{status: true, data: data})
           after
             500 -> Plug.Conn.send_resp(conn, 500, "")
@@ -2152,7 +2249,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
           default_refund_reply(conn, data)
       end
 
-      with_paid_plan(replies, fn accepted, payment, payer, recipient, _, tag ->
+      with_paid_plan(transaction, replies, fn accepted, payment, payer, recipient, _, tag ->
         fields = refund_fields(accepted, payment, payer, recipient)
         assert {:ok, owed} = request(payer.credentials, proof(fields))
         assert {:ok, _} = Commerce.reserve_fixture_refund(payer.credentials, owed.id)
@@ -2213,7 +2310,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
           )
 
         with_signing_key(fn key ->
-          excess_id = "18446744073709551613"
+          excess_id = large_provider_id()
 
           data = %{
             reference: original.reference,
@@ -2382,9 +2479,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   test "signed excess seen before the primary remains recoverable through its existing worker" do
     P805.with_fixture(fn ->
-      with_unpaid_plan(fn accepted, payer, recipient, reference, _listener, tag ->
+      with_unpaid_plan(fn accepted, payer, recipient, reference, transaction, tag ->
         with_signing_key(fn key ->
-          excess = charge_data(reference, "18446744073709551613")
+          excess = charge_data(reference, large_provider_id())
           assert 202 == send_event(key, "charge.excess", excess)
           assert 202 == send_event(key, "charge.excess", excess)
           assert [receipt] = payment_receipts(reference)
@@ -2396,7 +2493,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
           assert [] == purchase_refunds(accepted)
           assert {:ok, []} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
 
-          assert 202 == send_event(key, "charge.success", charge_data(reference, @transaction))
+          assert 202 == send_event(key, "charge.success", charge_data(reference, transaction))
           assert primary = Enum.find(payment_receipts(reference), &(&1.id != receipt.id))
           assert :ok = Commerce.apply_hosted_payment_evidence(primary.id)
 
@@ -2438,10 +2535,10 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   test "concurrent primary and excess receipts preserve one benefit and reject genuine conflicts" do
     P805.with_fixture(fn ->
-      with_unpaid_plan(fn accepted, payer, recipient, reference, _listener, tag ->
+      with_unpaid_plan(fn accepted, payer, recipient, reference, transaction, tag ->
         with_signing_key(fn key ->
-          primary = charge_data(reference, @transaction)
-          excess = charge_data(reference, "18446744073709551613")
+          primary = charge_data(reference, transaction)
+          excess = charge_data(reference, large_provider_id())
           assert 202 == send_event(key, "charge.success", primary)
           assert 202 == send_event(key, "charge.excess", excess)
           receipts = payment_receipts(reference)
@@ -2614,7 +2711,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
         assert [] == refund_receipts(refund.reference)
 
         with_signing_key(fn key ->
-          receipt = processed_receipt(key, refund)
+          receipt = processed_receipt(key, refund, refund_data(refund).id)
           assert :ok = Commerce.apply_fixture_refund_receipt(receipt.id)
         end)
 
@@ -2721,7 +2818,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   defp put_unknown_receipt(key, track?) do
     reference = Base.encode16(:crypto.strong_rand_bytes(16), case: :lower)
-    data = refund_data(%{reference: reference})
+    data = refund_data(%{reference: reference, transaction_id: large_provider_id()})
     assert 202 == send_evidence(key, data, "processed", track?: track?)
 
     NewYou.Commerce.FixtureRefundReceipt
@@ -2770,8 +2867,8 @@ defmodule NewYou.Commerce.HostedRefundTest do
   defp refund_data(refund) do
     %{
       reference: refund.reference,
-      transaction: @transaction,
-      id: "18446744073709551615",
+      transaction: refund.transaction_id,
+      id: large_provider_id(refund.reference),
       amount: @amount,
       currency: "ZAR",
       provider: "paystack",
@@ -2836,7 +2933,11 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   # Use the actual commerce qualification and pin, with separate payer and recipient.
   defp with_paid_plan(refund_reply \\ &default_refund_reply/2, fun) do
-    with_paid_plan(verified_party(), verified_party(), @transaction, refund_reply, fun)
+    with_paid_plan(large_provider_id(), refund_reply, fun)
+  end
+
+  defp with_paid_plan(transaction, refund_reply, fun) do
+    with_paid_plan(verified_party(), verified_party(), transaction, refund_reply, fun)
   end
 
   defp with_paid_plan(payer, recipient, transaction, refund_reply, fun) do
@@ -2861,11 +2962,13 @@ defmodule NewYou.Commerce.HostedRefundTest do
     payer = verified_party()
     recipient = verified_party()
 
-    with_checkout(payer, recipient, @transaction, &default_refund_reply/2, fn accepted,
-                                                                              reference,
-                                                                              listener,
-                                                                              tag ->
-      fun.(accepted, payer, recipient, reference, listener, tag)
+    transaction = large_provider_id()
+
+    with_checkout(payer, recipient, transaction, &default_refund_reply/2, fn accepted,
+                                                                             reference,
+                                                                             _listener,
+                                                                             tag ->
+      fun.(accepted, payer, recipient, reference, transaction, tag)
     end)
   end
 

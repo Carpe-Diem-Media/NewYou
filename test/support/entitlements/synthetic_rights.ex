@@ -84,14 +84,23 @@ defmodule NewYou.Entitlements.SyntheticRights do
     change_right(scope, :plan, [:held_unconsumed], :suspend_component)
   end
 
-  defp apply_dispute_effect(scope, :available) do
-    with {:ok, :allowed} <- Identity.locked_fixture_recipient(scope.recipient_id),
+  defp apply_dispute_effect(scope, :restore) do
+    with :ok <- allow_restoration(scope),
          {:ok, :allowed} <- SyntheticSuppression.locked_status(scope.recipient_id) do
       change_right(scope, :plan, [:suspended], :restore_component)
     else
       {:ok, :suppressed} -> {:ok, nil}
       _ -> {:error, :grant_unavailable}
     end
+  end
+
+  defp allow_restoration(scope) do
+    Repo.without_query_telemetry(fn ->
+      case Identity.locked_fixture_recipient(scope.recipient_id) do
+        {:ok, :allowed} -> :ok
+        _ -> {:error, :grant_unavailable}
+      end
+    end)
   end
 
   defp transact_hosted_effect(id) do
@@ -142,7 +151,7 @@ defmodule NewYou.Entitlements.SyntheticRights do
 
   defp apply_committed_effect(_scope, %{kind: :excess_satisfied}), do: :ok
 
-  @doc "Apply the original P1 grant under current Commerce and Privacy authority."
+  @doc "Apply the original P1 grant under current Commerce and Privacy authority, including Identity when restoring."
   @spec grant_p1(String.t()) :: {:ok, PlanRight.t() | :withheld} | {:error, :grant_unavailable}
   def grant_p1(consequence_id) do
     case Ash.transact(PlanRight, fn -> apply_current_p1(consequence_id) end) do
@@ -173,6 +182,10 @@ defmodule NewYou.Entitlements.SyntheticRights do
       result ->
         result
     end
+  end
+
+  defp apply_p1({:hosted_restored, scope}) do
+    with :ok <- allow_restoration(scope), do: apply_p1({:legacy, scope})
   end
 
   defp apply_p1({:legacy, scope}) do

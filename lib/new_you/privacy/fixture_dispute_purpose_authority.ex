@@ -28,12 +28,12 @@ defmodule NewYou.Privacy.FixtureDisputePurposeAuthority do
   end
 
   actions do
-    read :read do
-      primary? true
-      public? false
-    end
-
     if Mix.env() == :test do
+      read :read do
+        primary? true
+        public? false
+      end
+
       create :grant_fixture_only do
         public? false
 

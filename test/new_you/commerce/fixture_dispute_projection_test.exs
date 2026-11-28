@@ -29,7 +29,6 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
   require Ash.Query
 
   @scope %{provider: :paystack, integration: :local_fixture, environment: :test, channel: :card}
-  @transaction "18446744073709551613"
   @amount 47_500
 
   test "finance read projects only accepted commercial fields and records minimized Audit evidence" do
@@ -74,7 +73,7 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
 
         assert projection.purchase_id == dispute.purchase_id
         assert projection.payment_id == dispute.payment_id
-        assert projection.dispute_id == "991"
+        assert projection.dispute_id == dispute.dispute_id
         assert projection.amount_minor == @amount
         assert projection.currency == "ZAR"
         assert projection.allocation == :plan
@@ -224,7 +223,7 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
     end)
   end
 
-  test "read fails closed for missing, altered, foreign, revoked and wrong-session authority" do
+  test "read fails closed for missing or foreign claims, Privacy withdrawal and session denial" do
     P805.with_fixture(fn ->
       with_dispute(fn payer, recipient, dispute ->
         operation_id = operation()
@@ -237,14 +236,20 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
 
         proofs = proofs(payer.account_id, dispute.id, operation_id, privacy_purpose)
 
-        assert {:error, :evidence_unavailable} =
-                 FixtureDisputeProjection.read(
-                   payer.credentials,
-                   dispute.id,
-                   nil,
-                   proofs.privacy,
-                   proofs.audit
-                 )
+        for {finance, privacy, audit} <- [
+              {nil, proofs.privacy, proofs.audit},
+              {proofs.finance, nil, proofs.audit},
+              {proofs.finance, proofs.privacy, nil}
+            ] do
+          assert {:error, :evidence_unavailable} =
+                   FixtureDisputeProjection.read(
+                     payer.credentials,
+                     dispute.id,
+                     finance,
+                     privacy,
+                     audit
+                   )
+        end
 
         for forbidden_key <- [
               :health_safety_notes,
@@ -274,20 +279,19 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
                    )
         end
 
-        foreign =
-          PlanPaymentObservation.produce(%{
-            proofs.finance.fields
-            | source_id: uuid()
-          })
+        for role <- [:finance, :privacy, :audit] do
+          foreign = PlanPaymentObservation.produce(%{proofs[role].fields | source_id: uuid()})
+          claims = Map.put(proofs, role, foreign)
 
-        assert {:error, :evidence_unavailable} =
-                 FixtureDisputeProjection.read(
-                   payer.credentials,
-                   dispute.id,
-                   foreign,
-                   proofs.privacy,
-                   proofs.audit
-                 )
+          assert {:error, :evidence_unavailable} =
+                   FixtureDisputeProjection.read(
+                     payer.credentials,
+                     dispute.id,
+                     claims.finance,
+                     claims.privacy,
+                     claims.audit
+                   )
+        end
 
         assert {:ok, :withdrawn} =
                  FixtureDisputePurpose.withdraw(recipient.account_id, operation_id, dispute.id)
@@ -368,6 +372,7 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
   defp with_dispute(callback) do
     payer = verified_party()
     recipient = verified_party()
+    transaction = large_provider_id()
     publish!(:plan, %{amount_minor: @amount, plan_list_minor: @amount})
     authority = parties(payer, recipient)
     quote = quote!(authority, :plan)
@@ -386,7 +391,7 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
             status: true,
             data: %{
               reference: reference,
-              id: @transaction,
+              id: transaction,
               amount: @amount,
               currency: "ZAR",
               status: "success",
@@ -417,8 +422,8 @@ defmodule NewYou.Commerce.FixtureDisputeProjectionTest do
           data = %{
             scope: "newyou_dispute_fixture",
             reference: reference,
-            transaction: @transaction,
-            id: "991",
+            transaction: transaction,
+            id: large_provider_id(payment.id),
             amount: @amount,
             currency: "ZAR",
             revision: 1,
