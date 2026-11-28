@@ -23,7 +23,12 @@ from uuid import uuid4
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
 from tools import ci_attestation, newyou_attest
-from tools.foundation_integrity_routing import classify_changed_paths, classify_deep_application_changes
+from tools.exunit_ci import CAPACITY, SHARDS
+from tools.foundation_integrity_routing import (
+    classify_changed_paths,
+    classify_deep_application_changes,
+    classify_hex_audit_changes,
+)
 
 REPO = 'Carpe-Diem-Media/NewYou'
 ROOT = Path.cwd()
@@ -122,22 +127,29 @@ def require_local(state, binding):
             'local verification failed or is missing')
 
 
-def validate_ci(evidence, binding, *, application, deep):
+def validate_ci(evidence, binding, *, application, deep, hex_audit):
     require(evidence.get('head') == binding['head'] == evidence.get('reviewed_head')
             and evidence.get('base') == binding['base'] == evidence.get('premerge_main'), 'stale CI head/base')
     require(evidence.get('candidate_parents') == [binding['base'], binding['head']], 'stale CI candidate/base')
-    jobs = evidence.get('jobs', [])
-    names = [j.get('name') for j in jobs]
-    require(len(names) == len(set(names)), 'duplicate CI jobs')
+    jobs = evidence.get('jobs')
+    require(isinstance(jobs, list) and all(isinstance(job, dict) and isinstance(job.get('name'), str)
+                                          and job['name'] for job in jobs), 'invalid CI job evidence')
+    by_name = {job['name']: job for job in jobs}
+    require(len(jobs) == len(by_name), 'duplicate CI jobs')
     expected = ['Route CI lanes', 'Foundation Smoke', 'Foundation Integrity']
     if application:
-        expected.append('Application CI / mix check')
+        expected.extend([CAPACITY + 'Discover application tests',
+                         CAPACITY + 'Static application checks',
+                         *(CAPACITY + f'Test shard {n}' for n in range(1, SHARDS + 1)),
+                         CAPACITY + 'Verify application coverage'])
     if deep:
-        expected.append('Application CI / mix check.deep')
+        expected.append(CAPACITY + 'mix check.deep')
+    if hex_audit:
+        expected.append('Hex security audit / Fresh Hex advisory and retirement audit')
     for name in expected:
-        matching = [j for j in jobs if j.get('name') == name]
-        require(len(matching) == 1 and matching[0].get('status') == 'completed'
-                and matching[0].get('conclusion') == 'success', f'missing or unsuccessful required check: {name}')
+        job = by_name.get(name, {})
+        require(job.get('status') == 'completed' and job.get('conclusion') == 'success',
+                f'missing or unsuccessful required check: {name}')
 
 
 def collect_ci(binding, paths, override):
@@ -162,7 +174,7 @@ def collect_ci(binding, paths, override):
         raise GateError(f'hosted candidate verification failed: {exc}') from exc
     route = classify_changed_paths(paths, pr_number=pr['number'])
     validate_ci(evidence, binding, application=route['application_changes'],
-                deep=classify_deep_application_changes(paths))
+                deep=classify_deep_application_changes(paths), hex_audit=classify_hex_audit_changes(paths))
     return dict(pr=pr['number'], url=pr['html_url'], evidence=evidence)
 
 
