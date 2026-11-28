@@ -135,8 +135,7 @@ defmodule NewYou.Commerce.OfferAdmission do
            Ash.get(PurchaseQuote, id, authorize?: false),
          true <- same_parties?(quote, purchase),
          true <- quote.operation_id == purchase.operation_id,
-         {:ok, offer} <- fetch_offer(quote, nil),
-         true <- approved_development_offer?(offer),
+         {:ok, offer} <- checkout_offer(fetch_offer(quote, nil)),
          true <-
            offer.price_version == purchase.price_version and
              offer.amount_minor == purchase.amount_minor and
@@ -194,8 +193,7 @@ defmodule NewYou.Commerce.OfferAdmission do
          {:ok, %PurchaseQuote{} = quote} <- quote_by_operation(operation, :for_update),
          true <- same_parties?(quote, parties),
          :ok <- current_parties_privacy(quote),
-         {:ok, offer} <- fetch_offer(quote, "FOR SHARE"),
-         true <- approved_development_offer?(offer) do
+         {:ok, offer} <- checkout_offer(fetch_offer(quote, "FOR SHARE")) do
       if quote.id == id and quote.disclosure_fingerprint == fingerprint and
            exact_disclosure?(quote, offer),
          do: accept_quote(quote, offer),
