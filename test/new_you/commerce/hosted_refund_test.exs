@@ -801,6 +801,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
               assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
             end
 
+            assert %{state: :conflict} =
+                     Ash.get!(FixtureDisputeReceipt, first_receipt.id, authorize?: false)
+
             assert {:ok, %{id: id}} = FixtureDisputes.read_identity(data.id)
 
             # Equal-revision evidence cannot adjudicate the worker conflict.
@@ -1427,72 +1430,87 @@ defmodule NewYou.Commerce.HostedRefundTest do
   end
 
   test "fresh scheduler processes a committed webhook receipt after missing or exhausted work" do
+    with_unrelated_dispute_receipt_job(fn ->
+      for queue_state <- [:missing, :exhausted] do
+        recover_webhook_receipt(queue_state)
+      end
+    end)
+  end
+
+  defp recover_webhook_receipt(queue_state) do
     worker = NewYou.Commerce.Workers.ProcessFixtureDisputeReceipt
 
-    for queue_state <- [:missing, :exhausted] do
-      P805.with_fixture(fn ->
-        with_paid_plan(fn _, payment, _, _, _, tag ->
-          with_signing_key(fn key ->
-            assert 202 == send_event(key, "fixture.dispute", dispute_data(payment))
+    P805.with_fixture(fn ->
+      with_paid_plan(fn _, payment, _, _, _, tag ->
+        with_signing_key(fn key ->
+          payment_id = payment.id
+          assert 202 == send_event(key, "fixture.dispute", dispute_data(payment))
 
-            assert [%{id: receipt_id, state: :pending, source: :webhook}] =
-                     dispute_receipts(payment)
+          assert [%{id: receipt_id, state: :pending, source: :webhook}] =
+                   dispute_receipts(payment)
 
-            assert [] == dispute_receipt_jobs(receipt_id)
-            assert is_nil(dispute_for_payment(payment))
+          assert [] == dispute_receipt_jobs(receipt_id)
+          assert is_nil(dispute_for_payment(payment))
 
-            exhausted =
-              if queue_state == :exhausted do
-                queued =
-                  worker.new(%{"primary_key" => %{"id" => receipt_id}}, max_attempts: 1)
-                  |> Oban.insert!()
+          exhausted =
+            if queue_state == :exhausted do
+              queued =
+                worker.new(%{"primary_key" => %{"id" => receipt_id}}, max_attempts: 1)
+                |> Oban.insert!()
 
-                P805.with_rejected_insert("commerce_fixture_disputes", fn reached? ->
-                  assert %{discard: 1} = Oban.drain_queue(queue: :commerce_fixture_dispute)
-                  assert reached?.()
-                end)
+              P805.with_rejected_insert("commerce_fixture_disputes", fn reached? ->
+                assert %{discard: 1} = Oban.drain_queue(queue: :commerce_fixture_dispute)
+                assert reached?.()
+              end)
 
-                assert [[_, "discarded"]] = jobs = dispute_receipt_jobs(receipt_id)
-                assert [[queued.id, "discarded"]] == jobs
-                refute dispute_for_payment(payment)
-                jobs
-              else
-                []
-              end
+              assert [[_, "discarded"]] = jobs = dispute_receipt_jobs(receipt_id)
+              assert [[queued.id, "discarded"]] == jobs
+              refute dispute_for_payment(payment)
+              jobs
+            else
+              []
+            end
 
-            assert [%{id: ^receipt_id, state: :pending}] = dispute_receipts(payment)
+          assert NewYou.Commerce.FixtureCorrectionSource.independently_visible?(fn ->
+                   match?(
+                     {:ok, %{state: :pending, source: :webhook, payment_id: ^payment_id}},
+                     Ash.get(FixtureDisputeReceipt, receipt_id, authorize?: false)
+                   )
+                 end)
 
-            {executable, arguments} =
-              FreshMix.command(["run", "--no-compile", "test/proof/well223_dispute_restart.exs"])
+          {executable, arguments} =
+            FreshMix.command(["run", "--no-compile", "test/proof/well223_dispute_restart.exs"])
 
-            diagnostic =
-              P815Port.run(
-                executable,
-                arguments,
-                Jason.encode!(%{id: receipt_id, phase: "receipt"}),
-                60_000
-              )
+          diagnostic =
+            P815Port.run(
+              executable,
+              arguments,
+              Jason.encode!(%{id: receipt_id, phase: "receipt"}),
+              60_000
+            )
 
-            assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} = diagnostic
-            assert [%{id: ^receipt_id, state: :applied} = applied] = dispute_receipts(payment)
+          assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} = diagnostic
+          assert [%{id: ^receipt_id, state: :applied} = applied] = dispute_receipts(payment)
 
-            assert %{state: :contested, effect_version: 1, dispute_id: dispute_id} =
-                     dispute_for_payment(payment)
+          assert %{state: :contested, effect_version: 1, dispute_id: dispute_id} =
+                   dispute_for_payment(payment)
 
-            assert dispute_id == applied.dispute_id
-            assert [[_, "completed"]] = dispute_receipt_jobs(receipt_id) -- exhausted
-            refute_received {^tag, _, _, _, _}
-          end)
+          assert dispute_id == applied.dispute_id
+          assert [[_, "completed"]] = dispute_receipt_jobs(receipt_id) -- exhausted
+          refute_received {^tag, _, _, _, _}
         end)
       end)
-    end
+    end)
   end
 
   test "two workers running the scheduled receipt job bind one dispute consequence" do
     worker = NewYou.Commerce.Workers.ProcessFixtureDisputeReceipt
 
     P805.with_fixture(fn ->
-      with_paid_plan(fn _, payment, _, _, _, _ ->
+      with_paid_plan(fn accepted, payment, _, _, _, _ ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert {:ok, %{id: original_right}} = Commerce.deliver_plan_payment_consequence(grant)
+
         with_signing_key(fn key ->
           data = dispute_data(payment)
           assert 202 == send_event(key, "fixture.dispute", data)
@@ -1521,6 +1539,13 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
           assert [[job.id, "completed"]] == dispute_receipt_jobs(receipt_id)
           assert dispute == dispute_for_payment(payment)
+
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+          assert [%{id: ^original_right, state: :suspended}] =
+                   Entitlements.PlanRight
+                   |> Ash.Query.filter(payment_id == ^payment.id)
+                   |> Ash.read!(authorize?: false)
         end)
       end)
     end)
@@ -1540,12 +1565,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
   test "fixture cleanup removes only its dispute rows and jobs from the shared queue" do
     worker = NewYou.Commerce.Workers.ProcessFixtureDisputeReceipt
 
-    sentinel =
-      Sandbox.unboxed_run(Repo, fn ->
-        Oban.insert!(worker.new(%{"primary_key" => %{"id" => uuid()}}))
-      end)
-
-    try do
+    with_unrelated_dispute_receipt_job(fn ->
       {case_id, receipt_id, job_id} =
         P805.with_fixture(fn ->
           with_paid_plan(fn _, payment, _, _, _, _ ->
@@ -1566,7 +1586,24 @@ defmodule NewYou.Commerce.HostedRefundTest do
                  Ash.get(FixtureDisputeReceipt, receipt_id, error?: false, authorize?: false)
 
         refute Repo.get(Oban.Job, job_id)
-        assert Repo.get(Oban.Job, sentinel.id)
+      end)
+    end)
+  end
+
+  defp with_unrelated_dispute_receipt_job(callback) do
+    worker = NewYou.Commerce.Workers.ProcessFixtureDisputeReceipt
+    args = %{"primary_key" => %{"id" => uuid()}}
+
+    sentinel =
+      Sandbox.unboxed_run(Repo, fn ->
+        Oban.insert!(worker.new(args, schedule_in: 3_600))
+      end)
+
+    try do
+      callback.()
+
+      Sandbox.unboxed_run(Repo, fn ->
+        assert %{state: "scheduled", args: ^args} = Repo.get!(Oban.Job, sentinel.id)
       end)
     after
       Sandbox.unboxed_run(Repo, fn -> Oban.delete_job(sentinel.id) end)
@@ -1843,14 +1880,18 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
             with_signing_key(fn key ->
               data = dispute_data(original)
+              foreign = %{dispute_data(distinct) | id: data.id}
               assert 202 == send_event(key, "fixture.dispute", data)
+              assert 202 == send_event(key, "fixture.dispute", foreign)
               dispute = apply_dispute_receipts(original)
               assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+              delivered = dispute_for_payment(original)
 
-              assert 400 ==
-                       send_event(key, "fixture.dispute", %{dispute_data(distinct) | id: data.id})
-
-              assert [] = dispute_receipts(distinct)
+              assert nil == apply_dispute_receipts(distinct)
+              assert [%{state: :quarantined}] = dispute_receipts(distinct)
+              assert 400 == send_event(key, "fixture.dispute", %{foreign | revision: 2})
+              assert [_receipt] = dispute_receipts(distinct)
+              assert delivered == dispute_for_payment(original)
               assert [%{id: ^second_right}] = plan_rights(recipient)
 
               assert %{state: :suspended} =

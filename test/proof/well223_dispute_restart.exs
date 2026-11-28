@@ -20,7 +20,11 @@ try do
 
     IO.puts("P815_CHECKPOINT")
     true = processed >= 2
-    %{state: :applied} = Ash.get!(FixtureDisputeReceipt, id, authorize?: false)
+    %{state: :applied} = receipt = Ash.get!(FixtureDisputeReceipt, id, authorize?: false)
+    AshOban.Test.refute_would_schedule(receipt, :process)
+
+    %{failure: 0, discard: 0, queues_not_drained: []} =
+      AshOban.Test.schedule_and_run_triggers({FixtureDisputeReceipt, :process})
   else
     %FixtureDispute{} = Ash.get!(FixtureDispute, id, authorize?: false)
 
