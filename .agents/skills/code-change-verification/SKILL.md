@@ -32,6 +32,8 @@ Do not automatically rerun already-valid focused proof or broad gates merely bec
 
 ## Independent implementation and proof assessment
 
+When a ticket explicitly cites reviewed scoped planning IDs, resolve only the applicable records and necessary direct governing sources. Check scope, exclusions and authority against the current routers and live Plane. Verify the acceptance-to-test mapping in the existing proof matrix against the actual code, tests and complete exact-head diff. Use related IDs for navigation only. Report missing, stale or conflicting references and resolve the affected scope under the existing authority and STOP rules. Apply this guidance prospectively.
+
 Inspect the complete implementation diff and affected consumers against current authority, rather than accepting the implementation plan as proof. Evaluate material JIT fitness decisions, justified introductions/replacements, pinned framework return types and DSL compatibility, single Domain ownership and supported owning Ash interfaces. Check module cohesion and avoid forwarding abstractions without a distinct responsibility.
 
 For meaningful lifecycles, inspect states, transitions, guards, terminal states and durable consequences. Review valid fixture prerequisites and permitted controls: negative tests must reject for the intended guard, not an unrelated invalid prerequisite. Assess selected isolated sensitivity proof, including restoration and focused rerun evidence, under the TDD skill. Evaluate applicable concurrency, idempotency, retry, failure, rollback and recovery proof using Engineering Standards' LOW / STANDARD / HIGH policy, without universal mutation testing or numeric coverage thresholds.
@@ -73,7 +75,7 @@ Handoffs remain descriptive implementation maps beneath routed authority. They d
 
 ## Review and merge handoff
 
-Follow `docs/development/foundation-integrity-merge-gate.md`. For eligible development work, ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the exact final head. That review is both technical approval and standing merge authorization. Do not add a second founder comment or a base-SHA line. The implementing agent must not use founder credentials.
+Follow `docs/development/foundation-integrity-merge-gate.md`. For eligible development work, after the independent Master Gate technical review, the other account submits one authenticated GitHub APPROVED review for the exact final head. That review supplies technical approval and standing merge authorization. Any head change requires fresh approval.
 
 Verify current required CI and live branch protection before merge. From trusted integrated `main`, run `python3 -m tools.ci_attestation native-candidate --pr NUMBER --reviewed-head HEAD_SHA --run RUN_ID`. When it passes, use `gh pr merge --repo Carpe-Diem-Media/NewYou --merge --match-head-commit HEAD_SHA NUMBER` without bypass. Then run `python3 -m tools.ci_attestation native-result --pr NUMBER --reviewed-head HEAD_SHA --run RUN_ID --candidate TESTED_CANDIDATE_SHA`. If GitHub returns an uncertain merge result, inspect the PR and `main` before taking further action. Never blindly repeat the merge.
 
@@ -85,7 +87,7 @@ After merge, verify resulting main SHA, ordered parents and tested tree before P
 
 CI generates informational mechanical PR snapshots without modifying the branch. Existing committed history remains searchable, but new records are not required. Verify semantic maps against the source and retain exact-head and current-base evidence.
 
-Before a routine PR update, follow the actual `JC-Agents` authentication and existing-author preflight in `AGENTS.md` and `ticket-implement`. A founder-authored PR is ineligible for the routine agent/founder approval route.
+Before creating or updating a routine PR, run `gh api user --jq .login` and `python3 -m tools.newyou_attest pr-preflight`, adding `--pr NUMBER` for an existing PR. Use authenticated `JC-Agents` or `JCSchoeman96`. Use the PR author's account for routine implementation updates; synchronization events from the other account do not fail CI. The other account independently reviews the exact final head and must not have made the latest reviewable push. Git commit name and email do not verify GitHub identity. Stop on mismatched or unverifiable authentication. Each account authenticates separately.
 
 ## Elixir/Ash/OTP evidence lens — conditional review supplement
 

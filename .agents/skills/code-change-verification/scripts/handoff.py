@@ -22,8 +22,13 @@ from uuid import uuid4
 # Make repository modules importable when this skill script is run by path.
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
-from tools import ci_attestation
-from tools.foundation_integrity_routing import classify_changed_paths, classify_deep_application_changes
+from tools import ci_attestation, newyou_attest
+from tools.exunit_ci import CAPACITY, SHARDS
+from tools.foundation_integrity_routing import (
+    classify_changed_paths,
+    classify_deep_application_changes,
+    classify_hex_audit_changes,
+)
 
 REPO = 'Carpe-Diem-Media/NewYou'
 ROOT = Path.cwd()
@@ -122,22 +127,29 @@ def require_local(state, binding):
             'local verification failed or is missing')
 
 
-def validate_ci(evidence, binding, *, application, deep):
+def validate_ci(evidence, binding, *, application, deep, hex_audit):
     require(evidence.get('head') == binding['head'] == evidence.get('reviewed_head')
             and evidence.get('base') == binding['base'] == evidence.get('premerge_main'), 'stale CI head/base')
     require(evidence.get('candidate_parents') == [binding['base'], binding['head']], 'stale CI candidate/base')
-    jobs = evidence.get('jobs', [])
-    names = [j.get('name') for j in jobs]
-    require(len(names) == len(set(names)), 'duplicate CI jobs')
+    jobs = evidence.get('jobs')
+    require(isinstance(jobs, list) and all(isinstance(job, dict) and isinstance(job.get('name'), str)
+                                          and job['name'] for job in jobs), 'invalid CI job evidence')
+    by_name = {job['name']: job for job in jobs}
+    require(len(jobs) == len(by_name), 'duplicate CI jobs')
     expected = ['Route CI lanes', 'Foundation Smoke', 'Foundation Integrity']
     if application:
-        expected.append('Application CI / mix check')
+        expected.extend([CAPACITY + 'Discover application tests',
+                         CAPACITY + 'Static application checks',
+                         *(CAPACITY + f'Test shard {n}' for n in range(1, SHARDS + 1)),
+                         CAPACITY + 'Verify application coverage'])
     if deep:
-        expected.append('Application CI / mix check.deep')
+        expected.append(CAPACITY + 'mix check.deep')
+    if hex_audit:
+        expected.append('Hex security audit / Fresh Hex advisory and retirement audit')
     for name in expected:
-        matching = [j for j in jobs if j.get('name') == name]
-        require(len(matching) == 1 and matching[0].get('status') == 'completed'
-                and matching[0].get('conclusion') == 'success', f'missing or unsuccessful required check: {name}')
+        job = by_name.get(name, {})
+        require(job.get('status') == 'completed' and job.get('conclusion') == 'success',
+                f'missing or unsuccessful required check: {name}')
 
 
 def collect_ci(binding, paths, override):
@@ -162,7 +174,7 @@ def collect_ci(binding, paths, override):
         raise GateError(f'hosted candidate verification failed: {exc}') from exc
     route = classify_changed_paths(paths, pr_number=pr['number'])
     validate_ci(evidence, binding, application=route['application_changes'],
-                deep=classify_deep_application_changes(paths))
+                deep=classify_deep_application_changes(paths), hex_audit=classify_hex_audit_changes(paths))
     return dict(pr=pr['number'], url=pr['html_url'], evidence=evidence)
 
 
@@ -293,7 +305,7 @@ def validate_ocr(result, preview, binding, budget):
                 budget=budget, tokens=used, findings=findings, excluded=list(excluded.values()))
 
 
-def validate_findings(summary, review, head):
+def validate_findings(summary, review, head, author):
     """Use an existing authenticated independent PR review, not author waivers.
 
     This triage disposition is not final approval. Master Gate still reviews the
@@ -301,7 +313,12 @@ def validate_findings(summary, review, head):
     """
     if not summary['findings']:
         return
-    require(isinstance(review, dict) and review.get('user', {}).get('login') == 'JCSchoeman96'
+    try:
+        reviewer = newyou_attest.counterpart(author)
+    except ci_attestation.AttestationError as error:
+        raise GateError(str(error)) from error
+    require(isinstance(review, dict) and review.get('user', {}).get('login') == reviewer
+            and review.get('user', {}).get('id') == newyou_attest.PR_ACCOUNTS[reviewer]
             and review.get('commit_id') == head and review.get('state') in ('COMMENTED', 'APPROVED'),
             'OCR findings require exact-head independent reviewed disposition or verified repair; keep Draft')
     for index, _finding in enumerate(summary['findings'], 1):
@@ -309,7 +326,7 @@ def validate_findings(summary, review, head):
         require(re.search(pattern, review.get('body', '')), f'OCR finding {index} unresolved; keep Draft')
 
 
-def optional_ocr(state, binding, review):
+def optional_ocr(state, binding, review, author=None):
     """Report optional evidence honestly; never discard known findings."""
     history = state.get('ocr_history', [])
     require(isinstance(history, list), 'invalid OCR history')
@@ -324,7 +341,7 @@ def optional_ocr(state, binding, review):
             previous_session = previous_result.get('session_id')
             if prior_findings:
                 require(isinstance(previous_session, str) and previous_session, 'prior OCR findings have no session identity')
-                validate_findings(dict(findings=prior_findings, session=previous_session), review, binding['head'])
+                validate_findings(dict(findings=prior_findings, session=previous_session), review, binding['head'], author or {})
             manifest = previous_result.get('manifest') if isinstance(previous_result.get('manifest'), dict) else {}
             execution = manifest.get('execution') if isinstance(manifest.get('execution'), dict) else {}
             prior.append(dict(status='UNVERIFIED', reported_status=previous_result.get('status', 'unknown'), session=previous_session,
@@ -351,7 +368,7 @@ def optional_ocr(state, binding, review):
     session = result.get('session_id')
     if findings:
         require(isinstance(session, str) and session, 'OCR findings have no session identity')
-        validate_findings(dict(findings=findings, session=session), review, binding['head'])
+        validate_findings(dict(findings=findings, session=session), review, binding['head'], author or {})
     if not all(isinstance(f, dict) and f.get('content') for f in findings):
         return dict(status='FAILED', prior_attempts=prior, limitation='Malformed OCR findings; independent inspection required.')
     prepared = evidence.get('prepared') or state.get('prepared')
@@ -580,7 +597,7 @@ def main():
             reuse = proof_binding(state, binding)
             fresh_ci = collect_ci(binding, paths, pr['number'])
             review = api(f'pulls/{pr["number"]}/reviews/{args.disposition_review}') if args.disposition_review else None
-            summary = optional_ocr(state, binding, review)
+            summary = optional_ocr(state, binding, review, pr.get("user"))
             require(worktree()[0] == binding, 'source changed while finishing')
             print(json.dumps(dict(ticket=args.ticket, binding=binding, local=state['local'], ci=fresh_ci,
                                   implementation_binding=state['binding'], proof_binding=reuse,

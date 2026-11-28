@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repository Reconnaissance"
+  short_description: "Establish repo truth first"
+  default_prompt: "Establish the current repository baseline before planning, grilling, specification, implementation, or review."

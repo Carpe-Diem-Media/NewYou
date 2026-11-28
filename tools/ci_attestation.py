@@ -107,25 +107,59 @@ def verify_result(candidate: dict, result: dict) -> None:
     require(result.get("tree") == candidate["tree"], "resulting tree differs from tested tree")
 
 
+# Executables observed in actions/checkout logs: GitHub-hosted runners use
+# /usr/bin/git and Blacksmith runners use /usr/local/bin/git.
+CHECKOUT_COMMANDS = {f"[command]{git} log -1 --format=%H" for git in ("/usr/bin/git", "/usr/local/bin/git")}
+RUNNER_TIMESTAMP = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z"
+RUNNER_PREFIX = rf"{RUNNER_TIMESTAMP} "
+# Exported lines begin with a job, a step and a runner timestamp. Job and step must be
+# nonempty and must not contain a tab or carriage return.
+EXPORTED_PREFIX = rf"([^\t\r]+)\t([^\t\r]+)\t{RUNNER_TIMESTAMP} "
+
+
+def _log_record(line: str) -> tuple[tuple[str, ...], str] | None:
+    """Return (metadata, message) for a runner or exported line, or None without a record prefix.
+
+    Raw runner lines have no metadata. Exported lines carry (job, step), so a checkout
+    command and its SHA must share both the format and the metadata.
+    """
+    match = re.match(RUNNER_PREFIX, line)
+    if match:
+        return (), line[match.end():]
+    match = re.match(EXPORTED_PREFIX, line)
+    if match:
+        return match.groups(), line[match.end():]
+    return None
+
+
 def checkout_from_log(log: str) -> str:
     """Read the full checkout SHA emitted by actions/checkout, or fail closed."""
-    lines = log.splitlines()
-    found = []
-    for left, right in zip(lines, lines[1:]):
-        if "[command]/usr/bin/git log -1 --format=%H" in left:
-            match = re.search(r"\s([0-9a-f]{40})$", right)
-            if match:
-                found.append(match.group(1))
-    require(len(found) == 1, "job has missing or ambiguous checkout evidence")
-    return found[0]
+    # Split on "\n" only: splitlines() also breaks on "\r", so forged text could stand alone.
+    lines = log.split("\n")
+    # Any line that names a checkout command counts, so a malformed copy beside a real record still fails closed.
+    commands = [index for index, line in enumerate(lines) if any(known in line for known in CHECKOUT_COMMANDS)]
+    require(len(commands) == 1, "job has missing, duplicate or conflicting checkout evidence")
+    index = commands[0]
+    command = _log_record(lines[index])
+    require(command is not None and command[1] in CHECKOUT_COMMANDS, "job checkout command record is malformed")
+    # The SHA must be the very next line, in the same format and with the same exported job and step.
+    result = _log_record(lines[index + 1]) if index + 1 < len(lines) else None
+    require(result is not None and result[0] == command[0] and re.fullmatch(r"[0-9a-f]{40}", result[1]),
+            "job checkout evidence has no full SHA in the command's record format")
+    return result[1]
 
 
 def _command(*args: str) -> str:
     import subprocess
     try:
-        return subprocess.run(args, check=True, capture_output=True, text=True, timeout=60).stdout
+        output = subprocess.run(args, check=True, capture_output=True, timeout=60).stdout
     except (OSError, subprocess.SubprocessError) as exc:
         raise AttestationError(f"cannot collect GitHub evidence: {exc}") from exc
+    # Keep CR and CRLF: text mode would rewrite them as LF before the checkout parser runs.
+    try:
+        return output.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise AttestationError("GitHub evidence is not valid UTF-8") from exc
 
 
 def _api(path: str) -> dict:
@@ -263,23 +297,21 @@ def collect(pr_number: int, reviewed_head: str, run_id: int, *, candidate_sha: s
 
 
 def verify_native_review(pr: dict, reviews: list) -> dict:
-    """Read the founder's latest decisive GitHub review, bound to the final head."""
-    from tools.newyou_attest import FOUNDER_ID, FOUNDER_LOGIN
-    require(pr.get("user", {}).get("id") == 355419376
-            and pr.get("user", {}).get("login") == "JC-Agents",
-            "routine integration must use the implementing agent account")
+    """Read the other account's latest decisive GitHub review for the final head."""
+    from tools.newyou_attest import PR_ACCOUNTS, counterpart
+    reviewer = counterpart(pr.get("user", {}))
     require(isinstance(reviews, list) and all(isinstance(r, dict) for r in reviews),
             "GitHub review evidence is incomplete")
-    opinions = [r for r in reviews if r.get("user", {}).get("id") == FOUNDER_ID
-                and r.get("user", {}).get("login") == FOUNDER_LOGIN
+    opinions = [r for r in reviews if r.get("user", {}).get("id") == PR_ACCOUNTS[reviewer]
+                and r.get("user", {}).get("login") == reviewer
                 and r.get("state") in ("APPROVED", "CHANGES_REQUESTED", "DISMISSED")]
     require(opinions and all(type(r.get("id")) is int for r in opinions),
-            "authenticated founder approval is missing")
+            "authenticated counterpart approval is missing")
     review = max(opinions, key=lambda r: r["id"])
     require(review.get("state") == "APPROVED" and review.get("commit_id") == pr["head"]["sha"]
             and review.get("submitted_at")
             and review.get("html_url") == f'https://github.com/Carpe-Diem-Media/NewYou/pull/{pr["number"]}#pullrequestreview-{review["id"]}',
-            "founder approval is stale, dismissed, withdrawn or unverifiable")
+            "counterpart approval is stale, dismissed, withdrawn or unverifiable")
     return review
 
 
@@ -308,7 +340,7 @@ def collect_native(pr_number: int, reviewed_head: str, run_id: int, *,
     """
     import base64
     import json
-    from tools.newyou_attest import founder_account_id
+    from tools.newyou_attest import AGENT_LOGIN, CODEOWNERS, FOUNDER_LOGIN, founder_account_id, pr_account
     repo = "Carpe-Diem-Media/NewYou"
     require(after_merge == (candidate_sha is not None), "result verification requires the tested candidate SHA")
     proof = collect(pr_number, reviewed_head, run_id, candidate_sha=candidate_sha,
@@ -317,9 +349,7 @@ def collect_native(pr_number: int, reviewed_head: str, run_id: int, *,
     verify_native_review_rules(candidate["ruleset"]["rules"])
     effective = [r for r in candidate["effective_rules"] if r.get("ruleset_id") == 24191860]
     verify_native_review_rules(effective)
-    actor = _api("user")
-    require(actor.get("login") == "JC-Agents" and actor.get("id") == 355419376,
-            "implementer must not use founder credentials")
+    pr_account(_api("user"))
     agent_permission = _api(f"repos/{repo}/collaborators/JC-Agents/permission")
     founder_permission = _api(f"repos/{repo}/collaborators/JCSchoeman96/permission")
     require(agent_permission.get("permission") in ("write", "admin")
@@ -333,16 +363,20 @@ def collect_native(pr_number: int, reviewed_head: str, run_id: int, *,
     owners = _api(f'repos/{repo}/contents/.github/CODEOWNERS?ref={candidate["base"]}')
     require(owners.get("encoding") == "base64" and isinstance(owners.get("content"), str),
             "base-branch CODEOWNERS is missing")
-    require(base64.b64decode(owners["content"]).decode() == "* @JCSchoeman96\n",
+    ownership = base64.b64decode(owners["content"]).decode()
+    require(ownership in (CODEOWNERS, f"* @{FOUNDER_LOGIN}\n"),
             "base-branch CODEOWNERS must cover every file and itself")
     pr = _api(f"repos/{repo}/pulls/{pr_number}")
     require(pr["head"]["sha"] == reviewed_head and pr["base"]["sha"] == candidate["base"]
             and pr.get("merged") is after_merge, "PR changed after CI verification")
+    if ownership != CODEOWNERS:
+        require(pr_account(pr["user"]) == AGENT_LOGIN,
+                "the previous base-branch CODEOWNERS requires a JC-Agents PR")
     pages = json.loads(_command("gh", "api", "--paginate", "--slurp", f"repos/{repo}/pulls/{pr_number}/reviews?per_page=100"))
     require(isinstance(pages, list) and all(isinstance(page, list) for page in pages),
             "GitHub review pagination is incomplete")
     review = verify_native_review(pr, [r for page in pages for r in page])
-    candidate["founder_review"] = {k: review[k] for k in ("id", "commit_id", "html_url", "submitted_at")}
+    candidate["independent_review"] = {k: review[k] for k in ("id", "commit_id", "html_url", "submitted_at", "user")}
     # GitHub enforces review threads, latest push approval and all required checks
     # atomically when the ordinary expected-head merge request is made.
     return proof

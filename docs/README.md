@@ -30,7 +30,7 @@ Implementation maps and their review requirements live in development documentat
 - [WELL-103 ExUnit performance profile](development/well-103-exunit-performance.md)
 - [Founder-development merge handoff](development/solo-founder-merge-handoff.md)
 
-The merge procedure uses one authenticated JCSchoeman96 APPROVED review after ChatGPT Master Gate completes technical review and standing authorization for eligible work. Verify live protection and required CI, run the read-only native-candidate check, merge against the reviewed head, and run the native-result check. Stronger approval applies only when an actual governing or external obligation requires it. See [Foundation Integrity merge gate](development/foundation-integrity-merge-gate.md).
+The merge procedure uses one authenticated APPROVED review from the account opposite the PR author after independent Master Gate technical review; that review supplies standing merge authorization for eligible work. Verify live protection and required CI, run the read-only native-candidate check, merge against the reviewed head, and run the native-result check. Stronger approval applies only when an actual governing or external obligation requires it. See [Foundation Integrity merge gate](development/foundation-integrity-merge-gate.md).
 
 These maps describe source at a recorded revision. Verify current code before reuse; they are not semantic authority routes or live status ledgers.
 

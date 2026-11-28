@@ -274,7 +274,39 @@ try {
       const packet = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_SESSION_AND_TRUSTED_DEVICE_BROWSER_COPY_APPROVED_v0.1.1.json', 'utf8'));
       const copy = key => JSON.stringify(packet.copy_items.find(item => item.key === 'identity.sessions.' + key)[input.locale].text);
       const unrelated = input.unrelated_session;
-      if (input.global_revocation) {
+      if (input.trusted_devices) {
+        const deviceText = key => JSON.stringify(packet.copy_items.find(item => item.key === 'identity.trusted_devices.' + key)[input.locale].text);
+        const form = operation => `document.querySelector('#trusted-devices').closest('section').querySelector('input[name="operation"][value="${operation}"]').form`;
+        checkpoint = 'trusted_devices.consent';
+        await cdp('Emulation.setDeviceMetricsOverride', {width: 375, height: 740, deviceScaleFactor: 1, mobile: true});
+        checks.empty = await evaluate(`document.querySelector('#trusted-devices').closest('section').textContent.includes(${deviceText('active.empty')})`);
+        checks.responsive = await evaluate('document.documentElement.scrollWidth <= innerWidth');
+        await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+        checks.reduced_motion = await evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches && document.getAnimations().length === 0");
+        await navigation(() => evaluate(`${form('consent')}.requestSubmit()`));
+        checkpoint = 'trusted_devices.granted';
+        checks.cookie_private = await evaluate('!document.cookie.includes("new_you_device")');
+        checks.current = await evaluate(`!!${form('rename')} && !document.querySelector('input[name="device_proof"]')`);
+
+        checkpoint = 'trusted_devices.rename';
+        await evaluate(`${form('rename')}.elements.device_name.value = 'Synthetic laptop'`);
+        await navigation(() => evaluate(`${form('rename')}.requestSubmit()`));
+        checks.name_saved = await evaluate(`${form('rename')}.elements.device_name.value === 'Synthetic laptop'`);
+
+        checkpoint = 'trusted_devices.remove';
+        const detail = "document.querySelector('#trusted-devices').closest('section').querySelector('details')";
+        await evaluate(`${detail}.querySelector('summary').focus()`);
+        await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Enter', code: 'Enter', text: '\r', windowsVirtualKeyCode: 13});
+        await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13});
+        checks.explicit_confirm = await evaluate(`${detail}.open && ${detail}.textContent.includes(${deviceText('revoke.confirm.body')})`);
+        await navigation(() => evaluate(`${form('revoke')}.requestSubmit()`));
+        checkpoint = 'trusted_devices.removed';
+        checks.removed = await evaluate(`document.querySelector('#trusted-devices')?.closest('section').querySelector('[role="status"]')?.textContent.trim() === ${deviceText('revoke.completed')}`);
+        await navigation(() => cdp('Page.navigate', {url: `${base}/session/manage?locale=${input.locale}`}));
+        checks.refreshed = await evaluate(`!document.querySelector('input[name="device_id"]') && !!document.querySelector('input[name="device_proof"]')`);
+        await navigation(() => cdp('Page.navigate', {url: `${base}/session/protected`}));
+        checks.session_survives = await evaluate(`!!document.querySelector('#session-logout')`);
+      } else if (input.global_revocation) {
         const all = 'a[href^="/session/manage/all?"]';
         const confirmation = '#revoke-all-sessions';
         const protectedStatus = status => `fetch('/session/protected', {cache: 'no-store'}).then(response => response.status === ${status})`;
@@ -424,6 +456,273 @@ try {
     } finally {
       await call('Target.disposeBrowserContext', {browserContextId: second.browserContextId});
     }
+  } else if (input.mode === 'operator_reconciliation') {
+    const path = '/dev/support/reconciliation';
+    const result = state => `document.querySelector('#case-status')?.textContent.trim() === ${JSON.stringify(state)}`;
+    const wait = (condition, session) => evaluate(`(async () => {
+      const deadline = performance.now() + 7000;
+      while (performance.now() < deadline) {
+        if (${condition}) return true;
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      return false;
+    })()`, session);
+    const open = (pathname, session = sessionId) =>
+      navigation(() => call('Page.navigate', {url: base + pathname}, session), session);
+    const signIn = async (account, session = sessionId) => {
+      await open(loginPath, session);
+      await evaluate(`
+        document.querySelector('#email').value = ${JSON.stringify(account.email)};
+        document.querySelector('#password').value = ${JSON.stringify(account.password)};
+      `, session);
+      await navigation(() => evaluate("document.querySelector('#password-login').requestSubmit()", session), session);
+      await open(path, session);
+      return wait("!!document.querySelector('#detect button:enabled')", session);
+    };
+
+    const history = async () => {
+      const entries = await cdp('Page.getNavigationHistory');
+      return entries.entries[entries.currentIndex].id;
+    };
+    let requestCount = 0;
+    const submit = async (form, values, condition, session = sessionId, decision = '') => {
+      checkpoint = `operator_reconciliation.${decision || form}`;
+      const selector = decision ? `button[value="${decision}"]` : 'button[type="submit"]';
+      const payload = {...values};
+      if ('password' in payload) payload.code = input.codes[requestCount];
+      requestCount++;
+      const started = await evaluate(`(() => {
+        const form = document.getElementById(${JSON.stringify(form)});
+        if (!form) return false;
+        form.closest('details')?.setAttribute('open', '');
+        for (const [name, value] of Object.entries(${JSON.stringify(payload)})) {
+          form.elements.namedItem(name).value = value;
+        }
+        form.querySelector(${JSON.stringify(selector)}).click();
+        return true;
+      })()`, session);
+      if (!started || !await wait(`(${condition}) && !document.querySelector('#reconciliation[aria-busy]')`, session)) {
+        throw new Error('browser.evaluation');
+      }
+      return true;
+    };
+
+    checkpoint = 'operator_reconciliation.sign_in';
+    checks.signed_in = await signIn(input.operator);
+    await cdp('Emulation.setDeviceMetricsOverride', {width: 320, height: 900, deviceScaleFactor: 1, mobile: true});
+    await cdp('Emulation.setEmulatedMedia', {features: [{name: 'prefers-reduced-motion', value: 'reduce'}]});
+    checks.reflow = await evaluate('document.documentElement.scrollWidth <= innerWidth && document.getAnimations().length === 0');
+    for (let tab = 0; tab < 3 && !(await evaluate("document.activeElement.id === 'detect-candidate_id'")); tab++) {
+      await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+      await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    }
+    checks.keyboard = await evaluate(`document.activeElement.id === 'detect-candidate_id'
+      && document.activeElement.labels.length === 1 && document.activeElement.matches(':focus-visible')
+      && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+    const authority = {...input.grants, password: input.operator.password};
+    checks.detected = await submit('detect', {...authority, ...input.pair}, result('Detected'));
+    const reference = await evaluate("document.querySelector('#case-reference')?.textContent");
+    checks.focused_result = await evaluate("document.activeElement.id === 'reconciliation-result'");
+    checks.candidate = await submit('progress-case', {}, result('Candidate'), sessionId, 'candidate');
+    checks.review = await submit('progress-case', {}, result('In review'), sessionId, 'review');
+    checks.conflict = await submit('progress-case', {}, result('Conflict recorded'), sessionId, 'conflict');
+    checks.review_again = await submit('progress-case', {}, result('In review'), sessionId, 'review');
+
+    const controls = [];
+    for (const account of input.accounts) {
+      const controlContext = await createBrowserContext(call);
+      try {
+        const target = await call('Target.createTarget', {url: 'about:blank', browserContextId: controlContext.browserContextId});
+        const {sessionId: controlSession} = await call('Target.attachToTarget', {targetId: target.targetId, flatten: true});
+        await call('Page.enable', {}, controlSession);
+        await call('Runtime.enable', {}, controlSession);
+        const signedIn = await signIn(account, controlSession);
+        const issued = signedIn && await submit('control', {case_id: reference}, "!!document.querySelector('#control-proof')", controlSession);
+        if (issued) controls.push(await evaluate("document.querySelector('#control-proof').value", controlSession));
+      } finally {
+        await call('Target.disposeBrowserContext', {browserContextId: controlContext.browserContextId});
+      }
+    }
+    checks.independent_controls = controls.length === 2 && controls[0] !== controls[1];
+    if (!checks.independent_controls) throw new Error('browser.evaluation');
+
+    checks.approved = await submit('progress-case', {
+      candidate_control: controls[0], canonical_control: controls[1],
+    }, result('Approved'), sessionId, 'approved');
+
+    const confirmation = "!!document.querySelector('#apply-case button:enabled')";
+    checks.confirmation = await submit('progress-case', {password: input.operator.password}, confirmation);
+    checks.confirmed_pair = await evaluate(`Object.values(${JSON.stringify(input.pair)})
+      .every(id => document.querySelector('#reconciliation-result dl')?.textContent.includes(id))
+      && document.documentElement.scrollWidth <= innerWidth`);
+    checkpoint = 'operator_reconciliation.cancel';
+    await navigation(() => evaluate("document.querySelector('#apply-case [data-operator-reset]').click()"));
+    checks.cancelled = await wait("!!document.querySelector('#detect button:enabled') && !document.querySelector('#apply-case')");
+    const firstEntry = await history();
+    checks.resumed_approved = await submit('resume', {...authority, case_id: reference}, result('Approved'));
+    checks.reconfirmed = await submit('progress-case', {password: input.operator.password}, confirmation);
+    const applyState = await evaluate("document.querySelector('#apply-case [name=state]').value");
+    checks.applied = await submit('apply-case', {}, result('Applied'));
+
+    checks.private_history = (await history()) === firstEntry && await evaluate(`location.pathname === ${JSON.stringify(path)}
+      && !location.search && history.state === null && sessionStorage.length === 0 && localStorage.length === 0
+      && ${JSON.stringify([...Object.values(input.grants), ...Object.values(input.pair), input.operator.password, ...controls, applyState])}
+        .every(value => !document.body.innerHTML.includes(value))`);
+    await evaluate(`window.addEventListener('pagehide', () => {
+      sessionStorage.setItem('well174_cleared', String(!document.querySelector('#case-reference')));
+    }, {once: true})`);
+    await open('/legal/privacy');
+    checks.scrubbed_on_leave = await evaluate("sessionStorage.getItem('well174_cleared') === 'true'");
+    const neutralEntry = await history();
+    checkpoint = 'operator_reconciliation.history';
+    const traverse = async (entryId, condition) => {
+      const previous = await evaluate('performance.timeOrigin');
+      await cdp('Page.navigateToHistoryEntry', {entryId});
+      const deadline = performance.now() + 5000;
+      while (performance.now() < deadline) {
+        try {
+          if (await evaluate(`performance.timeOrigin !== ${previous} && (${condition})`)) return true;
+        } catch (error) {
+          if (error.message !== 'browser.context_lost') throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      return false;
+    };
+    checks.back_blank = await traverse(firstEntry, "!!document.querySelector('#detect button:enabled') && !document.querySelector('#case-reference')");
+    checks.forward = await traverse(neutralEntry, "location.pathname === '/legal/privacy'");
+    await open(path);
+    checks.resumed_applied = await submit('resume', {...authority, case_id: reference}, result('Applied'));
+  } else if (input.mode === 'support_lookup') {
+    const path = '/dev/support/account-access';
+    const openLookup = () => navigation(() => cdp('Page.navigate', {url: base + path}));
+    await navigation(() => cdp('Page.navigate', {url: loginUrl.toString()}));
+    await evaluate(`document.querySelector('#email').value=${JSON.stringify(input.email)}; document.querySelector('#password').value=${JSON.stringify(input.password)};`);
+    await navigation(() => evaluate(`document.querySelector('#password-login').requestSubmit()`));
+    checks.signed_in = await evaluate(`location.pathname === '/session/protected'`);
+    await openLookup();
+
+    await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});
+    checks.keyboard = await evaluate(`document.activeElement.id === 'grant_id' &&
+      document.activeElement.matches(':focus-visible') &&
+      document.activeElement.labels.length === 1 &&
+      getComputedStyle(document.activeElement).outlineStyle !== 'none'`);
+
+    await cdp('Emulation.setDeviceMetricsOverride', {width: 320, height: 900, deviceScaleFactor: 1, mobile: true});
+    checks.reflow = await evaluate(`document.documentElement.scrollWidth <= innerWidth`);
+    await cdp('Emulation.clearDeviceMetricsOverride');
+
+    const fillLookup = code => {
+      const values = {grant_id: input.grant_id, target_account_id: input.target_account_id,
+        email: input.target_email, password: input.password, code};
+      return evaluate(`Object.entries(${JSON.stringify(values)}).forEach(([id, value]) => {
+        document.getElementById(id).value = value;
+      });`);
+    };
+    const submitLookup = async code => {
+      await fillLookup(code);
+      await navigation(() => evaluate(`document.querySelector('#support-lookup').requestSubmit()`));
+    };
+    const cleanLookup = `!document.querySelector('#support-diagnostics') &&
+      [...document.querySelectorAll('#support-lookup input:not([type=hidden])')].every(input => input.value === '')`;
+    const loadedAt = pathname => `location.pathname === ${JSON.stringify(pathname)} && document.readyState === 'complete'`;
+    const open = pathname => navigation(() => cdp('Page.navigate', {url: base + pathname}));
+    const currentEntry = async () => {
+      const entries = await cdp('Page.getNavigationHistory');
+      return entries.entries[entries.currentIndex].id;
+    };
+    const waitForPage = async (previous, condition) => {
+      const deadline = performance.now() + 5000;
+      while (performance.now() < deadline) {
+        try {
+          if (await evaluate(`performance.timeOrigin !== ${previous} && (${condition})`)) return true;
+        } catch (error) {
+          if (error.message !== 'browser.context_lost') throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      return false;
+    };
+    const traverse = async (entryId, condition) => {
+      const previous = await evaluate('performance.timeOrigin');
+      await cdp('Page.navigateToHistoryEntry', {entryId});
+      return waitForPage(previous, condition);
+    };
+    const observePagehide = () => evaluate(`
+      sessionStorage.removeItem('lookup_pagehide');
+      window.addEventListener('pagehide', () => sessionStorage.setItem('lookup_pagehide', String(${cleanLookup})), {once: true});
+    `);
+    const authorizeBlankForm = `${loadedAt(path)} && !!document.querySelector('#support-lookup') && (${cleanLookup})`;
+
+    const form = await currentEntry();
+    const formDocument = await evaluate('performance.timeOrigin');
+    await fillLookup(input.codes[0]);
+    await observePagehide();
+    await open('/legal/privacy');
+    checks.form_cleared_on_leave = await evaluate(`sessionStorage.getItem('lookup_pagehide') === 'true'`);
+    const neutral = await currentEntry();
+    checks.form_back_blank = await traverse(form, `${authorizeBlankForm} && performance.timeOrigin !== ${formDocument}`);
+    const restoredForm = await currentEntry();
+    const restoredDocument = await evaluate('performance.timeOrigin');
+    await fillLookup(input.codes[0]);
+    await observePagehide();
+    checks.form_forward = await traverse(neutral, loadedAt('/legal/privacy')) &&
+      await evaluate(`sessionStorage.getItem('lookup_pagehide') === 'true'`);
+    checks.form_back_again_blank = await traverse(restoredForm, `${authorizeBlankForm} && performance.timeOrigin !== ${restoredDocument}`);
+
+    await submitLookup(input.codes[0]);
+    checks.diagnostics = await evaluate(`document.querySelector('#support-diagnostics')?.textContent.includes('Email verified')`);
+    const sensitive = [input.grant_id, input.target_account_id, input.target_email, input.password, ...input.codes];
+    checks.private_response = await evaluate(`location.pathname === ${JSON.stringify(path)} && !location.search &&
+      ${JSON.stringify(sensitive)}.every(value => !document.body.innerHTML.includes(value))`);
+
+    // Exercise the persisted event on the actual POST document even when
+    // Chromium elects not to retain a no-store history entry.
+    await fillLookup(input.codes[1]);
+    checks.result_cleared_on_leave = await evaluate(`
+      window.dispatchEvent(new PageTransitionEvent('pagehide', {persisted: true}));
+      ${cleanLookup};
+    `);
+    const resultDocument = await evaluate('performance.timeOrigin');
+    await evaluate(`window.dispatchEvent(new PageTransitionEvent('pageshow', {persisted: true}));`)
+      .catch(error => { if (error.message !== 'browser.context_lost') throw error; });
+    checks.result_restored_as_get = await waitForPage(resultDocument, authorizeBlankForm);
+
+    const cleanResultEntry = await currentEntry();
+    const cleanResultDocument = await evaluate('performance.timeOrigin');
+    await open('/legal/privacy');
+    const afterResult = await currentEntry();
+    checks.revoked_back_blank = await traverse(cleanResultEntry,
+      `${authorizeBlankForm} && performance.timeOrigin !== ${cleanResultDocument}`);
+    const restoredResultEntry = await currentEntry();
+    const restoredResultDocument = await evaluate('performance.timeOrigin');
+    checks.revoked_forward = await traverse(afterResult, loadedAt('/legal/privacy'));
+    checks.revoked_back_again_blank = await traverse(restoredResultEntry,
+      `${authorizeBlankForm} && performance.timeOrigin !== ${restoredResultDocument}`);
+
+    await submitLookup(input.codes[1]);
+    checks.revoked = await evaluate(`document.querySelector('[role="alert"]')?.textContent.includes('Lookup unavailable') &&
+      !document.querySelector('#support-diagnostics')`);
+
+    await openLookup();
+    const firstBeforeLogout = await currentEntry();
+    await fillLookup(input.codes[0]);
+    await open('/legal/privacy');
+    await openLookup();
+    const secondBeforeLogout = await currentEntry();
+    await fillLookup(input.codes[1]);
+    await open('/session/protected');
+    await navigation(() => evaluate(`document.querySelector('#session-logout').requestSubmit()`));
+    const restoreSignedOut = async entry => {
+      const blank = await traverse(entry, `document.readyState === 'complete' &&
+        !document.querySelector('#support-lookup') && (${cleanLookup})`);
+      // Chromium may present its internal error document for an empty 404.
+      const {frameTree: {frame}} = await cdp('Page.getFrameTree');
+      return blank && (frame.unreachableUrl || frame.url) === base + path;
+    };
+    checks.logout_back_denied = await restoreSignedOut(firstBeforeLogout);
+    checks.logout_forward_denied = await restoreSignedOut(secondBeforeLogout);
   } else if (input.mode === 'ordinary_email_change') {
     const packet = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_PRIMARY_EMAIL_CHANGE_PHASE9_BROWSER_COPY_APPROVED_v0.1.1.json', 'utf8'));
     const copy = key => JSON.stringify(packet.copy_items.find(item => item.semantic_key === `identity.change_email.${key}`)[input.locale]);
@@ -552,7 +851,7 @@ try {
     await signIn(input.target);
     checks.held_login = await evaluate(`location.pathname === '/login' && !!document.querySelector('#password-login')`);
   } else if (input.mode === 'ordinary_recovery') {
-    const approved = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json', 'utf8'));
+    const approved = JSON.parse(readFileSync('docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json', 'utf8'));
     const text = key => JSON.stringify(approved.candidate.copy_items.find(item => item.key === key).locales[input.locale].text);
     const stage = name => evaluate(`document.documentElement.lang === ${JSON.stringify(input.locale)} && document.querySelector('h1')?.textContent.trim() === ${text(`identity.recovery.${name}.title`)} && document.querySelector('[role="status"]')?.textContent.trim() === ${text(`identity.recovery.${name}.body`)}`);
     const navigate = url => navigation(() => cdp('Page.navigate', {url}));
@@ -565,8 +864,23 @@ try {
     };
     const requestUrl = `${base}/recovery?locale=${input.locale}`;
 
+    checkpoint = 'recovery.sign_in_discovery';
+    await navigate(`${base}/login?locale=${input.locale}`);
+    const recoveryLink = `a[href="/recovery?locale=${input.locale}"]`;
+    const linkSelector = JSON.stringify(recoveryLink);
+    checks.discovery_copy = await evaluate(`document.querySelector(${linkSelector})?.textContent.trim() === ${text('identity.recovery.request.title')}`);
+    const key = async (name, code) => {
+      await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: name, code: name, text: name === 'Enter' ? '\r' : undefined, windowsVirtualKeyCode: code});
+      await cdp('Input.dispatchKeyEvent', {type: 'keyUp', key: name, code: name, windowsVirtualKeyCode: code});
+    };
+    for (let step = 0; step < 16; step++) {
+      await key('Tab', 9);
+      if (await evaluate(`document.activeElement.matches(${linkSelector})`)) break;
+    }
+    checks.discovery_keyboard = await evaluate(`document.activeElement.matches(${linkSelector} + ':focus-visible') && parseFloat(getComputedStyle(document.activeElement).outlineWidth) >= 2`);
+    await navigation(() => key('Enter', 13));
+    checks.discovery_destination = await evaluate(`location.href === ${JSON.stringify(requestUrl)}`);
     checkpoint = 'recovery.request';
-    await navigate(requestUrl);
     checks.request_copy = await stage('request');
     checks.usable_form = await evaluate(`!!document.querySelector('#recovery-form[method="post"] [name="_csrf_token"]') && document.querySelector('label[for="email"]')?.textContent.trim() === ${text('identity.registration.email.label')} && document.querySelector('#email')?.autocomplete === 'email' && document.querySelector('link[rel="stylesheet"]')?.sheet?.cssRules.length > 0`);
     await cdp('Input.dispatchKeyEvent', {type: 'keyDown', key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9});

@@ -63,6 +63,57 @@ defmodule NewYou.Identity.Reconciliation do
 
   def open(_), do: unavailable()
 
+  @spec status(map()) ::
+          {:ok, Identity.reconciliation_status()} | {:error, :reconciliation_unavailable}
+  def status(request) do
+    with {:ok, initial} <- find_case(request),
+         false <- Ash.DataLayer.in_transaction?(Account) do
+      transaction(fn -> status_locked(initial, request) end)
+    else
+      _ -> unavailable()
+    end
+  rescue
+    _ -> unavailable()
+  end
+
+  defp status_locked(initial, request) do
+    with {:ok, _, _} <- authority(request, initial, :review_reconciliation),
+         {:ok, current} <- locked_case(initial.id) do
+      {:ok, Map.take(current, [:id, :status, :version, :candidate_id, :canonical_id])}
+    end
+  end
+
+  def control_binding(credentials, case_id) do
+    with {:ok, %{account_id: id}} <- Identity.authorize_session(credentials),
+         {:ok, %{status: :review} = record} <- find_case(%{case_id: case_id}),
+         true <- id in [record.candidate_id, record.canonical_id] do
+      {:ok, {record.id, record.version}}
+    else
+      _ -> unavailable()
+    end
+  rescue
+    _ -> unavailable()
+  end
+
+  def prepare_apply(request) do
+    with {:ok, initial} <- find_case(request),
+         false <- Ash.DataLayer.in_transaction?(Account),
+         {:ok, _} <- preflight(initial, request) do
+      :ok
+    else
+      _ -> unavailable()
+    end
+  rescue
+    _ -> unavailable()
+  end
+
+  defp find_case(%{case_id: id}) do
+    case Ash.get(ReconciliationCase, id, authorize?: false) do
+      {:ok, %ReconciliationCase{} = record} -> {:ok, record}
+      _ -> unavailable()
+    end
+  end
+
   defp open_locked(request) do
     with {:ok, authority, accounts} <- authority(request, request, :review_reconciliation),
          :ok <- eligible_accounts(request, accounts),
@@ -154,6 +205,11 @@ defmodule NewYou.Identity.Reconciliation do
 
   defp review_outcome(_current, _request, _authority, _operation_id), do: :ok
 
+  # Preflight, Audit admission and the source apply are separate transactions.
+  # Audit admission survives source failure. Apply rechecks the case and grant
+  # bindings under lock before committing or returning the bound prior result.
+  @spec apply_decision(map()) ::
+          {:ok, ReconciliationCase.t()} | {:error, :reconciliation_unavailable}
   def apply_decision(request) when is_map(request) do
     with true <-
            keys?(
@@ -497,15 +553,47 @@ defmodule NewYou.Identity.Reconciliation do
     # only derived projections and likewise contributes no reconciliation truth.
     with true <-
            Enum.sort(Application.get_env(:new_you, :ash_domains, [])) ==
-             Enum.sort([Identity, Communications, Audit, NewYou.Privacy, NewYou.Analytics]),
+             Enum.sort([
+               Identity,
+               Communications,
+               Audit,
+               NewYou.Privacy,
+               NewYou.Analytics,
+               NewYou.Commerce,
+               NewYou.Entitlements,
+               NewYou.Temperament
+             ]),
          {:ok, communications} <-
            Communications.review_identity_reconciliation(
              current.candidate_id,
              current.canonical_id
            ),
+         :ok <- checkpoint(:before_audit_owner_review),
          {:ok, audit} <-
-           Audit.review_identity_reconciliation(current.candidate_id, current.canonical_id) do
-      {:ok, %{"communications" => communications, "audit" => audit}}
+           Audit.review_identity_reconciliation(current.candidate_id, current.canonical_id),
+         {:ok, commerce} <-
+           NewYou.Commerce.review_identity_reconciliation(
+             current.candidate_id,
+             current.canonical_id
+           ),
+         {:ok, entitlements} <-
+           NewYou.Entitlements.review_identity_reconciliation(
+             current.candidate_id,
+             current.canonical_id
+           ),
+         {:ok, temperament} <-
+           NewYou.Temperament.review_identity_reconciliation(
+             current.candidate_id,
+             current.canonical_id
+           ) do
+      {:ok,
+       %{
+         "communications" => communications,
+         "audit" => audit,
+         "commerce" => commerce,
+         "entitlements" => entitlements,
+         "temperament" => temperament
+       }}
     else
       _ -> unavailable()
     end

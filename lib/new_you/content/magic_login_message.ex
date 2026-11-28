@@ -519,6 +519,8 @@ defmodule NewYou.Content.MagicLoginMessage do
                 "docs/governance/product/01_DECISIONS_v1.17.0.md",
                 "docs/governance/product/00_PLATFORM_v1.18.0.md",
                 "docs/governance/product/01_DECISIONS_v1.18.0.md",
+                "docs/governance/product/00_PLATFORM_v1.21.0.md",
+                "docs/governance/product/01_DECISIONS_v1.21.0.md",
                 "docs/governance/product/00_PLATFORM_v1.20.0.md",
                 "docs/governance/product/01_DECISIONS_v1.20.0.md",
                 "docs/governance/product/00_PLATFORM_v1.19.0.md",

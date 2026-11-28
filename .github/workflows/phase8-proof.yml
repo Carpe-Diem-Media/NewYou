@@ -20,7 +20,7 @@ env:
 jobs:
   proof:
     name: ${{ inputs.mode }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 25
     services:
       postgres:
@@ -39,28 +39,42 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
+      - name: Set Blacksmith BEAM image
+        run: |
+          if [[ "$RUNNER_ENVIRONMENT" == self-hosted && "$RUNNER_NAME" == blacksmith-* ]]; then
+            echo "ImageOS=ubuntu24" >> "$GITHUB_ENV"
+          fi
       - name: Set up Erlang and Elixir from .tool-versions
         uses: erlef/setup-beam@v1
         with:
           version-file: .tool-versions
           version-type: strict
+      - name: Identify runner image
+        id: cache_platform
+        run: |
+          if [[ -n "${ImageVersion:-}" ]]; then
+            echo "image=${RUNNER_ENVIRONMENT}-${ImageOS}-${ImageVersion}" >> "$GITHUB_OUTPUT"
+          fi
       - name: Restore dependency and build cache
+        if: steps.cache_platform.outputs.image != ''
         uses: actions/cache@v4
         with:
           path: |
             deps
             _build
-          key: phase8-proof-${{ runner.os }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
+          key: phase8-proof-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-${{ hashFiles('.tool-versions', 'mix.lock') }}
       - name: Fetch dependencies
         run: mix deps.get
       - name: Provision isolated TEST role and database
         shell: bash
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
         run: |
           set -euo pipefail
           password="$(openssl rand -hex 24)"
           echo "::add-mask::${password}"
           echo "TEST_DATABASE_PASSWORD=${password}" >> "$GITHUB_ENV"
-          psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 55433 -U postgres -d postgres <<SQL
+          docker exec -i "$POSTGRES_CONTAINER" psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -U postgres -d postgres <<SQL
           CREATE ROLE new_you_test LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD '${password}';
           CREATE DATABASE new_you_test OWNER new_you_test;
           SQL

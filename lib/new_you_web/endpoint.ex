@@ -49,6 +49,11 @@ defmodule NewYouWeb.Endpoint do
     plug Phoenix.Ecto.CheckRepoStatus, otp_app: :new_you
   end
 
+  if Mix.env() == :test do
+    # Handle exact raw bytes before session, body parsing or request telemetry.
+    plug NewYouWeb.FixtureWebhook
+  end
+
   plug Plug.RequestId
   plug NewYouWeb.PrivacyTelemetry, event_prefix: [:phoenix, :endpoint]
 

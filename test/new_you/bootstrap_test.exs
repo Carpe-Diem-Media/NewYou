@@ -15,6 +15,9 @@ defmodule NewYou.BootstrapTest do
     assert Application.fetch_env!(:new_you, :ash_domains) == [
              NewYou.Analytics,
              NewYou.Communications,
+             NewYou.Commerce,
+             NewYou.Entitlements,
+             NewYou.Temperament,
              NewYou.Identity,
              NewYou.Audit,
              NewYou.Privacy

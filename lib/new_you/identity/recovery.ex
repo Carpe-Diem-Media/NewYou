@@ -86,6 +86,11 @@ defmodule NewYou.Identity.Recovery do
   @spec request_transaction_timeout_ms() :: pos_integer()
   def request_transaction_timeout_ms, do: 350
 
+  @doc """
+  Start or resume a recovery request with a neutral result. Unusable input,
+  unavailable proof fixtures and accepted requests all return `:ok`.
+  The request itself grants no recovery assurance.
+  """
   @spec request(term(), term(), term(), Identity.recovery_context()) :: :ok
   def request(email, locale, operation_id, context \\ :p8_15)
 
@@ -346,6 +351,11 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
+  @doc """
+  Serialize a current proof for trusted Communications use inside its delivery
+  transaction. The bearer is transient. An invalid source and unavailable
+  delivery authority have separate results.
+  """
   @spec delivery(term(), term(), term()) ::
           {:ok, binary()} | {:error, :source_invalid | :capability_unavailable}
   def delivery(reference, destination, locale) do
@@ -432,7 +442,28 @@ defmodule NewYou.Identity.Recovery do
     end
   end
 
-  @spec run(atom(), map()) :: {:ok, atom() | map()} | {:error, :recovery_unavailable}
+  @doc """
+  Dispatch an Identity recovery action outside an existing Account transaction.
+  Claimant actions revalidate the proof and entry context under lock. Manual
+  actions use the separate scoped review and completion path. Disabled builds
+  return `{:error, :recovery_unavailable}`.
+  """
+  @spec run(
+          :submit_recovery_proof
+          | :complete_recovery
+          | :cancel_recovery
+          | :approve_manual_recovery
+          | :complete_manual_recovery,
+          map()
+        ) ::
+          {:ok,
+           :accepted
+           | :held
+           | :completed
+           | :already_completed
+           | :cancelled
+           | %{status: :approved, version: pos_integer()}}
+          | {:error, :recovery_unavailable}
   def run(operation, request) do
     with true <- :erlang.andalso(@enabled, is_map(request)),
          false <- Ash.DataLayer.in_transaction?(Account) do

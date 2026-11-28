@@ -13,6 +13,8 @@ defmodule NewYou.Proof.P805 do
   @terms "NEWYOU-TERMS-EN-DEV-2026-10-27-001"
   @privacy "NEWYOU-PRIVACY-EN-DEV-2026-10-27-001"
   @tables ~w(accounts tokens registration_operations resend_operations message_intents communications_protected_envelopes communications_envelope_nonces evidence_obligations oban_jobs identity_pmr_reservations identity_grants privacy_purpose_authorities privacy_purpose_events)
+  @fault_tables @tables ++
+                  ~w(commerce_hosted_payment_receipts commerce_fixture_refund_receipts commerce_fixture_dispute_receipts commerce_fixture_disputes audit_fixture_dispute_disclosures privacy_fixture_dispute_purpose_events commerce_payment_consequences commerce_synthetic_collection_receipts entitlements_plan_rights commerce_assessment_admissions)
   @environment ~w(fp001_development_entry identity_registration_binding_keys identity_token_signing_secret identity_mfa_keyring communications_keyring p8_05_browser_development_fixtures p8_07_browser_development_fixtures p8_09_browser_development_fixtures p8_08_browser_development_fixtures p8_12_browser_development_fixtures p8_15_browser_development_fixtures identity_pmr_generator)a
 
   def run(case_id), do: with_fixture(fn -> execute(case_id) end)
@@ -308,6 +310,14 @@ defmodule NewYou.Proof.P805 do
 
   def track_operation(operation), do: track(%{operation_id: operation})
 
+  @doc false
+  @spec track_webhook_receipt_digest(binary()) :: :ok
+  def track_webhook_receipt_digest(<<_::256>> = digest) do
+    guardian = Process.get({__MODULE__, :guardian})
+    true = is_pid(guardian)
+    register_fixture_value(guardian, :webhook_receipt_digest, digest)
+  end
+
   defp track(request) do
     guardian = Process.get({__MODULE__, :guardian})
 
@@ -426,7 +436,8 @@ defmodule NewYou.Proof.P805 do
       fixture.operations ++ fixture.foreign_operations,
       fixture.emails ++ fixture.foreign_emails,
       projection_key,
-      fixture.cleanup_hook
+      fixture.cleanup_hook,
+      fixture.webhook_receipt_digests
     )
 
     Enum.each(fixture.foreign_projections, fn key ->
@@ -1473,7 +1484,7 @@ defmodule NewYou.Proof.P805 do
   transaction; the callback may start transactions. Temporary function/sequence
   dependencies also remove the owned trigger if that connection terminates.
   """
-  def with_rejected_insert(table, callback) when table in @tables do
+  def with_rejected_insert(table, callback) when table in @fault_tables do
     if Repo.in_transaction?(), do: raise("proof insertion cut requires no enclosing transaction")
 
     # Keep the SQL client checked out throughout the callback. DBConnection's
@@ -1523,12 +1534,20 @@ defmodule NewYou.Proof.P805 do
   defp cleanup(projection_key) do
     operations = Process.get({__MODULE__, :operations}, [])
     emails = Process.get({__MODULE__, :emails}, [])
-    cleanup(operations, emails, projection_key, Process.get({__MODULE__, :fixture_cleanup_hook}))
+
+    cleanup(
+      operations,
+      emails,
+      projection_key,
+      Process.get({__MODULE__, :fixture_cleanup_hook}),
+      []
+    )
+
     Process.delete({__MODULE__, :operations})
     Process.delete({__MODULE__, :emails})
   end
 
-  defp cleanup(operations, emails, projection_key, cleanup_hook) do
+  defp cleanup(operations, emails, projection_key, cleanup_hook, webhook_receipt_digests) do
     if is_function(cleanup_hook, 0), do: cleanup_hook.()
     :ok = cleanup_test_oban_queue(projection_key)
     :ok = cleanup_test_analytics_projection(projection_key)
@@ -1703,7 +1722,234 @@ defmodule NewYou.Proof.P805 do
         :ok
       end)
 
+    cleanup_fixture_refunds(operations, webhook_receipt_digests)
+    cleanup_fixture_disputes(operations, webhook_receipt_digests)
+
+    if operations != [] do
+      Repo.query!(
+        """
+        DELETE FROM commerce_synthetic_collection_receipts WHERE collection_id IN (
+          SELECT c.collection_id FROM commerce_synthetic_collections c WHERE c.source_id IN (
+            SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[])
+            UNION SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])
+          )
+        )
+        """,
+        [operations]
+      )
+
+      Repo.query!(
+        """
+        DELETE FROM commerce_synthetic_correction_receipts WHERE correction_id IN (
+          SELECT c.id FROM commerce_synthetic_corrections c WHERE c.source_id IN (
+            SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[])
+            UNION SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])
+          )
+        )
+        """,
+        [operations]
+      )
+
+      Repo.query!(
+        """
+        DELETE FROM commerce_synthetic_corrections WHERE source_id IN (
+          SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[])
+          UNION SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])
+        )
+        """,
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM entitlements_plan_rights WHERE purchase_id IN (SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_synthetic_excess_claims WHERE source_id IN (SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_synthetic_collections WHERE source_id IN (SELECT id FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_synthetic_correction_orders WHERE operation_id = ANY($1::uuid[])",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_synthetic_excess_claims WHERE source_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_synthetic_collections WHERE source_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM oban_jobs WHERE args->'primary_key'->>'id' IN (SELECT c.id::text FROM commerce_payment_consequences c JOIN commerce_plan_purchases p ON p.id = c.purchase_id WHERE p.operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM entitlements_plan_rights WHERE purchase_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_payment_consequences WHERE purchase_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_verified_payments WHERE purchase_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+
+      Repo.query!(
+        "DELETE FROM commerce_assessment_admissions WHERE purchase_id IN (SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[]))",
+        [operations]
+      )
+    end
+
+    cleanup_hosted_fixture_evidence(operations, webhook_receipt_digests)
+
+    if operations != [] do
+      Repo.query!(
+        """
+        DELETE FROM commerce_hosted_dispatches
+        WHERE attempt_id IN (
+          SELECT attempt_id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])
+        )
+        """,
+        [operations]
+      )
+
+      Repo.query!("DELETE FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])", [
+        operations
+      ])
+
+      Repo.query!("DELETE FROM commerce_purchase_quotes WHERE operation_id = ANY($1::uuid[])", [
+        operations
+      ])
+
+      Repo.query!("DELETE FROM commerce_offer_versions WHERE id = ANY($1::uuid[])", [operations])
+    end
+
+    for table <-
+          ~w(entitlements_assessment_credit_evidence temperament_assessment_delivery_evidence) do
+      Repo.query!(
+        "DELETE FROM #{table} WHERE recipient_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+        [emails]
+      )
+    end
+
+    Repo.query!(
+      "DELETE FROM privacy_synthetic_deletion_scopes WHERE subject_id IN (SELECT id FROM accounts WHERE email = ANY($1::text[]))",
+      [emails]
+    )
+
     Repo.query!("DELETE FROM accounts WHERE email = ANY($1::text[])", [emails])
+  end
+
+  defp cleanup_fixture_refunds([], []), do: :ok
+
+  defp cleanup_fixture_refunds(operations, webhook_receipt_digests) do
+    Repo.query!(
+      """
+      WITH removed_refunds AS (
+        DELETE FROM commerce_fixture_refunds
+        WHERE purchase_id IN (
+          SELECT id FROM commerce_plan_purchases WHERE operation_id = ANY($1::uuid[])
+        )
+        RETURNING id, reference
+      ),
+      removed_receipts AS (
+        DELETE FROM commerce_fixture_refund_receipts
+        WHERE reference IN (SELECT reference FROM removed_refunds) OR
+              requested_reference IN (SELECT reference FROM removed_refunds) OR
+              (source = 'webhook' AND digest = ANY($2::bytea[]))
+        RETURNING id
+      )
+      DELETE FROM oban_jobs
+      WHERE queue = 'commerce_fixture_refund' AND (
+        args->'primary_key'->>'id' IN (SELECT id::text FROM removed_receipts) OR
+        args->'primary_key'->>'id' IN (SELECT id::text FROM removed_refunds)
+      )
+      """,
+      [operations, webhook_receipt_digests]
+    )
+  end
+
+  defp cleanup_fixture_disputes([], []), do: :ok
+
+  defp cleanup_fixture_disputes(operations, webhook_receipt_digests) do
+    for table <- ~w(privacy_fixture_dispute_purpose_events privacy_fixture_dispute_purposes) do
+      Repo.query!("DELETE FROM #{table} WHERE source_operation_id = ANY($1::uuid[])", [operations])
+    end
+
+    Repo.query!(
+      """
+      WITH owned_payments AS (
+        SELECT v.id FROM commerce_verified_payments v
+        JOIN commerce_plan_purchases p ON p.id = v.purchase_id
+        WHERE p.operation_id = ANY($1::uuid[])
+      ),
+      removed_disclosures AS (
+        DELETE FROM audit_fixture_dispute_disclosures
+        WHERE operation_id = ANY($1::uuid[])
+      ),
+      removed_disputes AS (
+        DELETE FROM commerce_fixture_disputes
+        WHERE payment_id IN (SELECT id FROM owned_payments)
+        RETURNING id
+      ),
+      removed_receipts AS (
+        DELETE FROM commerce_fixture_dispute_receipts
+        WHERE payment_id IN (SELECT id FROM owned_payments) OR
+              (source = 'webhook' AND digest = ANY($2::bytea[]))
+        RETURNING id
+      )
+      DELETE FROM oban_jobs
+      WHERE queue = 'commerce_fixture_dispute' AND (
+        args->'primary_key'->>'id' IN (SELECT id::text FROM removed_receipts) OR
+        args->'primary_key'->>'id' IN (SELECT id::text FROM removed_disputes)
+      )
+      """,
+      [operations, webhook_receipt_digests]
+    )
+  end
+
+  defp cleanup_hosted_fixture_evidence([], []), do: :ok
+
+  defp cleanup_hosted_fixture_evidence(operations, webhook_receipt_digests) do
+    Repo.query!(
+      """
+      WITH dispatches AS (
+        SELECT d.reference, d.attempt_id
+        FROM commerce_hosted_dispatches d
+        JOIN commerce_plan_purchases p ON p.attempt_id = d.attempt_id
+        WHERE p.operation_id = ANY($1::uuid[])
+      ),
+      removed_receipts AS (
+        DELETE FROM commerce_hosted_payment_receipts
+        WHERE reference IN (SELECT reference FROM dispatches) OR
+              requested_reference IN (SELECT reference FROM dispatches) OR
+              (source = 'webhook' AND digest = ANY($2::bytea[]))
+        RETURNING id
+      )
+      DELETE FROM oban_jobs
+      WHERE queue = 'commerce_fixture' AND (
+        args->'primary_key'->>'attempt_id' IN (SELECT attempt_id::text FROM dispatches) OR
+        args->'primary_key'->>'id' IN (SELECT id::text FROM removed_receipts)
+      )
+      """,
+      [operations, webhook_receipt_digests]
+    )
   end
 
   defp cleanup_test_oban_queue("p817_test_" <> suffix) when suffix != "" do

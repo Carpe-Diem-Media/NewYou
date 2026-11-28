@@ -1,0 +1,76 @@
+<section class="grid max-w-prose gap-design-base" aria-labelledby="trusted-devices">
+  <h2 id="trusted-devices" class="font-design-bold text-design-heading-sm">
+    {device_text(@copy, "page.title")}
+  </h2>
+  <p>{device_text(@copy, "page.body")}</p>
+  <p :if={@message} role="status">{device_text(@copy, @message)}</p>
+
+  <%= if @inventory do %>
+    <p :if={@inventory.devices == []}>{device_text(@copy, "active.empty")}</p>
+
+    <.form
+      :if={@inventory.consent}
+      for={%{}}
+      action="/session/manage/devices"
+      method="post"
+      class="grid gap-design-sm"
+    >
+      <h3 class="font-design-bold">{device_text(@copy, "consent.title")}</h3>
+      <p>{device_text(@copy, "consent.body")}</p>
+      <input type="hidden" name="locale" value={@locale} />
+      <input type="hidden" name="operation" value="consent" />
+      <input type="hidden" name="device_proof" value={@inventory.consent} />
+      <.primary_button type="submit" adaptive>
+        {device_text(@copy, "consent.action")}
+      </.primary_button>
+    </.form>
+
+    <ul :if={@inventory.devices != []} class="grid gap-design-base">
+      <li
+        :for={device <- @inventory.devices}
+        class="grid min-w-0 gap-design-sm rounded-design-xl border border-design-hairline p-design-base"
+      >
+        <.form for={%{}} action="/session/manage/devices" method="post" class="grid gap-design-sm">
+          <input type="hidden" name="operation" value="rename" />
+          <input type="hidden" name="locale" value={@locale} />
+          <input type="hidden" name="device_id" value={device.id} />
+          <label for={"device-name-#{device.id}"} class="font-design-bold">
+            {device_text(@copy, "item.name.label")}
+          </label>
+          <input
+            class="h-design-input-height w-full rounded-design-sm border border-design-ink-muted bg-design-surface px-design-base py-design-sm text-design-body-sm text-design-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary"
+            id={"device-name-#{device.id}"}
+            name="device_name"
+            type="text"
+            value={device.name}
+            maxlength="80"
+            required
+          />
+          <.primary_button type="submit" adaptive>
+            {device_text(@copy, "item.name.action")}
+          </.primary_button>
+        </.form>
+        <details class="group">
+          <summary class="min-h-11 w-fit cursor-pointer content-center underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-design-primary">
+            {device_text(@copy, "revoke.action")}
+          </summary>
+          <.form
+            for={%{}}
+            action="/session/manage/devices"
+            method="post"
+            class="hidden gap-design-sm group-open:grid"
+          >
+            <h3 class="font-design-bold">{device_text(@copy, "revoke.confirm.title")}</h3>
+            <p>{device_text(@copy, "revoke.confirm.body")}</p>
+            <input type="hidden" name="operation" value="revoke" />
+            <input type="hidden" name="locale" value={@locale} />
+            <input type="hidden" name="device_id" value={device.id} />
+            <.primary_button type="submit" adaptive>
+              {device_text(@copy, "revoke.action")}
+            </.primary_button>
+          </.form>
+        </details>
+      </li>
+    </ul>
+  <% end %>
+</section>

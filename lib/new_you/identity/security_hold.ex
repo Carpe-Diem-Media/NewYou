@@ -4,16 +4,18 @@ defmodule NewYou.Identity.SecurityHold do
 
   alias NewYou.Identity.{
     Account,
+    DeviceAssurance,
     IdentityGrant,
     PrimaryEmailChange,
     PrivilegedAccess,
     Session,
+    SessionRevocation,
     Token
   }
 
   alias NewYou.Audit
 
-  @resources [Account, Token, Session, IdentityGrant, Audit.EvidenceObligation]
+  @resources [Account, Token, Session, DeviceAssurance, IdentityGrant, Audit.EvidenceObligation]
   @fields ~w(credentials grant_id target_id expected_version operation_id reason_code)a
   @reasons ~w(suspected_compromise security_review verified_recovery mistaken_hold)a
 
@@ -25,6 +27,11 @@ defmodule NewYou.Identity.SecurityHold do
     end
   end
 
+  # Call outside the Account transaction. Release must commit E1 before the
+  # source write. A successful replay still requires current scoped authority
+  # and a matching operation binding.
+  @spec run(:place_security_hold | :review_security_hold | :release_security_hold, map()) ::
+          {:ok, NewYou.Identity.security_hold_receipt()} | {:error, :security_hold_unavailable}
   def run(kind, request) do
     with {:ok, request} <- validate_request(request),
          false <- Ash.DataLayer.in_transaction?(Account) do
@@ -150,6 +157,7 @@ defmodule NewYou.Identity.SecurityHold do
          {:ok, target} <- write_transition(kind, authority, request),
          :ok <- PrimaryEmailChange.terminalize_for_security_hold(target),
          :ok <- revoke_target_sessions(target.id),
+         :ok <- SessionRevocation.revoke_devices(target.id),
          {:ok, _} <- establish_outcome(kind, authority, request, :succeeded, nil) do
       {:ok, %{status: :held, version: target.hold_version}}
     else

@@ -27,6 +27,19 @@ PR = dict(number=232, state='open', html_url='https://github.com/Carpe-Diem-Medi
 PREVIEW = dict(files=[dict(path='.agents/skills/code-change-verification/scripts/handoff.py', will_review=True),
                       dict(path='assets/page.heex', will_review=False, exclude_reason='unsupported_ext')],
                total_files=2, reviewable_count=1, excluded_count=1)
+FOUNDATION_JOBS = ('Route CI lanes', 'Foundation Smoke', 'Foundation Integrity')
+APPLICATION_JOBS = ('Application CI / Discover application tests',
+                    'Application CI / Static application checks',
+                    *(f'Application CI / Test shard {n}' for n in range(1, 9)),
+                    'Application CI / Verify application coverage')
+DEEP_JOB = 'Application CI / mix check.deep'
+HEX_JOB = 'Hex security audit / Fresh Hex advisory and retirement audit'
+
+
+def ci_evidence(*jobs):
+    return dict(head=HEAD, base=BASE, premerge_main=BASE, reviewed_head=HEAD,
+                candidate_parents=[BASE, HEAD],
+                jobs=[dict(name=name, status='completed', conclusion='success') for name in jobs])
 
 
 def result():
@@ -231,15 +244,17 @@ class HandoffTests(unittest.TestCase):
         r['comments'] = [dict(path='.agents/skills/code-change-verification/scripts/handoff.py', start_line=10, severity='high', content='Check this')]
         r['summary']['comments'] = 1
         summary = gate.validate_ocr(r, PREVIEW, BINDING, 100000)
+        author = dict(login="JC-Agents", id=355419376)
         with self.assertRaises(gate.GateError):
-            gate.validate_findings(summary, None, HEAD)
-        review = dict(user=dict(login='JCSchoeman96'), commit_id=HEAD, state='COMMENTED',
+            gate.validate_findings(summary, None, HEAD, author)
+        review = dict(user=dict(login='JCSchoeman96', id=216185530), commit_id=HEAD, state='COMMENTED',
                       body='OCR session-1 finding 1: FALSE POSITIVE. The guard rejects that state.')
-        gate.validate_findings(summary, review, HEAD)
+        gate.validate_findings(summary, review, HEAD, author)
+        gate.validate_findings(summary, dict(review, user=author), HEAD, review['user'])
         for change in [dict(commit_id=BASE), dict(user=dict(login='JC-Agents')), dict(body='Looks good'),
                        dict(state='DISMISSED'), dict(body='OCR session-1 finding 1: NEEDS EVIDENCE. More proof.')]:
             with self.assertRaises(gate.GateError):
-                gate.validate_findings(summary, dict(review, **change), HEAD)
+                gate.validate_findings(summary, dict(review, **change), HEAD, author)
 
     def test_discovery_prefers_worktree_branch_and_exact_remote_sha(self):
         with patch.object(gate, 'api', side_effect=lambda path: [PR] if path.endswith('/pulls?per_page=100') else PR), \
@@ -268,25 +283,60 @@ class HandoffTests(unittest.TestCase):
              self.assertRaisesRegex(gate.GateError, 'stale'):
             gate.discover_pr(HEAD, 232)
 
-    def test_ci_pending_failed_missing_and_stale_binding_stop(self):
-        evidence = dict(head=HEAD, base=BASE, premerge_main=BASE, reviewed_head=HEAD,
-                        jobs=[dict(name=n, status='completed', conclusion='success') for n in
-                              ['Route CI lanes', 'Foundation Smoke', 'Foundation Integrity', 'Application CI / mix check']],
-                        candidate_parents=[BASE, HEAD])
-        gate.validate_ci(evidence, BINDING, application=True, deep=False)
-        for change in [dict(head=BASE), dict(base=HEAD), dict(premerge_main=HEAD), dict(jobs=[]),
-                       dict(candidate_parents=[HEAD, BASE])]:
-            with self.assertRaises(gate.GateError):
-                gate.validate_ci(dict(evidence, **change), BINDING, application=True, deep=False)
-        for state, conclusion in [('queued', None), ('in_progress', None), ('completed', 'failure'), ('completed', 'cancelled')]:
-            e = copy.deepcopy(evidence)
-            e['jobs'][2].update(status=state, conclusion=conclusion)
-            with self.assertRaises(gate.GateError):
-                gate.validate_ci(e, BINDING, application=True, deep=False)
-        e = copy.deepcopy(evidence)
-        e['jobs'].pop()
-        with self.assertRaises(gate.GateError):
-            gate.validate_ci(e, BINDING, application=True, deep=False)
+    def test_ci_accepts_current_complete_sharded_application_ci(self):
+        evidence = ci_evidence(*FOUNDATION_JOBS, *APPLICATION_JOBS)
+        gate.validate_ci(evidence, BINDING, application=True, deep=False, hex_audit=False)
+
+    def test_ci_stops_on_incomplete_or_unsuccessful_routed_jobs(self):
+        all_jobs = (*FOUNDATION_JOBS, *APPLICATION_JOBS, DEEP_JOB, HEX_JOB)
+        evidence = ci_evidence(*all_jobs)
+        route = dict(application=True, deep=True, hex_audit=True)
+        gate.validate_ci(evidence, BINDING, **route)
+        unsuccessful = [('queued', None), ('in_progress', None), ('completed', 'failure'),
+                        ('completed', 'cancelled'), ('completed', 'skipped')]
+        for name in all_jobs:
+            with self.subTest(job=name, result='missing'):
+                with self.assertRaisesRegex(gate.GateError, 'missing or unsuccessful required check') as exc:
+                    gate.validate_ci(ci_evidence(*(job for job in all_jobs if job != name)), BINDING, **route)
+                self.assertIn(name, str(exc.exception))
+            for status, conclusion in unsuccessful:
+                with self.subTest(job=name, status=status, conclusion=conclusion):
+                    changed = dict(evidence, jobs=[dict(job, status=status, conclusion=conclusion)
+                                                   if job['name'] == name else job for job in evidence['jobs']])
+                    with self.assertRaisesRegex(gate.GateError, 'missing or unsuccessful required check') as exc:
+                        gate.validate_ci(changed, BINDING, **route)
+                    self.assertIn(name, str(exc.exception))
+
+    def test_ci_stops_on_stale_binding_or_ambiguous_jobs(self):
+        evidence = ci_evidence(*FOUNDATION_JOBS, *APPLICATION_JOBS)
+        route = dict(application=True, deep=False, hex_audit=False)
+        for change in [dict(head=BASE), dict(reviewed_head=BASE), dict(base=HEAD), dict(premerge_main=HEAD)]:
+            with self.subTest(change=change), self.assertRaisesRegex(gate.GateError, 'stale CI head/base'):
+                gate.validate_ci(dict(evidence, **change), BINDING, **route)
+        with self.assertRaisesRegex(gate.GateError, 'stale CI candidate/base'):
+            gate.validate_ci(dict(evidence, candidate_parents=[HEAD, BASE]), BINDING, **route)
+        with self.assertRaisesRegex(gate.GateError, 'duplicate CI jobs'):
+            gate.validate_ci(ci_evidence(*FOUNDATION_JOBS, *APPLICATION_JOBS, APPLICATION_JOBS[-1]), BINDING, **route)
+        for jobs in [None, {}, [dict(status='completed', conclusion='success')]]:
+            with self.subTest(jobs=jobs), self.assertRaisesRegex(gate.GateError, 'invalid CI job evidence'):
+                gate.validate_ci(dict(evidence, jobs=jobs), BINDING, **route)
+
+    def test_ci_does_not_require_unrouted_jobs(self):
+        evidence = ci_evidence(*FOUNDATION_JOBS)
+        gate.validate_ci(evidence, BINDING, application=False, deep=False, hex_audit=False)
+
+    def test_collect_ci_enforces_the_current_hex_route(self):
+        paths = ['tests/test_agent_handoff.py']
+        run = dict(id=1, pull_requests=[dict(number=PR['number'])], status='completed', conclusion='success')
+        evidence = ci_evidence(*FOUNDATION_JOBS, *APPLICATION_JOBS)
+        with patch.object(gate, 'discover_pr', return_value=dict(PR, base=dict(PR['base'], sha=BASE))), \
+             patch.object(gate, 'api', return_value=dict(total_count=1, workflow_runs=[run])), \
+             patch.object(gate.ci_attestation, 'collect', return_value=evidence) as collect:
+            with self.assertRaisesRegex(gate.GateError, 'missing or unsuccessful required check: Hex security audit'):
+                gate.collect_ci(BINDING, paths, None)
+            collect.assert_called_once_with(PR['number'], HEAD, run['id'], trust_mode='public-protected')
+            collect.return_value = ci_evidence(*FOUNDATION_JOBS, *APPLICATION_JOBS, HEX_JOB)
+            self.assertEqual(gate.collect_ci(BINDING, paths, None)['evidence'], collect.return_value)
 
     def test_preview_and_ocr_work_without_pr_or_ci(self):
         state = dict(binding=BINDING, local=[dict(exit_code=0)])
@@ -501,10 +551,7 @@ class HandoffTests(unittest.TestCase):
             gate.validate_reuse_preview(PREVIEW, fresh)
 
     def test_finish_requires_fresh_final_ci_after_valid_ocr(self):
-        evidence = dict(head=HEAD, base=BASE, premerge_main=BASE, reviewed_head=HEAD,
-                        jobs=[dict(name=n, status='completed', conclusion='success') for n in
-                              ['Route CI lanes', 'Foundation Smoke', 'Foundation Integrity', 'Application CI / mix check']],
-                        candidate_parents=[BASE, HEAD])
+        evidence = ci_evidence(*FOUNDATION_JOBS, *APPLICATION_JOBS)
         for outcome in ['success', 'pending', 'failure', 'missing', 'stale-head', 'stale-base']:
             with self.subTest(ci=outcome), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)

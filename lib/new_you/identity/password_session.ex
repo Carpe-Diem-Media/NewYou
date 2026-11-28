@@ -21,6 +21,10 @@ defmodule NewYou.Identity.PasswordSession do
   @global_proof_expired "Global Session revocation proof expired before use"
   @idle_seconds 30 * 60
 
+  # Password verification happens before the transaction. Issuance rechecks the
+  # verified credential and Account eligibility under the lock before writing.
+  @spec authenticate(term(), term()) ::
+          {:ok, NewYou.Identity.session_credentials()} | {:error, :authentication_unavailable}
   def authenticate(email, password) when is_binary(password) and byte_size(password) <= 1024 do
     with {:ok, email} <- Email.canonicalize(email),
          {:ok, account} <- find_account(email),
@@ -74,6 +78,8 @@ defmodule NewYou.Identity.PasswordSession do
   @doc false
   # Internal Identity seam. Caller holds the current eligible Account lock in the
   # same Token/Session transaction. Shared issuance preserves password semantics.
+  @spec issue_current(Account.t(), map()) ::
+          {:ok, NewYou.Identity.session_credentials()} | {:error, :authentication_unavailable}
   def issue_current(current, provenance \\ %{}) do
     with {:ok, bearer, claims} <-
            Jwt.token_for_user(current, %{}, purpose: :user, authorize?: false),
@@ -110,6 +116,24 @@ defmodule NewYou.Identity.PasswordSession do
     end
   end
 
+  @doc false
+  def authorize_canonical(credentials) do
+    result =
+      with_current_session(credentials, fn session, account, _token, _linked ->
+        with %Account{canonical_account_id: nil, pmr_status: :active, pmr: pmr} <- account,
+             true <- PMR.valid?(pmr) do
+          validate_and_touch(session, account)
+        else
+          _ -> :denied
+        end
+      end)
+
+    case result do
+      {:ok, %Account{id: id}} -> {:ok, %{account_id: id}}
+      _ -> {:error, :authentication_unavailable}
+    end
+  end
+
   def self_member_reference(credentials) do
     case with_current_session(credentials, &member_reference_locked/4) do
       {:ok, {:member_reference, pmr}} -> {:ok, pmr}
@@ -136,6 +160,23 @@ defmodule NewYou.Identity.PasswordSession do
       {:ok, page}
     else
       _ -> {:error, :authentication_unavailable}
+    end
+  end
+
+  def manage_trusted_devices(credentials, operation) do
+    manager = fn session, account, token, _linked ->
+      with {:ok, _} <- ordinary_revocation_factor(account),
+           true <- usable_deadlines?(session) and future?(token.expires_at) do
+        NewYou.Identity.TrustedDevices.execute(account, session, operation)
+      else
+        _ -> :denied
+      end
+    end
+
+    case with_current_session(credentials, manager) do
+      {:ok, {:device_result, value}} -> {:ok, value}
+      {:error, :transaction_unconfirmed} -> {:error, :device_result_uncertain}
+      _ -> {:error, :device_unavailable}
     end
   end
 

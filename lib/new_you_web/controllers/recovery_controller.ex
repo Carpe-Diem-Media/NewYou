@@ -14,6 +14,17 @@ defmodule NewYouWeb.RecoveryController do
   plug :require_proof_environment
   plug :require_current_copy
 
+  @doc "Returns the approved request title when ordinary Recovery can be opened in the given locale."
+  @spec discovery_title(String.t()) :: String.t() | nil
+  def discovery_title(locale) do
+    with :well183 <- entry_context(),
+         {:ok, copy} <- RecoveryBrowserCopy.load(locale) do
+      Map.fetch!(copy, "identity.recovery.request.title")
+    else
+      _ -> nil
+    end
+  end
+
   def new(conn, %{"locale" => locale}) when locale in ["en", "af"],
     do: page(conn, :request, locale)
 

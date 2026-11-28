@@ -1,0 +1,165 @@
+{
+  "attributes": [
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"uuid_generate_v7()\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": true,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "purchase_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "payment_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "nil",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "recipient_id",
+      "type": "uuid"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"plan\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "component",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "\"held_unconsumed\"",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "state",
+      "type": "text"
+    },
+    {
+      "allow_nil?": false,
+      "default": "fragment(\"(now() AT TIME ZONE 'utc')\")",
+      "generated?": false,
+      "precision": null,
+      "primary_key?": false,
+      "references": null,
+      "scale": null,
+      "size": null,
+      "source": "granted_at",
+      "type": "utc_datetime_usec"
+    }
+  ],
+  "base_filter": null,
+  "check_constraints": [
+    {
+      "attribute": [
+        "component"
+      ],
+      "base_filter": null,
+      "check": "component IN ('assessment', 'plan')",
+      "name": "entitlements_plan_rights_component"
+    },
+    {
+      "attribute": [
+        "state"
+      ],
+      "base_filter": null,
+      "check": "state IN ('held_unconsumed', 'suspended', 'ended')",
+      "name": "entitlements_plan_rights_state"
+    }
+  ],
+  "create_table_options": null,
+  "custom_indexes": [
+    {
+      "all_tenants?": false,
+      "concurrently": false,
+      "error_fields": [
+        "recipient_id"
+      ],
+      "fields": [
+        {
+          "type": "atom",
+          "value": "recipient_id"
+        }
+      ],
+      "include": null,
+      "include_base_filter?": true,
+      "message": null,
+      "name": null,
+      "nulls_distinct": true,
+      "prefix": null,
+      "table": null,
+      "unique": false,
+      "using": null,
+      "where": null
+    }
+  ],
+  "custom_statements": [],
+  "has_create_action": true,
+  "hash": "AC44A5AA024D9069AF0F3CBD8EC209494C1B75AA9CF9357AA1795A7D6B5AABA7",
+  "identities": [
+    {
+      "all_tenants?": false,
+      "base_filter": null,
+      "index_name": "entitlements_plan_rights_purchase_component_index",
+      "keys": [
+        {
+          "type": "atom",
+          "value": "purchase_id"
+        },
+        {
+          "type": "atom",
+          "value": "component"
+        }
+      ],
+      "name": "purchase_component",
+      "nils_distinct?": true,
+      "where": null
+    }
+  ],
+  "multitenancy": {
+    "attribute": null,
+    "global": null,
+    "strategy": null
+  },
+  "repo": "Elixir.NewYou.Repo",
+  "schema": null,
+  "table": "entitlements_plan_rights",
+  "temporal": null
+}

@@ -34,23 +34,32 @@ try do
       credentials: %{session_id: r["credentials"]["session_id"], token: r["credentials"]["token"]}
     }
 
-    {:ok, record} = NewYou.Identity.apply_reconciliation(request)
-    loser = Ash.get!(NewYou.Identity.Account, record.candidate_id, authorize?: false)
-    canonical = Ash.get!(NewYou.Identity.Account, record.canonical_id, authorize?: false)
+    if input["mode"] == "deny_conflict" do
+      {:error, :reconciliation_unavailable} = NewYou.Identity.apply_reconciliation(request)
 
-    true =
-      record.status == :applied and loser.pmr_status == :retired and
-        loser.pmr == input["retired_pmr"]
+      %{status: :conflict} =
+        Ash.get!(NewYou.Identity.ReconciliationCase, request.case_id, authorize?: false)
 
-    true = canonical.pmr_status == :active and canonical.account_status == :open
+      IO.puts("P814_CONFLICT_DENIED")
+    else
+      {:ok, record} = NewYou.Identity.apply_reconciliation(request)
+      loser = Ash.get!(NewYou.Identity.Account, record.candidate_id, authorize?: false)
+      canonical = Ash.get!(NewYou.Identity.Account, record.canonical_id, authorize?: false)
 
-    {:ok, _} =
-      NewYou.Audit.materialize_registration_evidence(
-        %{primary_key: %{id: input["obligation_id"]}},
-        authorize?: false
-      )
+      true =
+        record.status == :applied and loser.pmr_status == :retired and
+          loser.pmr == input["retired_pmr"]
 
-    IO.puts("P814_RECONSTRUCTED")
+      true = canonical.pmr_status == :active and canonical.account_status == :open
+
+      {:ok, _} =
+        NewYou.Audit.materialize_registration_evidence(
+          %{primary_key: %{id: input["obligation_id"]}},
+          authorize?: false
+        )
+
+      IO.puts("P814_RECONSTRUCTED")
+    end
   end
 after
   Ecto.Adapters.SQL.Sandbox.checkin(NewYou.Repo)

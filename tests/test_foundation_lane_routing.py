@@ -31,7 +31,10 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
 
     def test_application_ci_builds_browser_assets_before_fast_gate(self):
         workflow = (WORKFLOWS / 'application-ci.yml').read_text()
-        self.assertLess(workflow.index('run: mix assets.build'), workflow.index('run: mix check\n'))
+        setup = (WORKFLOWS.parent / "actions/application-test-setup/action.yml").read_text()
+        shards = workflow.split("  shards:\n", 1)[1].split("  coverage:\n", 1)[0]
+        self.assertIn("run: mix assets.build", setup)
+        self.assertLess(shards.index("application-test-setup"), shards.index("tools.exunit_ci execute"))
 
     def test_application_source_runs_application_ci_without_full(self):
         decision = _route(["lib/new_you/accounts.ex"])
@@ -78,6 +81,11 @@ class ApplicationAndEngineeringRoutingTests(unittest.TestCase):
         ]:
             with self.subTest(path=path):
                 self.assertEqual("application", classify_path(path))
+
+    def test_phase8_proof_workflow_routes_application_ci(self):
+        self.assertEqual(
+            {"application_changes": True}, _route([".github/workflows/phase8-proof.yml"])
+        )
 
     def test_cache_warmer_is_explicitly_routed_and_unknown_workflows_fail(self):
         path = ".github/workflows/application-cache.yml"
@@ -440,10 +448,11 @@ class TopologyTests(unittest.TestCase):
 
     def test_application_ci_runs_canonical_gates_and_never_historical_full(self):
         workflow = (WORKFLOWS / "application-ci.yml").read_text(encoding="utf-8")
-        self.assertIn("run: mix check\n", workflow)
+        self.assertIn("run: mix check.static\n", workflow)
+        self.assertIn("tools.exunit_ci execute", workflow)
         self.assertIn("run: mix check.deep", workflow)
         lowered = workflow.lower()
-        self.assertNotIn("unittest", lowered)
+        self.assertNotIn("foundation_full", lowered)
         self.assertNotIn("foundation_integrity", lowered)
         self.assertNotIn("redis", lowered)
         self.assertNotIn("dev_database", lowered)

@@ -17,7 +17,26 @@ defmodule NewYouWeb.RegistrationBoundary do
   def init(opts), do: opts
 
   @impl Plug
-  def call(conn, opts) do
+  if Mix.env() in [:dev, :test] do
+    def call(%{request_path: path} = conn, opts)
+        when path in ["/dev/support/account-access", "/dev/support/reconciliation"] do
+      conn =
+        conn
+        |> Plug.Conn.put_resp_header("cache-control", "no-store")
+        |> Plug.Conn.put_resp_header("referrer-policy", "no-referrer")
+
+      if conn.query_string == "" do
+        NewYou.Repo.without_query_telemetry(fn -> parse_and_dispatch(conn, opts) end)
+      else
+        fail_closed_response(conn, 404)
+      end
+      |> scrub_support_response()
+    end
+  end
+
+  def call(conn, opts), do: parse_and_dispatch(conn, opts)
+
+  defp parse_and_dispatch(conn, opts) do
     conn
     |> Plug.Parsers.call(
       Plug.Parsers.init(
@@ -181,6 +200,12 @@ defmodule NewYouWeb.RegistrationBoundary do
   defp dispatch(%Plug.Conn{method: "POST", request_path: "/session/manage/revoke"} = conn, _opts),
     do: dispatch_browser_request(conn, :revoke, NewYouWeb.SessionManagementController)
 
+  defp dispatch(
+         %Plug.Conn{method: "POST", request_path: "/session/manage/devices"} = conn,
+         _opts
+       ),
+       do: dispatch_browser_request(conn, :manage_device, NewYouWeb.SessionManagementController)
+
   defp dispatch(%Plug.Conn{method: "POST", request_path: "/session/logout"} = conn, _opts),
     do: dispatch_browser_request(conn, :logout, PasswordSessionController)
 
@@ -191,6 +216,33 @@ defmodule NewYouWeb.RegistrationBoundary do
     do: dispatch_browser_request(conn, :privacy)
 
   if Mix.env() in [:dev, :test] do
+    defp dispatch(
+           %Plug.Conn{method: method, request_path: "/dev/support/account-access"} = conn,
+           _opts
+         )
+         when method in ["GET", "POST"] do
+      action = if method == "POST", do: :lookup, else: :show
+      dispatch_browser_request(conn, action, NewYouWeb.SupportLookupController)
+    end
+
+    defp dispatch(
+           %Plug.Conn{method: "GET", request_path: "/dev/support/reconciliation"} = conn,
+           _opts
+         ) do
+      dispatch_browser_request(conn, :show, NewYouWeb.ReconciliationController)
+    end
+
+    defp dispatch(
+           %Plug.Conn{method: "POST", request_path: "/dev/support/reconciliation"} = conn,
+           _opts
+         ) do
+      if Plug.Conn.get_req_header(conn, "x-newyou-operator-request") == ["1"] do
+        dispatch_browser_request(conn, :submit, NewYouWeb.ReconciliationController)
+      else
+        fail_closed_response(conn, 403)
+      end
+    end
+
     defp dispatch(%Plug.Conn{method: "GET", request_path: path} = conn, _opts)
          when path in ["/dev/design-system", "/dev/design-system/preview"] do
       NewYouWeb.DesignSystemBoundary.render(conn)
@@ -200,6 +252,28 @@ defmodule NewYouWeb.RegistrationBoundary do
   # Every current browser route is dispatched above. A Router fallback would
   # expose session-bearing connections through dispatch or error telemetry.
   defp dispatch(%Plug.Conn{} = conn, _opts), do: fail_closed_response(conn, 404)
+
+  if Mix.env() in [:dev, :test] do
+    # Bandit publishes the returned, already-sent connection in request-stop
+    # metadata. The session and CSRF callbacks have run before we clear it.
+    defp scrub_support_response(conn) do
+      %{
+        conn
+        | assigns: %{},
+          body_params: %{},
+          params: %{},
+          private: %{},
+          cookies: %{},
+          query_params: %{},
+          query_string: "",
+          req_cookies: %{},
+          req_headers: [],
+          resp_cookies: %{},
+          resp_headers: Enum.reject(conn.resp_headers, fn {name, _} -> name == "set-cookie" end),
+          secret_key_base: nil
+      }
+    end
+  end
 
   defp dispatch_browser_request(conn, action, controller \\ RegistrationController) do
     conn

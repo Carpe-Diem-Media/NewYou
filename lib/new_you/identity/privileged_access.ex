@@ -18,6 +18,24 @@ defmodule NewYou.Identity.PrivilegedAccess do
     :complete_manual_recovery,
     :lookup_identity
   ]
+  @typep capability ::
+           :place_security_hold
+           | :review_security_hold
+           | :release_security_hold
+           | :review_reconciliation
+           | :apply_reconciliation
+           | :change_primary_email
+           | :approve_manual_recovery
+           | :complete_manual_recovery
+           | :lookup_identity
+  @typep authority :: %{
+           actor: Account.t(),
+           target: Account.t(),
+           session: Session.t(),
+           grant: IdentityGrant.t(),
+           accounts: %{optional(Ecto.UUID.t()) => Account.t()}
+         }
+
   @step_up_seconds 5 * 60
   @max_failed_codes 5
   @cooldown_seconds 15 * 60
@@ -65,6 +83,13 @@ defmodule NewYou.Identity.PrivilegedAccess do
   end
 
   @doc false
+  @spec authorize_locked(
+          NewYou.Identity.session_credentials(),
+          Ecto.UUID.t(),
+          Ecto.UUID.t(),
+          capability()
+        ) ::
+          {:ok, authority()} | {:error, :privileged_access_unavailable}
   def authorize_locked(credentials, grant_id, target_id, capability)
       when capability in @purposes do
     authorize_locked(credentials, grant_id, target_id, capability, [])
@@ -73,6 +98,16 @@ defmodule NewYou.Identity.PrivilegedAccess do
   def authorize_locked(_, _, _, _), do: unavailable()
 
   @doc false
+  # The caller owns the transaction. Lock all participating Accounts before
+  # checking current Token, Session, step-up and scoped grant authority.
+  @spec authorize_locked(
+          NewYou.Identity.session_credentials(),
+          Ecto.UUID.t(),
+          Ecto.UUID.t(),
+          capability(),
+          [Ecto.UUID.t()]
+        ) ::
+          {:ok, authority()} | {:error, :privileged_access_unavailable}
   def authorize_locked(credentials, grant_id, target_id, capability, additional_account_ids)
       when capability in @purposes and is_list(additional_account_ids) do
     with true <- Ash.DataLayer.in_transaction?(Account),
@@ -100,6 +135,8 @@ defmodule NewYou.Identity.PrivilegedAccess do
   def authorize_locked(_, _, _, _, _), do: unavailable()
 
   @doc false
+  # Recheck the recorded reviewer against current authority inside the caller's
+  # transaction. The caller must already hold the participating Account locks.
   def authorize_recorded_locked(review, target_id, capability, actor)
       when is_map(review) and capability in @purposes do
     with true <- Ash.DataLayer.in_transaction?(Account),

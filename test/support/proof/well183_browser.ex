@@ -20,6 +20,7 @@ defmodule NewYou.Proof.Well183Browser do
       Enum.each(result["operations"], &P805.track_operation/1)
 
       for check <- ~w(
+            discovery_copy discovery_keyboard discovery_destination
             request_copy usable_form keyboard_focus responsive reduced_motion
             neutral_request real_delivery passive_safe confirmation_copy
             credential_copy completed_copy no_automatic_login replay_denied

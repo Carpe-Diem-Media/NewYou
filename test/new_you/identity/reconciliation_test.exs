@@ -1,8 +1,10 @@
 defmodule NewYou.Identity.ReconciliationTest do
   use ExUnit.Case, async: false
   import NewYou.Proof.ReconciliationScenarios
+  alias NewYou.Commerce.{OfferAdmission, OfferFixtures}
   alias NewYou.Identity
-  alias NewYou.Proof.{P805, P813HoldFixture}
+  alias NewYou.Privacy.SyntheticSuppression
+  alias NewYou.Proof.{FreshMix, P805, P813HoldFixture}
 
   test "scoped detection, verified review and apply preserve history and retire the losing PMR" do
     NewYou.Proof.ReconciliationScenarios.scenario_scoped_detection_verified_review_and_apply_preserve_history_and_retire_the_losing_pmr()
@@ -537,18 +539,10 @@ defmodule NewYou.Identity.ReconciliationTest do
         obligation_id: obligation.id
       }
 
-      port =
-        Port.open({:spawn_executable, System.find_executable("mix")}, [
-          :binary,
-          :exit_status,
-          args: ["run", "test/proof/p8_14_restart.exs"],
-          env: [{~c"MIX_ENV", ~c"test"}, {~c"ERL_FLAGS", ~c"+S 2:2"}]
-        ])
+      {executable, arguments} = FreshMix.command(["run", "test/proof/p8_14_restart.exs"])
 
-      true = Port.command(port, Jason.encode!(input) <> "\n")
-
-      assert restart_output(port, "", System.monotonic_time(:millisecond) + 30_000) ==
-               "P814_RECONSTRUCTED"
+      assert %{status: :ok, marker: :p814_reconstructed, cleanup: :confirmed} =
+               NewYou.Proof.P815Port.run(executable, arguments, Jason.encode!(input))
 
       assert Ash.get!(Identity.ReconciliationCase, applied.id, authorize?: false).version ==
                applied.version
@@ -590,6 +584,279 @@ defmodule NewYou.Identity.ReconciliationTest do
         Application.put_env(:new_you, :ash_domains, previous)
       end
     end)
+  end
+
+  @tag timeout: 60_000
+  test "Commerce history committed on another connection invalidates the empty owner review" do
+    with_case(fn f ->
+      {:ok, approved} = approve(f)
+      reviews = approved.review["domains"]
+
+      for {owner, policy} <- [
+            {"commerce", "empty_commerce_scope"},
+            {"entitlements", "empty_entitlements_scope"}
+          ] do
+        assert reviews[owner] == %{
+                 "policy" => policy,
+                 "candidate_id" => f.target.id,
+                 "canonical_id" => f.survivor.id,
+                 "commands" => []
+               }
+      end
+
+      operation_id = Ecto.UUID.generate()
+      P805.track_operation(operation_id)
+
+      task =
+        Task.async(fn ->
+          receive do: (:start -> :ok)
+          :ok = Ecto.Adapters.SQL.Sandbox.checkout(NewYou.Repo, sandbox: false)
+
+          NewYou.Commerce.accept_plan_purchase(f.target.credentials, %{
+            operation_id: operation_id,
+            price_version: "synthetic-plan-v1"
+          })
+        end)
+
+      :ok = P805.register_cleanup_worker(task.pid)
+      send(task.pid, :start)
+
+      assert {:ok, purchase} = Task.await(task)
+      assert purchase.payer_id == f.target.id
+
+      evidence =
+        NewYou.Proof.PlanPaymentObservation.produce(%{
+          attempt_id: purchase.attempt_id,
+          purchase_id: purchase.id,
+          amount_minor: 39_900,
+          currency: "ZAR",
+          environment: :test,
+          integration: :synthetic,
+          status: :succeeded
+        })
+
+      assert {:ok, payment} = NewYou.Commerce.apply_payment_observation(evidence)
+      assert {:ok, [consequence_id]} = NewYou.Commerce.open_plan_payment_consequences(purchase.id)
+      assert :ok = NewYou.Privacy.SyntheticSuppression.register(f.target.credentials)
+      assert {:ok, right} = NewYou.Entitlements.grant_paid_plan(consequence_id)
+      assert {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      request = apply_request(f, approved)
+
+      assert {:error, :reconciliation_unavailable} = Identity.apply_reconciliation(request)
+      assert {:ok, :ok} = P813HoldFixture.step_up(f.actor, :review_reconciliation)
+      review = review_request(f)
+
+      assert {:ok, reopened} =
+               Identity.review_reconciliation(%{
+                 review
+                 | expected_version: approved.version,
+                   decision: :review
+               })
+
+      assert {:error, :reconciliation_unavailable} =
+               Identity.review_reconciliation(%{review | expected_version: reopened.version})
+
+      assert {:ok, conflict} =
+               Identity.review_reconciliation(%{
+                 review
+                 | expected_version: reopened.version,
+                   decision: :conflict
+               })
+
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      assert_conflict_after_restart(apply_request(f, conflict))
+
+      assert P805.account!(f.target.id).pmr_status == :active
+      assert P805.account!(f.survivor.id).pmr_status == :active
+      assert {:ok, [persisted_right]} = NewYou.Entitlements.plan_rights(f.target.credentials)
+      assert persisted_right.id == right.id
+      assert persisted_right.purchase_id == purchase.id
+      assert persisted_right.payment_id == payment.id
+      assert persisted_right.recipient_id == f.target.id
+      assert persisted_right.state == :held_unconsumed
+
+      assert {:ok, [^consequence_id]} =
+               NewYou.Commerce.open_plan_payment_consequences(purchase.id)
+
+      persisted_purchase = Ash.get!(NewYou.Commerce.Purchase, purchase.id, authorize?: false)
+      assert persisted_purchase.payer_id == f.target.id
+      assert persisted_purchase.attempt_id == purchase.attempt_id
+
+      assert Ash.get!(NewYou.Commerce.VerifiedPayment, payment.id, authorize?: false).purchase_id ==
+               purchase.id
+
+      refute Enum.any?(outcomes(request.operation_id), &(&1.outcome == :succeeded))
+    end)
+  end
+
+  test "a missing Commerce or Entitlements owner prevents reconciliation approval" do
+    with_case(fn f ->
+      domains = Application.fetch_env!(:new_you, :ash_domains)
+      request = review_request(f)
+      {:ok, candidate} = Identity.review_reconciliation(%{request | decision: :candidate})
+
+      {:ok, review} =
+        Identity.review_reconciliation(%{
+          request
+          | expected_version: candidate.version,
+            decision: :review
+        })
+
+      request = %{request | expected_version: review.version}
+
+      try do
+        for missing <- [NewYou.Commerce, NewYou.Entitlements] do
+          Application.put_env(:new_you, :ash_domains, List.delete(domains, missing))
+          assert {:error, :reconciliation_unavailable} = Identity.review_reconciliation(request)
+          assert P805.account!(f.target.id).pmr_status == :active
+        end
+      after
+        Application.put_env(:new_you, :ash_domains, domains)
+      end
+
+      assert {:ok, %{status: :approved}} = Identity.review_reconciliation(request)
+    end)
+  end
+
+  test "an unapplied legacy owner snapshot is denied until a fresh review succeeds" do
+    assert_legacy_owner_snapshot_requires_review(["commerce", "entitlements", "temperament"])
+  end
+
+  test "an approval from the owner set before Temperament requires fresh review" do
+    assert_legacy_owner_snapshot_requires_review(["temperament"])
+  end
+
+  test "a new versioned purchase with recipient-only Commerce history invalidates approval" do
+    assert_new_history_blocks_apply(fn f ->
+      payer = OfferFixtures.verified_party()
+      recipient = assessment_party(f.target)
+      :ok = SyntheticSuppression.register(recipient.credentials)
+      OfferFixtures.publish!(:plan)
+      authority = OfferFixtures.parties(payer, recipient)
+      quote = OfferFixtures.quote!(authority, :plan)
+
+      assert {:ok, purchase} = OfferAdmission.accept(authority, OfferFixtures.acceptance(quote))
+      assert purchase.payer_id == payer.account_id
+      assert purchase.payer_id not in [f.target.id, f.survivor.id]
+      assert purchase.recipient_id == f.target.id
+    end)
+  end
+
+  test "new Entitlements Assessment credit evidence invalidates approval" do
+    assert_new_history_blocks_apply(fn f ->
+      recipient = assessment_party(f.survivor)
+      :ok = SyntheticSuppression.register(recipient.credentials)
+
+      assert {:ok, %{recipient_id: id, ordinary_state: :available_unused}} =
+               OfferFixtures.set_credit(recipient, :available_unused, %{
+                 credit_id: OfferFixtures.uuid()
+               })
+
+      assert id == f.survivor.id
+    end)
+  end
+
+  test "new Temperament successful delivery evidence invalidates approval" do
+    assert_new_history_blocks_apply(fn f ->
+      recipient = assessment_party(f.target)
+      :ok = SyntheticSuppression.register(recipient.credentials)
+
+      assert {:ok, %{recipient_id: id, status: :successful}} =
+               OfferFixtures.set_delivery(recipient, :successful, %{
+                 successful_at: DateTime.add(DateTime.utc_now(), -1, :day)
+               })
+
+      assert id == f.target.id
+    end)
+  end
+
+  defp assessment_party(account), do: %{account_id: account.id, credentials: account.credentials}
+
+  defp assert_new_history_blocks_apply(establish) do
+    with_case(fn f ->
+      assert {:ok, %{status: :approved} = approved} = approve(f)
+      establish.(f)
+
+      assert {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      request = apply_request(f, approved)
+      assert {:error, :reconciliation_unavailable} = Identity.apply_reconciliation(request)
+      assert admissions(request.operation_id) == []
+      assert outcomes(request.operation_id) == []
+      assert %{canonical_account_id: nil, pmr_status: :active} = P805.account!(f.target.id)
+      assert %{canonical_account_id: nil, pmr_status: :active} = P805.account!(f.survivor.id)
+    end)
+  end
+
+  defp assert_legacy_owner_snapshot_requires_review(omit) do
+    with_case(fn f ->
+      {:ok, original} = approve(f)
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :review_reconciliation)
+      review = review_request(f)
+
+      assert {:ok, reopened} =
+               Identity.review_reconciliation(%{
+                 review
+                 | expected_version: original.version,
+                   decision: :review
+               })
+
+      legacy_review =
+        Map.update!(original.review, "domains", &Map.drop(&1, omit))
+
+      # Create the historical snapshot through the private fixture action, while
+      # retaining the database's normal review transition and immutable history guard.
+      assert {:ok, legacy} =
+               Ash.update(
+                 reopened,
+                 %{
+                   status: :approved,
+                   review: legacy_review,
+                   history: reopened.history ++ [%{"status" => "approved"}],
+                   expected_version: reopened.version
+                 },
+                 action: :record_review,
+                 authorize?: false
+               )
+
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+      request = apply_request(f, legacy)
+      assert {:error, :reconciliation_unavailable} = Identity.apply_reconciliation(request)
+      assert admissions(request.operation_id) == []
+      assert P805.account!(f.target.id).pmr_status == :active
+
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :review_reconciliation)
+
+      assert {:ok, new_review} =
+               Identity.review_reconciliation(%{
+                 review
+                 | expected_version: legacy.version,
+                   decision: :review
+               })
+
+      assert {:ok, refreshed} =
+               Identity.review_reconciliation(%{review | expected_version: new_review.version})
+
+      assert refreshed.review["domains"] == original.review["domains"]
+      assert refreshed.review["domains"]["temperament"]["policy"] == "empty_temperament_scope"
+      {:ok, :ok} = P813HoldFixture.step_up(f.actor, :apply_reconciliation)
+
+      assert {:ok, %{status: :applied}} =
+               Identity.apply_reconciliation(apply_request(f, refreshed))
+    end)
+  end
+
+  defp assert_conflict_after_restart(request) do
+    input = %{
+      mode: "deny_conflict",
+      request: request,
+      signing_secret:
+        Base.encode64(Application.fetch_env!(:new_you, :identity_token_signing_secret))
+    }
+
+    {executable, arguments} = FreshMix.command(["run", "test/proof/p8_14_restart.exs"])
+
+    assert %{status: :ok, marker: :p814_conflict_denied, cleanup: :confirmed} =
+             NewYou.Proof.P815Port.run(executable, arguments, Jason.encode!(input))
   end
 
   test "resource policies deny caller-supplied authority and expiry blocks the privileged action" do

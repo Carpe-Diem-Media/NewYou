@@ -33,6 +33,30 @@
       "contract_type": "feature_contract"
     },
     {
+      "document_id": "FP002_FEATURE_PACK_SKELETON",
+      "canonical_filename": "FP-002_FEATURE_PACK_SKELETON_WORKING_v0.1.0.md",
+      "repository_path": "docs/delivery/feature-contracts/fp-002/FP-002_FEATURE_PACK_SKELETON_WORKING_v0.1.0.md",
+      "sha256": "f349ed7c4a9302a7cf46ce469078babb5d66253d5b9c39e80b3e119ac7630e07",
+      "contract_type": "feature_contract",
+      "status": "CANDIDATE_FOR_EXACT_SOURCE_REVIEW; NO_DEVELOPMENT_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP002_PHASE_7B_RECONCILIATION",
+      "canonical_filename": "FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+      "repository_path": "docs/delivery/proof/fp-002/FP-002_PHASE_7B_RECONCILIATION_v0.2.0.md",
+      "sha256": "429659470e446c4172e6bee57d1ccf6dcd34467fbc86dfb539c44364e994f822",
+      "contract_type": "proof",
+      "status": "COMPLETE; CERTIFIED; CURRENT; NO_DEVELOPMENT_OR_RELEASE_AUTHORITY"
+    },
+    {
+      "document_id": "FP002_FINAL_FEATURE_PACK",
+      "canonical_filename": "FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+      "repository_path": "docs/delivery/feature-contracts/fp-002/FP-002_FINAL_FEATURE_PACK_CONTRACT_v0.3.0.md",
+      "sha256": "3f244024bee42333d114a4cebef4195d7959f2cdab9dc52d5c88be0342948b2f",
+      "contract_type": "feature_contract",
+      "status": "COMPLETE; CERTIFIED; CURRENT; NO_DEVELOPMENT_OR_RELEASE_AUTHORITY"
+    },
+    {
       "document_id": "DELIVERY_ATLAS",
       "canonical_filename": "DELIVERY_ATLAS_WORKING_v0.4.31.md",
       "repository_path": "docs/delivery/execution/DELIVERY_ATLAS_WORKING_v0.4.31.md",
@@ -231,9 +255,9 @@
     },
     {
       "document_id": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED",
-      "canonical_filename": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json",
-      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.2.0.json",
-      "sha256": "8a9466ce2b91e6311154bea13d085959d550f77ba63b6f9b4585ad3d3a67c5da",
+      "canonical_filename": "FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json",
+      "repository_path": "docs/delivery/content-evidence/copy/evidence/FP001_RECOVERY_PHASE9_BROWSER_COPY_APPROVED_v0.3.0.json",
+      "sha256": "eae5ea169d30278a70f97621f559d1669b8a897dcad5e276b74e4d1c9e15a06d",
       "contract_type": "content_evidence",
       "status": "OWNER_APPROVED_BOUNDED_NONPRODUCTION_BROWSER_COPY; NO_IMPLEMENTATION_OR_RELEASE_AUTHORITY"
     },

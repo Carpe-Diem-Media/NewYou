@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import unittest
 from pathlib import Path
 
@@ -17,33 +18,27 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
             workflow,
         )
 
-    def test_each_application_job_checks_dependencies_before_database_and_gates(self):
-        workflow = (WORKFLOWS / "application-ci.yml").read_text(encoding="utf-8")
-        for job in ("mix-check", "mix-check-deep"):
+    def test_application_jobs_prepare_dependencies_before_database_and_verification(self):
+        workflow = (WORKFLOWS / "application-ci.yml").read_text()
+        setup = (WORKFLOWS.parent / "actions/application-test-setup/action.yml").read_text()
+        for job, command in (("discover", "tools.exunit_ci plan"), ("static", "mix check.static"),
+                             ("shards", "tools.exunit_ci execute")):
             with self.subTest(job=job):
-                block = workflow.split(f"  {job}:\n", 1)[1].split("\n  mix-check-deep:", 1)[0]
-                header = block.split("    steps:", 1)[0]
-                if job == "mix-check":
-                    self.assertNotIn("    if:", header)
-                else:
-                    self.assertIn("    if: inputs.deep_application_changes\n", header)
-                commands = [
-                    "uses: actions/checkout@v7",
-                    "uses: erlef/setup-beam@v1",
-                    "run: bash tools/ci/prepare_cached_dependencies.sh",
-                    "run: mix deps.unlock --check-unused",
-                    "      - name: Provision isolated TEST role and database",
-                    f"run: mix {'check' if job == 'mix-check' else 'check.deep'}",
-                ]
-                for command in commands:
-                    self.assertIn(command + "\n", block)
-                positions = [block.index(command) for command in commands]
-                self.assertEqual(sorted(positions), positions)
-                self.assertEqual(1, block.count("continue-on-error: true"))
-                restore = block.split("      - name: Restore dependency cache\n", 1)[1].split("      - name:", 1)[0]
-                self.assertIn("continue-on-error: true\n        uses: actions/cache/restore@v4", restore)
-                self.assertNotIn("run: mix deps.get\n", block)
-                self.assertNotIn("if:", block.split("    steps:", 1)[1])
+                block = re.split(r"\n  [\w-]+:\n", workflow.split(f"  {job}:\n", 1)[1])[0]
+                self.assertIn("runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}", block)
+                self.assertIn("postgres: ${{ job.services.postgres.id }}", block)
+                self.assertLess(block.index("application-test-setup"), block.index(command))
+        for step in ("Restore exact trusted-main cache", "Prepare locked dependencies",
+                     "Reject unused dependency locks", "Provision and verify isolated TEST"):
+            self.assertIn(step, setup)
+        self.assertLess(setup.index("Prepare locked dependencies"),
+                        setup.index("Provision and verify isolated TEST"))
+        self.assertIn("run: mix check.deep", workflow)
+        self.assertIn("if: inputs.deep_application_changes", workflow)
+        coverage = workflow.split("  coverage:\n", 1)[1]
+        self.assertIn("needs: [discover, static, shards]", coverage)
+        self.assertIn("if: always()", coverage)
+        self.assertIn("Verify independent inventory", coverage)
 
     def test_cache_writer_is_main_only_and_pr_jobs_restore_only(self):
         warmer = (WORKFLOWS / "application-cache.yml").read_text(encoding="utf-8")
@@ -57,18 +52,17 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
             ".tool-versions",
             "config/**/*.exs",
             ".github/workflows/application-cache.yml",
-            ".github/workflows/application-ci.yml",
-            "tools/ci/**",
+            "tools/ci/cache_manifest.py",
+            "tools/ci/prepare_cached_dependencies.sh",
         ):
             with self.subTest(path=path):
                 self.assertIn(f"      - '{path}'", warmer)
         # Exact filter ownership prevents a broad docs/lib/** entry from
         # accidentally restoring the every-merge workflow trigger.
-        import re
         filters = re.findall(r"^      - '([^']+)'$", warmer, re.MULTILINE)
         self.assertEqual({"mix.exs", "mix.lock", ".tool-versions", "config/**/*.exs",
                           ".github/workflows/application-cache.yml",
-                          ".github/workflows/application-ci.yml", "tools/ci/**"}, set(filters))
+                          "tools/ci/cache_manifest.py", "tools/ci/prepare_cached_dependencies.sh"}, set(filters))
         save = warmer.split("      - name: Save trusted dependency cache", 1)[1]
         self.assertNotIn("continue-on-error", save)
         self.assertLess(warmer.index("run: bash tools/ci/prepare_cached_dependencies.sh"),
@@ -78,14 +72,18 @@ class FoundationMergeGateTopologyTests(unittest.TestCase):
         self.assertNotIn("pull_request", warmer)
         self.assertNotIn("workflow_run", warmer)
         self.assertIn("actions/cache/save@v4", warmer)
-        self.assertEqual(2, application.count("actions/cache/restore@v4"))
+        setup = (WORKFLOWS.parent / "actions/application-test-setup/action.yml").read_text()
+        self.assertEqual(2, (application + setup).count("actions/cache/restore@v4"))
         self.assertNotIn("actions/cache/save@v4", application)
         self.assertNotIn("pull_request_target", warmer + application)
-        key = "app-deps-v3-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', '.github/workflows/application-cache.yml', '.github/workflows/application-ci.yml', 'tools/ci/**') }}"
-        self.assertEqual(4, (application + warmer).count(key))
+        key = "app-deps-v4-${{ runner.os }}-${{ runner.arch }}-${{ steps.cache_platform.outputs.image }}-test-${{ hashFiles('.tool-versions', 'mix.lock', 'mix.exs', 'config/**/*.exs', 'tools/ci/cache_manifest.py', 'tools/ci/prepare_cached_dependencies.sh') }}"
+        self.assertEqual(3, (application + warmer).count(key))
+        self.assertIn(key.replace("steps.cache_platform", "steps.platform"), setup)
+        self.assertNotIn("cache_manifest.py check", setup)
 
     def test_mix_aliases_enforce_warnings_and_strict_security_parsing(self):
         mix = (ROOT / "mix.exs").read_text(encoding="utf-8")
+        self.assertIn('check: ["check.static", "test"]', mix)
         self.assertIn('test: ["ecto.migrate --quiet", "test --warnings-as-errors"]', mix)
         self.assertIn('"compile --warnings-as-errors"', mix)
         self.assertIn(

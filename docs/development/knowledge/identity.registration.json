@@ -17,8 +17,8 @@
     "WELL-143"
   ],
   "implementation_revision": {
-    "git_sha": "0406f410d5063972a9b0086d62989ea04dc9ddf5",
-    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 retains the registration and verification owner interfaces and exact semantic copy while using the shared native controls and approved font policy. The shared router/boundary also declares an isolated DEV-only design guide; no registration transaction, eligibility rule or Account lifecycle is changed. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure."
+    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
+    "semantics": "WELL-131 replaces the starter entry with the existing governed registration composition, adds Content-owned current development eligibility to presentation and Identity acceptance, and proves the ordinary EN/AF journey. Existing durable registration, PMR, verification, Communications and Audit lifecycles are reused unchanged. Master Gate correction validates both complete approved legal-context lists, independent of order, rejecting unexpected scope, removed prohibitions, overlap, duplicates and malformed metadata. WELL-134 refreshes the shared browser-boundary source after global endpoint redaction, explicit legal dispatch, unknown-path denial and bounded parser-error handling. Domain registration/recovery ownership and durable lifecycle are unchanged. WELL-112 retains the registration and verification owner interfaces and exact semantic copy while using the shared native controls and approved font policy. The shared router/boundary also declares an isolated DEV-only design guide; no registration transaction, eligibility rule or Account lifecycle is changed. WELL-114 changes test observations only: fixture queries filter before hydration, registration inputs are unique, and global Session/token maintenance proofs use rollback to preserve retained data. Business ownership and lifecycle are unchanged. Source-linked proof and refreshed hashes do not certify runtime completion, merge or resulting main. WELL-136 refreshes shared source references after independent semantic review; this mapped capability remains unchanged. WELL-156 refreshes locators in shared source files. The new ordinary primary-email-change routes and context do not change this capability contract. WELL-143 extends shared TEST creation ownership to MessageIntent and Session identifiers. Magic request observations and full-row Token/Session fingerprints exclude independent fixtures while retaining unexpected owned consequences. Maintenance proof separately checks foreign expired rows are restored after actual global maintenance rollback. P815 retains reset operation and account identifiers before JTI-based delivery. Production lifecycle and fixed proof inventory are unchanged; this evidence does not clear the unresolved P809 canonical failure. WELL-189 refreshes shared source references. The mapped behavior is unchanged."
   },
   "authoritative_domain": "NewYou.Identity",
   "collaborating_domains": [
@@ -671,7 +671,7 @@
       "id": "identity",
       "path": "lib/new_you/identity.ex",
       "symbol": "def register(request)",
-      "sha256": "612edc267bf4d63204e78ea5054e5d65bcf171de20df620b36620eedd82c897b"
+      "sha256": "50a71d13d85167bbcd71cbe42e8fe089edcd0f5c83146cfad05b216fc0258c20"
     },
     {
       "id": "accept",
@@ -683,7 +683,7 @@
       "id": "operation",
       "path": "lib/new_you/identity/registration_operation.ex",
       "symbol": ":accept_registration",
-      "sha256": "9ccb0553febf1a6c2ce027f6480b29f60c0bd88f7d59a52f738eb5bf5663a191"
+      "sha256": "90f11e42b0181b0a11addbcce8588b9730a0eb2bca061863dfa7cd1db9749ddf"
     },
     {
       "id": "binding",
@@ -695,13 +695,13 @@
       "id": "communications",
       "path": "lib/new_you/communications.ex",
       "symbol": "def establish_verification",
-      "sha256": "408e0c815a74e98317ab4d5e22b499a32369a83f3e42162d087bbad25e8b2baa"
+      "sha256": "da05bcf17b3265605034e8665a676243bc856f1b3b7964533dfada8334a3a41b"
     },
     {
       "id": "audit",
       "path": "lib/new_you/audit.ex",
       "symbol": ":establish_registration_obligation",
-      "sha256": "4c526021acbd6c1eddbe723815c2a35a7a6f0beec6ca06c2892f829386d2f0e7"
+      "sha256": "de3d4d0329b604588ef5a1a9fdd3f5f50b0c59eb8a1ca3526832707883f6f32a"
     },
     {
       "id": "expiry",
@@ -743,7 +743,7 @@
       "id": "account",
       "path": "lib/new_you/identity/account.ex",
       "symbol": "create :register",
-      "sha256": "976dac1fdc3a55bbd3808e8e9cefe3a942e4482e7263fb53120f0c1faed526fa"
+      "sha256": "1bae4faef571d8f1b50f8d36759408c66656448f7d9721774c82c0f664b88e50"
     },
     {
       "id": "token",
@@ -839,7 +839,7 @@
       "id": "boundary",
       "path": "lib/new_you_web/registration_boundary.ex",
       "symbol": "defmodule",
-      "sha256": "08f3b17fe1f24a1c66dd2a99a3c90fb67a4325848b6bb3948ffff3a3ee973226"
+      "sha256": "eeb8f8f76bdb9b5da3ffdbb2d1ef6ec10a0c8ca91ffa49aa3b307bc863513460"
     },
     {
       "id": "telemetry",

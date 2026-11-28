@@ -1,8 +1,20 @@
 import Config
 
 config :new_you, :verification_development_fixtures, true
+config :new_you, :p1_synthetic_plan_amount_minor, 39_900
 
-config :new_you, Oban, testing: :manual
+config :new_you, Oban,
+  testing: :manual,
+  queues: [
+    default: 10,
+    audit: 10,
+    communications: 10,
+    commerce: 10,
+    commerce_fixture: 2,
+    commerce_fixture_refund: 2,
+    commerce_fixture_dispute: 2
+  ]
+
 config :new_you, :platform_name, "Test Platform"
 
 config :new_you, :identity_registration_legal_versions, %{

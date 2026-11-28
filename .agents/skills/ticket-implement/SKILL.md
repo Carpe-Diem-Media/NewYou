@@ -50,6 +50,8 @@ Before substantial-feature planning, inspect existing capabilities, Domain owner
 
 ### Ready-ticket discovery
 
+When the live ticket explicitly cites applicable, reviewed scoped planning IDs, resolve those exact IDs through `docs/delivery/planning/INDEX.json`. Read only the selected records and necessary direct governing sources. Check exclusions, the current routers, live Plane and actual code. Map applicable IDs to assertions in the existing Behaviour and Proof Matrix. Use related IDs for navigation only. Report missing, stale or conflicting references and resolve the affected scope under current authority and the existing STOP rules. Missing references alone do not block Ready intake. Apply this guidance prospectively within the live ticket scope.
+
 Do not restart feature planning for ordinary JIT implementation choices. Verify the approved outcome against current code: exact modules, functions, Ash actions and Resources, callers, consumers, tests, constraints, migrations, configuration and pinned dependency behaviour. Inspect framework return types and DSL compatibility against `mix.exs`, `mix.lock` and installed/version-matched sources before choosing a mechanism.
 
 Inspect only what is needed to implement the ticket correctly:
@@ -229,7 +231,7 @@ Check new or materially changed public Domain/application interfaces for appropr
 
 ## 10. Open the PR and hand off exact evidence
 
-Before creating or updating a routine PR, run `gh api user --jq .login`. It must return `JC-Agents`. Run `python3 -m tools.newyou_attest pr-preflight`, or add `--pr NUMBER` for an existing PR to verify its author too. Stop on wrong/missing authentication or a founder-authored PR. Do not request founder credentials. `JCSchoeman96` independently reviews the exact final head; the agent cannot approve its own work.
+Before creating or updating a routine PR, run `gh api user --jq .login` and `python3 -m tools.newyou_attest pr-preflight`, adding `--pr NUMBER` for an existing PR. Use authenticated `JC-Agents` or `JCSchoeman96`. Use the PR author's account for routine implementation updates; synchronization events from the other account do not fail CI. The other account independently reviews the exact final head and must not have made the latest reviewable push. Git commit name and email do not verify GitHub identity. Stop on mismatched or unverifiable authentication. Each account authenticates separately.
 
 Keep the PR Draft while mandatory local verification or exact-head hosted CI is incomplete or blocked; OCR is optional. Ordinary PR discovery uses the actual worktree and HEAD, not T3Code attached metadata. Any source correction invalidates affected local, CI, OCR and review evidence and requires refreshed affected proof; OCR remains optional.
 
@@ -241,7 +243,7 @@ Only when the full sequence is review-ready:
 4. move Plane `In Progress → In Review` (or return `Changes Requested → In Review` after corrections);
 5. record material JIT choices and discovered work in Plane/PR evidence where useful;
 6. hand off for independent Master Gate review, including adjudication of any material OCR findings, the documentation-impact determination and handoff audit. Missing or materially inaccurate required documentation means `CHANGES REQUIRED` for this PR. Do not create a routine after-merge documentation ticket or unrelated blocker.
-7. follow the eligible founder-development route in the merge-gate procedure. ChatGPT Master Gate completes the technical review and publishes one authenticated JCSchoeman96 APPROVED review for the final head. That review is both technical approval and standing merge authorization. Do not add a second comment or a base-SHA line. Keep any stronger approval that an actual governing or external obligation requires.
+7. Follow the ordinary merge-gate procedure. For eligible development work, after the independent Master Gate technical review, the other account submits one authenticated GitHub APPROVED review for the exact final head. That review supplies technical approval and standing merge authorization. Any head change requires fresh approval. Keep any stronger approval that an applicable governing or external obligation requires.
 
 Report:
 

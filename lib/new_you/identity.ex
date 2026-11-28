@@ -47,6 +47,39 @@ defmodule NewYou.Identity do
     resource NewYou.Identity.RecoveryCase
   end
 
+  @typedoc "Bearer credentials for one durable Identity Session. Treat the token as a secret."
+  @type session_credentials :: %{session_id: Ecto.UUID.t(), token: binary()}
+
+  @typedoc "A committed security-hold transition and its resulting Account hold version."
+  @type security_hold_receipt :: %{
+          status: :held | :reviewed | :released,
+          version: non_neg_integer()
+        }
+
+  @typedoc "A primary-email apply decision or a replay of its terminal result."
+  @type email_change_decision ::
+          :applied | :already_applied | :held | :already_held | :rejected | :already_rejected
+
+  @typedoc "The Account address and current primary-email-change projection for its Session holder."
+  @type email_change_status :: %{
+          email: String.t(),
+          mfa?: boolean(),
+          operation_id: Ecto.UUID.t() | nil,
+          content_context: :p8_16 | :well156,
+          state: atom(),
+          apply_after: DateTime.t() | nil,
+          requires_review?: boolean()
+        }
+
+  @typedoc "The reconciliation case fields available under current scoped review authority."
+  @type reconciliation_status :: %{
+          id: Ecto.UUID.t(),
+          status: :detected | :candidate | :review | :approved | :rejected | :conflict | :applied,
+          version: non_neg_integer(),
+          candidate_id: Ecto.UUID.t(),
+          canonical_id: Ecto.UUID.t()
+        }
+
   @type recovery_context :: :p8_15 | :well183
 
   @doc "Start or reuse a recovery case with a neutral result. Requests alone do not change Account security or access. A missing channel remains unproven until the existing Identity verification boundary establishes it."
@@ -209,7 +242,8 @@ defmodule NewYou.Identity do
     do: NewYou.Identity.MagicLogin.request(email, locale, operation_id)
 
   @doc "Consume a magic-login proof only after explicit participant confirmation. Returns the existing Session transport or one neutral failure."
-  @spec authenticate_magic_link(term()) :: {:ok, map()} | {:error, :authentication_unavailable}
+  @spec authenticate_magic_link(term()) ::
+          {:ok, session_credentials()} | {:error, :authentication_unavailable}
   def authenticate_magic_link(proof) when is_binary(proof) and byte_size(proof) in 1..8192 do
     Account
     |> Ash.ActionInput.for_action(:authenticate_magic_link, %{proof: proof}, authorize?: false)
@@ -237,7 +271,7 @@ defmodule NewYou.Identity do
   store it in the Session or logs. All unavailable outcomes share one error.
   """
   @spec authenticate_password(term(), term()) ::
-          {:ok, map()} | {:error, :authentication_unavailable}
+          {:ok, session_credentials()} | {:error, :authentication_unavailable}
   def authenticate_password(email, password),
     do: NewYou.Identity.PasswordSession.authenticate(email, password)
 
@@ -245,6 +279,89 @@ defmodule NewYou.Identity do
   @spec authorize_session(term()) ::
           {:ok, %{account_id: String.t()}} | {:error, :authentication_unavailable}
   def authorize_session(credentials), do: NewYou.Identity.PasswordSession.authorize(credentials)
+
+  @doc """
+  Authorize a current verified session whose Account still owns an active
+  member reference. The transaction holds the Account lock until the owning
+  caller's transaction ends when called within the same data layer.
+  """
+  @spec authorize_canonical_session(map()) ::
+          {:ok, %{account_id: String.t()}} | {:error, :authentication_unavailable}
+  def authorize_canonical_session(credentials),
+    do: NewYou.Identity.PasswordSession.authorize_canonical(credentials)
+
+  @doc """
+  Check the current canonical status and access posture of an already bound
+  Plan recipient. The transaction holds a shared Account lock through the
+  caller's commit.
+  """
+  @spec locked_plan_recipient(Ecto.UUID.t()) ::
+          {:ok, :allowed | :blocked} | {:error, :recipient_unavailable}
+  def locked_plan_recipient(id) do
+    with true <- Ash.DataLayer.in_transaction?(Account),
+         {:ok, account} <-
+           Account
+           |> Ash.Query.filter(id == ^id)
+           |> Ash.Query.lock("FOR SHARE")
+           |> Ash.read_one(authorize?: false) do
+      case account do
+        %Account{
+          canonical_account_id: nil,
+          pmr_status: :active,
+          account_status: :open,
+          email_verified?: true,
+          credential_status: :active,
+          security_posture: :normal,
+          pmr: pmr
+        } ->
+          {:ok, if(PMR.valid?(pmr), do: :allowed, else: :blocked)}
+
+        _ ->
+          {:ok, :blocked}
+      end
+    else
+      _ -> {:error, :recipient_unavailable}
+    end
+  end
+
+  @doc "Check the locked Plan recipient for TEST fixture grant and dispute work."
+  @spec locked_fixture_recipient(Ecto.UUID.t()) ::
+          {:ok, :allowed | :blocked} | {:error, :recipient_unavailable}
+  if Mix.env() == :test do
+    def locked_fixture_recipient(id), do: locked_plan_recipient(id)
+  else
+    def locked_fixture_recipient(_), do: {:error, :recipient_unavailable}
+  end
+
+  @doc "Record an independently approved Finance or Audit dispute-disclosure grant in TEST."
+  @spec issue_fixture_dispute_grant(session_credentials(), map()) ::
+          {:ok, IdentityGrant.t()} | {:error, :disclosure_grant_unavailable}
+  if Mix.env() == :test do
+    def issue_fixture_dispute_grant(credentials, scope),
+      do: NewYou.Identity.FixtureDisputeGrants.issue(credentials, scope)
+
+    @doc "Revoke a TEST dispute-disclosure grant under its current Domain approval scope."
+    @spec revoke_fixture_dispute_grant(session_credentials(), Ecto.UUID.t()) ::
+            {:ok, IdentityGrant.t()} | {:error, :disclosure_grant_unavailable}
+    def revoke_fixture_dispute_grant(credentials, grant_id),
+      do: NewYou.Identity.FixtureDisputeGrants.revoke(credentials, grant_id)
+
+    @doc false
+    @spec require_fixture_dispute_grants(map()) :: :ok | {:error, :disclosure_grant_unavailable}
+    def require_fixture_dispute_grants(scope),
+      do: NewYou.Identity.FixtureDisputeGrants.require_current(scope)
+  else
+    def issue_fixture_dispute_grant(_, _), do: {:error, :disclosure_grant_unavailable}
+
+    @doc "Revoke a TEST dispute-disclosure grant under its current Domain approval scope."
+    @spec revoke_fixture_dispute_grant(session_credentials(), Ecto.UUID.t()) ::
+            {:ok, IdentityGrant.t()} | {:error, :disclosure_grant_unavailable}
+    def revoke_fixture_dispute_grant(_, _), do: {:error, :disclosure_grant_unavailable}
+
+    @doc false
+    @spec require_fixture_dispute_grants(map()) :: :ok | {:error, :disclosure_grant_unavailable}
+    def require_fixture_dispute_grants(_), do: {:error, :disclosure_grant_unavailable}
+  end
 
   @doc """
   Return the presenting Session holder's current canonical Platform Member Reference.
@@ -276,6 +393,33 @@ defmodule NewYou.Identity do
           | {:error, :authentication_unavailable}
   def list_active_sessions(credentials, cursor \\ nil),
     do: NewYou.Identity.PasswordSession.list_active(credentials, cursor)
+
+  @type trusted_device :: %{
+          id: Ecto.UUID.t(),
+          name: String.t() | nil,
+          expires_at: DateTime.t(),
+          current?: boolean()
+        }
+
+  @type trusted_device_operation ::
+          :list
+          | {:list, binary() | nil}
+          | {:grant, binary()}
+          | {:rename, Ecto.UUID.t(), String.t()}
+          | {:revoke, Ecto.UUID.t()}
+
+  @doc """
+  Manage device trust for the presenting ordinary Account. The caller must submit
+  a fresh random 32-byte artifact only after explicit consent. A successful
+  replay of that artifact keeps the original expiry. Terminal artifacts cannot
+  grant again. The optional listing artifact identifies the current device.
+  Revoke ends trust only. An uncertain write requires a fresh inventory read.
+  """
+  @spec manage_trusted_devices(map(), trusted_device_operation()) ::
+          {:ok, [trusted_device()] | trusted_device() | :renamed | :revoked | :already_ended}
+          | {:error, :device_unavailable | :device_result_uncertain}
+  def manage_trusted_devices(credentials, operation),
+    do: NewYou.Identity.PasswordSession.manage_trusted_devices(credentials, operation)
 
   @doc """
   Terminate one other currently usable Session owned by the presenting Account.
@@ -345,18 +489,25 @@ defmodule NewYou.Identity do
         email
       )
 
-  @doc "Place a version-bound security hold under current scoped Support authority and revoke the target's active Sessions."
-  @spec place_security_hold(map()) :: {:ok, map()} | {:error, :security_hold_unavailable}
+  @doc """
+  Place a version-bound hold under current scoped Support authority. Placement
+  ends active Sessions, revokes trusted devices and terminalizes an in-flight
+  primary-email change in the same source transaction as the Audit obligation.
+  """
+  @spec place_security_hold(map()) ::
+          {:ok, security_hold_receipt()} | {:error, :security_hold_unavailable}
   def place_security_hold(request),
     do: NewYou.Identity.SecurityHold.run(:place_security_hold, request)
 
   @doc "Record independent current security review of one held generation. This does not release the hold."
-  @spec review_security_hold(map()) :: {:ok, map()} | {:error, :security_hold_unavailable}
+  @spec review_security_hold(map()) ::
+          {:ok, security_hold_receipt()} | {:error, :security_hold_unavailable}
   def review_security_hold(request),
     do: NewYou.Identity.SecurityHold.run(:review_security_hold, request)
 
   @doc "Release a reviewed hold after Audit E1 commits and current Identity authority is revalidated. Admission survives source failure."
-  @spec release_security_hold(map()) :: {:ok, map()} | {:error, :security_hold_unavailable}
+  @spec release_security_hold(map()) ::
+          {:ok, security_hold_receipt()} | {:error, :security_hold_unavailable}
   def release_security_hold(request),
     do: NewYou.Identity.SecurityHold.run(:release_security_hold, request)
 
@@ -364,6 +515,24 @@ defmodule NewYou.Identity do
   @spec open_reconciliation(map()) ::
           {:ok, NewYou.Identity.ReconciliationCase.t()} | {:error, :reconciliation_unavailable}
   defdelegate open_reconciliation(request), to: NewYou.Identity.Reconciliation, as: :open
+
+  @doc "Return the minimum current reconciliation state under review step-up and grants for both Accounts."
+  @spec reconciliation_status(map()) ::
+          {:ok, reconciliation_status()} | {:error, :reconciliation_unavailable}
+  defdelegate reconciliation_status(request), to: NewYou.Identity.Reconciliation, as: :status
+
+  @doc "Bind a current Account Session to the exact review generation for its own case."
+  @spec reconciliation_control_binding(map(), Ecto.UUID.t()) ::
+          {:ok, {Ecto.UUID.t(), pos_integer()}} | {:error, :reconciliation_unavailable}
+  defdelegate reconciliation_control_binding(credentials, case_id),
+    to: NewYou.Identity.Reconciliation,
+    as: :control_binding
+
+  @doc "Check current apply prerequisites for confirmation. Apply repeats these checks and admits Audit E1 separately."
+  @spec prepare_reconciliation_apply(map()) :: :ok | {:error, :reconciliation_unavailable}
+  defdelegate prepare_reconciliation_apply(request),
+    to: NewYou.Identity.Reconciliation,
+    as: :prepare_apply
 
   @doc "Advance review under grants for both Accounts. Approval requires verified controls and owner review; reopening approval preserves its evidence and requires fresh review."
   @spec review_reconciliation(map()) ::
@@ -391,13 +560,13 @@ defmodule NewYou.Identity do
 
   @doc "Read the current eligible Account's canonical address and email-change status."
   @spec primary_email_change_status(map()) ::
-          {:ok, map()} | {:error, :primary_email_change_unavailable}
+          {:ok, email_change_status()} | {:error, :primary_email_change_unavailable}
   def primary_email_change_status(credentials),
     do: NewYou.Identity.PrimaryEmailChange.status(credentials)
 
   @doc "Apply the current Phase-9 change under the presenting operation-bound Session."
   @spec apply_authenticated_primary_email_change(map(), Ecto.UUID.t()) ::
-          {:ok, atom()} | {:error, :primary_email_change_unavailable}
+          {:ok, email_change_decision()} | {:error, :primary_email_change_unavailable}
   def apply_authenticated_primary_email_change(credentials, operation_id),
     do: NewYou.Identity.PrimaryEmailChange.apply_authenticated(credentials, operation_id)
 
@@ -431,9 +600,7 @@ defmodule NewYou.Identity do
 
   @doc "Apply a current, confirmed primary-email change after its Identity-owned guards pass."
   @spec apply_primary_email_change(term()) ::
-          {:ok,
-           :applied | :already_applied | :held | :already_held | :rejected | :already_rejected}
-          | {:error, :primary_email_change_unavailable}
+          {:ok, email_change_decision()} | {:error, :primary_email_change_unavailable}
   def apply_primary_email_change(operation_id),
     do: NewYou.Identity.PrimaryEmailChange.apply(operation_id)
 
@@ -573,6 +740,9 @@ defmodule NewYou.Identity do
 
   def resend_verification_by_email(_), do: {:error, :resend_unavailable}
 
+  @doc false
+  # Keep acceptance and receipt timestamps on the same configured Identity clock.
+  @spec registration_now() :: DateTime.t()
   def registration_now, do: now()
 
   @doc false

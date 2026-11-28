@@ -12,7 +12,7 @@ config :ash_oban, pro?: false
 config :new_you, Oban,
   engine: Oban.Engines.Basic,
   notifier: Oban.Notifiers.Postgres,
-  queues: [default: 10, audit: 10, communications: 10],
+  queues: [default: 10, audit: 10, communications: 10, commerce: 10],
   lifeline: [rescue_after: {2, :hours}],
   pruner: [max_age: {1, :day}],
   repo: NewYou.Repo,
@@ -73,6 +73,9 @@ config :new_you,
   ash_domains: [
     NewYou.Analytics,
     NewYou.Communications,
+    NewYou.Commerce,
+    NewYou.Entitlements,
+    NewYou.Temperament,
     NewYou.Identity,
     NewYou.Audit,
     NewYou.Privacy
@@ -107,7 +110,7 @@ config :esbuild,
   version: "0.25.4",
   new_you: [
     args:
-      ~w(js/app.js js/password_reset.js js/member_reference.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
+      ~w(js/app.js js/password_reset.js js/member_reference.js js/support_lookup.js js/reconciliation.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]

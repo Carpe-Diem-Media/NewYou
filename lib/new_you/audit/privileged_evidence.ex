@@ -7,7 +7,7 @@ defmodule NewYou.Audit.PrivilegedEvidence do
   @uuid_fields ~w(attempt_id actor_id target_id grant_id session_id)a
   @reasons ~w(suspected_compromise security_review verified_recovery mistaken_hold)a
   @outcome_fields ~w(source_operation_id source_occurred_at evidence_type actor_id target_id grant_id session_id reason_code admission_id outcome case_id)a
-  @security_types ~w(security_hold_placement security_hold_review security_hold_release_result identity_mfa_confirmed identity_session_revoked identity_grant_revoked identity_reconciliation_result identity_reconciliation_review identity_password_reset identity_recovery_completed identity_recovery_review identity_primary_email_change_requested identity_primary_email_change_confirmed identity_primary_email_change_applied identity_primary_email_change_cancelled identity_primary_email_change_expired identity_primary_email_change_rejected identity_primary_email_change_superseded identity_primary_email_change_held identity_primary_email_change_reviewed)a
+  @security_types ~w(security_hold_placement security_hold_review security_hold_release_result identity_mfa_confirmed identity_session_revoked identity_device_trust_granted identity_device_trust_revoked identity_grant_revoked identity_reconciliation_result identity_reconciliation_review identity_password_reset identity_recovery_completed identity_recovery_review identity_primary_email_change_requested identity_primary_email_change_confirmed identity_primary_email_change_applied identity_primary_email_change_cancelled identity_primary_email_change_expired identity_primary_email_change_rejected identity_primary_email_change_superseded identity_primary_email_change_held identity_primary_email_change_reviewed)a
   @recovery_types ~w(identity_recovery_completed identity_recovery_review)a
 
   defmacrop checkpoint(point) do
@@ -18,6 +18,10 @@ defmodule NewYou.Audit.PrivilegedEvidence do
     end
   end
 
+  # E1 admission must commit outside the source transaction. Reuse an attempt
+  # only when the full admitted binding matches, including after an insert race.
+  @spec admit(map(), :security_hold_release | :identity_reconciliation | :identity_recovery) ::
+          {:ok, EvidenceRecord.t()} | {:error, :evidence_admission_unavailable}
   def admit(envelope, action_class \\ :security_hold_release)
 
   def admit(envelope, action_class)
@@ -106,6 +110,10 @@ defmodule NewYou.Audit.PrivilegedEvidence do
       is_integer(envelope.grant_version) and envelope.grant_version > 0 and
         is_integer(envelope.expected_version) and envelope.expected_version >= 0
 
+  # E2 requires the surrounding source transaction. Replay compares the
+  # supplied fields of the existing operation/type binding. Ash errors from
+  # the create action are returned to the caller so it can roll back.
+  @spec establish_outcome(map()) :: {:ok, EvidenceObligation.t()} | {:error, term()}
   def establish_outcome(envelope) when is_map(envelope) do
     with true <- Ash.DataLayer.in_transaction?(EvidenceObligation),
          true <- Enum.all?(Map.keys(envelope), &(&1 in @outcome_fields)),

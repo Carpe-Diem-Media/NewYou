@@ -234,6 +234,29 @@ defmodule NewYou.Identity.SupportLookupTest do
     end)
   end
 
+  test "a live grant does not authorize a different Account or a self lookup" do
+    P813HoldFixture.with_fixture(fn fixture ->
+      grant = provision_grant(fixture, :identity_lookup, [])
+      self_grant = provision_grant(fixture, :identity_lookup, target: fixture.actor)
+      %{actor: %{credentials: credentials}} = fixture
+      target = Ash.get!(Account, fixture.target.id, authorize?: false)
+      other = Ash.get!(Account, fixture.reviewer.id, authorize?: false)
+      actor = Ash.get!(Account, fixture.actor.id, authorize?: false)
+      {:ok, :ok} = P813HoldFixture.step_up(fixture.actor, :lookup_identity)
+
+      assert {:ok, %{account_id: id}} =
+               Identity.lookup_support_identity(credentials, grant.id, target.id, target.email)
+
+      assert id == target.id
+
+      assert {:error, :support_lookup_unavailable} =
+               Identity.lookup_support_identity(credentials, grant.id, other.id, other.email)
+
+      assert {:error, :support_lookup_unavailable} =
+               Identity.lookup_support_identity(credentials, self_grant.id, actor.id, actor.email)
+    end)
+  end
+
   defp provision_grant(fixture, scope, opts) do
     subject = Keyword.get(opts, :subject, fixture.actor)
     approver = Keyword.get(opts, :approver, fixture.approver)

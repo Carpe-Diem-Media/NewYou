@@ -9,7 +9,17 @@ defmodule NewYou.Proof.P815Port do
     "P815_DELIVERY_MATCHES" => :delivery_matches,
     "P815_ACCEPTED" => :accepted,
     "P815_COMPLETED" => :completed,
-    "P815_ALREADY_COMPLETED" => :already_completed
+    "P815_ALREADY_COMPLETED" => :already_completed,
+    "P1_COMPLETED" => :p1_completed,
+    "S1_COMPLETED" => :s1_completed,
+    "E1AF_COMPLETED" => :e1af_completed,
+    "E1BF_COMPLETED" => :e1bf_completed,
+    "WELL221_COMPLETED" => :well221_completed,
+    "WELL223_COMPLETED" => :well223_completed,
+    "E2A_COMPLETED" => :e2a_completed,
+    "P814_RECONSTRUCTED" => :p814_reconstructed,
+    "P814_CONFLICT_DENIED" => :p814_conflict_denied,
+    "P814_REVIEW_RECOVERED" => :p814_review_recovered
   }
 
   def run(executable, args, payload, timeout \\ 30_000)
@@ -479,6 +489,7 @@ defmodule NewYou.Proof.P815Port do
       database_failures: database_failures,
       budget_reports: Enum.flat_map(lines, &NewYou.Proof.RecoveryBudget.parse/1),
       lease_reports: Enum.flat_map(lines, &NewYou.Proof.RecoveryLease.parse/1),
+      load_reports: Enum.flat_map(lines, &NewYou.Proof.RecoveryLoad.parse/1),
       rollback_checkpoint?: "P815_ROLLBACK_CHECKPOINT" in lines,
       failure_class: failure_class(lines),
       phases: phases(lines)
