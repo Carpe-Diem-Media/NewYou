@@ -6,7 +6,7 @@
     "WELL-221"
   ],
   "implementation_revision": {
-    "git_sha": "374e77d344336a3c0308c83d6adc5eae5209c676",
+    "git_sha": "70ab560c8041024d7055712c33c65f621edec407",
     "semantics": "Provider-disabled refund dispatch, recoverable capped reads, source-qualified excess, durable provider ID conflict classification and privacy-safe Entitlements convergence."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -839,7 +839,7 @@
       "id": "allocation",
       "path": "lib/new_you/commerce/offer_admission.ex",
       "symbol": "def accepted_component_minor",
-      "sha256": "87a9713e7d1d0e3d09844b74f843a17ae2c356d0dd48392ac841a554692bb74f"
+      "sha256": "7587b19b15d06b899404afbc903774462b0f369f313c6b65c23304cff5d06fed"
     },
     {
       "id": "evidence",
