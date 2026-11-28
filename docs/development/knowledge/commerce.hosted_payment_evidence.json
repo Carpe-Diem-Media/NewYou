@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "a94161d64fa9c5adfeb9eb1ae1a13f29172e384d",
+    "git_sha": "c944d41a6a09a81b33edcfe54525539a1a1dd1ff",
     "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -679,7 +679,7 @@
       "id": "fixture_cleanup",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defp cleanup_hosted_fixture_evidence(",
-      "sha256": "95587a9944199b98fe8d5be5a3ce49b81b15b56f69ac668a51bee934df2dce62"
+      "sha256": "5438d41d47aa28e858124fb8fc39492eda62fa5c72c8a635d72d3aeb736f1967"
     },
     {
       "id": "fixture_ownership",
