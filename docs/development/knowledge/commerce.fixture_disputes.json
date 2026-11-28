@@ -1,0 +1,1506 @@
+{
+  "schema_version": 1,
+  "capability_id": "commerce.fixture_disputes",
+  "purpose": "Qualify source-bound TEST dispute evidence, maintain competing correction truth, and converge the original paid right. Recover work with known-case pinned reads and project minimized local evidence.",
+  "implementing_tickets": [
+    "WELL-223"
+  ],
+  "implementation_revision": {
+    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
+    "semantics": "Provider-disabled dispute intake, receipt and case recovery, source-specific correction, and local disclosure under independent revocable Finance and Audit grants."
+  },
+  "authoritative_domain": "NewYou.Commerce",
+  "collaborating_domains": [
+    {
+      "domain": "NewYou.Entitlements",
+      "interface": "apply_fixture_dispute/1; grant_paid_plan/1",
+      "ownership": "Applies the current source-specific effect and owns right identity and lifecycle.",
+      "source_ids": [
+        "rights",
+        "convergence"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "interface": "locked_plan_recipient/1; locked_fixture_recipient/1; issue_fixture_dispute_grant/2; revoke_fixture_dispute_grant/2; require_fixture_dispute_grants/1",
+      "ownership": "Owns canonical Account and session posture and durable dispute disclosure grants. Finance approval is reserved for the Commerce approver scope, and Audit approval is reserved for the Audit & Evidence approver scope.",
+      "source_ids": [
+        "identity",
+        "disclosure_identity",
+        "disclosure_grants",
+        "grant_resource",
+        "plan_recipient"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "interface": "FixtureDisputePurpose.require_current_locked/3; SyntheticSuppression.locked_status/1",
+      "ownership": "Owns purpose authorization and deletion suppression for the exact fixture subject.",
+      "source_ids": [
+        "privacy"
+      ]
+    },
+    {
+      "domain": "NewYou.Audit",
+      "interface": "FixtureDisputeDisclosureEvidence.record_in_transaction/3",
+      "ownership": "Owns the minimized disclosure assertion and its replay binding.",
+      "source_ids": [
+        "audit"
+      ]
+    }
+  ],
+  "ash": [
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.FixtureDisputeReceipt",
+      "actions": [
+        "receive",
+        "classify",
+        "process"
+      ],
+      "caller_boundary": "Authenticated ingress or independently pinned read persists normalized source-bound evidence. TEST worker classifies once.",
+      "source_ids": [
+        "receipt",
+        "ingress"
+      ]
+    },
+    {
+      "domain": "NewYou.Commerce",
+      "resource": "NewYou.Commerce.FixtureDispute",
+      "actions": [
+        "bind",
+        "qualify",
+        "record_conflict",
+        "confirm_terminal",
+        "reserve_read",
+        "refund_claimed",
+        "acknowledge",
+        "read_due",
+        "deliver"
+      ],
+      "caller_boundary": "TEST-only owning work revalidates the accepted purchase lock before mutation.",
+      "source_ids": [
+        "dispute",
+        "lifecycle"
+      ]
+    },
+    {
+      "domain": "NewYou.Entitlements",
+      "resource": "NewYou.Entitlements.PlanRight",
+      "actions": [
+        "grant",
+        "suspend_component",
+        "restore_component",
+        "end_component"
+      ],
+      "caller_boundary": "Entitlements revalidates the locked Identity recipient before any original Plan creation and before restoring a disputed Plan right. Current Commerce and TEST Privacy authority still govern the effect.",
+      "source_ids": [
+        "rights",
+        "convergence",
+        "plan_recipient"
+      ]
+    },
+    {
+      "domain": "NewYou.Privacy",
+      "resource": "NewYou.Privacy.FixtureDisputePurposeAuthority",
+      "actions": [
+        "grant_fixture_only",
+        "withdraw_fixture_only"
+      ],
+      "caller_boundary": "Fixture-only exact-purpose state. Withdrawal is terminal.",
+      "source_ids": [
+        "privacy"
+      ]
+    },
+    {
+      "domain": "NewYou.Audit",
+      "resource": "NewYou.Audit.FixtureDisputeDisclosure",
+      "actions": [
+        "record_disclosure"
+      ],
+      "caller_boundary": "Records a fixed field-set assertion through the Audit owner inside a transaction.",
+      "source_ids": [
+        "audit"
+      ]
+    },
+    {
+      "domain": "NewYou.Identity",
+      "resource": "NewYou.Identity.IdentityGrant",
+      "actions": [
+        "provision_fixture_dispute_approver",
+        "approve_fixture_dispute_disclosure",
+        "revoke"
+      ],
+      "caller_boundary": "TEST-only approver fixtures seed distinct scoped roles. Identity verifies the current Domain approval grant and rejects self-approval before it issues the exact reader grant. Revocation uses the existing Identity lifecycle and Audit E2 evidence.",
+      "source_ids": [
+        "grant_resource",
+        "disclosure_grants",
+        "disclosure_identity"
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "module": "NewYou.Commerce",
+      "function": "apply_fixture_dispute_receipt",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Receipt UUID"
+      ],
+      "returns": [
+        "ok or dispute_unavailable."
+      ],
+      "side_effects": [
+        "Commits lifecycle state and the current consequence version with the receipt classification."
+      ],
+      "caller_constraints": [
+        "TEST only."
+      ],
+      "source_ids": [
+        "commerce",
+        "lifecycle"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce",
+      "function": "deliver_fixture_dispute",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Case UUID"
+      ],
+      "returns": [
+        "ok or dispute_unavailable."
+      ],
+      "side_effects": [
+        "Resolves the current effect through Entitlements and acknowledges only the version that owner applied."
+      ],
+      "caller_constraints": [
+        "TEST only. Call after the Commerce commit."
+      ],
+      "source_ids": [
+        "commerce",
+        "convergence"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.FixtureDisputes",
+      "function": "read_due",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Case UUID"
+      ],
+      "returns": [
+        "ok or bounded error."
+      ],
+      "side_effects": [
+        "Reserves a durable known-case read and verifies the exact committed reservation before GET."
+      ],
+      "caller_constraints": [
+        "Call outside a transaction. Use the original checkout listener pin."
+      ],
+      "source_ids": [
+        "lifecycle",
+        "transport"
+      ]
+    },
+    {
+      "module": "NewYou.Commerce.FixtureDisputes",
+      "function": "correction_overlap",
+      "arity": 1,
+      "visibility": "internal",
+      "arguments": [
+        "Case UUID"
+      ],
+      "returns": [
+        "none, refund_owed, unresolved or dispute_unavailable."
+      ],
+      "side_effects": [
+        "Reads current same-collection correction classification under the purchase lock."
+      ],
+      "caller_constraints": [
+        "TEST only. A financial overlap cannot authorize another POST."
+      ],
+      "source_ids": [
+        "lifecycle",
+        "refund"
+      ]
+    }
+  ],
+  "persistence": [
+    {
+      "migration": "priv/repo/migrations/20261127135002_well223_fixture_disputes.exs",
+      "tables": [
+        "commerce_fixture_disputes",
+        "commerce_fixture_dispute_receipts",
+        "audit_fixture_dispute_disclosures",
+        "entitlements_plan_rights"
+      ],
+      "constraints": [
+        "fixture_dispute_source_shape",
+        "fixture_dispute_receipt_shape",
+        "commerce_fixture_disputes_provider_dispute_index",
+        "commerce_fixture_dispute_receipts_evidence_index",
+        "entitlements_plan_rights_state"
+      ],
+      "source_ids": [
+        "migration",
+        "roundtrip"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261127140243_well223_dispute_privacy.exs",
+      "tables": [
+        "privacy_fixture_dispute_purposes",
+        "privacy_fixture_dispute_purpose_events"
+      ],
+      "constraints": [
+        "fixture_dispute_purpose_owner_uidx",
+        "fixture_dispute_purpose_event_uidx"
+      ],
+      "source_ids": [
+        "privacy_migration",
+        "roundtrip"
+      ]
+    },
+    {
+      "migration": "priv/repo/migrations/20261128091553_well223_dispute_disclosure_grants.exs",
+      "tables": [
+        "identity_grants"
+      ],
+      "constraints": [
+        "identity_grants_role",
+        "identity_grants_scope",
+        "identity_grants_approval_grant_id_fkey",
+        "identity_grants_one_active_assignment_index",
+        "identity_grants_one_active_disclosure_index"
+      ],
+      "source_ids": [
+        "grant_migration",
+        "roundtrip"
+      ]
+    }
+  ],
+  "request_flow": [
+    {
+      "summary": "The exact-raw HMAC webhook path validates the fixture vocabulary and resolves the original qualified payment transaction and reference. An independent connection must see the bounded receipt before acknowledgement.",
+      "source_ids": [
+        "ingress",
+        "receipt"
+      ]
+    },
+    {
+      "summary": "The receipt worker locks the accepted purchase, binds the provider dispute identity, classifies revision or conflict and increments the durable effect version in the same transaction.",
+      "source_ids": [
+        "lifecycle",
+        "dispute"
+      ]
+    },
+    {
+      "summary": "A first refund claim advances conflict-free restored Plan consequences for the exact purchase and payment under the same Purchase transaction. The claim and consequence versions commit together. Dispatch replay cannot advance them again.",
+      "source_ids": [
+        "refund",
+        "lifecycle",
+        "dispute",
+        "test"
+      ]
+    },
+    {
+      "summary": "The owning Entitlements transaction re-reads the current source effect. Applied versions are acknowledged separately, so a cut between transactions leaves recoverable work.",
+      "source_ids": [
+        "convergence",
+        "lifecycle"
+      ]
+    },
+    {
+      "summary": "The projection requires current Finance and Audit IdentityGrant rows for the canonical actor, recipient, dispute and operation. It checks the signed and persisted Privacy purpose and deletion authority. Audit records the exact operation, actor, dispute, purpose and field set. An independent connection must see that committed assertion before the projection returns. Explicit caller transactions are denied.",
+      "source_ids": [
+        "projection",
+        "privacy",
+        "audit",
+        "fence",
+        "projection_test",
+        "disclosure_identity",
+        "disclosure_grants"
+      ]
+    }
+  ],
+  "lifecycle": {
+    "states": [
+      "contested",
+      "awaiting_feedback",
+      "under_review",
+      "unresolved",
+      "restored",
+      "lost",
+      "held_unconsumed",
+      "suspended",
+      "ended",
+      "allowed",
+      "withdrawn",
+      "receipt.pending",
+      "receipt.applied",
+      "receipt.stale",
+      "receipt.conflict",
+      "receipt.quarantined",
+      "disclosure_grant.active",
+      "disclosure_grant.revoked"
+    ],
+    "transitions": [
+      {
+        "from_state": "receipt.pending",
+        "to_state": "receipt.applied",
+        "guards": [
+          "Under the Purchase lock, a qualified webhook can bind an unbound case without opposing terminal evidence, or exact current evidence can advance or confirm an existing case."
+        ],
+        "side_effects": [
+          "Commerce may bind the case, advance its revision and effect version, or confirm its retained outcome in the same transaction as receipt classification. Entitlements applies the resulting effect separately."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "receipt",
+          "receipt_restart_test",
+          "receipt_replay_test"
+        ]
+      },
+      {
+        "from_state": "receipt.pending",
+        "to_state": "receipt.stale",
+        "guards": [
+          "The read reservation is superseded, or the receipt cannot advance or confirm the current case under the revision and terminal evidence rules."
+        ],
+        "side_effects": [
+          "Commerce classifies the receipt without changing the case or advancing the consequence. Committed exact-source terminal evidence can still constrain a later reconciliation."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "receipt",
+          "receipt_stale_test"
+        ]
+      },
+      {
+        "from_state": "receipt.pending",
+        "to_state": "receipt.conflict",
+        "guards": [
+          "Opposing source-bound evidence prevents qualification, including incompatible outcomes at one revision or contradictory terminal evidence."
+        ],
+        "side_effects": [
+          "Commerce may bind an unbound case as unresolved or flag the existing case and advance its effect version once. Receipt classification is complete while the dispute can remain unresolved and eligible for a later qualified read."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "receipt",
+          "receipt_conflict_test"
+        ]
+      },
+      {
+        "from_state": "receipt.pending",
+        "to_state": "receipt.quarantined",
+        "guards": [
+          "The provider dispute identity belongs to a different payment or amount, or a read observation has no existing case to qualify against."
+        ],
+        "side_effects": [
+          "Commerce classifies the receipt without qualifying a new effect or changing another payment's case. A competing bind can return the existing case without replacing it."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "receipt",
+          "receipt_quarantine_test"
+        ]
+      },
+      {
+        "from_state": "contested",
+        "to_state": "awaiting_feedback",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "contested",
+        "to_state": "under_review",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "contested",
+        "to_state": "unresolved",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "contested",
+        "to_state": "restored",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision.",
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "contested",
+        "to_state": "lost",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision.",
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "awaiting_feedback",
+        "to_state": "contested",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "awaiting_feedback",
+        "to_state": "under_review",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "awaiting_feedback",
+        "to_state": "unresolved",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "awaiting_feedback",
+        "to_state": "restored",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision.",
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "awaiting_feedback",
+        "to_state": "lost",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision.",
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "under_review",
+        "to_state": "contested",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "under_review",
+        "to_state": "awaiting_feedback",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "under_review",
+        "to_state": "unresolved",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "under_review",
+        "to_state": "restored",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision.",
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "under_review",
+        "to_state": "lost",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision.",
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "contested",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "awaiting_feedback",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "under_review",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "restored",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision.",
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "unresolved",
+        "to_state": "lost",
+        "guards": [
+          "Same exact case and a higher qualified fixture revision.",
+          "Without a conflict, no committed opposing terminal evidence exists for the exact source. With a conflict, a current pinned read must match or exceed the revision of committed same-outcome evidence and strictly exceed all committed opposing terminal revisions."
+        ],
+        "side_effects": [
+          "Advance the durable effect version and reconcile the exact source."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "dispute"
+        ]
+      },
+      {
+        "from_state": "restored",
+        "to_state": "restored",
+        "guards": [
+          "Contradictory qualified terminal evidence."
+        ],
+        "side_effects": [
+          "Preserve terminal history, flag the conflict and suspend attributable access.",
+          "Opening the conflict invalidates an earlier read reservation."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "convergence"
+        ]
+      },
+      {
+        "from_state": "lost",
+        "to_state": "lost",
+        "guards": [
+          "Contradictory qualified terminal evidence."
+        ],
+        "side_effects": [
+          "Preserve the lost payment and its ended right. Flag the conflict.",
+          "Opening the conflict invalidates an earlier read reservation."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "convergence"
+        ]
+      },
+      {
+        "from_state": "held_unconsumed",
+        "to_state": "suspended",
+        "guards": [
+          "Original source has a qualified attributable active case or a conflicting restoration."
+        ],
+        "side_effects": [
+          "Preserve right identity and grant timestamp. Block use and treat suspended Assessment credit as outstanding."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "rights",
+          "convergence",
+          "assessment"
+        ]
+      },
+      {
+        "from_state": "suspended",
+        "to_state": "held_unconsumed",
+        "guards": [
+          "Same paid source has restored payment, no overriding refund or loss, current canonical recipient and current Privacy authority."
+        ],
+        "side_effects": [
+          "Restore the same right."
+        ],
+        "terminal": false,
+        "source_ids": [
+          "lifecycle",
+          "convergence"
+        ]
+      },
+      {
+        "from_state": "held_unconsumed",
+        "to_state": "ended",
+        "guards": [
+          "Current attributable final loss or verified refund."
+        ],
+        "side_effects": [
+          "End only the original affected right."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "convergence"
+        ]
+      },
+      {
+        "from_state": "suspended",
+        "to_state": "ended",
+        "guards": [
+          "Current attributable final loss or verified refund."
+        ],
+        "side_effects": [
+          "End the suspended right."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "lifecycle",
+          "convergence"
+        ]
+      },
+      {
+        "from_state": "allowed",
+        "to_state": "withdrawn",
+        "guards": [
+          "Withdrawal for the current exact purpose."
+        ],
+        "side_effects": [
+          "Append the versioned Privacy event and deny previously signed allowed proof."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "privacy",
+          "projection"
+        ]
+      },
+      {
+        "from_state": "restored",
+        "to_state": "restored",
+        "guards": [
+          "A current, source-qualified pinned fixture read confirms the retained outcome at a revision newer than the retained decision and all committed opposing terminal evidence, and at least as high as all committed matching terminal evidence, including stale-lease observations."
+        ],
+        "side_effects": [
+          "Clear the conflict and advance the consequence version atomically. Historic receipts remain additive.",
+          "Re-evaluate restoration and the refund fence for the existing paid right."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "dispute",
+          "lifecycle",
+          "restart",
+          "test"
+        ]
+      },
+      {
+        "from_state": "lost",
+        "to_state": "lost",
+        "guards": [
+          "A current, source-qualified pinned fixture read confirms the retained outcome at a revision newer than the retained decision and all committed opposing terminal evidence, and at least as high as all committed matching terminal evidence, including stale-lease observations."
+        ],
+        "side_effects": [
+          "Clear the conflict and advance the consequence version atomically. Historic receipts remain additive.",
+          "Retain final loss, the refund fence and the ended right."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "dispute",
+          "lifecycle",
+          "restart",
+          "test"
+        ]
+      },
+      {
+        "from_state": "disclosure_grant.active",
+        "to_state": "disclosure_grant.revoked",
+        "guards": [
+          "The current canonical approver has the matching Commerce or Audit & Evidence approval role for the target recipient and differs from the reader."
+        ],
+        "side_effects": [
+          "Identity revokes the exact grant and records one Audit E2 obligation. The canonical session and Privacy purpose can remain current. The other disclosure role remains independently valid."
+        ],
+        "terminal": true,
+        "source_ids": [
+          "grant_resource",
+          "disclosure_grants",
+          "revocation_test"
+        ]
+      }
+    ]
+  },
+  "security_invariants": [
+    {
+      "summary": "Dispute wire, handlers, workers, Ash actions and AshOban read authorization compile only in TEST. Network reads are GET to the original certificate-pinned loopback endpoint, without redirects or automatic retries.",
+      "source_ids": [
+        "dispute",
+        "receipt",
+        "transport",
+        "non_test"
+      ]
+    },
+    {
+      "summary": "The stored receipt contains only a digest, bounded normalized outcome data and a local bound payment identity. SQL query telemetry is suppressed on protected paths including the independent visibility observer.",
+      "source_ids": [
+        "ingress",
+        "fence",
+        "test"
+      ]
+    },
+    {
+      "summary": "Privacy suppresses restricted SQL telemetry around authority reads, grant and withdrawal writes and events, proof issuance, and failure reconciliation. The same bounded observer that checks receipt visibility also checks exact Audit visibility with protected SQL telemetry.",
+      "source_ids": [
+        "privacy",
+        "privacy_telemetry",
+        "audit",
+        "fence"
+      ]
+    },
+    {
+      "summary": "Finance and Audit reader capabilities use distinct role and scope pairs and confer no Support permission. Identity checks exact IDs, role, actor, recipient, dispute, operation, active period and unrevoked state in the projection transaction. TEST-only scope provisioning rejects self-approval and records the exact active approver grant used for issuance.",
+      "source_ids": [
+        "disclosure_grants",
+        "grant_resource",
+        "revocation_test"
+      ]
+    }
+  ],
+  "concurrency": [
+    {
+      "summary": "The purchase lock is shared by dispute ingress, qualification, refund dispatch claim and entitlement convergence. A pending bound receipt or current blocking dispute fences a new POST. An existing claim remains durable and cannot be repeated.",
+      "source_ids": [
+        "fence",
+        "lifecycle",
+        "refund",
+        "test"
+      ]
+    },
+    {
+      "summary": "Dispute receipt persistence and terminal qualification take the same purchase lock. Precommitted opposing outcomes keep a known case suspended with the refund fence held in either processing order. The first terminal receipt for a still-unbound case binds as unresolved when its opposition is already committed. Loss qualified before opposition remains irreversible.",
+      "source_ids": [
+        "lifecycle",
+        "dispute",
+        "ingress",
+        "test"
+      ]
+    },
+    {
+      "summary": "Refund claim and dispute delivery use the same Purchase lock. The refund owner's payment-scoped status keeps a restored dispute financially unresolved after an ambiguous, pending or failed claimed POST. Entitlements suspends the affected Plan right and ends it after qualified processed refund evidence. A delivery that commits first can restore access while clear, and the committed claim then fences reads immediately and advances the durable effect version for scheduler discovery.",
+      "source_ids": [
+        "lifecycle",
+        "refund",
+        "convergence",
+        "test"
+      ]
+    },
+    {
+      "summary": "Grant administration locks involved Accounts in identifier order. The projection retains the canonical reader Account lock before checking the two current grant rows. A competing grant revocation uses the same Account boundary and revokes the targeted disclosure grant under its independently authenticated Domain authority and clears elevated assurance through the existing Identity lifecycle.",
+      "source_ids": [
+        "disclosure_grants",
+        "grant_resource",
+        "projection"
+      ]
+    }
+  ],
+  "idempotency_retry": [
+    {
+      "summary": "The receipt worker processes only pending rows. Any committed classification is terminal for that receipt. On replay Commerce rereads under the Purchase lock and leaves the case, effect version and receipt unchanged. The receipt scheduler skips classified rows. A failed classification transaction leaves the receipt pending for rediscovery.",
+      "source_ids": [
+        "lifecycle",
+        "receipt",
+        "receipt_restart_test",
+        "receipt_replay_test"
+      ]
+    },
+    {
+      "summary": "Every original Plan creation checks the current canonical Identity recipient and holds the Account lock through commit. An Identity security hold keeps the original consequence open. After release, qualified delivery creates one original right and replay returns that right. Dispute restoration checks the same eligibility before restoring an existing right.",
+      "source_ids": [
+        "lifecycle",
+        "late_grant",
+        "convergence",
+        "identity",
+        "test",
+        "plan_recipient",
+        "original_hold_test"
+      ]
+    },
+    {
+      "summary": "Dispute identity and immutable receipt identity are separate. Replays of earlier revisions or obsolete read tokens cannot advance the owning case. The durable scheduled retry remains capped and due after the final round.",
+      "source_ids": [
+        "lifecycle",
+        "dispute",
+        "receipt",
+        "restart"
+      ]
+    },
+    {
+      "summary": "A later exact pinned confirmation covers older opposing revisions. An older disagreement with no newer pinned confirmation can still open a conflict.",
+      "source_ids": [
+        "lifecycle",
+        "test"
+      ]
+    }
+  ],
+  "failure_recovery": [
+    {
+      "summary": "The installed TEST receipt scheduler discovers a committed pending webhook receipt with missing or exhausted work in a fresh BEAM. Competing executions of the scheduled worker bind one dispute and advance the effect once. Separate fresh processes verify due known-case reads and pending consequence recovery.",
+      "source_ids": [
+        "receipt",
+        "dispute",
+        "restart",
+        "test",
+        "discovery"
+      ]
+    },
+    {
+      "summary": "Down migrations refuse to discard retained dispute, Privacy or Audit evidence or suspended rights. Cleanup selects only the tracked operation, exact payment or webhook digest and their jobs.",
+      "source_ids": [
+        "migration",
+        "privacy_migration",
+        "cleanup",
+        "roundtrip"
+      ]
+    },
+    {
+      "summary": "A stale read token prevents its receipt from applying an outcome. Its committed exact-source terminal revision still limits confirmation. A current pinned read can resolve an unsettled conflict when its revision is at least as high as same-outcome evidence and strictly newer than every opposing terminal revision. Repeating the same terminal outcome under a current reservation can apply after a superseded attempt.",
+      "source_ids": [
+        "lifecycle",
+        "test",
+        "restart"
+      ]
+    },
+    {
+      "summary": "AshOban 0.10.2 remains pinned. These triggers use generic actions. The owning code revalidates pending receipt, due read and effect state under the Purchase lock. The 0.10.3 update and destroy worker recheck change is distinct from those guards. Fresh BEAM proof executes the current pinned scheduler and workers.",
+      "source_ids": [
+        "dispute",
+        "receipt",
+        "lifecycle",
+        "restart"
+      ]
+    },
+    {
+      "summary": "The dispute delivery scheduler finds the newer unacknowledged version even after queue loss. An acknowledgement for a previous restoration cannot acknowledge this version. The refund owner continues same-reference reads until qualified processing and owns the terminal refund effect.",
+      "source_ids": [
+        "dispute",
+        "lifecycle",
+        "refund",
+        "convergence",
+        "restart",
+        "test"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "cases": [
+        "HMAC verification and durable receipt failure",
+        "Reordered lifecycle, conflict and exact right restoration",
+        "Independent PostgreSQL contention in both directions",
+        "Partial and excess scope",
+        "Pinned TLS request counts and capped fresh-BEAM recovery",
+        "SQL telemetry canaries and scoped job cleanup",
+        "Terminal conflicts hold the refund fence until a newer exact pinned confirmation across a fresh BEAM, including final-loss non-resurrection and additive receipt history",
+        "Superseded pinned read committed at revision 10 blocks revision 4 and 10 restoration, then revision 11 restores the same right in a fresh BEAM",
+        "Both worker orders with precommitted opposite terminal evidence suspend the same right and fence refund for bound and initially unbound cases, then a strictly newer pinned loss ends the right",
+        "Both terminal outcomes reconcile an identical revision 4 result under a current reservation after a stale attempt, and a lower same-outcome retry stays fenced. Equal-revision opposition still blocks reconciliation.",
+        "Retained restoration and loss at revision 2 with opposition at 4 and stale matching evidence at 6 both reject revision 5, then reconcile an identical current revision 6 exactly once",
+        "An ambiguous refund POST followed by restored dispute stays unresolved, including pending and failed evidence. Independent PostgreSQL claim and restoration delivery contention runs in both Purchase lock orders, followed by qualified refund processing",
+        "A fully acknowledged restoration receives a same-payment ambiguous claim. A pre-commit cut rolls back both writes. The fresh BEAM scheduler rediscovers suspension with no queued job and leaves an independent same-recipient right unchanged.",
+        "A refund claim between Entitlements commit and Commerce acknowledgement invalidates the older version. After removal of the queued work, a fresh BEAM delivers exactly once and a second scheduler pass creates no worker. Both Purchase lock orders and qualified processed refund ending use the actual scheduler.",
+        "The original outstanding grant and dispute delivery both reject a held recipient in either order. The grant remains open and no right exists until release. Replaying the original grant after release returns the same right.",
+        "Run-specific 20-digit provider identities and payment-scoped assertions preserve large numeric-ID and deliberate collision coverage in the shared TEST allocation.",
+        "An independent PostgreSQL observer sees the exact pending webhook before starting the fresh BEAM. The receipt scheduler recovers after missing or exhausted work and skips the classified receipt on replay. Competing workers leave one case, consequence version and original Plan right. Scoped teardown preserves an unrelated scheduled job.",
+        "A second payment can commit an authenticated receipt before the first payment binds the provider dispute identity. Processing the second receipt after the first bind quarantines it and preserves the independent right.",
+        "With no dispute, receipt or refund for the payment, a recipient security hold blocks the original Plan grant and leaves its consequence open. Release permits exactly one original Plan right and replay returns the same ID."
+      ],
+      "proves": "F-01 through F-05 and F-07 fixture execution.",
+      "limits": "Hosted proof is standalone Plan only. No live provider behavior.",
+      "source_ids": [
+        "test",
+        "restart",
+        "fixture_ids",
+        "original_hold_test"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
+      "cases": [
+        "Minimal allowlist and Audit binding",
+        "Missing, swapped and foreign grants, foreign actor or operation, and extra disclosure fields are rejected.",
+        "Old proof replay after terminal withdrawal",
+        "Deletion suppression",
+        "Explicit and implicit Sandbox rollback, rejected Audit persistence, independent exact committed assertion, and idempotent replay",
+        "Signed Finance and Audit claims alone are denied even with a current canonical session and Privacy purpose.",
+        "Independent revocation and expiry of each scoped reader grant deny a current session and Privacy purpose without a disclosure assertion. Replay emits one revocation obligation and a current replacement grant restores authorized projection without reviving the revoked identifier.",
+        "Cross-Domain, Support, unprivileged and self-approval attempts fail. Both correctly scoped Domain approvals create usable grants for the same reader."
+      ],
+      "proves": "F-06 minimized local disclosure under independent Finance, Audit, Privacy and canonical session authority, with an independent exact Audit commit boundary.",
+      "limits": "Synthetic approval roles and grant administration are restricted to TEST. Production provisioning and privileged authentication require their governed release gates.",
+      "source_ids": [
+        "projection_test",
+        "privacy",
+        "audit",
+        "grant_resource",
+        "disclosure_grants",
+        "revocation_test"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "cases": [
+        "Suspended Assessment credit prevents a competing admission",
+        "Accepted component attribution and unallocated evidence through E2a"
+      ],
+      "proves": "F-02/F-03 synthetic-only component and admission interlocks.",
+      "limits": "Uses accepted E2a fixture allocations independently of hosted checkout.",
+      "source_ids": [
+        "assessment"
+      ]
+    },
+    {
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "cases": [
+        "Isolated schema forward/down/forward",
+        "Refuse rollback over retained Audit and Privacy evidence",
+        "Identity grant migration keeps legacy Support grants through forward/down/forward and refuses rollback over retained dispute approval evidence."
+      ],
+      "proves": "F-07 migration compatibility and preservation.",
+      "limits": "Migration proof runs in a transaction-owned schema.",
+      "source_ids": [
+        "roundtrip",
+        "grant_migration"
+      ]
+    },
+    {
+      "path": "test/new_you/privacy/fixture_dispute_purpose_telemetry_test.exs",
+      "cases": [
+        "Emitted SQL telemetry positive controls in string and binary UUID representations",
+        "Grant and withdrawal success, failed event persistence and rollback, proof issuance, and independent concurrent grant reconciliation"
+      ],
+      "proves": "MG-223-02 direct Privacy authority calls protect subject, dispute and operation identifiers.",
+      "limits": "Purpose fixtures use the shared DevCore TEST allocation and operation-scoped teardown.",
+      "source_ids": [
+        "privacy",
+        "privacy_telemetry",
+        "cleanup"
+      ]
+    },
+    {
+      "path": "test/proof/well223_provider_disabled.exs",
+      "cases": [
+        "Non-TEST primary read actions are absent even when Ash supplies a real AshOban job context.",
+        "Fixture ingress, trigger declarations, worker and scheduler modules, all five fixture request builders and TEST-only PlanRight actions are absent. Public Domain wrappers fail closed and normal Privacy and Audit reader policies deny rows.",
+        "Disclosure grant provisioning and approval actions are absent in DEV, and Identity issue, revoke and require wrappers fail closed."
+      ],
+      "proves": "F-07 DEV compile and read denial for all five Commerce, Audit and Privacy dispute resources, with and without authorization.",
+      "limits": "Runs in DEV without starting Repo or the endpoint. Application CI executes it in the existing static job after compiling DEV and loading static project policies.",
+      "source_ids": [
+        "non_test",
+        "dispute",
+        "receipt",
+        "audit_resource",
+        "purpose_resource",
+        "purpose_event",
+        "discovery",
+        "application_ci",
+        "disclosure_identity",
+        "grant_resource"
+      ]
+    }
+  ],
+  "safe_extensions": [
+    {
+      "summary": "Retain the same Commerce purchase lock and source-specific right transition when adding a governed correction producer. Keep any provider vocabulary and provider operation authorization in the separately qualified WELL-195 scope.",
+      "source_ids": [
+        "fence",
+        "lifecycle"
+      ]
+    }
+  ],
+  "reuse": [
+    {
+      "summary": "EXTEND Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/provider_event.ex and webhook_receipt.ex. Keep immutable first-write receipt deduplication and receipt-first handling. Exclude raw-body retention, admin reads and provider events as financial authority.",
+      "source_ids": [
+        "receipt",
+        "ingress",
+        "test"
+      ]
+    },
+    {
+      "summary": "EXTEND Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/observation_evidence.ex, types/provider_observation.ex, priv/repo/migrations/20261010120000_jc_287_provider_observation_evidence.exs and test/store/payments/provider_observation_test.exs. Keep observed evidence separate from business qualification, bound identities and rollback refusal. Exclude PaymentAttempt storage and Stripe/provider-specific outcome mappings.",
+      "source_ids": [
+        "lifecycle",
+        "migration",
+        "roundtrip"
+      ]
+    },
+    {
+      "summary": "COMPOSE Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/refunds.ex with WELL-221. Preserve immutable request and exact cumulative refund allocation checks under a shared lock. Exclude ordinary Repo business writes, order-state semantics, cancellation and netting.",
+      "source_ids": [
+        "fence",
+        "refund",
+        "test"
+      ]
+    },
+    {
+      "summary": "COMPOSE Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/entitlements/source_convergence.ex and test/store/entitlements/source_convergence_test.exs. Retain replay and exact source isolation. Exclude subscription-grant rules and shipment effects.",
+      "source_ids": [
+        "convergence",
+        "assessment",
+        "test"
+      ]
+    },
+    {
+      "summary": "REUSE explicit unsupported-provider guards from Store 949821ac589addb6e595f6333370ed65cf8d5ef7 lib/store/payments/providers/paystack.ex. Exclude Store's stub adapter. INTRODUCE the NewYou dispute state and pinned known-case fixture GET through WELL-219's transport.",
+      "source_ids": [
+        "transport",
+        "dispute",
+        "test"
+      ]
+    }
+  ],
+  "prohibited_shortcuts": [
+    {
+      "summary": "Do not infer component identity from a partial amount, classify financial settlement from access state, retry a claimed POST or create a right during correction delivery.",
+      "source_ids": [
+        "lifecycle",
+        "refund",
+        "convergence"
+      ]
+    },
+    {
+      "summary": "Do not disclose raw participant information, send evidence outside NewYou, activate Paystack or discover unknown disputes.",
+      "source_ids": [
+        "projection",
+        "transport"
+      ]
+    }
+  ],
+  "proof_limitations": [
+    "Actual Paystack account configuration, dispute status and deadline vocabulary, Finance operations and release certification remain out of scope.",
+    "The local fixture records unresolved overlapping corrections and does not decide cancellation, netting or external adjudication.",
+    "Ash Signals and Temporal Resources were considered. The existing versioned Commerce consequence and immutable receipts provide scoped durable recovery and historical evidence without process-local authority or new dependencies.",
+    "Product Law section 15.1A and DEC-320 allow synthetic Domain approval roles to prove reader grant issuance and independent revocation in TEST. Finance and Audit scopes confer no production capability. Fixture revisions order local observations only."
+  ],
+  "follow_up_tickets": [
+    "WELL-195",
+    "WELL-194",
+    "WELL-176"
+  ],
+  "sources": [
+    {
+      "id": "commerce",
+      "path": "lib/new_you/commerce.ex",
+      "symbol": "def apply_fixture_dispute_receipt",
+      "sha256": "25a69d39290bf645780e736f8128723d230e3f2cf04177b888aabddde01da86b"
+    },
+    {
+      "id": "ingress",
+      "path": "test/support/commerce/fixture_dispute_evidence.ex",
+      "symbol": "def receive_webhook",
+      "sha256": "ddcbe2a6bc6e98083d92e80cceb60ebd13d22260ddb683c4c6d3b6bb8fc5def5"
+    },
+    {
+      "id": "dispute",
+      "path": "lib/new_you/commerce/fixture_dispute.ex",
+      "symbol": "identity :provider_dispute",
+      "sha256": "dcbb24c59e5e4c5a609f52c3fdaee014bbcb7a1e311dd98491fea5e63186ca9a"
+    },
+    {
+      "id": "receipt",
+      "path": "lib/new_you/commerce/fixture_dispute_receipt.ex",
+      "symbol": "identity :evidence",
+      "sha256": "c8b792efb6751c10ba69a445c599a6c3ba0c6cebf3383b748ca5a2f97f0983ac"
+    },
+    {
+      "id": "lifecycle",
+      "path": "test/support/commerce/fixture_disputes.ex",
+      "symbol": "def locked_effect",
+      "sha256": "4e92c5ab82fa8a821de5e7e21b2fb643ee42b436e2e1ccef4279c9e7d7399573"
+    },
+    {
+      "id": "fence",
+      "path": "test/support/commerce/fixture_correction_source.ex",
+      "symbol": "def lock_purchase",
+      "sha256": "996acbe595e14aa3c76b20d11b5d775301e17773c3e9972300bbe877e9509d6d"
+    },
+    {
+      "id": "refund",
+      "path": "test/support/commerce/fixture_refunds.ex",
+      "symbol": "defp claim",
+      "sha256": "375c7dde6b6d6c3f200184d87aa9c2e8fceba9ab13debcffb4a6473b8c80a953"
+    },
+    {
+      "id": "transport",
+      "path": "lib/new_you/commerce/paystack_checkout.ex",
+      "symbol": "def build_dispute_read",
+      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
+    },
+    {
+      "id": "rights",
+      "path": "lib/new_you/entitlements/plan_right.ex",
+      "symbol": "update :restore_component",
+      "sha256": "ca13a00752a214b56cbd784ff494165386f62b492ff3341b94b6298b87f684a2"
+    },
+    {
+      "id": "convergence",
+      "path": "test/support/entitlements/synthetic_rights.ex",
+      "symbol": "def apply_dispute",
+      "sha256": "477964028de3a5ea34455d9d8b34215e79dd1fac2c3a3ffa21bf02e49926796a"
+    },
+    {
+      "id": "identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def locked_fixture_recipient",
+      "sha256": "50a71d13d85167bbcd71cbe42e8fe089edcd0f5c83146cfad05b216fc0258c20"
+    },
+    {
+      "id": "privacy",
+      "path": "test/support/privacy/fixture_dispute_purpose.ex",
+      "symbol": "def require_current_locked",
+      "sha256": "9b7f032b44090c8865e1eeb7339a52e1dffd4f5984b33aa1f9e6a770479cb384"
+    },
+    {
+      "id": "audit",
+      "path": "test/support/audit/fixture_dispute_disclosure_evidence.ex",
+      "symbol": "def record_in_transaction",
+      "sha256": "6accd3434a9f073cc8282a6cf13b2a860de4be2ccf70e6ede3e03627f1e8a5d4"
+    },
+    {
+      "id": "projection",
+      "path": "test/support/commerce/fixture_dispute_projection.ex",
+      "symbol": "def read",
+      "sha256": "8442473f6826652047b2bcc3e0fade73682943b55036fa5474b38326c5f145c5"
+    },
+    {
+      "id": "test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"refund and dispute serialize",
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
+    },
+    {
+      "id": "restart",
+      "path": "test/proof/well223_dispute_restart.exs",
+      "symbol": "WELL223_COMPLETED",
+      "sha256": "973eb0e974b7a924af5645895d28cc822bd9c9efcf09a02b7049633d86ac210c"
+    },
+    {
+      "id": "assessment",
+      "path": "test/new_you/commerce/synthetic_corrections_test.exs",
+      "symbol": "test \"a suspended Assessment right",
+      "sha256": "22e69bd3c8992474b845b6138c3a69390689210470467aab15967b3a13356013"
+    },
+    {
+      "id": "projection_test",
+      "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
+      "symbol": "defmodule NewYou.Commerce.FixtureDisputeProjectionTest",
+      "sha256": "b58f21034076072fa7567ae86156a648b6a635956c9225625eee237dbc9009a9"
+    },
+    {
+      "id": "roundtrip",
+      "path": "test/new_you/commerce/migration_roundtrip_test.exs",
+      "symbol": "test \"dispute migration roundtrips",
+      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
+    },
+    {
+      "id": "migration",
+      "path": "priv/repo/migrations/20261127135002_well223_fixture_disputes.exs",
+      "symbol": "Cannot remove retained fixture dispute evidence",
+      "sha256": "f59df4fee79e1945cf052794cff5ab4565243fdf397c583d19222a3c7142e74f"
+    },
+    {
+      "id": "privacy_migration",
+      "path": "priv/repo/migrations/20261127140243_well223_dispute_privacy.exs",
+      "symbol": "Cannot remove retained fixture dispute Privacy authority",
+      "sha256": "aabd57a42eb3465815f532e70fc0ed766f66a27270b2e9a67d73a5ff76e09e42"
+    },
+    {
+      "id": "cleanup",
+      "path": "test/support/proof/p8_05.ex",
+      "symbol": "defp cleanup_fixture_disputes",
+      "sha256": "5438d41d47aa28e858124fb8fc39492eda62fa5c72c8a635d72d3aeb736f1967"
+    },
+    {
+      "id": "discovery",
+      "path": "mix.exs",
+      "symbol": "well223_dispute_restart",
+      "sha256": "cb6c35a15a509049b6a5156b0c949cae31e3ce735adcb4f986dea0d657020e50"
+    },
+    {
+      "id": "privacy_telemetry",
+      "path": "test/new_you/privacy/fixture_dispute_purpose_telemetry_test.exs",
+      "symbol": "test \"purpose authority SQL omits",
+      "sha256": "bade0ea5e97cd2f2ce7e4f7af97380ddec2b76ddc935610fb8cd4afdabfcdb75"
+    },
+    {
+      "id": "non_test",
+      "path": "test/proof/well223_provider_disabled.exs",
+      "symbol": "AshOban.build_context",
+      "sha256": "454e79737a562b17c4180326699896e80530804edd55175920a6470160b05685"
+    },
+    {
+      "id": "late_grant",
+      "path": "test/support/commerce/synthetic_corrections.ex",
+      "symbol": "def locked_p1_grant_scope",
+      "sha256": "e3e3a55f691394c45eb38bab6f424f78effb892f7a95ee4235658642ea07073b"
+    },
+    {
+      "id": "audit_resource",
+      "path": "lib/new_you/audit/fixture_dispute_disclosure.ex",
+      "symbol": "read :read",
+      "sha256": "47ecae57bbaa3d996dba49275abc8997e11359cc58750216c5850bfeac167a59"
+    },
+    {
+      "id": "purpose_resource",
+      "path": "lib/new_you/privacy/fixture_dispute_purpose_authority.ex",
+      "symbol": "read :read",
+      "sha256": "ca89890a0b56bd7a563f7f95ac4d1d2940f6bb8e2bf538e6c9e27dd664c49081"
+    },
+    {
+      "id": "purpose_event",
+      "path": "lib/new_you/privacy/fixture_dispute_purpose_event.ex",
+      "symbol": "read :read",
+      "sha256": "1452be77f1fde89d894fa9b348b1d983ac07e84542496ebdbb45b816f79f7a65"
+    },
+    {
+      "id": "fixture_ids",
+      "path": "test/support/commerce/offer_fixtures.ex",
+      "symbol": "def large_provider_id",
+      "sha256": "4f7a40ba671febecbb37b88306e79a792ccfa3126c5e4fd19216900d10f54dd1"
+    },
+    {
+      "id": "application_ci",
+      "path": ".github/workflows/application-ci.yml",
+      "symbol": "Prove TEST dispute fixtures are absent in DEV",
+      "sha256": "b730c71131849108496223b9ed7a6d2ade7ecc3e8a24b5ff300e2d343379e83a"
+    },
+    {
+      "id": "receipt_restart_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"fresh scheduler processes a committed webhook receipt",
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
+    },
+    {
+      "id": "receipt_replay_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"two workers running the scheduled receipt job",
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
+    },
+    {
+      "id": "receipt_stale_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"a stale read token does not erase a committed opposing revision",
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
+    },
+    {
+      "id": "receipt_conflict_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"committed contradictory terminal receipts keep the right suspended",
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
+    },
+    {
+      "id": "receipt_quarantine_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"the same payer can have distinct equal-value purchases",
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
+    },
+    {
+      "id": "disclosure_identity",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def issue_fixture_dispute_grant",
+      "sha256": "50a71d13d85167bbcd71cbe42e8fe089edcd0f5c83146cfad05b216fc0258c20"
+    },
+    {
+      "id": "disclosure_grants",
+      "path": "test/support/identity/fixture_dispute_grants.ex",
+      "symbol": "defp authorize_approver",
+      "sha256": "c609cd76012ed7b2533582232a0b98e04dcec39ec0ed60605600ab8000d2da80"
+    },
+    {
+      "id": "grant_resource",
+      "path": "lib/new_you/identity/identity_grant.ex",
+      "symbol": "create :approve_fixture_dispute_disclosure",
+      "sha256": "af45f5c2992ee96a70a68bce3abeae9812c5a00d89a5cf3b05fab3a98bdbde69"
+    },
+    {
+      "id": "grant_migration",
+      "path": "priv/repo/migrations/20261128091553_well223_dispute_disclosure_grants.exs",
+      "symbol": "Cannot remove retained dispute disclosure grant",
+      "sha256": "9a06d598b6aa6b2193ebcfaa7e0f32feae8fa00ed5a2cf6618da7d591652f284"
+    },
+    {
+      "id": "revocation_test",
+      "path": "test/new_you/commerce/fixture_dispute_projection_test.exs",
+      "symbol": "test \"Finance and Audit grants can each be revoked",
+      "sha256": "b58f21034076072fa7567ae86156a648b6a635956c9225625eee237dbc9009a9"
+    },
+    {
+      "id": "plan_recipient",
+      "path": "lib/new_you/identity.ex",
+      "symbol": "def locked_plan_recipient",
+      "sha256": "50a71d13d85167bbcd71cbe42e8fe089edcd0f5c83146cfad05b216fc0258c20"
+    },
+    {
+      "id": "original_hold_test",
+      "path": "test/new_you/commerce/hosted_refund_test.exs",
+      "symbol": "test \"an original Plan grant without a dispute",
+      "sha256": "a352c7144a27b8010ffd3dceff7190b7f55e9fe52033cdc4b13a26bc36668004"
+    }
+  ]
+}

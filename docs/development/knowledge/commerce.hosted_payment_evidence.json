@@ -6,7 +6,7 @@
     "WELL-219"
   ],
   "implementation_revision": {
-    "git_sha": "b31979a3ab212012923453acc28303bd529d7d63",
+    "git_sha": "e805118190ad1dc8b22f7b92eb6a4ac475eaf091",
     "semantics": "Provider-disabled payment evidence and authenticated known-reference recovery for the existing standalone Plan."
   },
   "authoritative_domain": "NewYou.Commerce",
@@ -583,7 +583,7 @@
       "id": "commerce",
       "path": "lib/new_you/commerce.ex",
       "symbol": "def apply_hosted_payment_evidence(id)",
-      "sha256": "02d6b8474e529f9faeb6fa6a06cca4995d4269747b6a58e5b239c5242be826fd"
+      "sha256": "25a69d39290bf645780e736f8128723d230e3f2cf04177b888aabddde01da86b"
     },
     {
       "id": "checkout",
@@ -601,7 +601,7 @@
       "id": "evidence",
       "path": "lib/new_you/commerce/hosted_payment_evidence.ex",
       "symbol": "def verify_due(id)",
-      "sha256": "7ba56b126f01bd3a9035c4649ae143b657ceebf38c77d872c77c830f4264fa83"
+      "sha256": "11884af8c10749655466416568147870d4a2d30b79cacf062d8c1718189c8b68"
     },
     {
       "id": "receipt",
@@ -637,7 +637,7 @@
       "id": "entitlements",
       "path": "lib/new_you/entitlements.ex",
       "symbol": "def grant_paid_plan(consequence_id)",
-      "sha256": "dc7212e6cf03e4a830a51fb89e62e041e0649b3b5a5050dc3dbc70f8fc440642"
+      "sha256": "fd7b8f396f7e810ac5f1a285f74a08f4015e6c21617d014933ba2cc56fc36e76"
     },
     {
       "id": "accepted_source",
@@ -649,7 +649,7 @@
       "id": "transport",
       "path": "lib/new_you/commerce/paystack_checkout.ex",
       "symbol": "def build_verify(reference",
-      "sha256": "c7ee7d55fb93b5d83cc2a996bfbbca657fd5a641e6c29972c6f56d0b23c3d7a4"
+      "sha256": "2882d9b53d706e7098bfab8084d26ef37c61a7d4403f52915697639a0796042c"
     },
     {
       "id": "endpoint",
@@ -679,7 +679,7 @@
       "id": "fixture_cleanup",
       "path": "test/support/proof/p8_05.ex",
       "symbol": "defp cleanup_hosted_fixture_evidence(",
-      "sha256": "1fa9fb1c48bb374d7783049864e4d61a61b0c1910cd6f0af857abef0a815c00a"
+      "sha256": "5438d41d47aa28e858124fb8fc39492eda62fa5c72c8a635d72d3aeb736f1967"
     },
     {
       "id": "fixture_ownership",
@@ -709,7 +709,7 @@
       "id": "migration_test",
       "path": "test/new_you/commerce/migration_roundtrip_test.exs",
       "symbol": "payment evidence migration preserves legacy rows",
-      "sha256": "4db95bd1f9d0350041f0ada4918641893d1e51d160f060b4ffc3c54adff19214"
+      "sha256": "3ffe09e6877ebb3994e3c616a5b61820b2bd8d5a60c3a52d92edcbd7f513fa36"
     },
     {
       "id": "audit_pattern",

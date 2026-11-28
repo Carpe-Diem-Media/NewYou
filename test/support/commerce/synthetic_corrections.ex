@@ -218,7 +218,9 @@ defmodule NewYou.Commerce.SyntheticCorrections do
   Receipts from the original P1 case have no explicit collection identity.
   """
   @spec locked_p1_grant_scope(String.t()) ::
-          {:ok, {:legacy | :qualified | :hosted_ended, map()}} | {:error, term()}
+          {:ok,
+           {:legacy | :qualified | :hosted_ended | :hosted_suspended | :hosted_restored, map()}}
+          | {:error, term()}
   def locked_p1_grant_scope(consequence_id) do
     with true <- Ash.DataLayer.in_transaction?(SyntheticCorrection),
          {:ok, %{purchase_id: id} = immutable} <- NewYou.Commerce.paid_plan_source(consequence_id),
@@ -231,9 +233,17 @@ defmodule NewYou.Commerce.SyntheticCorrections do
   end
 
   defp p1_scope(nil, immutable, _source) do
-    case NewYou.Commerce.FixtureRefunds.plan_ended?(immutable) do
+    with {:ok, false} <- NewYou.Commerce.FixtureRefunds.plan_ended?(immutable),
+         {:ok, effect} <-
+           NewYou.Commerce.FixtureDisputes.right_effect(immutable.payment_id, :plan) do
+      case effect do
+        :end -> {:ok, {:hosted_ended, immutable}}
+        :suspend -> {:ok, {:hosted_suspended, immutable}}
+        :restore -> {:ok, {:hosted_restored, immutable}}
+        :available -> {:ok, {:legacy, immutable}}
+      end
+    else
       {:ok, true} -> {:ok, {:hosted_ended, immutable}}
-      {:ok, false} -> {:ok, {:legacy, immutable}}
       error -> error
     end
   end

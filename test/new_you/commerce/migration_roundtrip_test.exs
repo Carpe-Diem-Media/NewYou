@@ -72,6 +72,162 @@ defmodule NewYou.Commerce.MigrationRoundtripTest do
      NewYou.Repo.Migrations.Well221ExcessCollection}
   ]
 
+  @dispute_migration {
+    20_261_127_135_002,
+    "priv/repo/migrations/20261127135002_well223_fixture_disputes.exs",
+    NewYou.Repo.Migrations.Well223FixtureDisputes
+  }
+
+  @dispute_privacy_migration {
+    20_261_127_140_243,
+    "priv/repo/migrations/20261127140243_well223_dispute_privacy.exs",
+    NewYou.Repo.Migrations.Well223DisputePrivacy
+  }
+
+  @dispute_grant_migration {
+    20_261_128_091_553,
+    "priv/repo/migrations/20261128091553_well223_dispute_disclosure_grants.exs",
+    NewYou.Repo.Migrations.Well223DisputeDisclosureGrants
+  }
+
+  test "disclosure grant migration preserves Support and refuses rollback over approval evidence" do
+    load_migrations([@dispute_grant_migration])
+    schema = "well223_grants_" <> String.replace(Ecto.UUID.generate(), "-", "")
+
+    Sandbox.unboxed_run(Repo, fn ->
+      assert {:error, :probe_complete} =
+               Repo.transaction(fn ->
+                 Repo.query!("CREATE SCHEMA #{schema}")
+                 seed_legacy_identity_grants(schema)
+                 run_migration(@dispute_grant_migration, :up, schema)
+                 assert {1, 1} = foreign_key_targets(schema)
+                 assert [["support", "identity_lookup"]] = identity_grant_roles(schema)
+
+                 Repo.query!("SAVEPOINT without_disclosure_approval")
+
+                 Repo.query!("""
+                 INSERT INTO #{schema}.identity_grants
+                   (subject_account_id, target_account_id, role, scope, state)
+                 VALUES (gen_random_uuid(), gen_random_uuid(), 'finance_disclosure_approver',
+                   'approve_finance_dispute_disclosure', 'active')
+                 """)
+
+                 Repo.query!("SAVEPOINT refuse_grant_rollback")
+
+                 assert_raise Postgrex.Error,
+                              ~r/Cannot remove retained dispute disclosure grant/,
+                              fn ->
+                                run_migration(@dispute_grant_migration, :down, schema)
+                              end
+
+                 Repo.query!("ROLLBACK TO SAVEPOINT refuse_grant_rollback")
+                 assert length(identity_grant_roles(schema)) == 2
+                 Repo.query!("ROLLBACK TO SAVEPOINT without_disclosure_approval")
+
+                 run_migration(@dispute_grant_migration, :down, schema)
+                 assert [["support", "identity_lookup"]] = identity_grant_roles(schema)
+                 run_migration(@dispute_grant_migration, :up, schema)
+                 assert [["support", "identity_lookup"]] = identity_grant_roles(schema)
+                 Repo.rollback(:probe_complete)
+               end)
+
+      assert [[0]] =
+               Repo.query!("SELECT count(*) FROM pg_namespace WHERE nspname = $1", [schema]).rows
+    end)
+  end
+
+  defp seed_legacy_identity_grants(schema) do
+    Repo.query!("""
+    CREATE TABLE #{schema}.identity_grants (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      subject_account_id uuid NOT NULL,
+      target_account_id uuid NOT NULL,
+      role text NOT NULL CONSTRAINT identity_grants_role CHECK (role = 'support'),
+      scope text NOT NULL CONSTRAINT identity_grants_scope CHECK (scope IN (
+        'security_hold_restriction', 'security_hold_review', 'security_hold_release',
+        'identity_reconciliation', 'identity_recovery', 'identity_lookup'
+      )),
+      state text NOT NULL
+    )
+    """)
+
+    Repo.query!("""
+    CREATE UNIQUE INDEX identity_grants_one_active_assignment_index
+    ON #{schema}.identity_grants (subject_account_id, role, scope, target_account_id)
+    WHERE state = 'active'
+    """)
+
+    Repo.query!("""
+    INSERT INTO #{schema}.identity_grants
+      (subject_account_id, target_account_id, role, scope, state)
+    VALUES (gen_random_uuid(), gen_random_uuid(), 'support', 'identity_lookup', 'active')
+    """)
+  end
+
+  defp identity_grant_roles(schema) do
+    Repo.query!("SELECT role, scope FROM #{schema}.identity_grants").rows
+  end
+
+  test "dispute migration roundtrips and refuses to erase retained disclosure evidence" do
+    base =
+      @migrations ++
+        @correction_migrations ++
+        @offer_migrations ++
+        [@dispatch_migration] ++ @refund_base ++ @refund_migrations
+
+    roundtrip(base ++ [@dispute_migration, @dispute_privacy_migration], 25, fn schema ->
+      {foreign_keys, local} = foreign_key_targets(schema)
+      assert foreign_keys == local
+      Repo.query!("SAVEPOINT well223_evidence")
+
+      Repo.query!("""
+      INSERT INTO #{schema}.audit_fixture_dispute_disclosures
+        (operation_id, actor_id, dispute_id, purpose, field_set)
+      VALUES (gen_random_uuid(), gen_random_uuid(), gen_random_uuid(),
+        'fixture_dispute_evidence_read', 'commercial_dispute_v1')
+      """)
+
+      Repo.query!("SAVEPOINT well223_refuse_rollback")
+
+      assert_raise Postgrex.Error, ~r/Cannot remove retained fixture dispute evidence/, fn ->
+        run_migration(@dispute_migration, :down, schema)
+      end
+
+      Repo.query!("ROLLBACK TO SAVEPOINT well223_refuse_rollback")
+
+      assert [[1]] =
+               Repo.query!("SELECT count(*) FROM #{schema}.audit_fixture_dispute_disclosures").rows
+
+      Repo.query!("ROLLBACK TO SAVEPOINT well223_evidence")
+
+      Repo.query!("SAVEPOINT well223_privacy_evidence")
+
+      Repo.query!("""
+      INSERT INTO #{schema}.privacy_fixture_dispute_purposes
+        (subject_id, dispute_id, source_operation_id, purpose, state, origin, version)
+      VALUES (gen_random_uuid(), gen_random_uuid(), gen_random_uuid(),
+        'commercial_dispute_evidence', 'withdrawn', 'fp002_dispute_test_fixture', 2)
+      """)
+
+      Repo.query!("SAVEPOINT well223_privacy_refuse_rollback")
+
+      assert_raise Postgrex.Error,
+                   ~r/Cannot remove retained fixture dispute Privacy authority/,
+                   fn ->
+                     run_migration(@dispute_privacy_migration, :down, schema)
+                   end
+
+      Repo.query!("ROLLBACK TO SAVEPOINT well223_privacy_refuse_rollback")
+
+      assert [[1]] =
+               Repo.query!(
+                 "SELECT count(*) FROM #{schema}.privacy_fixture_dispute_purposes WHERE state = 'withdrawn'"
+               ).rows
+
+      Repo.query!("ROLLBACK TO SAVEPOINT well223_privacy_evidence")
+    end)
+  end
+
   test "refund migrations roundtrip and refuse rollback over retained negative evidence" do
     base = @migrations ++ @correction_migrations ++ @offer_migrations ++ [@dispatch_migration]
 

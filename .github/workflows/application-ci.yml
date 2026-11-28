@@ -103,6 +103,17 @@ jobs:
           cache: restore
       - name: Run canonical static obligations
         run: mix check.static
+      - name: Prove TEST dispute fixtures are absent in DEV
+        env:
+          MIX_ENV: dev
+        run: |
+          mix compile
+          # The proof needs the DEV build and static policies, without loading database runtime config.
+          elixir -pa '_build/dev/lib/*/ebin' -e '
+            Mix.start()
+            Application.put_all_env(Config.Reader.read!("config/config.exs", env: Mix.env(), target: Mix.target()))
+            Code.require_file("test/proof/well223_provider_disabled.exs")
+          '
       - name: Verify actual pinned ExUnit event contract
         run: python3 -m unittest tests.test_exunit_ci_events tests.test_exunit_timing
 

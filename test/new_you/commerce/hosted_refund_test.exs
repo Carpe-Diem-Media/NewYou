@@ -6,6 +6,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
   alias NewYou.Entitlements
   alias NewYou.Repo
   alias NewYou.Commerce.{HostedCheckout, HostedCheckoutReceiver, HostedPaymentEvidence}
+  alias NewYou.Commerce.{FixtureDispute, FixtureDisputeReceipt, FixtureDisputes}
   alias NewYou.Commerce.{OfferAdmission, VerifiedPayment}
   alias NewYou.Proof.{FreshMix, P805, P815Port}
   alias NewYou.Privacy.SyntheticSuppression
@@ -17,7 +18,1757 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   @scope %{provider: :paystack, integration: :local_fixture, environment: :test, channel: :card}
   @amount 47_500
-  @transaction "18446744073709551614"
+
+  test "an original Plan grant without a dispute waits for the recipient's security hold to clear" do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn accepted, payment, _payer, recipient, _, _ ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert is_nil(dispute_for_payment(payment))
+        assert [] == dispute_receipts(payment)
+        assert [] == purchase_refunds(accepted)
+
+        held = place_recipient_hold(recipient.account_id)
+
+        assert {:error, :delivery_unavailable} = Commerce.deliver_plan_payment_consequence(grant)
+        assert {:ok, [^grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        refute payment_plan_right?(payment)
+
+        release_recipient_hold(held)
+
+        assert {:ok, %{id: right_id, state: :held_unconsumed, payment_id: payment_id}} =
+                 Commerce.deliver_plan_payment_consequence(grant)
+
+        assert payment_id == payment.id
+        assert {:ok, []} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+
+        assert {:ok, %{id: ^right_id, state: :held_unconsumed}} =
+                 Commerce.deliver_plan_payment_consequence(grant)
+
+        assert [%{id: ^right_id, recipient_id: recipient_id, state: :held_unconsumed}] =
+                 Entitlements.PlanRight
+                 |> Ash.Query.filter(payment_id == ^payment.id and component == :plan)
+                 |> Ash.read!(authorize?: false)
+
+        assert recipient_id == recipient.account_id
+      end)
+    end)
+  end
+
+  test "late grants and dispute delivery both wait for the recipient's security hold to clear" do
+    for order <- [:grant_first, :dispute_first] do
+      P805.with_fixture(fn ->
+        with_paid_plan(fn accepted, payment, _payer, recipient, _, _ ->
+          assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+
+          with_signing_key(fn key ->
+            data = dispute_data(payment)
+            assert 202 == send_event(key, "fixture.dispute", data)
+            dispute = apply_dispute_receipts(payment)
+            assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+            held = place_recipient_hold(recipient.account_id)
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
+
+            assert %{state: :restored} = apply_dispute_receipts(payment)
+
+            deliver_grant = fn -> Commerce.deliver_plan_payment_consequence(grant) end
+            deliver_dispute = fn -> Commerce.deliver_fixture_dispute(dispute.id) end
+
+            results =
+              case order do
+                :grant_first ->
+                  {deliver_grant.(), deliver_dispute.()}
+
+                :dispute_first ->
+                  dispute_result = deliver_dispute.()
+                  {deliver_grant.(), dispute_result}
+              end
+
+            assert {{:error, :delivery_unavailable}, {:error, :dispute_unavailable}} = results
+            assert {:ok, [^grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+            refute payment_plan_right?(payment)
+            assert {:error, :rights_unavailable} = Entitlements.plan_rights(recipient.credentials)
+
+            release_recipient_hold(held)
+
+            right =
+              case order do
+                :grant_first ->
+                  assert {:ok, right} = deliver_grant.()
+                  assert :ok = deliver_dispute.()
+                  right
+
+                :dispute_first ->
+                  assert :ok = deliver_dispute.()
+                  refute payment_plan_right?(payment)
+                  assert {:ok, right} = deliver_grant.()
+                  right
+              end
+
+            assert %{id: right_id, state: :held_unconsumed, payment_id: payment_id} = right
+            assert payment_id == payment.id
+            assert {:ok, []} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+            assert {:ok, %{id: ^right_id, state: :held_unconsumed}} = deliver_grant.()
+            assert :ok = deliver_dispute.()
+          end)
+        end)
+      end)
+    end
+  end
+
+  defp payment_plan_right?(payment) do
+    Entitlements.PlanRight
+    |> Ash.Query.filter(payment_id == ^payment.id and component == :plan)
+    |> Ash.exists?(authorize?: false)
+  end
+
+  defp place_recipient_hold(recipient_id) do
+    account = Ash.get!(NewYou.Identity.Account, recipient_id, authorize?: false)
+
+    Ash.update!(account, %{expected_hold_version: account.hold_version},
+      action: :place_security_hold,
+      authorize?: false
+    )
+  end
+
+  defp release_recipient_hold(held) do
+    Ash.update!(
+      held,
+      %{
+        expected_hold_version: held.hold_version,
+        hold_version: held.hold_version + 1,
+        security_version: held.security_version + 1
+      },
+      action: :release_security_hold,
+      authorize?: false
+    )
+  end
+
+  test "qualified disputes fence refund dispatch and converge the original right" do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn accepted, payment, payer, recipient, _listener, tag ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert {:ok, _} = Commerce.deliver_plan_payment_consequence(grant)
+        assert [%{id: original}] = plan_rights(recipient)
+
+        assert {:ok, refund} =
+                 request(
+                   payer.credentials,
+                   proof(refund_fields(accepted, payment, payer, recipient))
+                 )
+
+        assert {:ok, %{state: :reserved}} =
+                 Commerce.reserve_fixture_refund(payer.credentials, refund.id)
+
+        with_signing_key(fn key ->
+          data = dispute_data(payment)
+          assert 401 == send_event(key, "fixture.dispute", data, authenticated?: false)
+          assert 401 == send_event(key, "fixture.dispute", data, modified?: true)
+
+          for invalid <- [
+                %{data | reference: String.duplicate("0", 32)},
+                %{data | transaction: "17"},
+                %{data | amount: @amount + 1},
+                %{data | currency: "USD"},
+                %{data | id: "099"},
+                %{data | scope: "production"},
+                %{data | outcome: "success"},
+                Map.put(data, :health, "must never persist")
+              ] do
+            assert 400 == send_event(key, "fixture.dispute", invalid)
+          end
+
+          P805.with_rejected_insert("commerce_fixture_dispute_receipts", fn reached? ->
+            assert 503 == send_event(key, "fixture.dispute", data)
+            assert reached?.()
+          end)
+
+          assert 202 == send_event(key, "fixture.dispute", data)
+          assert 202 == send_event(key, "fixture.dispute", data)
+          assert [_one] = dispute_receipts(payment)
+
+          refute FixtureDispute
+                 |> Ash.Query.filter(payment_id == ^payment.id)
+                 |> Ash.exists?(authorize?: false)
+
+          assert {:error, :refund_unavailable} =
+                   Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+          dispute = apply_dispute_receipts(payment)
+          assert dispute.state == :contested
+          assert [] = plan_rights(recipient)
+
+          assert {:error, :refund_unavailable} =
+                   Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+          refute_received {^tag, "POST", "/refund", _, _}
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+          assert %{state: :suspended} =
+                   Ash.get!(NewYou.Entitlements.PlanRight, original, authorize?: false)
+
+          assert 202 ==
+                   send_event(key, "fixture.dispute", %{
+                     data
+                     | revision: 3,
+                       outcome: "under_review"
+                   })
+
+          assert 202 ==
+                   send_event(key, "fixture.dispute", %{
+                     data
+                     | revision: 2,
+                       outcome: "awaiting_feedback"
+                   })
+
+          assert %{state: :under_review, revision: 3} = apply_dispute_receipts(payment)
+
+          assert 202 ==
+                   send_event(key, "fixture.dispute", %{data | revision: 4, outcome: "restored"})
+
+          assert %{state: :restored} = apply_dispute_receipts(payment)
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+          assert [%{id: ^original}] = plan_rights(recipient)
+          assert 202 == send_event(key, "fixture.dispute", %{data | revision: 5, outcome: "lost"})
+          assert %{state: :restored, conflict?: true} = apply_dispute_receipts(payment)
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+          assert [] = plan_rights(recipient)
+
+          assert %{state: :reserved, amount_minor: @amount, claim_id: nil} =
+                   read_refund(refund.id)
+        end)
+      end)
+    end)
+  end
+
+  test "an outstanding grant uses current dispute truth and cannot resurrect a lost right" do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn accepted, payment, _payer, recipient, _, _ ->
+        with_signing_key(fn key ->
+          data = dispute_data(payment)
+          assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+          assert 202 == send_event(key, "fixture.dispute", data)
+          dispute = apply_dispute_receipts(payment)
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+          assert {:ok, %{id: id, state: :suspended}} =
+                   Commerce.deliver_plan_payment_consequence(grant)
+
+          assert [] = plan_rights(recipient)
+
+          assert 202 == send_event(key, "fixture.dispute", %{data | revision: 4, outcome: "lost"})
+
+          assert 202 ==
+                   send_event(key, "fixture.dispute", %{
+                     data
+                     | revision: 2,
+                       outcome: "awaiting_feedback"
+                   })
+
+          assert %{state: :lost} = apply_dispute_receipts(payment)
+
+          assert 202 ==
+                   send_event(key, "fixture.dispute", %{data | revision: 5, outcome: "restored"})
+
+          assert %{state: :lost, conflict?: true} = apply_dispute_receipts(payment)
+
+          cut_work(:fixture_dispute, :entitlements_committed, fn ->
+            Commerce.deliver_fixture_dispute(dispute.id)
+          end)
+
+          assert %{state: :ended} = Ash.get!(NewYou.Entitlements.PlanRight, id, authorize?: false)
+          assert {:ok, :withheld} = Commerce.deliver_plan_payment_consequence(grant)
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+          assert [] = plan_rights(recipient)
+          assert Ash.get!(VerifiedPayment, payment.id, authorize?: false) == payment
+        end)
+      end)
+    end)
+  end
+
+  test "partial loss retains financial evidence without inferring a component" do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn accepted, payment, payer, recipient, _, _ ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert {:ok, %{id: id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+        assert {:ok, refund} =
+                 request(
+                   payer.credentials,
+                   proof(refund_fields(accepted, payment, payer, recipient))
+                 )
+
+        assert {:ok, _} = Commerce.reserve_fixture_refund(payer.credentials, refund.id)
+        assert {:ok, claimed} = Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+        with_signing_key(fn key ->
+          data = %{dispute_data(payment) | amount: 24_900, outcome: "lost"}
+          assert 202 == send_event(key, "fixture.dispute", data)
+
+          assert %{state: :lost, allocation: :unallocated, amount_minor: 24_900} =
+                   dispute =
+                   apply_dispute_receipts(payment)
+
+          assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+          assert [%{id: ^id}] = plan_rights(recipient)
+
+          assert 202 == send_evidence(key, refund_data(refund), "processed")
+          process_evidence(refund.reference)
+          assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+
+          assert %{state: :processed, claim_id: claim_id, amount_minor: @amount} =
+                   read_refund(refund.id)
+
+          assert claim_id == claimed.claim_id
+          assert :ok = Commerce.deliver_fixture_refund(refund.id)
+          assert [] = plan_rights(recipient)
+        end)
+      end)
+    end)
+  end
+
+  test "payment restoration rechecks a verified refund, deletion and current access posture" do
+    for block <- [:refund, :ambiguous_refund, :deletion, :security_hold] do
+      P805.with_fixture(fn ->
+        with_paid_plan(fn accepted, payment, payer, recipient, _, _ ->
+          assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+          assert {:ok, %{id: id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+          refund =
+            if block in [:refund, :ambiguous_refund] do
+              assert {:ok, owed} =
+                       request(
+                         payer.credentials,
+                         proof(refund_fields(accepted, payment, payer, recipient))
+                       )
+
+              assert {:ok, _} = Commerce.reserve_fixture_refund(payer.credentials, owed.id)
+              assert {:ok, _} = Commerce.dispatch_fixture_refund(payer.credentials, owed.id)
+              owed
+            end
+
+          with_signing_key(fn key ->
+            data = dispute_data(payment)
+            assert 202 == send_event(key, "fixture.dispute", data)
+            dispute = apply_dispute_receipts(payment)
+            assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+            assert %{state: :suspended} =
+                     Ash.get!(NewYou.Entitlements.PlanRight, id, authorize?: false)
+
+            case block do
+              :refund ->
+                assert 202 == send_evidence(key, refund_data(refund), "processed")
+                process_evidence(refund.reference)
+
+              :ambiguous_refund ->
+                assert %{state: :unresolved, claim_id: claim} = read_refund(refund.id)
+                assert is_binary(claim)
+
+              :deletion ->
+                assert :ok =
+                         SyntheticSuppression.suppress(
+                           proof(%{scope: :completed_deletion, subject_id: recipient.account_id})
+                         )
+
+              :security_hold ->
+                account =
+                  Ash.get!(NewYou.Identity.Account, recipient.account_id, authorize?: false)
+
+                assert {:ok, _} =
+                         Ash.update(account, %{expected_hold_version: account.hold_version},
+                           action: :place_security_hold,
+                           authorize?: false
+                         )
+            end
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
+
+            assert %{state: :restored, effect_version: version} = apply_dispute_receipts(payment)
+
+            if block == :ambiguous_refund do
+              assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+            end
+
+            if block == :security_hold do
+              assert {:error, :dispute_unavailable} = Commerce.deliver_fixture_dispute(dispute.id)
+
+              assert Ash.get!(FixtureDispute, dispute.id, authorize?: false).acknowledged_version <
+                       version
+            else
+              assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+              assert [] = plan_rights(recipient)
+            end
+
+            expected = if block == :refund, do: :ended, else: :suspended
+
+            assert %{state: ^expected} =
+                     Ash.get!(NewYou.Entitlements.PlanRight, id, authorize?: false)
+          end)
+        end)
+      end)
+    end
+  end
+
+  test "dispute receipt and consequence telemetry exclude source canaries on committed and failed SQL paths" do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn _accepted, payment, _payer, _, _, _ ->
+        with_signing_key(fn key ->
+          data = dispute_data(payment)
+          needles = [data.reference, data.transaction, data.id, payment.id]
+
+          P805.with_rejected_insert("commerce_fixture_dispute_receipts", fn reached? ->
+            assert :clean ==
+                     observe_restricted_metadata(
+                       needles ++ [key],
+                       fn ->
+                         assert 503 == send_event(key, "fixture.dispute", data)
+                       end,
+                       :failed_dispute_receipt
+                     )
+
+            assert reached?.()
+          end)
+
+          assert :clean ==
+                   observe_restricted_metadata(
+                     needles ++ [key],
+                     fn ->
+                       assert 202 == send_event(key, "fixture.dispute", data)
+                     end,
+                     :committed_dispute_receipt
+                   )
+
+          assert [receipt] = dispute_receipts(payment)
+
+          assert :clean ==
+                   observe_restricted_metadata(
+                     needles ++ [key],
+                     fn ->
+                       assert :ok = Commerce.apply_fixture_dispute_receipt(receipt.id)
+                     end,
+                     :qualified_dispute_receipt
+                   )
+
+          dispute = apply_dispute_receipts(payment)
+
+          assert :clean ==
+                   observe_restricted_metadata(
+                     needles ++ [key],
+                     fn ->
+                       assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+                     end,
+                     :dispute_effect
+                   )
+        end)
+      end)
+    end)
+  end
+
+  test "known dispute read recovers missing work after a capped reservation and evidence failure" do
+    P805.with_fixture(fn ->
+      reply_data = start_supervised!({Agent, fn -> nil end})
+
+      reply = fn conn, _ ->
+        HostedCheckoutReceiver.json(conn, 200, %{data: Agent.get(reply_data, & &1)})
+      end
+
+      with_paid_plan(reply, fn accepted, payment, _payer, recipient, _, tag ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+        with_signing_key(fn key ->
+          data = dispute_data(payment)
+          read_path = "/__test/dispute/#{data.id}"
+          assert 202 == send_event(key, "fixture.dispute", data)
+          assert [receipt] = dispute_receipts(payment)
+
+          cut_work(:fixture_dispute, :commerce_committed, fn ->
+            Commerce.apply_fixture_dispute_receipt(receipt.id)
+          end)
+
+          dispute = apply_dispute_receipts(payment)
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+          assert [] = plan_rights(recipient)
+          make_dispute_due(dispute.id, 5)
+
+          cut_work(:fixture_dispute, :read_reserved, fn ->
+            FixtureDisputes.read_due(dispute.id)
+          end)
+
+          assert %{verify_round: 6} = Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+          refute_received {^tag, "GET", ^read_path, _, _}
+
+          make_dispute_due(dispute.id, 6)
+          Agent.update(reply_data, fn _ -> %{data | revision: 2, outcome: "restored"} end)
+
+          P805.with_rejected_insert("commerce_fixture_dispute_receipts", fn reached? ->
+            assert %{discard: 1, queues_not_drained: []} =
+                     AshOban.Test.schedule_and_run_triggers({FixtureDispute, :read_due})
+
+            assert reached?.()
+            assert_receive {^tag, "GET", ^read_path, _, _}
+          end)
+
+          assert [^receipt] = Enum.map(dispute_receipts(payment), &%{&1 | state: :pending})
+
+          refute_enqueued(
+            worker: NewYou.Commerce.Workers.ReadFixtureDispute,
+            args: %{"primary_key" => %{"id" => dispute.id}}
+          )
+
+          make_dispute_due(dispute.id, 6)
+
+          {executable, arguments} =
+            FreshMix.command(["run", "--no-compile", "test/proof/well223_dispute_restart.exs"])
+
+          payload = Jason.encode!(%{id: dispute.id})
+          diagnostic = P815Port.run(executable, arguments, payload, 60_000)
+          assert_receive {^tag, "GET", ^read_path, _, _}
+          assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} = diagnostic
+          refute_received {^tag, "GET", ^read_path, _, _}
+          assert [%{id: ^right_id}] = plan_rights(recipient)
+        end)
+      end)
+    end)
+  end
+
+  test "refund and dispute serialize both orders on independent PostgreSQL writers" do
+    for winner <- [:dispute, :refund] do
+      P805.with_fixture(fn ->
+        with_paid_plan(fn accepted, payment, payer, recipient, _, tag ->
+          assert {:ok, refund} =
+                   request(
+                     payer.credentials,
+                     proof(refund_fields(accepted, payment, payer, recipient))
+                   )
+
+          assert {:ok, _} = Commerce.reserve_fixture_refund(payer.credentials, refund.id)
+
+          with_signing_key(fn key ->
+            dispute = fn ->
+              send_event(key, "fixture.dispute", dispute_data(payment), track?: false)
+            end
+
+            dispatch = fn -> Commerce.dispatch_fixture_refund(payer.credentials, refund.id) end
+
+            case winner do
+              :dispute ->
+                assert {202, {:error, :refund_unavailable}} =
+                         race_corrections(:fixture_dispute, :receipt_written, dispute, dispatch)
+
+                refute_received {^tag, "POST", "/refund", _, _}
+                assert %{claim_id: nil, state: :reserved} = read_refund(refund.id)
+
+                assert {:ok, :refund_owed} =
+                         FixtureDisputes.correction_overlap(apply_dispute_receipts(payment).id)
+
+              :refund ->
+                assert {{:ok, %{state: :unresolved, claim_id: claim}}, 202} =
+                         race_corrections(:fixture_refund, :claim_written, dispatch, dispute)
+
+                assert_receive {^tag, "POST", "/refund", _, _}
+
+                assert {:ok, %{claim_id: ^claim}} =
+                         Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+                refute_received {^tag, "POST", "/refund", _, _}
+
+                assert {:ok, :unresolved} =
+                         FixtureDisputes.correction_overlap(apply_dispute_receipts(payment).id)
+            end
+          end)
+        end)
+      end)
+    end
+  end
+
+  test "a later pinned read can confirm either retained terminal outcome across a restart" do
+    reply_data = start_supervised!({Agent, fn -> nil end})
+
+    reply = fn conn, _ ->
+      HostedCheckoutReceiver.json(conn, 200, %{data: Agent.get(reply_data, & &1)})
+    end
+
+    for {terminal, contrary, right_state} <- [
+          {:restored, :lost, :held_unconsumed},
+          {:lost, :restored, :ended}
+        ] do
+      P805.with_fixture(fn ->
+        with_paid_plan(reply, fn accepted, payment, payer, recipient, _, tag ->
+          assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+          assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+          assert {:ok, refund} =
+                   request(
+                     payer.credentials,
+                     proof(refund_fields(accepted, payment, payer, recipient))
+                   )
+
+          assert {:ok, %{state: :reserved}} =
+                   Commerce.reserve_fixture_refund(payer.credentials, refund.id)
+
+          with_signing_key(fn key ->
+            data = dispute_data(payment)
+            read_path = "/__test/dispute/#{data.id}"
+            retained = Atom.to_string(terminal)
+            opposite = Atom.to_string(contrary)
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 2, outcome: retained})
+
+            dispute = apply_dispute_receipts(payment)
+            assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 1, outcome: opposite})
+
+            assert %{state: ^terminal, conflict?: true} = apply_dispute_receipts(payment)
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 4, outcome: opposite})
+
+            assert %{state: ^terminal, conflict?: true, effect_version: conflict_version} =
+                     apply_dispute_receipts(payment)
+
+            assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+            assert [] = plan_rights(recipient)
+            interim = if terminal == :restored, do: :suspended, else: :ended
+
+            assert %{state: ^interim} =
+                     Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+            assert {:error, :refund_unavailable} =
+                     Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+            refute_received {^tag, "POST", "/refund", _, _}
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 6, outcome: retained})
+
+            assert %{conflict?: true} = apply_dispute_receipts(payment)
+
+            for observation <- [
+                  %{data | revision: 4, outcome: retained},
+                  %{data | revision: 7, outcome: opposite},
+                  %{data | revision: 6, outcome: retained},
+                  %{data | revision: 8, outcome: retained, reference: String.duplicate("0", 32)}
+                ] do
+              set_due_dispute_reply(dispute.id, reply_data, observation)
+              assert :ok = FixtureDisputes.read_due(dispute.id)
+              assert_receive {^tag, "GET", ^read_path, _, _}
+
+              assert %{state: ^terminal, conflict?: true, effect_version: ^conflict_version} =
+                       Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+            end
+
+            set_due_dispute_reply(dispute.id, reply_data, %{data | revision: 8, outcome: retained})
+
+            {executable, arguments} =
+              FreshMix.command(["run", "--no-compile", "test/proof/well223_dispute_restart.exs"])
+
+            diagnostic =
+              P815Port.run(
+                executable,
+                arguments,
+                Jason.encode!(%{id: dispute.id, terminal: retained}),
+                60_000
+              )
+
+            assert_receive {^tag, "GET", ^read_path, _, _}
+
+            assert %{
+                     state: ^terminal,
+                     conflict?: false,
+                     revision: 8,
+                     effect_version: effect,
+                     acknowledged_version: effect
+                   } = Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+            assert effect == conflict_version + 1
+            assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} = diagnostic
+
+            assert %{state: ^right_state} =
+                     Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 3, outcome: opposite})
+
+            assert %{state: ^terminal, conflict?: false, effect_version: ^effect} =
+                     apply_dispute_receipts(payment)
+
+            assert Enum.frequencies_by(dispute_receipts(payment), & &1.state) ==
+                     %{applied: 2, conflict: 3, stale: 4}
+
+            assert %{claim_id: nil, state: :reserved, amount_minor: @amount} =
+                     read_refund(refund.id)
+
+            assert {:ok, clear?} =
+                     NewYou.Commerce.FixtureCorrectionSource.transact(fn ->
+                       {:ok, %NewYou.Commerce.Purchase{}} =
+                         NewYou.Commerce.FixtureCorrectionSource.lock_purchase(
+                           accepted.purchase_id
+                         )
+
+                       {:ok, clear?} = FixtureDisputes.refund_clear?(payment.id)
+                       clear?
+                     end)
+
+            assert clear? == (terminal == :restored)
+            refute_received {^tag, "POST", "/refund", _, _}
+          end)
+        end)
+      end)
+    end
+  end
+
+  test "a stale read token does not erase a committed opposing revision" do
+    reply_data = start_supervised!({Agent, fn -> nil end})
+    reply = fn conn, _ -> dispute_read_response(conn, Agent.get(reply_data, & &1)) end
+
+    P805.with_fixture(fn ->
+      with_paid_plan(reply, fn accepted, payment, _, recipient, _, tag ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+        with_signing_key(fn key ->
+          data = dispute_data(payment)
+
+          assert 202 ==
+                   send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
+
+          dispute = apply_dispute_receipts(payment)
+          assert 202 == send_event(key, "fixture.dispute", %{data | revision: 3, outcome: "lost"})
+          assert %{conflict?: true} = apply_dispute_receipts(payment)
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+          set_due_dispute_reply(dispute.id, reply_data, %{data | revision: 10, outcome: "lost"})
+
+          with_paused_dispute_read(dispute.id, fn ->
+            # A later lease supersedes the committed read before its worker classifies it.
+            set_due_dispute_reply(dispute.id, reply_data, :miss)
+            assert :ok = FixtureDisputes.read_due(dispute.id)
+          end)
+
+          assert Enum.any?(dispute_receipts(payment), fn receipt ->
+                   receipt.source == :read and receipt.revision == 10 and receipt.state == :stale
+                 end)
+
+          for revision <- [4, 10] do
+            set_due_dispute_reply(dispute.id, reply_data, %{
+              data
+              | revision: revision,
+                outcome: "restored"
+            })
+
+            assert :ok = FixtureDisputes.read_due(dispute.id)
+            assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+            assert %{state: :suspended} =
+                     Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+            assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
+          end
+
+          set_due_dispute_reply(dispute.id, reply_data, %{
+            data
+            | revision: 11,
+              outcome: "restored"
+          })
+
+          {executable, arguments} =
+            FreshMix.command(["run", "--no-compile", "test/proof/well223_dispute_restart.exs"])
+
+          assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} =
+                   P815Port.run(executable, arguments, Jason.encode!(%{id: dispute.id}), 60_000)
+
+          assert %{state: :restored, revision: 11, conflict?: false} =
+                   Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+          assert [%{id: ^right_id, state: :held_unconsumed}] = plan_rights(recipient)
+          assert {:ok, true} = dispute_refund_clear(accepted.purchase_id, payment.id)
+          refute_received {^tag, "POST", "/refund", _, _}
+        end)
+      end)
+    end)
+  end
+
+  test "committed contradictory terminal receipts keep the right suspended in both worker orders" do
+    reply_data = start_supervised!({Agent, fn -> nil end})
+    reply = fn conn, _ -> dispute_read_response(conn, Agent.get(reply_data, & &1)) end
+
+    for initial <- [:under_review, :unbound], first <- [:lost, :restored] do
+      P805.with_fixture(fn ->
+        with_paid_plan(reply, fn accepted, payment, _, recipient, _, _ ->
+          assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+          assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+          with_signing_key(fn key ->
+            data = dispute_data(payment)
+
+            if initial == :under_review do
+              assert 202 == send_event(key, "fixture.dispute", %{data | outcome: "under_review"})
+              dispute = apply_dispute_receipts(payment)
+              assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+            end
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "lost"})
+
+            assert 202 ==
+                     send_event(key, "fixture.dispute", %{data | revision: 3, outcome: "restored"})
+
+            pending = Enum.filter(dispute_receipts(payment), &(&1.state == :pending))
+
+            assert {[first_receipt], [second_receipt]} =
+                     Enum.split_with(pending, &(&1.outcome == first))
+
+            for receipt <- [first_receipt, second_receipt] do
+              assert :ok = Commerce.apply_fixture_dispute_receipt(receipt.id)
+              state = if initial == :unbound, do: :unresolved, else: initial
+
+              assert {:ok, %{id: id, state: ^state, conflict?: true}} =
+                       FixtureDisputes.read_identity(data.id)
+
+              assert :ok = Commerce.deliver_fixture_dispute(id)
+              assert [] = plan_rights(recipient)
+
+              assert %{state: :suspended} =
+                       Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+              assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
+            end
+
+            assert %{state: :conflict} =
+                     Ash.get!(FixtureDisputeReceipt, first_receipt.id, authorize?: false)
+
+            assert {:ok, %{id: id}} = FixtureDisputes.read_identity(data.id)
+
+            # Equal-revision evidence cannot adjudicate the worker conflict.
+            set_due_dispute_reply(id, reply_data, %{data | revision: 3, outcome: "lost"})
+            assert :ok = FixtureDisputes.read_due(id)
+            assert {:ok, %{conflict?: true}} = FixtureDisputes.read_identity(data.id)
+
+            set_due_dispute_reply(id, reply_data, %{data | revision: 4, outcome: "lost"})
+            assert :ok = FixtureDisputes.read_due(id)
+            assert :ok = Commerce.deliver_fixture_dispute(id)
+
+            assert {:ok, %{state: :lost, conflict?: false}} =
+                     FixtureDisputes.read_identity(data.id)
+
+            assert %{state: :ended} =
+                     Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+            assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
+          end)
+        end)
+      end)
+    end
+  end
+
+  test "a current copy of a terminal loss reconciles after the first read loses its lease" do
+    assert_identical_terminal_retry(:lost, :restored, :ended, false)
+  end
+
+  test "a current copy of a terminal restoration reconciles after the first read loses its lease" do
+    assert_identical_terminal_retry(:restored, :lost, :held_unconsumed, true)
+  end
+
+  defp assert_identical_terminal_retry(outcome, opposite, right_state, refund_clear?) do
+    reply_data = start_supervised!({Agent, fn -> nil end})
+    reply = fn conn, _ -> dispute_read_response(conn, Agent.get(reply_data, & &1)) end
+    expected = {outcome, opposite, right_state, refund_clear?}
+
+    P805.with_fixture(fn ->
+      with_paid_plan(reply, fn accepted, payment, _, _, _, tag ->
+        with_signing_key(
+          &exercise_terminal_retry(&1, accepted, payment, tag, reply_data, expected)
+        )
+      end)
+    end)
+  end
+
+  defp exercise_terminal_retry(
+         key,
+         accepted,
+         payment,
+         tag,
+         reply_data,
+         {outcome, opposite, right_state, refund_clear?}
+       ) do
+    assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+    assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+    data = dispute_data(payment)
+    terminal = Atom.to_string(outcome)
+    opposing = Atom.to_string(opposite)
+    assert 202 == send_event(key, "fixture.dispute", %{data | outcome: "under_review"})
+    dispute = apply_dispute_receipts(payment)
+
+    assert 202 ==
+             send_event(key, "fixture.dispute", %{data | revision: 2, outcome: opposing})
+
+    assert 202 ==
+             send_event(key, "fixture.dispute", %{data | revision: 3, outcome: terminal})
+
+    assert %{state: :under_review, conflict?: true} = apply_dispute_receipts(payment)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    authoritative = %{data | revision: 4, outcome: terminal}
+    set_due_dispute_reply(dispute.id, reply_data, authoritative)
+
+    with_paused_dispute_read(dispute.id, fn ->
+      set_due_dispute_reply(dispute.id, reply_data, :miss)
+      assert :ok = FixtureDisputes.read_due(dispute.id)
+    end)
+
+    assert [%{revision: 4, outcome: ^outcome, state: :stale}] =
+             Enum.filter(dispute_receipts(payment), &(&1.source == :read))
+
+    # A lower current read still loses to the recorded higher revision.
+    set_due_dispute_reply(dispute.id, reply_data, %{authoritative | revision: 3})
+    assert :ok = FixtureDisputes.read_due(dispute.id)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    assert %{state: :under_review, conflict?: true} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert %{state: :suspended} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
+
+    set_due_dispute_reply(dispute.id, reply_data, authoritative)
+    assert :ok = FixtureDisputes.read_due(dispute.id)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    assert %{
+             state: ^outcome,
+             revision: 4,
+             conflict?: false,
+             effect_version: version,
+             acknowledged_version: version
+           } = Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert %{state: ^right_state} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    copies =
+      Enum.filter(dispute_receipts(payment), &(&1.source == :read and &1.revision == 4))
+
+    assert [%{state: :applied} = applied, %{state: :stale} = stale] =
+             Enum.sort_by(copies, & &1.state)
+
+    assert applied.digest == stale.digest
+    refute applied.read_token == stale.read_token
+    assert :ok = Commerce.apply_fixture_dispute_receipt(applied.id)
+
+    assert %{effect_version: ^version} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert {:ok, ^refund_clear?} = dispute_refund_clear(accepted.purchase_id, payment.id)
+    refute_received {^tag, "POST", "/refund", _, _}
+  end
+
+  test "retained restoration cannot reconcile below a committed same-outcome revision" do
+    assert_retained_revision_floor(:restored, :lost, :suspended, :held_unconsumed)
+  end
+
+  test "retained loss cannot reconcile below a committed same-outcome revision" do
+    assert_retained_revision_floor(:lost, :restored, :ended, :ended)
+  end
+
+  defp assert_retained_revision_floor(outcome, opposite, interim_right, final_right) do
+    response = start_supervised!({Agent, fn -> nil end})
+    reply = fn conn, _ -> dispute_read_response(conn, Agent.get(response, & &1)) end
+    expected = {outcome, opposite, interim_right, final_right}
+
+    P805.with_fixture(fn ->
+      with_paid_plan(reply, fn accepted, payment, _, _, _, tag ->
+        with_signing_key(
+          &exercise_retained_revision_floor(&1, response, accepted, payment, tag, expected)
+        )
+      end)
+    end)
+  end
+
+  defp exercise_retained_revision_floor(
+         key,
+         response,
+         accepted,
+         payment,
+         tag,
+         {outcome, opposite, interim_right, final_right}
+       ) do
+    assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+    assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+    terminal = Atom.to_string(outcome)
+    other = Atom.to_string(opposite)
+    data = dispute_data(payment)
+
+    assert 202 == send_event(key, "fixture.dispute", %{data | revision: 2, outcome: terminal})
+    dispute = apply_dispute_receipts(payment)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+    assert 202 == send_event(key, "fixture.dispute", %{data | revision: 4, outcome: other})
+    assert %{state: ^outcome, revision: 2, conflict?: true} = apply_dispute_receipts(payment)
+
+    latest = %{data | revision: 6, outcome: terminal}
+    set_due_dispute_reply(dispute.id, response, latest)
+
+    with_paused_dispute_read(dispute.id, fn ->
+      set_due_dispute_reply(dispute.id, response, :miss)
+      assert :ok = FixtureDisputes.read_due(dispute.id)
+    end)
+
+    assert Enum.any?(dispute_receipts(payment), fn receipt ->
+             receipt.source == :read and receipt.revision == 6 and receipt.outcome == outcome and
+               receipt.state == :stale
+           end)
+
+    set_due_dispute_reply(dispute.id, response, %{latest | revision: 5})
+    assert :ok = FixtureDisputes.read_due(dispute.id)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    assert %{state: ^outcome, revision: 2, conflict?: true, effect_version: conflict_version} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert %{state: ^interim_right} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    assert {:ok, false} = dispute_refund_clear(accepted.purchase_id, payment.id)
+
+    set_due_dispute_reply(dispute.id, response, latest)
+    assert :ok = FixtureDisputes.read_due(dispute.id)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+    assert %{
+             state: ^outcome,
+             revision: 6,
+             conflict?: false,
+             effect_version: version,
+             acknowledged_version: version
+           } = Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert version == conflict_version + 1
+
+    assert %{state: ^final_right} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    assert Enum.frequencies_by(dispute_receipts(payment), & &1.state) ==
+             %{applied: 2, conflict: 1, stale: 2}
+
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+    assert %{effect_version: ^version} = Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+    refute_received {^tag, "POST", "/refund", _, _}
+  end
+
+  test "claimed refunds and restoration serialize in both Purchase lock orders" do
+    for first <- [:refund, :restoration] do
+      P805.with_fixture(fn ->
+        with_paid_plan(fn accepted, payment, payer, recipient, _, tag ->
+          with_signing_key(
+            &exercise_restoration_overlap(&1, {accepted, payment, payer, recipient, tag}, first)
+          )
+        end)
+      end)
+    end
+  end
+
+  defp exercise_restoration_overlap(key, {accepted, payment, payer, recipient, tag}, first) do
+    assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+    assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+    assert {:ok, refund} =
+             request(payer.credentials, proof(refund_fields(accepted, payment, payer, recipient)))
+
+    assert {:ok, %{state: :reserved}} =
+             Commerce.reserve_fixture_refund(payer.credentials, refund.id)
+
+    data = dispute_data(payment)
+    assert 202 == send_event(key, "fixture.dispute", data)
+    dispute = apply_dispute_receipts(payment)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+    assert [] = plan_rights(recipient)
+
+    assert 202 == send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
+    assert %{state: :restored} = apply_dispute_receipts(payment)
+
+    dispatch = fn -> Commerce.dispatch_fixture_refund(payer.credentials, refund.id) end
+    restore = fn -> Commerce.deliver_fixture_dispute(dispute.id) end
+
+    assert %{state: :unresolved, claim_id: claim} =
+             race_restoration_and_claim(first, dispatch, restore)
+
+    assert_receive {^tag, "POST", "/refund", _, _}
+    assert is_binary(claim)
+
+    # A delivery that held the lock before the claim saw a clear source.
+    right_state = if first == :restoration, do: :held_unconsumed, else: :suspended
+
+    assert %{state: ^right_state} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+    assert [] = plan_rights(recipient)
+    expected = if first == :restoration, do: 2, else: 1
+
+    assert %{success: ^expected, failure: 0, discard: 0, queues_not_drained: []} =
+             AshOban.Test.schedule_and_run_triggers({FixtureDispute, :deliver})
+
+    assert %{state: :suspended} = stored_plan_right(right_id)
+
+    for status <- ["pending", "failed"] do
+      assert 202 == send_evidence(key, refund_data(refund), status)
+      process_evidence(refund.reference)
+      assert %{claim_id: ^claim, state: state} = read_refund(refund.id)
+      assert Atom.to_string(state) == status
+      assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+
+      assert %{success: 1, failure: 0, discard: 0, queues_not_drained: []} =
+               AshOban.Test.schedule_and_run_triggers({FixtureDispute, :deliver})
+
+      assert %{state: :suspended} =
+               Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+    end
+
+    assert 202 == send_evidence(key, refund_data(refund), "processed")
+    process_evidence(refund.reference)
+    assert {:ok, :none} = FixtureDisputes.correction_overlap(dispute.id)
+
+    assert %{success: 2, failure: 0, discard: 0, queues_not_drained: []} =
+             AshOban.Test.schedule_and_run_triggers({NewYou.Commerce.FixtureRefund, :deliver})
+
+    assert %{state: :ended} =
+             Ash.get!(NewYou.Entitlements.PlanRight, right_id, authorize?: false)
+
+    assert {:ok, %{claim_id: ^claim, state: :processed}} =
+             Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+    refute_received {^tag, "POST", "/refund", _, _}
+  end
+
+  defp race_restoration_and_claim(:refund, dispatch, restore) do
+    assert {{:ok, claimed}, :ok} =
+             race_corrections(:fixture_refund, :claim_written, dispatch, restore)
+
+    claimed
+  end
+
+  defp race_restoration_and_claim(:restoration, dispatch, restore) do
+    assert {:ok, {:ok, claimed}} =
+             race_corrections(:fixture_dispute, :effect_checked, restore, dispatch)
+
+    claimed
+  end
+
+  test "a refund claim rediscovers a fully acknowledged restoration in a fresh BEAM" do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn accepted, payment, payer, recipient, _, tag ->
+        with_signing_key(
+          &exercise_claim_after_restoration(&1, {accepted, payment, payer, recipient, tag})
+        )
+      end)
+    end)
+  end
+
+  defp exercise_claim_after_restoration(key, {accepted, payment, payer, recipient, tag}) do
+    unrelated = grant_unrelated_plan(payer, recipient)
+
+    {dispute, refund, right_id} =
+      prepare_restoration_and_refund(key, accepted, payment, payer, recipient)
+
+    assert %{success: 2, failure: 0, discard: 0, queues_not_drained: []} =
+             AshOban.Test.schedule_and_run_triggers({FixtureDispute, :deliver})
+
+    assert %{effect_version: restored_version, acknowledged_version: restored_version} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    assert %{state: :held_unconsumed} = stored_plan_right(right_id)
+
+    cut_dispatch(payer.credentials, refund.id, :claim_written)
+    assert %{state: :reserved, claim_id: nil} = read_refund(refund.id)
+
+    assert %{effect_version: ^restored_version, acknowledged_version: ^restored_version} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    refute_received {^tag, "POST", "/refund", _, _}
+
+    assert {:ok, %{state: :unresolved, claim_id: claim}} =
+             Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+    assert_receive {^tag, "POST", "/refund", _, _}
+    assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+    assert [%{id: ^unrelated}] = plan_rights(recipient)
+    assert %{state: :held_unconsumed} = stored_plan_right(right_id)
+    refute_dispute_delivery_enqueued(dispute.id)
+
+    assert {:ok, %{state: :unresolved, claim_id: ^claim}} =
+             Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+    recover_refund_suspension(dispute.id, right_id, restored_version)
+    assert %{state: :held_unconsumed} = stored_plan_right(unrelated)
+
+    assert 202 == send_evidence(key, refund_data(refund), "processed")
+    process_evidence(refund.reference)
+
+    assert %{success: 2, failure: 0, discard: 0, queues_not_drained: []} =
+             AshOban.Test.schedule_and_run_triggers({NewYou.Commerce.FixtureRefund, :deliver})
+
+    assert %{state: :ended} = stored_plan_right(right_id)
+    assert [%{id: ^unrelated}] = plan_rights(recipient)
+    assert {:ok, :none} = FixtureDisputes.correction_overlap(dispute.id)
+
+    assert {:ok, %{state: :processed, claim_id: ^claim, reference: reference}} =
+             Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+
+    assert reference == refund.reference
+    assert [%{id: refund_id}] = purchase_refunds(accepted)
+    assert refund_id == refund.id
+    refute_received {^tag, "POST", "/refund", _, _}
+  end
+
+  test "a claim between restoration commit and acknowledgement leaves a discoverable effect" do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn accepted, payment, payer, recipient, _, tag ->
+        with_signing_key(
+          &exercise_claim_before_restoration_ack(&1, {accepted, payment, payer, recipient, tag})
+        )
+      end)
+    end)
+  end
+
+  defp exercise_claim_before_restoration_ack(key, {accepted, payment, payer, recipient, tag}) do
+    {dispute, refund, right_id} =
+      prepare_restoration_and_refund(key, accepted, payment, payer, recipient)
+
+    restored_version = dispute.effect_version
+    previous_ack = dispute.acknowledged_version
+
+    queued =
+      NewYou.Commerce.Workers.DeliverFixtureDispute.new(%{"primary_key" => %{"id" => dispute.id}})
+      |> Oban.insert!()
+
+    with_paused_dispute(
+      :entitlements_committed,
+      fn -> Commerce.deliver_fixture_dispute(dispute.id) end,
+      fn ->
+        assert %{state: :held_unconsumed} = stored_plan_right(right_id)
+
+        assert %{effect_version: ^restored_version, acknowledged_version: ^previous_ack} =
+                 Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+        assert {:ok, %{state: :unresolved}} =
+                 Commerce.dispatch_fixture_refund(payer.credentials, refund.id)
+      end
+    )
+
+    assert_receive {^tag, "POST", "/refund", _, _}
+    assert [] = plan_rights(recipient)
+    assert %{state: :held_unconsumed} = stored_plan_right(right_id)
+    assert :ok = Oban.delete_job(queued)
+    refute_dispute_delivery_enqueued(dispute.id)
+
+    assert %{acknowledged_version: ^previous_ack} =
+             Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+    recover_refund_suspension(dispute.id, right_id, restored_version)
+    refute_received {^tag, "POST", "/refund", _, _}
+  end
+
+  defp prepare_restoration_and_refund(key, accepted, payment, payer, recipient) do
+    assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+    assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+
+    assert {:ok, refund} =
+             request(payer.credentials, proof(refund_fields(accepted, payment, payer, recipient)))
+
+    assert {:ok, %{state: :reserved}} =
+             Commerce.reserve_fixture_refund(payer.credentials, refund.id)
+
+    data = dispute_data(payment)
+    assert 202 == send_event(key, "fixture.dispute", data)
+    dispute = apply_dispute_receipts(payment)
+    assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+    assert %{state: :suspended} = stored_plan_right(right_id)
+
+    assert 202 == send_event(key, "fixture.dispute", %{data | revision: 2, outcome: "restored"})
+
+    assert %{state: :restored, conflict?: false} = restored = apply_dispute_receipts(payment)
+    {restored, refund, right_id}
+  end
+
+  defp grant_unrelated_plan(payer, recipient) do
+    with_paid_plan(payer, recipient, large_provider_id(), &default_refund_reply/2, fn
+      accepted, _, _, _, _, _ ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert {:ok, %{id: right_id}} = Commerce.deliver_plan_payment_consequence(grant)
+        right_id
+    end)
+  end
+
+  defp recover_refund_suspension(id, right_id, restored_version) do
+    before = Ash.get!(FixtureDispute, id, authorize?: false)
+
+    {executable, arguments} =
+      FreshMix.command(["run", "--no-compile", "test/proof/well223_dispute_restart.exs"])
+
+    diagnostic =
+      P815Port.run(executable, arguments, Jason.encode!(%{id: id, phase: "effect"}), 60_000)
+
+    assert %{state: :suspended} = stored_plan_right(right_id)
+    assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} = diagnostic
+
+    version = restored_version + 1
+    assert before.effect_version == version
+    assert before.acknowledged_version <= restored_version
+
+    assert %{
+             state: :restored,
+             revision: 2,
+             conflict?: false,
+             effect_version: ^version,
+             acknowledged_version: ^version
+           } = Ash.get!(FixtureDispute, id, authorize?: false)
+  end
+
+  defp stored_plan_right(id),
+    do: Ash.get!(NewYou.Entitlements.PlanRight, id, authorize?: false)
+
+  defp refute_dispute_delivery_enqueued(id) do
+    refute_enqueued(
+      worker: NewYou.Commerce.Workers.DeliverFixtureDispute,
+      args: %{"primary_key" => %{"id" => id}}
+    )
+  end
+
+  defp with_paused_dispute_read(id, while_paused) do
+    with_paused_dispute(:evidence_committed, fn -> FixtureDisputes.read_due(id) end, while_paused)
+  end
+
+  defp with_paused_dispute(stage, operation, while_paused) do
+    parent = self()
+    handler = {__MODULE__, make_ref()}
+
+    :ok =
+      :telemetry.attach(
+        handler,
+        [:new_you, :commerce, :fixture_dispute, :checkpoint],
+        fn _, _, metadata, _ ->
+          if metadata.stage == stage and self() != parent do
+            send(parent, {:dispute_checkpoint_reached, self()})
+
+            receive do
+              :resume_dispute -> :ok
+            after
+              5_000 -> raise "Timed out waiting to resume dispute work"
+            end
+          end
+        end,
+        nil
+      )
+
+    reader =
+      Task.async(fn -> Sandbox.unboxed_run(Repo, operation) end)
+
+    try do
+      assert_receive {:dispute_checkpoint_reached, pid}, 3_000
+      assert pid == reader.pid
+      while_paused.()
+      send(pid, :resume_dispute)
+      assert :ok = Task.await(reader)
+    after
+      :telemetry.detach(handler)
+      Task.shutdown(reader, :brutal_kill)
+    end
+  end
+
+  defp dispute_refund_clear(purchase_id, payment_id) do
+    source = NewYou.Commerce.FixtureCorrectionSource
+
+    source.transact(fn ->
+      assert {:ok, %NewYou.Commerce.Purchase{}} = source.lock_purchase(purchase_id)
+      assert {:ok, clear?} = FixtureDisputes.refund_clear?(payment_id)
+      clear?
+    end)
+  end
+
+  defp set_due_dispute_reply(id, reply_data, observation) do
+    make_dispute_due(id, 6)
+    Agent.update(reply_data, fn _ -> observation end)
+  end
+
+  test "known reads count one request across contenders and retain a retry after miss and throttle" do
+    P805.with_fixture(fn ->
+      response = start_supervised!({Agent, fn -> :miss end})
+      reply = fn conn, _ -> dispute_read_response(conn, Agent.get(response, & &1)) end
+
+      with_paid_plan(reply, fn _, payment, _, _, _, tag ->
+        with_signing_key(fn key ->
+          data = dispute_data(payment)
+          read_path = "/__test/dispute/#{data.id}"
+          assert 202 == send_event(key, "fixture.dispute", data)
+          dispute = apply_dispute_receipts(payment)
+
+          assert [:ok, :ok] =
+                   compete_on_connections(fn -> FixtureDisputes.read_due(dispute.id) end)
+
+          assert_receive {^tag, "GET", ^read_path, _, _}
+          refute_received {^tag, "GET", ^read_path, _, _}
+
+          assert %{verify_round: 1, state: :contested} =
+                   Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+          cases = [:throttle, :timeout, %{data | id: "55", outcome: "lost", revision: 4}]
+
+          for {kind, round} <- Enum.with_index(cases, 1) do
+            Agent.update(response, fn _ -> kind end)
+            make_dispute_due(dispute.id, round)
+            assert :ok = FixtureDisputes.read_due(dispute.id)
+            assert_receive {^tag, "GET", ^read_path, _, _}
+
+            assert %{verify_after: due, state: :contested} =
+                     Ash.get!(FixtureDispute, dispute.id, authorize?: false)
+
+            if kind == :throttle, do: assert(DateTime.diff(due, DateTime.utc_now()) in 175..180)
+          end
+
+          assert [_webhook] = dispute_receipts(payment)
+          assert :ok = FixtureDisputes.read_due(dispute.id)
+          refute_received {^tag, "GET", ^read_path, _, _}
+        end)
+      end)
+    end)
+  end
+
+  test "known-dispute GET sends no request to a replacement TLS listener on the original port" do
+    P805.with_fixture(fn ->
+      {case_id, pin} =
+        with_paid_plan(fn _, payment, _, _, listener, _ ->
+          with_signing_key(fn key ->
+            assert 202 == send_event(key, "fixture.dispute", dispute_data(payment))
+            {apply_dispute_receipts(payment).id, listener}
+          end)
+        end)
+
+      HostedCheckoutReceiver.with_bound_receiver(
+        &default_refund_reply/2,
+        fn replacement, tag ->
+          assert replacement.port == pin.port
+          refute replacement.certificate == pin.certificate
+          assert :ok = FixtureDisputes.read_due(case_id)
+
+          assert %{state: :contested, verify_round: 1} =
+                   Ash.get!(FixtureDispute, case_id, authorize?: false)
+
+          refute_receive {^tag, "GET", "/__test/dispute/" <> _, _, _}, 30
+        end,
+        port: pin.port
+      )
+    end)
+  end
+
+  test "fresh scheduler processes a committed webhook receipt after missing or exhausted work" do
+    with_unrelated_dispute_receipt_job(fn ->
+      for queue_state <- [:missing, :exhausted] do
+        recover_webhook_receipt(queue_state)
+      end
+    end)
+  end
+
+  defp recover_webhook_receipt(queue_state) do
+    P805.with_fixture(fn ->
+      with_paid_plan(fn _, payment, _, _, _, tag ->
+        with_signing_key(&assert_receipt_recovery(&1, payment, tag, queue_state))
+      end)
+    end)
+  end
+
+  defp assert_receipt_recovery(key, payment, tag, queue_state) do
+    payment_id = payment.id
+    assert 202 == send_event(key, "fixture.dispute", dispute_data(payment))
+    assert [%{id: receipt_id, state: :pending, source: :webhook}] = dispute_receipts(payment)
+    assert [] == dispute_receipt_jobs(receipt_id)
+    assert is_nil(dispute_for_payment(payment))
+
+    exhausted = prepare_receipt_queue(queue_state, receipt_id)
+    assert is_nil(dispute_for_payment(payment))
+
+    assert NewYou.Commerce.FixtureCorrectionSource.independently_visible?(fn ->
+             match?(
+               {:ok, %{state: :pending, source: :webhook, payment_id: ^payment_id}},
+               Ash.get(FixtureDisputeReceipt, receipt_id, authorize?: false)
+             )
+           end)
+
+    {executable, arguments} =
+      FreshMix.command(["run", "--no-compile", "test/proof/well223_dispute_restart.exs"])
+
+    diagnostic =
+      P815Port.run(
+        executable,
+        arguments,
+        Jason.encode!(%{id: receipt_id, phase: "receipt"}),
+        60_000
+      )
+
+    assert [%{id: ^receipt_id, state: :applied} = applied] = dispute_receipts(payment)
+    assert %{status: :ok, cleanup: :confirmed, marker: :well223_completed} = diagnostic
+
+    assert %{state: :contested, effect_version: 1, dispute_id: dispute_id} =
+             dispute_for_payment(payment)
+
+    assert dispute_id == applied.dispute_id
+    assert [[_, "completed"]] = dispute_receipt_jobs(receipt_id) -- exhausted
+    refute_received {^tag, _, _, _, _}
+  end
+
+  defp prepare_receipt_queue(:missing, _receipt_id), do: []
+
+  defp prepare_receipt_queue(:exhausted, receipt_id) do
+    worker = NewYou.Commerce.Workers.ProcessFixtureDisputeReceipt
+
+    queued =
+      worker.new(%{"primary_key" => %{"id" => receipt_id}}, max_attempts: 1)
+      |> Oban.insert!()
+
+    P805.with_rejected_insert("commerce_fixture_disputes", fn reached? ->
+      assert %{discard: 1} = Oban.drain_queue(queue: :commerce_fixture_dispute)
+      assert reached?.()
+    end)
+
+    jobs = [[queued.id, "discarded"]]
+    assert jobs == dispute_receipt_jobs(receipt_id)
+    jobs
+  end
+
+  test "two workers running the scheduled receipt job bind one dispute consequence" do
+    worker = NewYou.Commerce.Workers.ProcessFixtureDisputeReceipt
+
+    P805.with_fixture(fn ->
+      with_paid_plan(fn accepted, payment, _, _, _, _ ->
+        assert {:ok, [grant]} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+        assert {:ok, %{id: original_right}} = Commerce.deliver_plan_payment_consequence(grant)
+
+        with_signing_key(fn key ->
+          data = dispute_data(payment)
+          assert 202 == send_event(key, "fixture.dispute", data)
+          assert [%{id: receipt_id, state: :pending}] = dispute_receipts(payment)
+          args = %{"primary_key" => %{"id" => receipt_id}}
+          refute_enqueued(worker: worker, args: args)
+
+          AshOban.Test.schedule_and_run_triggers({FixtureDisputeReceipt, :process},
+            drain_queues?: false
+          )
+
+          assert %{success: 1, failure: 0, discard: 0} =
+                   Oban.drain_queue(queue: :commerce_fixture_dispute, with_limit: 1)
+
+          assert [job] = all_enqueued(worker: worker, args: args)
+          attempt = %{job | attempt: 1, attempted_at: DateTime.utc_now()}
+          assert [:ok, :ok] = compete_on_connections(fn -> perform_job(attempt) end)
+          assert [%{id: ^receipt_id, state: :applied}] = dispute_receipts(payment)
+          assert %{state: :contested, effect_version: 1} = dispute = dispute_for_payment(payment)
+
+          assert %{success: 1, failure: 0, discard: 0} =
+                   Oban.drain_queue(queue: :commerce_fixture_dispute)
+
+          assert %{success: 1, failure: 0, discard: 0} =
+                   AshOban.Test.schedule_and_run_triggers({FixtureDisputeReceipt, :process})
+
+          assert [[job.id, "completed"]] == dispute_receipt_jobs(receipt_id)
+          assert dispute == dispute_for_payment(payment)
+
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+
+          assert [%{id: ^original_right, state: :suspended}] =
+                   Entitlements.PlanRight
+                   |> Ash.Query.filter(payment_id == ^payment.id)
+                   |> Ash.read!(authorize?: false)
+        end)
+      end)
+    end)
+  end
+
+  defp dispute_receipt_jobs(receipt_id) do
+    Repo.query!(
+      """
+      SELECT id, state FROM oban_jobs
+      WHERE worker = $1 AND args->'primary_key'->>'id' = $2
+      ORDER BY id
+      """,
+      [inspect(NewYou.Commerce.Workers.ProcessFixtureDisputeReceipt), receipt_id]
+    ).rows
+  end
+
+  test "fixture cleanup removes only its dispute rows and jobs from the shared queue" do
+    worker = NewYou.Commerce.Workers.ProcessFixtureDisputeReceipt
+
+    with_unrelated_dispute_receipt_job(fn ->
+      {case_id, receipt_id, job_id} =
+        P805.with_fixture(fn ->
+          with_paid_plan(fn _, payment, _, _, _, _ ->
+            with_signing_key(fn key ->
+              assert 202 == send_event(key, "fixture.dispute", dispute_data(payment))
+              assert [receipt] = dispute_receipts(payment)
+              dispute = apply_dispute_receipts(payment)
+              job = Oban.insert!(worker.new(%{"primary_key" => %{"id" => receipt.id}}))
+              {dispute.id, receipt.id, job.id}
+            end)
+          end)
+        end)
+
+      Sandbox.unboxed_run(Repo, fn ->
+        assert {:ok, nil} = Ash.get(FixtureDispute, case_id, error?: false, authorize?: false)
+
+        assert {:ok, nil} =
+                 Ash.get(FixtureDisputeReceipt, receipt_id, error?: false, authorize?: false)
+
+        refute Repo.get(Oban.Job, job_id)
+      end)
+    end)
+  end
+
+  defp with_unrelated_dispute_receipt_job(callback) do
+    worker = NewYou.Commerce.Workers.ProcessFixtureDisputeReceipt
+    args = %{"primary_key" => %{"id" => uuid()}}
+
+    sentinel =
+      Sandbox.unboxed_run(Repo, fn ->
+        Oban.insert!(worker.new(args, schedule_in: 3_600))
+      end)
+
+    try do
+      callback.()
+
+      Sandbox.unboxed_run(Repo, fn ->
+        assert %{state: "scheduled", args: ^args} = Repo.get!(Oban.Job, sentinel.id)
+      end)
+    after
+      Sandbox.unboxed_run(Repo, fn -> Oban.delete_job(sentinel.id) end)
+    end
+  end
+
+  defp dispute_read_response(conn, :miss), do: Plug.Conn.send_resp(conn, 404, "")
+
+  defp dispute_read_response(conn, :throttle) do
+    conn |> Plug.Conn.put_resp_header("retry-after", "180") |> Plug.Conn.send_resp(429, "")
+  end
+
+  defp dispute_read_response(conn, :timeout) do
+    Process.sleep(750)
+    Plug.Conn.send_resp(conn, 200, "{}")
+  end
+
+  defp dispute_read_response(conn, data),
+    do: HostedCheckoutReceiver.json(conn, 200, %{data: data})
+
+  defp race_corrections(kind, stage, winning_operation, competing_operation) do
+    parent = self()
+    handler = {__MODULE__, make_ref()}
+
+    :ok =
+      :telemetry.attach(
+        handler,
+        [:new_you, :commerce, kind, :checkpoint],
+        fn _, _, metadata, _ ->
+          if metadata.stage == stage do
+            send(parent, {:locked_correction, self()})
+
+            receive do
+              :release_correction -> :ok
+            after
+              5_000 -> raise "Timed out while holding the correction lock"
+            end
+          end
+        end,
+        nil
+      )
+
+    try do
+      winner = Task.async(fn -> run_contender(parent, winning_operation) end)
+      assert_receive {:contender, first, backend_a}
+      send(first, :go)
+      assert_receive {:locked_correction, ^first}
+
+      competitor = Task.async(fn -> run_contender(parent, competing_operation) end)
+      assert_receive {:contender, second, backend_b}
+      refute backend_a == backend_b
+      send(second, :go)
+      assert blocked_by?(backend_b, backend_a, 80)
+      send(first, :release_correction)
+      {Task.await(winner), Task.await(competitor)}
+    after
+      :telemetry.detach(handler)
+    end
+  end
+
+  defp blocked_by?(_waiter, _blocker, 0), do: false
+
+  defp blocked_by?(waiter, blocker, attempts) do
+    case Repo.query!("SELECT $2::integer = ANY(pg_blocking_pids($1))", [waiter, blocker]).rows do
+      [[true]] ->
+        true
+
+      [[false]] ->
+        Process.sleep(20)
+        blocked_by?(waiter, blocker, attempts - 1)
+    end
+  end
+
+  defp make_dispute_due(id, round) do
+    Ash.update!(
+      Ash.get!(FixtureDispute, id, authorize?: false),
+      %{verify_after: DateTime.add(DateTime.utc_now(), -1), verify_round: round},
+      action: :reserve_read,
+      authorize?: false
+    )
+  end
+
+  defp dispute_data(payment) do
+    %{reference: reference} =
+      Ash.get!(NewYou.Commerce.HostedPaymentReceipt, payment.fixture_receipt_id,
+        authorize?: false
+      )
+
+    %{
+      reference: reference,
+      transaction: payment.fixture_transaction_id,
+      id: large_provider_id(payment.id),
+      amount: @amount,
+      currency: "ZAR",
+      scope: "newyou_dispute_fixture",
+      revision: 1,
+      outcome: "contested"
+    }
+  end
+
+  defp plan_rights(recipient) do
+    assert {:ok, rights} = Entitlements.plan_rights(recipient.credentials)
+    rights
+  end
+
+  defp apply_dispute_receipts(payment) do
+    for receipt <- dispute_receipts(payment) do
+      assert :ok = Commerce.apply_fixture_dispute_receipt(receipt.id)
+    end
+
+    dispute_for_payment(payment)
+  end
+
+  defp dispute_for_payment(payment) do
+    Ash.read_one!(Ash.Query.filter(FixtureDispute, payment_id == ^payment.id), authorize?: false)
+  end
+
+  defp dispute_receipts(payment) do
+    FixtureDisputeReceipt
+    |> Ash.Query.filter(payment_id == ^payment.id)
+    |> Ash.Query.sort(:id)
+    |> Ash.read!(authorize?: false)
+  end
 
   test "only qualified authorization of the immutable hosted source establishes owed money" do
     P805.with_fixture(fn ->
@@ -32,7 +1783,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
               %{payment_id: uuid()},
               %{quote_id: nil},
               %{recipient_id: payer.account_id},
-              %{transaction_id: "18446744073709551613"},
+              %{transaction_id: large_provider_id()},
               %{amount_minor: @amount - 1},
               %{currency: "USD"},
               %{allocation: :assessment}
@@ -48,7 +1799,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
         assert owed.state == :owed
         assert owed.payment_id == payment.id
         assert owed.payer_id == payer.account_id
-        assert owed.transaction_id == @transaction
+        assert owed.transaction_id == payment.fixture_transaction_id
         assert owed.amount_minor == @amount
 
         assert {:ok, replay} = request(payer.credentials, proof(fields))
@@ -120,12 +1871,13 @@ defmodule NewYou.Commerce.HostedRefundTest do
         assert_receive {^tag, "POST", "/refund", _,
                         %{
                           "reference" => reference,
-                          "transaction" => @transaction,
+                          "transaction" => transaction,
                           "amount" => @amount,
                           "currency" => "ZAR"
                         }}
 
         assert reference == owed.reference
+        assert transaction == owed.transaction_id
         assert_received {:refund_at_post, %{state: :unresolved, claim_id: claim_id}}
         assert is_binary(claim_id)
         refute_receive {^tag, "POST", "/refund", _, _}, 30
@@ -144,7 +1896,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
         first_fields = refund_fields(first, original, payer, recipient)
         assert {:ok, first_owed} = request(payer.credentials, proof(first_fields))
 
-        with_paid_plan(payer, recipient, "18446744073709551612", &default_refund_reply/2, fn
+        with_paid_plan(payer, recipient, large_provider_id(), &default_refund_reply/2, fn
           second, distinct, ^payer, ^recipient, _, _ ->
             second_fields = refund_fields(second, distinct, payer, recipient)
 
@@ -155,6 +1907,38 @@ defmodule NewYou.Commerce.HostedRefundTest do
             assert first_owed.amount_minor == second_owed.amount_minor
             refute first_owed.payment_id == second_owed.payment_id
             refute first_owed.reference == second_owed.reference
+
+            assert {:ok, [first_grant]} =
+                     Commerce.open_plan_payment_consequences(first.purchase_id)
+
+            assert {:ok, [second_grant]} =
+                     Commerce.open_plan_payment_consequences(second.purchase_id)
+
+            assert {:ok, %{id: first_right}} =
+                     Commerce.deliver_plan_payment_consequence(first_grant)
+
+            assert {:ok, %{id: second_right}} =
+                     Commerce.deliver_plan_payment_consequence(second_grant)
+
+            with_signing_key(fn key ->
+              data = dispute_data(original)
+              foreign = %{dispute_data(distinct) | id: data.id}
+              assert 202 == send_event(key, "fixture.dispute", data)
+              assert 202 == send_event(key, "fixture.dispute", foreign)
+              dispute = apply_dispute_receipts(original)
+              assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+              delivered = dispute_for_payment(original)
+
+              assert nil == apply_dispute_receipts(distinct)
+              assert [%{state: :quarantined}] = dispute_receipts(distinct)
+              assert 400 == send_event(key, "fixture.dispute", %{foreign | revision: 2})
+              assert [_receipt] = dispute_receipts(distinct)
+              assert delivered == dispute_for_payment(original)
+              assert [%{id: ^second_right}] = plan_rights(recipient)
+
+              assert %{state: :suspended} =
+                       Ash.get!(NewYou.Entitlements.PlanRight, first_right, authorize?: false)
+            end)
         end)
       end)
     end)
@@ -184,8 +1968,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
     P805.with_fixture(fn ->
       with_two_claims(fn first, second, recipient ->
         with_signing_key(fn key ->
-          original = processed_receipt(key, first)
-          conflict = processed_receipt(key, second)
+          provider_id = large_provider_id()
+          original = processed_receipt(key, first, provider_id)
+          conflict = processed_receipt(key, second, provider_id)
           assert :ok = Commerce.apply_fixture_refund_receipt(original.id)
           assert :ok = Commerce.apply_fixture_refund_receipt(conflict.id)
           assert :ok = Commerce.apply_fixture_refund_receipt(conflict.id)
@@ -199,7 +1984,8 @@ defmodule NewYou.Commerce.HostedRefundTest do
     P805.with_fixture(fn ->
       with_two_claims(fn first, second, recipient ->
         with_signing_key(fn key ->
-          receipts = [processed_receipt(key, first), processed_receipt(key, second)]
+          provider_id = large_provider_id()
+          receipts = Enum.map([first, second], &processed_receipt(key, &1, provider_id))
 
           assert [:ok, :ok] = race_provider_bindings(receipts)
 
@@ -299,12 +2085,12 @@ defmodule NewYou.Commerce.HostedRefundTest do
     with_paid_plan(fn accepted, payment, payer, recipient, _, first_tag ->
       first = dispatch_claim(accepted, payment, payer, recipient, first_tag)
 
-      with_paid_plan(payer, recipient, "18446744073709551612", &default_refund_reply/2, fn other,
-                                                                                           collection,
-                                                                                           _,
-                                                                                           _,
-                                                                                           _,
-                                                                                           second_tag ->
+      with_paid_plan(payer, recipient, large_provider_id(), &default_refund_reply/2, fn other,
+                                                                                        collection,
+                                                                                        _,
+                                                                                        _,
+                                                                                        _,
+                                                                                        second_tag ->
         second = dispatch_claim(other, collection, payer, recipient, second_tag)
         fun.(first, second, recipient)
       end)
@@ -322,14 +2108,8 @@ defmodule NewYou.Commerce.HostedRefundTest do
     claimed
   end
 
-  defp processed_receipt(key, refund) do
-    assert 202 ==
-             send_evidence(
-               key,
-               %{refund_data(refund) | transaction: refund.transaction_id},
-               "processed"
-             )
-
+  defp processed_receipt(key, refund, provider_id) do
+    assert 202 == send_evidence(key, %{refund_data(refund) | id: provider_id}, "processed")
     assert [receipt] = refund_receipts(refund.reference)
     receipt
   end
@@ -404,12 +2184,16 @@ defmodule NewYou.Commerce.HostedRefundTest do
   end
 
   defp cut_refund_work(stage, work) do
+    cut_work(:fixture_refund, stage, work)
+  end
+
+  defp cut_work(fixture_kind, stage, work) do
     handler_id = {__MODULE__, make_ref()}
 
     :ok =
       :telemetry.attach(
         handler_id,
-        [:new_you, :commerce, :fixture_refund, :checkpoint],
+        [:new_you, :commerce, fixture_kind, :checkpoint],
         &kill_at_checkpoint/4,
         stage
       )
@@ -536,7 +2320,8 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   test "fresh owning work reads only the original reference after a committed POST loses its response" do
     P805.with_fixture(fn ->
-      provider_id = "18446744073709551615"
+      provider_id = large_provider_id()
+      transaction = large_provider_id()
 
       refund_reply = fn
         %{method: "POST"} = conn, _ ->
@@ -548,7 +2333,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
             status: true,
             data: %{
               reference: reference,
-              transaction: @transaction,
+              transaction: transaction,
               id: provider_id,
               amount: @amount,
               currency: "ZAR",
@@ -560,7 +2345,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
           })
       end
 
-      with_paid_plan(refund_reply, fn accepted, payment, payer, recipient, _, tag ->
+      with_paid_plan(transaction, refund_reply, fn accepted, payment, payer, recipient, _, tag ->
         fields = refund_fields(accepted, payment, payer, recipient)
         assert {:ok, owed} = request(payer.credentials, proof(fields))
         assert {:ok, _} = Commerce.reserve_fixture_refund(payer.credentials, owed.id)
@@ -579,7 +2364,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
         refute_enqueued(worker: NewYou.Commerce.Workers.ReadFixtureRefund, args: read_job_args)
         make_refund_due(owed.id, %{verify_round: 5})
 
-        cut_refund_work(:read_reserved, fn -> NewYou.Commerce.FixtureRefunds.read_due(owed.id) end)
+        cut_refund_work(:read_reserved, fn ->
+          NewYou.Commerce.FixtureRefunds.read_due(owed.id)
+        end)
 
         assert %{verify_round: 6, verify_after: %DateTime{}, claim_id: ^claim_id} =
                  read_refund(owed.id)
@@ -618,7 +2405,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
                  read_refund(owed.id)
 
         with_signing_key(fn key ->
-          assert 202 == send_evidence(key, refund_data(owed), "processed")
+          assert 202 == send_evidence(key, %{refund_data(owed) | id: provider_id}, "processed")
           process_evidence(reference)
           assert %{processed_receipt_id: ^applied} = read_refund(owed.id)
 
@@ -637,6 +2424,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
   test "independent webhook and pinned-read workers converge on one processed effect" do
     P805.with_fixture(fn ->
       parent = self()
+      transaction = large_provider_id()
 
       replies = fn
         %{method: "GET", path_info: ["refund", reference]} = conn, _ ->
@@ -644,7 +2432,10 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
           receive do
             :reply ->
-              data = refund_data(%{reference: reference}) |> Map.put(:status, "processed")
+              data =
+                refund_data(%{reference: reference, transaction_id: transaction})
+                |> Map.put(:status, "processed")
+
               HostedCheckoutReceiver.json(conn, 200, %{status: true, data: data})
           after
             500 -> Plug.Conn.send_resp(conn, 500, "")
@@ -654,7 +2445,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
           default_refund_reply(conn, data)
       end
 
-      with_paid_plan(replies, fn accepted, payment, payer, recipient, _, tag ->
+      with_paid_plan(transaction, replies, fn accepted, payment, payer, recipient, _, tag ->
         fields = refund_fields(accepted, payment, payer, recipient)
         assert {:ok, owed} = request(payer.credentials, proof(fields))
         assert {:ok, _} = Commerce.reserve_fixture_refund(payer.credentials, owed.id)
@@ -715,7 +2506,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
           )
 
         with_signing_key(fn key ->
-          excess_id = "18446744073709551613"
+          excess_id = large_provider_id()
 
           data = %{
             reference: original.reference,
@@ -767,6 +2558,17 @@ defmodule NewYou.Commerce.HostedRefundTest do
                    Entitlements.plan_rights(recipient.credentials)
 
           assert {:ok, []} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
+
+          excess_payment = Ash.get!(VerifiedPayment, owed.payment_id, authorize?: false)
+          data = %{dispute_data(excess_payment) | outcome: "lost"}
+          assert 202 == send_event(key, "fixture.dispute", data)
+
+          assert %{state: :lost, allocation: :excess} =
+                   dispute = apply_dispute_receipts(excess_payment)
+
+          assert {:ok, :unresolved} = FixtureDisputes.correction_overlap(dispute.id)
+          assert :ok = Commerce.deliver_fixture_dispute(dispute.id)
+          assert [%{id: ^right_id}] = plan_rights(recipient)
         end)
       end)
     end)
@@ -873,9 +2675,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   test "signed excess seen before the primary remains recoverable through its existing worker" do
     P805.with_fixture(fn ->
-      with_unpaid_plan(fn accepted, payer, recipient, reference, _listener, tag ->
+      with_unpaid_plan(fn accepted, payer, recipient, reference, transaction, tag ->
         with_signing_key(fn key ->
-          excess = charge_data(reference, "18446744073709551613")
+          excess = charge_data(reference, large_provider_id())
           assert 202 == send_event(key, "charge.excess", excess)
           assert 202 == send_event(key, "charge.excess", excess)
           assert [receipt] = payment_receipts(reference)
@@ -887,7 +2689,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
           assert [] == purchase_refunds(accepted)
           assert {:ok, []} = Commerce.open_plan_payment_consequences(accepted.purchase_id)
 
-          assert 202 == send_event(key, "charge.success", charge_data(reference, @transaction))
+          assert 202 == send_event(key, "charge.success", charge_data(reference, transaction))
           assert primary = Enum.find(payment_receipts(reference), &(&1.id != receipt.id))
           assert :ok = Commerce.apply_hosted_payment_evidence(primary.id)
 
@@ -929,10 +2731,10 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   test "concurrent primary and excess receipts preserve one benefit and reject genuine conflicts" do
     P805.with_fixture(fn ->
-      with_unpaid_plan(fn accepted, payer, recipient, reference, _listener, tag ->
+      with_unpaid_plan(fn accepted, payer, recipient, reference, transaction, tag ->
         with_signing_key(fn key ->
-          primary = charge_data(reference, @transaction)
-          excess = charge_data(reference, "18446744073709551613")
+          primary = charge_data(reference, transaction)
+          excess = charge_data(reference, large_provider_id())
           assert 202 == send_event(key, "charge.success", primary)
           assert 202 == send_event(key, "charge.excess", excess)
           receipts = payment_receipts(reference)
@@ -1105,7 +2907,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
         assert [] == refund_receipts(refund.reference)
 
         with_signing_key(fn key ->
-          receipt = processed_receipt(key, refund)
+          receipt = processed_receipt(key, refund, refund_data(refund).id)
           assert :ok = Commerce.apply_fixture_refund_receipt(receipt.id)
         end)
 
@@ -1212,7 +3014,7 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   defp put_unknown_receipt(key, track?) do
     reference = Base.encode16(:crypto.strong_rand_bytes(16), case: :lower)
-    data = refund_data(%{reference: reference})
+    data = refund_data(%{reference: reference, transaction_id: large_provider_id()})
     assert 202 == send_evidence(key, data, "processed", track?: track?)
 
     NewYou.Commerce.FixtureRefundReceipt
@@ -1261,8 +3063,8 @@ defmodule NewYou.Commerce.HostedRefundTest do
   defp refund_data(refund) do
     %{
       reference: refund.reference,
-      transaction: @transaction,
-      id: "18446744073709551615",
+      transaction: refund.transaction_id,
+      id: large_provider_id(refund.reference),
       amount: @amount,
       currency: "ZAR",
       provider: "paystack",
@@ -1284,6 +3086,8 @@ defmodule NewYou.Commerce.HostedRefundTest do
       if Keyword.get(options, :authenticated?, true),
         do: Base.encode16(:crypto.mac(:hmac, :sha512, key, raw), case: :lower),
         else: String.duplicate("0", 128)
+
+    raw = if Keyword.get(options, :modified?, false), do: raw <> " ", else: raw
 
     conn =
       Plug.Test.conn(:post, "/__test/commerce/fixture-webhook", raw)
@@ -1325,7 +3129,11 @@ defmodule NewYou.Commerce.HostedRefundTest do
 
   # Use the actual commerce qualification and pin, with separate payer and recipient.
   defp with_paid_plan(refund_reply \\ &default_refund_reply/2, fun) do
-    with_paid_plan(verified_party(), verified_party(), @transaction, refund_reply, fun)
+    with_paid_plan(large_provider_id(), refund_reply, fun)
+  end
+
+  defp with_paid_plan(transaction, refund_reply, fun) do
+    with_paid_plan(verified_party(), verified_party(), transaction, refund_reply, fun)
   end
 
   defp with_paid_plan(payer, recipient, transaction, refund_reply, fun) do
@@ -1350,11 +3158,13 @@ defmodule NewYou.Commerce.HostedRefundTest do
     payer = verified_party()
     recipient = verified_party()
 
-    with_checkout(payer, recipient, @transaction, &default_refund_reply/2, fn accepted,
-                                                                              reference,
-                                                                              listener,
-                                                                              tag ->
-      fun.(accepted, payer, recipient, reference, listener, tag)
+    transaction = large_provider_id()
+
+    with_checkout(payer, recipient, transaction, &default_refund_reply/2, fn accepted,
+                                                                             reference,
+                                                                             _listener,
+                                                                             tag ->
+      fun.(accepted, payer, recipient, reference, transaction, tag)
     end)
   end
 
@@ -1387,6 +3197,9 @@ defmodule NewYou.Commerce.HostedRefundTest do
           refund_reply.(conn, data)
 
         %{method: "GET", path_info: ["refund", _]} = conn, data ->
+          refund_reply.(conn, data)
+
+        %{method: "GET", path_info: ["__test", "dispute", _]} = conn, data ->
           refund_reply.(conn, data)
 
         %{method: "GET", path_info: ["transaction", "verify", ^reference]} = conn, _ ->

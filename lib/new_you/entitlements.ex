@@ -32,7 +32,7 @@ defmodule NewYou.Entitlements do
              PlanRight
              |> Ash.Query.filter(
                recipient_id == ^recipient_id and component == :assessment and
-                 state == :held_unconsumed
+                 state in [:held_unconsumed, :suspended]
              )
              |> Ash.exists(authorize?: false) do
         cond do
@@ -49,11 +49,25 @@ defmodule NewYou.Entitlements do
   end
 
   @doc """
+  Reconcile the exact existing Plan right against the current qualified TEST
+  dispute, Privacy and Identity facts. An acknowledgement must use the
+  version returned by this commit. Restoration never creates a right.
+  """
+  @spec apply_fixture_dispute(Ecto.UUID.t()) ::
+          {:ok, pos_integer()} | {:error, :grant_unavailable}
+  if Mix.env() == :test do
+    def apply_fixture_dispute(id), do: NewYou.Entitlements.SyntheticRights.apply_dispute(id)
+  else
+    def apply_fixture_dispute(_), do: {:error, :grant_unavailable}
+  end
+
+  @doc """
   Apply or replay one Plan right for the given Commerce consequence. The
   executor cannot supply the recipient, component or paid purchase. Those
-  fields come from the committed source. A committed TEST correction or
-  suppression may withhold the grant. Missing or unavailable TEST Privacy
-  authority leaves the grant open for retry. Call outside any existing transaction.
+  fields come from the committed source. An Identity block, or missing TEST
+  Privacy authority, leaves delivery open for retry. A committed TEST
+  correction or suppression may withhold the grant. Call outside any existing
+  transaction.
   """
   @spec grant_paid_plan(String.t()) ::
           {:ok, PlanRight.t() | :withheld} | {:error, :grant_unavailable}
@@ -85,19 +99,47 @@ defmodule NewYou.Entitlements do
         {:error, _} = error -> error
       end
     end
+
+    defp visible_plan_rights(rights) do
+      Enum.reduce_while(rights, [], fn right, visible ->
+        case NewYou.Commerce.FixtureDisputes.right_effect(right.payment_id, :plan) do
+          {:ok, effect} when effect in [:available, :restore] -> {:cont, [right | visible]}
+          {:ok, _} -> {:cont, visible}
+          {:error, _} = error -> {:halt, error}
+        end
+      end)
+      |> case do
+        visible when is_list(visible) -> Enum.reverse(visible)
+        error -> error
+      end
+    end
   else
     defp grant_current_plan(consequence_id) do
+      result =
+        NewYou.Repo.without_query_telemetry(fn ->
+          Ash.transact(PlanRight, fn -> apply_current_plan(consequence_id) end)
+        end)
+
+      case result do
+        {:ok, %PlanRight{} = right} -> {:ok, right}
+        _ -> {:error, :grant_unavailable}
+      end
+    end
+
+    defp apply_current_plan(consequence_id) do
       with {:ok, %{recipient_id: recipient_id, payment_id: payment_id} = source} <-
              NewYou.Commerce.paid_plan_source(consequence_id),
+           {:ok, :allowed} <- Identity.locked_plan_recipient(recipient_id),
            {:ok, %PlanRight{recipient_id: ^recipient_id, payment_id: ^payment_id} = right} <-
              Ash.create(PlanRight, source, action: :grant, authorize?: false) do
-        {:ok, right}
+        right
       else
         _ -> {:error, :grant_unavailable}
       end
     end
 
     defp scope_visible?(_), do: {:ok, true}
+    defp visible_plan_rights(rights), do: rights
   end
 
   @doc """
@@ -122,7 +164,7 @@ defmodule NewYou.Entitlements do
              recipient_id == ^recipient_id and component == :plan and state == :held_unconsumed
            )
            |> Ash.read(authorize?: false) do
-      rights
+      visible_plan_rights(rights)
     else
       {:ok, false} -> []
       {:error, _} = error -> error

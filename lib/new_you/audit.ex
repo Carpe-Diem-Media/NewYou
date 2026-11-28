@@ -28,6 +28,8 @@ defmodule NewYou.Audit do
         get_by: [:obligation_id],
         not_found_error?: false
     end
+
+    resource NewYou.Audit.FixtureDisputeDisclosure
   end
 
   @doc "Commit or replay the same minimised E1 attempt before the caller opens its protected source transaction."

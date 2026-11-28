@@ -23,6 +23,8 @@ defmodule NewYou.Privacy do
     resource PurposeAuthority
     resource PurposeEvent
     resource NewYou.Privacy.SyntheticDeletionScope
+    resource NewYou.Privacy.FixtureDisputePurposeAuthority
+    resource NewYou.Privacy.FixtureDisputePurposeEvent
   end
 
   @doc false

@@ -16,7 +16,7 @@ defmodule NewYou.Entitlements.PlanRight do
         check: "component IN ('assessment', 'plan')"
 
       check_constraint :state, "entitlements_plan_rights_state",
-        check: "state IN ('held_unconsumed', 'ended')"
+        check: "state IN ('held_unconsumed', 'suspended', 'ended')"
     end
 
     custom_indexes do
@@ -44,6 +44,22 @@ defmodule NewYou.Entitlements.PlanRight do
       accept []
       change atomic_update(:state, :ended)
     end
+
+    if Mix.env() == :test do
+      update :suspend_component do
+        public? false
+        accept []
+        change filter(expr(state == :held_unconsumed))
+        change atomic_update(:state, :suspended)
+      end
+
+      update :restore_component do
+        public? false
+        accept []
+        change filter(expr(state == :suspended))
+        change atomic_update(:state, :held_unconsumed)
+      end
+    end
   end
 
   policies do
@@ -66,7 +82,7 @@ defmodule NewYou.Entitlements.PlanRight do
     attribute :state, :atom,
       default: :held_unconsumed,
       allow_nil?: false,
-      constraints: [one_of: [:held_unconsumed, :ended]]
+      constraints: [one_of: [:held_unconsumed, :suspended, :ended]]
 
     create_timestamp :granted_at
   end

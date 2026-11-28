@@ -218,6 +218,55 @@ Do not introduce parallel ordinary `NewYou.Repo`, raw SQL or `Ecto.Multi` busine
 
 Do not introduce Redis, extra services, extra Repos, ETS/process authority, replicas, Rust/Rustler, microservices or speculative infrastructure without demonstrated need and authority.
 
+## Development-First Priority — Mandatory
+
+**Platform development is the current TOP PRIORITY.**
+
+The platform must be built before real-world organisational role allocation and production permission provisioning become operational requirements.
+
+The following rules are mandatory for every implementation agent:
+
+1. **Never make future production permissions a development prerequisite.**
+   - Do not require real runtime IdentityGrants.
+   - Do not require production role assignments.
+   - Do not require named human approvers.
+   - Do not require organisational separation of roles.
+   - Do not ask the user to nominate people to hold or approve roles.
+   - Do not block implementation, testing, migrations, seeds, engineering administration or verification because these arrangements have not been provisioned.
+
+2. **The user is currently the sole developer/operator.**
+   - JC may exercise all authorised non-production development and administration activities.
+   - One identity may hold multiple roles.
+   - Do not require JC to split roles or appoint other people during development.
+   - This is development execution authority, not unrestricted production business authority.
+
+3. **Build the role-based authorization architecture, but defer real-world provisioning.**
+   - Capabilities must belong to governed roles, scopes and applicable relationships.
+   - Implement the required authorization mechanisms as part of development.
+   - Use deterministic synthetic identities, roles, grants and approver roles in DEV/TEST.
+   - Test allowed and denied actions, scope restrictions, expiry, revocation, independent approval and relevant security boundaries.
+   - Never replace role-based authorization with direct user permissions or disable production security to simplify development.
+
+4. **Production role provisioning is a later operational activity.**
+   - Real people will receive their required role assignments when the platform reaches operational/production provisioning.
+   - Organisational separation and actual production approver assignments must be completed before the applicable sensitive production capabilities are activated.
+   - This future activity must not block ordinary platform development.
+
+5. **Interpret missing approver authority correctly.**
+   - A missing real-world approver blocks materialisation or use of the affected sensitive production grant, not development of its authorization mechanism.
+   - Use synthetic role-bearing identities to exercise approval and denial paths during development.
+   - Preserve the prohibition against sensitive self-approval.
+   - Stop only when an actual external requirement is intrinsically necessary for the bounded development action, as permitted by Product Law §15.1A.
+
+6. **Do not repeatedly raise settled future provisioning questions.**
+   - Do not reopen role allocation, human appointments or production permission provisioning in unrelated tickets.
+   - Do not create blockers or governance amendments for these matters.
+   - Keep development moving using current authority and the simplest compliant JIT implementation.
+
+**Authority:** Product Law §15.1A and §15.1B; DEC-317 and DEC-318.
+
+This section governs development execution. It does not override Product, Architecture, Domain or production security authority.
+
 ## Authorization and capability authority
 
 Resolve authorization through governed roles, scopes and applicable relationships.
@@ -234,7 +283,12 @@ Platform Administrator, developer or founder status does not imply expert Domain
 
 Super Admin is break-glass, not a universal bypass.
 
-An unresolved required approver authority is a STOP condition.
+An unresolved required approver authority is a STOP condition
+only for materialising or using the affected sensitive runtime/production
+grant or performing an external operation requiring
+that authority. It is never, by itself, a blocker to developing
+or testing the authorization mechanism. Apply the
+Development-First Priority rules above.
 
 ## Lifecycle requirements
 

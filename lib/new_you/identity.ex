@@ -291,6 +291,79 @@ defmodule NewYou.Identity do
     do: NewYou.Identity.PasswordSession.authorize_canonical(credentials)
 
   @doc """
+  Check the current canonical status and access posture of an already bound
+  Plan recipient. The transaction holds a shared Account lock through the
+  caller's commit.
+  """
+  @spec locked_plan_recipient(Ecto.UUID.t()) ::
+          {:ok, :allowed | :blocked} | {:error, :recipient_unavailable}
+  def locked_plan_recipient(id) do
+    with true <- Ash.DataLayer.in_transaction?(Account),
+         {:ok, account} <-
+           Account
+           |> Ash.Query.filter(id == ^id)
+           |> Ash.Query.lock("FOR SHARE")
+           |> Ash.read_one(authorize?: false) do
+      case account do
+        %Account{
+          canonical_account_id: nil,
+          pmr_status: :active,
+          account_status: :open,
+          email_verified?: true,
+          credential_status: :active,
+          security_posture: :normal,
+          pmr: pmr
+        } ->
+          {:ok, if(PMR.valid?(pmr), do: :allowed, else: :blocked)}
+
+        _ ->
+          {:ok, :blocked}
+      end
+    else
+      _ -> {:error, :recipient_unavailable}
+    end
+  end
+
+  @doc "Check the locked Plan recipient for TEST fixture grant and dispute work."
+  @spec locked_fixture_recipient(Ecto.UUID.t()) ::
+          {:ok, :allowed | :blocked} | {:error, :recipient_unavailable}
+  if Mix.env() == :test do
+    def locked_fixture_recipient(id), do: locked_plan_recipient(id)
+  else
+    def locked_fixture_recipient(_), do: {:error, :recipient_unavailable}
+  end
+
+  @doc "Record an independently approved Finance or Audit dispute-disclosure grant in TEST."
+  @spec issue_fixture_dispute_grant(session_credentials(), map()) ::
+          {:ok, IdentityGrant.t()} | {:error, :disclosure_grant_unavailable}
+  if Mix.env() == :test do
+    def issue_fixture_dispute_grant(credentials, scope),
+      do: NewYou.Identity.FixtureDisputeGrants.issue(credentials, scope)
+
+    @doc "Revoke a TEST dispute-disclosure grant under its current Domain approval scope."
+    @spec revoke_fixture_dispute_grant(session_credentials(), Ecto.UUID.t()) ::
+            {:ok, IdentityGrant.t()} | {:error, :disclosure_grant_unavailable}
+    def revoke_fixture_dispute_grant(credentials, grant_id),
+      do: NewYou.Identity.FixtureDisputeGrants.revoke(credentials, grant_id)
+
+    @doc false
+    @spec require_fixture_dispute_grants(map()) :: :ok | {:error, :disclosure_grant_unavailable}
+    def require_fixture_dispute_grants(scope),
+      do: NewYou.Identity.FixtureDisputeGrants.require_current(scope)
+  else
+    def issue_fixture_dispute_grant(_, _), do: {:error, :disclosure_grant_unavailable}
+
+    @doc "Revoke a TEST dispute-disclosure grant under its current Domain approval scope."
+    @spec revoke_fixture_dispute_grant(session_credentials(), Ecto.UUID.t()) ::
+            {:ok, IdentityGrant.t()} | {:error, :disclosure_grant_unavailable}
+    def revoke_fixture_dispute_grant(_, _), do: {:error, :disclosure_grant_unavailable}
+
+    @doc false
+    @spec require_fixture_dispute_grants(map()) :: :ok | {:error, :disclosure_grant_unavailable}
+    def require_fixture_dispute_grants(_), do: {:error, :disclosure_grant_unavailable}
+  end
+
+  @doc """
   Return the presenting Session holder's current canonical Platform Member Reference.
   The Session ID and bearer must resolve to the same active verified Account. This
   reuses the normal Session activity refresh and returns one generic error on
