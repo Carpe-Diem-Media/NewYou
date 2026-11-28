@@ -20,6 +20,8 @@ defmodule NewYou.Commerce.OfferAdmission do
 
   require Ash.Query
 
+  @offer_products if(Mix.env() == :dev, do: [:plan], else: [:plan, :assessment, :bundle])
+
   @type terms :: %{
           required(:quote_id) => Ecto.UUID.t(),
           required(:operation_id) => Ecto.UUID.t(),
@@ -54,7 +56,7 @@ defmodule NewYou.Commerce.OfferAdmission do
   @spec quote(map(), %{product: OfferCatalogue.product(), language: :en | :af}) ::
           {:ok, terms()} | {:error, denial()}
   def quote(authority, %{product: product, language: language} = request)
-      when product in [:plan, :assessment, :bundle] and language in [:en, :af] and
+      when product in @offer_products and language in [:en, :af] and
              map_size(request) == 2 do
     transaction(fn ->
       with {:ok, parties} <- authorize_parties(authority),
@@ -134,6 +136,7 @@ defmodule NewYou.Commerce.OfferAdmission do
          true <- same_parties?(quote, purchase),
          true <- quote.operation_id == purchase.operation_id,
          {:ok, offer} <- fetch_offer(quote, nil),
+         true <- approved_development_offer?(offer),
          true <-
            offer.price_version == purchase.price_version and
              offer.amount_minor == purchase.amount_minor and
@@ -169,8 +172,21 @@ defmodule NewYou.Commerce.OfferAdmission do
       end
     end
   else
-    defp authorize_parties(_), do: {:error, :purchase_unavailable}
-    defp current_privacy(_), do: {:error, :purchase_unavailable}
+    if Mix.env() == :dev do
+      defp authorize_parties(%{credentials: credentials}) do
+        with {:ok, %{"payer_id" => id, "operation_id" => operation}} <-
+               NewYou.Commerce.PaystackDevelopmentSource.authorize(credentials) do
+          {:ok, %{operation_id: operation, payer_id: id, recipient_id: id}}
+        end
+      end
+
+      defp authorize_parties(_), do: {:error, :purchase_unavailable}
+
+      defp current_privacy(id), do: NewYou.Privacy.require_development_checkout_subject_locked(id)
+    else
+      defp authorize_parties(_), do: {:error, :purchase_unavailable}
+      defp current_privacy(_), do: {:error, :purchase_unavailable}
+    end
   end
 
   defp accept_for(authority, operation, id, fingerprint) do
@@ -178,7 +194,8 @@ defmodule NewYou.Commerce.OfferAdmission do
          {:ok, %PurchaseQuote{} = quote} <- quote_by_operation(operation, :for_update),
          true <- same_parties?(quote, parties),
          :ok <- current_parties_privacy(quote),
-         {:ok, offer} <- fetch_offer(quote, "FOR SHARE") do
+         {:ok, offer} <- fetch_offer(quote, "FOR SHARE"),
+         true <- approved_development_offer?(offer) do
       if quote.id == id and quote.disclosure_fingerprint == fingerprint and
            exact_disclosure?(quote, offer),
          do: accept_quote(quote, offer),
@@ -246,7 +263,7 @@ defmodule NewYou.Commerce.OfferAdmission do
   end
 
   defp transaction(operation) do
-    case Ash.transact(Purchase, operation) do
+    case NewYou.Repo.without_query_telemetry(fn -> Ash.transact(Purchase, operation) end) do
       {:ok, {:refused, reason}} -> {:error, reason}
       {:ok, result} when is_map(result) -> {:ok, result}
       _ -> {:error, :purchase_unavailable}
@@ -255,6 +272,7 @@ defmodule NewYou.Commerce.OfferAdmission do
 
   defp offer_quote(nil, parties, product, language) do
     with {:ok, offer} <- OfferCatalogue.current(product, "FOR SHARE"),
+         true <- approved_development_offer?(offer),
          attrs = disclosure_attributes(parties, offer, language),
          {:ok, quoted} <-
            Ash.create(PurchaseQuote, attrs, action: :offer, authorize?: false) do
@@ -264,6 +282,7 @@ defmodule NewYou.Commerce.OfferAdmission do
         true -> {:refused, :acceptance_conflict}
       end
     else
+      false -> {:refused, :offer_unavailable}
       {:error, :offer_unavailable} -> {:refused, :offer_unavailable}
       {:error, _} = error -> error
     end
@@ -278,6 +297,7 @@ defmodule NewYou.Commerce.OfferAdmission do
        when quote.payer_id == payer and quote.recipient_id == recipient do
     with ^language <- quote.language,
          {:ok, %OfferVersion{product: ^product} = offer} <- fetch_offer(quote, nil),
+         true <- approved_development_offer?(offer),
          true <- exact_disclosure?(quote, offer) do
       disclosed(quote, offer)
     else
@@ -286,6 +306,33 @@ defmodule NewYou.Commerce.OfferAdmission do
   end
 
   defp offer_quote(%PurchaseQuote{}, _, _, _), do: {:error, :purchase_unavailable}
+
+  if Mix.env() == :dev do
+    defp approved_development_offer?(%OfferVersion{
+           id: id,
+           product: :plan,
+           amount_minor: 39_900,
+           currency: "ZAR",
+           approval_id: approval,
+           disclosure_en_id: en,
+           disclosure_af_id: af
+         }) do
+      match?(
+        {:ok,
+         %{
+           "offer_id" => ^id,
+           "approval_id" => ^approval,
+           "disclosure_en_id" => ^en,
+           "disclosure_af_id" => ^af
+         }},
+        NewYou.LocalConfig.paystack_development_plan()
+      )
+    end
+
+    defp approved_development_offer?(_), do: false
+  else
+    defp approved_development_offer?(_), do: true
+  end
 
   defp accept_quote(%{state: :accepted} = quote, offer) do
     version = offer.price_version

@@ -1,24 +1,24 @@
 defmodule NewYou.Commerce.PaystackTestIntegration do
   @moduledoc false
 
-  if Mix.env() == :test do
+  if Mix.env() in [:dev, :test] do
     alias NewYou.Commerce.HostedDispatch
     alias Plug.Crypto.MessageEncryptor
+
+    @derive {Inspect, only: []}
+    defstruct [:attempt_id, :restricted_key, :email, :capability_key, :listener]
 
     def settings(attempt_id) when is_binary(attempt_id) do
       with %{
              attempt_id: ^attempt_id,
              restricted_key: credential,
              email: email,
-             capability_key: encryption_key,
-             listener: listener
+             capability_key: <<_::256>>
            } = config <- configuration(),
            true <-
              is_binary(credential) and Regex.match?(~r/\Ark_test_[a-zA-Z0-9_-]+\z/, credential),
-           true <- valid_email?(email),
-           true <- is_binary(encryption_key) and byte_size(encryption_key) == 32,
-           true <- valid_listener?(listener) do
-        {:ok, config}
+           {:ok, ^email} <- NewYou.Identity.Email.canonicalize(email) do
+        {:ok, struct!(__MODULE__, config)}
       else
         _ -> {:error, :checkout_unavailable}
       end
@@ -47,12 +47,24 @@ defmodule NewYou.Commerce.PaystackTestIntegration do
       )
     end
 
-    defp configuration do
-      case Application.get_env(:new_you, :paystack_test_checkout) do
-        %{listener: %{port: _, certificate: _}} = fixture -> fixture
-        nil -> approved_configuration()
-        _ -> :disabled
+    if Mix.env() == :test do
+      defp configuration do
+        case {System.get_env("NEW_YOU_PAYSTACK_TEST_ENABLED"),
+              Application.get_env(:new_you, :paystack_test_checkout)} do
+          {_, nil} ->
+            approved_configuration()
+
+          {enabled, %{listener: %{port: port, certificate: certificate}} = fixture}
+          when enabled != "true" and port in 1..65_535 and
+                 is_binary(certificate) and byte_size(certificate) in 1..8192 ->
+            fixture
+
+          _ ->
+            :disabled
+        end
       end
+    else
+      defp configuration, do: approved_configuration()
     end
 
     defp approved_configuration do
@@ -69,18 +81,5 @@ defmodule NewYou.Commerce.PaystackTestIntegration do
         _ -> :disabled
       end
     end
-
-    defp valid_email?(email) when is_binary(email) and byte_size(email) in 3..254,
-      do: Regex.match?(~r/\A[A-Za-z0-9.!_%+-]+@[A-Za-z0-9.-]+\.[A-Za-z0-9-]+\z/, email)
-
-    defp valid_email?(_), do: false
-
-    defp valid_listener?(:paystack), do: true
-
-    defp valid_listener?(%{port: port, certificate: certificate})
-         when port in 1..65_535 and is_binary(certificate) and byte_size(certificate) in 1..8192,
-         do: true
-
-    defp valid_listener?(_), do: false
   end
 end

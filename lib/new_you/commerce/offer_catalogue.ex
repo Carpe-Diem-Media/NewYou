@@ -208,6 +208,65 @@ defmodule NewYou.Commerce.OfferCatalogue do
     |> Ash.read_one(authorize?: false)
   end
 
+  if Mix.env() == :dev do
+    @doc "Install the exact operator-approved R399 DEV Plan for its authenticated payer."
+    def prepare_development_plan(credentials) do
+      result =
+        NewYou.Repo.without_query_telemetry(fn ->
+          Ash.transact(OfferVersion, fn -> prepare_development_plan_locked(credentials) end)
+        end)
+
+      case result do
+        {:ok, %OfferVersion{} = offer} -> {:ok, terms(offer)}
+        _ -> {:error, :offer_unavailable}
+      end
+    end
+
+    defp prepare_development_plan_locked(credentials) do
+      with {:ok, source} <- NewYou.Commerce.PaystackDevelopmentSource.authorize(credentials) do
+        development_plan_locked(source)
+      end
+    end
+
+    defp development_plan_locked(source) do
+      id = source["offer_id"]
+
+      attrs = %{
+        id: id,
+        product: :plan,
+        price_version: "dev-paystack-" <> id,
+        currency: "ZAR",
+        amount_minor: 39_900,
+        plan_list_minor: 39_900,
+        plan_discount_minor: 0,
+        assessment_list_minor: 0,
+        assessment_discount_minor: 0
+      }
+
+      approvals = %{
+        approval_id: source["approval_id"],
+        disclosure_en_id: source["disclosure_en_id"],
+        disclosure_af_id: source["disclosure_af_id"]
+      }
+
+      with {:ok, active} <- approved(:plan, "FOR UPDATE"),
+           true <- is_nil(active) or active.id == id,
+           {:ok, offer} <- development_draft(id, attrs),
+           true <- Map.take(offer, Map.keys(attrs)) == attrs do
+        publish(offer, active, approvals)
+      else
+        _ -> {:error, :offer_unavailable}
+      end
+    end
+
+    defp development_draft(id, attrs) do
+      case locked(id) do
+        {:ok, nil} -> Ash.create(OfferVersion, attrs, action: :draft, authorize?: false)
+        result -> result
+      end
+    end
+  end
+
   if Mix.env() == :test do
     defp verify(evidence), do: NewYou.Proof.PlanPaymentObservation.verify(evidence)
   else

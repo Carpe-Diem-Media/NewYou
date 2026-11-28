@@ -113,46 +113,52 @@ defmodule NewYou.Commerce.HostedDispatch do
 
     update :claim do
       public? false
-      accept [:fixture_port, :fixture_certificate, :verify_after]
+
+      accept if(Mix.env() == :test,
+               do: [:fixture_port, :fixture_certificate, :verify_after],
+               else: []
+             )
 
       argument :claim_id, :uuid, allow_nil?: false
       change filter(expr(is_nil(claim_id)))
       change set_attribute(:claim_id, arg(:claim_id))
     end
 
-    update :defer_verify do
-      public? false
-      accept [:verify_after, :verify_round]
-      change filter(expr(not is_nil(verify_after)))
-    end
+    if Mix.env() == :test do
+      update :defer_verify do
+        public? false
+        accept [:verify_after, :verify_round]
+        change filter(expr(not is_nil(verify_after)))
+      end
 
-    update :respect_retry_after do
-      public? false
-      accept []
-      argument :retry_after, AshPostgres.TimestamptzUsec, allow_nil?: false
-      change filter(expr(verify_after < ^arg(:retry_after)))
-      change set_attribute(:verify_after, arg(:retry_after))
-    end
+      update :respect_retry_after do
+        public? false
+        accept []
+        argument :retry_after, AshPostgres.TimestamptzUsec, allow_nil?: false
+        change filter(expr(verify_after < ^arg(:retry_after)))
+        change set_attribute(:verify_after, arg(:retry_after))
+      end
 
-    update :close_verify do
-      public? false
-      accept []
-      change set_attribute(:verify_after, nil)
-    end
+      update :close_verify do
+        public? false
+        accept []
+        change set_attribute(:verify_after, nil)
+      end
 
-    action :verify_fixture_reference do
-      public? false
-      argument :primary_key, :map, allow_nil?: false
-      run NewYou.Commerce.VerifyFixtureReference
-    end
+      action :verify_fixture_reference do
+        public? false
+        argument :primary_key, :map, allow_nil?: false
+        run NewYou.Commerce.VerifyFixtureReference
+      end
 
-    update :retain do
-      public? false
-      accept [:fixture_code]
+      update :retain do
+        public? false
+        accept [:fixture_code]
 
-      argument :expected_claim_id, :uuid, allow_nil?: false
-      change filter(expr(claim_id == ^arg(:expected_claim_id) and is_nil(fixture_code)))
-      validate present(:fixture_code)
+        argument :expected_claim_id, :uuid, allow_nil?: false
+        change filter(expr(claim_id == ^arg(:expected_claim_id) and is_nil(fixture_code)))
+        validate present(:fixture_code)
+      end
     end
 
     update :retain_provider_capability do
@@ -173,8 +179,14 @@ defmodule NewYou.Commerce.HostedDispatch do
   end
 
   policies do
-    policy action([:read, :verify_fixture_reference]) do
-      authorize_if AshOban.Checks.AshObanInteraction
+    if Mix.env() == :test do
+      policy action([:read, :verify_fixture_reference]) do
+        authorize_if AshOban.Checks.AshObanInteraction
+      end
+    else
+      policy always() do
+        forbid_if always()
+      end
     end
   end
 

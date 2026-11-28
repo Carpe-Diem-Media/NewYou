@@ -1,34 +1,68 @@
-alias NewYou.Commerce.{HostedCheckout, PaystackCheckout}
+alias NewYou.Commerce.{HostedCheckout, PaystackCheckout, PaystackTestIntegration}
 
-{:ok, {HostedCheckout, [imports: imports]}} =
-  :beam_lib.chunks(:code.which(HostedCheckout), [:imports])
+scope = %{provider: :paystack, integration: :voelgoedwinkel, environment: :test, channel: :card}
+fixture_scope = %{scope | integration: :local_fixture}
+attempt = "1179dc31-72bc-4f01-a2cd-78f59ccd45ac"
 
-false =
-  Enum.any?(imports, fn {module, _, _} ->
-    module in [Req.Request, PaystackCheckout, Ash, :telemetry]
-  end)
+fixture = %{
+  attempt_id: attempt,
+  listener: %{port: 1, certificate: <<0>>},
+  restricted_key: "rk_test_fixture_canary",
+  email: "fixture@example.test",
+  capability_key: :binary.copy(<<251>>, 32)
+}
+
+Application.put_env(:new_you, :paystack_test_checkout, fixture)
+
+System.put_env(%{
+  "NEW_YOU_PAYSTACK_TEST_APPROVED_ATTEMPT_ID" => attempt,
+  "NEW_YOU_PAYSTACK_TEST_RESTRICTED_KEY" => "rk_test_runtime_canary",
+  "NEW_YOU_PAYSTACK_TEST_EMAIL" => "runtime@example.test",
+  "NEW_YOU_PAYSTACK_TEST_CAPABILITY_KEY" => Base.encode64(:binary.copy(<<81>>, 32))
+})
 
 true = Code.ensure_loaded?(PaystackCheckout)
+true = Code.ensure_loaded?(PaystackTestIntegration)
 false = function_exported?(PaystackCheckout, :build, 3)
+false = function_exported?(PaystackCheckout, :build_verify, 2)
+{:error, :provider_disabled} = HostedCheckout.initialize(%{}, %{}, fixture_scope, 1)
+nil = Process.whereis(NewYou.Repo)
 
-scope = %{provider: :paystack, integration: :local_fixture, environment: :test, channel: :card}
-credentials = %{session_id: "fixture-only", token: "fixture-only"}
+case Mix.env() do
+  :dev ->
+    System.delete_env("NEW_YOU_PAYSTACK_TEST_ENABLED")
+    {:error, :checkout_unavailable} = PaystackTestIntegration.settings(attempt)
+    System.put_env("NEW_YOU_PAYSTACK_TEST_ENABLED", "true")
+    {:ok, %{listener: :paystack}} = PaystackTestIntegration.settings(attempt)
 
-# Configuration cannot turn a non-TEST build into a wire caller.
-Application.put_env(:new_you, :paystack, enabled: true, integration: :local_fixture)
+    false = Code.ensure_loaded?(NewYouWeb.FixtureWebhook)
+    false = Code.ensure_loaded?(NewYou.Commerce.Workers.VerifyFixtureReference)
+    nil = Ash.Resource.Info.action(NewYou.Commerce.HostedDispatch, :verify_fixture_reference)
+    [] = AshOban.Info.oban_triggers_and_scheduled_actions(NewYou.Commerce.HostedDispatch)
 
-{:error, :provider_disabled} = HostedCheckout.prepare(credentials, %{}, scope)
-{:error, :provider_disabled} = HostedCheckout.initialize(credentials, %{}, scope, 1)
-{:error, :provider_disabled} = HostedCheckout.recover(credentials, %{}, scope)
+    {:ok, {HostedCheckout, [imports: imports]}} =
+      :beam_lib.chunks(:code.which(HostedCheckout), [:imports])
 
-IO.puts("E1a-F non-TEST dispatch exclusion passed")
+    false = Enum.any?(imports, fn {module, _, _} -> module == Ecto.Adapters.SQL.Sandbox end)
+    true = function_exported?(PaystackCheckout, :build_provider, 3)
+    {:error, :checkout_unavailable} = HostedCheckout.prepare(%{}, %{}, scope)
 
+  :prod ->
+    System.put_env("NEW_YOU_PAYSTACK_TEST_ENABLED", "true")
+    false = function_exported?(PaystackTestIntegration, :settings, 1)
+    false = function_exported?(PaystackCheckout, :build_provider, 3)
+    {:error, :provider_disabled} = HostedCheckout.prepare(%{}, %{}, scope)
+    {:error, :provider_disabled} = HostedCheckout.initialize(%{}, %{}, scope)
+    {:error, :provider_disabled} = HostedCheckout.recover(%{}, %{}, scope)
+end
+
+IO.puts("WELL-190 checkout build boundary passed for #{Mix.env()}")
+
+# The E1b-F fixture remains unavailable in both non-TEST builds.
 false = Code.ensure_loaded?(NewYouWeb.FixtureWebhook)
 false = Code.ensure_loaded?(NewYou.Commerce.Workers.VerifyFixtureReference)
 false = Code.ensure_loaded?(NewYou.Commerce.Workers.ProcessFixtureReceipt)
-false = function_exported?(PaystackCheckout, :build_verify, 2)
-
 {:error, :provider_disabled} = NewYou.Commerce.HostedPaymentEvidence.verify_due("fixture-only")
 {:error, :unavailable} = NewYou.Commerce.apply_hosted_payment_evidence("fixture-only")
 
-IO.puts("E1b-F non-TEST fixture ingress, Verify and settlement exclusion passed")
+IO.puts("WELL-219 fixture ingress, Verify and settlement exclusion passed for #{Mix.env()}")

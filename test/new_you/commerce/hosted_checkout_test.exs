@@ -9,6 +9,8 @@ defmodule NewYou.Commerce.HostedCheckoutTest do
     HostedCheckout,
     HostedDispatch,
     OfferAdmission,
+    PaystackCheckout,
+    PaystackTestIntegration,
     PaymentConsequence,
     Purchase,
     SyntheticCorrections,
@@ -30,6 +32,100 @@ defmodule NewYou.Commerce.HostedCheckoutTest do
   @fixture_url "https://checkout.paystack.invalid/fixture-checkout-canary"
   @provider_scope %{@scope | integration: :voelgoedwinkel}
   @provider_url "https://checkout.paystack.com/provider-checkout-canary"
+
+  test "runtime activation still requires the current payer and exact accepted source" do
+    P805.with_fixture(fn ->
+      {payer, recipient, accepted} = accept(:plan, %{})
+      key = "rk_test_runtime_credential_canary"
+      email = "runtime-email-canary@example.test"
+      capability_key = Base.encode64(:binary.copy(<<113>>, 32))
+
+      settings = %{
+        "NEW_YOU_PAYSTACK_TEST_ENABLED" => "true",
+        "NEW_YOU_PAYSTACK_TEST_APPROVED_ATTEMPT_ID" => accepted.attempt_id,
+        "NEW_YOU_PAYSTACK_TEST_RESTRICTED_KEY" => key,
+        "NEW_YOU_PAYSTACK_TEST_EMAIL" => email,
+        "NEW_YOU_PAYSTACK_TEST_CAPABILITY_KEY" => capability_key
+      }
+
+      with_environment(settings, fn ->
+        assert {:error, :checkout_unavailable} =
+                 HostedCheckout.prepare(recipient.credentials, accepted, @provider_scope)
+
+        altered = put_in(accepted.terms.amount_minor, accepted.terms.amount_minor + 1)
+
+        assert {:error, :checkout_unavailable} =
+                 HostedCheckout.prepare(payer.credentials, altered, @provider_scope)
+
+        assert {:ok, nil} =
+                 Ash.get(HostedDispatch, accepted.attempt_id, authorize?: false, error?: false)
+
+        assert {:ok, %{status: :prepared, reference: reference} = prepared} =
+                 HostedCheckout.prepare(payer.credentials, accepted, @provider_scope)
+
+        assert {:ok, configured} = PaystackTestIntegration.settings(accepted.attempt_id)
+        request = PaystackCheckout.build_provider(accepted.terms, reference, configured)
+        assert request.method == :post
+        assert URI.to_string(request.url) == "https://api.paystack.co/transaction/initialize"
+        assert request.options.retry == false
+        assert request.options.redirect == false
+        assert request.options.connect_options[:protocols] == [:http1]
+        assert request.options.connect_options[:transport_opts][:verify] == :verify_peer
+
+        for private <- [key, email, reference, capability_key] do
+          refute inspect(request) =~ private
+        end
+
+        assert {:ok, ^prepared} =
+                 HostedCheckout.recover(payer.credentials, accepted, @provider_scope)
+
+        refute inspect(prepared) =~ reference
+
+        observer = self()
+        handler = make_ref()
+
+        :ok =
+          :telemetry.attach_many(
+            handler,
+            [[:finch, :send, :start], [:finch, :recv, :stop]],
+            fn event, _, _, pid -> send(pid, {:raw_transport_event, event}) end,
+            observer
+          )
+
+        try do
+          log =
+            ExUnit.CaptureLog.capture_log(fn ->
+              assert {:error, :checkout_unavailable} =
+                       HostedCheckout.initialize(payer.credentials, accepted, @provider_scope)
+            end)
+
+          for canary <- [key, email, capability_key, reference] do
+            refute log =~ canary
+          end
+
+          refute_received {:raw_transport_event, _}
+        after
+          :telemetry.detach(handler)
+        end
+
+        assert %{claim_id: nil, verify_after: nil, provider_capability: nil} = attempt!(accepted)
+      end)
+    end)
+  end
+
+  defp with_environment(settings, run) do
+    previous = Map.new(settings, fn {key, _} -> {key, System.get_env(key)} end)
+    System.put_env(settings)
+
+    try do
+      run.()
+    after
+      Enum.each(previous, fn
+        {key, nil} -> System.delete_env(key)
+        {key, value} -> System.put_env(key, value)
+      end)
+    end
+  end
 
   test "the scoped TEST integration initializes once and recovers an encrypted capability" do
     P805.with_fixture(fn ->
@@ -147,6 +243,75 @@ defmodule NewYou.Commerce.HostedCheckoutTest do
           end
         end)
       end)
+    end)
+  end
+
+  test "provider transport stops after 503 or a redirect and keeps response data out of evidence" do
+    P805.with_fixture(fn ->
+      for status <- [503, 302] do
+        {payer, _, accepted} = accept(:plan, %{})
+        canary = "private-provider-response-canary"
+
+        response = fn conn, _ ->
+          conn
+          |> Plug.Conn.put_resp_header("location", @provider_url)
+          |> Plug.Conn.send_resp(status, canary)
+        end
+
+        Receiver.with_bound_receiver(response, fn listener, observed ->
+          with_provider_settings(accepted, listener, fn ->
+            assert {:ok, %{status: :prepared, reference: reference}} =
+                     HostedCheckout.prepare(payer.credentials, accepted, @provider_scope)
+
+            observer = self()
+            handler = make_ref()
+
+            :ok =
+              :telemetry.attach(
+                handler,
+                [:new_you, :commerce, :hosted_checkout, :http],
+                fn _, measurements, metadata, pid ->
+                  send(pid, {:provider_evidence, measurements, metadata})
+                end,
+                observer
+              )
+
+            try do
+              log =
+                ExUnit.CaptureLog.capture_log(fn ->
+                  assert {:ok, %{status: :ambiguous, reference: ^reference} = result} =
+                           HostedCheckout.initialize(payer.credentials, accepted, @provider_scope)
+
+                  refute inspect(result) =~ reference
+                  refute inspect(result) =~ @provider_url
+                end)
+
+              assert_receive {^observed, "POST", "/transaction/initialize", _,
+                              %{"reference" => ^reference}}
+
+              assert_receive {:provider_evidence, %{duration: duration}, metadata}
+              assert is_integer(duration)
+              assert metadata.http_status == status
+              assert Map.keys(metadata) |> Enum.sort() == [:classification, :http_status]
+              assert %{provider_capability: nil, verify_after: nil} = attempt!(accepted)
+              refute_receive {^observed, _, _, _, _}
+              refute_receive {:provider_evidence, _, _}
+
+              for secret <- [
+                    reference,
+                    canary,
+                    @provider_url,
+                    "rk_test_local_e1a",
+                    "checkout@example.com"
+                  ] do
+                refute log =~ secret
+              end
+            after
+              :telemetry.detach(handler)
+            end
+          end)
+        end)
+      end
     end)
   end
 
